@@ -1,17 +1,16 @@
 package com.redhat.thermostat.agent;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
+import com.redhat.thermostat.agent.config.Configuration;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
@@ -23,100 +22,45 @@ public class Agent {
 
     private final UUID id;
     private final BackendRegistry backendRegistry;
-    private final List<AgentStateListener> listeners;
-    private final RuntimeConfiguration runtimeConfig;
-    private final StartupConfiguration startupConfig;
+    private final Configuration config;
 
-    private AgentState currentState;
     private DB database;
 
-    public Agent(BackendRegistry backendRegistry, StartupConfiguration startupConfiguration) {
-        this(backendRegistry,
-                UUID.randomUUID(),
-                startupConfiguration,
-                new RuntimeConfiguration());
+    public Agent(BackendRegistry backendRegistry, Configuration config, DB db) {
+        this(backendRegistry, UUID.randomUUID(), config, db);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, StartupConfiguration startup, RuntimeConfiguration runtime) {
+    public Agent(BackendRegistry registry, UUID agentId, Configuration config, DB db) {
         this.id = agentId;
         this.backendRegistry = registry;
-        this.listeners = new CopyOnWriteArrayList<AgentStateListener>();
-        this.currentState = AgentState.DISCONNECTED;
-        this.startupConfig = startup;
-        this.runtimeConfig = runtime;
-        updateConfig();
+        this.config = config;
+        this.database = db;
+        config.setAgent(this);
+        config.setCollection(database.getCollection(Constants.AGENT_CONFIG_COLLECTION_NAME));
+        loadConfiguredBackends();
     }
 
-    /**
-     * Update the agent configuration from backends
-     */
-    private void updateConfig() {
-        for (Backend backend : backendRegistry.getAll()) {
-            String isActive = Boolean.toString(Arrays.asList(startupConfig.getBackendsToStart()).contains(backend.getName()));
-            runtimeConfig.addConfig(backend.getName(), Constants.AGENT_CONFIG_KEY_BACKEND_ACTIVE, isActive);
-            Map<String, String> settings = backend.getSettings();
-            for (Entry<String, String> e : settings.entrySet()) {
-                runtimeConfig.addConfig(backend.getName(), e.getKey(), e.getValue());
-            }
-        }
+    private void loadConfiguredBackends() {
+        // TODO Once Configuration has relevant methods for getting list of backend names and backend-specific parameters, iterate over that list,
+        // activating as per configuration parameters and adding each to the registry
     }
 
-    public void setDatabase(DB database) {
-        this.database = database;
+    private void stopAllBackends() {
+        // TODO Inverse of the above.  Stop each backend, remove from registry.
     }
 
-    /**
-     * Advertises the agent as active to the world.
-     */
-    public void publish() {
-        DBCollection configCollection = database.getCollection(Constants.AGENT_CONFIG_COLLECTION_NAME);
-        DBObject toInsert = runtimeConfig.toBson();
-        toInsert.put(Constants.AGENT_ID, id.toString());
-        configCollection.insert(toInsert, WriteConcern.SAFE);
-        setState(AgentState.ACTIVE);
+    public void start() {
+        loadConfiguredBackends();
+        config.publish();
     }
 
-    /**
-     * Removes the agent info published to the world
-     */
-    public void unpublish() {
-        DBCollection configCollection = database.getCollection(Constants.AGENT_CONFIG_COLLECTION_NAME);
-        BasicDBObject toRemove = new BasicDBObject(Constants.AGENT_ID, id.toString());
-        configCollection.remove(toRemove);
-        setState(AgentState.DISCONNECTED);
-    }
-
-    public synchronized AgentState getState() {
-        return currentState;
-    }
-
-    public synchronized void setState(AgentState newState) {
-        if (currentState != newState) {
-            currentState = newState;
-            emitStateChanged();
-        }
-    }
-
-    private void emitStateChanged() {
-        for (AgentStateListener listener : listeners) {
-            listener.stateChanged(this);
-        }
-    }
-
-    public void addStateListener(AgentStateListener listener) {
-        listeners.add(listener);
-    }
-
-    public void removeStateListener(AgentStateListener listener) {
-        listeners.remove(listener);
+    public void stop() {
+        config.unpublish();
+        stopAllBackends();
     }
 
     public UUID getId() {
         return id;
-    }
-
-    public BackendRegistry getBackendRegistry() {
-        return backendRegistry;
     }
 
 }

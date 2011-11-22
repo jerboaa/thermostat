@@ -4,12 +4,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
+import com.redhat.thermostat.agent.config.Configuration;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -32,45 +34,49 @@ public final class Main {
         LoggingUtils.resetAndGetRootLogger();
         Logger logger = LoggingUtils.getLogger(Main.class);
 
-        StartupConfiguration startupConfig = null;
+        Properties props = null;
         try {
-            startupConfig = new StartupConfiguration(new FileReader(Constants.AGENT_CONFIG_FILE_LOCATION));
+            props = new Properties();
+            props.load(new FileReader(Constants.AGENT_PROPERTIES_FILE));
         } catch (FileNotFoundException fnfe) {
-            System.err.println("unable to read config file at " + Constants.AGENT_CONFIG_FILE_LOCATION);
+            System.err.println("Unable to read properties file at " + Constants.AGENT_PROPERTIES_FILE);
+            System.exit(Constants.EXIT_UNABLE_TO_READ_CONFIG);
+        } catch (IOException e) {
+            System.err.println("Unable to read properties file at " + Constants.AGENT_PROPERTIES_FILE);
             System.exit(Constants.EXIT_UNABLE_TO_READ_CONFIG);
         }
 
-        ArgumentParser argumentParser = new ArgumentParser(startupConfig, args);
+        Configuration config = new Configuration(args, props);
 
-        logger.setLevel(argumentParser.getLogLevel());
+        logger.setLevel(config.getLogLevel());
 
         BackendRegistry backendRegistry = BackendRegistry.getInstance();
 
         Mongo mongo = null;
+        DB db = null;
         try {
-            String uri = argumentParser.getConnectionURL();
-            logger.fine("connecting to " + uri);
-            mongo = new Mongo(new MongoURI(uri));
-            DB db = mongo.getDB(Constants.THERMOSTAT_DB);
+            MongoURI mongoURI = config.getMongoURI();
+            mongo = new Mongo(mongoURI);
+            db = mongo.getDB(Constants.THERMOSTAT_DB);
             logger.fine("connected");
-            Agent agent = new Agent(backendRegistry, startupConfig);
-            agent.setDatabase(db);
-            agent.publish();
-            logger.fine("agent published");
-
-            try {
-                System.in.read();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-
-            agent.unpublish();
-            logger.fine("agent unpublished");
         } catch (UnknownHostException uhe) {
             System.err.println("unknown host");
             uhe.printStackTrace();
             System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
         }
 
+        Agent agent = new Agent(backendRegistry, config, db);
+        agent.start();
+        logger.fine("agent published");
+
+        try {
+            System.in.read();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        agent.stop();
+        logger.fine("agent unpublished");
+        
     }
 }
