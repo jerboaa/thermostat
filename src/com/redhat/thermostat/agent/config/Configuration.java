@@ -19,6 +19,7 @@ import com.mongodb.WriteConcern;
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.Defaults;
 import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.LaunchException;
 
 public final class Configuration {
 
@@ -36,7 +37,7 @@ public final class Configuration {
     private boolean published = false;
     private DBCollection dbCollection = null;
 
-    public Configuration(String[] args, Properties props) {
+    public Configuration(String[] args, Properties props) throws LaunchException {
         initFromDefaults();
         initFromProperties(props);
         initFromArguments(args);
@@ -73,7 +74,7 @@ public final class Configuration {
         backends = new Backends(props);
     }
 
-    private void initFromArguments(String[] args) {
+    private void initFromArguments(String[] args) throws LaunchException {
         Arguments arguments;
 
         arguments = new Arguments(args);
@@ -154,7 +155,7 @@ public final class Configuration {
         private final Level logLevel;
         private final boolean logLevelSpecified;
 
-        public Arguments(String[] args) {
+        public Arguments(String[] args) throws LaunchException {
             boolean local = false;
             boolean explicitMode = false;
             Level level = null;
@@ -167,10 +168,14 @@ public final class Configuration {
                             level = Level.parse(args[index].toUpperCase());
                             explicitLogLevel = true;
                         } catch (IllegalArgumentException iae) {
-                            System.err.println("warning: invalid argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL);
+                            String message = "Invalid argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL;
+                            System.err.println("ERROR: " + message);
+                            throw new LaunchException(message, iae);
                         }
                     } else {
-                        System.err.println("warning: missing argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL);
+                        String message = "Missing argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL;
+                        System.err.println("ERROR: " + message);
+                        throw new LaunchException(message);
                     }
                 } else if (args[index].equals(Constants.AGENT_ARGUMENT_LOCAL)) {
                     explicitMode = true;

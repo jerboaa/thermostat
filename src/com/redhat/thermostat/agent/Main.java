@@ -1,6 +1,5 @@
 package com.redhat.thermostat.agent;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -14,6 +13,7 @@ import com.mongodb.MongoURI;
 import com.redhat.thermostat.agent.config.Configuration;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
 
@@ -38,15 +38,17 @@ public final class Main {
         try {
             props = new Properties();
             props.load(new FileReader(Constants.AGENT_PROPERTIES_FILE));
-        } catch (FileNotFoundException fnfe) {
-            System.err.println("Unable to read properties file at " + Constants.AGENT_PROPERTIES_FILE);
-            System.exit(Constants.EXIT_UNABLE_TO_READ_CONFIG);
         } catch (IOException e) {
             System.err.println("Unable to read properties file at " + Constants.AGENT_PROPERTIES_FILE);
-            System.exit(Constants.EXIT_UNABLE_TO_READ_CONFIG);
+            System.exit(Constants.EXIT_UNABLE_TO_READ_PROPERTIES);
         }
 
-        Configuration config = new Configuration(args, props);
+        Configuration config = null;
+        try {
+            config = new Configuration(args, props);
+        } catch (LaunchException e1) {
+            System.exit(Constants.EXIT_CONFIGURATION_ERROR);
+        }
 
         logger.setLevel(config.getLogLevel());
 

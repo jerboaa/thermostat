@@ -1,17 +1,9 @@
 package com.redhat.thermostat.agent;
 
-import java.util.Arrays;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
-import com.mongodb.WriteConcern;
 import com.redhat.thermostat.agent.config.Configuration;
-import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
 
