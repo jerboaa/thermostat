@@ -15,7 +15,6 @@ public class Constants {
     public static final int EXIT_UNABLE_TO_READ_CONFIG = 3;
 
     public static final String THERMOSTAT_DB = "thermostat";
-    public static final String MONGO_URL = "mongodb://127.0.0.1";
 
     public static final String AGENT_CONFIG_COLLECTION_NAME = "agent-configs";
     public static final String AGENT_ID = "agent-id";

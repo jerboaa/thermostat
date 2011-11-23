@@ -55,7 +55,7 @@ public final class Main {
         Mongo mongo = null;
         DB db = null;
         try {
-            MongoURI mongoURI = config.getMongoURI();
+            MongoURI mongoURI = new MongoURI(config.getDatabaseURIAsString());
             mongo = new Mongo(mongoURI);
             db = mongo.getDB(Constants.THERMOSTAT_DB);
             logger.fine("connected");

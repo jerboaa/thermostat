@@ -15,50 +15,86 @@ import java.util.logging.Level;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.Defaults;
 import com.redhat.thermostat.common.Constants;
 
 public final class Configuration {
-    private Arguments arguments;
-    private MongoURI uri;
+
+    private Level logLevel;
+    private boolean localMode;
+    private int mongodPort;
+    private int mongosPort;
+    private String databaseURI;
+    private String completeDatabaseURI;
     private Backends backends;
+
     private String hostname;
+
     private Agent agent;
-    private DBCollection dbCollection = null;
     private boolean published = false;
+    private DBCollection dbCollection = null;
 
     public Configuration(String[] args, Properties props) {
-        arguments = new Arguments(args);
-        if (arguments.getLocalMode()) {
-            uri = new MongoURI(Constants.MONGO_URL + ":" + props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT));
+        initFromDefaults();
+        initFromProperties(props);
+        initFromArguments(args);
+
+        if (localMode) {
+            completeDatabaseURI = databaseURI + ":" + mongodPort;
             hostname = Constants.AGENT_LOCAL_HOSTNAME;
         } else {
-            uri = new MongoURI(props.getProperty(Constants.MONGO_URL) + ":" + props.getProperty(Constants.AGENT_PROPERTY_MONGOS_PORT));
+            completeDatabaseURI = databaseURI + ":" + mongosPort;
             try {
                 InetAddress addr = InetAddress.getLocalHost();
                 hostname = addr.getCanonicalHostName();
             } catch (UnknownHostException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void initFromDefaults() {
+        logLevel = Defaults.LOGGING_LEVEL;
+        localMode = Defaults.LOCAL_MODE;
+        mongodPort = Defaults.MONGOD_PORT;
+        mongosPort = Defaults.MONGOS_PORT;
+        databaseURI = Defaults.DATABASE_URI;
+    }
+
+    private void initFromProperties(Properties props) {
+        if (props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT) != null) {
+            mongodPort = Integer.valueOf(props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT));
+        }
+        if (props.getProperty(Constants.AGENT_PROPERTY_MONGOS_PORT) != null) {
+            mongosPort = Integer.valueOf(props.getProperty(Constants.AGENT_PROPERTY_MONGOS_PORT));
         }
         backends = new Backends(props);
     }
 
+    private void initFromArguments(String[] args) {
+        Arguments arguments;
+
+        arguments = new Arguments(args);
+        if (arguments.isModeSpecified()) {
+            localMode = arguments.getLocalMode();
+        }
+        if (arguments.isLogLevelSpecified()) {
+            logLevel = arguments.getLogLevel();
+        }
+    }
 
     public void setCollection(DBCollection collection) {
         dbCollection = collection;
     }
-    
+
     public Level getLogLevel() {
-        return arguments.getLogLevel();
+        return logLevel;
     }
 
-    public MongoURI getMongoURI() {
-        return uri;
+    public String getDatabaseURIAsString() {
+        return completeDatabaseURI;
     }
 
     public String getHostname() {
@@ -107,34 +143,65 @@ public final class Configuration {
         return null;
     }
 
-    private class Arguments {
+    /**
+     * Exposes the command line arguments in a more object-oriented style.
+     * <p>
+     * Please check that an option was specified (using the various is*Specified() methods) before using its value.
+     */
+    private static class Arguments {
         private final boolean localMode;
+        private final boolean modeSpecified;
         private final Level logLevel;
+        private final boolean logLevelSpecified;
 
         public Arguments(String[] args) {
-            boolean local = Defaults.local;
-            Level level = Defaults.LOGGING_LEVEL;
+            boolean local = false;
+            boolean explicitMode = false;
+            Level level = null;
+            boolean explicitLogLevel = false;
             for (int index = 0; index < args.length; index++) {
                 if (args[index].equals(Constants.AGENT_ARGUMENT_LOGLEVEL)) {
                     index++;
                     if (index < args.length) {
-                        level = Level.parse(args[index].toUpperCase());
+                        try {
+                            level = Level.parse(args[index].toUpperCase());
+                            explicitLogLevel = true;
+                        } catch (IllegalArgumentException iae) {
+                            System.err.println("warning: invalid argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL);
+                        }
                     } else {
-                        
+                        System.err.println("warning: missing argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL);
                     }
                 } else if (args[index].equals(Constants.AGENT_ARGUMENT_LOCAL)) {
+                    explicitMode = true;
                     local = true;
                 }
             }
             logLevel = level;
+            logLevelSpecified = explicitLogLevel;
             localMode = local;
+            modeSpecified = explicitMode;
+        }
+
+        public boolean isModeSpecified() {
+            return modeSpecified;
         }
 
         public boolean getLocalMode() {
+            if (!isModeSpecified()) {
+                throw new IllegalStateException("local mode is not valid");
+            }
             return localMode;
         }
 
+        public boolean isLogLevelSpecified() {
+            return logLevelSpecified;
+        }
+
         public Level getLogLevel() {
+            if (!isLogLevelSpecified()) {
+                throw new IllegalStateException("log level not explicitly specified");
+            }
             return logLevel;
         }
     }
