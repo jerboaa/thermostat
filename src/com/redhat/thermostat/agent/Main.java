@@ -66,6 +66,7 @@ public final class Main {
         }
 
         Agent agent = new Agent(backendRegistry, config, db);
+        config.setAgent(agent);
         agent.start();
         logger.fine("agent published");
 

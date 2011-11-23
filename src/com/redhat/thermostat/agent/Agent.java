@@ -35,9 +35,7 @@ public class Agent {
         this.backendRegistry = registry;
         this.config = config;
         this.database = db;
-        config.setAgent(this);
         config.setCollection(database.getCollection(Constants.AGENT_CONFIG_COLLECTION_NAME));
-        loadConfiguredBackends();
     }
 
     private void loadConfiguredBackends() {
