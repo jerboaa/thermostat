@@ -8,21 +8,20 @@ import java.util.Map.Entry;
  * registered with the {@link BackendRegistry}.
  */
 public abstract class Backend {
-    private String name;
 
-    public Backend(String name, Map<String, String> properties) {
-        this.name = name;
-        for (Entry<String, String> e : properties.entrySet()) {
+    public Backend() {
+    }
+
+    public final void setInitialConfiguration(Map<String, String> configMap) {
+        for (Entry<String, String> e : configMap.entrySet()) {
             setConfigurationValue(e.getKey(), e.getValue());
         }
     }
 
-    public abstract void setConfigurationValue(String name, String value);
+    protected abstract void setConfigurationValue(String name, String value);
 
     /** Returns the name of the {@link Backend} */
-    public String getName() {
-        return name;
-    }
+    public abstract String getName();
 
     /** Returns the description of the {@link Backend} */
     public abstract String getDescription();
@@ -39,16 +38,19 @@ public abstract class Backend {
     public abstract Map<String, String> getConfigurationMap();
 
     /**
-     * Activate the {@link Backend}. The backend should start gathering general
-     * data (not specific to any vm) and start sending it
+     * Activate the {@link Backend}.  Based on the current configuration,
+     * begin pushing data to the Storage layer.  If the {@link Backend} is
+     * already active, this method should have no effect
      *
      * @return true on success, false if there was an error
      */
     public abstract boolean activate();
 
     /**
-     * Deactivate the {@link Backend}. The backend should release resources at
-     * this point.
+     * Deactivate the {@link Backend}. The backend should release any
+     * resources that were obtained as a direct result of a call to
+     * {@link #activate()}.  If the {@link Backend} is not active, this
+     * method should have no effect
      *
      * @return true on success
      */

@@ -11,6 +11,7 @@ import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
@@ -52,7 +53,14 @@ public final class Main {
 
         logger.setLevel(config.getLogLevel());
 
-        BackendRegistry backendRegistry = BackendRegistry.getInstance();
+        BackendRegistry backendRegistry = null;
+        try {
+            backendRegistry = new BackendRegistry(config);
+        } catch (BackendLoadException ble) {
+            System.err.println("Could not get BackendRegistry instance.");
+            ble.printStackTrace();
+            System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
+        }
 
         Mongo mongo = null;
         DB db = null;
@@ -69,7 +77,13 @@ public final class Main {
 
         Agent agent = new Agent(backendRegistry, config, db);
         config.setAgent(agent);
-        agent.start();
+        try {
+            agent.start();
+        } catch (LaunchException le) {
+            System.err.println("Agent could not start, probably because a configured backend could not be activated.");
+            le.printStackTrace();
+            System.exit(Constants.EXIT_BACKEND_START_ERROR);
+        }
         logger.fine("agent published");
 
         try {

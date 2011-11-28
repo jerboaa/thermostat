@@ -4,8 +4,9 @@ package com.redhat.thermostat.common;
  * of program.
  *
  */
-@SuppressWarnings("serial")
 public class LaunchException extends Exception {
+
+    private static final long serialVersionUID = -6757521147558143649L;
 
     public LaunchException(String message) {
         super(message);

@@ -14,6 +14,8 @@ public class Constants {
     public static final int EXIT_UNABLE_TO_CONNECT_TO_DATABASE = 2;
     public static final int EXIT_UNABLE_TO_READ_PROPERTIES = 3;
     public static final int EXIT_CONFIGURATION_ERROR = 4;
+    public static final int EXIT_BACKEND_LOAD_ERROR = 5;
+    public static final int EXIT_BACKEND_START_ERROR = 6;
 
     public static final String THERMOSTAT_DB = "thermostat";
 
@@ -34,4 +36,5 @@ public class Constants {
     public static final String AGENT_PROPERTY_BACKENDS = "backends";
 
     public static final String AGENT_LOCAL_HOSTNAME = "localhost";
+
 }

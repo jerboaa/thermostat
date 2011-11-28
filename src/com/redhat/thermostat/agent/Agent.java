@@ -1,11 +1,16 @@
 package com.redhat.thermostat.agent;
 
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.mongodb.DB;
 import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
  * Represents the Agent running on a host.
@@ -15,6 +20,8 @@ public class Agent {
     private final UUID id;
     private final BackendRegistry backendRegistry;
     private final Configuration config;
+
+    private static final Logger LOGGER = LoggingUtils.getLogger(Agent.class);
 
     private DB database;
 
@@ -30,23 +37,33 @@ public class Agent {
         config.setCollection(database.getCollection(Constants.AGENT_CONFIG_COLLECTION_NAME));
     }
 
-    private void loadConfiguredBackends() {
-        // TODO Once Configuration has relevant methods for getting list of backend names and backend-specific parameters, iterate over that list,
-        // activating as per configuration parameters and adding each to the registry
+    private void startBackends() throws LaunchException {
+        for (Backend be : backendRegistry.getAll()) {
+            if (!be.activate()) {
+                // When encountering issues during startup, we should not attempt to continue activating.
+                stopBackends();
+                throw new LaunchException("Could not activate backend: " + be.getName());
+            }
+        }
     }
 
-    private void stopAllBackends() {
-        // TODO Inverse of the above.  Stop each backend, remove from registry.
+    private void stopBackends() {
+        for (Backend be : backendRegistry.getAll()) {
+            if (!be.deactivate()) {
+                // When encountering issues during shutdown, we should attempt to shut down remaining backends.
+                LOGGER.log(Level.WARNING, "Issue while deactivating backend: " + be.getName());
+            }
+        }
     }
 
-    public void start() {
-        loadConfiguredBackends();
+    public void start() throws LaunchException {
+        startBackends();
         config.publish();
     }
 
     public void stop() {
         config.unpublish();
-        stopAllBackends();
+        stopBackends();
     }
 
     public UUID getId() {
