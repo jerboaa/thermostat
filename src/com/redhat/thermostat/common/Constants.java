@@ -17,16 +17,7 @@ public class Constants {
     public static final int EXIT_BACKEND_LOAD_ERROR = 5;
     public static final int EXIT_BACKEND_START_ERROR = 6;
 
-    public static final String THERMOSTAT_DB = "thermostat";
-
-    public static final String AGENT_CONFIG_COLLECTION_NAME = "agent-configs";
-    public static final String AGENT_ID = "agent-id";
-
     public static final int SAMPLING_INTERVAL_UNKNOWN = -1;
-
-    public static final String AGENT_CONFIG_KEY_HOST = "host";
-    public static final String AGENT_CONFIG_KEY_BACKENDS = "backends";
-    public static final String AGENT_CONFIG_KEY_BACKEND_ACTIVE = "active";
 
     public static final String AGENT_ARGUMENT_LOCAL = "--local";
     public static final String AGENT_ARGUMENT_LOGLEVEL = "--loglevel";
@@ -34,6 +25,7 @@ public class Constants {
     public static final String AGENT_PROPERTY_MONGOS_PORT = "mongos_port";
     public static final String AGENT_PROPERTY_MONGOD_PORT = "mongod_port";
     public static final String AGENT_PROPERTY_BACKENDS = "backends";
+    public static final String AGENT_PROPERTY_BACKEND_ACTIVE = "active";
 
     public static final String AGENT_LOCAL_HOSTNAME = "localhost";
 

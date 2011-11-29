@@ -7,9 +7,6 @@ import java.util.Properties;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import com.mongodb.DB;
-import com.mongodb.Mongo;
-import com.mongodb.MongoURI;
 import com.redhat.thermostat.agent.config.Configuration;
 import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
@@ -25,6 +22,8 @@ public final class Main {
     }
 
     public static void main(String[] args) {
+        long startTimestamp = System.currentTimeMillis();
+
         try {
             LogManager.getLogManager().readConfiguration(
                     StringUtils.toInputStream(Constants.LOGGING_CONFIG));
@@ -46,7 +45,7 @@ public final class Main {
 
         Configuration config = null;
         try {
-            config = new Configuration(args, props);
+            config = new Configuration(startTimestamp, args, props);
         } catch (LaunchException e1) {
             System.exit(Constants.EXIT_CONFIGURATION_ERROR);
         }
@@ -62,12 +61,9 @@ public final class Main {
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        Mongo mongo = null;
-        DB db = null;
+        Storage storage = new MongoStorage();
         try {
-            MongoURI mongoURI = new MongoURI(config.getDatabaseURIAsString());
-            mongo = new Mongo(mongoURI);
-            db = mongo.getDB(Constants.THERMOSTAT_DB);
+            storage.connect(config.getDatabaseURIAsString());
             logger.fine("connected");
         } catch (UnknownHostException uhe) {
             System.err.println("unknown host");
@@ -75,8 +71,9 @@ public final class Main {
             System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
         }
 
-        Agent agent = new Agent(backendRegistry, config, db);
+        Agent agent = new Agent(backendRegistry, config, storage);
         config.setAgent(agent);
+        config.setStorage(storage);
         try {
             agent.start();
         } catch (LaunchException le) {
@@ -94,6 +91,6 @@ public final class Main {
 
         agent.stop();
         logger.fine("agent unpublished");
-        
+
     }
 }

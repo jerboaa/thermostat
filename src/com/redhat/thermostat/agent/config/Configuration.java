@@ -12,23 +12,26 @@ import java.util.Properties;
 import java.util.logging.Level;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
-import com.mongodb.WriteConcern;
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.Defaults;
+import com.redhat.thermostat.agent.Storage;
+import com.redhat.thermostat.agent.StorageConstants;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 
 public final class Configuration {
 
     /* FIXME
-     * 
+     *
      * This class needs some love.  It mixes up startup configuration with runtime configuration,
      * while each is handled in very different ways.  It probably should be split into separate
      * classes, but it makes very little sense to do that before we have a Storage abstraction
      * hiding implementation details (ie Mongo API stuff).
      */
+
+    private final long startTimestamp;
+
     private Properties props;
 
     private Level logLevel;
@@ -41,9 +44,9 @@ public final class Configuration {
     private String hostname;
 
     private Agent agent;
-    private DBCollection dbCollection = null;
+    private Storage storage = null;
 
-    public Configuration(String[] args, Properties props) throws LaunchException {
+    public Configuration(long startTime, String[] args, Properties props) throws LaunchException {
         this.props = props;
 
         initFromDefaults();
@@ -62,6 +65,7 @@ public final class Configuration {
                 e.printStackTrace();
             }
         }
+        startTimestamp = startTime;
     }
 
     private void initFromDefaults() {
@@ -93,9 +97,8 @@ public final class Configuration {
         }
     }
 
-    // TODO hide Mongo stuff behind Storage facade
-    public void setCollection(DBCollection collection) {
-        dbCollection = collection;
+    public void setStorage(Storage storage) {
+        this.storage = storage;
     }
 
     public Level getLogLevel() {
@@ -110,12 +113,12 @@ public final class Configuration {
         return hostname;
     }
 
-    // TODO all of this should be assembled somewhere behind the Storage facade, once it exists.
+    // TODO move this into Storage as well
     public DBObject toDBObject() {
         BasicDBObject result = new BasicDBObject();
         // TODO explicit exception if agent not yet set.
-        result.put(Constants.AGENT_ID, agent.getId().toString());
-        result.put(Constants.AGENT_CONFIG_KEY_HOST, hostname);
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ID, agent.getId().toString());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, startTimestamp);
         // TODO create nested backend config parts
         return result;
     }
@@ -125,15 +128,13 @@ public final class Configuration {
     }
 
     public void publish() {
-        // TODO Hide Mongo stuff behind Storage facade.
-        dbCollection.insert(toDBObject(), WriteConcern.SAFE);
+        storage.addAgentInformation(this);
         // TODO Start configuration-change-detection thread.
     }
 
     public void unpublish() {
         // TODO Stop configuration-change-detection thread.
-        // TODO hide Mongo stuff behind storage facade.
-        dbCollection.remove(new BasicDBObject(Constants.AGENT_ID, agent.getId().toString()), WriteConcern.NORMAL);
+        storage.removeAgentInformation();
     }
 
     public List<String> getStartupBackendClassNames() {
@@ -164,16 +165,13 @@ public final class Configuration {
     }
 
     /**
-     * 
+     *
      * @param backendName
      * @param configurationKey
      * @return
      */
     public String getBackendConfigValue(String backendName, String configurationKey) {
-        // TODO hide Mongo stuff behind Storage facade.
-        DBObject config = dbCollection.findOne(new BasicDBObject(Constants.AGENT_ID, agent.getId().toString()));
-        // TODO get the appropriate value from this agent's configuration.
-        return null;
+        return storage.getBackendConfig(backendName, configurationKey);
     }
 
     /**

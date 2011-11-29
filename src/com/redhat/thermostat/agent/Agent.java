@@ -4,11 +4,9 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.mongodb.DB;
 import com.redhat.thermostat.agent.config.Configuration;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
-import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -17,24 +15,23 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  */
 public class Agent {
 
+    private static final Logger LOGGER = LoggingUtils.getLogger(Agent.class);
+
     private final UUID id;
     private final BackendRegistry backendRegistry;
     private final Configuration config;
 
-    private static final Logger LOGGER = LoggingUtils.getLogger(Agent.class);
+    private Storage storage;
 
-    private DB database;
-
-    public Agent(BackendRegistry backendRegistry, Configuration config, DB db) {
-        this(backendRegistry, UUID.randomUUID(), config, db);
+    public Agent(BackendRegistry backendRegistry, Configuration config, Storage storage) {
+        this(backendRegistry, UUID.randomUUID(), config, storage);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, Configuration config, DB db) {
+    public Agent(BackendRegistry registry, UUID agentId, Configuration config, Storage storage) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
-        this.database = db;
-        config.setCollection(database.getCollection(Constants.AGENT_CONFIG_COLLECTION_NAME));
+        this.storage = storage;
     }
 
     private void startBackends() throws LaunchException {
