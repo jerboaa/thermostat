@@ -74,6 +74,7 @@ public final class Main {
         Agent agent = new Agent(backendRegistry, config, storage);
         config.setAgent(agent);
         config.setStorage(storage);
+        storage.setAgentId(agent.getId());
         try {
             agent.start();
         } catch (LaunchException le) {
