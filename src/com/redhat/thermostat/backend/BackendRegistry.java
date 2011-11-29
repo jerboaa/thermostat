@@ -16,7 +16,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  */
 public final class BackendRegistry {
 
-    private static final Logger LOGGER = LoggingUtils.getLogger(BackendRegistry.class);
+    private static final Logger logger = LoggingUtils.getLogger(BackendRegistry.class);
 
     private final Map<String, Backend> registeredBackends;
 
@@ -24,7 +24,7 @@ public final class BackendRegistry {
         registeredBackends = new HashMap<String, Backend>();
         
         for (String backendClassName : config.getStartupBackendClassNames()) {
-            LOGGER.log(Level.FINE, "Initializing backend: \"" + backendClassName + "\"");
+            logger.log(Level.FINE, "Initializing backend: \"" + backendClassName + "\"");
             Backend backend = null;
             try {
                 Class<? > c = Class.forName(backendClassName);

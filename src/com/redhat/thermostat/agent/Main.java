@@ -4,6 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
@@ -38,15 +39,20 @@ public final class Main {
         try {
             props = new Properties();
             props.load(new FileReader(Constants.AGENT_PROPERTIES_FILE));
-        } catch (IOException e) {
-            System.err.println("Unable to read properties file at " + Constants.AGENT_PROPERTIES_FILE);
+        } catch (IOException ioe) {
+            logger.log(Level.SEVERE,
+                    "Unable to read properties file at " + Constants.AGENT_PROPERTIES_FILE,
+                    ioe);
             System.exit(Constants.EXIT_UNABLE_TO_READ_PROPERTIES);
         }
 
         Configuration config = null;
         try {
             config = new Configuration(startTimestamp, args, props);
-        } catch (LaunchException e1) {
+        } catch (LaunchException le) {
+            logger.log(Level.SEVERE,
+                    "Unable to instantiate startup configuration.",
+                    le);
             System.exit(Constants.EXIT_CONFIGURATION_ERROR);
         }
 
@@ -56,8 +62,7 @@ public final class Main {
         try {
             backendRegistry = new BackendRegistry(config);
         } catch (BackendLoadException ble) {
-            System.err.println("Could not get BackendRegistry instance.");
-            ble.printStackTrace();
+            logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", ble);
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
@@ -66,8 +71,7 @@ public final class Main {
             storage.connect(config.getDatabaseURIAsString());
             logger.fine("connected");
         } catch (UnknownHostException uhe) {
-            System.err.println("unknown host");
-            uhe.printStackTrace();
+            logger.log(Level.SEVERE, "Could not initialize storage layer.", uhe);
             System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
         }
 
@@ -78,11 +82,12 @@ public final class Main {
         try {
             agent.start();
         } catch (LaunchException le) {
-            System.err.println("Agent could not start, probably because a configured backend could not be activated.");
-            le.printStackTrace();
+            logger.log(Level.SEVERE,
+                    "Agent could not start, probably because a configured backend could not be activated.",
+                    le);
             System.exit(Constants.EXIT_BACKEND_START_ERROR);
         }
-        logger.fine("agent published");
+        logger.fine("Agent started.");
 
         try {
             System.in.read();
@@ -91,7 +96,6 @@ public final class Main {
         }
 
         agent.stop();
-        logger.fine("agent unpublished");
-
+        logger.fine("Agent stopped.");
     }
 }

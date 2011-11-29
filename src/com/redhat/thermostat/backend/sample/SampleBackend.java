@@ -18,7 +18,7 @@ public class SampleBackend extends Backend {
     private final String VERSION = "0.1";
     private boolean currentlyActive = false;
 
-    private Logger LOGGER = LoggingUtils.getLogger(SampleBackend.class);
+    private Logger logger = LoggingUtils.getLogger(SampleBackend.class);
 
     public SampleBackend() {
         super();
@@ -26,8 +26,8 @@ public class SampleBackend extends Backend {
 
     @Override
     protected void setConfigurationValue(String name, String value) {
-        LOGGER.log(Level.FINE, "Setting configuration value for backend: " + this.NAME);
-        LOGGER.log(Level.FINE, "key: " + name + "    value: " + value);
+        logger.log(Level.FINE, "Setting configuration value for backend: " + this.NAME);
+        logger.log(Level.FINE, "key: " + name + "    value: " + value);
     }
 
     @Override

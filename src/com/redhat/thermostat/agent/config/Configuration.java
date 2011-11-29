@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
@@ -19,6 +20,7 @@ import com.redhat.thermostat.agent.Storage;
 import com.redhat.thermostat.agent.StorageConstants;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public final class Configuration {
 
@@ -29,6 +31,7 @@ public final class Configuration {
      * classes, but it makes very little sense to do that before we have a Storage abstraction
      * hiding implementation details (ie Mongo API stuff).
      */
+    private static Logger logger = LoggingUtils.getLogger(Configuration.class);
 
     private final long startTimestamp;
 
@@ -62,7 +65,7 @@ public final class Configuration {
                 InetAddress addr = InetAddress.getLocalHost();
                 hostname = addr.getCanonicalHostName();
             } catch (UnknownHostException e) {
-                e.printStackTrace();
+                logger.log(Level.FINE, "Error determining local hostname.");
             }
         }
         startTimestamp = startTime;
@@ -198,14 +201,10 @@ public final class Configuration {
                             level = Level.parse(args[index].toUpperCase());
                             explicitLogLevel = true;
                         } catch (IllegalArgumentException iae) {
-                            String message = "Invalid argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL;
-                            System.err.println("ERROR: " + message);
-                            throw new LaunchException(message, iae);
+                            throw new LaunchException("Invalid argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL, iae);
                         }
                     } else {
-                        String message = "Missing argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL;
-                        System.err.println("ERROR: " + message);
-                        throw new LaunchException(message);
+                        throw new LaunchException("Missing argument for " + Constants.AGENT_ARGUMENT_LOGLEVEL);
                     }
                 } else if (args[index].equals(Constants.AGENT_ARGUMENT_LOCAL)) {
                     explicitMode = true;

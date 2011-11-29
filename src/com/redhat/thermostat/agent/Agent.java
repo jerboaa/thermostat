@@ -15,7 +15,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  */
 public class Agent {
 
-    private static final Logger LOGGER = LoggingUtils.getLogger(Agent.class);
+    private static final Logger logger = LoggingUtils.getLogger(Agent.class);
 
     private final UUID id;
     private final BackendRegistry backendRegistry;
@@ -48,7 +48,7 @@ public class Agent {
         for (Backend be : backendRegistry.getAll()) {
             if (!be.deactivate()) {
                 // When encountering issues during shutdown, we should attempt to shut down remaining backends.
-                LOGGER.log(Level.WARNING, "Issue while deactivating backend: " + be.getName());
+                logger.log(Level.WARNING, "Issue while deactivating backend: " + be.getName());
             }
         }
     }
