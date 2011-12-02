@@ -29,4 +29,10 @@ public class Constants {
 
     public static final String AGENT_LOCAL_HOSTNAME = "localhost";
 
+    public static final long KILOBYTES_TO_BYTES = 1000;
+
+    public static final int HOST_INFO_NETWORK_IPV4_INDEX = 0;
+    public static final int HOST_INFO_NETWORK_IPV6_INDEX = 1;
+
+
 }

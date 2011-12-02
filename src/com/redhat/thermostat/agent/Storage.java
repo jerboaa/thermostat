@@ -4,6 +4,9 @@ import java.net.UnknownHostException;
 import java.util.UUID;
 
 import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.common.CpuStat;
+import com.redhat.thermostat.common.HostInfo;
+import com.redhat.thermostat.common.MemoryStat;
 
 public interface Storage {
     public void connect(String uri) throws UnknownHostException;
@@ -13,6 +16,12 @@ public interface Storage {
     public void addAgentInformation(Configuration config);
 
     public void removeAgentInformation();
+
+    public void addCpuStat(CpuStat stat);
+
+    public void addMemoryStat(MemoryStat stat);
+
+    public void updateHostInfo(HostInfo hostInfo);
 
     /**
      * @return {@code null} if the value is invalid or missing

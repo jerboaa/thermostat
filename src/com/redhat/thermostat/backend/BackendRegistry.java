@@ -7,7 +7,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.Storage;
 import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.backend.system.SystemBackend;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
@@ -20,9 +22,21 @@ public final class BackendRegistry {
 
     private final Map<String, Backend> registeredBackends;
 
-    public BackendRegistry(Configuration config) throws BackendLoadException {
+    public BackendRegistry(Configuration config, Storage storage) throws BackendLoadException {
         registeredBackends = new HashMap<String, Backend>();
-        
+
+        /*
+         * Configure the always-on backends
+         */
+        Backend systemBackend = new SystemBackend();
+        logger.log(Level.FINE, "Initializing backend: \"" + systemBackend.getClass().getCanonicalName() + "\"");
+        systemBackend.setInitialConfiguration(config.getStartupBackendConfigMap(systemBackend.getName()));
+        systemBackend.setStorage(storage);
+        register(systemBackend);
+
+        /*
+         * Configure the dynamic/custom backends
+         */
         for (String backendClassName : config.getStartupBackendClassNames()) {
             logger.log(Level.FINE, "Initializing backend: \"" + backendClassName + "\"");
             Backend backend = null;
@@ -32,6 +46,7 @@ public final class BackendRegistry {
                 Constructor<? extends Backend> backendConstructor = narrowed.getConstructor();
                 backend = backendConstructor.newInstance();
                 backend.setInitialConfiguration(config.getStartupBackendConfigMap(backend.getName()));
+                backend.setStorage(storage);
             } catch (Exception e) {
                 throw new BackendLoadException("Could not instantiate configured backend class: " + backendClassName, e);
             }

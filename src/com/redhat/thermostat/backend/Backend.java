@@ -3,14 +3,15 @@ package com.redhat.thermostat.backend;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.redhat.thermostat.agent.Storage;
+
 /**
  * Represents a monitoring back-end. All the {@link Backend}s should be
  * registered with the {@link BackendRegistry}.
  */
 public abstract class Backend {
 
-    public Backend() {
-    }
+    protected Storage storage;
 
     public final void setInitialConfiguration(Map<String, String> configMap) {
         for (Entry<String, String> e : configMap.entrySet()) {
@@ -19,6 +20,8 @@ public abstract class Backend {
     }
 
     protected abstract void setConfigurationValue(String name, String value);
+
+
 
     /** Returns the name of the {@link Backend} */
     public abstract String getName();
@@ -36,6 +39,10 @@ public abstract class Backend {
      * Returns a map containing the settings of this backend
      */
     public abstract Map<String, String> getConfigurationMap();
+
+    protected void setStorage(Storage storage) {
+        this.storage = storage;
+    }
 
     /**
      * Activate the {@link Backend}.  Based on the current configuration,

@@ -58,14 +58,6 @@ public final class Main {
 
         logger.setLevel(config.getLogLevel());
 
-        BackendRegistry backendRegistry = null;
-        try {
-            backendRegistry = new BackendRegistry(config);
-        } catch (BackendLoadException ble) {
-            logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", ble);
-            System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
-        }
-
         Storage storage = new MongoStorage();
         try {
             storage.connect(config.getDatabaseURIAsString());
@@ -74,10 +66,18 @@ public final class Main {
             logger.log(Level.SEVERE, "Could not initialize storage layer.", uhe);
             System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
         }
+        config.setStorage(storage);
+
+        BackendRegistry backendRegistry = null;
+        try {
+            backendRegistry = new BackendRegistry(config, storage);
+        } catch (BackendLoadException ble) {
+            logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", ble);
+            System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
+        }
 
         Agent agent = new Agent(backendRegistry, config, storage);
         config.setAgent(agent);
-        config.setStorage(storage);
         storage.setAgentId(agent.getId());
         try {
             agent.start();

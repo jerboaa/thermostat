@@ -120,7 +120,7 @@ public final class Configuration {
     public DBObject toDBObject() {
         BasicDBObject result = new BasicDBObject();
         // TODO explicit exception if agent not yet set.
-        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ID, agent.getId().toString());
+        result.put(StorageConstants.KEY_AGENT_ID, agent.getId().toString());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, startTimestamp);
         // TODO create nested backend config parts
         return result;
