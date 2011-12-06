@@ -3,7 +3,7 @@ package com.redhat.thermostat.agent;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
-import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.MemoryStat;
@@ -13,7 +13,7 @@ public interface Storage {
 
     public void setAgentId(UUID id);
 
-    public void addAgentInformation(Configuration config);
+    public void addAgentInformation(StartupConfiguration config);
 
     public void removeAgentInformation();
 

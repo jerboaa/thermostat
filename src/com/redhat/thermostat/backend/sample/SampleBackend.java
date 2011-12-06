@@ -56,6 +56,11 @@ public class SampleBackend extends Backend {
     }
 
     @Override
+    public String getConfigurationValue(String key) {
+        throw new IllegalArgumentException("SampleBackend does not actually accept any configuration.");
+    }
+
+    @Override
     public boolean activate() {
         currentlyActive = true;
         return true;

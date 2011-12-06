@@ -14,7 +14,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
-import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.HostInfo;
@@ -43,7 +43,7 @@ public class MongoStorage implements Storage {
     }
 
     @Override
-    public void addAgentInformation(Configuration config) {
+    public void addAgentInformation(StartupConfiguration config) {
         DBCollection configCollection = db.getCollection(StorageConstants.COLLECTION_AGENT_CONFIG);
         DBObject toInsert = config.toDBObject();
         /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
@@ -144,5 +144,4 @@ public class MongoStorage implements Storage {
         toInsert.put(StorageConstants.KEY_MEMORY_STATS_COMMIT_LIMIT, stat.getCommitLimit());
         memoryStatsCollection.insert(toInsert, WriteConcern.NORMAL);
     }
-
 }

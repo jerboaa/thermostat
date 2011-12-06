@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.Storage;
-import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.system.SystemBackend;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -22,7 +22,7 @@ public final class BackendRegistry {
 
     private final Map<String, Backend> registeredBackends;
 
-    public BackendRegistry(Configuration config, Storage storage) throws BackendLoadException {
+    public BackendRegistry(StartupConfiguration config, Storage storage) throws BackendLoadException {
         registeredBackends = new HashMap<String, Backend>();
 
         /*

@@ -5,16 +5,14 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.logging.Level;
-import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.StringUtils;
 
 public final class Main {
 
@@ -25,13 +23,7 @@ public final class Main {
     public static void main(String[] args) {
         long startTimestamp = System.currentTimeMillis();
 
-        try {
-            LogManager.getLogManager().readConfiguration(
-                    StringUtils.toInputStream(Constants.LOGGING_CONFIG));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        LoggingUtils.setGlobalLogLevel(Level.ALL);
         LoggingUtils.resetAndGetRootLogger();
         Logger logger = LoggingUtils.getLogger(Main.class);
 
@@ -46,9 +38,9 @@ public final class Main {
             System.exit(Constants.EXIT_UNABLE_TO_READ_PROPERTIES);
         }
 
-        Configuration config = null;
+        StartupConfiguration config = null;
         try {
-            config = new Configuration(startTimestamp, args, props);
+            config = new StartupConfiguration(startTimestamp, args, props);
         } catch (LaunchException le) {
             logger.log(Level.SEVERE,
                     "Unable to instantiate startup configuration.",
@@ -57,16 +49,16 @@ public final class Main {
         }
 
         logger.setLevel(config.getLogLevel());
+        LoggingUtils.setGlobalLogLevel(config.getLogLevel());
 
         Storage storage = new MongoStorage();
         try {
             storage.connect(config.getDatabaseURIAsString());
-            logger.fine("connected");
+            logger.fine("Connected to database server.");
         } catch (UnknownHostException uhe) {
             logger.log(Level.SEVERE, "Could not initialize storage layer.", uhe);
             System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
         }
-        config.setStorage(storage);
 
         BackendRegistry backendRegistry = null;
         try {
@@ -80,6 +72,7 @@ public final class Main {
         config.setAgent(agent);
         storage.setAgentId(agent.getId());
         try {
+            logger.fine("Starting agent.");
             agent.start();
         } catch (LaunchException le) {
             logger.log(Level.SEVERE,

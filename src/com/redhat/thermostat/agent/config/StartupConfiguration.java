@@ -16,13 +16,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.Defaults;
-import com.redhat.thermostat.agent.Storage;
 import com.redhat.thermostat.agent.StorageConstants;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public final class Configuration {
+public final class StartupConfiguration {
 
     /* FIXME
      *
@@ -31,7 +30,7 @@ public final class Configuration {
      * classes, but it makes very little sense to do that before we have a Storage abstraction
      * hiding implementation details (ie Mongo API stuff).
      */
-    private static Logger logger = LoggingUtils.getLogger(Configuration.class);
+    private static Logger logger = LoggingUtils.getLogger(StartupConfiguration.class);
 
     private final long startTimestamp;
 
@@ -47,9 +46,8 @@ public final class Configuration {
     private String hostname;
 
     private Agent agent;
-    private Storage storage = null;
 
-    public Configuration(long startTime, String[] args, Properties props) throws LaunchException {
+    public StartupConfiguration(long startTime, String[] args, Properties props) throws LaunchException {
         this.props = props;
 
         initFromDefaults();
@@ -100,10 +98,6 @@ public final class Configuration {
         }
     }
 
-    public void setStorage(Storage storage) {
-        this.storage = storage;
-    }
-
     public Level getLogLevel() {
         return logLevel;
     }
@@ -128,16 +122,6 @@ public final class Configuration {
 
     public void setAgent(Agent agent) {
         this.agent = agent;
-    }
-
-    public void publish() {
-        storage.addAgentInformation(this);
-        // TODO Start configuration-change-detection thread.
-    }
-
-    public void unpublish() {
-        // TODO Stop configuration-change-detection thread.
-        storage.removeAgentInformation();
     }
 
     public List<String> getStartupBackendClassNames() {
@@ -165,16 +149,6 @@ public final class Configuration {
             }
         }
         return configMap;
-    }
-
-    /**
-     *
-     * @param backendName
-     * @param configurationKey
-     * @return
-     */
-    public String getBackendConfigValue(String backendName, String configurationKey) {
-        return storage.getBackendConfig(backendName, configurationKey);
     }
 
     /**

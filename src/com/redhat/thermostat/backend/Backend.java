@@ -11,42 +11,81 @@ import com.redhat.thermostat.agent.Storage;
  */
 public abstract class Backend {
 
+    private boolean initialConfigurationComplete = false;
     protected Storage storage;
 
-    public final void setInitialConfiguration(Map<String, String> configMap) {
-        for (Entry<String, String> e : configMap.entrySet()) {
-            setConfigurationValue(e.getKey(), e.getValue());
-        }
-    }
-
-    protected abstract void setConfigurationValue(String name, String value);
-
-
-
-    /** Returns the name of the {@link Backend} */
-    public abstract String getName();
-
-    /** Returns the description of the {@link Backend} */
-    public abstract String getDescription();
-
-    /** Returns the vendor of the {@link Backend} */
-    public abstract String getVendor();
-
-    /** Returns the version of the {@link Backend} */
-    public abstract String getVersion();
-
     /**
-     * Returns a map containing the settings of this backend
+     * 
+     * @param configMap a map containing the settings that this backend has been configured with.
+     * @throws LaunchException if map contains values that this backend does not accept.
      */
-    public abstract Map<String, String> getConfigurationMap();
+    public final void setInitialConfiguration(Map<String, String> configMap) throws BackendLoadException {
+        if (initialConfigurationComplete) {
+            throw new BackendLoadException("A backend may only receive intitial configuration once.");
+        }
+        for (Entry<String, String> e : configMap.entrySet()) {
+            String key = e.getKey();
+            String value = e.getValue();
+            try {
+                setConfigurationValue(key, value);
+            } catch (IllegalArgumentException iae) {
+                throw new BackendLoadException("Attempt to set invalid backend configuration for " + getName()
+                        + " backend.  Key: " + key + "   Value: " + value, iae);
+            }
+        }
+        initialConfigurationComplete = true;
+    }
 
     protected void setStorage(Storage storage) {
         this.storage = storage;
     }
 
     /**
+     * Set the named configuration to the given value.
+     * @param name
+     * @param value
+     * @throws IllegalArgumentException if either the key does not refer to a valid configuration option
+     *                                  for this backend or the value is not valid for the key
+     */
+    protected abstract void setConfigurationValue(String name, String value);
+
+    /**
+     * @return the name of the {@link Backend}
+     */
+    public abstract String getName();
+
+    /**
+     * @returns the description of the {@link Backend}
+     */
+    public abstract String getDescription();
+
+    /**
+     * @return the vendor of the {@link Backend}
+     */
+    public abstract String getVendor();
+
+    /** 
+     * @return the version of the {@link Backend}
+     */
+    public abstract String getVersion();
+
+    /**
+     * @return a map containing the settings of this backend
+     */
+    public abstract Map<String, String> getConfigurationMap();
+
+    /**
+     * 
+     * @param key The constant key that corresponds to the desired configuration value
+     * @return The current value of the configuration value corresponding to the key given.
+     * @throws IllegalArgumentException if the key does not refer to a valid configuration option for
+     *                                  this backend
+     */
+    public abstract String getConfigurationValue(String key);
+
+    /**
      * Activate the {@link Backend}.  Based on the current configuration,
-     * begin pushing data to the Storage layer.  If the {@link Backend} is
+     * begin pushing data to the {@link Storage} layer.  If the {@link Backend} is
      * already active, this method should have no effect
      *
      * @return true on success, false if there was an error
@@ -64,8 +103,7 @@ public abstract class Backend {
     public abstract boolean deactivate();
 
     /**
-     * Returns a boolean indicating if the backend is currently active on this
-     * host
+     * @return a boolean indicating whether the backend is currently active on this host
      */
     public abstract boolean isActive();
 

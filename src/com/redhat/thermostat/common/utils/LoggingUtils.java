@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LogFormatter;
 
 /**
@@ -16,6 +17,8 @@ import com.redhat.thermostat.common.LogFormatter;
  */
 public final class LoggingUtils {
 
+    private static Logger root;
+
     private LoggingUtils() {
         /* should not be instantiated */
     }
@@ -25,7 +28,7 @@ public final class LoggingUtils {
      * works around http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
      */
     public static Logger resetAndGetRootLogger() {
-        Logger root = Logger.getLogger("");
+        root = Logger.getLogger("");
         Handler[] handlers = root.getHandlers();
         for (Handler handler : handlers) {
             root.removeHandler(handler);
@@ -37,6 +40,18 @@ public final class LoggingUtils {
         root.addHandler(handler);
 
         return root;
+    }
+
+    public static void setGlobalLogLevel(Level level) {
+        try {
+            LogManager.getLogManager().readConfiguration(StringUtils.toInputStream(Constants.LOG_LEVEL_CONFIG + level.toString()));
+        } catch (Exception e) {
+            if (root != null) {
+                root.log(Level.WARNING, "Error setting new log level.", e);
+            } else {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**

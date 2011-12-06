@@ -6,7 +6,7 @@ package com.redhat.thermostat.common;
  */
 public class Constants {
 
-    public static final String LOGGING_CONFIG = "com.redhat.thermostat.level=ALL";
+    public static final String LOG_LEVEL_CONFIG = "com.redhat.thermostat.level=";
 
     public static final String AGENT_PROPERTIES_FILE = "config/agent.properties";
 

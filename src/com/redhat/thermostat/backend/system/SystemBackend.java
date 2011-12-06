@@ -97,4 +97,10 @@ public class SystemBackend extends Backend {
         return (timer != null);
     }
 
+    @Override
+    public String getConfigurationValue(String key) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
 }

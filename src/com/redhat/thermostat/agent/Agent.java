@@ -1,10 +1,10 @@
 package com.redhat.thermostat.agent;
 
 import java.util.UUID;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.config.Configuration;
+import com.redhat.thermostat.agent.config.ConfigurationWatcher;
+import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
@@ -19,15 +19,16 @@ public class Agent {
 
     private final UUID id;
     private final BackendRegistry backendRegistry;
-    private final Configuration config;
+    private final StartupConfiguration config;
 
     private Storage storage;
+    private Thread configWatcherThread = null;
 
-    public Agent(BackendRegistry backendRegistry, Configuration config, Storage storage) {
+    public Agent(BackendRegistry backendRegistry, StartupConfiguration config, Storage storage) {
         this(backendRegistry, UUID.randomUUID(), config, storage);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, Configuration config, Storage storage) {
+    public Agent(BackendRegistry registry, UUID agentId, StartupConfiguration config, Storage storage) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
@@ -36,7 +37,9 @@ public class Agent {
 
     private void startBackends() throws LaunchException {
         for (Backend be : backendRegistry.getAll()) {
+            logger.fine("Attempting to start backend: " + be.getName());
             if (!be.activate()) {
+                logger.warning("Issue while starting backend: " + be.getName());
                 // When encountering issues during startup, we should not attempt to continue activating.
                 stopBackends();
                 throw new LaunchException("Could not activate backend: " + be.getName());
@@ -46,21 +49,41 @@ public class Agent {
 
     private void stopBackends() {
         for (Backend be : backendRegistry.getAll()) {
+            logger.fine("Attempting to stop backend: " +be.getName());
             if (!be.deactivate()) {
                 // When encountering issues during shutdown, we should attempt to shut down remaining backends.
-                logger.log(Level.WARNING, "Issue while deactivating backend: " + be.getName());
+                logger.warning("Issue while deactivating backend: " + be.getName());
             }
         }
     }
 
-    public void start() throws LaunchException {
-        startBackends();
-        config.publish();
+    public synchronized void start() throws LaunchException {
+        if (configWatcherThread == null) {
+            startBackends();
+            storage.addAgentInformation(config);
+            configWatcherThread = new Thread(new ConfigurationWatcher(storage), "Configuration Watcher");
+            configWatcherThread.start();
+        } else {
+            logger.warning("Attempt to start agent when already started.");
+        }
     }
 
-    public void stop() {
-        config.unpublish();
-        stopBackends();
+    public synchronized void stop() {
+        if (configWatcherThread != null) {
+            configWatcherThread.interrupt(); // This thread checks for its own interrupted state and ends if interrupted.
+            while (configWatcherThread.isAlive()) {
+                try {
+                    configWatcherThread.join();
+                } catch (InterruptedException e) {
+                    logger.fine("Interrupted while waiting for ConfigurationWatcher to die.");
+                }
+            }
+            configWatcherThread = null;
+            storage.removeAgentInformation();
+            stopBackends();
+        } else {
+            logger.warning("Attempt to stop agent which is not active");
+        }
     }
 
     public UUID getId() {
