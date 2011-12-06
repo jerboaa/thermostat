@@ -10,7 +10,7 @@ public class ConfigurationWatcher implements Runnable {
     private static final Logger logger = LoggingUtils.getLogger(ConfigurationWatcher.class);
 
     private Storage storage;
-    
+
     public ConfigurationWatcher(Storage storage) {
         this.storage = storage;
     }
@@ -28,7 +28,9 @@ public class ConfigurationWatcher implements Runnable {
     private void checkConfigUpdates() {
         try { // THIS IS ONLY TEMPORARY.  Until we do implement this algorithm, we don't want this thread busy hogging CPU.
             Thread.sleep(2000);
-        } catch (InterruptedException ignore) { }
+        } catch (InterruptedException ignore) {
+            Thread.currentThread().interrupt();
+        }
     }
 
 }
