@@ -1,4 +1,4 @@
-package com.redhat.thermostat.agent;
+package com.redhat.thermostat.agent.storage;
 
 import java.net.UnknownHostException;
 import java.util.List;

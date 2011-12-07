@@ -1,4 +1,4 @@
-package com.redhat.thermostat.agent;
+package com.redhat.thermostat.agent.storage;
 
 public class StorageConstants {
     public static final String THERMOSTAT_DB = "thermostat";

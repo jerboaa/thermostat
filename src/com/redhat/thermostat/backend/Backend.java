@@ -3,7 +3,7 @@ package com.redhat.thermostat.backend;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.redhat.thermostat.agent.Storage;
+import com.redhat.thermostat.agent.storage.Storage;
 
 /**
  * Represents a monitoring back-end. All the {@link Backend}s should be

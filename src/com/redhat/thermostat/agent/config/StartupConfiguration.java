@@ -16,7 +16,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.Defaults;
-import com.redhat.thermostat.agent.StorageConstants;
+import com.redhat.thermostat.agent.storage.StorageConstants;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
