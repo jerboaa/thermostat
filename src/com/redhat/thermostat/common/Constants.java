@@ -21,6 +21,7 @@ public class Constants {
 
     public static final String AGENT_ARGUMENT_LOCAL = "--local";
     public static final String AGENT_ARGUMENT_LOGLEVEL = "--loglevel";
+    public static final String AGENT_ARGUMENT_DEVEL = "--devel";
 
     public static final String AGENT_PROPERTY_MONGOS_PORT = "mongos_port";
     public static final String AGENT_PROPERTY_MONGOD_PORT = "mongod_port";

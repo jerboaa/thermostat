@@ -3,6 +3,9 @@ package com.redhat.thermostat.agent;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,8 +26,13 @@ public final class Main {
     public static void main(String[] args) {
         long startTimestamp = System.currentTimeMillis();
 
+        List<String> argsAsList = new ArrayList<String>(Arrays.asList(args));
+        while (argsAsList.contains(Constants.AGENT_ARGUMENT_DEVEL)) {
+            argsAsList.remove(Constants.AGENT_ARGUMENT_DEVEL);
+            LoggingUtils.useDevelConsole();
+        }
+
         LoggingUtils.setGlobalLogLevel(Level.ALL);
-        LoggingUtils.resetAndGetRootLogger();
         Logger logger = LoggingUtils.getLogger(Main.class);
 
         Properties props = null;
@@ -40,7 +48,7 @@ public final class Main {
 
         StartupConfiguration config = null;
         try {
-            config = new StartupConfiguration(startTimestamp, args, props);
+            config = new StartupConfiguration(startTimestamp, argsAsList.toArray(new String[0]), props);
         } catch (LaunchException le) {
             logger.log(Level.SEVERE,
                     "Unable to instantiate startup configuration.",
@@ -48,13 +56,11 @@ public final class Main {
             System.exit(Constants.EXIT_CONFIGURATION_ERROR);
         }
 
-        logger.setLevel(config.getLogLevel());
         LoggingUtils.setGlobalLogLevel(config.getLogLevel());
-
         Storage storage = new MongoStorage();
         try {
             storage.connect(config.getDatabaseURIAsString());
-            logger.fine("Connected to database server.");
+            logger.fine("Storage configured with database URI.");
         } catch (UnknownHostException uhe) {
             logger.log(Level.SEVERE, "Could not initialize storage layer.", uhe);
             System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);

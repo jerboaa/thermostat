@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LogFormatter;
 
 /**
@@ -17,40 +16,34 @@ import com.redhat.thermostat.common.LogFormatter;
  */
 public final class LoggingUtils {
 
-    private static Logger root;
+    private static Logger root = null;
 
     private LoggingUtils() {
         /* should not be instantiated */
     }
 
     /**
-     * Should be called once, very-early during program initialization. This
-     * works around http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
+     * Pretty much every one of the utility methods in this static class should call this method before doing anything else.
      */
-    public static Logger resetAndGetRootLogger() {
-        root = Logger.getLogger("");
-        Handler[] handlers = root.getHandlers();
-        for (Handler handler : handlers) {
-            root.removeHandler(handler);
+    private static void ensureRootLogger() {
+        if (root == null) {
+            root = Logger.getLogger("com.redhat.thermostat");
+            root.setUseParentHandlers(false);
+            for (Handler handler : root.getHandlers()) {
+                handler.setFormatter(new LogFormatter());
+            }
         }
-
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        handler.setLevel(Level.ALL);
-        root.addHandler(handler);
-
-        return root;
     }
 
+    /**
+     * This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
+     * Must be called when changing LogManager configuration (such as via readConfiguration())
+     */
     public static void setGlobalLogLevel(Level level) {
-        try {
-            LogManager.getLogManager().readConfiguration(StringUtils.toInputStream(Constants.LOG_LEVEL_CONFIG + level.toString()));
-        } catch (Exception e) {
-            if (root != null) {
-                root.log(Level.WARNING, "Error setting new log level.", e);
-            } else {
-                e.printStackTrace();
-            }
+        ensureRootLogger();
+        root.setLevel(level);
+        for (Handler handler : root.getHandlers()) {
+            handler.setLevel(level);
         }
     }
 
@@ -58,7 +51,20 @@ public final class LoggingUtils {
      * Returns an appropriate logger to be used by class klass.
      */
     public static Logger getLogger(Class<?> klass) {
-        return Logger.getLogger(klass.getPackage().getName());
+        ensureRootLogger();
+        Logger logger = Logger.getLogger(klass.getPackage().getName());
+        logger.setLevel(null); // Will inherit from root logger
+        return logger;
+    }
+
+    /**
+     * 
+     */
+    public static void useDevelConsole() {
+        ensureRootLogger();
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setFormatter(new LogFormatter());;
+        root.addHandler(handler);
     }
 
 }
