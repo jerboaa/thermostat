@@ -1,10 +1,15 @@
 package com.redhat.thermostat.backend.system;
 
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import sun.jvmstat.monitor.HostIdentifier;
+import sun.jvmstat.monitor.MonitorException;
+import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.CpuStat;
@@ -25,6 +30,11 @@ public class SystemBackend extends Backend {
     private long procCheckInterval = 1000;
 
     private Timer timer = null;
+
+    private HostIdentifier hostId = null;
+    private MonitoredHost host = null;
+    private JvmStatHostListener hostListener = new JvmStatHostListener();
+
 
     @Override
     protected void setConfigurationValue(String name, String value) {
@@ -77,6 +87,17 @@ public class SystemBackend extends Backend {
             }
         }, 0, procCheckInterval);
 
+        try {
+            hostId = new HostIdentifier((String) null);
+            host = MonitoredHost.getMonitoredHost(hostId);
+            hostListener.setStorage(storage);
+            host.addHostListener(hostListener);
+        } catch (MonitorException me) {
+            logger.log(Level.WARNING , "problems with connecting jvmstat to local machien" , me);
+        } catch (URISyntaxException use) {
+            logger.log(Level.WARNING , "problems with connecting jvmstat to local machien" , use);
+        }
+
         return true;
     }
 
@@ -88,6 +109,14 @@ public class SystemBackend extends Backend {
 
         timer.cancel();
         timer = null;
+
+        try {
+            host.removeHostListener(hostListener);
+        } catch (MonitorException me) {
+            logger.log(Level.INFO, "something went wront in jvmstat's listeningto this host");
+        }
+        host = null;
+        hostId = null;
 
         return true;
     }
