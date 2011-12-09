@@ -7,6 +7,13 @@ import sun.jvmstat.monitor.MonitoredVmUtil;
 
 /**
  * A helper class to provide type-safe access to commonly used jvmstat monitors
+ * <p>
+ * Implementation details: For local vms, jvmstat uses a ByteBuffer
+ * corresponding to mmap()ed hsperfdata file. The hsperfdata file is updated
+ * asynchronously by the vm that created the file. The polling that jvmstat api
+ * provides is merely an abstraction over this (possibly always up-to-date)
+ * ByteBuffer. So the data this class extracts is as current as possible, and
+ * does not correspond to when the jvmstat update events fired.
  */
 public class JvmStatDataExtractor {
 

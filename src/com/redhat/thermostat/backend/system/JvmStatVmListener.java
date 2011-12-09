@@ -52,10 +52,10 @@ public class JvmStatVmListener implements VmListener {
 
     private void recordGcStat(MonitoredVm vm) {
         try {
-            long timestamp = System.currentTimeMillis();
             JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
             long collectors = extractor.getTotalCollectors();
             for (int i = 0; i < collectors; i++) {
+                long timestamp = System.currentTimeMillis();
                 VmGcStat stat = new VmGcStat(vmId, timestamp,
                         extractor.getCollectorName(i),
                         extractor.getCollectorInvocations(i),

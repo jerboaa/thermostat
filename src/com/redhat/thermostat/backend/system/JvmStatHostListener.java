@@ -46,7 +46,6 @@ public class JvmStatHostListener implements HostListener {
         if (storage == null) {
             throw new NullPointerException("null");
         }
-        long currentTime = System.currentTimeMillis();
 
         MonitoredHost host = event.getMonitoredHost();
 
@@ -55,7 +54,7 @@ public class JvmStatHostListener implements HostListener {
             Integer newVm = newActive.next();
             try {
                 logger.fine("New vm: " + newVm);
-                sendNewVM(currentTime, newVm, host);
+                sendNewVM(newVm, host);
             } catch (MonitorException e) {
                 logger.log(Level.WARNING, "error getting info for new vm" + newVm, e);
             } catch (URISyntaxException e) {
@@ -68,7 +67,7 @@ public class JvmStatHostListener implements HostListener {
             Integer stoppedVm = newStopped.next();
             try {
                 logger.fine("stopped vm: " + stoppedVm);
-                sendStoppedVM(currentTime, stoppedVm, host);
+                sendStoppedVM(stoppedVm, host);
             } catch (URISyntaxException e) {
                 logger.log(Level.WARNING, "error getting info for stopped vm" + stoppedVm, e);
             } catch (MonitorException e) {
@@ -77,20 +76,20 @@ public class JvmStatHostListener implements HostListener {
         }
     }
 
-    private void sendNewVM(long timestamp, Integer vmId, MonitoredHost host)
+    private void sendNewVM(Integer vmId, MonitoredHost host)
             throws MonitorException, URISyntaxException {
         MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(
                 new VmIdentifier(vmId.toString())));
         if (vm != null) {
-
             VmInfo info = null;
             try {
+                long startTime = System.currentTimeMillis();
                 long stopTime = Long.MIN_VALUE;
                 JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
                 Map<String, String> properties = new HashMap<String, String>();
                 Map<String, String> environment = new HashMap<String, String>();
                 List<String> loadedNativeLibraries = new ArrayList<String>();
-                info = new VmInfo(vmId, timestamp, stopTime,
+                info = new VmInfo(vmId, startTime, stopTime,
                         extractor.getJavaVersion(), extractor.getJavaHome(), extractor.getCommandLine(),
                         extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
                         properties, environment, loadedNativeLibraries);
@@ -106,7 +105,7 @@ public class JvmStatHostListener implements HostListener {
         }
     }
 
-    private void sendStoppedVM(long timestamp, Integer vmId, MonitoredHost host)
+    private void sendStoppedVM(Integer vmId, MonitoredHost host)
             throws URISyntaxException, MonitorException {
         VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(
                 new VmIdentifier(vmId.toString()));
