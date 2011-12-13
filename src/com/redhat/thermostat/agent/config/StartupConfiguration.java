@@ -23,19 +23,11 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public final class StartupConfiguration {
 
-    /* FIXME
-     *
-     * This class needs some love.  It mixes up startup configuration with runtime configuration,
-     * while each is handled in very different ways.  It probably should be split into separate
-     * classes, but it makes very little sense to do that before we have a Storage abstraction
-     * hiding implementation details (ie Mongo API stuff).
-     */
     private static Logger logger = LoggingUtils.getLogger(StartupConfiguration.class);
 
     private final long startTimestamp;
 
     private Properties props;
-
     private Level logLevel;
     private boolean localMode;
     private int mongodPort;
@@ -113,8 +105,6 @@ public final class StartupConfiguration {
     // TODO move this into Storage as well
     public DBObject toDBObject() {
         BasicDBObject result = new BasicDBObject();
-        // TODO explicit exception if agent not yet set.
-        result.put(StorageConstants.KEY_AGENT_ID, agent.getId().toString());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, startTimestamp);
         // TODO create nested backend config parts
         return result;

@@ -20,8 +20,12 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.StringUtils;
 
 public class HostInfoBuilder {
+
+    private static final String MEMINFO_FILE = "/proc/meminfo";
+    private static final String CPUINFO_FILE = "/proc/cpuinfo";
 
     private static final Logger logger = LoggingUtils.getLogger(HostInfoBuilder.class);
 
@@ -42,9 +46,7 @@ public class HostInfoBuilder {
         String osKernel = System.getProperty("os.name") + " " + System.getProperty("os.version");
         logger.log(Level.FINEST, "osKernel: " + osKernel);
 
-        // FIXME replace with a real implementation. This is the number of
-        // processors available to the _JVM_
-        int cpuCount = Runtime.getRuntime().availableProcessors();
+        int cpuCount = getProcessorCountFromProc();
         logger.log(Level.FINEST, "cpuCount: " + cpuCount);
 
         long totalMemory = -1;
@@ -83,6 +85,32 @@ public class HostInfoBuilder {
 
         return new HostInfo(hostname, osName, osKernel, cpuCount, totalMemory, networkInfo);
 
+    }
+
+    private int getProcessorCountFromProc() {
+        final String KEY_PROCESSOR_ID = "processor";
+        int totalCpus = 0;
+        BufferedReader reader = null;
+        try {
+            reader = new BufferedReader(new FileReader(CPUINFO_FILE));
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith(KEY_PROCESSOR_ID)) {
+                    totalCpus++;
+                }
+            }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "unable to read " + CPUINFO_FILE);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "unable to close " + CPUINFO_FILE);
+                }
+            }
+        }
+        return totalCpus;
     }
 
     /**

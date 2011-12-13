@@ -17,4 +17,8 @@ public class StringUtils {
             throw new IllegalStateException("UTF-8 not supported");
         }
     }
+
+    public static String quote(String toQuote) {
+        return new String("\"" + toQuote + "\"");
+    }
 }
