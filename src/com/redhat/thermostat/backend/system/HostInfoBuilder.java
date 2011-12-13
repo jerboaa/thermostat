@@ -50,8 +50,9 @@ public class HostInfoBuilder {
         logger.log(Level.FINEST, "cpuCount: " + cpuCount);
 
         long totalMemory = -1;
+        BufferedReader reader = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader("/proc/meminfo"));
+            reader = new BufferedReader(new FileReader(MEMINFO_FILE));
             String[] memTotalParts = reader.readLine().split(" +");
             long data = Long.valueOf(memTotalParts[1]);
             String units = memTotalParts[2];
@@ -59,7 +60,15 @@ public class HostInfoBuilder {
                 totalMemory = data * Constants.KILOBYTES_TO_BYTES;
             }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read /proc/meminfo");
+            logger.log(Level.WARNING, "unable to read " + MEMINFO_FILE);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "unable to close " + MEMINFO_FILE);
+                }
+            }
         }
         logger.log(Level.FINEST, "totalMemory: " + totalMemory + " bytes");
 

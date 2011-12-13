@@ -23,9 +23,9 @@ public class CpuStatBuilder {
         double load5 = CpuStat.INVALID_LOAD;
         double load10 = CpuStat.INVALID_LOAD;
         double load15 = CpuStat.INVALID_LOAD;
-
+        BufferedReader reader = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(LOAD_FILE));
+            reader = new BufferedReader(new FileReader(LOAD_FILE));
             String[] loadAvgParts = reader.readLine().split(" +");
             if (loadAvgParts.length >= 3) {
                 load5 = Double.valueOf(loadAvgParts[0]);
@@ -36,6 +36,14 @@ public class CpuStatBuilder {
             logger.log(Level.WARNING, "error extracting load from " + LOAD_FILE);
         } catch (IOException e) {
             logger.log(Level.WARNING, "unable to read " + LOAD_FILE);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "unable to close " + LOAD_FILE);
+                }
+            }
         }
 
         return new CpuStat(timestamp, load5, load10, load15);

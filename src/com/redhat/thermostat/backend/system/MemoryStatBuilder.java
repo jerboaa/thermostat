@@ -40,8 +40,9 @@ public class MemoryStatBuilder {
         long buffers = UNAVAILABLE;
         long cached = UNAVAILABLE;
         long commitLimit = UNAVAILABLE;
+        BufferedReader reader = null;
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(MEMINFO_FILE));
+            reader = new BufferedReader(new FileReader(MEMINFO_FILE));
             String line = null;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(":");
@@ -68,6 +69,15 @@ public class MemoryStatBuilder {
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "unable to read " + MEMINFO_FILE);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "unable to close " + MEMINFO_FILE);
+
+                }
+            }
         }
         return new MemoryStat(timestamp, total, free, buffers, cached, swapTotal, swapFree, commitLimit);
     }

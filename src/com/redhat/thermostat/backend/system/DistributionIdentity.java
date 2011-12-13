@@ -25,10 +25,11 @@ public class DistributionIdentity {
     public DistributionIdentity() {
         String tempName = "Unknown Distribution";
         String tempVersion = "Unknown";
+        BufferedReader reader = null;
         try {
             Process lsbProc = Runtime.getRuntime().exec(new String[] { "lsb_release", "-a" });
             InputStream progOutput = lsbProc.getInputStream();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(progOutput));
+            reader = new BufferedReader(new InputStreamReader(progOutput));
             String line;
             while ((line = reader.readLine()) != null) {
                 int sepLocation = line.indexOf(":");
@@ -43,6 +44,14 @@ public class DistributionIdentity {
             }
         } catch (IOException e) {
             logger.log(Level.WARNING, "unable to identify distribution");
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "unable to close a child's output stream");
+                }
+            }
         }
         name = tempName;
         version = tempVersion;
