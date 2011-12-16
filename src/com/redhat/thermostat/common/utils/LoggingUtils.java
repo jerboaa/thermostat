@@ -17,6 +17,7 @@ import com.redhat.thermostat.common.LogFormatter;
 public final class LoggingUtils {
 
     private static Logger root = null;
+    private static final String ROOTNAME = "com.redhat.thermostat";
 
     private LoggingUtils() {
         /* should not be instantiated */
@@ -27,24 +28,24 @@ public final class LoggingUtils {
      */
     private static void ensureRootLogger() {
         if (root == null) {
-            root = Logger.getLogger("com.redhat.thermostat");
+            root = Logger.getLogger(ROOTNAME);
             root.setUseParentHandlers(false);
             for (Handler handler : root.getHandlers()) {
                 handler.setFormatter(new LogFormatter());
+                // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
+                handler.setLevel(Level.ALL);
             }
         }
     }
 
     /**
-     * This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
-     * Must be called when changing LogManager configuration (such as via readConfiguration())
+     * Set the log level for the logger at the root of the "com.redhat.thermostat" namespace
+     * 
+     * @param level the minimum level at which logging statements should appear in the logs
      */
     public static void setGlobalLogLevel(Level level) {
         ensureRootLogger();
         root.setLevel(level);
-        for (Handler handler : root.getHandlers()) {
-            handler.setLevel(level);
-        }
     }
 
     /**
@@ -64,6 +65,8 @@ public final class LoggingUtils {
         ensureRootLogger();
         ConsoleHandler handler = new ConsoleHandler();
         handler.setFormatter(new LogFormatter());
+        // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
+        handler.setLevel(Level.ALL);
         root.addHandler(handler);
     }
 
