@@ -58,12 +58,12 @@ public final class LoggingUtils {
     }
 
     /**
-     * 
+     * Ensures log messages are written to the console as well
      */
     public static void useDevelConsole() {
         ensureRootLogger();
         ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());;
+        handler.setFormatter(new LogFormatter());
         root.addHandler(handler);
     }
 
