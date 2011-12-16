@@ -12,6 +12,7 @@ public class VmInfo {
     private String javaVersion = "unknown";
     private String javaHome = "unknown";
     private String javaCommandLine = "unknown";
+    private String mainClass = "unknown";
     private String vmName = "unknown";
     private String vmInfo = "unknown";
     private String vmVersion = "unknown";
@@ -25,7 +26,8 @@ public class VmInfo {
     }
 
     public VmInfo(int vmPid, long startTime, long stopTime,
-            String javaVersion, String javaHome, String commandLine,
+            String javaVersion, String javaHome,
+            String mainClass, String commandLine,
             String vmName, String vmInfo, String vmVersion, String vmArguments,
             Map<String, String> properties, Map<String, String> environment, List<String> loadedNativeLibraries) {
         this.vmPid = vmPid;
@@ -33,6 +35,7 @@ public class VmInfo {
         this.stopTime = stopTime;
         this.javaVersion = javaVersion;
         this.javaHome = javaHome;
+        this.mainClass = mainClass;
         this.javaCommandLine = commandLine;
         this.vmName = vmName;
         this.vmInfo = vmInfo;
@@ -65,6 +68,10 @@ public class VmInfo {
 
     public String getJavaHome() {
         return javaHome;
+    }
+
+    public String getMainClass() {
+        return mainClass;
     }
 
     public String getJavaCommandLine() {

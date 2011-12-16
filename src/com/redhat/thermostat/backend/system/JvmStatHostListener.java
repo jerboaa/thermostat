@@ -90,7 +90,8 @@ public class JvmStatHostListener implements HostListener {
                 Map<String, String> environment = new HashMap<String, String>();
                 List<String> loadedNativeLibraries = new ArrayList<String>();
                 info = new VmInfo(vmId, startTime, stopTime,
-                        extractor.getJavaVersion(), extractor.getJavaHome(), extractor.getCommandLine(),
+                        extractor.getJavaVersion(), extractor.getJavaHome(),
+                        extractor.getMainClass(), extractor.getCommandLine(),
                         extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
                         properties, environment, loadedNativeLibraries);
                 // FIXME storage.addVmInfo(info);

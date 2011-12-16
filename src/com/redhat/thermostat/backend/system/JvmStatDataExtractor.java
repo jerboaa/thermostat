@@ -35,6 +35,10 @@ public class JvmStatDataExtractor {
         return MonitoredVmUtil.commandLine(vm);
     }
 
+    public String getMainClass() throws MonitorException {
+        return MonitoredVmUtil.mainClass(vm, true);
+    }
+
     public String getJavaVersion() throws MonitorException {
         return (String) vm.findByName("java.property.java.version").getValue();
     }
