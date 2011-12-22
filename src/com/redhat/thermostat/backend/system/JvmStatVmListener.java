@@ -1,6 +1,7 @@
 package com.redhat.thermostat.backend.system;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,7 +12,7 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.agent.storage.Storage;
+import com.redhat.thermostat.agent.storage.Category;
 import com.redhat.thermostat.common.VmGcStat;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
@@ -23,11 +24,17 @@ public class JvmStatVmListener implements VmListener {
     private static final Logger logger = LoggingUtils.getLogger(JvmStatVmListener.class);
 
     private final int vmId;
-    private final Storage storage;
+    private final SystemBackend backend;
 
-    public JvmStatVmListener(Storage storage, int vmId) {
-        this.storage = storage;
+    public JvmStatVmListener(SystemBackend backend, int vmId) {
+        this.backend = backend;
         this.vmId = vmId;
+    }
+
+    public static Collection<Category> getCategories() {
+        ArrayList<Category> categories = new ArrayList<Category>();
+        // TODO add appropriate categories
+        return categories;
     }
 
     @Override

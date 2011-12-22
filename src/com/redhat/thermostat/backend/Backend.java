@@ -1,8 +1,11 @@
 package com.redhat.thermostat.backend;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.redhat.thermostat.agent.storage.Category;
+import com.redhat.thermostat.agent.storage.Chunk;
 import com.redhat.thermostat.agent.storage.Storage;
 
 /**
@@ -12,7 +15,7 @@ import com.redhat.thermostat.agent.storage.Storage;
 public abstract class Backend {
 
     private boolean initialConfigurationComplete = false;
-    protected Storage storage;
+    private Storage storage;
 
     /**
      * 
@@ -36,9 +39,14 @@ public abstract class Backend {
         initialConfigurationComplete = true;
     }
 
-    protected void setStorage(Storage storage) {
+    public final void setStorage(Storage storage) {
         this.storage = storage;
+        for (Iterator<Category> iter = getCategoryIterator(); iter.hasNext();) {
+            storage.registerCategory(iter.next(), this);
+        }
     }
+
+    protected abstract Iterator<Category> getCategoryIterator();
 
     /**
      * Set the named configuration to the given value.
@@ -107,4 +115,7 @@ public abstract class Backend {
      */
     public abstract boolean isActive();
 
+    public final void store(Chunk chunk) {
+        storage.putChunk(chunk, this);
+    }
 }

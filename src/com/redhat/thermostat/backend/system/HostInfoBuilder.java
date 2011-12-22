@@ -3,24 +3,14 @@ package com.redhat.thermostat.backend.system;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.Inet4Address;
-import java.net.Inet6Address;
 import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.StringUtils;
 
 public class HostInfoBuilder {
 
@@ -29,7 +19,7 @@ public class HostInfoBuilder {
 
     private static final Logger logger = LoggingUtils.getLogger(HostInfoBuilder.class);
 
-    public HostInfo build() {
+    public static HostInfo build() {
         InetAddress localAddr;
         String hostname;
         try {
@@ -72,31 +62,11 @@ public class HostInfoBuilder {
         }
         logger.log(Level.FINEST, "totalMemory: " + totalMemory + " bytes");
 
-        HashMap<String, List<String>> networkInfo = new HashMap<String, List<String>>();
-        try {
-            Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
-            for (NetworkInterface iface : Collections.list(ifaces)) {
-                List<String> ipAddresses = new ArrayList<String>(2);
-                ipAddresses.add(Constants.HOST_INFO_NETWORK_IPV4_INDEX, null);
-                ipAddresses.add(Constants.HOST_INFO_NETWORK_IPV6_INDEX, null);
-                for (InetAddress addr : Collections.list(iface.getInetAddresses())) {
-                    if (addr instanceof Inet4Address) {
-                        ipAddresses.set(Constants.HOST_INFO_NETWORK_IPV4_INDEX, fixAddr(addr.toString()));
-                    } else if (addr instanceof Inet6Address) {
-                        ipAddresses.set(Constants.HOST_INFO_NETWORK_IPV6_INDEX, fixAddr(addr.toString()));
-                    }
-                }
-                networkInfo.put(iface.getName(), ipAddresses);
-            }
-        } catch (SocketException e) {
-            logger.log(Level.WARNING, "error enumerating network interfaces");
-        }
-
-        return new HostInfo(hostname, osName, osKernel, cpuCount, totalMemory, networkInfo);
+        return new HostInfo(hostname, osName, osKernel, cpuCount, totalMemory);
 
     }
 
-    private int getProcessorCountFromProc() {
+    private static int getProcessorCountFromProc() {
         final String KEY_PROCESSOR_ID = "processor";
         int totalCpus = 0;
         BufferedReader reader = null;
@@ -120,23 +90,5 @@ public class HostInfoBuilder {
             }
         }
         return totalCpus;
-    }
-
-    /**
-     * Removes the "hostname/" and the "%scope_id" parts from the
-     * {@link InetAddress#toString()} output.
-     */
-    private String fixAddr(String addr) {
-        int slashPos = addr.indexOf("/");
-        if (slashPos == -1) {
-            return addr;
-        }
-        String fixed = addr.substring(slashPos + 1);
-        int percentPos = fixed.indexOf("%");
-        if (percentPos == -1) {
-            return fixed;
-        }
-        fixed = fixed.substring(0, percentPos);
-        return fixed;
     }
 }

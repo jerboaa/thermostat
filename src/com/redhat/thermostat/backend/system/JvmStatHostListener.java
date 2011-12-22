@@ -2,6 +2,7 @@ package com.redhat.thermostat.backend.system;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,7 +18,7 @@ import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
-import com.redhat.thermostat.agent.storage.Storage;
+import com.redhat.thermostat.agent.storage.Category;
 import com.redhat.thermostat.common.VmInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -25,15 +26,18 @@ public class JvmStatHostListener implements HostListener {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
-    private Storage storage;
+    private SystemBackend backend;
 
     private Map<Integer, JvmStatVmListener> listenerMap = new HashMap<Integer, JvmStatVmListener>();
 
-    public void setStorage(Storage storage) {
-        if (storage == null) {
-            throw new NullPointerException();
-        }
-        this.storage = storage;
+    public static Collection<Category> getCategories() {
+        ArrayList<Category> categories = new ArrayList<Category>();
+        // TODO add appropriate categories
+        return categories;
+    }
+
+    public void setBackend(SystemBackend backend) {
+        this.backend = backend;
     }
 
     @Override
@@ -43,10 +47,6 @@ public class JvmStatHostListener implements HostListener {
 
     @Override
     public void vmStatusChanged(VmStatusChangeEvent event) {
-        if (storage == null) {
-            throw new NullPointerException("null");
-        }
-
         MonitoredHost host = event.getMonitoredHost();
 
         Iterator<Integer> newActive = event.getStarted().iterator();
@@ -100,7 +100,7 @@ public class JvmStatHostListener implements HostListener {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
             }
 
-            JvmStatVmListener listener = new JvmStatVmListener(storage, vmId);
+            JvmStatVmListener listener = new JvmStatVmListener(backend, vmId);
             listenerMap.put(vmId, listener);
             vm.addVmListener(listener);
         }

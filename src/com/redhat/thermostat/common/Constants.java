@@ -6,8 +6,6 @@ package com.redhat.thermostat.common;
  */
 public class Constants {
 
-    public static final String LOG_LEVEL_CONFIG = "com.redhat.thermostat.level=";
-
     public static final String AGENT_PROPERTIES_FILE = "config/agent.properties";
 
     public static final int EXIT_UNKNOWN_ERROR = 1;
