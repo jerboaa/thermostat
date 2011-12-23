@@ -49,6 +49,7 @@ public class SystemBackend extends Backend {
     private Key osNameKey = new Key("os_name", false);
     private Key osKernelKey = new Key("os_kernel", false);
     private Key cpuCountKey = new Key("cpu_num", false);
+    private Key cpuModelKey = new Key("cpu_model", false);
     private Key hostMemoryTotalKey = new Key("memory_total", false);
 
     private Category networkInfoCategory = new Category("network-info");
@@ -87,7 +88,7 @@ public class SystemBackend extends Backend {
         networkInfoCategory.addKey(ip6AddrKey);
         networkInfoCategory.lock();
         categories.add(networkInfoCategory);
-        
+
         // cpu-stats category.
         cpuStatCategory.addKey(Key.TIMESTAMP);
         cpuStatCategory.addKey(cpu5LoadKey);
@@ -228,6 +229,7 @@ public class SystemBackend extends Backend {
         chunk.put(osNameKey, hostInfo.getOsName());
         chunk.put(osKernelKey, hostInfo.getOsKernel());
         chunk.put(cpuCountKey, Integer.toString(hostInfo.getCpuCount()));
+        chunk.put(cpuModelKey, hostInfo.getCpuModel());
         chunk.put(hostMemoryTotalKey, Long.toString(hostInfo.getTotalMemory()));
         return chunk;
     }

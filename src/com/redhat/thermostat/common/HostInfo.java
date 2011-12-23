@@ -5,13 +5,15 @@ public class HostInfo {
     private final String hostname;
     private final String osName;
     private final String osKernel;
+    private final String cpuModel;
     private final int cpuCount;
     private final long totalMemory;
 
-    public HostInfo(String hostname, String osName, String osKernel, int cpuCount, long totalMemory) {
+    public HostInfo(String hostname, String osName, String osKernel, String cpuModel, int cpuCount, long totalMemory) {
         this.hostname = hostname;
         this.osName = osName;
         this.osKernel = osKernel;
+        this.cpuModel = cpuModel;
         this.cpuCount = cpuCount;
         this.totalMemory = totalMemory;
     }
@@ -28,6 +30,10 @@ public class HostInfo {
         return osKernel;
     }
 
+    public String getCpuModel() {
+        return cpuModel;
+    }
+
     public int getCpuCount() {
         return cpuCount;
     }
@@ -38,4 +44,5 @@ public class HostInfo {
     public long getTotalMemory() {
         return totalMemory;
     }
+
 }

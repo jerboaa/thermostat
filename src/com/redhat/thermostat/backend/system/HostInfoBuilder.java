@@ -36,14 +36,39 @@ public class HostInfoBuilder {
         String osKernel = System.getProperty("os.name") + " " + System.getProperty("os.version");
         logger.log(Level.FINEST, "osKernel: " + osKernel);
 
-        int cpuCount = getProcessorCountFromProc();
+        final String KEY_PROCESSOR_ID = "processor";
+        final String KEY_CPU_MODEL = "model name";
+        int cpuCount = 0;
+        String cpuModel = null;
+        BufferedReader cpuInfoReader = null;
+        try {
+            cpuInfoReader = new BufferedReader(new FileReader(CPUINFO_FILE));
+            String line = null;
+            while ((line = cpuInfoReader.readLine()) != null) {
+                if (line.startsWith(KEY_PROCESSOR_ID)) {
+                    cpuCount++;
+                } else if (line.startsWith(KEY_CPU_MODEL)) {
+                    cpuModel = line.substring(line.indexOf(":") + 1).trim();
+                }
+            }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "unable to read " + CPUINFO_FILE);
+        } finally {
+            if (cpuInfoReader != null) {
+                try {
+                    cpuInfoReader.close();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "unable to close " + CPUINFO_FILE);
+                }
+            }
+        }
         logger.log(Level.FINEST, "cpuCount: " + cpuCount);
 
         long totalMemory = -1;
-        BufferedReader reader = null;
+        BufferedReader memInfoReader = null;
         try {
-            reader = new BufferedReader(new FileReader(MEMINFO_FILE));
-            String[] memTotalParts = reader.readLine().split(" +");
+            memInfoReader = new BufferedReader(new FileReader(MEMINFO_FILE));
+            String[] memTotalParts = memInfoReader.readLine().split(" +");
             long data = Long.valueOf(memTotalParts[1]);
             String units = memTotalParts[2];
             if (units.equals("kB")) {
@@ -52,9 +77,9 @@ public class HostInfoBuilder {
         } catch (IOException e) {
             logger.log(Level.WARNING, "unable to read " + MEMINFO_FILE);
         } finally {
-            if (reader != null) {
+            if (memInfoReader != null) {
                 try {
-                    reader.close();
+                    memInfoReader.close();
                 } catch (IOException e) {
                     logger.log(Level.WARNING, "unable to close " + MEMINFO_FILE);
                 }
@@ -62,33 +87,7 @@ public class HostInfoBuilder {
         }
         logger.log(Level.FINEST, "totalMemory: " + totalMemory + " bytes");
 
-        return new HostInfo(hostname, osName, osKernel, cpuCount, totalMemory);
-
+        return new HostInfo(hostname, osName, osKernel, cpuModel, cpuCount, totalMemory);
     }
 
-    private static int getProcessorCountFromProc() {
-        final String KEY_PROCESSOR_ID = "processor";
-        int totalCpus = 0;
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(CPUINFO_FILE));
-            String line = null;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith(KEY_PROCESSOR_ID)) {
-                    totalCpus++;
-                }
-            }
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read " + CPUINFO_FILE);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "unable to close " + CPUINFO_FILE);
-                }
-            }
-        }
-        return totalCpus;
-    }
 }
