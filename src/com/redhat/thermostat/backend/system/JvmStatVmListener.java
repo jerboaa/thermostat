@@ -13,6 +13,8 @@ import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
 import com.redhat.thermostat.agent.storage.Category;
+import com.redhat.thermostat.agent.storage.Chunk;
+import com.redhat.thermostat.agent.storage.Key;
 import com.redhat.thermostat.common.VmGcStat;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
@@ -23,8 +25,50 @@ public class JvmStatVmListener implements VmListener {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatVmListener.class);
 
+    private static final Category vmGcStatsCategory = new Category("vm-gc-stats");
+    private static final Category vmMemoryStatsCategory = new Category("vm-memory-stats");
+
+    private static final Key vmGcStatVmIdKey = new Key("vm-id", false);
+    private static final Key vmGcStatCollectorKey = new Key("collector", false);
+    private static final Key vmGcStatRunCountKey = new Key("runtime-count", false);
+    private static final Key vmGCstatWallTimeKey = new Key("wall-time", false);
+
+    private static final Key vmMemoryStatVmIdKey = new Key("vm-id", false);
+    private static final Key vmMemoryStatTimestampKey = new Key("timestamp", false);
+    private static final Key vmMemoryStatAllocatedKey = new Key("allocated", false);
+    private static final Key vmMemoryStatFreeKey = new Key("free", false);
+    // data structure knows too much about the format of data
+    // i would rather not allocate all these keys beforehand
+    private static final Key vmMemoryStatEdenKey = new Key("eden", false);
+    private static final Key vmMemoryStatS0Key = new Key("s0", false);
+    private static final Key vmMemoryStatS1Key = new Key("s1", false);
+    private static final Key vmMemoryStatOldKey = new Key("old", false);
+    private static final Key vmMemoryStatPermKey = new Key("perm", false);
+
+
     private final int vmId;
     private final SystemBackend backend;
+
+    static {
+        vmGcStatsCategory.addKey(vmGcStatVmIdKey);
+        vmGcStatsCategory.addKey(vmGcStatCollectorKey);
+        vmGcStatsCategory.addKey(vmGcStatRunCountKey);
+        vmGcStatsCategory.addKey(vmGCstatWallTimeKey);
+        vmGcStatsCategory.lock();
+
+        vmMemoryStatsCategory.addKey(vmMemoryStatVmIdKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatTimestampKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatAllocatedKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatFreeKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatEdenKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS0Key);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS1Key);
+        vmMemoryStatsCategory.addKey(vmMemoryStatOldKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatPermKey);
+        // this lock is invalid
+        // vmMemoryStatsCategory.lock();
+
+    }
 
     public JvmStatVmListener(SystemBackend backend, int vmId) {
         this.backend = backend;
@@ -33,7 +77,10 @@ public class JvmStatVmListener implements VmListener {
 
     public static Collection<Category> getCategories() {
         ArrayList<Category> categories = new ArrayList<Category>();
-        // TODO add appropriate categories
+
+        categories.add(vmGcStatsCategory);
+        categories.add(vmMemoryStatsCategory);
+
         return categories;
     }
 
@@ -67,7 +114,7 @@ public class JvmStatVmListener implements VmListener {
                         extractor.getCollectorName(i),
                         extractor.getCollectorInvocations(i),
                         extractor.getCollectorTime(i));
-                // FIXME storage.addVmGcStat(stat);
+                backend.store(makeVmGcStatChunk(stat));
             }
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering gc info for vm " + vmId, e);
@@ -107,10 +154,28 @@ public class JvmStatVmListener implements VmListener {
                     s.used = extractor.getSpaceUsed(generation, space);
                 }
             }
-            // FIXME storage.addVmMemoryStat(stat);
+            backend.store(makeVmMemoryStatChunk(stat));
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);
         }
+    }
+
+    private Chunk makeVmGcStatChunk(VmGcStat vmGcStat) {
+        Chunk chunk = new Chunk(vmGcStatsCategory, false);
+
+        // TODO leave as original data structures
+        chunk.put(vmGcStatVmIdKey, String.valueOf(vmGcStat.getVmId()));
+        chunk.put(vmGcStatCollectorKey, vmGcStat.getCollectorName());
+        chunk.put(vmGcStatRunCountKey, String.valueOf(vmGcStat.getRunCount()));
+        chunk.put(vmGCstatWallTimeKey, String.valueOf(vmGcStat.getWallTime()));
+
+        return chunk;
+    }
+
+    private Chunk makeVmMemoryStatChunk(VmMemoryStat vmMemStat) {
+        Chunk chunk = new Chunk(vmMemoryStatsCategory, false);
+        // FIXME implement this
+        return chunk;
     }
 
 }
