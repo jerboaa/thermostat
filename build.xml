@@ -1,0 +1,155 @@
+<?xml version='1.0'?>
+<project name="thermostat" default="all">
+    <description>
+        Build the thermostat project
+    </description>
+
+    <property name="config.dir" value="config" />
+    <property name="src.dir" location="src" />
+    <property name="unit-tests.dir" location="tests" />
+    <property name="build.dir" location="build" />
+    <property name="classes.dir" location="${build.dir}/classes" />
+    <property name="dist.dir" location="dist" />
+    <property name="javadoc.dir" location="${dist.dir}/doc/javadoc" />
+
+    <property name="common.classes.dir" location="${classes.dir}/common" />
+    <property name="agent.classes.dir" location="${classes.dir}/agent" />
+    <property name="client-gui.classes.dir" location="${classes.dir}/client-gui" />
+
+    <property name="common.jar" location="${dist.dir}/lib/thermostat-common.jar" />
+    <property name="agent.jar" location="${dist.dir}/lib/thermostat-agent.jar" />
+    <property name="client-gui.jar" location="${dist.dir}/lib/thermostat-client-gui.jar" />
+
+    <property name="agent-main-class" value="com.redhat.thermostat.agent.Main" />
+    <property name="client-gui-main-class" value="com.redhat.thermostat.client.Main" />
+
+    <!-- allow users/packagers to override our default directories -->
+    <property file="custom-libs.properties" />
+    <!-- default locations for libraries -->
+    <property file="libs.properties" />
+
+    <path id="agent.classpath" >
+        <pathelement path="${mongo.jar}"/>
+        <pathelement path="${tools.jar}"/>
+    </path>
+
+    <path id="client-gui.classpath">
+        <pathelement path="${jfreechart.jar}" />
+    </path>
+
+    <target name="debug">
+        <echoproperties/>
+    </target>
+
+    <target name="build-common-classes">
+        <mkdir dir="${common.classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${common.classes.dir}">
+            <include name="com/redhat/thermostat/common/**" />
+        </javac>
+    </target>
+
+    <target name="common-jar" depends="build-common-classes">
+        <mkdir dir="${dist.dir}" />
+        <jar destfile="${common.jar}" duplicate="fail">
+            <fileset dir="${common.classes.dir}">
+                <include name="**/*.class" />
+            </fileset>
+         </jar>
+    </target>
+
+    <target name="build-agent-classes" depends="build-common-classes">
+        <mkdir dir="${agent.classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${agent.classes.dir}">
+            <include name="com/redhat/thermostat/agent/**" />
+            <classpath>
+                <path location="${common.classes.dir}" />
+                <path refid="agent.classpath" />
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="agent-jar" depends="build-agent-classes">
+        <mkdir dir="${dist.dir}" />
+        <jar destfile="${agent.jar}" duplicate="fail">
+            <fileset dir="${agent.classes.dir}">
+                <include name="**/*.class" />
+            </fileset>
+         </jar>
+    </target>
+
+    <target name="build-client-gui-classes" depends="build-common-classes">
+        <mkdir dir="${client-gui.classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${client-gui.classes.dir}">
+            <include name="com/redhat/thermostat/client/**" />
+            <classpath>
+                <path location="${common.classes.dir}" />
+                <path refid="client-gui.classpath" />
+            </classpath>
+        </javac>
+    </target>
+
+    <target name="client-gui-jar" depends="build-client-gui-classes">
+        <mkdir dir="${dist.dir}" />
+        <jar destfile="${client-gui.jar}" duplicate="fail">
+            <fileset dir="${client-gui.classes.dir}">
+                <include name="**/*.class" />
+            </fileset>
+         </jar>
+    </target>
+
+    <target name="build-all"
+            depends="common-jar,agent-jar,client-gui-jar"
+            description="build all jars" />
+
+    <target name="javadoc" description="generate javadoc">
+        <javadoc destdir="${javadoc.dir}">
+            <fileset dir="${src.dir}" />
+        </javadoc>
+    </target>
+
+    <target name="dist" depends="build-all,javadoc" description="build everything">
+        <mkdir dir="${config.dir}" />
+        <copy todir="${dist.dir}/${config.dir}">
+            <fileset dir="${config.dir}" />
+        </copy>
+    </target>
+
+    <target name="all"
+            depends="dist"
+            description="build everything"
+            />
+
+    <target name="check" description="run tests">
+        <junit printsummary="yes" haltonfailure="yes">
+            <batchtest>
+                <fileset dir="${unit-tests.dir}" />
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="clean" description="delete all generated files" >
+        <delete dir="${build.dir}" />
+        <delete dir="${dist.dir}" />
+    </target>
+
+    <target name="run-agent-local" depends="agent-jar,common-jar">
+        <java fork="yes" classname="${agent-main-class}">
+            <classpath>
+                <path refid="agent.classpath" />
+                <path location="${agent.jar}" />
+                <path location="${common.jar}" />
+            </classpath>
+            <arg value="--local"/>
+        </java>
+    </target>
+
+    <target name="run-client-gui" depends="client-gui-jar,common-jar">
+        <java fork="yes" classname="${client-gui-main-class}">
+            <classpath>
+                <path refid="client-gui.classpath" />
+                <path location="${client-gui.jar}" />
+                <path location="${common.jar}" />
+            </classpath>
+        </java>
+    </target>
+</project>
