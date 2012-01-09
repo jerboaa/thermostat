@@ -87,7 +87,7 @@ public class JvmStatHostListener implements HostListener {
                 long stopTime = Long.MIN_VALUE;
                 JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
                 Map<String, String> properties = new HashMap<String, String>();
-                Map<String, String> environment = new HashMap<String, String>();
+                Map<String, String> environment = ProcessEnvironmentBuilder.build(vmId);
                 List<String> loadedNativeLibraries = new ArrayList<String>();
                 info = new VmInfo(vmId, startTime, stopTime,
                         extractor.getJavaVersion(), extractor.getJavaHome(),
