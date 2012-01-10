@@ -34,6 +34,7 @@
     </path>
 
     <path id="client-gui.classpath">
+        <pathelement path="${jcommon.jar}" />
         <pathelement path="${jfreechart.jar}" />
     </path>
 
