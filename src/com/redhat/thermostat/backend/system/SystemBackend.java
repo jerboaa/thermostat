@@ -2,9 +2,11 @@ package com.redhat.thermostat.backend.system;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Level;
@@ -15,14 +17,15 @@ import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.agent.storage.Category;
-import com.redhat.thermostat.agent.storage.Key;
 import com.redhat.thermostat.agent.storage.Chunk;
+import com.redhat.thermostat.agent.storage.Key;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.VmCpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class SystemBackend extends Backend {
@@ -41,6 +44,9 @@ public class SystemBackend extends Backend {
     private HostIdentifier hostId = null;
     private MonitoredHost host = null;
     private JvmStatHostListener hostListener = new JvmStatHostListener();
+
+    private boolean monitorNewVms = true;
+    private Set<Integer> pidsToMonitor = new HashSet<Integer>();
 
     private List<Category> categories = new ArrayList<Category>();
 
@@ -71,6 +77,10 @@ public class SystemBackend extends Backend {
     private Key memorySwapFreeKey = new Key("swap-free", false);
     private Key memoryCommitLimitKey = new Key("commit-limit", false);
 
+    private Category vmCpuStatCategory = new Category("vm-cpu-stats");
+    private Key vmCpuVmIdKey = new Key("vm-id", false);
+    private Key vmCpuLoadKey = new Key("processor-usage", false);
+
     {
         // Set up categories that will later be registered.
         // host-info category.
@@ -82,7 +92,7 @@ public class SystemBackend extends Backend {
         hostInfoCategory.lock();
         categories.add(hostInfoCategory);
 
-        //network-info category
+        // network-info category
         networkInfoCategory.addKey(ifaceKey);
         networkInfoCategory.addKey(ip4AddrKey);
         networkInfoCategory.addKey(ip6AddrKey);
@@ -109,14 +119,20 @@ public class SystemBackend extends Backend {
         memoryStatCategory.lock();
         categories.add(memoryStatCategory);
 
+        // vm-cpu-stat category
+        vmCpuStatCategory.addKey(vmCpuLoadKey);
+        vmCpuStatCategory.addKey(vmCpuVmIdKey);
+        categories.add(vmCpuStatCategory);
+
         categories.addAll(JvmStatHostListener.getCategories());
         categories.addAll(JvmStatVmListener.getCategories());
     }
 
-
     @Override
     protected void setConfigurationValue(String name, String value) {
-        logger.log(Level.INFO, "configuring " + NAME + " not supported");
+        if (name.equals("new")) {
+            monitorNewVms = Boolean.valueOf(value);
+        }
     }
 
     @Override
@@ -150,6 +166,9 @@ public class SystemBackend extends Backend {
             return true;
         }
 
+        if (!monitorNewVms) {
+            logger.log(Level.WARNING, "not monitoring new vms");
+        }
         store(makeHostChunk(HostInfoBuilder.build()));
 
         timer = new Timer();
@@ -161,6 +180,11 @@ public class SystemBackend extends Backend {
                     store(makeNetworkChunk(iter.next()));
                 }
                 store(makeMemoryChunk(new MemoryStatBuilder().build()));
+
+                for (Integer pid : pidsToMonitor) {
+                    new VmCpuStatBuilder();
+                    store(makeVmCpuChunk(VmCpuStatBuilder.build(pid)));
+                }
             }
         }, 0, procCheckInterval);
 
@@ -170,9 +194,9 @@ public class SystemBackend extends Backend {
             hostListener.setBackend(this);
             host.addHostListener(hostListener);
         } catch (MonitorException me) {
-            logger.log(Level.WARNING , "problems with connecting jvmstat to local machine" , me);
+            logger.log(Level.WARNING, "problems with connecting jvmstat to local machine", me);
         } catch (URISyntaxException use) {
-            logger.log(Level.WARNING , "problems with connecting jvmstat to local machine" , use);
+            logger.log(Level.WARNING, "problems with connecting jvmstat to local machine", use);
         }
 
         return true;
@@ -214,8 +238,20 @@ public class SystemBackend extends Backend {
         return categories.iterator();
     }
 
+    public boolean monitorNewVms() {
+        return monitorNewVms;
+    }
+
+    public void addPid(int pid) {
+        pidsToMonitor.add(pid);
+    }
+
+    public void removePid(int pid) {
+        pidsToMonitor.remove(pid);
+    }
+
     private Chunk makeCpuChunk(CpuStat cpuStat) {
-        Chunk chunk = new Chunk(/*cpuStat.getTimeStamp(), */cpuStatCategory, false);
+        Chunk chunk = new Chunk(/* cpuStat.getTimeStamp(), */cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, Long.toString(cpuStat.getTimeStamp()));
         chunk.put(cpu5LoadKey, Double.toString(cpuStat.getLoad5()));
         chunk.put(cpu10LoadKey, Double.toString(cpuStat.getLoad10()));
@@ -258,6 +294,14 @@ public class SystemBackend extends Backend {
         chunk.put(memorySwapTotalKey, Long.toString(mem.getSwapTotal()));
         chunk.put(memorySwapFreeKey, Long.toString(mem.getSwapFree()));
         chunk.put(memoryCommitLimitKey, Long.toString(mem.getCommitLimit()));
+        return chunk;
+    }
+
+    private Chunk makeVmCpuChunk(VmCpuStat stat) {
+        Chunk chunk = new Chunk(vmCpuStatCategory, false);
+        chunk.put(Key.TIMESTAMP, Long.toString(stat.getTimeStamp()));
+        chunk.put(vmCpuVmIdKey, Integer.toString(stat.getVmId()));
+        chunk.put(vmCpuLoadKey, Double.toString(stat.getCpuLoad()));
         return chunk;
     }
 }

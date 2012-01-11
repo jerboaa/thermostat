@@ -135,9 +135,14 @@ public class JvmStatHostListener implements HostListener {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
             }
 
-            JvmStatVmListener listener = new JvmStatVmListener(backend, vmId);
-            listenerMap.put(vmId, listener);
-            vm.addVmListener(listener);
+            if (backend.monitorNewVms()) {
+                backend.addPid(vmId);
+                JvmStatVmListener listener = new JvmStatVmListener(backend, vmId);
+                listenerMap.put(vmId, listener);
+                vm.addVmListener(listener);
+            } else {
+                logger.log(Level.FINE, "skipping new vm " + vmId);
+            }
         }
     }
 
