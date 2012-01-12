@@ -29,7 +29,7 @@ public class JvmStatHostListener implements HostListener {
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
     private static final Category vmInfoCategory = new Category("vm-info");
-    private static final Key vmInfoIdKey = new Key("vm-id", false);
+    private static final Key vmInfoIdKey = new Key("vm-id", true);
     private static final Key vmInfoPidKey = new Key("vm-pid", false);
     private static final Key vmInfoRuntimeVersionKey = new Key("runtime-version", false);
     private static final Key vmInfoJavaHomeKey = new Key("java-home", false);

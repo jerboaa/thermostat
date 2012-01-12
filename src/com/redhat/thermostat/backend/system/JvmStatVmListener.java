@@ -29,6 +29,7 @@ public class JvmStatVmListener implements VmListener {
     private static final Category vmMemoryStatsCategory = new Category("vm-memory-stats");
 
     private static final Key vmGcStatVmIdKey = new Key("vm-id", false);
+    private static final Key vmGcStatTimeStampKey = new Key("timestamp", false);
     private static final Key vmGcStatCollectorKey = new Key("collector", false);
     private static final Key vmGcStatRunCountKey = new Key("runtime-count", false);
     private static final Key vmGCstatWallTimeKey = new Key("wall-time", false);
@@ -51,6 +52,7 @@ public class JvmStatVmListener implements VmListener {
 
     static {
         vmGcStatsCategory.addKey(vmGcStatVmIdKey);
+        vmGcStatsCategory.addKey(vmGcStatTimeStampKey);
         vmGcStatsCategory.addKey(vmGcStatCollectorKey);
         vmGcStatsCategory.addKey(vmGcStatRunCountKey);
         vmGcStatsCategory.addKey(vmGCstatWallTimeKey);
@@ -165,6 +167,7 @@ public class JvmStatVmListener implements VmListener {
 
         // TODO leave as original data structures
         chunk.put(vmGcStatVmIdKey, String.valueOf(vmGcStat.getVmId()));
+        chunk.put(vmGcStatTimeStampKey, String.valueOf(vmGcStat.getTimeStamp()));
         chunk.put(vmGcStatCollectorKey, vmGcStat.getCollectorName());
         chunk.put(vmGcStatRunCountKey, String.valueOf(vmGcStat.getRunCount()));
         chunk.put(vmGCstatWallTimeKey, String.valueOf(vmGcStat.getWallTime()));

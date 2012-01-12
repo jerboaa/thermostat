@@ -87,6 +87,7 @@ public class SystemBackend extends Backend {
         hostInfoCategory.addKey(hostNameKey);
         hostInfoCategory.addKey(osNameKey);
         hostInfoCategory.addKey(osKernelKey);
+        hostInfoCategory.addKey(cpuModelKey);
         hostInfoCategory.addKey(cpuCountKey);
         hostInfoCategory.addKey(hostMemoryTotalKey);
         hostInfoCategory.lock();
