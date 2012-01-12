@@ -36,8 +36,6 @@ public class JvmStatVmListener implements VmListener {
 
     private static final Key vmMemoryStatVmIdKey = new Key("vm-id", false);
     private static final Key vmMemoryStatTimestampKey = new Key("timestamp", false);
-    // data structure knows too much about the format of data
-    // i would rather not allocate all these keys beforehand
     private static final Key vmMemoryStatEdenGenKey = new Key("eden.gen", false);
     private static final Key vmMemoryStatEdenCollectorKey = new Key("eden.collector", false);
     private static final Key vmMemoryStatEdenCapacityKey = new Key("eden.capacity", false);
