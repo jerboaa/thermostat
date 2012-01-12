@@ -36,16 +36,37 @@ public class JvmStatVmListener implements VmListener {
 
     private static final Key vmMemoryStatVmIdKey = new Key("vm-id", false);
     private static final Key vmMemoryStatTimestampKey = new Key("timestamp", false);
-    private static final Key vmMemoryStatAllocatedKey = new Key("allocated", false);
-    private static final Key vmMemoryStatFreeKey = new Key("free", false);
     // data structure knows too much about the format of data
     // i would rather not allocate all these keys beforehand
-    private static final Key vmMemoryStatEdenKey = new Key("eden", false);
-    private static final Key vmMemoryStatS0Key = new Key("s0", false);
-    private static final Key vmMemoryStatS1Key = new Key("s1", false);
-    private static final Key vmMemoryStatOldKey = new Key("old", false);
-    private static final Key vmMemoryStatPermKey = new Key("perm", false);
+    private static final Key vmMemoryStatEdenGenKey = new Key("eden.gen", false);
+    private static final Key vmMemoryStatEdenCollectorKey = new Key("eden.collector", false);
+    private static final Key vmMemoryStatEdenCapacityKey = new Key("eden.capacity", false);
+    private static final Key vmMemoryStatEdenMaxCapacityKey = new Key("eden.max-capacity", false);
+    private static final Key vmMemoryStatEdenUsedKey = new Key("eden.used", false);
 
+    private static final Key vmMemoryStatS0GenKey = new Key("s0.gen", false);
+    private static final Key vmMemoryStatS0CollectorKey = new Key("s0.collector", false);
+    private static final Key vmMemoryStatS0CapacityKey = new Key("s0.capacity", false);
+    private static final Key vmMemoryStatS0MaxCapacityKey = new Key("s0.max-capacity", false);
+    private static final Key vmMemoryStatS0UsedKey = new Key("s0.used", false);
+
+    private static final Key vmMemoryStatS1GenKey = new Key("s1.gen", false);
+    private static final Key vmMemoryStatS1CollectorKey = new Key("s1.collector", false);
+    private static final Key vmMemoryStatS1CapacityKey = new Key("s1.capacity", false);
+    private static final Key vmMemoryStatS1MaxCapacityKey = new Key("s1.max-capacity", false);
+    private static final Key vmMemoryStatS1UsedKey = new Key("s1.used", false);
+
+    private static final Key vmMemoryStatOldGenKey = new Key("old.gen", false);
+    private static final Key vmMemoryStatOldCollectorKey = new Key("old.collector", false);
+    private static final Key vmMemoryStatOldCapacityKey = new Key("old.capacity", false);
+    private static final Key vmMemoryStatOldMaxCapacityKey = new Key("old.max-capacity", false);
+    private static final Key vmMemoryStatOldUsedKey = new Key("old.used", false);
+
+    private static final Key vmMemoryStatPermGenKey = new Key("perm.gen", false);
+    private static final Key vmMemoryStatPermCollectorKey = new Key("perm.collector", false);
+    private static final Key vmMemoryStatPermCapacityKey = new Key("perm.capacity", false);
+    private static final Key vmMemoryStatPermMaxCapacityKey = new Key("perm.max-capacity", false);
+    private static final Key vmMemoryStatPermUsedKey = new Key("perm.used", false);
 
     private final int vmId;
     private final SystemBackend backend;
@@ -60,15 +81,31 @@ public class JvmStatVmListener implements VmListener {
 
         vmMemoryStatsCategory.addKey(vmMemoryStatVmIdKey);
         vmMemoryStatsCategory.addKey(vmMemoryStatTimestampKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatAllocatedKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatFreeKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatEdenKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS0Key);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS1Key);
-        vmMemoryStatsCategory.addKey(vmMemoryStatOldKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatPermKey);
-        // this lock is invalid
-        // vmMemoryStatsCategory.lock();
+        vmMemoryStatsCategory.addKey(vmMemoryStatEdenGenKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatEdenCollectorKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatEdenCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatEdenMaxCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatEdenUsedKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS0GenKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS0CollectorKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS0CapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS0MaxCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS0UsedKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS1GenKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS1CollectorKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS1CapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS1MaxCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatS1UsedKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatOldGenKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatOldCollectorKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatOldCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatOldMaxCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatOldUsedKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatPermGenKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatPermCollectorKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatPermCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatPermMaxCapacityKey);
+        vmMemoryStatsCategory.addKey(vmMemoryStatPermUsedKey);
 
     }
 
@@ -177,7 +214,51 @@ public class JvmStatVmListener implements VmListener {
 
     private Chunk makeVmMemoryStatChunk(VmMemoryStat vmMemStat) {
         Chunk chunk = new Chunk(vmMemoryStatsCategory, false);
-        // FIXME implement this
+
+        chunk.put(vmMemoryStatVmIdKey, String.valueOf(vmMemStat.getVmId()));
+        chunk.put(vmMemoryStatTimestampKey, String.valueOf(vmMemStat.getTimeStamp()));
+
+        Generation newGen = vmMemStat.getGeneration("new");
+        Space eden = newGen.getSpace("eden");
+
+        chunk.put(vmMemoryStatEdenGenKey, newGen.name);
+        chunk.put(vmMemoryStatEdenCollectorKey, newGen.collector);
+        chunk.put(vmMemoryStatEdenCapacityKey, String.valueOf(eden.capacity));
+        chunk.put(vmMemoryStatEdenMaxCapacityKey, String.valueOf(eden.maxCapacity));
+        chunk.put(vmMemoryStatEdenUsedKey, String.valueOf(eden.used));
+
+        Space s0 = newGen.getSpace("s0");
+        chunk.put(vmMemoryStatS0GenKey, newGen.name);
+        chunk.put(vmMemoryStatS0CollectorKey, newGen.collector);
+        chunk.put(vmMemoryStatS0CapacityKey, String.valueOf(s0.capacity));
+        chunk.put(vmMemoryStatS0MaxCapacityKey, String.valueOf(s0.maxCapacity));
+        chunk.put(vmMemoryStatS0UsedKey, String.valueOf(s0.used));
+
+        Space s1 = newGen.getSpace("s1");
+        chunk.put(vmMemoryStatS1GenKey, newGen.name);
+        chunk.put(vmMemoryStatS1CollectorKey, newGen.collector);
+        chunk.put(vmMemoryStatS1CapacityKey, String.valueOf(s1.capacity));
+        chunk.put(vmMemoryStatS1MaxCapacityKey, String.valueOf(s1.maxCapacity));
+        chunk.put(vmMemoryStatS1UsedKey, String.valueOf(s1.used));
+
+        Generation oldGen = vmMemStat.getGeneration("old");
+        Space old = oldGen.getSpace("old");
+
+        chunk.put(vmMemoryStatOldGenKey, oldGen.name);
+        chunk.put(vmMemoryStatOldCollectorKey, oldGen.collector);
+        chunk.put(vmMemoryStatOldCapacityKey, String.valueOf(old.capacity));
+        chunk.put(vmMemoryStatOldMaxCapacityKey, String.valueOf(old.maxCapacity));
+        chunk.put(vmMemoryStatOldUsedKey, String.valueOf(old.used));
+
+        Generation permGen = vmMemStat.getGeneration("perm");
+        Space perm = permGen.getSpace("perm");
+
+        chunk.put(vmMemoryStatPermGenKey, permGen.name);
+        chunk.put(vmMemoryStatPermCollectorKey, permGen.collector);
+        chunk.put(vmMemoryStatPermCapacityKey, String.valueOf(perm.capacity));
+        chunk.put(vmMemoryStatPermMaxCapacityKey, String.valueOf(perm.maxCapacity));
+        chunk.put(vmMemoryStatPermUsedKey, String.valueOf(perm.used));
+
         return chunk;
     }
 
