@@ -95,7 +95,7 @@ public class MongoStorage extends Storage {
         for (Iterator<com.redhat.thermostat.agent.storage.Key> iter = cat.getEntryIterator(); iter.hasNext();) {
             com.redhat.thermostat.agent.storage.Key key = iter.next();
             boolean isKey = key.isPartialCategoryKey();
-            String[] entryParts = key.getName().split(".");
+            String[] entryParts = key.getName().split("\\.");
             if (entryParts.length == 2) {
                 BasicDBObject nested = nestedParts.get(entryParts[0]);
                 if (nested == null) {
