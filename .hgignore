@@ -2,4 +2,6 @@
 .project
 .classpath
 bin
+build
+dist
 
