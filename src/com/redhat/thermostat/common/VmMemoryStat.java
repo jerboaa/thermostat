@@ -11,6 +11,15 @@ public class VmMemoryStat {
         public long maxCapacity;
         public List<Space> spaces;
         public String collector;
+
+        public Space getSpace(String string) {
+            for (Space s : spaces) {
+                if (s.name.equals(string)) {
+                    return s;
+                }
+            }
+            return null;
+        }
     }
 
     public static class Space {
@@ -41,6 +50,15 @@ public class VmMemoryStat {
 
     public List<Generation> getGenerations() {
         return generations;
+    }
+
+    public Generation getGeneration(String name) {
+        for (Generation g : generations) {
+            if (g.name.equals(name)) {
+                return g;
+            }
+        }
+        return null;
     }
 
 }
