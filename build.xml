@@ -66,6 +66,9 @@
             <fileset dir="${common.classes.dir}">
                 <include name="**/*.class" />
             </fileset>
+            <fileset dir="${src.dir}">
+                <include name="com/redhat/thermostat/common/**/*.properties" />
+            </fileset>
          </jar>
     </target>
 
@@ -86,6 +89,12 @@
             <fileset dir="${agent.classes.dir}">
                 <include name="**/*.class" />
             </fileset>
+            <fileset dir="${src.dir}">
+                <include name="com/redhat/thermostat/agent/**/*.properties" />
+            </fileset>
+            <fileset dir="${src.dir}">
+                <include name="com/redhat/thermostat/backend/**/*.properties" />
+            </fileset>
          </jar>
     </target>
 
@@ -105,6 +114,9 @@
         <jar destfile="${client-gui.jar}" duplicate="fail">
             <fileset dir="${client-gui.classes.dir}">
                 <include name="**/*.class" />
+            </fileset>
+            <fileset dir="${src.dir}">
+                <include name="com/redhat/thermostat/client/**/*.properties" />
             </fileset>
          </jar>
     </target>
