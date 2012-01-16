@@ -2,12 +2,12 @@ package com.redhat.thermostat.client;
 
 public class VmRef {
 
-    private final AgentRef agentRef;
+    private final HostRef hostRef;
     private final String uid;
     private final String name;
 
-    public VmRef(AgentRef agentRef, String id, String name) {
-        this.agentRef = agentRef;
+    public VmRef(HostRef hostRef, String id, String name) {
+        this.hostRef = hostRef;
         this.uid = id;
         this.name = name;
     }
@@ -15,6 +15,10 @@ public class VmRef {
     @Override
     public String toString() {
         return name;
+    }
+
+    public HostRef getAgent() {
+        return hostRef;
     }
 
     public String getId() {

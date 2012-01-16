@@ -1,11 +1,11 @@
 package com.redhat.thermostat.client;
 
-public class AgentRef {
+public class HostRef {
 
     private final String uid;
     private final String name;
 
-    public AgentRef(String id, String name) {
+    public HostRef(String id, String name) {
         this.uid = id;
         this.name = name;
     }
@@ -15,7 +15,7 @@ public class AgentRef {
         return name;
     }
 
-    public String getId() {
+    public String getAgentId() {
         return uid;
     }
 

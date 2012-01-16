@@ -17,10 +17,12 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.VmInformationFacade;
+import com.redhat.thermostat.client.DiscreteTimeData;
+import com.redhat.thermostat.client.VmPanelFacade;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.common.VmInfo;
@@ -32,11 +34,11 @@ public class VmPanel extends JPanel {
 
     private static final long serialVersionUID = 2816226547554943368L;
 
-    private final VmInformationFacade facade;
+    private final VmPanelFacade facade;
 
     private final VmInfo vmInfo;
 
-    public VmPanel(VmInformationFacade facade) {
+    public VmPanel(VmPanelFacade facade) {
         this.facade = facade;
         this.vmInfo = facade.getVmInfo();
         createUI();
@@ -112,7 +114,7 @@ public class VmPanel extends JPanel {
     private Component createCurrentMemoryDisplay() {
         DefaultCategoryDataset data = new DefaultCategoryDataset();
 
-        VmMemoryStat info = facade.getMemoryInfo();
+        VmMemoryStat info = facade.getLatestMemoryInfo();
         List<Generation> generations = info.getGenerations();
         for (Generation generation : generations) {
             List<Space> spaces = generation.spaces;
@@ -178,12 +180,12 @@ public class VmPanel extends JPanel {
 
         detailsPanel.add(Components.header(_("VM_GC_COLLECTOR_OVER_GENERATION", collectorName, facade.getCollectorGeneration(collectorName))), BorderLayout.NORTH);
 
-        long[][] cpuData = facade.getCollectorData(collectorName);
-        XYSeries series = new XYSeries("gc-runs");
-        for (long[] data : cpuData) {
-            series.add(data[0], data[1]);
+        DiscreteTimeData<Long>[] cpuData = facade.getCollectorRunTime(collectorName);
+        TimeSeries series = new TimeSeries("gc-runs");
+        for (DiscreteTimeData<Long> data : cpuData) {
+            series.add(new FixedMillisecond(data.getTimeInMillis()), data.getData());
         }
-        XYSeriesCollection dataset = new XYSeriesCollection();
+        TimeSeriesCollection dataset = new TimeSeriesCollection();
         dataset.addSeries(series);
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,

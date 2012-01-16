@@ -19,8 +19,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.client.ConnectionInfo;
-import com.redhat.thermostat.client.ConnectionInfo.ConnectionType;
+import com.redhat.thermostat.client.Connection;
+import com.redhat.thermostat.client.Connection.ConnectionType;
 
 public class ConnectionSelectionDialog extends JDialog {
 
@@ -28,9 +28,9 @@ public class ConnectionSelectionDialog extends JDialog {
 
     private static final int ICON_LABEL_GAP = 5;
 
-    private final ConnectionInfo model;
+    private final Connection model;
 
-    public ConnectionSelectionDialog(JFrame owner, ConnectionInfo model) {
+    public ConnectionSelectionDialog(JFrame owner, Connection model) {
         super(owner);
         setTitle(_("STARTUP_MODE_SELECTION_DIALOG_TITLE"));
         this.model = model;
@@ -111,7 +111,7 @@ public class ConnectionSelectionDialog extends JDialog {
         return html;
     }
 
-    public ConnectionInfo getModel() {
+    public Connection getModel() {
         return model;
     }
 

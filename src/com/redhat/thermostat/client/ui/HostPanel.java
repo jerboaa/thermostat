@@ -20,10 +20,14 @@ import javax.swing.JTabbedPane;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
-import com.redhat.thermostat.client.HostInformationFacade;
+import com.redhat.thermostat.client.DiscreteTimeData;
+import com.redhat.thermostat.client.HostPanelFacade;
 import com.redhat.thermostat.client.MemoryType;
 import com.redhat.thermostat.client.ui.SimpleTable.Key;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
@@ -41,10 +45,10 @@ public class HostPanel extends JPanel {
 
     private static final long serialVersionUID = 4835316442841009133L;
 
-    private final HostInformationFacade facade;
+    private final HostPanelFacade facade;
     private final HostInfo hostInfo;
 
-    public HostPanel(HostInformationFacade facade) {
+    public HostPanel(HostPanelFacade facade) {
         this.facade = facade;
         this.hostInfo = facade.getHostInfo();
         init();
@@ -136,12 +140,12 @@ public class HostPanel extends JPanel {
         table.setBorder(Components.smallBorder());
         contentArea.add(table, c);
 
-        double[][] cpuData = facade.getCpuLoad();
-        XYSeries series = new XYSeries("cpu-load");
-        for (double[] data : cpuData) {
-            series.add(data[0], data[1]);
+        DiscreteTimeData<Double>[] cpuData = facade.getCpuLoad();
+        TimeSeries series = new TimeSeries("cpu-load");
+        for (DiscreteTimeData<Double> data : cpuData) {
+            series.add(new FixedMillisecond(data.getTimeInMillis()), data.getData());
         }
-        XYSeriesCollection dataset = new XYSeriesCollection();
+        TimeSeriesCollection dataset = new TimeSeriesCollection();
         dataset.addSeries(series);
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 _("HOST_CPU_USAGE_CHART_TITLE"),
@@ -185,7 +189,6 @@ public class HostPanel extends JPanel {
         entry = new TableEntry(_("HOST_INFO_MEMORY_TOTAL"), String.valueOf(hostInfo.getTotalMemory()));
         memoryBasics.add(entry);
 
-
         JPanel table = SimpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
         contentArea.add(table, BorderLayout.PAGE_START);
@@ -218,16 +221,16 @@ public class HostPanel extends JPanel {
         return contentArea;
     }
 
-    private static JFreeChart createMemoryChart(HostInformationFacade facade) {
+    private static JFreeChart createMemoryChart(HostPanelFacade facade) {
         XYSeriesCollection dataset = new XYSeriesCollection();
 
         // FIXME associate a fixed color with each type
 
         for (MemoryType type : facade.getMemoryTypesToDisplay()) {
             XYSeries series = new XYSeries(type.name());
-            long[][] data = facade.getMemoryUsage(type);
-            for (long[] point : data) {
-                series.add(point[0], point[1]);
+            DiscreteTimeData<Long>[] data = facade.getMemoryUsage(type);
+            for (DiscreteTimeData<Long> point : data) {
+                series.add(point.getTimeInMillis(), point.getData());
             }
             dataset.addSeries(series);
         }
@@ -246,11 +249,11 @@ public class HostPanel extends JPanel {
 
     private static class UpdateMemoryGraph implements ActionListener {
 
-        private final HostInformationFacade facade;
+        private final HostPanelFacade facade;
         private final MemoryType type;
         private final ChartPanel chartPanel;
 
-        public UpdateMemoryGraph(HostInformationFacade facade, ChartPanel chartPanel, MemoryType type) {
+        public UpdateMemoryGraph(HostPanelFacade facade, ChartPanel chartPanel, MemoryType type) {
             this.facade = facade;
             this.chartPanel = chartPanel;
             this.type = type;
@@ -263,7 +266,6 @@ public class HostPanel extends JPanel {
             facade.setDisplayMemoryType(type, selected);
             chartPanel.setChart(createMemoryChart(facade));
         }
-
     }
 
 }

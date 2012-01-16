@@ -13,17 +13,17 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListModel;
 
-import com.redhat.thermostat.client.ThermostatFacade;
+import com.redhat.thermostat.client.SummaryPanelFacade;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 
-public class HomePanel extends JPanel {
+public class SummaryPanel extends JPanel {
 
     private static final long serialVersionUID = -5953027789947771737L;
 
-    private final ThermostatFacade facade;
+    private final SummaryPanelFacade facade;
 
-    public HomePanel(ThermostatFacade facade) {
+    public SummaryPanel(SummaryPanelFacade facade) {
         this.facade = facade;
 
         setLayout(new BorderLayout());
@@ -44,9 +44,9 @@ public class HomePanel extends JPanel {
         Section summarySection = new Section(_("HOME_PANEL_SECTION_SUMMARY"));
         sections.add(summarySection);
 
-        entry = new TableEntry(_("HOME_PANEL_TOTAL_MACHINES"), String.valueOf(facade.getConnectedAgents().length));
+        entry = new TableEntry(_("HOME_PANEL_TOTAL_MACHINES"), String.valueOf(facade.getTotalConnectedAgents()));
         summarySection.add(entry);
-        entry = new TableEntry(_("HOME_PANEL_TOTAL_JVMS"), String.valueOf(facade.getConnectedVms().length));
+        entry = new TableEntry(_("HOME_PANEL_TOTAL_JVMS"), String.valueOf(facade.getTotalConnectedVms()));
         summarySection.add(entry);
 
         JPanel summaryPanel = SimpleTable.createTable(sections);

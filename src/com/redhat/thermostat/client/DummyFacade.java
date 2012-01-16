@@ -17,12 +17,12 @@ import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
 
-public class DummyFacade implements ThermostatFacade, HostInformationFacade, VmInformationFacade {
+public class DummyFacade implements SummaryPanelFacade, HostPanelFacade, VmPanelFacade, MainWindowFacade {
 
     private final Random r = new Random();
     private List<MemoryType> toDisplay = new ArrayList<MemoryType>();
 
-    private AgentRef onlyAgent = new AgentRef("a-random-string-of-letters-and-numbers", "agent on localhost");
+    private HostRef onlyAgent = new HostRef("a-random-string-of-letters-and-numbers", "agent on localhost");
     private VmRef onlyVm = new VmRef(onlyAgent, "a-random-string-of-letters-and-numbers-or-perhaps-a-process-id", "super crazy awesome java app");
 
     public DummyFacade() {
@@ -30,23 +30,28 @@ public class DummyFacade implements ThermostatFacade, HostInformationFacade, VmI
     }
 
     @Override
-    public AgentRef[] getConnectedAgents() {
-        return new AgentRef[] { onlyAgent };
+    public long getTotalConnectedVms() {
+        return new VmRef[] { onlyVm }.length;
     }
 
     @Override
-    public VmRef[] getConnectedVms() {
+    public long getTotalConnectedAgents() {
+        return 1;
+    }
+
+    @Override
+    public HostRef[] getHosts() {
+        return new HostRef[] { onlyAgent };
+    }
+
+    @Override
+    public VmRef[] getVms(HostRef ref) {
         return new VmRef[] { onlyVm };
     }
 
     @Override
-    public VmRef[] getVms() {
-        return new VmRef[] { onlyVm };
-    }
-
-    @Override
-    public HostInformationFacade getHost(AgentRef ref) {
-        return this;
+    public List<String> getIssues() {
+        return new ArrayList<String>();
     }
 
     @Override
@@ -77,11 +82,6 @@ public class DummyFacade implements ThermostatFacade, HostInformationFacade, VmI
     }
 
     @Override
-    public VmInformationFacade getVm(VmRef vmRef) {
-        return this;
-    }
-
-    @Override
     public VmInfo getVmInfo() {
 
         // TODO hook into storage and return the actual VmInfo object
@@ -103,35 +103,41 @@ public class DummyFacade implements ThermostatFacade, HostInformationFacade, VmI
     }
 
     @Override
-    public double[][] getCpuLoad() {
-        double[][] cpuData = new double[][] {
-                new double[] { 10000, r.nextDouble() },
-                new double[] { 10010, r.nextDouble() },
-                new double[] { 10020, r.nextDouble() },
-                new double[] { 10030, r.nextDouble() },
-                new double[] { 10040, r.nextDouble() },
-                new double[] { 10050, r.nextDouble() },
-                new double[] { 10060, r.nextDouble() },
-        };
+    public DiscreteTimeData<Double>[] getCpuLoad() {
+        List<DiscreteTimeData<Double>> cpuData = new ArrayList<DiscreteTimeData<Double>>();
 
-        return cpuData;
+        long currentTime = System.currentTimeMillis();
+        long oneMinute = 1000 * 60;
+
+        cpuData.add(new DiscreteTimeData<Double>(currentTime, r.nextDouble()));
+        cpuData.add(new DiscreteTimeData<Double>(currentTime - 1 * oneMinute, r.nextDouble()));
+        cpuData.add(new DiscreteTimeData<Double>(currentTime - 2 * oneMinute, r.nextDouble()));
+        cpuData.add(new DiscreteTimeData<Double>(currentTime - 3 * oneMinute, r.nextDouble()));
+        cpuData.add(new DiscreteTimeData<Double>(currentTime - 4 * oneMinute, r.nextDouble()));
+        cpuData.add(new DiscreteTimeData<Double>(currentTime - 5 * oneMinute, r.nextDouble()));
+        cpuData.add(new DiscreteTimeData<Double>(currentTime - 6 * oneMinute, r.nextDouble()));
+
+        return (DiscreteTimeData<Double>[]) cpuData.toArray(new DiscreteTimeData<?>[0]);
     }
 
     @Override
-    public long[][] getMemoryUsage(MemoryType type) {
-        long[][] data = new long[][] {
-                new long[] { 100010, r.nextLong() },
-                new long[] { 100020, r.nextLong() },
-                new long[] { 100030, r.nextLong() },
-                new long[] { 100040, r.nextLong() },
-                new long[] { 100050, r.nextLong() },
-                new long[] { 100060, r.nextLong() },
-                new long[] { 100070, r.nextLong() },
-                new long[] { 100080, r.nextLong() },
-                new long[] { 100090, r.nextLong() },
-                new long[] { 100110, r.nextLong() },
-        };
-        return data;
+    public DiscreteTimeData<Long>[] getMemoryUsage(MemoryType type) {
+        List<DiscreteTimeData<Long>> data = new ArrayList<DiscreteTimeData<Long>>();
+
+        long currentTime = System.currentTimeMillis();
+        long oneMinute = 1000 * 60;
+
+        data.add(new DiscreteTimeData<Long>(currentTime, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 1 * oneMinute, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 2 * oneMinute, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 3 * oneMinute, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 4 * oneMinute, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 5 * oneMinute, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 6 * oneMinute, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 7 * oneMinute, r.nextLong()));
+        data.add(new DiscreteTimeData<Long>(currentTime - 8 * oneMinute, r.nextLong()));
+
+        return (DiscreteTimeData<Long>[]) data.toArray(new DiscreteTimeData<?>[0]);
     }
 
     @Override
@@ -162,27 +168,23 @@ public class DummyFacade implements ThermostatFacade, HostInformationFacade, VmI
     }
 
     @Override
-    public long getTotalInvocations() {
-        return 11;
-    }
+    public DiscreteTimeData<Long>[] getCollectorRunTime(String collectorName) {
+        List<DiscreteTimeData<Long>> data = new ArrayList<DiscreteTimeData<Long>>();
 
-    @Override
-    public long[][] getCollectorData(String collectorName) {
-        List<long[]> data = new ArrayList<long[]>();
         long last = 2;
-        data.add(new long[] { 100000, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100010, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100020, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100030, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100040, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100050, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100060, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100070, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100080, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100090, (last = last + r.nextInt(10)) });
-        data.add(new long[] { 100110, (last = last + r.nextInt(10)) });
+        data.add(new DiscreteTimeData<Long>(100000, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100010, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100020, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100030, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100040, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100050, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100060, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100070, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100080, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100090, (last = last + r.nextInt(10))));
+        data.add(new DiscreteTimeData<Long>(100110, (last = last + r.nextInt(10))));
 
-        return data.toArray(new long[0][0]);
+        return (DiscreteTimeData<Long>[]) data.toArray(new DiscreteTimeData<?>[0]);
     }
 
     @Override
@@ -196,7 +198,7 @@ public class DummyFacade implements ThermostatFacade, HostInformationFacade, VmI
     }
 
     @Override
-    public VmMemoryStat getMemoryInfo() {
+    public VmMemoryStat getLatestMemoryInfo() {
         long timestamp = -1;
         List<Generation> generations = new ArrayList<Generation>();
 

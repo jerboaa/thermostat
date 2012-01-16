@@ -1,6 +1,6 @@
 package com.redhat.thermostat.client;
 
-public class ConnectionInfo {
+public abstract class Connection {
 
     public enum ConnectionType {
         LOCAL(false),
@@ -54,4 +54,8 @@ public class ConnectionInfo {
         }
         return type.toString() + " to " + url;
     }
+
+    public abstract void connect();
+
+    public abstract void disconnect();
 }

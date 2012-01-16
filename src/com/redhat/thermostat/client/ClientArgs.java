@@ -11,11 +11,15 @@ public class ClientArgs {
 
     // private static boolean isDebugLayout = true;
 
+    private boolean dummyDataSource = false;
+
     public ClientArgs(String[] initialArgs) {
         // remove 'unused' warnings
         for (String arg : initialArgs) {
             if (arg.equals("--debug-layout")) {
                 isDebugLayout = true;
+            } else if (arg.equals("--dummy-data-source")) {
+                dummyDataSource = true;
             }
         }
         // TODO what arguments do we care about?
@@ -47,5 +51,9 @@ public class ClientArgs {
 
     public static boolean isDebugLayout() {
         return isDebugLayout;
+    }
+
+    public boolean useDummyDataSource() {
+        return dummyDataSource;
     }
 }

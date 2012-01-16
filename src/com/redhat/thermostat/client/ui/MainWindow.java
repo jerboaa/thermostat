@@ -16,14 +16,12 @@ import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JLayeredPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
@@ -33,10 +31,6 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.plaf.synth.SynthConstants;
-import javax.swing.plaf.synth.SynthContext;
-import javax.swing.plaf.synth.SynthLookAndFeel;
-import javax.swing.plaf.synth.SynthStyle;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -46,11 +40,11 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import com.redhat.thermostat.client.AgentRef;
-import com.redhat.thermostat.client.ThermostatFacade;
 import com.redhat.thermostat.client.ApplicationInfo;
 import com.redhat.thermostat.client.ClientArgs;
-import com.redhat.thermostat.client.ConnectionInfo.ConnectionType;
+import com.redhat.thermostat.client.HostRef;
+import com.redhat.thermostat.client.MainWindowFacade;
+import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.VmRef;
 
 public class MainWindow extends JFrame {
@@ -60,13 +54,13 @@ public class MainWindow extends JFrame {
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(_("MAIN_WINDOW_TREE_ROOT_NAME"));
     private final DefaultTreeModel treeModel = new DefaultTreeModel(root);
 
-    private final ThermostatFacade facade;
+    private final MainWindowFacade facade;
 
     private JPanel contentArea = null;
     private JTree agentVmTree = null;
     private JTextField searchField = null;
 
-    public MainWindow(ThermostatFacade facade) {
+    public MainWindow(MainWindowFacade facade) {
         super();
         setTitle(_("MAIN_WINDOW_TITLE"));
 
@@ -187,15 +181,14 @@ public class MainWindow extends JFrame {
                     contentArea.removeAll();
                     TreePath path = e.getPath();
                     if (path.getPathCount() == 1) {/* root */
-                        contentArea.add(new HomePanel(facade));
+                        contentArea.add(new SummaryPanel(UiFacadeFactory.getSummaryPanel()));
                     } else if (path.getPathCount() == 2) { /* agent */
-                        AgentRef agentRef = (AgentRef) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-                        HostPanel panel = new HostPanel(facade.getHost(agentRef));
+                        HostRef hostRef = (HostRef) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
+                        HostPanel panel = new HostPanel(UiFacadeFactory.getHostPanel(hostRef));
                         contentArea.add(panel);
                     } else { /* vm */
-                        AgentRef agentRef = (AgentRef) ((DefaultMutableTreeNode) path.getParentPath().getLastPathComponent()).getUserObject();
                         VmRef vmRef = (VmRef) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-                        VmPanel panel = new VmPanel(facade.getHost(agentRef).getVm(vmRef));
+                        VmPanel panel = new VmPanel(UiFacadeFactory.getVmPanel(vmRef));
                         contentArea.add(panel);
                     }
                     // Fixes some 'ghosting' caused by the previous components
@@ -232,23 +225,20 @@ public class MainWindow extends JFrame {
         return result;
     }
 
-    public void setStartupMode(ConnectionType type) {
-        // TODO use type to set up connection
-    }
-
     private void buildTree(String filter) {
         root.removeAllChildren();
         treeModel.setRoot(null);
         // paths to expand. only expand paths when a vm matches (to ensure it is
         // visible)
+
         List<TreeNode[]> pathsToExpand = new ArrayList<TreeNode[]>();
         if (filter == null || filter.trim().equals("")) {
             DefaultMutableTreeNode agentNode;
-            AgentRef[] agentRefs = facade.getConnectedAgents();
-            for (AgentRef agentRef : agentRefs) {
-                agentNode = new DefaultMutableTreeNode(agentRef);
+            HostRef[] agentRefs = facade.getHosts();
+            for (HostRef hostRef : agentRefs) {
+                agentNode = new DefaultMutableTreeNode(hostRef);
                 root.add(agentNode);
-                VmRef[] vmRefs = facade.getHost(agentRef).getVms();
+                VmRef[] vmRefs = facade.getVms(hostRef);
                 for (VmRef vmRef : vmRefs) {
                     agentNode.add(new DefaultMutableTreeNode(vmRef));
                 }
@@ -256,20 +246,20 @@ public class MainWindow extends JFrame {
             treeModel.setRoot(root);
         } else {
             DefaultMutableTreeNode agentNode;
-            for (AgentRef agentRef : facade.getConnectedAgents()) {
-                if (agentRef.getName().contains(filter) || agentRef.getId().contains(filter)) {
-                    agentNode = new DefaultMutableTreeNode(agentRef);
+            for (HostRef hostRef : facade.getHosts()) {
+                if (hostRef.getName().contains(filter) || hostRef.getAgentId().contains(filter)) {
+                    agentNode = new DefaultMutableTreeNode(hostRef);
                     root.add(agentNode);
-                    VmRef[] vmRefs = facade.getHost(agentRef).getVms();
+                    VmRef[] vmRefs = facade.getVms(hostRef);
                     for (VmRef vmRef : vmRefs) {
                         agentNode.add(new DefaultMutableTreeNode(vmRef));
                     }
                 } else {
                     agentNode = null;
-                    for (VmRef vmRef : facade.getHost(agentRef).getVms()) {
+                    for (VmRef vmRef : facade.getVms(hostRef)) {
                         if (vmRef.getName().contains(filter) || vmRef.getId().contains(filter)) {
                             if (agentNode == null) {
-                                agentNode = new DefaultMutableTreeNode(agentRef);
+                                agentNode = new DefaultMutableTreeNode(hostRef);
                                 root.add(agentNode);
                             }
                             DefaultMutableTreeNode vmNode = new DefaultMutableTreeNode(vmRef);
