@@ -3,6 +3,7 @@ package com.redhat.thermostat.agent.config;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.storage.Storage;
+import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ConfigurationWatcher implements Runnable {
@@ -10,9 +11,11 @@ public class ConfigurationWatcher implements Runnable {
     private static final Logger logger = LoggingUtils.getLogger(ConfigurationWatcher.class);
 
     private Storage storage;
+    private BackendRegistry backends;
 
-    public ConfigurationWatcher(Storage storage) {
+    public ConfigurationWatcher(Storage storage, BackendRegistry backends) {
         this.storage = storage;
+        this.backends = backends;
     }
 
     @Override

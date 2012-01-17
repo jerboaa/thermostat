@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendRegistry;
 
 public abstract class Storage {
     private Map<String, Backend> categoryMap;
@@ -19,7 +20,7 @@ public abstract class Storage {
 
     public abstract void setAgentId(UUID id);
 
-    public abstract void addAgentInformation(StartupConfiguration config);
+    public abstract void addAgentInformation(StartupConfiguration config, BackendRegistry registry);
 
     public abstract void removeAgentInformation();
 

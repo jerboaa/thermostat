@@ -12,11 +12,8 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.Defaults;
-import com.redhat.thermostat.agent.storage.StorageConstants;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -102,14 +99,6 @@ public final class StartupConfiguration {
         return hostname;
     }
 
-    // TODO move this into Storage as well
-    public DBObject toDBObject() {
-        BasicDBObject result = new BasicDBObject();
-        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, startTimestamp);
-        // TODO create nested backend config parts
-        return result;
-    }
-
     public void setAgent(Agent agent) {
         this.agent = agent;
     }
@@ -139,6 +128,10 @@ public final class StartupConfiguration {
             }
         }
         return configMap;
+    }
+
+    public long getStartTime() {
+        return startTimestamp;
     }
 
     /**

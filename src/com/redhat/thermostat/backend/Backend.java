@@ -1,5 +1,6 @@
 package com.redhat.thermostat.backend;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,7 +16,8 @@ import com.redhat.thermostat.agent.storage.Storage;
 public abstract class Backend {
 
     private boolean initialConfigurationComplete = false;
-    private Storage storage;
+    private Storage storage = null;
+    private boolean observeNewJvm = attachToNewProcessByDefault();
 
     /**
      * 
@@ -55,7 +57,9 @@ public abstract class Backend {
      * @throws IllegalArgumentException if either the key does not refer to a valid configuration option
      *                                  for this backend or the value is not valid for the key
      */
-    protected abstract void setConfigurationValue(String name, String value);
+    protected void setConfigurationValue(String name, String value) {
+        throw new IllegalArgumentException("Backend " + getName() + " does not support any specific configuration values.");
+    }
 
     /**
      * @return the name of the {@link Backend}
@@ -77,10 +81,16 @@ public abstract class Backend {
      */
     public abstract String getVersion();
 
-    /**
+    /** Get a map containing the current settings of this backend.
+     * Implementors of this abstract class which have some settings that
+     * are be configurable by the client must override this method
+     * to provide an appropriate map.
+     * 
      * @return a map containing the settings of this backend
      */
-    public abstract Map<String, String> getConfigurationMap();
+    public Map<String, String> getConfigurationMap() {
+        return new HashMap<String, String>();
+    }
 
     /**
      * 
@@ -114,6 +124,33 @@ public abstract class Backend {
      * @return a boolean indicating whether the backend is currently active on this host
      */
     public abstract boolean isActive();
+
+    /**
+     * A {@link Backend} may be configured to automatically begin collecting from new Java
+     * processes.  This method determines whether this will be the case when the backend
+     * is initially started.
+     * 
+     * @return true if the initial backend behaviour is to attach to new java processes, false otherwise.
+     */
+    public abstract boolean attachToNewProcessByDefault();
+
+    /**
+     * Indicate whether this backend will attach to new java processes.
+     * 
+     * @return true if this backend will attach to new java processes, false otherwise.
+     */
+    public boolean getObserveNewJvm() {
+        return observeNewJvm;
+    }
+
+    /**
+     * Set whether this backend will attach to new java processes.
+     * 
+     * @param newValue
+     */
+    public void setObserveNewJvm(boolean newValue) {
+        observeNewJvm = newValue;
+    }
 
     public final void store(Chunk chunk) {
         storage.putChunk(chunk, this);

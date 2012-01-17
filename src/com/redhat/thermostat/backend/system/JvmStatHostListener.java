@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,13 +20,15 @@ import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
+import com.redhat.thermostat.agent.JvmStatusListener;
+import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.agent.storage.Category;
 import com.redhat.thermostat.agent.storage.Chunk;
 import com.redhat.thermostat.agent.storage.Key;
 import com.redhat.thermostat.common.VmInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class JvmStatHostListener implements HostListener {
+public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
@@ -64,6 +68,8 @@ public class JvmStatHostListener implements HostListener {
     private SystemBackend backend;
 
     private Map<Integer, JvmStatVmListener> listenerMap = new HashMap<Integer, JvmStatVmListener>();
+
+    private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
 
     public static Collection<Category> getCategories() {
         ArrayList<Category> categories = new ArrayList<Category>();
@@ -135,13 +141,16 @@ public class JvmStatHostListener implements HostListener {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
             }
 
-            if (backend.monitorNewVms()) {
+            if (backend.getObserveNewJvm()) {
                 backend.addPid(vmId);
                 JvmStatVmListener listener = new JvmStatVmListener(backend, vmId);
                 listenerMap.put(vmId, listener);
                 vm.addVmListener(listener);
             } else {
                 logger.log(Level.FINE, "skipping new vm " + vmId);
+            }
+            for (JvmStatusListener statusListener : statusListeners) {
+                statusListener.jvmStarted(vmId);
             }
         }
     }
@@ -156,6 +165,9 @@ public class JvmStatHostListener implements HostListener {
             if (vm != null) {
                 JvmStatVmListener listener = listenerMap.remove(vmId);
                 vm.removeVmListener(listener);
+                for (JvmStatusListener statusListener : statusListeners) {
+                    statusListener.jvmStopped(vmId);
+                }
             }
             // TODO record vm as stopped
         }
@@ -180,5 +192,15 @@ public class JvmStatHostListener implements HostListener {
         chunk.put(vmInfoStartTimeKey, String.valueOf(info.getStartTimeStamp()));
         chunk.put(vmInfoStopTimeKey, String.valueOf(info.getStopTimeStamp()));
         return chunk;
+    }
+
+    @Override
+    public void addJvmStatusListener(JvmStatusListener listener) {
+        statusListeners.add(listener);
+    }
+
+    @Override
+    public void removeJvmStatusListener(JvmStatusListener listener) {
+        statusListeners.remove(listener);
     }
 }

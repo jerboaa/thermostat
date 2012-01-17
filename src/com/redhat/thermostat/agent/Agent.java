@@ -61,8 +61,8 @@ public class Agent {
     public synchronized void start() throws LaunchException {
         if (configWatcherThread == null) {
             startBackends();
-            storage.addAgentInformation(config);
-            configWatcherThread = new Thread(new ConfigurationWatcher(storage), "Configuration Watcher");
+            storage.addAgentInformation(config, backendRegistry);
+            configWatcherThread = new Thread(new ConfigurationWatcher(storage, backendRegistry), "Configuration Watcher");
             configWatcherThread.start();
         } else {
             logger.warning("Attempt to start agent when already started.");

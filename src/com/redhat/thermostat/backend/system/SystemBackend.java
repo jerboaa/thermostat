@@ -16,6 +16,8 @@ import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
+import com.redhat.thermostat.agent.JvmStatusListener;
+import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.agent.storage.Category;
 import com.redhat.thermostat.agent.storage.Chunk;
 import com.redhat.thermostat.agent.storage.Key;
@@ -28,7 +30,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.VmCpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class SystemBackend extends Backend {
+public class SystemBackend extends Backend implements JvmStatusNotifier {
 
     private static final String NAME = "system";
     private static final String DESCRIPTION = "gathers basic information from the system";
@@ -45,7 +47,6 @@ public class SystemBackend extends Backend {
     private MonitoredHost host = null;
     private JvmStatHostListener hostListener = new JvmStatHostListener();
 
-    private boolean monitorNewVms = true;
     private Set<Integer> pidsToMonitor = new HashSet<Integer>();
 
     private List<Category> categories = new ArrayList<Category>();
@@ -130,13 +131,6 @@ public class SystemBackend extends Backend {
     }
 
     @Override
-    protected void setConfigurationValue(String name, String value) {
-        if (name.equals("new")) {
-            monitorNewVms = Boolean.valueOf(value);
-        }
-    }
-
-    @Override
     public String getName() {
         return NAME;
     }
@@ -157,18 +151,13 @@ public class SystemBackend extends Backend {
     }
 
     @Override
-    public Map<String, String> getConfigurationMap() {
-        throw new NotImplementedException("get configuration");
-    }
-
-    @Override
     public synchronized boolean activate() {
         if (timer != null) {
             return true;
         }
 
-        if (!monitorNewVms) {
-            logger.log(Level.WARNING, "not monitoring new vms");
+        if (!getObserveNewJvm()) {
+            logger.fine("not monitoring new vms");
         }
         store(makeHostChunk(HostInfoBuilder.build()));
 
@@ -215,7 +204,7 @@ public class SystemBackend extends Backend {
         try {
             host.removeHostListener(hostListener);
         } catch (MonitorException me) {
-            logger.log(Level.INFO, "something went wront in jvmstat's listeningto this host");
+            logger.log(Level.INFO, "something went wrong in jvmstat's listening to this host");
         }
         host = null;
         hostId = null;
@@ -237,10 +226,6 @@ public class SystemBackend extends Backend {
     @Override
     protected Iterator<Category> getCategoryIterator() {
         return categories.iterator();
-    }
-
-    public boolean monitorNewVms() {
-        return monitorNewVms;
     }
 
     public void addPid(int pid) {
@@ -304,5 +289,20 @@ public class SystemBackend extends Backend {
         chunk.put(vmCpuVmIdKey, Integer.toString(stat.getVmId()));
         chunk.put(vmCpuLoadKey, Double.toString(stat.getCpuLoad()));
         return chunk;
+    }
+
+    @Override
+    public boolean attachToNewProcessByDefault() {
+        return true;
+    }
+
+    @Override
+    public void addJvmStatusListener(JvmStatusListener listener) {
+        hostListener.addJvmStatusListener(listener);
+    }
+
+    @Override
+    public void removeJvmStatusListener(JvmStatusListener listener) {
+        hostListener.removeJvmStatusListener(listener);
     }
 }

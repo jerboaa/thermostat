@@ -85,4 +85,9 @@ public class SampleBackend extends Backend {
         return new HashSet<Category>().iterator();
     }
 
+    @Override
+    public boolean attachToNewProcessByDefault() {
+        return false;
+    }
+
 }

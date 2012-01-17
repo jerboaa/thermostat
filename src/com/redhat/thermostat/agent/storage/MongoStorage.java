@@ -5,9 +5,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 import org.bson.BSONObject;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -16,6 +18,9 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
 import com.redhat.thermostat.agent.config.StartupConfiguration;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.
@@ -25,6 +30,8 @@ import com.redhat.thermostat.agent.config.StartupConfiguration;
 public class MongoStorage extends Storage {
 
     public static final String KEY_AGENT_ID = "agent-id";
+
+    private static final Logger logger = LoggingUtils.getLogger(MongoStorage.class);
 
     private Mongo mongo = null;
     private DB db = null;
@@ -47,9 +54,9 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public void addAgentInformation(StartupConfiguration config) {
+    public void addAgentInformation(StartupConfiguration config, BackendRegistry registry) {
         DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        DBObject toInsert = config.toDBObject();
+        DBObject toInsert = createConfigDBObject(config, registry);
         /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
         toInsert.putAll((BSONObject) getAgentDBObject());
         configCollection.insert(toInsert, WriteConcern.SAFE);
@@ -130,5 +137,36 @@ public class MongoStorage extends Storage {
             coll.remove(toDelete);
         }
         coll.insert(toInsert);
+    }
+
+    private DBObject createConfigDBObject(StartupConfiguration config, BackendRegistry registry) {
+        BasicDBObject result = getAgentDBObject();
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, config.getStartTime());
+        BasicDBObject backends = new BasicDBObject();
+        for (Backend backend : registry.getAll()) {
+            backends.put(backend.getName(), createBackendConfigDBObject(backend));
+        }
+        result.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS, backends);
+        return result;
+    }
+
+    private DBObject createBackendConfigDBObject(Backend backend) {
+        BasicDBObject result = new BasicDBObject();
+        Map<String, String> configMap = backend.getConfigurationMap();
+        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NAME, backend.getName());
+        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_DESC, backend.getDescription());
+        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_ACTIVE, createBackendActiveDBObject(backend));
+        for (String configName : configMap.keySet()) {
+            result.append(configName, configMap.get(configName));
+        }
+        return result;
+    }
+
+    private DBObject createBackendActiveDBObject(Backend backend) {
+        BasicDBObject result = new BasicDBObject();
+        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NEW, backend.getObserveNewJvm());
+        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_PIDS, new BasicDBList());
+        // TODO check which processes are already being listened to.
+        return result;
     }
 }
