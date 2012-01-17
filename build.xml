@@ -11,6 +11,8 @@
     <property name="dist.dir" location="dist" />
     <property name="javadoc.dir" location="${dist.dir}/doc/javadoc" />
 
+    <property name="app-info.file" value="app-info.properties" />
+
     <property name="test.src.dir" location="test" />
     <property name="test.build.dir" location="${build.dir}/test" />
     <property name="reports.dir" location="reports" />
@@ -23,11 +25,13 @@
     <property name="agent.jar" location="${dist.dir}/lib/thermostat-agent.jar" />
     <property name="client-gui.jar" location="${dist.dir}/lib/thermostat-client-gui.jar" />
 
+    <property name="thermostat.path.prefix" value="com/redhat/thermostat/" />
     <property name="agent-main-class" value="com.redhat.thermostat.agent.Main" />
     <property name="client-gui-main-class" value="com.redhat.thermostat.client.Main" />
 
     <property name="junit.out.xml.dir" location="${reports.dir}/junit/xml" />
     <property name="junit.out.html.dir" location="${reports.dir}/junit/html" />
+
 
     <!-- allow users/packagers to override our default directories -->
     <property file="custom-libs.properties" />
@@ -70,6 +74,9 @@
             <fileset dir="${src.dir}">
                 <include name="com/redhat/thermostat/common/**/*.properties" />
             </fileset>
+            <zipfileset fullpath="${thermostat.path.prefix}${app-info.file}"
+                        dir="."
+                        includes="${app-info.file}" />
          </jar>
     </target>
 

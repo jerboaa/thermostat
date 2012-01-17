@@ -32,6 +32,11 @@ public class IconResource {
         this.path = descriptor;
     }
 
+    public static IconResource fromPath(String path) {
+        // TODO implement this
+        return null;
+    }
+
     public Icon getIcon() {
         if (new File(path).exists()) {
             return new ImageIcon(path);

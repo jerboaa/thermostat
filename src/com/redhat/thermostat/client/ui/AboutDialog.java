@@ -36,11 +36,10 @@ public class AboutDialog extends JDialog {
         String name = appInfo.getName();
         String description = appInfo.getDescription();
         String version = appInfo.getVersion();
-        Icon icon = appInfo.getIcon();
+        Icon icon = IconResource.QUESTION.getIcon(); // TODO appInfo.getIcon();
         String releaseDate = appInfo.getReleaseDate();
-        String buildDate = appInfo.getBuildDate();
         String copyright = appInfo.getCopyright();
-        String license = appInfo.getLicense();
+        String license = appInfo.getLicenseSummary();
         String email = appInfo.getEmail();
         String website = appInfo.getWebsite();
 
