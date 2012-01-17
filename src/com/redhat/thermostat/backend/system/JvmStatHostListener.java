@@ -112,7 +112,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
             } catch (URISyntaxException e) {
                 logger.log(Level.WARNING, "error getting info for stopped vm" + stoppedVm, e);
             } catch (MonitorException e) {
-                logger.log(Level.WARNING, "error getting info for new vm" + stoppedVm, e);
+                logger.log(Level.WARNING, "error getting info for stopped vm" + stoppedVm, e);
             }
         }
     }
@@ -142,7 +142,6 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
             }
 
             if (backend.getObserveNewJvm()) {
-                backend.addPid(vmId);
                 JvmStatVmListener listener = new JvmStatVmListener(backend, vmId);
                 listenerMap.put(vmId, listener);
                 vm.addVmListener(listener);
@@ -160,16 +159,11 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(
                 new VmIdentifier(vmId.toString()));
         if (resolvedVmID != null) {
-            MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(
-                    new VmIdentifier(vmId.toString())));
-            if (vm != null) {
-                JvmStatVmListener listener = listenerMap.remove(vmId);
-                vm.removeVmListener(listener);
-                for (JvmStatusListener statusListener : statusListeners) {
-                    statusListener.jvmStopped(vmId);
-                }
+            listenerMap.remove(vmId);
+            for (JvmStatusListener statusListener : statusListeners) {
+                statusListener.jvmStopped(vmId);
             }
-            // TODO record vm as stopped
+            // TODO store updated vminfo chunk with stop time.
         }
     }
 

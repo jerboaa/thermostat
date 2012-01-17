@@ -30,7 +30,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.VmCpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class SystemBackend extends Backend implements JvmStatusNotifier {
+public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {
 
     private static final String NAME = "system";
     private static final String DESCRIPTION = "gathers basic information from the system";
@@ -156,6 +156,8 @@ public class SystemBackend extends Backend implements JvmStatusNotifier {
             return true;
         }
 
+        addJvmStatusListener(this);
+
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
         }
@@ -228,14 +230,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier {
         return categories.iterator();
     }
 
-    public void addPid(int pid) {
-        pidsToMonitor.add(pid);
-    }
-
-    public void removePid(int pid) {
-        pidsToMonitor.remove(pid);
-    }
-
     private Chunk makeCpuChunk(CpuStat cpuStat) {
         Chunk chunk = new Chunk(/* cpuStat.getTimeStamp(), */cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, Long.toString(cpuStat.getTimeStamp()));
@@ -304,5 +298,17 @@ public class SystemBackend extends Backend implements JvmStatusNotifier {
     @Override
     public void removeJvmStatusListener(JvmStatusListener listener) {
         hostListener.removeJvmStatusListener(listener);
+    }
+
+    @Override
+    public void jvmStarted(int vmId) {
+        if (getObserveNewJvm()) {
+            pidsToMonitor.add(vmId);
+        }
+    }
+
+    @Override
+    public void jvmStopped(int vmId) {
+        pidsToMonitor.remove(vmId);
     }
 }
