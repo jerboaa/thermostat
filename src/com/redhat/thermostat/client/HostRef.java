@@ -19,7 +19,11 @@ public class HostRef {
         return uid;
     }
 
-    public String getName() {
+    public String getHostName() {
         return name;
+    }
+
+    public boolean matches(String filter) {
+        return getHostName().contains(filter) || getAgentId().contains(filter);
     }
 }

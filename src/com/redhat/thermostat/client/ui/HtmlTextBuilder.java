@@ -55,18 +55,28 @@ public class HtmlTextBuilder {
         return text.toString();
     }
 
-    private static String escape(String text) {
+    private static String escape(String toEscape) {
         // FIXME implement this
-        return text;
+        return toEscape;
     }
 
-    public HtmlTextBuilder append(String value) {
-        text.append(value);
+    public HtmlTextBuilder append(String toAppend) {
+        text.append(escape(toAppend));
+        return this;
+    }
+
+    public HtmlTextBuilder appendRaw(String toAppend) {
+        text.append(toAppend);
         return this;
     }
 
     public static String boldHtml(String toBold) {
         return new HtmlTextBuilder().bold(toBold).toHtml();
+    }
+
+    public HtmlTextBuilder newLine() {
+        text.append("<br>");
+        return this;
     }
 
 }

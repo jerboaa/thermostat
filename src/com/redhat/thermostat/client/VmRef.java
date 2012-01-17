@@ -28,4 +28,8 @@ public class VmRef {
     public String getName() {
         return name;
     }
+
+    public boolean matches(String filter) {
+        return getName().contains(filter) || getId().contains(filter);
+    }
 }

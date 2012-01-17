@@ -18,11 +18,13 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
 
     private DB db;
     private DBCollection agentConfigCollection;
+    private DBCollection hostInfoCollection;
     private DBCollection vmInfoCollection;
 
     public MainWindowFacadeImpl(DB db) {
         this.db = db;
         this.agentConfigCollection = db.getCollection("agent-config");
+        this.hostInfoCollection = db.getCollection("host-info");
         this.vmInfoCollection = db.getCollection("vm-info");
     }
 
@@ -35,7 +37,9 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
             DBObject doc = cursor.next();
             String id = (String) doc.get("agent-id");
             if (id != null) {
-                HostRef agent = new HostRef(id, id);
+                DBObject hostInfo = hostInfoCollection.findOne(new BasicDBObject("agent-id", id));
+                String hostName = (String) hostInfo.get("hostname");
+                HostRef agent = new HostRef(id, hostName);
                 hostRefs.add(agent);
             }
         }
@@ -50,7 +54,9 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
         while (cursor.hasNext()) {
             DBObject vmObject = cursor.next();
             String id = (String) vmObject.get("vm-id");
-            VmRef ref = new VmRef(hostRef, id, id);
+            // TODO can we do better than the main class?
+            String mainClass = (String) vmObject.get("main-class");
+            VmRef ref = new VmRef(hostRef, id, mainClass);
             vmRefs.add(ref);
         }
 

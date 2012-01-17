@@ -4,6 +4,7 @@ import static com.redhat.thermostat.client.Translate._;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -27,6 +28,7 @@ import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.TreeSelectionEvent;
@@ -34,6 +36,7 @@ import javax.swing.event.TreeSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
@@ -70,6 +73,8 @@ public class MainWindow extends JFrame {
 
         searchField = new JTextField();
         agentVmTree = new AgentVmTree(treeModel);
+        agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
+        ToolTipManager.sharedInstance().registerComponent(agentVmTree);
         contentArea = new VerticalOnlyScrollingPanel();
         contentArea.setLayout(new BorderLayout());
 
@@ -249,7 +254,7 @@ public class MainWindow extends JFrame {
         } else {
             DefaultMutableTreeNode agentNode;
             for (HostRef hostRef : facade.getHosts()) {
-                if (hostRef.getName().contains(filter) || hostRef.getAgentId().contains(filter)) {
+                if (hostRef.matches(filter)) {
                     agentNode = new DefaultMutableTreeNode(hostRef);
                     root.add(agentNode);
                     VmRef[] vmRefs = facade.getVms(hostRef);
@@ -259,7 +264,7 @@ public class MainWindow extends JFrame {
                 } else {
                     agentNode = null;
                     for (VmRef vmRef : facade.getVms(hostRef)) {
-                        if (vmRef.getName().contains(filter) || vmRef.getId().contains(filter)) {
+                        if (vmRef.matches(filter)) {
                             if (agentNode == null) {
                                 agentNode = new DefaultMutableTreeNode(hostRef);
                                 root.add(agentNode);
@@ -302,6 +307,40 @@ public class MainWindow extends JFrame {
         public AgentVmTree(TreeModel model) {
             super(model);
             getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        }
+    }
+
+    private static class AgentVmTreeCellRenderer extends DefaultTreeCellRenderer {
+        private static final long serialVersionUID = 4444642511815252481L;
+
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+            setToolTipText(createToolTipText(((DefaultMutableTreeNode) value).getUserObject()));
+            return super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+        }
+
+        private String createToolTipText(Object value) {
+            if (value instanceof HostRef) {
+                HostRef hostRef = (HostRef) value;
+                String hostNameHtml = new HtmlTextBuilder().bold(hostRef.getHostName()).toPartialHtml();
+                String agentIdHtml = new HtmlTextBuilder().bold(hostRef.getAgentId()).toPartialHtml();
+                HtmlTextBuilder builder = new HtmlTextBuilder()
+                    .appendRaw(_("TREE_HOST_TOOLTIP_HOST_NAME", hostNameHtml))
+                    .newLine()
+                    .appendRaw(_("TREE_HOST_TOOLTIP_AGENT_ID", agentIdHtml));
+                return builder.toHtml();
+            } else if (value instanceof VmRef) {
+                VmRef vmRef = (VmRef) value;
+                String vmNameHtml= new HtmlTextBuilder().bold(vmRef.getName()).toPartialHtml();
+                String vmIdHtml = new HtmlTextBuilder().bold(vmRef.getId()).toPartialHtml();
+                HtmlTextBuilder builder = new HtmlTextBuilder()
+                    .appendRaw(_("TREE_HOST_TOOLTIP_VM_NAME", vmNameHtml))
+                    .newLine()
+                    .appendRaw(_("TREE_HOST_TOOLTIP_VM_ID", vmIdHtml));
+                return builder.toHtml();
+            } else {
+                return null;
+            }
         }
     }
 
