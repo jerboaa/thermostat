@@ -9,7 +9,7 @@ public abstract class Connection {
         LOCAL(false),
         REMOTE(true),
         CLUSTER(true),
-        NONE(false, false), ;
+        ;
 
         boolean isDisplayable = false;
         boolean needsUrl = false;

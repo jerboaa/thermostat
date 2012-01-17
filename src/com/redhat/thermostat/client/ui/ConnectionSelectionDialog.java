@@ -10,6 +10,8 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.Box;
@@ -28,6 +30,7 @@ public class ConnectionSelectionDialog extends JDialog {
 
     private static final int ICON_LABEL_GAP = 5;
 
+    private boolean cancelled = false;
     private final Connection model;
 
     public ConnectionSelectionDialog(JFrame owner, Connection model) {
@@ -35,6 +38,10 @@ public class ConnectionSelectionDialog extends JDialog {
         setTitle(_("STARTUP_MODE_SELECTION_DIALOG_TITLE"));
         this.model = model;
         setupUi();
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        // note: this is only fired when the user tries to close the window
+        // not when we try to close the window
+        addWindowListener(new CancelListener(this));
     }
 
     private void setupUi() {
@@ -53,7 +60,7 @@ public class ConnectionSelectionDialog extends JDialog {
 
         JButton cancelButton = new JButton(_("BUTTON_CANCEL"));
         cancelButton.setMargin(new Insets(0, 15, 0, 15));
-        cancelButton.addActionListener(new SetStartupModeListener(this, ConnectionType.NONE));
+        cancelButton.addActionListener(new CancelListener(this));
         buttonsPanel.add(cancelButton);
     }
 
@@ -115,6 +122,14 @@ public class ConnectionSelectionDialog extends JDialog {
         return model;
     }
 
+    public void setCancelled(boolean newValue) {
+        cancelled = newValue;
+    }
+
+    public boolean isCancelled() {
+        return cancelled;
+    }
+
     private static class SetStartupModeListener implements ActionListener {
         private final ConnectionType mode;
         private final ConnectionSelectionDialog window;
@@ -130,5 +145,31 @@ public class ConnectionSelectionDialog extends JDialog {
             window.setVisible(false);
             window.dispose();
         }
+    }
+
+    private static class CancelListener extends WindowAdapter implements ActionListener {
+
+        private final ConnectionSelectionDialog dialog;
+
+        public CancelListener(ConnectionSelectionDialog dialog) {
+            this.dialog = dialog;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            cancel();
+        }
+
+        @Override
+        public void windowClosing(WindowEvent e) {
+            cancel();
+        }
+
+        private void cancel() {
+            dialog.setCancelled(true);
+            dialog.setVisible(false);
+            dialog.dispose();
+        }
+
     }
 }

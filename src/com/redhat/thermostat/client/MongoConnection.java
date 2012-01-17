@@ -42,8 +42,6 @@ public class MongoConnection extends Connection {
             case CLUSTER:
                 // TODO connect to a cluster
                 break;
-            case NONE:
-                throw new IllegalArgumentException();
         }
         fireChanged(ConnectionStatus.CONNECTED);
         connected = true;

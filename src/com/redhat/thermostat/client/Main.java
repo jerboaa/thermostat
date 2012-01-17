@@ -11,7 +11,6 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.Connection.ConnectionListener;
 import com.redhat.thermostat.client.Connection.ConnectionStatus;
-import com.redhat.thermostat.client.Connection.ConnectionType;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Constants;
@@ -54,7 +53,7 @@ public class Main {
         dialog.setModal(true);
         dialog.setVisible(true);
 
-        if (connection.getType() == ConnectionType.NONE) {
+        if (dialog.isCancelled()) {
             return;
         }
 
