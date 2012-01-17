@@ -54,17 +54,19 @@ public class MainWindow extends JFrame {
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(_("MAIN_WINDOW_TREE_ROOT_NAME"));
     private final DefaultTreeModel treeModel = new DefaultTreeModel(root);
 
+    private final UiFacadeFactory facadeFactory;
     private final MainWindowFacade facade;
 
     private JPanel contentArea = null;
     private JTree agentVmTree = null;
     private JTextField searchField = null;
 
-    public MainWindow(MainWindowFacade facade) {
+    public MainWindow(UiFacadeFactory facadeFactory) {
         super();
         setTitle(_("MAIN_WINDOW_TITLE"));
 
-        this.facade = facade;
+        this.facadeFactory = facadeFactory;
+        this.facade = facadeFactory.getMainWindow();
 
         searchField = new JTextField();
         agentVmTree = new AgentVmTree(treeModel);
@@ -181,14 +183,14 @@ public class MainWindow extends JFrame {
                     contentArea.removeAll();
                     TreePath path = e.getPath();
                     if (path.getPathCount() == 1) {/* root */
-                        contentArea.add(new SummaryPanel(UiFacadeFactory.getSummaryPanel()));
+                        contentArea.add(new SummaryPanel(facadeFactory.getSummaryPanel()));
                     } else if (path.getPathCount() == 2) { /* agent */
                         HostRef hostRef = (HostRef) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-                        HostPanel panel = new HostPanel(UiFacadeFactory.getHostPanel(hostRef));
+                        HostPanel panel = new HostPanel(facadeFactory.getHostPanel(hostRef));
                         contentArea.add(panel);
                     } else { /* vm */
                         VmRef vmRef = (VmRef) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-                        VmPanel panel = new VmPanel(UiFacadeFactory.getVmPanel(vmRef));
+                        VmPanel panel = new VmPanel(facadeFactory.getVmPanel(vmRef));
                         contentArea.add(panel);
                     }
                     // Fixes some 'ghosting' caused by the previous components

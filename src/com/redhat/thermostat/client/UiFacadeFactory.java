@@ -1,36 +1,13 @@
 package com.redhat.thermostat.client;
 
-public class UiFacadeFactory {
+public interface UiFacadeFactory {
 
-    private static Connection connection;
+    public MainWindowFacade getMainWindow();
 
-    private static DummyFacade dummy;
+    public SummaryPanelFacade getSummaryPanel();
 
-    public static MainWindowFacade getMainWindow() {
-        return getDummy();
-    }
+    public HostPanelFacade getHostPanel(HostRef ref);
 
-    public static SummaryPanelFacade getSummaryPanel() {
-        return getDummy();
-    }
-
-    public static HostPanelFacade getHostPanel(HostRef ref) {
-        return getDummy();
-    }
-
-    public static VmPanelFacade getVmPanel(VmRef ref) {
-        return getDummy();
-    }
-
-    public static void setConnection(Connection connection) {
-        UiFacadeFactory.connection = connection;
-    }
-
-    private static DummyFacade getDummy() {
-        if (dummy == null) {
-            dummy = new DummyFacade();
-        }
-        return dummy;
-    }
+    public VmPanelFacade getVmPanel(VmRef ref);
 
 }
