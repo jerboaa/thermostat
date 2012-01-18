@@ -6,7 +6,11 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -72,9 +76,17 @@ public class VmPanel extends JPanel {
 
         entry = new TableEntry(_("VM_INFO_PROCESS_ID"), String.valueOf(vmInfo.getVmPid()));
         processSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_START_TIME"), String.valueOf(vmInfo.getStartTimeStamp()));
+        long startTime = vmInfo.getStartTimeStamp();
+        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
+        entry = new TableEntry(_("VM_INFO_START_TIME"), df.format(new Date(startTime)));
         processSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_STOP_TIME"), String.valueOf(vmInfo.getStopTimeStamp()));
+        long stopTime = vmInfo.getStopTimeStamp();
+        if (stopTime >= startTime) {
+            // Only show a stop time if we have actually stopped.
+            entry = new TableEntry(_("VM_INFO_STOP_TIME"), df.format(new Date(stopTime)));
+        } else {
+            entry = new TableEntry(_("VM_INFO_STOP_TIME"), _("VM_INFO_RUNNING"));
+        }
         processSection.add(entry);
 
         Section javaSection = new Section(_("VM_INFO_SECTION_JAVA"));
