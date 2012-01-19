@@ -75,8 +75,7 @@ public class MainWindow extends JFrame {
         agentVmTree = new AgentVmTree(treeModel);
         agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
-        contentArea = new VerticalOnlyScrollingPanel();
-        contentArea.setLayout(new BorderLayout());
+        contentArea = new JPanel(new BorderLayout());
 
         setupMenus();
         setupPanels();
@@ -198,9 +197,6 @@ public class MainWindow extends JFrame {
                         VmPanel panel = new VmPanel(facadeFactory.getVmPanel(vmRef));
                         contentArea.add(panel);
                     }
-                    // Fixes some 'ghosting' caused by the previous components
-                    // to stay painted on the JViewPort
-                    ((JScrollPane) contentArea.getParent().getParent()).repaint();
                     contentArea.revalidate();
                 }
             }
@@ -221,14 +217,7 @@ public class MainWindow extends JFrame {
 
     private JPanel createDetailsPanel() {
         JPanel result = new JPanel(new BorderLayout());
-        if (ClientArgs.isDebugLayout()) {
-            contentArea.setBorder(BorderFactory.createLineBorder(Color.GREEN));
-        }
-        JScrollPane contentScrollPane = new JScrollPane(contentArea, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        result.add(contentScrollPane, BorderLayout.CENTER);
-        if (ClientArgs.isDebugLayout()) {
-            result.setBorder(BorderFactory.createLineBorder(Color.PINK));
-        }
+        result.add(contentArea, BorderLayout.CENTER);
         return result;
     }
 
