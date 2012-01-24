@@ -60,8 +60,6 @@ public class IconResource {
 
     public static final IconResource SEARCH = new IconResource(ICON_PREFIX + "16x16/actions/search.png");
 
-    public static final IconResource USER_HOME = new IconResource(ICON_PREFIX + "256x256/places/user-home.png");
-
     private final String path;
 
     private IconResource(String descriptor) {

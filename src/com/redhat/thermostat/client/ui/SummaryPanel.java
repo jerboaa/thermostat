@@ -64,16 +64,6 @@ public class SummaryPanel extends JPanel {
 
         setLayout(new BorderLayout());
 
-        JPanel intro = new JPanel();
-        intro.setLayout(new BorderLayout());
-        JLabel homeIcon = new JLabel(IconResource.USER_HOME.getIcon());
-        intro.add(homeIcon, BorderLayout.LINE_START);
-
-        JLabel welcomeMessageLabel = new JLabel(new HtmlTextBuilder(_("WELCOME_MESSAGE")).toHtml());
-        intro.add(welcomeMessageLabel, BorderLayout.CENTER);
-
-        add(intro, BorderLayout.PAGE_START);
-
         List<Section> sections = new ArrayList<Section>();
         TableEntry entry;
 
