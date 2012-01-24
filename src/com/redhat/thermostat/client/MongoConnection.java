@@ -74,10 +74,12 @@ public class MongoConnection extends Connection {
                 break;
             case REMOTE:
                 // TODO connect to a remote machine
-                break;
+                fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+                return;
             case CLUSTER:
                 // TODO connect to a cluster
-                break;
+                fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+                return;
         }
         fireChanged(ConnectionStatus.CONNECTED);
         connected = true;
