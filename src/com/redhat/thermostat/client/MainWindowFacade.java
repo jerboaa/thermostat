@@ -36,10 +36,20 @@
 
 package com.redhat.thermostat.client;
 
+import javax.swing.tree.TreeModel;
+
 public interface MainWindowFacade {
 
-    public abstract HostRef[] getHosts();
+    public void start();
 
-    public abstract VmRef[] getVms(HostRef ref);
+    public void stop();
+
+    public HostRef[] getHosts();
+
+    public VmRef[] getVms(HostRef ref);
+
+    public TreeModel getHostVmTree();
+
+    public void setHostVmTreeFilter(String filter);
 
 }

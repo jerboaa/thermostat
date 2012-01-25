@@ -57,4 +57,13 @@ public class StringUtils {
     public static String quote(String toQuote) {
         return new String("\"" + toQuote + "\"");
     }
+
+    public static String repeat(String text, int times) {
+        StringBuilder builder = new StringBuilder(text.length() * times);
+        for (int i = 0; i < times; i++) {
+            builder.append(text);
+        }
+        return builder.toString();
+    }
+
 }

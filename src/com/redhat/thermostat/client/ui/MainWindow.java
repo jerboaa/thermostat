@@ -47,8 +47,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -63,7 +61,6 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
-import javax.swing.ScrollPaneConstants;
 import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -73,14 +70,11 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.ApplicationInfo;
-import com.redhat.thermostat.client.ClientArgs;
 import com.redhat.thermostat.client.HostRef;
 import com.redhat.thermostat.client.MainWindowFacade;
 import com.redhat.thermostat.client.UiFacadeFactory;
@@ -90,15 +84,13 @@ public class MainWindow extends JFrame {
 
     private static final long serialVersionUID = 5608972421496808177L;
 
-    private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(_("MAIN_WINDOW_TREE_ROOT_NAME"));
-    private final DefaultTreeModel treeModel = new DefaultTreeModel(root);
-
     private final UiFacadeFactory facadeFactory;
     private final MainWindowFacade facade;
 
     private JPanel contentArea = null;
-    private JTree agentVmTree = null;
+
     private JTextField searchField = null;
+    private JTree agentVmTree = null;
 
     public MainWindow(UiFacadeFactory facadeFactory) {
         super();
@@ -106,9 +98,10 @@ public class MainWindow extends JFrame {
 
         this.facadeFactory = facadeFactory;
         this.facade = facadeFactory.getMainWindow();
-
         searchField = new JTextField();
-        agentVmTree = new AgentVmTree(treeModel);
+        TreeModel model = facade.getHostVmTree();
+        agentVmTree = new JTree(model);
+        agentVmTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
         contentArea = new JPanel(new BorderLayout());
@@ -116,11 +109,11 @@ public class MainWindow extends JFrame {
         setupMenus();
         setupPanels();
 
-        agentVmTree.setSelectionPath(new TreePath(root.getPath()));
-
-        buildTree("");
+        agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) model.getRoot()).getPath()));
 
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        this.facade.start();
     }
 
     private void setupMenus() {
@@ -151,7 +144,7 @@ public class MainWindow extends JFrame {
 
         JMenuItem fileExitMenu = new JMenuItem(_("MENU_FILE_EXIT"));
         fileExitMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
-        fileExitMenu.addActionListener(new ShtudownClient(this));
+        fileExitMenu.addActionListener(new ShutdownClient(this.facade, this));
         fileMenu.add(fileExitMenu);
 
         JMenu helpMenu = new JMenu(_("MENU_HELP"));
@@ -203,10 +196,13 @@ public class MainWindow extends JFrame {
                 String filter = null;
                 try {
                     filter = doc.getText(0, doc.getLength());
+                    if (filter.trim().equals("")) {
+                        filter = null;
+                    }
                 } catch (BadLocationException ble) {
                     // ignore
                 }
-                buildTree(filter);
+                facade.setHostVmTreeFilter(filter);
             }
         });
 
@@ -236,7 +232,6 @@ public class MainWindow extends JFrame {
                     contentArea.revalidate();
                 }
             }
-
         });
 
         JScrollPane treeScrollPane = new JScrollPane(agentVmTree);
@@ -257,81 +252,20 @@ public class MainWindow extends JFrame {
         return result;
     }
 
-    private void buildTree(String filter) {
-        root.removeAllChildren();
-        treeModel.setRoot(null);
-        // paths to expand. only expand paths when a vm matches (to ensure it is
-        // visible)
-
-        List<TreeNode[]> pathsToExpand = new ArrayList<TreeNode[]>();
-        if (filter == null || filter.trim().equals("")) {
-            DefaultMutableTreeNode agentNode;
-            HostRef[] agentRefs = facade.getHosts();
-            for (HostRef hostRef : agentRefs) {
-                agentNode = new DefaultMutableTreeNode(hostRef);
-                root.add(agentNode);
-                VmRef[] vmRefs = facade.getVms(hostRef);
-                for (VmRef vmRef : vmRefs) {
-                    agentNode.add(new DefaultMutableTreeNode(vmRef));
-                }
-            }
-            treeModel.setRoot(root);
-        } else {
-            DefaultMutableTreeNode agentNode;
-            for (HostRef hostRef : facade.getHosts()) {
-                if (hostRef.matches(filter)) {
-                    agentNode = new DefaultMutableTreeNode(hostRef);
-                    root.add(agentNode);
-                    VmRef[] vmRefs = facade.getVms(hostRef);
-                    for (VmRef vmRef : vmRefs) {
-                        agentNode.add(new DefaultMutableTreeNode(vmRef));
-                    }
-                } else {
-                    agentNode = null;
-                    for (VmRef vmRef : facade.getVms(hostRef)) {
-                        if (vmRef.matches(filter)) {
-                            if (agentNode == null) {
-                                agentNode = new DefaultMutableTreeNode(hostRef);
-                                root.add(agentNode);
-                            }
-                            DefaultMutableTreeNode vmNode = new DefaultMutableTreeNode(vmRef);
-                            agentNode.add(vmNode);
-                            pathsToExpand.add(vmNode.getPath());
-                        }
-                    }
-                }
-            }
-            if (root.getChildCount() > 0) {
-                treeModel.setRoot(root);
-            }
-
-        }
-        for (TreeNode[] path : pathsToExpand) {
-            agentVmTree.expandPath(new TreePath(path).getParentPath());
-        }
-        agentVmTree.expandRow(0);
-    }
-
-    public static class ShtudownClient implements ActionListener {
+    public static class ShutdownClient implements ActionListener {
 
         private JFrame toDispose;
+        private MainWindowFacade facade;
 
-        public ShtudownClient(JFrame toDispose) {
+        public ShutdownClient(MainWindowFacade facade, JFrame toDispose) {
+            this.facade = facade;
             this.toDispose = toDispose;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             toDispose.dispose();
-        }
-    }
-
-    private static class AgentVmTree extends JTree {
-        private static final long serialVersionUID = 8894141735861100579L;
-
-        public AgentVmTree(TreeModel model) {
-            super(model);
-            getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+            facade.stop();
         }
     }
 

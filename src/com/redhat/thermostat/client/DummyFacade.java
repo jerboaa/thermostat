@@ -45,6 +45,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
+
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.NetworkInfo;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
@@ -60,6 +64,7 @@ public class DummyFacade implements SummaryPanelFacade, HostPanelFacade, VmPanel
 
     private HostRef onlyAgent = new HostRef("a-random-string-of-letters-and-numbers", "agent on localhost");
     private VmRef onlyVm = new VmRef(onlyAgent, "a-random-string-of-letters-and-numbers-or-perhaps-a-process-id", "super crazy awesome java app");
+    private String filter;
 
     public DummyFacade() {
         toDisplay.addAll(Arrays.asList(MemoryType.values()));
@@ -83,6 +88,16 @@ public class DummyFacade implements SummaryPanelFacade, HostPanelFacade, VmPanel
     @Override
     public VmRef[] getVms(HostRef ref) {
         return new VmRef[] { onlyVm };
+    }
+
+    @Override
+    public TreeModel getHostVmTree() {
+        return new DefaultTreeModel(new DefaultMutableTreeNode());
+    }
+
+    @Override
+    public void setHostVmTreeFilter(String filter) {
+        this.filter = filter;
     }
 
     @Override
@@ -291,6 +306,16 @@ public class DummyFacade implements SummaryPanelFacade, HostPanelFacade, VmPanel
 
         VmMemoryStat stat = new VmMemoryStat(timestamp, 0, generations);
         return stat;
+    }
+
+    @Override
+    public void start() {
+        // no-op
+    }
+
+    @Override
+    public void stop() {
+        // no-op
     }
 
 }
