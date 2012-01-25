@@ -215,6 +215,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         chunk.put(vmInfoMainClassKey, info.getMainClass());
         chunk.put(vmInfoCommandLineKey, info.getJavaCommandLine());
         chunk.put(vmInfoVmArgumentsKey, info.getVmArguments());
+        chunk.put(vmInfoVmNameKey, info.getVmName());
         chunk.put(vmInfoVmInfoKey, info.getVmInfo());
         chunk.put(vmInfoVmVersionKey, info.getVmVersion());
         chunk.put(vmInfoEnvironmentKey, info.getEnvironment().toString());
