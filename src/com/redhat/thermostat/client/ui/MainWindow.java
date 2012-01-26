@@ -115,6 +115,8 @@ public class MainWindow extends JFrame {
 
         setupMenus();
         setupPanels();
+        
+        this.setPreferredSize(new Dimension(800, 600));
 
         agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) model.getRoot()).getPath()));
 
@@ -247,6 +249,9 @@ public class MainWindow extends JFrame {
         navigationPanel.add(treeScrollPane);
 
         JPanel detailsPanel = createDetailsPanel();
+
+        navigationPanel.setMinimumSize(new Dimension(200,500));
+        detailsPanel.setMinimumSize(new Dimension(500, 500));
 
         splitPane.add(navigationPanel);
         splitPane.add(detailsPanel);
