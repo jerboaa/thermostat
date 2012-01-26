@@ -38,13 +38,12 @@ package com.redhat.thermostat.backend.system;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -83,7 +82,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     private MonitoredHost host = null;
     private JvmStatHostListener hostListener = new JvmStatHostListener();
 
-    private Set<Integer> pidsToMonitor = new HashSet<Integer>();
+    private Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
 
     private List<Category> categories = new ArrayList<Category>();
 
