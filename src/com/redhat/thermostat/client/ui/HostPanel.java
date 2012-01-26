@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.ui;
 import static com.redhat.thermostat.client.Translate._;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -51,7 +52,11 @@ import java.util.List;
 import javax.swing.AbstractButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -127,16 +132,25 @@ public class HostPanel extends JPanel {
         entry = new TableEntry(_("HOST_INFO_MEMORY_TOTAL"), String.valueOf(hostInfo.getTotalMemory()));
         hardware.add(entry);
 
-        Key key = new Key(_("HOST_INFO_NETWORK"));
-        List<Value> values = new ArrayList<Value>();
+        DefaultTableModel networkTableModel = new DefaultTableModel();
+        networkTableModel.addColumn(_("NETWORK_INTERFACE_COLUMN"));
+        networkTableModel.addColumn(_("NETWORK_IPV4_COLUMN"));
+        networkTableModel.addColumn(_("NETWORK_IPV6_COLUMN"));
         for (Iterator<NetworkInterfaceInfo> iter = facade.getNetworkInfo().getInterfacesIterator(); iter.hasNext();) {
             NetworkInterfaceInfo networkInfo = iter.next();
             String ifaceName = networkInfo.getInterfaceName();
             String ipv4 = networkInfo.getIp4Addr();
             String ipv6 = networkInfo.getIp6Addr();
-            values.add(new Value(_("HOST_INFO_NETWORK_INTERFACE_ADDDRESS", ifaceName, ipv4, ipv6)));
+            networkTableModel.addRow(new Object[] {ifaceName, ipv4, ipv6});
         }
-        hardware.add(new TableEntry(key, values));
+        JTable networkTable = new JTable(networkTableModel);
+
+        JPanel networkPanel = new JPanel(new BorderLayout());
+        networkPanel.add(networkTable.getTableHeader(), BorderLayout.PAGE_START);
+        networkPanel.add(networkTable, BorderLayout.CENTER);
+
+        Key key = new Key(_("HOST_INFO_NETWORK"));
+        hardware.add(new TableEntry(key, new Value(networkPanel)));
 
         Section software = new Section(_("HOST_OVERVIEW_SECTION_SOFTWARE"));
         allSections.add(software);

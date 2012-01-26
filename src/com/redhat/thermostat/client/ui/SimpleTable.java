@@ -120,14 +120,25 @@ public class SimpleTable {
 
     public static class Value {
         private final String text;
+        private final Component actualComponent;
 
         public Value(String text) {
             this.text = text;
+            this.actualComponent = null;
+        }
+
+        public Value(Component component) {
+            this.actualComponent = component;
+            this.text = null;
         }
 
         public String getText() {
             return text;
         }
+        public Component getComponent() {
+            return actualComponent;
+        }
+
     }
 
     public static JPanel createTable(List<Section> sections) {
@@ -148,6 +159,7 @@ public class SimpleTable {
         keyConstraints.insets = valueConstraints.insets = rowInsets;
         keyConstraints.gridy = valueConstraints.gridy = 0;
         keyConstraints.gridx = 0;
+        keyConstraints.anchor = GridBagConstraints.FIRST_LINE_END;
         valueConstraints.gridx = 1;
         keyConstraints.fill = valueConstraints.fill = GridBagConstraints.HORIZONTAL;
 
@@ -164,7 +176,11 @@ public class SimpleTable {
                 container.add(Components.label(tableEntry.getKey().getText()), keyConstraints);
 
                 for (Value value : tableEntry.getValues()) {
-                    container.add(Components.value(value.getText()), valueConstraints);
+                    if (value.getComponent() == null) {
+                        container.add(Components.value(value.getText()), valueConstraints);
+                    } else {
+                        container.add(value.getComponent(), valueConstraints);
+                    }
                     keyConstraints.gridy = ++valueConstraints.gridy;
                 }
             }
