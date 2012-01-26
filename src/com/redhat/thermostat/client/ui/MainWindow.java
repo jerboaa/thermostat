@@ -47,6 +47,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -92,12 +94,17 @@ public class MainWindow extends JFrame {
     private JTextField searchField = null;
     private JTree agentVmTree = null;
 
+    private final ShutdownClient shutdownAction;
+
     public MainWindow(UiFacadeFactory facadeFactory) {
         super();
         setTitle(_("MAIN_WINDOW_TITLE"));
 
         this.facadeFactory = facadeFactory;
         this.facade = facadeFactory.getMainWindow();
+
+        shutdownAction = new ShutdownClient(facade, this);
+
         searchField = new JTextField();
         TreeModel model = facade.getHostVmTree();
         agentVmTree = new JTree(model);
@@ -111,7 +118,8 @@ public class MainWindow extends JFrame {
 
         agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) model.getRoot()).getPath()));
 
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(shutdownAction);
 
         this.facade.start();
     }
@@ -144,7 +152,7 @@ public class MainWindow extends JFrame {
 
         JMenuItem fileExitMenu = new JMenuItem(_("MENU_FILE_EXIT"));
         fileExitMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
-        fileExitMenu.addActionListener(new ShutdownClient(this.facade, this));
+        fileExitMenu.addActionListener(shutdownAction);
         fileMenu.add(fileExitMenu);
 
         JMenu helpMenu = new JMenu(_("MENU_HELP"));
@@ -252,7 +260,7 @@ public class MainWindow extends JFrame {
         return result;
     }
 
-    public static class ShutdownClient implements ActionListener {
+    public static class ShutdownClient extends WindowAdapter implements ActionListener {
 
         private JFrame toDispose;
         private MainWindowFacade facade;
@@ -263,7 +271,16 @@ public class MainWindow extends JFrame {
         }
 
         @Override
+        public void windowClosing(WindowEvent e) {
+            shutdown();
+        }
+
+        @Override
         public void actionPerformed(ActionEvent e) {
+            shutdown();
+        }
+
+        private void shutdown() {
             toDispose.dispose();
             facade.stop();
         }
