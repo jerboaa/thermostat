@@ -4,8 +4,9 @@
         Build the thermostat project
     </description>
 
-    <property name="config.dir" value="config" />
+    <property name="config.dir" location="config" />
     <property name="src.dir" location="src" />
+    <property name="scripts.dir" location="scripts" />
     <property name="build.dir" location="build" />
     <property name="classes.dir" location="${build.dir}/classes" />
     <property name="dist.dir" location="dist" />
@@ -17,30 +18,28 @@
     <property name="test.build.dir" location="${build.dir}/test" />
     <property name="reports.dir" location="reports" />
 
-    <property name="common.classes.dir" location="${classes.dir}/common" />
-    <property name="agent.classes.dir" location="${classes.dir}/agent" />
-    <property name="client-gui.classes.dir" location="${classes.dir}/client-gui" />
-
     <property name="common.jar" location="${dist.dir}/lib/thermostat-common.jar" />
     <property name="agent.jar" location="${dist.dir}/lib/thermostat-agent.jar" />
     <property name="client-gui.jar" location="${dist.dir}/lib/thermostat-client-gui.jar" />
 
     <property name="thermostat.path.prefix" value="com/redhat/thermostat/" />
+    <property name="common.path.prefix" value="${thermostat.path.prefix}common/" />
+    <property name="agent.path.prefix" value="${thermostat.path.prefix}agent/" />
+    <property name="backend.path.prefix" value="${thermostat.path.prefix}backend/" />
+    <property name="client-gui.path.prefix" value="${thermostat.path.prefix}client/" />
     <property name="agent-main-class" value="com.redhat.thermostat.agent.Main" />
     <property name="client-gui-main-class" value="com.redhat.thermostat.client.Main" />
 
     <property name="junit.out.xml.dir" location="${reports.dir}/junit/xml" />
     <property name="junit.out.html.dir" location="${reports.dir}/junit/html" />
 
-
-    <!-- allow users/packagers to override our default directories -->
-    <property file="custom-libs.properties" />
-    <!-- default locations for libraries -->
-    <property file="libs.properties" />
+    <!-- allow users/packagers to change default paths and other parameters -->
+    <property file="ant-build.properties" />
 
     <path id="agent.classpath" >
-        <pathelement path="${mongo.jar}"/>
-        <pathelement path="${tools.jar}"/>
+        <pathelement path="${mongo.jar}" />
+        <pathelement path="${bson.jar}" />
+        <pathelement path="${tools.jar}" />
     </path>
 
     <path id="client-gui.classpath">
@@ -59,59 +58,51 @@
     </target>
 
     <target name="build-common-classes">
-        <mkdir dir="${common.classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${common.classes.dir}">
-            <include name="com/redhat/thermostat/common/**" />
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
+            <include name="${common.path.prefix}**" />
         </javac>
     </target>
 
-    <target name="common-jar" depends="build-common-classes">
+    <target name="common-jar" depends="build-common-classes,replace-properties">
         <mkdir dir="${dist.dir}" />
         <jar destfile="${common.jar}" duplicate="fail">
-            <fileset dir="${common.classes.dir}">
-                <include name="**/*.class" />
+            <fileset dir="${classes.dir}/">
+                <include name="${common.path.prefix}**/*.class" />
+                <include name="${common.path.prefix}**/*.properties" />
             </fileset>
-            <fileset dir="${src.dir}">
-                <include name="com/redhat/thermostat/common/**/*.properties" />
-            </fileset>
-            <zipfileset fullpath="${thermostat.path.prefix}${app-info.file}"
-                        dir="."
-                        includes="${app-info.file}" />
          </jar>
     </target>
 
     <target name="build-agent-classes" depends="build-common-classes">
-        <mkdir dir="${agent.classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${agent.classes.dir}">
-            <include name="com/redhat/thermostat/agent/**" />
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
+            <include name="${agent.path.prefix}**" />
             <classpath>
-                <path location="${common.classes.dir}" />
+                <path location="${classes.dir}" />
                 <path refid="agent.classpath" />
             </classpath>
         </javac>
     </target>
 
-    <target name="agent-jar" depends="build-agent-classes">
+    <target name="agent-jar" depends="build-agent-classes,replace-properties">
         <mkdir dir="${dist.dir}" />
         <jar destfile="${agent.jar}" duplicate="fail">
-            <fileset dir="${agent.classes.dir}">
-                <include name="**/*.class" />
-            </fileset>
-            <fileset dir="${src.dir}">
-                <include name="com/redhat/thermostat/agent/**/*.properties" />
-            </fileset>
-            <fileset dir="${src.dir}">
-                <include name="com/redhat/thermostat/backend/**/*.properties" />
+            <fileset dir="${classes.dir}">
+                <include name="${agent.path.prefix}**/*.class" />
+                <include name="${backend.path.prefix}**/*.class" />
+                <include name="${agent.path.prefix}**/*.properties" />
+                <include name="${backend.path.prefix}**/*.properties" />
             </fileset>
          </jar>
     </target>
 
     <target name="build-client-gui-classes" depends="build-common-classes">
-        <mkdir dir="${client-gui.classes.dir}"/>
-        <javac srcdir="${src.dir}" destdir="${client-gui.classes.dir}">
-            <include name="com/redhat/thermostat/client/**" />
+        <mkdir dir="${classes.dir}"/>
+        <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
+            <include name="${client.path.prefix}**" />
             <classpath>
-                <path location="${common.classes.dir}" />
+                <path location="${classes.dir}" />
                 <path refid="client-gui.classpath" />
             </classpath>
         </javac>
@@ -120,17 +111,61 @@
     <target name="client-gui-jar" depends="build-client-gui-classes">
         <mkdir dir="${dist.dir}" />
         <jar destfile="${client-gui.jar}" duplicate="fail">
-            <fileset dir="${client-gui.classes.dir}">
-                <include name="**/*.class" />
-            </fileset>
-            <fileset dir="${src.dir}">
-                <include name="com/redhat/thermostat/client/**/*.properties" />
+            <fileset dir="${classes.dir}">
+                <include name="${client.path.prefix}**/*.class" />
+                <include name="${client.path.prefix}**/*.properties" />
             </fileset>
          </jar>
     </target>
 
+    <target name="replace-scripts">
+    	<property name="scripts.dest" location="${dist.dir}/scripts" />
+    	<mkdir dir="${scripts.dest}" />
+        <copy todir="${scripts.dest}">
+            <fileset dir="${scripts.dir}" />
+            <filterset>
+                <filter token="JAVA_DIR" value="${java.dir}" />
+                <filter token="JAVA_HOME" value="${java.home}" />
+                <filter token="AGENT_CLASSPATH" value="${agent.classpath}" />
+                <filter token="AGENT_PROPERTIES" value="${agent.properties}" />
+                <filter token="CLIENT_GUI_CLASSPATH" value="${client-gui.classpath}" />
+                <filter token="CONFIG_DIR" value="${config.dir}" />
+            </filterset>
+        </copy>
+        <chmod perm="a+x" type="file">
+        	<fileset dir="${scripts.dest}" />
+        </chmod>
+    </target>
+
+    <target name="replace-properties">
+        <copy todir="${classes.dir}">
+            <fileset dir="${src.dir}">
+                <include name="**/*.properties" />
+            </fileset>
+        	<filterset>
+                <filter token="DATE" value="${appinfo.releasedate}" />
+                <filter token="VERSION" value="{appinfo.version}" />
+        	</filterset>
+        </copy>
+    </target>
+
+    <target name="replace-config">
+        <property name="config.dest" location="${dist.dir}/config" />
+        <mkdir dir="${config.dest}" />
+        <copy todir="${config.dest}">
+            <fileset dir="${config.dir}" />
+            <filterset>
+        		<!-- FIXME this works only for the case of running things from ${dist.dir}.
+        		     If the dir is copied to some other system dir (aka 'installed') this
+        		     breaks.  Probably need an ant install target to make this work properly
+        		 -->
+        		<filter token="THERM_INSTALL_DIR" value="${dist.dir}" />
+            </filterset>
+        </copy>
+    </target>
+
     <target name="build-all"
-            depends="common-jar,agent-jar,client-gui-jar"
+            depends="common-jar,agent-jar,client-gui-jar,replace-scripts,replace-config"
             description="build all jars" />
 
     <target name="javadoc" description="generate javadoc">
@@ -140,10 +175,6 @@
     </target>
 
     <target name="dist" depends="build-all,javadoc" description="build everything">
-        <mkdir dir="${config.dir}" />
-        <copy todir="${dist.dir}/${config.dir}">
-            <fileset dir="${config.dir}" />
-        </copy>
     </target>
 
     <target name="all"
@@ -154,7 +185,6 @@
     <target name="build-test">
         <mkdir dir="${test.build.dir}" />
         <javac srcdir="${test.src.dir}" destdir="${test.build.dir}" debug="true">
-            <!-- <include name="**" /> -->
             <classpath>
                 <path refid="test.classpath" />
             </classpath>

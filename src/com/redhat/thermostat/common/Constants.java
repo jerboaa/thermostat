@@ -42,8 +42,6 @@ package com.redhat.thermostat.common;
  */
 public class Constants {
 
-    public static final String AGENT_PROPERTIES_FILE = "config/agent.properties";
-
     public static final int EXIT_UNKNOWN_ERROR = 1;
     public static final int EXIT_UNABLE_TO_CONNECT_TO_DATABASE = 2;
     public static final int EXIT_UNABLE_TO_READ_PROPERTIES = 3;
@@ -56,9 +54,11 @@ public class Constants {
     public static final String AGENT_ARGUMENT_LOCAL = "--local";
     public static final String AGENT_ARGUMENT_LOGLEVEL = "--loglevel";
     public static final String AGENT_ARGUMENT_DEVEL = "--devel";
+    public static final String AGENT_ARGUMENT_PROPERTIES = "--properties";
 
     public static final String AGENT_PROPERTY_MONGOS_PORT = "mongos_port";
     public static final String AGENT_PROPERTY_MONGOD_PORT = "mongod_port";
+    public static final String AGENT_PROPERTY_MONGO_LAUNCH_SCRIPT = "mongo_launch_script";
     public static final String AGENT_PROPERTY_BACKENDS = "backends";
     public static final String AGENT_PROPERTY_BACKEND_ACTIVE = "active";
 

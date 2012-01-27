@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.config;
 
+import java.io.FileReader;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -48,7 +50,6 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.Defaults;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
@@ -60,24 +61,23 @@ public final class StartupConfiguration {
 
     private final long startTimestamp;
 
-    private Properties props;
+    private Properties props = new Properties();
     private Level logLevel;
     private boolean localMode;
     private int mongodPort;
+    private String mongoScript;
     private int mongosPort;
     private String databaseURI;
     private String completeDatabaseURI;
+    private Arguments arguments;
 
     private String hostname;
 
-    private Agent agent;
-
-    public StartupConfiguration(long startTime, String[] args, Properties props) throws LaunchException {
-        this.props = props;
+    public StartupConfiguration(long startTime, String[] args) throws LaunchException {
 
         initFromDefaults();
-        initFromProperties();
         initFromArguments(args);
+        initFromProperties();
 
         if (localMode) {
             completeDatabaseURI = databaseURI + ":" + mongodPort;
@@ -102,9 +102,15 @@ public final class StartupConfiguration {
         databaseURI = Defaults.DATABASE_URI;
     }
 
-    private void initFromProperties() {
+    private void initFromProperties() throws LaunchException {
         if (props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT) != null) {
             mongodPort = Integer.valueOf(props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT));
+        }
+        if (props.getProperty(Constants.AGENT_PROPERTY_MONGO_LAUNCH_SCRIPT) != null) {
+            mongoScript = props.getProperty(Constants.AGENT_PROPERTY_MONGO_LAUNCH_SCRIPT);
+            logger.finest("Mongo launch script at: " + mongoScript);
+        } else {
+            throw new LaunchException("No mongo launch script in properties.");
         }
         if (props.getProperty(Constants.AGENT_PROPERTY_MONGOS_PORT) != null) {
             mongosPort = Integer.valueOf(props.getProperty(Constants.AGENT_PROPERTY_MONGOS_PORT));
@@ -112,8 +118,6 @@ public final class StartupConfiguration {
     }
 
     private void initFromArguments(String[] args) throws LaunchException {
-        Arguments arguments;
-
         arguments = new Arguments(args);
         if (arguments.isModeSpecified()) {
             localMode = arguments.getLocalMode();
@@ -127,6 +131,10 @@ public final class StartupConfiguration {
         return logLevel;
     }
 
+    public String getMongoLaunchScript() {
+        return mongoScript;
+    }
+
     public String getDatabaseURIAsString() {
         return completeDatabaseURI;
     }
@@ -135,8 +143,14 @@ public final class StartupConfiguration {
         return hostname;
     }
 
-    public void setAgent(Agent agent) {
-        this.agent = agent;
+    public boolean getLocalMode() {
+        boolean local = false;
+        try {
+            local = arguments.getLocalMode();
+        } catch (IllegalStateException ise) {
+            local = false;
+        }
+        return local;
     }
 
     public List<String> getStartupBackendClassNames() {
@@ -175,7 +189,7 @@ public final class StartupConfiguration {
      * <p>
      * Please check that an option was specified (using the various is*Specified() methods) before using its value.
      */
-    private static class Arguments {
+    private class Arguments {
         private final boolean localMode;
         private final boolean modeSpecified;
         private final Level logLevel;
@@ -186,6 +200,7 @@ public final class StartupConfiguration {
             boolean explicitMode = false;
             Level level = null;
             boolean explicitLogLevel = false;
+            boolean noProps = true;
             for (int index = 0; index < args.length; index++) {
                 if (args[index].equals(Constants.AGENT_ARGUMENT_LOGLEVEL)) {
                     index++;
@@ -202,7 +217,25 @@ public final class StartupConfiguration {
                 } else if (args[index].equals(Constants.AGENT_ARGUMENT_LOCAL)) {
                     explicitMode = true;
                     local = true;
+                } else if (args[index].equals(Constants.AGENT_ARGUMENT_PROPERTIES)) {
+                    logger.finest("Properties argument specified.");
+                    index++;
+                    if (index < args.length) {
+                        String propFile = args[index];
+                        logger.finest("Properties file: " + propFile);
+                        try {
+                            props.load(new FileReader(propFile));
+                        } catch (IOException ioe) {
+                            throw new LaunchException("Unable to read properties file at " + propFile);
+                        }
+                        noProps = false;
+                    } else {
+                        throw new LaunchException("Missing argument for " + Constants.AGENT_ARGUMENT_PROPERTIES);
+                    }
                 }
+            }
+            if (noProps) {
+                throw new LaunchException("Required properties file not specified.");
             }
             logLevel = level;
             logLevelSpecified = explicitLogLevel;

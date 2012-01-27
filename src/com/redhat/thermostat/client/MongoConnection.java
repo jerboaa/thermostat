@@ -62,7 +62,7 @@ public class MongoConnection extends Connection {
                     m = new Mongo(getMongoURI());
                     db = m.getDB(StorageConstants.THERMOSTAT_DB_NAME);
                     /* the mongo java driver does not ensure this connection is actually working */
-                    testConnnection(db);
+                    testConnection(db);
                 } catch (MongoException e) {
                     fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
                     return;
@@ -85,19 +85,28 @@ public class MongoConnection extends Connection {
         connected = true;
     }
 
-    private static void testConnnection(DB db) {
+    private static void testConnection(DB db) {
         db.getCollection("agent-config").getCount();
     }
 
     private MongoURI getMongoURI() {
-        // FIXME hardcorded address
-        startMongoAndAgent();
-        return new MongoURI("mongodb://127.0.0.1:27017");
+        MongoURI uri = new MongoURI("mongodb://127.0.0.1:27017");
+        switch (getType()) {
+            case LOCAL:
+                startLocalAgent();
+                // FIXME hardcorded address, use config/agent.properties instead.
+                uri = new MongoURI("mongodb://127.0.0.1:27518");
+            case REMOTE:
+                // TODO
+            case CLUSTER:
+                // TODO
+        }
+        return uri;
     }
 
-    private void startMongoAndAgent() {
+    private void startLocalAgent() {
         // TODO implement this
-        logger.log(Level.WARNING, "startMongoAndAgent not implemented");
+        logger.log(Level.WARNING, "startLocalAgent not implemented");
         logger.log(Level.WARNING, "please start mongodb and agent yourself");
     }
 
@@ -111,14 +120,14 @@ public class MongoConnection extends Connection {
             m.close();
         }
         if (isLocal) {
-            stopMongoAndAgent();
+            stopLocalAgent();
         }
         connected = false;
     }
 
-    private void stopMongoAndAgent() {
+    private void stopLocalAgent() {
         // TODO implement this
-        logger.log(Level.WARNING, "startMongoAndAgent not implemented");
+        logger.log(Level.WARNING, "stopLocalAgent not implemented");
         logger.log(Level.WARNING, "please stop mongodb and agent yourself");
     }
 
