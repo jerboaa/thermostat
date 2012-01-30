@@ -38,30 +38,57 @@ package com.redhat.thermostat.client;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 
 public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
 
-    private DB db;
-    private DBCollection agentConfigCollection;
-    private DBCollection vmInfoCollection;
+    private final DB db;
+    private final DBCollection agentConfigCollection;
+    private final DBCollection vmInfoCollection;
+
+    private final ChangeableText connectedAgentText;
+    private final ChangeableText connectedVmText;
+
+    private final Timer backgroundUpdateTimer = new Timer();
 
     public SummaryPanelFacadeImpl(DB db) {
         this.db = db;
         this.agentConfigCollection = db.getCollection("agent-config");
         this.vmInfoCollection = db.getCollection("vm-info");
+
+        this.connectedVmText = new ChangeableText("");
+        this.connectedAgentText = new ChangeableText("");
     }
 
     @Override
-    public long getTotalConnectedVms() {
-        return vmInfoCollection.getCount();
+    public void start() {
+        backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                connectedVmText.setText(String.valueOf(vmInfoCollection.getCount()));
+                connectedAgentText.setText(String.valueOf(agentConfigCollection.getCount()));
+            }
+        }, 0, TimeUnit.SECONDS.toMillis(10));
     }
 
     @Override
-    public long getTotalConnectedAgents() {
-        return agentConfigCollection.getCount();
+    public void stop() {
+        backgroundUpdateTimer.cancel();
+    }
+
+    @Override
+    public ChangeableText getTotalConnectedVms() {
+        return connectedVmText;
+    }
+
+    @Override
+    public ChangeableText getTotalConnectedAgents() {
+        return connectedAgentText;
     }
 
     @Override

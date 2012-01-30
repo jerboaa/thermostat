@@ -42,11 +42,7 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -65,7 +61,6 @@ import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.VmPanelFacade;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
-import com.redhat.thermostat.common.VmInfo;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
@@ -76,12 +71,11 @@ public class VmPanel extends JPanel {
 
     private final VmPanelFacade facade;
 
-    private final VmInfo vmInfo;
-
-    public VmPanel(VmPanelFacade facade) {
+    public VmPanel(final VmPanelFacade facade) {
         this.facade = facade;
-        this.vmInfo = facade.getVmInfo();
         createUI();
+
+        addHierarchyListener(new AsyncFacadeManager(facade));
     }
 
     public void createUI() {
@@ -110,34 +104,27 @@ public class VmPanel extends JPanel {
         Section processSection = new Section(_("VM_INFO_SECTION_PROCESS"));
         allSections.add(processSection);
 
-        entry = new TableEntry(_("VM_INFO_PROCESS_ID"), String.valueOf(vmInfo.getVmPid()));
+        entry = new TableEntry(_("VM_INFO_PROCESS_ID"), facade.getVmPid());
         processSection.add(entry);
-        long startTime = vmInfo.getStartTimeStamp();
-        DateFormat df = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
-        entry = new TableEntry(_("VM_INFO_START_TIME"), df.format(new Date(startTime)));
+        entry = new TableEntry(_("VM_INFO_START_TIME"), facade.getStartTimeStamp());
         processSection.add(entry);
-        long stopTime = vmInfo.getStopTimeStamp();
-        if (stopTime >= startTime) {
-            // Only show a stop time if we have actually stopped.
-            entry = new TableEntry(_("VM_INFO_STOP_TIME"), df.format(new Date(stopTime)));
-        } else {
-            entry = new TableEntry(_("VM_INFO_STOP_TIME"), _("VM_INFO_RUNNING"));
-        }
+        entry = new TableEntry(_("VM_INFO_STOP_TIME"), facade.getStopTimeStamp());
         processSection.add(entry);
 
         Section javaSection = new Section(_("VM_INFO_SECTION_JAVA"));
         allSections.add(javaSection);
 
-        entry = new TableEntry(_("VM_INFO_MAIN_CLASS"), vmInfo.getMainClass());
+        entry = new TableEntry(_("VM_INFO_MAIN_CLASS"), facade.getMainClass());
         javaSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_COMMAND_LINE"), vmInfo.getJavaCommandLine());
+        entry = new TableEntry(_("VM_INFO_COMMAND_LINE"), facade.getJavaCommandLine());
         javaSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_JAVA_VERSION"), vmInfo.getJavaVersion());
+        entry = new TableEntry(_("VM_INFO_JAVA_VERSION"), facade.getJavaVersion());
         javaSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_VM"), _("VM_INFO_VM_NAME_AND_VERSION", vmInfo.getVmName(), vmInfo.getVmVersion()));
+        entry = new TableEntry(_("VM_INFO_VM"), facade.getVmNameAndVersion());
         javaSection.add(entry);
 
-        JPanel table = SimpleTable.createTable(allSections);
+        SimpleTable simpleTable = new SimpleTable();
+        JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
         panel.add(table, BorderLayout.PAGE_START);
 

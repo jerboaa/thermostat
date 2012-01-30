@@ -37,28 +37,48 @@
 package com.redhat.thermostat.client;
 
 import static com.redhat.thermostat.client.Translate._;
+
+import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.VmInfo;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
 
 public class VmPanelFacadeImpl implements VmPanelFacade {
 
-    private VmRef ref;
-    private DB db;
-    private DBCollection vmInfoCollection;
-    private DBCollection vmGcStatsCollection;
-    private DBCollection vmMemoryStatsCollection;
+    private final VmRef ref;
+    private final DB db;
+    private final DBCollection vmInfoCollection;
+    private final DBCollection vmGcStatsCollection;
+    private final DBCollection vmMemoryStatsCollection;
+
+    private final ChangeableText vmPid = new ChangeableText("");
+    private final ChangeableText startTime = new ChangeableText("");
+    private final ChangeableText stopTime = new ChangeableText("");
+    private final ChangeableText javaVersion = new ChangeableText("");
+    private final ChangeableText javaHome = new ChangeableText("");
+    private final ChangeableText mainClass = new ChangeableText("");
+    private final ChangeableText commandLine = new ChangeableText("");
+    private final ChangeableText vmName = new ChangeableText("");
+    private final ChangeableText vmInfo = new ChangeableText("");
+    private final ChangeableText vmVersion = new ChangeableText("");
+    private final ChangeableText vmArguments = new ChangeableText("");
+    private final ChangeableText vmNameAndVersion = new ChangeableText("");
+
+    private final Timer timer = new Timer();
+
+    private final DateFormat vmRunningTimeFormat;
 
     private VmMemoryStat cached;
 
@@ -69,35 +89,92 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         vmGcStatsCollection = db.getCollection("vm-gc-stats");
         vmMemoryStatsCollection = db.getCollection("vm-memory-stats");
 
+        vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
     }
 
     @Override
-    public VmInfo getVmInfo() {
-        BasicDBObject queryObject = new BasicDBObject();
-        queryObject.put("agent-id", ref.getAgent().getAgentId());
-        queryObject.put("vm-id", ref.getId());
-        DBObject vmInfoObject = vmInfoCollection.findOne(queryObject);
-        int vmPid = Integer.valueOf((String) vmInfoObject.get("vm-pid"));
-        long startTime = Long.valueOf((String) vmInfoObject.get("start-time"));
-        long stopTime = Long.valueOf((String) vmInfoObject.get("stop-time"));
-        String javaVersion = (String) vmInfoObject.get("runtime-version");
-        String javaHome = (String) vmInfoObject.get("java-home");
-        String mainClass = (String) vmInfoObject.get("main-class");
-        String commandLine = (String) vmInfoObject.get("command-line");
-        String vmName = (String) vmInfoObject.get("vm-name");
-        String vmInfo = (String) vmInfoObject.get("vm-info");
-        String vmVersion = (String) vmInfoObject.get("vm-version");
-        String vmArguments = (String) vmInfoObject.get("vm-arguments");
-        // TODO fill in these
-        Map<String, String> properties = new HashMap<String, String>();
-        Map<String, String> environment = new HashMap<String, String>();
-        List<String> loadedNativeLibraries = new ArrayList<String>();
-        return new VmInfo(vmPid, startTime, stopTime,
-                javaVersion, javaHome,
-                mainClass, commandLine,
-                vmName, vmInfo, vmVersion, vmArguments,
-                properties, environment, loadedNativeLibraries);
+    public void start() {
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                BasicDBObject queryObject = new BasicDBObject();
+                queryObject.put("agent-id", ref.getAgent().getAgentId());
+                queryObject.put("vm-id", ref.getId());
+                DBObject vmInfoObject = vmInfoCollection.findOne(queryObject);
+                vmPid.setText((String) vmInfoObject.get("vm-pid"));
+                long actualStartTime = Long.valueOf((String) vmInfoObject.get("start-time"));
+                startTime.setText(vmRunningTimeFormat.format(new Date(actualStartTime)));
+                long actualStopTime = Long.valueOf((String) vmInfoObject.get("stop-time"));
+                if (actualStopTime >= actualStartTime) {
+                    // Only show a stop time if we have actually stopped.
+                    stopTime.setText(vmRunningTimeFormat.format(new Date(actualStopTime)));
+                } else {
+                    stopTime.setText(_("VM_INFO_RUNNING"));
+                }
+                javaVersion.setText((String) vmInfoObject.get("runtime-version"));
+                javaHome.setText((String) vmInfoObject.get("java-home"));
+                mainClass.setText((String) vmInfoObject.get("main-class"));
+                commandLine.setText((String) vmInfoObject.get("command-line"));
+                String actualVmName = (String) vmInfoObject.get("vm-name");
+                vmName.setText(actualVmName);
+                vmInfo.setText((String) vmInfoObject.get("vm-info"));
+                String actualVmVersion = (String) vmInfoObject.get("vm-version");
+                vmVersion.setText(actualVmVersion);
+                vmArguments.setText((String) vmInfoObject.get("vm-arguments"));
+                vmNameAndVersion.setText(_("VM_INFO_VM_NAME_AND_VERSION", actualVmName, actualVmVersion));
+            }
+        }, 0, TimeUnit.SECONDS.toMillis(5));
 
+    }
+
+    @Override
+    public void stop() {
+        timer.cancel();
+    }
+
+    @Override
+    public ChangeableText getVmPid() {
+        return vmPid;
+    }
+
+    @Override
+    public ChangeableText getJavaCommandLine() {
+        return commandLine;
+    }
+
+    @Override
+    public ChangeableText getJavaVersion() {
+        return javaVersion;
+    }
+
+    @Override
+    public ChangeableText getMainClass() {
+        return mainClass;
+    }
+
+    @Override
+    public ChangeableText getStartTimeStamp() {
+        return startTime;
+    }
+
+    @Override
+    public ChangeableText getStopTimeStamp() {
+        return stopTime;
+    }
+
+    @Override
+    public ChangeableText getVmNameAndVersion() {
+        return vmNameAndVersion;
+    }
+
+    @Override
+    public ChangeableText getVmName() {
+        return vmName;
+    }
+
+    @Override
+    public ChangeableText getVmVersion() {
+        return vmVersion;
     }
 
     @Override

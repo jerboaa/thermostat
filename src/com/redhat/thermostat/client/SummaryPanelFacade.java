@@ -38,11 +38,11 @@ package com.redhat.thermostat.client;
 
 import java.util.List;
 
-public interface SummaryPanelFacade {
+public interface SummaryPanelFacade extends AsyncUiFacade {
 
-    public long getTotalConnectedVms();
+    public ChangeableText getTotalConnectedVms();
 
-    public long getTotalConnectedAgents();
+    public ChangeableText getTotalConnectedAgents();
 
     public List<String> getIssues();
 

@@ -68,36 +68,33 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowFacadeImpl.class);
 
+    private final DB db;
+    private final DBCollection agentConfigCollection;
+    private final DBCollection hostInfoCollection;
+    private final DBCollection vmInfoCollection;
+
     private final DefaultMutableTreeNode publishedRoot = new DefaultMutableTreeNode(_("MAIN_WINDOW_TREE_ROOT_NAME"));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
-    private DB db;
-    private DBCollection agentConfigCollection;
-    private DBCollection hostInfoCollection;
-    private DBCollection vmInfoCollection;
-
     private String filterText;
 
-    private Timer backgroundUpdater;
+    private final Timer backgroundUpdater = new Timer();
 
     public MainWindowFacadeImpl(DB db) {
         this.db = db;
         this.agentConfigCollection = db.getCollection("agent-config");
         this.hostInfoCollection = db.getCollection("host-info");
         this.vmInfoCollection = db.getCollection("vm-info");
-
     }
 
     @Override
     public void start() {
-        backgroundUpdater = new Timer();
         backgroundUpdater.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 doUpdateTreeAsync();
             }
         }, 0, TimeUnit.SECONDS.toMillis(10));
-
     }
 
     @Override

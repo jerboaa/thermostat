@@ -34,47 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.common.VmMemoryStat;
+import java.awt.Component;
 
-/**
- * Represents information specific to a JVM running on a host somewhere. This is
- * used to populate the UI for a VM's information.
- */
-public interface VmPanelFacade extends AsyncUiFacade {
+import com.redhat.thermostat.client.AsyncUiFacade;
 
-    /**
-     * @return names of the garbage collectors that are operating
-     */
-    public String[] getCollectorNames();
+public class AsyncFacadeManager extends ComponentVisibleListener {
 
-    /**
-     * @param collectorName the name of the garbage collector
-     * @return a list of (time, cumulative time collector has run )
-     */
-    public DiscreteTimeData<Long>[] getCollectorRunTime(String collectorName);
+    private AsyncUiFacade facade;
 
-    public String getCollectorGeneration(String collectorName);
+    public AsyncFacadeManager(AsyncUiFacade facade) {
+        this.facade = facade;
+    }
 
-    public VmMemoryStat getLatestMemoryInfo();
+    @Override
+    public void componentHidden(Component component) {
+        facade.stop();
+    }
 
-    public ChangeableText getVmPid();
-
-    public ChangeableText getMainClass();
-
-    public ChangeableText getJavaCommandLine();
-
-    public ChangeableText getJavaVersion();
-
-    public ChangeableText getVmName();
-
-    public ChangeableText getVmVersion();
-
-    public ChangeableText getStartTimeStamp();
-
-    public ChangeableText getStopTimeStamp();
-
-    public ChangeableText getVmNameAndVersion();
+    @Override
+    public void componentShown(Component component) {
+        facade.start();
+    }
 
 }

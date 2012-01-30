@@ -36,45 +36,9 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.common.VmMemoryStat;
+public interface AsyncUiFacade {
 
-/**
- * Represents information specific to a JVM running on a host somewhere. This is
- * used to populate the UI for a VM's information.
- */
-public interface VmPanelFacade extends AsyncUiFacade {
+    public void start();
 
-    /**
-     * @return names of the garbage collectors that are operating
-     */
-    public String[] getCollectorNames();
-
-    /**
-     * @param collectorName the name of the garbage collector
-     * @return a list of (time, cumulative time collector has run )
-     */
-    public DiscreteTimeData<Long>[] getCollectorRunTime(String collectorName);
-
-    public String getCollectorGeneration(String collectorName);
-
-    public VmMemoryStat getLatestMemoryInfo();
-
-    public ChangeableText getVmPid();
-
-    public ChangeableText getMainClass();
-
-    public ChangeableText getJavaCommandLine();
-
-    public ChangeableText getJavaVersion();
-
-    public ChangeableText getVmName();
-
-    public ChangeableText getVmVersion();
-
-    public ChangeableText getStartTimeStamp();
-
-    public ChangeableText getStopTimeStamp();
-
-    public ChangeableText getVmNameAndVersion();
-
+    public void stop();
 }

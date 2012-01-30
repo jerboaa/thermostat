@@ -36,14 +36,9 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.NetworkInfo;
+import javax.swing.table.TableModel;
 
-public interface HostPanelFacade {
-    public HostInfo getHostInfo();
-
-    public NetworkInfo getNetworkInfo();
-
+public interface HostPanelFacade extends AsyncUiFacade {
     public DiscreteTimeData<Double>[] getCpuLoad();
 
     public DiscreteTimeData<Long>[] getMemoryUsage(MemoryType type);
@@ -53,5 +48,19 @@ public interface HostPanelFacade {
     public boolean isMemoryTypeDisplayed(MemoryType type);
 
     public void setDisplayMemoryType(MemoryType type, boolean selected);
+
+    public ChangeableText getHostName();
+
+    public ChangeableText getCpuModel();
+
+    public ChangeableText getCpuCount();
+
+    public ChangeableText getTotalMemory();
+
+    public ChangeableText getOsName();
+
+    public ChangeableText getOsKernel();
+
+    public TableModel getNetworkTableModel();
 
 }

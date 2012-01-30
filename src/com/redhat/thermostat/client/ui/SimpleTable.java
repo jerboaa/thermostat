@@ -41,12 +41,23 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.swing.Box;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
-public class SimpleTable {
+import com.redhat.thermostat.client.ChangeableText;
+
+public class SimpleTable implements ChangeableText.TextListener {
+
+    Map<ChangeableText, Set<JLabel>> updateMap = new HashMap<ChangeableText, Set<JLabel>>();
 
     public static class Section {
         private final String sectionName;
@@ -81,7 +92,7 @@ public class SimpleTable {
         private final Key key;
         private final List<Value> values;
 
-        public TableEntry(String key, String value) {
+        public TableEntry(String key, ChangeableText value) {
             this(new Key(key), new Value(value));
         }
 
@@ -103,7 +114,6 @@ public class SimpleTable {
         public Value[] getValues() {
             return values.toArray(new Value[0]);
         }
-
     }
 
     public static class Key {
@@ -119,10 +129,14 @@ public class SimpleTable {
     }
 
     public static class Value {
-        private final String text;
+        private final ChangeableText text;
         private final Component actualComponent;
 
         public Value(String text) {
+            this(new ChangeableText(text));
+        }
+
+        public Value(ChangeableText text) {
             this.text = text;
             this.actualComponent = null;
         }
@@ -132,16 +146,16 @@ public class SimpleTable {
             this.text = null;
         }
 
-        public String getText() {
-            return text;
-        }
         public Component getComponent() {
             return actualComponent;
         }
 
+        public ChangeableText getChangeableText() {
+            return text;
+        }
     }
 
-    public static JPanel createTable(List<Section> sections) {
+    public JPanel createTable(List<Section> sections) {
         final int SECTION_TOP_GAP = 10;
         final int ROW_VERTICAL_GAP = 0;
         final int ROW_HORIZONTAL_GAP = 10;
@@ -177,7 +191,16 @@ public class SimpleTable {
 
                 for (Value value : tableEntry.getValues()) {
                     if (value.getComponent() == null) {
-                        container.add(Components.value(value.getText()), valueConstraints);
+                        ChangeableText text = value.getChangeableText();
+                        JLabel valueLabel = Components.value(text.getText());
+                        if (updateMap.containsKey(text)) {
+                            updateMap.get(text).add(valueLabel);
+                        } else {
+                            Set<JLabel> set = new HashSet<JLabel>();
+                            set.add(valueLabel);
+                            updateMap.put(text, set);
+                        }
+                        container.add(valueLabel, valueConstraints);
                     } else {
                         container.add(value.getComponent(), valueConstraints);
                     }
@@ -197,7 +220,54 @@ public class SimpleTable {
         Component filler = Box.createGlue();
         container.add(filler, glueConstraints);
 
+        container.addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component c) {
+                updateAllValues();
+                addAllListeners();
+            }
+
+            @Override
+            public void componentHidden(Component c) {
+                removeAllListeners();
+            }
+        });
+
         return container;
+    }
+
+
+    private void updateAllValues() {
+        for (Entry<ChangeableText, Set<JLabel>> entry: updateMap.entrySet()) {
+            for (JLabel label: entry.getValue()) {
+                label.setText(entry.getKey().getText());
+            }
+        }
+    }
+
+    @Override
+    public void textChanged(final ChangeableText text) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                String newValue = text.getText();
+                for (JLabel label: updateMap.get(text)) {
+                    label.setText(newValue);
+                }
+            }
+        });
+    }
+
+    public void addAllListeners() {
+        for (ChangeableText text : updateMap.keySet()) {
+            text.addListener(this);
+        }
+    }
+
+    public void removeAllListeners() {
+        for (ChangeableText text : updateMap.keySet()) {
+            text.removeListener(this);
+        }
     }
 
 }

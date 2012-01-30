@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -70,12 +69,13 @@ public class SummaryPanel extends JPanel {
         Section summarySection = new Section(_("HOME_PANEL_SECTION_SUMMARY"));
         sections.add(summarySection);
 
-        entry = new TableEntry(_("HOME_PANEL_TOTAL_MACHINES"), String.valueOf(facade.getTotalConnectedAgents()));
+        entry = new TableEntry(_("HOME_PANEL_TOTAL_MACHINES"), facade.getTotalConnectedAgents());
         summarySection.add(entry);
-        entry = new TableEntry(_("HOME_PANEL_TOTAL_JVMS"), String.valueOf(facade.getTotalConnectedVms()));
+        entry = new TableEntry(_("HOME_PANEL_TOTAL_JVMS"), facade.getTotalConnectedVms());
         summarySection.add(entry);
 
-        JPanel summaryPanel = SimpleTable.createTable(sections);
+        SimpleTable simpleTable = new SimpleTable();
+        JPanel summaryPanel = simpleTable.createTable(sections);
         summaryPanel.setBorder(Components.smallBorder());
         add(summaryPanel, BorderLayout.CENTER);
 
@@ -83,6 +83,7 @@ public class SummaryPanel extends JPanel {
         issuesPanel.setBorder(Components.smallBorder());
         add(issuesPanel, BorderLayout.PAGE_END);
 
+        addHierarchyListener(new AsyncFacadeManager(facade));
     }
 
     public JPanel createIssuesPanel() {

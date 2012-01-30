@@ -34,34 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-public class DummyUiFacadeFactory implements UiFacadeFactory {
+import java.awt.Component;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 
-    private final DummyFacade dummyFacade;
-
-    public DummyUiFacadeFactory() {
-        dummyFacade = new DummyFacade();
-    }
-
+public abstract class ComponentVisibleListener implements HierarchyListener {
     @Override
-    public MainWindowFacade getMainWindow() {
-        return dummyFacade;
+    public void hierarchyChanged(HierarchyEvent e) {
+        if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0)  {
+            if (e.getComponent().isShowing()) {
+                componentShown(e.getComponent());
+            } else {
+                componentHidden(e.getComponent());
+            }
+        }
+
     }
 
-    @Override
-    public SummaryPanelFacade getSummaryPanel() {
-        return dummyFacade;
-    }
+    public abstract void componentShown(Component component);
 
-    @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return dummyFacade;
-    }
-
-    @Override
-    public VmPanelFacade getVmPanel(VmRef ref) {
-        return dummyFacade;
-    }
+    public abstract void componentHidden(Component component);
 
 }

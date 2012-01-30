@@ -38,11 +38,7 @@ package com.redhat.thermostat.client;
 
 import javax.swing.tree.TreeModel;
 
-public interface MainWindowFacade {
-
-    public void start();
-
-    public void stop();
+public interface MainWindowFacade extends AsyncUiFacade {
 
     public HostRef[] getHosts();
 

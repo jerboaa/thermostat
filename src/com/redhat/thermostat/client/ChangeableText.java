@@ -36,45 +36,46 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.common.VmMemoryStat;
+import java.util.HashSet;
+import java.util.Set;
 
-/**
- * Represents information specific to a JVM running on a host somewhere. This is
- * used to populate the UI for a VM's information.
- */
-public interface VmPanelFacade extends AsyncUiFacade {
+public class ChangeableText {
 
-    /**
-     * @return names of the garbage collectors that are operating
-     */
-    public String[] getCollectorNames();
+    private final Set<TextListener> listeners = new HashSet<TextListener>();
+    private String text;
 
-    /**
-     * @param collectorName the name of the garbage collector
-     * @return a list of (time, cumulative time collector has run )
-     */
-    public DiscreteTimeData<Long>[] getCollectorRunTime(String collectorName);
+    public static interface TextListener {
+        public void textChanged(ChangeableText text);
+    }
 
-    public String getCollectorGeneration(String collectorName);
+    public ChangeableText(String text) {
+        this.text = text;
+    }
 
-    public VmMemoryStat getLatestMemoryInfo();
+    public synchronized void setText(String text) {
+        if (this.text.equals(text)) {
+            return;
+        }
+        this.text = text;
+        fireChanged();
+    }
 
-    public ChangeableText getVmPid();
+    public synchronized String getText() {
+        return text;
+    }
 
-    public ChangeableText getMainClass();
+    public synchronized void addListener(TextListener listener) {
+        this.listeners.add(listener);
+    }
 
-    public ChangeableText getJavaCommandLine();
+    public synchronized void removeListener(TextListener listener) {
+        this.listeners.remove(listener);
+    }
 
-    public ChangeableText getJavaVersion();
-
-    public ChangeableText getVmName();
-
-    public ChangeableText getVmVersion();
-
-    public ChangeableText getStartTimeStamp();
-
-    public ChangeableText getStopTimeStamp();
-
-    public ChangeableText getVmNameAndVersion();
+    private void fireChanged() {
+        for (TextListener listener: listeners) {
+            listener.textChanged(this);
+        }
+    }
 
 }

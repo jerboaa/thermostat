@@ -111,11 +111,7 @@ public class Main {
         connection.connect();
         connection.removeListener(connectionListener);
 
-        if (arguments.useDummyDataSource()) {
-            uiFacadeFactory = new DummyUiFacadeFactory();
-        } else {
-            uiFacadeFactory = new UiFacadeFactoryImpl((MongoConnection) connection);
-        }
+        uiFacadeFactory = new UiFacadeFactoryImpl((MongoConnection) connection);
 
         MainWindow gui = new MainWindow(uiFacadeFactory);
         gui.pack();

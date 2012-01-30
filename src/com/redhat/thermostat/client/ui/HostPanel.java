@@ -39,24 +39,19 @@ package com.redhat.thermostat.client.ui;
 import static com.redhat.thermostat.client.Translate._;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.AbstractButton;
 import javax.swing.JCheckBox;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -74,8 +69,6 @@ import com.redhat.thermostat.client.ui.SimpleTable.Key;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.client.ui.SimpleTable.Value;
-import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.NetworkInterfaceInfo;
 
 public class HostPanel extends JPanel {
 
@@ -87,12 +80,12 @@ public class HostPanel extends JPanel {
     private static final long serialVersionUID = 4835316442841009133L;
 
     private final HostPanelFacade facade;
-    private final HostInfo hostInfo;
 
-    public HostPanel(HostPanelFacade facade) {
+    public HostPanel(final HostPanelFacade facade) {
         this.facade = facade;
-        this.hostInfo = facade.getHostInfo();
+
         init();
+        addHierarchyListener(new AsyncFacadeManager(facade));
     }
 
     private void init() {
@@ -119,31 +112,20 @@ public class HostPanel extends JPanel {
         Section basics = new Section(_("HOST_OVERVIEW_SECTION_BASICS"));
         allSections.add(basics);
 
-        entry = new TableEntry(_("HOST_INFO_HOSTNAME"), hostInfo.getHostname());
+        entry = new TableEntry(_("HOST_INFO_HOSTNAME"), facade.getHostName());
         basics.add(entry);
 
         Section hardware = new Section(_("HOST_OVERVIEW_SECTION_HARDWARE"));
         allSections.add(hardware);
 
-        entry = new TableEntry(_("HOST_INFO_CPU_MODEL"), hostInfo.getCpuModel());
+        entry = new TableEntry(_("HOST_INFO_CPU_MODEL"), facade.getCpuModel());
         hardware.add(entry);
-        entry = new TableEntry(_("HOST_INFO_CPU_COUNT"), String.valueOf(hostInfo.getCpuCount()));
+        entry = new TableEntry(_("HOST_INFO_CPU_COUNT"), facade.getCpuCount());
         hardware.add(entry);
-        entry = new TableEntry(_("HOST_INFO_MEMORY_TOTAL"), String.valueOf(hostInfo.getTotalMemory()));
+        entry = new TableEntry(_("HOST_INFO_MEMORY_TOTAL"), facade.getTotalMemory());
         hardware.add(entry);
 
-        DefaultTableModel networkTableModel = new DefaultTableModel();
-        networkTableModel.addColumn(_("NETWORK_INTERFACE_COLUMN"));
-        networkTableModel.addColumn(_("NETWORK_IPV4_COLUMN"));
-        networkTableModel.addColumn(_("NETWORK_IPV6_COLUMN"));
-        for (Iterator<NetworkInterfaceInfo> iter = facade.getNetworkInfo().getInterfacesIterator(); iter.hasNext();) {
-            NetworkInterfaceInfo networkInfo = iter.next();
-            String ifaceName = networkInfo.getInterfaceName();
-            String ipv4 = networkInfo.getIp4Addr();
-            String ipv6 = networkInfo.getIp6Addr();
-            networkTableModel.addRow(new Object[] {ifaceName, ipv4, ipv6});
-        }
-        JTable networkTable = new JTable(networkTableModel);
+        JTable networkTable = new JTable(facade.getNetworkTableModel());
 
         JPanel networkPanel = new JPanel(new BorderLayout());
         networkPanel.add(networkTable.getTableHeader(), BorderLayout.PAGE_START);
@@ -155,12 +137,13 @@ public class HostPanel extends JPanel {
         Section software = new Section(_("HOST_OVERVIEW_SECTION_SOFTWARE"));
         allSections.add(software);
 
-        entry = new TableEntry(_("HOST_INFO_OS_NAME"), hostInfo.getOsName());
+        entry = new TableEntry(_("HOST_INFO_OS_NAME"), facade.getOsName());
         software.add(entry);
-        entry = new TableEntry(_("HOST_INFO_OS_KERNEL"), hostInfo.getOsKernel());
+        entry = new TableEntry(_("HOST_INFO_OS_KERNEL"), facade.getOsKernel());
         software.add(entry);
 
-        JPanel table = SimpleTable.createTable(allSections);
+        SimpleTable simpleTable = new SimpleTable();
+        JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
         return table;
     }
@@ -181,12 +164,13 @@ public class HostPanel extends JPanel {
         allSections.add(cpuBasics);
 
         TableEntry entry;
-        entry = new TableEntry(_("HOST_INFO_CPU_MODEL"), hostInfo.getCpuModel());
+        entry = new TableEntry(_("HOST_INFO_CPU_MODEL"), facade.getCpuModel());
         cpuBasics.add(entry);
-        entry = new TableEntry(_("HOST_INFO_CPU_COUNT"), String.valueOf(hostInfo.getCpuCount()));
+        entry = new TableEntry(_("HOST_INFO_CPU_COUNT"), facade.getCpuCount());
         cpuBasics.add(entry);
 
-        JPanel table = SimpleTable.createTable(allSections);
+        final SimpleTable simpleTable = new SimpleTable();
+        JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
         contentArea.add(table, c);
 
@@ -236,10 +220,11 @@ public class HostPanel extends JPanel {
         allSections.add(memoryBasics);
 
         TableEntry entry;
-        entry = new TableEntry(_("HOST_INFO_MEMORY_TOTAL"), String.valueOf(hostInfo.getTotalMemory()));
+        entry = new TableEntry(_("HOST_INFO_MEMORY_TOTAL"), facade.getTotalMemory());
         memoryBasics.add(entry);
 
-        JPanel table = SimpleTable.createTable(allSections);
+        SimpleTable simpleTable = new SimpleTable();
+        JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
         contentArea.add(table, BorderLayout.PAGE_START);
 
