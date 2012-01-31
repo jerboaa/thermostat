@@ -73,12 +73,24 @@ public abstract class Storage {
     }
 
     public final void putChunk(Chunk chunk, Backend backend) {
+        validateChunkOrigin(chunk, backend);
+        putChunkImpl(chunk);
+    }
+
+    public final void updateChunk(Chunk chunk, Backend backend) {
+        validateChunkOrigin(chunk, backend);
+        updateChunkImpl(chunk);
+    }
+
+    private void validateChunkOrigin(Chunk chunk, Backend origin) {
         Category category = chunk.getCategory();
-        if (backend != categoryMap.get(category.getName())) { // This had better be not just equivalent, but actually the same object.
-            throw new IllegalArgumentException("Invalid category-backend combination while inserting data.  Category: " + category.getName() + "  Backend: " + backend.getName());
+        if (origin != categoryMap.get(category.getName())) { // This had better be not just equivalent, but actually the same object.
+            throw new IllegalArgumentException("Invalid category-backend combination while inserting data.  Category: " + category.getName() + "  Backend: " + origin.getName());
         }
-        addChunkImpl(chunk);
     }
     
-    protected abstract void addChunkImpl(Chunk chunk);
+    protected abstract void putChunkImpl(Chunk chunk);
+
+    protected abstract void updateChunkImpl(Chunk chunk);
+
 }

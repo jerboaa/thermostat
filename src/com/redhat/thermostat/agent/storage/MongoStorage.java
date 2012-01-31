@@ -66,11 +66,13 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 public class MongoStorage extends Storage {
 
     public static final String KEY_AGENT_ID = "agent-id";
+    public static final String SET_MODIFIER = "$set";
 
     private static final Logger logger = LoggingUtils.getLogger(MongoStorage.class);
 
     private Mongo mongo = null;
     private DB db = null;
+    private Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
 
     private UUID agentId = null;
 
@@ -79,7 +81,7 @@ public class MongoStorage extends Storage {
         connect(new MongoURI(uri));
     }
 
-    public void connect(MongoURI uri) throws UnknownHostException {
+    private void connect(MongoURI uri) throws UnknownHostException {
         mongo = new Mongo(uri);
         db = mongo.getDB(StorageConstants.THERMOSTAT_DB_NAME);
     }
@@ -123,17 +125,17 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    protected void addChunkImpl(Chunk chunk) {
+    protected void putChunkImpl(Chunk chunk) {
         Category cat = chunk.getCategory();
-        DBCollection coll = db.getCollection(cat.getName());
+        DBCollection coll = getCachedCollection(cat.getName());
         BasicDBObject toInsert = getAgentDBObject();
-        BasicDBObject toDelete = null;
+        BasicDBObject replaceKey = null;
         boolean replace = chunk.getReplace();
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
-        Map<String, BasicDBObject> deleteNestedParts = null;
+        Map<String, BasicDBObject> replaceKeyNestedParts = null;
         if (replace) {
-            toDelete = getAgentDBObject();
-            deleteNestedParts = new HashMap<String, BasicDBObject>();
+            replaceKey = getAgentDBObject();
+            replaceKeyNestedParts = new HashMap<String, BasicDBObject>();
         }
         for (Iterator<com.redhat.thermostat.agent.storage.Key> iter = cat.getEntryIterator(); iter.hasNext();) {
             com.redhat.thermostat.agent.storage.Key key = iter.next();
@@ -142,24 +144,30 @@ public class MongoStorage extends Storage {
             if (entryParts.length == 2) {
                 BasicDBObject nested = nestedParts.get(entryParts[0]);
                 if (nested == null) {
+                    if (isKey) {
+                        throwMissingKey(key.getName());
+                    }
                     nested = new BasicDBObject();
                     nestedParts.put(entryParts[0], nested);
                 }
                 nested.append(entryParts[1], chunk.get(key));
                 if (replace && isKey) {
-                    BasicDBObject deleteNested = deleteNestedParts.get(entryParts[0]);
-                    if (deleteNested == null) {
-                        deleteNested = new BasicDBObject();
-                        deleteNestedParts.put(entryParts[0], deleteNested);
+                    BasicDBObject replaceKeyNested = replaceKeyNestedParts.get(entryParts[0]);
+                    if (replaceKeyNested == null) {
+                        replaceKeyNested = new BasicDBObject();
+                        replaceKeyNestedParts.put(entryParts[0], replaceKeyNested);
                     }
-                    deleteNested.append(entryParts[1], deleteNested);
+                    replaceKeyNested.append(entryParts[1], replaceKeyNested);
                 }
             } else {
                 String mongoKey = key.getName();
                 String value = chunk.get(key);
+                if ((value == null) && isKey) {
+                    throwMissingKey(key.getName());
+                }
                 toInsert.append(mongoKey, value);
                 if (replace && isKey) {
-                    toDelete.append(mongoKey, value);
+                    replaceKey.append(mongoKey, value);
                 }
             }
         }
@@ -167,12 +175,83 @@ public class MongoStorage extends Storage {
             toInsert.append(mongoKey, nestedParts.get(mongoKey));
         }
         if (replace) {
-            for (String mongoKey : deleteNestedParts.keySet()) {
-                toDelete.append(mongoKey, deleteNestedParts.get(mongoKey));
+            for (String mongoKey : replaceKeyNestedParts.keySet()) {
+                replaceKey.append(mongoKey, replaceKeyNestedParts.get(mongoKey));
             }
-            coll.remove(toDelete);
+            coll.update(replaceKey, toInsert, true, false);
+        } else {
+            coll.insert(toInsert);
         }
-        coll.insert(toInsert);
+    }
+
+    @Override
+    protected void updateChunkImpl(Chunk chunk) {
+        Category cat = chunk.getCategory();
+        DBCollection coll = getCachedCollection(cat.getName());
+        BasicDBObject toUpdate = new BasicDBObject();
+        BasicDBObject updateKey = getAgentDBObject();
+        Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
+        Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
+        for (Iterator<com.redhat.thermostat.agent.storage.Key> iter = cat.getEntryIterator(); iter.hasNext();) {
+            com.redhat.thermostat.agent.storage.Key key = iter.next();
+            boolean isKey = key.isPartialCategoryKey();
+            String[] entryParts = key.getName().split("\\.");
+            if (entryParts.length == 2) {
+                BasicDBObject nested = nestedParts.get(entryParts[0]);
+                if (nested == null) {
+                    if (isKey) {
+                        throwMissingKey(key.getName());
+                    }
+                } else {
+                    if (isKey) {
+                        BasicDBObject updateKeyNested = updateKeyNestedParts.get(entryParts[0]);
+                        if (updateKeyNested == null) {
+                            updateKeyNested = new BasicDBObject();
+                            updateKeyNestedParts.put(entryParts[0], updateKeyNested);
+                        }
+                        updateKeyNested.append(entryParts[1], updateKeyNested);
+                    } else {
+                        nested.append(SET_MODIFIER, new BasicDBObject(entryParts[1], chunk.get(key)));
+                    }
+                }
+            } else {
+                String mongoKey = key.getName();
+                String value = chunk.get(key);
+                if (value == null) {
+                    if (isKey) {
+                        throwMissingKey(key.getName());
+                    }
+                } else {
+                    if (isKey) {
+                        updateKey.append(mongoKey, value);
+                    } else {
+                        toUpdate.append(SET_MODIFIER, new BasicDBObject(mongoKey, value));
+                    }
+                }
+            }
+        }
+        for (String mongoKey : nestedParts.keySet()) {
+            toUpdate.append(mongoKey, nestedParts.get(mongoKey));
+        }
+        for (String mongoKey : updateKeyNestedParts.keySet()) {
+            updateKey.append(mongoKey, updateKeyNestedParts.get(mongoKey));
+        }
+        coll.update(updateKey, toUpdate);
+    }
+
+    private void throwMissingKey(String keyName) {
+        throw new IllegalArgumentException("Attempt to insert chunk with incomplete partial key.  Missing: " + keyName);
+    }
+
+    private DBCollection getCachedCollection(String collName) {
+        DBCollection coll = collectionCache.get(collName);
+        if (coll == null) {
+            coll = db.getCollection(collName);
+            if (coll != null) {
+                collectionCache.put(collName, coll);
+            }
+        }
+        return coll;
     }
 
     private DBObject createConfigDBObject(StartupConfiguration config, BackendRegistry registry) {

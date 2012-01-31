@@ -191,4 +191,8 @@ public abstract class Backend {
     public final void store(Chunk chunk) {
         storage.putChunk(chunk, this);
     }
+
+    public final void update(Chunk chunk) {
+        storage.updateChunk(chunk, this);
+    }
 }

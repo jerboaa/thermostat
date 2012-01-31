@@ -266,7 +266,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     }
 
     private Chunk makeCpuChunk(CpuStat cpuStat) {
-        Chunk chunk = new Chunk(/* cpuStat.getTimeStamp(), */cpuStatCategory, false);
+        Chunk chunk = new Chunk(cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, Long.toString(cpuStat.getTimeStamp()));
         chunk.put(cpu5LoadKey, Double.toString(cpuStat.getLoad5()));
         chunk.put(cpu10LoadKey, Double.toString(cpuStat.getLoad10()));

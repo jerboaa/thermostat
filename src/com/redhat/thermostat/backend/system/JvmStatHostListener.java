@@ -122,13 +122,12 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         logger.warning("Disconnected from host");
     }
 
+    @SuppressWarnings("unchecked") // Unchecked casts to (Set<Integer>).
     @Override
     public void vmStatusChanged(VmStatusChangeEvent event) {
         MonitoredHost host = event.getMonitoredHost();
 
-        Iterator<Integer> newActive = event.getStarted().iterator();
-        while (newActive.hasNext()) {
-            Integer newVm = newActive.next();
+        for (Integer newVm : (Set<Integer>) event.getStarted()) {
             try {
                 logger.fine("New vm: " + newVm);
                 sendNewVM(newVm, host);
@@ -139,9 +138,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
             }
         }
 
-        Iterator<Integer> newStopped = event.getTerminated().iterator();
-        while (newStopped.hasNext()) {
-            Integer stoppedVm = newStopped.next();
+        for (Integer stoppedVm : (Set<Integer>) event.getTerminated()) {
             try {
                 logger.fine("stopped vm: " + stoppedVm);
                 sendStoppedVM(stoppedVm, host);
@@ -195,11 +192,12 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(
                 new VmIdentifier(vmId.toString()));
         if (resolvedVmID != null) {
+            long stopTime = System.currentTimeMillis();
             listenerMap.remove(vmId);
             for (JvmStatusListener statusListener : statusListeners) {
                 statusListener.jvmStopped(vmId);
             }
-            // TODO store updated vminfo chunk with stop time.
+            backend.update(makeVmInfoUpdateStoppedChunk(vmId, stopTime));
         }
     }
 
@@ -222,6 +220,13 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         chunk.put(vmInfoLibrariesKey, info.getLoadedNativeLibraries().toString());
         chunk.put(vmInfoStartTimeKey, String.valueOf(info.getStartTimeStamp()));
         chunk.put(vmInfoStopTimeKey, String.valueOf(info.getStopTimeStamp()));
+        return chunk;
+    }
+
+    private Chunk makeVmInfoUpdateStoppedChunk(int vmId, long stopTimeStamp) {
+        Chunk chunk = new Chunk(vmInfoCategory, false);
+        chunk.put(vmInfoIdKey, String.valueOf(vmId));
+        chunk.put(vmInfoStopTimeKey, String.valueOf(stopTimeStamp));
         return chunk;
     }
 
