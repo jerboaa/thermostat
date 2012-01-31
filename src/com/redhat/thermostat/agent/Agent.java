@@ -118,6 +118,9 @@ public class Agent {
             configWatcherThread = null;
             storage.removeAgentInformation();
             stopBackends();
+            if (config.getLocalMode()) {
+                storage.purge();
+            }
         } else {
             logger.warning("Attempt to stop agent which is not active");
         }

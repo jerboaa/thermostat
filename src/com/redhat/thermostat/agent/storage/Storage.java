@@ -93,4 +93,8 @@ public abstract class Storage {
 
     protected abstract void updateChunkImpl(Chunk chunk);
 
+    /* Drop all data related to the currently running agent.
+     */
+    public abstract void purge();
+
 }

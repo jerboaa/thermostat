@@ -284,4 +284,11 @@ public class MongoStorage extends Storage {
         // TODO check which processes are already being listened to.
         return result;
     }
+
+    public void purge() {
+        BasicDBObject deleteKey = getAgentDBObject();
+        for (DBCollection coll : collectionCache.values()) {
+            coll.remove(deleteKey);
+        }
+    }
 }
