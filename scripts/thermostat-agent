@@ -40,11 +40,10 @@
 JAVA_DIR="@JAVA_DIR@"
 JAVA_EXE="@JAVA_HOME@/bin/java"
 JCOMMON_JAR="${JAVA_DIR}/jcommon.jar"
-JFREECHART_JAR="${JAVA_DIR}/jfreechart/jfreechart.jar"
 MONGO_JAR="${JAVA_DIR}/mongo.jar"
 BSON_JAR="${JAVA_DIR}/bson.jar"
 TOOLS_JAR="@JAVA_HOME@/../lib/tools.jar"
-AGENT_CLASSPATH="${JCOMMON_JAR}:${JFREECHART_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}"
+AGENT_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}"
 # Find the directory where thermostat is installed.
 # Note this will not work if there are symlinks to resolve that
 # are not full paths.
