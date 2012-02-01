@@ -66,12 +66,15 @@ import javax.swing.KeyStroke;
 import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.event.TreeModelEvent;
+import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -108,6 +111,7 @@ public class MainWindow extends JFrame {
         searchField = new JTextField();
         TreeModel model = facade.getHostVmTree();
         agentVmTree = new JTree(model);
+        model.addTreeModelListener(new KeepRootExpandedListener(agentVmTree));
         agentVmTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
@@ -115,7 +119,7 @@ public class MainWindow extends JFrame {
 
         setupMenus();
         setupPanels();
-        
+
         this.setPreferredSize(new Dimension(800, 600));
 
         agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) model.getRoot()).getPath()));
@@ -288,6 +292,40 @@ public class MainWindow extends JFrame {
         private void shutdown() {
             toDispose.dispose();
             facade.stop();
+        }
+    }
+
+    private static class KeepRootExpandedListener implements TreeModelListener {
+
+        private JTree toModify;
+
+        public KeepRootExpandedListener(JTree treeToModify) {
+            toModify = treeToModify;
+        }
+
+        @Override
+        public void treeStructureChanged(TreeModelEvent e) {
+            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
+        }
+
+        @Override
+        public void treeNodesRemoved(TreeModelEvent e) {
+            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
+        }
+
+        @Override
+        public void treeNodesInserted(TreeModelEvent e) {
+            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
+        }
+
+        @Override
+        public void treeNodesChanged(TreeModelEvent e) {
+            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
+        }
+
+        private void ensureRootIsExpanded(DefaultTreeModel model) {
+            DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+            toModify.expandPath(new TreePath(root.getPath()));
         }
     }
 
