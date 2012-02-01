@@ -68,6 +68,7 @@ public class JvmStatVmListener implements VmListener {
     private static final Key vmGcStatTimeStampKey = new Key("timestamp", false);
     private static final Key vmGcStatCollectorKey = new Key("collector", false);
     private static final Key vmGcStatRunCountKey = new Key("runtime-count", false);
+    /** time in microseconds */
     private static final Key vmGCstatWallTimeKey = new Key("wall-time", false);
 
     private static final Key vmMemoryStatVmIdKey = new Key("vm-id", false);

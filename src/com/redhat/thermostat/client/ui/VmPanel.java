@@ -53,17 +53,11 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.VmPanelFacade;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
-import com.redhat.thermostat.common.VmMemoryStat;
-import com.redhat.thermostat.common.VmMemoryStat.Generation;
-import com.redhat.thermostat.common.VmMemoryStat.Space;
 
 public class VmPanel extends JPanel {
 
@@ -147,18 +141,7 @@ public class VmPanel extends JPanel {
     }
 
     private Component createCurrentMemoryDisplay() {
-        DefaultCategoryDataset data = new DefaultCategoryDataset();
-
-        VmMemoryStat info = facade.getLatestMemoryInfo();
-        List<Generation> generations = info.getGenerations();
-        for (Generation generation : generations) {
-            List<Space> spaces = generation.spaces;
-            for (Space space : spaces) {
-                data.addValue(space.used, _("VM_CURRENT_MEMORY_CHART_USED"), space.name);
-                data.addValue(space.capacity - space.used, _("VM_CURRENT_MEMORY_CHART_CAPACITY"), space.name);
-                data.addValue(space.maxCapacity - space.capacity, _("VM_CURRENT_MEMORY_CHART_MAX_CAPACITY"), space.name);
-            }
-        }
+        DefaultCategoryDataset data = facade.getCurrentMemory();
 
         JFreeChart chart = ChartFactory.createStackedBarChart(
                 null,
@@ -215,13 +198,7 @@ public class VmPanel extends JPanel {
 
         detailsPanel.add(Components.header(_("VM_GC_COLLECTOR_OVER_GENERATION", collectorName, facade.getCollectorGeneration(collectorName))), BorderLayout.NORTH);
 
-        DiscreteTimeData<Long>[] cpuData = facade.getCollectorRunTime(collectorName);
-        TimeSeries series = new TimeSeries("gc-runs");
-        for (DiscreteTimeData<Long> data : cpuData) {
-            series.add(new FixedMillisecond(data.getTimeInMillis()), data.getData());
-        }
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
-        dataset.addSeries(series);
+        TimeSeriesCollection dataset = facade.getCollectorDataSet(collectorName);
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
                 _("VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL"),
@@ -229,12 +206,7 @@ public class VmPanel extends JPanel {
                 dataset,
                 false, false, false);
 
-        ChartPanel chartPanel = new ChartPanel(chart);
-        // make this chart non-interactive
-        chartPanel.setDisplayToolTips(true);
-        chartPanel.setDoubleBuffered(true);
-        chartPanel.setMouseZoomable(false);
-        chartPanel.setPopupMenu(null);
+        JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
         detailsPanel.add(chartPanel, BorderLayout.CENTER);
 

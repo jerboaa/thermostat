@@ -38,8 +38,9 @@ package com.redhat.thermostat.client;
 
 import javax.swing.table.TableModel;
 
+import org.jfree.data.time.TimeSeriesCollection;
+
 public interface HostPanelFacade extends AsyncUiFacade {
-    public DiscreteTimeData<Double>[] getCpuLoad();
 
     public DiscreteTimeData<Long>[] getMemoryUsage(MemoryType type);
 
@@ -62,5 +63,7 @@ public interface HostPanelFacade extends AsyncUiFacade {
     public ChangeableText getOsKernel();
 
     public TableModel getNetworkTableModel();
+
+    public TimeSeriesCollection getCpuLoadDataSet();
 
 }

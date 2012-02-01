@@ -54,6 +54,10 @@ import javax.swing.SwingWorker;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
 
+import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -80,6 +84,10 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     private final DefaultTableModel networkTableModel = new DefaultTableModel();
     private final Vector<String> networkTableColumnVector;
 
+    private final TimeSeriesCollection cpuLoadTimeSeriesCollection = new TimeSeriesCollection();
+    private final TimeSeries cpuLoadSeries = new TimeSeries("cpu-time");
+    private long cpuLoadLastUpdateTime = Long.MIN_VALUE;
+
     private final Timer backgroundUpdateTimer = new Timer();
 
     private Set<MemoryType> toDisplay = new HashSet<MemoryType>();
@@ -98,6 +106,8 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         networkTableColumnVector.add(_("NETWORK_IPV4_COLUMN"));
         networkTableColumnVector.add(_("NETWORK_IPV6_COLUMN"));
 
+        cpuLoadTimeSeriesCollection.addSeries(cpuLoadSeries);
+
         toDisplay.addAll(Arrays.asList(MemoryType.values()));
     }
 
@@ -115,8 +125,9 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
                 memoryTotal.setText((String) hostInfo.get("memory_total"));
 
                 doNetworkTableUpdateAsync();
-            }
 
+                doCpuChartUpdateAsync();
+            }
         }, 0, TimeUnit.SECONDS.toMillis(5));
     }
 
@@ -202,7 +213,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
                     String ifaceName = networkIfaceInfo.getInterfaceName();
                     String ipv4 = networkIfaceInfo.getIp4Addr();
                     String ipv6 = networkIfaceInfo.getIp6Addr();
-                    data.add(new Vector<String>(Arrays.asList(new String[] {ifaceName, ipv4, ipv6})));
+                    data.add(new Vector<String>(Arrays.asList(new String[] { ifaceName, ipv4, ipv6 })));
                 }
                 facade.networkTableModel.setDataVector(data, facade.networkTableColumnVector);
 
@@ -220,26 +231,11 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     }
 
     @Override
-    public DiscreteTimeData<Double>[] getCpuLoad() {
-        List<DiscreteTimeData<Double>> load = new ArrayList<DiscreteTimeData<Double>>();
-        DBCursor cursor = cpuStatsCollection.find(new BasicDBObject("agent-id", agent.getAgentId()));
-        long timestamp = 0;
-        double data = 0;
-        while (cursor.hasNext()) {
-            DBObject stat = cursor.next();
-            timestamp = Long.valueOf((String) stat.get("timestamp"));
-            data = Double.valueOf((String) stat.get("5load"));
-            load.add(new DiscreteTimeData<Double>(timestamp, data));
-        }
-        // TODO we may also want to avoid sending out thousands of values.
-        // a subset of values from this entire array should suffice.
-        return (DiscreteTimeData<Double>[]) load.toArray(new DiscreteTimeData<?>[0]);
-    }
-
-    @Override
     public DiscreteTimeData<Long>[] getMemoryUsage(MemoryType type) {
         List<DiscreteTimeData<Long>> data = new ArrayList<DiscreteTimeData<Long>>();
-        DBCursor cursor = memoryStatsCollection.find(new BasicDBObject("agent-id", agent.getAgentId()));
+        BasicDBObject queryObject = new BasicDBObject();
+        queryObject.put("agent-id", agent.getAgentId());
+        DBCursor cursor = memoryStatsCollection.find(queryObject);
         long timestamp = 0;
         long memoryData = 0;
         while (cursor.hasNext()) {
@@ -275,5 +271,95 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
             toDisplay.remove(type);
         }
     }
+
+    @Override
+    public TimeSeriesCollection getCpuLoadDataSet() {
+        return cpuLoadTimeSeriesCollection;
+    }
+
+    private void doCpuChartUpdateAsync() {
+        CpuLoadChartUpdater updater = new CpuLoadChartUpdater(this);
+        updater.execute();
+    }
+
+    private static class CpuLoadChartUpdater extends SwingWorker<DiscreteTimeData<Double>[], Void> {
+
+        private HostPanelFacadeImpl facade;
+
+        public CpuLoadChartUpdater(HostPanelFacadeImpl impl) {
+            this.facade = impl;
+        }
+
+        @Override
+        protected DiscreteTimeData<Double>[] doInBackground() throws Exception {
+            return getCpuLoad(facade.cpuLoadLastUpdateTime);
+        }
+
+        private DiscreteTimeData<Double>[] getCpuLoad(long after) {
+            List<DiscreteTimeData<Double>> load = new ArrayList<DiscreteTimeData<Double>>();
+            BasicDBObject queryObject = new BasicDBObject();
+            queryObject.put("agent-id", facade.agent.getAgentId());
+            if (after != Long.MIN_VALUE) {
+                // TODO once we have an index and the 'column' is of type long, use a
+                // query which can utilize an index. this one doesn't
+                queryObject.put("$where", "this.timestamp > " + after);
+            }
+            DBCursor cursor = facade.cpuStatsCollection.find(queryObject);
+            long timestamp = 0;
+            double data = 0;
+            while (cursor.hasNext()) {
+                DBObject stat = cursor.next();
+                timestamp = Long.valueOf((String) stat.get("timestamp"));
+                data = Double.valueOf((String) stat.get("5load"));
+                load.add(new DiscreteTimeData<Double>(timestamp, data));
+            }
+            // TODO we may also want to avoid sending out thousands of values.
+            // a subset of values from this entire array should suffice.
+            return (DiscreteTimeData<Double>[]) load.toArray(new DiscreteTimeData<?>[0]);
+        }
+
+        @Override
+        protected void done() {
+            try {
+                if (facade.cpuLoadLastUpdateTime == Long.MIN_VALUE) {
+                    /* TODO clear stuff? */
+                    facade.cpuLoadSeries.clear();
+                }
+
+                DiscreteTimeData<Double>[] data = get();
+                appendCpuChartData(data);
+
+            } catch (ExecutionException ee) {
+                ee.printStackTrace();
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+        }
+
+        private void appendCpuChartData(DiscreteTimeData<Double>[] cpuData) {
+            if (cpuData.length > 0) {
+
+                /*
+                 * We have lots of new data to add. we do it in 2 steps:
+                 * 1. Add everything with notify off.
+                 * 2. Notify the chart that there has been a change. It does
+                 * all the expensive computations and redraws itself.
+                 */
+
+                DiscreteTimeData<Double> data;
+                for (int i = 0; i < cpuData.length; i++) {
+                    data = cpuData[i];
+                    facade.cpuLoadLastUpdateTime = Math.max(facade.cpuLoadLastUpdateTime, data.getTimeInMillis());
+                    facade.cpuLoadSeries.add(
+                            new FixedMillisecond(data.getTimeInMillis()), data.getData(),
+                            /* notify = */false);
+                }
+
+                facade.cpuLoadSeries.fireSeriesChanged();
+            }
+        }
+
+    }
+
 
 }

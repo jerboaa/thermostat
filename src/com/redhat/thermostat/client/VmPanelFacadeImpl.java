@@ -41,10 +41,20 @@ import static com.redhat.thermostat.client.Translate._;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+
+import javax.swing.SwingWorker;
+
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.TimeSeries;
+import org.jfree.data.time.TimeSeriesCollection;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -75,6 +85,12 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     private final ChangeableText vmVersion = new ChangeableText("");
     private final ChangeableText vmArguments = new ChangeableText("");
     private final ChangeableText vmNameAndVersion = new ChangeableText("");
+
+    private final DefaultCategoryDataset currentMemoryDataset = new DefaultCategoryDataset();
+
+    private final Map<String, TimeSeriesCollection> collectorSeriesCollection = new HashMap<String, TimeSeriesCollection>();
+    private final Map<String, TimeSeries> collectorSeries = new HashMap<String, TimeSeries>();
+    private final Map<String, Long> collectorSeriesLastUpdateTime = new HashMap<String, Long>();
 
     private final Timer timer = new Timer();
 
@@ -122,7 +138,32 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 vmVersion.setText(actualVmVersion);
                 vmArguments.setText((String) vmInfoObject.get("vm-arguments"));
                 vmNameAndVersion.setText(_("VM_INFO_VM_NAME_AND_VERSION", actualVmName, actualVmVersion));
+
+                String[] collectorNames = getCollectorNames();
+                for (String collectorName: collectorNames) {
+                    TimeSeriesCollection seriesCollection = collectorSeriesCollection.get(collectorName);
+                    if (seriesCollection == null) {
+                        seriesCollection = new TimeSeriesCollection();
+                        collectorSeriesCollection.put(collectorName, seriesCollection);
+                    }
+                    TimeSeries series = collectorSeries.get(collectorName);
+                    if (series == null) {
+                        series = new TimeSeries(collectorName);
+                        collectorSeries.put(collectorName, series);
+                    }
+                    if (seriesCollection.getSeries(collectorName) == null) {
+                        seriesCollection.addSeries(series);
+                    }
+                    if (!collectorSeriesLastUpdateTime.containsKey(collectorName)) {
+                        collectorSeriesLastUpdateTime.put(collectorName, Long.MIN_VALUE);
+                    }
+                }
+
+                doUpdateCurrentMemoryChartAsync();
+                doUpdateCollectorChartsAsync();
+
             }
+
         }, 0, TimeUnit.SECONDS.toMillis(5));
 
     }
@@ -188,24 +229,110 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         return collectorNames.toArray(new String[0]);
     }
 
-    @Override
-    public DiscreteTimeData<Long>[] getCollectorRunTime(String collectorName) {
-        ArrayList<DiscreteTimeData<Long>> result = new ArrayList<DiscreteTimeData<Long>>();
-        BasicDBObject queryObject = new BasicDBObject();
-        queryObject.put("agent-id", ref.getAgent().getAgentId());
-        queryObject.put("vm-id", ref.getId());
-        queryObject.put("collector", collectorName);
-        DBCursor cursor = vmGcStatsCollection.find(queryObject);
-        long timestamp;
-        long walltime;
-        while (cursor.hasNext()) {
-            DBObject current = cursor.next();
-            timestamp = Long.valueOf((String) current.get("timestamp"));
-            walltime = Long.valueOf((String) current.get("wall-time"));
-            result.add(new DiscreteTimeData<Long>(timestamp, walltime));
+    private void doUpdateCollectorChartsAsync() {
+        String[] collectorNames = getCollectorNames();
+        for (String name: collectorNames) {
+            CollectorChartUpdater updater = new CollectorChartUpdater(this, name);
+            updater.execute();
+        }
+    }
+
+    public static class CollectorChartUpdater extends SwingWorker<DiscreteTimeData<Double>[], Void> {
+
+        private VmPanelFacadeImpl facade;
+        private String collectorName;
+
+        public CollectorChartUpdater(VmPanelFacadeImpl facade, String collectorName) {
+            this.facade = facade;
+            this.collectorName = collectorName;
         }
 
-        return (DiscreteTimeData<Long>[]) result.toArray(new DiscreteTimeData<?>[0]);
+        @Override
+        protected DiscreteTimeData<Double>[] doInBackground() throws Exception {
+            Long after = facade.collectorSeriesLastUpdateTime.get(collectorName);
+            if (after == null) {
+                after = Long.MIN_VALUE;
+            }
+            return getCollectorRunTime(after);
+        }
+
+        private DiscreteTimeData<Double>[] getCollectorRunTime(long after) {
+            ArrayList<DiscreteTimeData<Double>> result = new ArrayList<DiscreteTimeData<Double>>();
+            BasicDBObject queryObject = new BasicDBObject();
+            queryObject.put("agent-id", facade.ref.getAgent().getAgentId());
+            queryObject.put("vm-id", facade.ref.getId());
+            if (after != Long.MIN_VALUE) {
+                // TODO once we have an index and the 'column' is of type long, use a
+                // query which can utilize an index. this one doesn't
+                queryObject.put("$where", "this.timestamp > " + after);
+            }
+            queryObject.put("collector", collectorName);
+            DBCursor cursor = facade.vmGcStatsCollection.find(queryObject);
+            long timestamp;
+            double walltime;
+            while (cursor.hasNext()) {
+                DBObject current = cursor.next();
+                timestamp = Long.valueOf((String) current.get("timestamp"));
+                // convert microseconds to seconds
+                walltime = 1.0E-6 * Long.valueOf((String) current.get("wall-time"));
+                result.add(new DiscreteTimeData<Double>(timestamp, walltime));
+            }
+
+            return (DiscreteTimeData<Double>[]) result.toArray(new DiscreteTimeData<?>[0]);
+        }
+
+        @Override
+        protected void done() {
+            try {
+                Long after = facade.collectorSeriesLastUpdateTime.get(collectorName);
+                if (after == null) {
+                    after = Long.MIN_VALUE;
+                }
+                after = appendCollectorDataToChart(get(), facade.collectorSeries.get(collectorName), after);
+                facade.collectorSeriesLastUpdateTime.put(collectorName, after);
+            } catch (ExecutionException ee) {
+                ee.printStackTrace();
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+        }
+
+        private long appendCollectorDataToChart(DiscreteTimeData<Double>[] collectorData, TimeSeries collectorSeries, long prevMaxTime) {
+            long maxTime = prevMaxTime;
+
+            if (collectorData.length > 0) {
+
+                /*
+                 * We have lots of new data to add. we do it in 2 steps:
+                 * 1. Add everything with notify off.
+                 * 2. Notify the chart that there has been a change. It
+                 * does all the expensive computations and redraws itself.
+                 */
+
+                DiscreteTimeData<Double> data;
+                for (int i = 0; i < collectorData.length; i++) {
+                    data = collectorData[i];
+                    maxTime = Math.max(maxTime, data.getTimeInMillis());
+                    collectorSeries.add(
+                            new FixedMillisecond(data.getTimeInMillis()), data.getData(),
+                            /* notify = */false);
+                }
+
+                collectorSeries.fireSeriesChanged();
+            }
+
+            return maxTime;
+        }
+    }
+
+    @Override
+    public TimeSeriesCollection getCollectorDataSet(String collectorName) {
+        TimeSeriesCollection seriesCollection = collectorSeriesCollection.get(collectorName);
+        if (seriesCollection == null) {
+            seriesCollection = new TimeSeriesCollection();
+            collectorSeriesCollection.put(collectorName, seriesCollection);
+        }
+        return seriesCollection;
     }
 
     @Override
@@ -221,8 +348,48 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         return _("UNKNOWN_GEN");
     }
 
-    @Override
-    public VmMemoryStat getLatestMemoryInfo() {
+    private void doUpdateCurrentMemoryChartAsync() {
+        UpdateCurrentMemory worker = new UpdateCurrentMemory(this);
+        worker.execute();
+    }
+
+    private static class UpdateCurrentMemory extends SwingWorker<VmMemoryStat, Void> {
+
+        private final VmPanelFacadeImpl facade;
+
+        public UpdateCurrentMemory(VmPanelFacadeImpl facade) {
+            this.facade = facade;
+        }
+
+        @Override
+        protected VmMemoryStat doInBackground() throws Exception {
+            return facade.getLatestMemoryInfo();
+        }
+
+        @Override
+        protected void done() {
+            try {
+                VmMemoryStat info = get();
+                DefaultCategoryDataset dataset = facade.currentMemoryDataset;
+                List<Generation> generations = info.getGenerations();
+                for (Generation generation: generations) {
+                    List<Space> spaces = generation.spaces;
+                    for (Space space: spaces) {
+                        dataset.addValue(space.used, _("VM_CURRENT_MEMORY_CHART_USED"), space.name);
+                        dataset.addValue(space.capacity - space.used, _("VM_CURRENT_MEMORY_CHART_CAPACITY"), space.name);
+                        dataset.addValue(space.maxCapacity - space.capacity, _("VM_CURRENT_MEMORY_CHART_MAX_CAPACITY"), space.name);
+                    }
+                }
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            } catch (ExecutionException ee) {
+                ee.printStackTrace();
+            }
+        }
+
+    }
+
+    private VmMemoryStat getLatestMemoryInfo() {
         BasicDBObject query = new BasicDBObject();
         query.put("agent-id", ref.getAgent().getAgentId());
         query.put("vm-id", ref.getId());
@@ -267,7 +434,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
             space.name = spaceName;
             space.capacity = Long.valueOf((String)info.get("capacity"));
             space.maxCapacity = Long.valueOf((String)info.get("max-capacity"));
-            space.used = Long.valueOf((String)info.get("used"));
+            space.used = Long.valueOf((String) info.get("used"));
             if (target.spaces == null) {
                 target.spaces = new ArrayList<Space>();
             }
@@ -276,6 +443,11 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
 
         cached = new VmMemoryStat(timestamp, vmId , generations);
         return cached;
+    }
+
+    @Override
+    public DefaultCategoryDataset getCurrentMemory() {
+        return currentMemoryDataset;
     }
 
 }

@@ -36,28 +36,15 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.common.VmMemoryStat;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.TimeSeriesCollection;
 
 /**
  * Represents information specific to a JVM running on a host somewhere. This is
  * used to populate the UI for a VM's information.
  */
 public interface VmPanelFacade extends AsyncUiFacade {
-
-    /**
-     * @return names of the garbage collectors that are operating
-     */
-    public String[] getCollectorNames();
-
-    /**
-     * @param collectorName the name of the garbage collector
-     * @return a list of (time, cumulative time collector has run )
-     */
-    public DiscreteTimeData<Long>[] getCollectorRunTime(String collectorName);
-
-    public String getCollectorGeneration(String collectorName);
-
-    public VmMemoryStat getLatestMemoryInfo();
 
     public ChangeableText getVmPid();
 
@@ -76,5 +63,21 @@ public interface VmPanelFacade extends AsyncUiFacade {
     public ChangeableText getStopTimeStamp();
 
     public ChangeableText getVmNameAndVersion();
+
+    /**
+     * @return names of the garbage collectors that are operating
+     */
+    public String[] getCollectorNames();
+
+    public String getCollectorGeneration(String collectorName);
+
+    /**
+     * Returns a {@link TimeSeriesCollection} containing TimeSeries for the collector with a
+     * matching name. The domain is in time ({@link FixedMillisecond}), range is Long, corresponding
+     * to the time spent collecting in microseconds.
+     */
+    public TimeSeriesCollection getCollectorDataSet(String collectorName);
+
+    public DefaultCategoryDataset getCurrentMemory();
 
 }

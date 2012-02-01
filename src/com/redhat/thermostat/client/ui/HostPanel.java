@@ -56,8 +56,6 @@ import javax.swing.JTable;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -174,26 +172,15 @@ public class HostPanel extends JPanel {
         table.setBorder(Components.smallBorder());
         contentArea.add(table, c);
 
-        DiscreteTimeData<Double>[] cpuData = facade.getCpuLoad();
-        TimeSeries series = new TimeSeries("cpu-load");
-        for (DiscreteTimeData<Double> data : cpuData) {
-            series.add(new FixedMillisecond(data.getTimeInMillis()), data.getData());
-        }
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
-        dataset.addSeries(series);
+        TimeSeriesCollection dataset = facade.getCpuLoadDataSet();
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                _("HOST_CPU_USAGE_CHART_TITLE"),
+                null,
                 _("HOST_CPU_USAGE_CHART_TIME_LABEL"),
                 _("HOST_CPU_USAGE_CHART_VALUE_LABEL"),
                 dataset,
                 false, false, false);
 
-        ChartPanel chartPanel = new ChartPanel(chart);
-        // make this chart non-interactive
-        chartPanel.setDisplayToolTips(true);
-        chartPanel.setDoubleBuffered(true);
-        chartPanel.setMouseZoomable(false);
-        chartPanel.setPopupMenu(null);
+        JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
         c.gridy++;
         c.fill = GridBagConstraints.BOTH;
