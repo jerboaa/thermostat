@@ -100,6 +100,7 @@ public class MongoConnection extends Connection {
                 startLocalAgent();
                 uri = new MongoURI("mongodb://127.0.0.1:"
                         + props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT));
+                break;
             case REMOTE:
                 throw new NotImplementedException("No mongo URI implemented for REMOTE.");
             case CLUSTER:
