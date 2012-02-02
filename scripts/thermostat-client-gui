@@ -62,5 +62,6 @@ function usage {
   echo "  thermostat-client-gui [args]"
 }
 
-${JAVA} -cp ${CLIENT_CLASSPATH} ${CLIENT_MAIN} ${CLIENT_ARGS} &
+${JAVA} -cp ${CLIENT_CLASSPATH} ${CLIENT_MAIN} ${CLIENT_ARGS}
+exit $?
 
