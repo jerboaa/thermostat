@@ -36,7 +36,10 @@
 
 package com.redhat.thermostat.client;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.net.UnknownHostException;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,6 +48,8 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.agent.storage.StorageConstants;
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MongoConnection extends Connection {
@@ -52,34 +57,33 @@ public class MongoConnection extends Connection {
 
     private Mongo m = null;
     private DB db = null;
-    private boolean isLocal = false;
+    private boolean hasLocalAgent = false;
+    private Process localAgentProcess = null;
+    private Properties props;
+
+    public MongoConnection(Properties props) {
+        this.props = props;
+    }
 
     @Override
     public void connect() {
-        switch (getType()) {
-            case LOCAL:
-                try {
-                    m = new Mongo(getMongoURI());
-                    db = m.getDB(StorageConstants.THERMOSTAT_DB_NAME);
-                    /* the mongo java driver does not ensure this connection is actually working */
-                    testConnection(db);
-                } catch (MongoException e) {
-                    fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-                    return;
-                } catch (UnknownHostException e) {
-                    fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-                    return;
-                }
-                isLocal = true;
-                break;
-            case REMOTE:
-                // TODO connect to a remote machine
-                fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-                return;
-            case CLUSTER:
-                // TODO connect to a cluster
-                fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-                return;
+        try {
+            m = new Mongo(getMongoURI());
+            db = m.getDB(StorageConstants.THERMOSTAT_DB_NAME);
+            /* the mongo java driver does not ensure this connection is actually working */
+            testConnection(db);
+        } catch (MongoException e) {
+            fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+            return;
+        } catch (UnknownHostException e) {
+            fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+            return;
+        } catch (LocalAgentException e) {
+            fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+            return;
+        } catch (NotImplementedException e) {
+            fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+            return;
         }
         fireChanged(ConnectionStatus.CONNECTED);
         connected = true;
@@ -90,24 +94,39 @@ public class MongoConnection extends Connection {
     }
 
     private MongoURI getMongoURI() {
-        MongoURI uri = new MongoURI("mongodb://127.0.0.1:27017");
+        MongoURI uri = null;
         switch (getType()) {
             case LOCAL:
                 startLocalAgent();
-                // FIXME hardcorded address, use config/agent.properties instead.
-                uri = new MongoURI("mongodb://127.0.0.1:27518");
+                uri = new MongoURI("mongodb://127.0.0.1:"
+                        + props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT));
             case REMOTE:
-                // TODO
+                throw new NotImplementedException("No mongo URI implemented for REMOTE.");
             case CLUSTER:
-                // TODO
+                throw new NotImplementedException("No mongo URI implemented for CLUSTER.");
         }
         return uri;
     }
 
-    private void startLocalAgent() {
-        // TODO implement this
-        logger.log(Level.WARNING, "startLocalAgent not implemented");
-        logger.log(Level.WARNING, "please start mongodb and agent yourself");
+    private void startLocalAgent() throws LocalAgentException {
+        int status = 0;
+        try {
+            String agentCommand = props.getProperty(Constants.CLIENT_PROPERTY_AGENT_LAUNCH_SCRIPT) + " --local";
+            localAgentProcess = Runtime.getRuntime().exec(agentCommand);
+            // Allow some time for things to get started.
+            try {
+                // TODO provide some UI feedback here instead of just seeming dead.
+                Thread.sleep(2000);
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        } catch (IOException e) {
+            throw new LocalAgentException();
+        }
+        if (status != 0) {
+            throw new LocalAgentException();
+        }
+        hasLocalAgent = true;
     }
 
     public DB getDB() {
@@ -119,16 +138,28 @@ public class MongoConnection extends Connection {
         if (m != null) {
             m.close();
         }
-        if (isLocal) {
+        if (hasLocalAgent) {
             stopLocalAgent();
         }
         connected = false;
     }
 
     private void stopLocalAgent() {
-        // TODO implement this
-        logger.log(Level.WARNING, "stopLocalAgent not implemented");
-        logger.log(Level.WARNING, "please stop mongodb and agent yourself");
+        // TODO this is currently using Agent's 'run until some data avail on stdin' hack.
+        // That hack will go away, at which point we will need another way to shut down.
+        OutputStream agentIn = localAgentProcess.getOutputStream();
+        byte[] anything = { 0x04 };
+        try {
+            agentIn.write(anything);
+            agentIn.flush();
+            localAgentProcess.waitFor();
+        } catch (IOException e) {
+            logger.warning("Error shutting down local agent.");
+        } catch (InterruptedException e) {
+            logger.warning("Interrupted waiting for local agent to shut down.");
+        }
     }
 
+    private class LocalAgentException extends RuntimeException {
+    }
 }

@@ -37,28 +37,43 @@
 package com.redhat.thermostat.client;
 
 import java.awt.Window;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Properties;
 
 import com.redhat.thermostat.client.ui.LayoutDebugHelper;
 
 public class ClientArgs {
 
-    private static boolean isDebugLayout =
-            Boolean.getBoolean("thermostat.debug-layout");
+    private boolean isDebugLayout = Boolean.getBoolean("thermostat.debug-layout");
+    private Properties props = new Properties();
 
-    // private static boolean isDebugLayout = true;
-
-    private boolean dummyDataSource = false;
-
-    public ClientArgs(String[] initialArgs) {
-        // remove 'unused' warnings
-        for (String arg : initialArgs) {
-            if (arg.equals("--debug-layout")) {
+    public ClientArgs(String[] args) {
+        boolean hasValidPropertiesArg = false;
+        for (int i=0; i < args.length; i++) {
+            if (args[i].equals("--debug-layout")) {
                 isDebugLayout = true;
-            } else if (arg.equals("--dummy-data-source")) {
-                dummyDataSource = true;
+            } else if (args[i].equals("--properties")) {
+                i++;
+                if (i >= args.length) {
+                    throw new IllegalArgumentException("--properties argument requires filename.");
+                }
+                try {
+                    props.load(new FileReader(args[i]));
+                } catch (FileNotFoundException e) {
+                    // ignore
+                } catch (IOException e) {
+                    // ignore
+                }
+                // Ok props file must be good.
+                hasValidPropertiesArg = true;
             }
         }
-        // TODO what arguments do we care about?
+        if (!hasValidPropertiesArg) {
+            throw new IllegalArgumentException("Properties argument with valid properties file is required.");
+        }
+        // TODO what other arguments do we care about?
         // perhaps skipping the mode selection?
 
         if (isDebugLayout()) {
@@ -85,11 +100,11 @@ public class ClientArgs {
         }
     }
 
-    public static boolean isDebugLayout() {
+    public boolean isDebugLayout() {
         return isDebugLayout;
     }
 
-    public boolean useDummyDataSource() {
-        return dummyDataSource;
+    public Properties getProperties() {
+        return props;
     }
 }

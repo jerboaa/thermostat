@@ -61,24 +61,14 @@ public class Main {
     private UiFacadeFactory uiFacadeFactory;
 
     private Main(String[] args) {
-        this.arguments = new ClientArgs(args);
-
-        if (arguments.useDummyDataSource()) {
-            logger.log(Level.CONFIG, "using dummy data");
-            connection = new Connection() {
-                @Override
-                public void disconnect() {
-                    /* no op */
-                }
-
-                @Override
-                public void connect() {
-                    /* no op */
-                }
-            };
-        } else {
-            connection = new MongoConnection();
+        try {
+            this.arguments = new ClientArgs(args);
+        } catch (IllegalArgumentException ex) {
+            logger.log(Level.SEVERE, "Bad arguments to Thermostat client.", ex);
+            System.exit(-1);
         }
+
+        connection = new MongoConnection(arguments.getProperties());
     }
 
     private void showGui() {

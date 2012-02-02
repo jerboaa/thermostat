@@ -100,7 +100,7 @@
     <target name="build-client-gui-classes" depends="build-common-classes">
         <mkdir dir="${classes.dir}"/>
         <javac srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
-            <include name="${client.path.prefix}**" />
+            <include name="${client-gui.path.prefix}**" />
             <classpath>
                 <path location="${classes.dir}" />
                 <path refid="client-gui.classpath" />
@@ -112,8 +112,8 @@
         <mkdir dir="${dist.dir}" />
         <jar destfile="${client-gui.jar}" duplicate="fail">
             <fileset dir="${classes.dir}">
-                <include name="${client.path.prefix}**/*.class" />
-                <include name="${client.path.prefix}**/*.properties" />
+                <include name="${client-gui.path.prefix}**/*.class" />
+                <include name="${client-gui.path.prefix}**/*.properties" />
             </fileset>
          </jar>
     </target>

@@ -62,6 +62,8 @@ public class Constants {
     public static final String AGENT_PROPERTY_BACKENDS = "backends";
     public static final String AGENT_PROPERTY_BACKEND_ACTIVE = "active";
 
+    public static final String CLIENT_PROPERTY_AGENT_LAUNCH_SCRIPT = "agent_launch_script";
+
     public static final String AGENT_LOCAL_HOSTNAME = "localhost";
 
     public static final long KILOBYTES_TO_BYTES = 1000;
