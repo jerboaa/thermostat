@@ -56,6 +56,7 @@ import com.mongodb.WriteConcern;
 import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.common.storage.StorageConstants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**

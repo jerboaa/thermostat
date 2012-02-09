@@ -40,16 +40,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
-import com.redhat.thermostat.agent.storage.StorageConstants;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.storage.StorageConstants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MongoConnection extends Connection {

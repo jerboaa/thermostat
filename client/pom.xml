@@ -63,12 +63,6 @@
       <artifactId>thermostat-common</artifactId>
       <version>${project.version}</version>
     </dependency>
-    <!-- TODO: Should the dependency to agent/storage go to common? -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
     <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>

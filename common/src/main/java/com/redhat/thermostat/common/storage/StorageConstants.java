@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
 public class StorageConstants {
     public static final String THERMOSTAT_DB_NAME = "thermostat";
