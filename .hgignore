@@ -1,7 +1,7 @@
-.settings/org.eclipse.jdt.ui.prefs
+.settings
 .project
 .classpath
 bin
 build
-dist
-
+dist/
+target

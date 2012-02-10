@@ -37,13 +37,14 @@
 #####################################################################
 #
 # Some necessary variables.
-JAVA_DIR="@JAVA_DIR@"
-JAVA="@JAVA_HOME@/bin/java"
+JAVA_DIR="@java.dir@"
+JAVA="@java.home@/bin/java"
 JCOMMON_JAR="${JAVA_DIR}/jcommon.jar"
+JFREECHART_JAR="${JAVA_DIR}/jfreechart/jfreechart.jar"
 MONGO_JAR="${JAVA_DIR}/mongo.jar"
 BSON_JAR="${JAVA_DIR}/bson.jar"
-TOOLS_JAR="@JAVA_HOME@/../lib/tools.jar"
-AGENT_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}"
+TOOLS_JAR="@java.home@/../lib/tools.jar"
+CLIENT_CLASSPATH="${JCOMMON_JAR}:${JFREECHART_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}"
 # Find the directory where thermostat is installed.
 # Note this will not work if there are symlinks to resolve that
 # are not full paths.
@@ -51,48 +52,16 @@ SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
 THERM_DIR=`dirname "$( cd -P "$( dirname "$SOURCE" )" && pwd )"`
 # Some other necessary variables.
-AGENT_CLASSPATH="${AGENT_CLASSPATH}:${THERM_DIR}/lib/thermostat-agent.jar:${THERM_DIR}/lib/thermostat-common.jar"
-AGENT_MAIN="com.redhat.thermostat.agent.Main"
+CLIENT_CLASSPATH="${CLIENT_CLASSPATH}:${THERM_DIR}/lib/thermostat-client-@project.version@.jar:${THERM_DIR}/lib/thermostat-common-@project.version@.jar"
+CLIENT_MAIN="com.redhat.thermostat.client.Main"
 
-AGENT_ARGS="--local --properties ${THERM_DIR}/config/agent.properties"
+CLIENT_ARGS="--properties ${THERM_DIR}/config/agent.properties"
 
 function usage {
   echo "Usage:"
-  echo "  thermostat-agent <--local|--remote|--cluster>"
+  echo "  thermostat-client-gui [args]"
 }
 
-function run_agent {
-  ${JAVA} -cp ${AGENT_CLASSPATH} ${AGENT_MAIN} ${AGENT_ARGS}
-}
+${JAVA} -cp ${CLIENT_CLASSPATH} ${CLIENT_MAIN} ${CLIENT_ARGS}
+exit $?
 
-function run_local {
-  AGENT_ARGS="${AGENT_ARGS} --local"
-  run_agent
-  exit $?
-}
-
-function run_remote {
-  echo "Remote agent not yet supported."
-  exit -1
-}
-
-function run_cluster {
-  echo "Cluster agent not yet supported."
-  exit -1
-}
-
-if [ $# != 1 ]; then
-  usage
-  exit -1
-fi
-
-if [ $1 = "--local" ]; then
-  run_local
-elif [ $1 = "--remote" ]; then
-  run_remote
-elif [ $1 = "--cluster" ]; then
-  run_cluster
-else
-  usage
-  exit -1
-fi
