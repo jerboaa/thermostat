@@ -50,6 +50,9 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  */
 public class DistributionIdentity {
 
+    public static final String UNKNOWN_NAME = "Unknown Distribution";
+    public static final String UNKNOWN_VERSION = "Unknown Version";
+
     private static final String DISTRIBUTION_NAME = "distributor id";
     private static final String DISTRIBUTION_VERSION = "release";
 
@@ -59,8 +62,8 @@ public class DistributionIdentity {
     private final String version;
 
     public DistributionIdentity() {
-        String tempName = "Unknown Distribution";
-        String tempVersion = "Unknown";
+        String tempName = UNKNOWN_NAME;
+        String tempVersion = UNKNOWN_VERSION;
         BufferedReader reader = null;
         try {
             Process lsbProc = Runtime.getRuntime().exec(new String[] { "lsb_release", "-a" });
@@ -78,8 +81,14 @@ public class DistributionIdentity {
                     }
                 }
             }
+            int exitValue = lsbProc.waitFor();
+            if (exitValue != 0) {
+                logger.log(Level.WARNING, "unable to identify distribution, problems running 'lsb_release'");
+            }
         } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to identify distribution");
+            logger.log(Level.WARNING, "unable to identify distribution", e);
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, "unable to identify distribution", e);
         } finally {
             if (reader != null) {
                 try {
@@ -97,7 +106,7 @@ public class DistributionIdentity {
     }
 
     /**
-     * @return the name of the distrbution, or {@code null} if it can not be
+     * @return the name of the distribution, or {@link #UNKNOWN_NAME} if it can not be
      * identified
      */
     public String getName() {
@@ -105,7 +114,7 @@ public class DistributionIdentity {
     }
 
     /**
-     * @return the release of the distribution or {@code null} if it can not be
+     * @return the release of the distribution or {@link #UNKNOWN_VERSION} if it can not be
      * identified
      */
     public String getVersion() {
