@@ -52,7 +52,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
  * A registry for {@link Backend}s. Each {@link Backend} should call
  * {@link #register(Backend)} to register itself.
  */
-public final class BackendRegistry {
+public class BackendRegistry {
 
     private static final Logger logger = LoggingUtils.getLogger(BackendRegistry.class);
 

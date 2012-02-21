@@ -56,7 +56,7 @@ public abstract class Storage {
 
     public abstract void setAgentId(UUID id);
 
-    public abstract void addAgentInformation(StartupConfiguration config, BackendRegistry registry);
+    public abstract void addAgentInformation(AgentInformation agentInfo);
 
     public abstract void removeAgentInformation();
 

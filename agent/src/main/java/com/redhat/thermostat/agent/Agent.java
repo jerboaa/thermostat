@@ -41,6 +41,8 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.config.ConfigurationWatcher;
 import com.redhat.thermostat.agent.config.StartupConfiguration;
+import com.redhat.thermostat.agent.storage.AgentInformation;
+import com.redhat.thermostat.agent.storage.BackendInformation;
 import com.redhat.thermostat.agent.storage.Storage;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
@@ -97,12 +99,25 @@ public class Agent {
     public synchronized void start() throws LaunchException {
         if (configWatcherThread == null) {
             startBackends();
-            storage.addAgentInformation(config, backendRegistry);
+            storage.addAgentInformation(createAgentInformation());
             configWatcherThread = new Thread(new ConfigurationWatcher(storage, backendRegistry), "Configuration Watcher");
             configWatcherThread.start();
         } else {
             logger.warning("Attempt to start agent when already started.");
         }
+    }
+
+    private AgentInformation createAgentInformation() {
+        AgentInformation agentInfo = new AgentInformation();
+        agentInfo.setStartTime(config.getStartTime());
+        for (Backend backend : backendRegistry.getAll()) {
+            BackendInformation backendInfo = new BackendInformation();
+            backendInfo.setName(backend.getName());
+            backendInfo.setDescription(backend.getDescription());
+            backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
+            agentInfo.addBackend(backendInfo);
+        }
+        return agentInfo;
     }
 
     public synchronized void stop() {

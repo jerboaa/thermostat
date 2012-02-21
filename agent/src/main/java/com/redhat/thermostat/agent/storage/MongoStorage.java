@@ -93,9 +93,9 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public void addAgentInformation(StartupConfiguration config, BackendRegistry registry) {
+    public void addAgentInformation(AgentInformation agentInfo) {
         DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        DBObject toInsert = createConfigDBObject(config, registry);
+        DBObject toInsert = createConfigDBObject(agentInfo);
         /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
         toInsert.putAll((BSONObject) getAgentDBObject());
         configCollection.insert(toInsert, WriteConcern.SAFE);
@@ -255,20 +255,20 @@ public class MongoStorage extends Storage {
         return coll;
     }
 
-    private DBObject createConfigDBObject(StartupConfiguration config, BackendRegistry registry) {
+    private DBObject createConfigDBObject(AgentInformation agentInfo) {
         BasicDBObject result = getAgentDBObject();
-        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, config.getStartTime());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
         BasicDBObject backends = new BasicDBObject();
-        for (Backend backend : registry.getAll()) {
+        for (BackendInformation backend : agentInfo.getBackends()) {
             backends.put(backend.getName(), createBackendConfigDBObject(backend));
         }
         result.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS, backends);
         return result;
     }
 
-    private DBObject createBackendConfigDBObject(Backend backend) {
+    private DBObject createBackendConfigDBObject(BackendInformation backend) {
         BasicDBObject result = new BasicDBObject();
-        Map<String, String> configMap = backend.getConfigurationMap();
+        Map<String, String> configMap = backend.getConfiguration();
         result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NAME, backend.getName());
         result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_DESC, backend.getDescription());
         result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_ACTIVE, createBackendActiveDBObject(backend));
@@ -278,9 +278,9 @@ public class MongoStorage extends Storage {
         return result;
     }
 
-    private DBObject createBackendActiveDBObject(Backend backend) {
+    private DBObject createBackendActiveDBObject(BackendInformation backend) {
         BasicDBObject result = new BasicDBObject();
-        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NEW, backend.getObserveNewJvm());
+        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NEW, backend.isObserveNewJvm());
         result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_PIDS, new BasicDBList());
         // TODO check which processes are already being listened to.
         return result;

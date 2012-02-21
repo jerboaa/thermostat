@@ -55,7 +55,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public final class StartupConfiguration {
+public class StartupConfiguration {
 
     private static Logger logger = LoggingUtils.getLogger(StartupConfiguration.class);
 
