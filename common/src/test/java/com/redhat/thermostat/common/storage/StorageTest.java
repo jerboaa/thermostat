@@ -34,50 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class BackendInformation {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    private String name;
-    private String description;
-    private boolean observeNewJvm;
-    private List<Integer> pids;
-    private Map<String, String> configuration = new HashMap<String,String>();
+public class StorageTest {
 
-    public String getName() {
-        return name;
+    private Storage storage;
+    private ConnectionKey connKey;
+
+    @Before
+    public void setUp() {
+        storage = mock(Storage.class);
+        connKey = new ConnectionKey(){};
+        when(storage.createConnectionKey(any(Category.class))).thenReturn(connKey);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @After
+    public void tearDown() {
+        storage = null;
+        connKey = null;
     }
 
-    public String getDescription() {
-        return description;
+    @Test
+    public void testRegisterCategory() {
+        Category category = new Category("testRegisterCategory");
+        storage.registerCategory(category);
+
+        verify(storage).createConnectionKey(category);
+        assertSame(connKey, category.getConnectionKey());
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    @Test(expected=IllegalStateException.class)
+    public void testRegisterCategoryTwice() {
+
+        Category category = new Category("test");
+        storage.registerCategory(category);
+        storage.registerCategory(category);
     }
 
-    public boolean isObserveNewJvm() {
-        return observeNewJvm;
-    }
+    @Test(expected=IllegalStateException.class)
+    public void testRegisterCategorySameName() {
 
-    public void setObserveNewJvm(boolean observeNewJvm) {
-        this.observeNewJvm = observeNewJvm;
+        Category category1 = new Category("test");
+        storage.registerCategory(category1);
+        Category category2 = new Category("test");
+        storage.registerCategory(category2);
     }
-
-    public List<Integer> getPids() {
-        return pids;
-    }
-
-    public Map<String, String> getConfiguration() {
-        return configuration;
-    }
-
 }

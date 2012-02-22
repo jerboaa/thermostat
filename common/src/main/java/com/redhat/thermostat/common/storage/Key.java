@@ -34,59 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
-import static org.junit.Assert.assertSame;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+/**
+ * A Key is used to refer to data in a {@link Chunk}.  It may also be a partial key to the
+ * set of data represented by a {@link Chunk} in a category.
+ */
+public class Key {
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+    // Key used by most Categories.
+    public static Key TIMESTAMP = new Key("timestamp", false);
 
-public class StorageTest {
+    private String name;
+    private boolean isPartialCategoryKey;
 
-    private Storage storage;
-    private ConnectionKey connKey;
-
-    @Before
-    public void setUp() {
-        storage = mock(Storage.class);
-        connKey = new ConnectionKey(){};
-        when(storage.createConnectionKey(any(Category.class))).thenReturn(connKey);
+    public Key(String name, boolean isPartialCategoryKey) {
+        this.name = name;
+        this.isPartialCategoryKey = isPartialCategoryKey;
     }
 
-    @After
-    public void tearDown() {
-        storage = null;
-        connKey = null;
+    public String getName() {
+        return name;
     }
 
-    @Test
-    public void testRegisterCategory() {
-        Category category = new Category("testRegisterCategory");
-        storage.registerCategory(category);
-
-        verify(storage).createConnectionKey(category);
-        assertSame(connKey, category.getConnectionKey());
+    public boolean isPartialCategoryKey() {
+        return isPartialCategoryKey;
     }
 
-    @Test(expected=IllegalStateException.class)
-    public void testRegisterCategoryTwice() {
-
-        Category category = new Category("test");
-        storage.registerCategory(category);
-        storage.registerCategory(category);
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if ((o == null) || (o.getClass() != this.getClass())) {
+            return false;
+        }
+        Key e = (Key) o;
+        return (isPartialCategoryKey == e.isPartialCategoryKey()) &&
+            name.equals(e.getName());
     }
 
-    @Test(expected=IllegalStateException.class)
-    public void testRegisterCategorySameName() {
-
-        Category category1 = new Category("test");
-        storage.registerCategory(category1);
-        Category category2 = new Category("test");
-        storage.registerCategory(category2);
+    @Override
+    public int hashCode() {
+        int hash = 1867;
+        hash = hash * 37 + (isPartialCategoryKey ? 0 : 1);
+        hash = hash * 37 + (name == null ? 0 : name.hashCode());
+        return hash;
     }
 }

@@ -57,10 +57,10 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
-import com.redhat.thermostat.agent.storage.Category;
-import com.redhat.thermostat.agent.storage.Chunk;
-import com.redhat.thermostat.agent.storage.Key;
 import com.redhat.thermostat.common.VmInfo;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class JvmStatHostListener implements HostListener, JvmStatusNotifier {

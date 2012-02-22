@@ -53,15 +53,15 @@ import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
-import com.redhat.thermostat.agent.storage.Category;
-import com.redhat.thermostat.agent.storage.Chunk;
-import com.redhat.thermostat.agent.storage.Key;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.VmCpuStat;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {

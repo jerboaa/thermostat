@@ -34,20 +34,8 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
-import static org.junit.Assert.assertNotNull;
-
-import org.junit.Test;
-
-public class MongoStorageTest {
-
-    @Test
-    public void testCreateConnectionKey() {
-        MongoStorage mongoStorage = new MongoStorage();
-        Category category = new Category("testCreateConnectionKey");
-        ConnectionKey connKey = mongoStorage.createConnectionKey(category);
-        assertNotNull(connKey);
-    }
+public interface ConnectionKey {
 
 }

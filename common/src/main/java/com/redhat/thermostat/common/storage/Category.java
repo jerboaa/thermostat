@@ -34,30 +34,68 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
-public class AgentInformation {
+public class Category {
+    private final String name;
+    private final List<Key> keys;
+    private boolean locked = false;
 
-    private long startTime;
-    private List<BackendInformation> backends = new ArrayList<BackendInformation>();
+    private ConnectionKey connectionKey;
 
-    public long getStartTime() {
-        return startTime;
+    private static Set<String> categoryNames = new HashSet<String>();
+
+    /**
+     * Creates a new Category instance with the specified name.
+     *
+     * @param name the name of the category
+     *
+     * @throws IllegalArgumentException if a Category is created with a name that has been used before
+     */
+    public Category(String name) {
+        if (categoryNames.contains(name)) {
+            throw new IllegalStateException();
+        }
+        categoryNames.add(name);
+        this.name = name;
+        keys = new ArrayList<Key>();
     }
 
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
+    public String getName() {
+        return name;
     }
 
-    public List<BackendInformation> getBackends() {
-        return Collections.unmodifiableList(backends);
+    public synchronized void lock() {
+        locked = true;
     }
 
-    public void addBackend(BackendInformation backend) {
-        backends.add(backend);
+    public synchronized void addKey(Key key) {
+        if (!locked) {
+            keys.add(key);
+        } else {
+            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
+        }
+    }
+
+    public synchronized Iterator<Key> getEntryIterator() {
+        return keys.iterator();
+    }
+
+    public void setConnectionKey(ConnectionKey connKey) {
+        connectionKey = connKey;
+    }
+
+    public ConnectionKey getConnectionKey() {
+        return connectionKey;
+    }
+
+    public boolean hasBeenRegistered() {
+        return getConnectionKey() != null;
     }
 }

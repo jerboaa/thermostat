@@ -34,42 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
-import java.net.UnknownHostException;
-import java.util.UUID;
+import static org.junit.Assert.assertNotNull;
 
-public abstract class Storage {
+import org.junit.Test;
 
-    public abstract void connect(String uri) throws UnknownHostException;
+public class MongoStorageTest {
 
-    public abstract void setAgentId(UUID id);
-
-    public abstract void addAgentInformation(AgentInformation agentInfo);
-
-    public abstract void removeAgentInformation();
-
-    /**
-     * @return {@code null} if the value is invalid or missing
-     */
-    public abstract String getBackendConfig(String backendName, String configurationKey);
-
-    public final void registerCategory(Category category) {
-        if (category.hasBeenRegistered()) {
-            throw new IllegalStateException("Category may only be associated with one backend.");
-        }
-        ConnectionKey connKey = createConnectionKey(category);
-        category.setConnectionKey(connKey);
+    @Test
+    public void testCreateConnectionKey() {
+        MongoStorage mongoStorage = new MongoStorage();
+        Category category = new Category("testCreateConnectionKey");
+        ConnectionKey connKey = mongoStorage.createConnectionKey(category);
+        assertNotNull(connKey);
     }
-
-    public abstract ConnectionKey createConnectionKey(Category category);
-
-    public abstract void putChunk(Chunk chunk);
-
-    public abstract void updateChunk(Chunk chunk);
-
-    /* Drop all data related to the currently running agent.
-     */
-    public abstract void purge();
 
 }

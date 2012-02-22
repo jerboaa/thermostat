@@ -41,9 +41,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.redhat.thermostat.agent.storage.Category;
-import com.redhat.thermostat.agent.storage.Chunk;
-import com.redhat.thermostat.agent.storage.Storage;
+import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Storage;
 
 /**
  * Represents a monitoring back-end. All the {@link Backend}s should be

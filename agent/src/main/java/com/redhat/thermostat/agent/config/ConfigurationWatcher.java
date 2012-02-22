@@ -38,8 +38,8 @@ package com.redhat.thermostat.agent.config;
 
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.storage.Storage;
 import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ConfigurationWatcher implements Runnable {

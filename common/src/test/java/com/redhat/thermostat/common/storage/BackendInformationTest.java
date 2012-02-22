@@ -34,51 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
-/**
- * A Key is used to refer to data in a {@link Chunk}.  It may also be a partial key to the
- * set of data represented by a {@link Chunk} in a category.
- */
-public class Key {
+import static org.junit.Assert.assertNotNull;
 
-    // Key used by most Categories.
-    public static Key TIMESTAMP = new Key("timestamp", false);
+import java.util.Map;
 
-    private String name;
-    private boolean isPartialCategoryKey;
+import org.junit.Test;
 
-    public Key(String name, boolean isPartialCategoryKey) {
-        this.name = name;
-        this.isPartialCategoryKey = isPartialCategoryKey;
+public class BackendInformationTest {
+
+    @Test
+    public void testConfigurationNotNull() {
+        BackendInformation backendInfo = new BackendInformation();
+        Map<String,String> config = backendInfo.getConfiguration();
+        assertNotNull(config);
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public boolean isPartialCategoryKey() {
-        return isPartialCategoryKey;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if ((o == null) || (o.getClass() != this.getClass())) {
-            return false;
-        }
-        Key e = (Key) o;
-        return (isPartialCategoryKey == e.isPartialCategoryKey()) &&
-            name.equals(e.getName());
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 1867;
-        hash = hash * 37 + (isPartialCategoryKey ? 0 : 1);
-        hash = hash * 37 + (name == null ? 0 : name.hashCode());
-        return hash;
-    }
 }

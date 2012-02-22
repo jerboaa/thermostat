@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -52,7 +52,6 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
-import com.redhat.thermostat.common.storage.StorageConstants;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.
@@ -131,8 +130,8 @@ public class MongoStorage extends Storage {
             replaceKey = getAgentDBObject();
             replaceKeyNestedParts = new HashMap<String, BasicDBObject>();
         }
-        for (Iterator<com.redhat.thermostat.agent.storage.Key> iter = cat.getEntryIterator(); iter.hasNext();) {
-            com.redhat.thermostat.agent.storage.Key key = iter.next();
+        for (Iterator<Key> iter = cat.getEntryIterator(); iter.hasNext();) {
+            Key key = iter.next();
             boolean isKey = key.isPartialCategoryKey();
             String[] entryParts = key.getName().split("\\.");
             if (entryParts.length == 2) {
@@ -186,8 +185,8 @@ public class MongoStorage extends Storage {
         BasicDBObject updateKey = getAgentDBObject();
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
-        for (Iterator<com.redhat.thermostat.agent.storage.Key> iter = cat.getEntryIterator(); iter.hasNext();) {
-            com.redhat.thermostat.agent.storage.Key key = iter.next();
+        for (Iterator<Key> iter = cat.getEntryIterator(); iter.hasNext();) {
+            Key key = iter.next();
             boolean isKey = key.isPartialCategoryKey();
             String[] entryParts = key.getName().split("\\.");
             if (entryParts.length == 2) {

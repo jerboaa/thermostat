@@ -41,12 +41,12 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.config.ConfigurationWatcher;
 import com.redhat.thermostat.agent.config.StartupConfiguration;
-import com.redhat.thermostat.agent.storage.AgentInformation;
-import com.redhat.thermostat.agent.storage.BackendInformation;
-import com.redhat.thermostat.agent.storage.Storage;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.storage.AgentInformation;
+import com.redhat.thermostat.common.storage.BackendInformation;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**

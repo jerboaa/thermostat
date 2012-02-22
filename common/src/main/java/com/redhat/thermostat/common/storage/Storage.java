@@ -34,68 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.storage;
+package com.redhat.thermostat.common.storage;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.net.UnknownHostException;
+import java.util.UUID;
 
-public class Category {
-    private final String name;
-    private final List<Key> keys;
-    private boolean locked = false;
+public abstract class Storage {
 
-    private ConnectionKey connectionKey;
+    public abstract void connect(String uri) throws UnknownHostException;
 
-    private static Set<String> categoryNames = new HashSet<String>();
+    public abstract void setAgentId(UUID id);
+
+    public abstract void addAgentInformation(AgentInformation agentInfo);
+
+    public abstract void removeAgentInformation();
 
     /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
+     * @return {@code null} if the value is invalid or missing
      */
-    public Category(String name) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
+    public abstract String getBackendConfig(String backendName, String configurationKey);
+
+    public final void registerCategory(Category category) {
+        if (category.hasBeenRegistered()) {
+            throw new IllegalStateException("Category may only be associated with one backend.");
         }
-        categoryNames.add(name);
-        this.name = name;
-        keys = new ArrayList<Key>();
+        ConnectionKey connKey = createConnectionKey(category);
+        category.setConnectionKey(connKey);
     }
 
-    public String getName() {
-        return name;
-    }
+    public abstract ConnectionKey createConnectionKey(Category category);
 
-    public synchronized void lock() {
-        locked = true;
-    }
+    public abstract void putChunk(Chunk chunk);
 
-    public synchronized void addKey(Key key) {
-        if (!locked) {
-            keys.add(key);
-        } else {
-            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
-        }
-    }
+    public abstract void updateChunk(Chunk chunk);
 
-    public synchronized Iterator<Key> getEntryIterator() {
-        return keys.iterator();
-    }
+    /* Drop all data related to the currently running agent.
+     */
+    public abstract void purge();
 
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
-    }
 }

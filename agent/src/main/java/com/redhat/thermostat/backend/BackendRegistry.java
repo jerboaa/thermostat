@@ -43,9 +43,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.storage.Storage;
 import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.system.SystemBackend;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**

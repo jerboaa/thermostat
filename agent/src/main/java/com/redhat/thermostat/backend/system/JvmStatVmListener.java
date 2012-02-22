@@ -48,13 +48,13 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.agent.storage.Category;
-import com.redhat.thermostat.agent.storage.Chunk;
-import com.redhat.thermostat.agent.storage.Key;
 import com.redhat.thermostat.common.VmGcStat;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class JvmStatVmListener implements VmListener {
