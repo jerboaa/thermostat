@@ -36,48 +36,19 @@
 
 package com.redhat.thermostat.agent.storage;
 
-import java.util.HashMap;
-import java.util.List;
+import static org.junit.Assert.assertNotNull;
+
 import java.util.Map;
 
-public class BackendInformation {
+import org.junit.Test;
 
-    private String name;
-    private String description;
-    private boolean observeNewJvm;
-    private List<Integer> pids;
-    private Map<String, String> configuration = new HashMap<String,String>();
+public class BackendInformationTest {
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public boolean isObserveNewJvm() {
-        return observeNewJvm;
-    }
-
-    public void setObserveNewJvm(boolean observeNewJvm) {
-        this.observeNewJvm = observeNewJvm;
-    }
-
-    public List<Integer> getPids() {
-        return pids;
-    }
-
-    public Map<String, String> getConfiguration() {
-        return configuration;
+    @Test
+    public void testConfigurationNotNull() {
+        BackendInformation backendInfo = new BackendInformation();
+        Map<String,String> config = backendInfo.getConfiguration();
+        assertNotNull(config);
     }
 
 }
