@@ -119,7 +119,7 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    protected void putChunkImpl(Chunk chunk) {
+    public void putChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         BasicDBObject toInsert = getAgentDBObject();
@@ -179,7 +179,7 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    protected void updateChunkImpl(Chunk chunk) {
+    public void updateChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         BasicDBObject toUpdate = new BasicDBObject();
@@ -284,5 +284,12 @@ public class MongoStorage extends Storage {
         for (DBCollection coll : collectionCache.values()) {
             coll.remove(deleteKey);
         }
+    }
+
+    @Override
+    public ConnectionKey createConnectionKey(Category category) {
+        // TODO: We want to return an instance of an inner class here that carries the actual connection
+        // and replace the collectionCache. For now this is good enough though.
+        return new ConnectionKey(){};
     }
 }

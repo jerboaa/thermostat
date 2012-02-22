@@ -37,18 +37,9 @@
 package com.redhat.thermostat.agent.storage;
 
 import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
-import com.redhat.thermostat.backend.Backend;
-
 public abstract class Storage {
-    private Map<String, Backend> categoryMap;
-
-    public Storage() {
-        categoryMap = new HashMap<String, Backend>();
-    }
 
     public abstract void connect(String uri) throws UnknownHostException;
 
@@ -63,33 +54,19 @@ public abstract class Storage {
      */
     public abstract String getBackendConfig(String backendName, String configurationKey);
 
-    public final void registerCategory(Category category, Backend backend) {
-        if (categoryMap.containsKey(category.getName())) {
+    public final void registerCategory(Category category) {
+        if (category.hasBeenRegistered()) {
             throw new IllegalStateException("Category may only be associated with one backend.");
         }
-        categoryMap.put(category.getName(), backend);
+        ConnectionKey connKey = createConnectionKey(category);
+        category.setConnectionKey(connKey);
     }
 
-    public final void putChunk(Chunk chunk, Backend backend) {
-        validateChunkOrigin(chunk, backend);
-        putChunkImpl(chunk);
-    }
+    public abstract ConnectionKey createConnectionKey(Category category);
 
-    public final void updateChunk(Chunk chunk, Backend backend) {
-        validateChunkOrigin(chunk, backend);
-        updateChunkImpl(chunk);
-    }
+    public abstract void putChunk(Chunk chunk);
 
-    private void validateChunkOrigin(Chunk chunk, Backend origin) {
-        Category category = chunk.getCategory();
-        if (origin != categoryMap.get(category.getName())) { // This had better be not just equivalent, but actually the same object.
-            throw new IllegalArgumentException("Invalid category-backend combination while inserting data.  Category: " + category.getName() + "  Backend: " + origin.getName());
-        }
-    }
-    
-    protected abstract void putChunkImpl(Chunk chunk);
-
-    protected abstract void updateChunkImpl(Chunk chunk);
+    public abstract void updateChunk(Chunk chunk);
 
     /* Drop all data related to the currently running agent.
      */

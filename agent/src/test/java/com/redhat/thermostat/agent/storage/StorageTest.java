@@ -36,66 +36,57 @@
 
 package com.redhat.thermostat.agent.storage;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import static org.junit.Assert.assertSame;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class Category {
-    private final String name;
-    private final List<Key> keys;
-    private boolean locked = false;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    private ConnectionKey connectionKey;
+public class StorageTest {
 
-    private static Set<String> categoryNames = new HashSet<String>();
+    private Storage storage;
+    private ConnectionKey connKey;
 
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
-        }
-        categoryNames.add(name);
-        this.name = name;
-        keys = new ArrayList<Key>();
+    @Before
+    public void setUp() {
+        storage = mock(Storage.class);
+        connKey = new ConnectionKey(){};
+        when(storage.createConnectionKey(any(Category.class))).thenReturn(connKey);
     }
 
-    public String getName() {
-        return name;
+    @After
+    public void tearDown() {
+        storage = null;
+        connKey = null;
     }
 
-    public synchronized void lock() {
-        locked = true;
+    @Test
+    public void testRegisterCategory() {
+        Category category = new Category("testRegisterCategory");
+        storage.registerCategory(category);
+
+        verify(storage).createConnectionKey(category);
+        assertSame(connKey, category.getConnectionKey());
     }
 
-    public synchronized void addKey(Key key) {
-        if (!locked) {
-            keys.add(key);
-        } else {
-            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
-        }
+    @Test(expected=IllegalStateException.class)
+    public void testRegisterCategoryTwice() {
+
+        Category category = new Category("test");
+        storage.registerCategory(category);
+        storage.registerCategory(category);
     }
 
-    public synchronized Iterator<Key> getEntryIterator() {
-        return keys.iterator();
-    }
+    @Test(expected=IllegalStateException.class)
+    public void testRegisterCategorySameName() {
 
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
+        Category category1 = new Category("test");
+        storage.registerCategory(category1);
+        Category category2 = new Category("test");
+        storage.registerCategory(category2);
     }
 }

@@ -80,7 +80,7 @@ public abstract class Backend {
     public final void setStorage(Storage storage) {
         this.storage = storage;
         for (Iterator<Category> iter = getCategoryIterator(); iter.hasNext();) {
-            storage.registerCategory(iter.next(), this);
+            storage.registerCategory(iter.next());
         }
     }
 
@@ -189,10 +189,10 @@ public abstract class Backend {
     }
 
     public final void store(Chunk chunk) {
-        storage.putChunk(chunk, this);
+        storage.putChunk(chunk);
     }
 
     public final void update(Chunk chunk) {
-        storage.updateChunk(chunk, this);
+        storage.updateChunk(chunk);
     }
 }
