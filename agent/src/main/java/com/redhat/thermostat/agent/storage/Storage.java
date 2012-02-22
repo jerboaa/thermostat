@@ -41,9 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendRegistry;
 
 public abstract class Storage {
     private Map<String, Backend> categoryMap;

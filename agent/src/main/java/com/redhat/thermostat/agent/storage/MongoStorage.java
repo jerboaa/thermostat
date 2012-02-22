@@ -41,7 +41,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
-import java.util.logging.Logger;
 
 import org.bson.BSONObject;
 
@@ -53,11 +52,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
-import com.redhat.thermostat.agent.config.StartupConfiguration;
-import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.storage.StorageConstants;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.
@@ -68,8 +63,6 @@ public class MongoStorage extends Storage {
 
     public static final String KEY_AGENT_ID = "agent-id";
     public static final String SET_MODIFIER = "$set";
-
-    private static final Logger logger = LoggingUtils.getLogger(MongoStorage.class);
 
     private Mongo mongo = null;
     private DB db = null;

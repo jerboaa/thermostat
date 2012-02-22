@@ -69,7 +69,6 @@ import com.redhat.thermostat.common.NetworkInterfaceInfo;
 public class HostPanelFacadeImpl implements HostPanelFacade {
 
     private final HostRef agent;
-    private final DB db;
     private final DBCollection hostInfoCollection;
     private final DBCollection networkInfoCollection;
     private final DBCollection cpuStatsCollection;
@@ -94,7 +93,6 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
 
     public HostPanelFacadeImpl(HostRef ref, DB db) {
         this.agent = ref;
-        this.db = db;
 
         hostInfoCollection = db.getCollection("host-info");
         networkInfoCollection = db.getCollection("network-info");

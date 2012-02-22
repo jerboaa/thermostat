@@ -68,7 +68,6 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowFacadeImpl.class);
 
-    private final DB db;
     private final DBCollection agentConfigCollection;
     private final DBCollection hostInfoCollection;
     private final DBCollection vmInfoCollection;
@@ -81,7 +80,6 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
     private final Timer backgroundUpdater = new Timer();
 
     public MainWindowFacadeImpl(DB db) {
-        this.db = db;
         this.agentConfigCollection = db.getCollection("agent-config");
         this.hostInfoCollection = db.getCollection("host-info");
         this.vmInfoCollection = db.getCollection("vm-info");

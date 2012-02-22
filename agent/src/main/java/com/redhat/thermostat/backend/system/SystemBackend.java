@@ -61,7 +61,6 @@ import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.VmCpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 

@@ -68,7 +68,6 @@ import com.redhat.thermostat.common.VmMemoryStat.Space;
 public class VmPanelFacadeImpl implements VmPanelFacade {
 
     private final VmRef ref;
-    private final DB db;
     private final DBCollection vmInfoCollection;
     private final DBCollection vmGcStatsCollection;
     private final DBCollection vmMemoryStatsCollection;
@@ -100,7 +99,6 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
 
     public VmPanelFacadeImpl(VmRef vmRef, DB db) {
         this.ref = vmRef;
-        this.db = db;
         vmInfoCollection = db.getCollection("vm-info");
         vmGcStatsCollection = db.getCollection("vm-gc-stats");
         vmMemoryStatsCollection = db.getCollection("vm-memory-stats");

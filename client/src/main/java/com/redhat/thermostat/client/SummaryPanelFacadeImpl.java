@@ -47,7 +47,6 @@ import com.mongodb.DBCollection;
 
 public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
 
-    private final DB db;
     private final DBCollection agentConfigCollection;
     private final DBCollection vmInfoCollection;
 
@@ -57,7 +56,6 @@ public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
     private final Timer backgroundUpdateTimer = new Timer();
 
     public SummaryPanelFacadeImpl(DB db) {
-        this.db = db;
         this.agentConfigCollection = db.getCollection("agent-config");
         this.vmInfoCollection = db.getCollection("vm-info");
 
