@@ -36,36 +36,28 @@
 
 package com.redhat.thermostat.backend.system;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.StringReader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.TestUtils;
-
-public class DistributionIdentityTest {
+public class LsbReleaseTest {
 
     @Test
-    public void testName() {
-        if (TestUtils.isLinux()) {
-            DistributionInformation info = DistributionInformation.get();
-            String name = info.getName();
-            assertNotNull(name);
-            assertTrue(name.length() > 0);
-            assertFalse(name.startsWith(":"));
-            assertFalse(name.equals(DistributionInformation.UNKNOWN_NAME));
-        }
+    public void testName() throws IOException, InterruptedException {
+        BufferedReader reader = new BufferedReader(new StringReader("Distributor ID: Name"));
+        DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
+        assertEquals("Name", info.getName());
     }
 
     @Test
-    public void testVersion() {
-        if (TestUtils.isLinux()) {
-            DistributionInformation info = DistributionInformation.get();
-            String version = info.getVersion();
-            assertNotNull(version);
-            assertTrue(version.length()> 0);
-            assertFalse(version.startsWith(":"));
-            assertFalse(version.equals(DistributionInformation.UNKNOWN_VERSION));
-        }
+    public void testVersion() throws IOException {
+        BufferedReader reader = new BufferedReader(new StringReader("Release: Version"));
+        DistributionInformation info = new LsbRelease().getFromLsbRelease(reader);
+        assertEquals("Version", info.getVersion());
     }
 
 }

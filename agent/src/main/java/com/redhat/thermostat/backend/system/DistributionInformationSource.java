@@ -36,36 +36,10 @@
 
 package com.redhat.thermostat.backend.system;
 
-import static org.junit.Assert.*;
+import java.io.IOException;
 
-import org.junit.Test;
+public interface DistributionInformationSource {
 
-import com.redhat.thermostat.TestUtils;
-
-public class DistributionIdentityTest {
-
-    @Test
-    public void testName() {
-        if (TestUtils.isLinux()) {
-            DistributionInformation info = DistributionInformation.get();
-            String name = info.getName();
-            assertNotNull(name);
-            assertTrue(name.length() > 0);
-            assertFalse(name.startsWith(":"));
-            assertFalse(name.equals(DistributionInformation.UNKNOWN_NAME));
-        }
-    }
-
-    @Test
-    public void testVersion() {
-        if (TestUtils.isLinux()) {
-            DistributionInformation info = DistributionInformation.get();
-            String version = info.getVersion();
-            assertNotNull(version);
-            assertTrue(version.length()> 0);
-            assertFalse(version.startsWith(":"));
-            assertFalse(version.equals(DistributionInformation.UNKNOWN_VERSION));
-        }
-    }
+    public DistributionInformation getDistributionInformation() throws IOException;
 
 }

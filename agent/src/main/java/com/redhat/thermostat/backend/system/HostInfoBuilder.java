@@ -65,7 +65,7 @@ public class HostInfoBuilder {
             hostname = Constants.AGENT_LOCAL_HOSTNAME;
         }
         logger.log(Level.FINEST, "hostname: " + hostname);
-        DistributionIdentity identifier = new DistributionIdentity();
+        DistributionInformation identifier = DistributionInformation.get();
         String osName = identifier.getName() + " " + identifier.getVersion();
         logger.log(Level.FINEST, "osName: " + osName);
 

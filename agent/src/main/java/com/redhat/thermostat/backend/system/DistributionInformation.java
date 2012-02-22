@@ -36,36 +36,55 @@
 
 package com.redhat.thermostat.backend.system;
 
-import static org.junit.Assert.*;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import org.junit.Test;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-import com.redhat.thermostat.TestUtils;
+public class DistributionInformation {
 
-public class DistributionIdentityTest {
+    public static final String UNKNOWN_NAME = "Unknown Distribution";
+    public static final String UNKNOWN_VERSION = "Unknown Version";
 
-    @Test
-    public void testName() {
-        if (TestUtils.isLinux()) {
-            DistributionInformation info = DistributionInformation.get();
-            String name = info.getName();
-            assertNotNull(name);
-            assertTrue(name.length() > 0);
-            assertFalse(name.startsWith(":"));
-            assertFalse(name.equals(DistributionInformation.UNKNOWN_NAME));
-        }
+    private static final Logger logger = LoggingUtils.getLogger(DistributionInformation.class);
+
+    private final String name;
+    private final String version;
+
+    public DistributionInformation(String name, String version) {
+        this.name = name;
+        this.version = version;
     }
 
-    @Test
-    public void testVersion() {
-        if (TestUtils.isLinux()) {
-            DistributionInformation info = DistributionInformation.get();
-            String version = info.getVersion();
-            assertNotNull(version);
-            assertTrue(version.length()> 0);
-            assertFalse(version.startsWith(":"));
-            assertFalse(version.equals(DistributionInformation.UNKNOWN_VERSION));
+    public static DistributionInformation get() {
+        try {
+            return new EtcOsRelease().getDistributionInformation();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "unable to use os-release", e);
         }
+        try {
+            return new LsbRelease().getDistributionInformation();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "unable to use lsb_release", e);
+        }
+        return new DistributionInformation(UNKNOWN_NAME, UNKNOWN_VERSION);
+    }
+
+    /**
+     * @return the name of the distribution, or {@link #UNKNOWN_NAME} if it can not be
+     * identified
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * @return the release of the distribution or {@link #UNKNOWN_VERSION} if it can not be
+     * identified
+     */
+    public String getVersion() {
+        return version;
     }
 
 }
