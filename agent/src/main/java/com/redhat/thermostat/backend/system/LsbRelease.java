@@ -45,50 +45,34 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-/**
- * Implementation note: this relies on the {@code lsb_release} program to work.
- */
-public class DistributionIdentity {
+public class LsbRelease implements DistributionInformationSource {
 
-    public static final String UNKNOWN_NAME = "Unknown Distribution";
-    public static final String UNKNOWN_VERSION = "Unknown Version";
+    private static final Logger logger = LoggingUtils.getLogger(LsbRelease.class);
 
     private static final String DISTRIBUTION_NAME = "distributor id";
     private static final String DISTRIBUTION_VERSION = "release";
 
-    private static final Logger logger = LoggingUtils.getLogger(DistributionIdentity.class);
+    @Override
+    public DistributionInformation getDistributionInformation()
+            throws IOException {
+        return getFromLsbRelease();
+    }
 
-    private final String name;
-    private final String version;
+    public DistributionInformation getFromLsbRelease() throws IOException {
 
-    public DistributionIdentity() {
-        String tempName = UNKNOWN_NAME;
-        String tempVersion = UNKNOWN_VERSION;
         BufferedReader reader = null;
         try {
             Process lsbProc = Runtime.getRuntime().exec(new String[] { "lsb_release", "-a" });
             InputStream progOutput = lsbProc.getInputStream();
             reader = new BufferedReader(new InputStreamReader(progOutput));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                int sepLocation = line.indexOf(":");
-                if (sepLocation != -1) {
-                    String key = line.substring(0, sepLocation).toLowerCase();
-                    if (key.equals(DISTRIBUTION_NAME)) {
-                        tempName = line.substring(sepLocation + 1).trim();
-                    } else if (key.equals(DISTRIBUTION_VERSION)) {
-                        tempVersion = line.substring(sepLocation + 1).trim();
-                    }
-                }
-            }
+            DistributionInformation result = getFromLsbRelease(reader);
             int exitValue = lsbProc.waitFor();
             if (exitValue != 0) {
                 logger.log(Level.WARNING, "unable to identify distribution, problems running 'lsb_release'");
             }
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to identify distribution", e);
+            return result;
         } catch (InterruptedException e) {
-            logger.log(Level.WARNING, "unable to identify distribution", e);
+            throw new IOException(e);
         } finally {
             if (reader != null) {
                 try {
@@ -98,27 +82,30 @@ public class DistributionIdentity {
                 }
             }
         }
-        name = tempName;
-        version = tempVersion;
+
+    }
+
+    public DistributionInformation getFromLsbRelease(BufferedReader reader) throws IOException {
+        String name = DistributionInformation.UNKNOWN_NAME;
+        String version = DistributionInformation.UNKNOWN_VERSION;
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            int sepLocation = line.indexOf(":");
+            if (sepLocation != -1) {
+                String key = line.substring(0, sepLocation).toLowerCase();
+                if (key.equals(DISTRIBUTION_NAME)) {
+                    name = line.substring(sepLocation + 1).trim();
+                } else if (key.equals(DISTRIBUTION_VERSION)) {
+                    version = line.substring(sepLocation + 1).trim();
+                }
+            }
+        }
 
         logger.log(Level.FINE, "distro-name: " + name);
         logger.log(Level.FINE, "distro-version: " + version);
-    }
 
-    /**
-     * @return the name of the distribution, or {@link #UNKNOWN_NAME} if it can not be
-     * identified
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @return the release of the distribution or {@link #UNKNOWN_VERSION} if it can not be
-     * identified
-     */
-    public String getVersion() {
-        return version;
+        return new DistributionInformation(name, version);
     }
 
 }
