@@ -45,7 +45,7 @@ public class MongoStorageTest {
     @Test
     public void testCreateConnectionKey() {
         MongoStorage mongoStorage = new MongoStorage();
-        Category category = new Category("test");
+        Category category = new Category("testCreateConnectionKey");
         ConnectionKey connKey = mongoStorage.createConnectionKey(category);
         assertNotNull(connKey);
     }
