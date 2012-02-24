@@ -177,6 +177,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                 JvmStatVmListener listener = new JvmStatVmListener(backend, vmId);
                 listenerMap.put(vmId, listener);
                 vm.addVmListener(listener);
+                vm.addVmListener(new JvmStatVmClassListener(backend, vmId));
             } else {
                 logger.log(Level.FINE, "skipping new vm " + vmId);
             }

@@ -130,8 +130,7 @@ public class MongoStorage extends Storage {
             replaceKey = getAgentDBObject();
             replaceKeyNestedParts = new HashMap<String, BasicDBObject>();
         }
-        for (Iterator<Key> iter = cat.getEntryIterator(); iter.hasNext();) {
-            Key key = iter.next();
+        for (Key key : cat.getKeys()) {
             boolean isKey = key.isPartialCategoryKey();
             String[] entryParts = key.getName().split("\\.");
             if (entryParts.length == 2) {
@@ -185,8 +184,7 @@ public class MongoStorage extends Storage {
         BasicDBObject updateKey = getAgentDBObject();
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
-        for (Iterator<Key> iter = cat.getEntryIterator(); iter.hasNext();) {
-            Key key = iter.next();
+        for (Key key : cat.getKeys()) {
             boolean isKey = key.isPartialCategoryKey();
             String[] entryParts = key.getName().split("\\.");
             if (entryParts.length == 2) {

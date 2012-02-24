@@ -159,4 +159,8 @@ public class JvmStatDataExtractor {
         return (Long) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".used").getValue();
     }
 
+    public long getLoadedClasses() throws MonitorException {
+        return (Long) vm.findByName("java.cls.loadedClasses").getValue();
+    }
+
 }

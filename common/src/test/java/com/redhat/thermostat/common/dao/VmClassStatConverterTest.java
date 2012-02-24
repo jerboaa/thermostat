@@ -34,69 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import static org.junit.Assert.assertEquals;
 
-public class Category {
-    private final String name;
-    private final List<Key> keys;
-    private boolean locked = false;
+import org.junit.Test;
 
-    private ConnectionKey connectionKey;
+import com.redhat.thermostat.common.VmClassStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 
-    private static Set<String> categoryNames = new HashSet<String>();
+public class VmClassStatConverterTest {
 
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
-        }
-        categoryNames.add(name);
-        this.name = name;
-        keys = new ArrayList<Key>();
-    }
+    @Test
+    public void testVmClassStatToChunk() {
+        VmClassStat stat = new VmClassStat(123, 1234L, 12345L);
 
-    public String getName() {
-        return name;
-    }
+        VmClassStatConverter dao = new VmClassStatConverter();
+        Chunk chunk = dao.vmClassStatToChunk(stat);
 
-    public synchronized void lock() {
-        locked = true;
-    }
-
-    public synchronized void addKey(Key key) {
-        if (!locked) {
-            keys.add(key);
-        } else {
-            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
-        }
-    }
-
-    public synchronized Collection<Key> getKeys() {
-        return Collections.unmodifiableCollection(keys);
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
+        assertEquals("vm-class-stats", chunk.getCategory().getName());
+        assertEquals("1234", chunk.get(Key.TIMESTAMP));
+        assertEquals("123", chunk.get(new Key("vm-id", false)));
+        assertEquals("12345", chunk.get(new Key("loadedClasses", false)));
     }
 }

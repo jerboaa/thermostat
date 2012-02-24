@@ -34,69 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
 
-public class Category {
-    private final String name;
-    private final List<Key> keys;
-    private boolean locked = false;
+public class VmClassStatDAO {
 
-    private ConnectionKey connectionKey;
+    static final Key vmIdKey = new Key("vm-id", false);
+    static final Key loadedClassesKey = new Key("loadedClasses", false);
 
-    private static Set<String> categoryNames = new HashSet<String>();
+    public static final Category vmClassStatsCategory = new Category("vm-class-stats");
 
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
-        }
-        categoryNames.add(name);
-        this.name = name;
-        keys = new ArrayList<Key>();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public synchronized void lock() {
-        locked = true;
-    }
-
-    public synchronized void addKey(Key key) {
-        if (!locked) {
-            keys.add(key);
-        } else {
-            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
-        }
-    }
-
-    public synchronized Collection<Key> getKeys() {
-        return Collections.unmodifiableCollection(keys);
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
+    static {
+        vmClassStatsCategory.addKey(Key.TIMESTAMP);
+        vmClassStatsCategory.addKey(vmIdKey);
+        vmClassStatsCategory.addKey(loadedClassesKey);
+        vmClassStatsCategory.lock(); // TODO: This can be done in a better way! (E.g. pass all keys as constructor var args)
     }
 }

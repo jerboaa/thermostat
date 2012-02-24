@@ -59,6 +59,7 @@ import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.VmCpuStat;
+import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -162,6 +163,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
         categories.addAll(JvmStatHostListener.getCategories());
         categories.addAll(JvmStatVmListener.getCategories());
+        categories.add(VmClassStatDAO.vmClassStatsCategory);
     }
 
     @Override

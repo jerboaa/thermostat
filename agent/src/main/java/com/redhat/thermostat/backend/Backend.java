@@ -189,11 +189,11 @@ public abstract class Backend {
         observeNewJvm = newValue;
     }
 
-    public final void store(Chunk chunk) {
+    public void store(Chunk chunk) {
         storage.putChunk(chunk);
     }
 
-    public final void update(Chunk chunk) {
+    public void update(Chunk chunk) {
         storage.updateChunk(chunk);
     }
 }

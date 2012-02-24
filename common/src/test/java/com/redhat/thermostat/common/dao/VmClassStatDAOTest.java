@@ -34,69 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
-public class Category {
-    private final String name;
-    private final List<Key> keys;
-    private boolean locked = false;
+import org.junit.Test;
 
-    private ConnectionKey connectionKey;
+import com.redhat.thermostat.common.storage.Key;
 
-    private static Set<String> categoryNames = new HashSet<String>();
+public class VmClassStatDAOTest {
 
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
-        }
-        categoryNames.add(name);
-        this.name = name;
-        keys = new ArrayList<Key>();
-    }
+    @Test
+    public void testCategory() {
+        assertEquals("vm-class-stats", VmClassStatDAO.vmClassStatsCategory.getName());
+        Collection<Key> keys = VmClassStatDAO.vmClassStatsCategory.getKeys();
+        assertTrue(keys.contains(new Key("vm-id", false)));
+        assertTrue(keys.contains(new Key("timestamp", false)));
+        assertTrue(keys.contains(new Key("loadedClasses", false)));
+        assertEquals(3, keys.size());
 
-    public String getName() {
-        return name;
-    }
-
-    public synchronized void lock() {
-        locked = true;
-    }
-
-    public synchronized void addKey(Key key) {
-        if (!locked) {
-            keys.add(key);
-        } else {
-            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
-        }
-    }
-
-    public synchronized Collection<Key> getKeys() {
-        return Collections.unmodifiableCollection(keys);
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
     }
 }

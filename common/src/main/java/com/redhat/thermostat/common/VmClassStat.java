@@ -34,69 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+public class VmClassStat {
 
-public class Category {
-    private final String name;
-    private final List<Key> keys;
-    private boolean locked = false;
+    private int vmId;
+    private long timestamp;
+    private long loadedClasses;
 
-    private ConnectionKey connectionKey;
-
-    private static Set<String> categoryNames = new HashSet<String>();
-
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
-        }
-        categoryNames.add(name);
-        this.name = name;
-        keys = new ArrayList<Key>();
+    public VmClassStat(int vmId, long timestamp, long loadedClasses) {
+        this.vmId = vmId;
+        this.timestamp = timestamp;
+        this.loadedClasses = loadedClasses;
     }
 
-    public String getName() {
-        return name;
+    public int getVmId() {
+        return vmId;
     }
 
-    public synchronized void lock() {
-        locked = true;
+    public long getTimestamp() {
+        return timestamp;
     }
 
-    public synchronized void addKey(Key key) {
-        if (!locked) {
-            keys.add(key);
-        } else {
-            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
-        }
-    }
-
-    public synchronized Collection<Key> getKeys() {
-        return Collections.unmodifiableCollection(keys);
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
+    public long getLoadedClasses() {
+        return loadedClasses;
     }
 }
