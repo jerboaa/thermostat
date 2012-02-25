@@ -51,7 +51,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <thermostat.build.directory>target</thermostat.build.directory>
-    <thermostat.java.version>1.6</thermostat.java.version>
+    <thermostat.java.version>1.7</thermostat.java.version>
     <java.dir>/usr/share/java</java.dir>
   </properties>
 

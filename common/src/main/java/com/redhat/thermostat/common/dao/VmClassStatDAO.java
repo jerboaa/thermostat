@@ -41,8 +41,8 @@ import com.redhat.thermostat.common.storage.Key;
 
 public class VmClassStatDAO {
 
-    static final Key vmIdKey = new Key("vm-id", false);
-    static final Key loadedClassesKey = new Key("loadedClasses", false);
+    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
+    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
 
     public static final Category vmClassStatsCategory = new Category("vm-class-stats");
 

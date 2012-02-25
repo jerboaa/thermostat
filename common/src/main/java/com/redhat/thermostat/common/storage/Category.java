@@ -45,7 +45,7 @@ import java.util.Set;
 
 public class Category {
     private final String name;
-    private final List<Key> keys;
+    private final List<Key<?>> keys;
     private boolean locked = false;
 
     private ConnectionKey connectionKey;
@@ -65,7 +65,7 @@ public class Category {
         }
         categoryNames.add(name);
         this.name = name;
-        keys = new ArrayList<Key>();
+        keys = new ArrayList<Key<?>>();
     }
 
     public String getName() {
@@ -76,7 +76,7 @@ public class Category {
         locked = true;
     }
 
-    public synchronized void addKey(Key key) {
+    public synchronized void addKey(Key<?> key) {
         if (!locked) {
             keys.add(key);
         } else {
@@ -84,7 +84,7 @@ public class Category {
         }
     }
 
-    public synchronized Collection<Key> getKeys() {
+    public synchronized Collection<Key<?>> getKeys() {
         return Collections.unmodifiableCollection(keys);
     }
 

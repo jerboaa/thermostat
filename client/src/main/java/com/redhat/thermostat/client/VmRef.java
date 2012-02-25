@@ -42,9 +42,9 @@ public class VmRef implements Ref {
     private final String uid;
     private final String name;
 
-    public VmRef(HostRef hostRef, String id, String name) {
+    public VmRef(HostRef hostRef, Integer id, String name) {
         this.hostRef = hostRef;
-        this.uid = id;
+        this.uid = id.toString();
         this.name = name;
     }
 

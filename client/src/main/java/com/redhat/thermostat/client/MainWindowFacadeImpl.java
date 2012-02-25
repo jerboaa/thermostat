@@ -125,7 +125,7 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
         DBCursor cursor = vmInfoCollection.find(new BasicDBObject("agent-id", hostRef.getAgentId()));
         while (cursor.hasNext()) {
             DBObject vmObject = cursor.next();
-            String id = (String) vmObject.get("vm-id");
+            Integer id = (Integer) vmObject.get("vm-id");
             // TODO can we do better than the main class?
             String mainClass = (String) vmObject.get("main-class");
             VmRef ref = new VmRef(hostRef, id, mainClass);

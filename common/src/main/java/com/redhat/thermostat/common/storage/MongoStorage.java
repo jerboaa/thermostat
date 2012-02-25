@@ -38,7 +38,6 @@ package com.redhat.thermostat.common.storage;
 
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.UUID;
 
@@ -130,7 +129,7 @@ public class MongoStorage extends Storage {
             replaceKey = getAgentDBObject();
             replaceKeyNestedParts = new HashMap<String, BasicDBObject>();
         }
-        for (Key key : cat.getKeys()) {
+        for (Key<?> key : cat.getKeys()) {
             boolean isKey = key.isPartialCategoryKey();
             String[] entryParts = key.getName().split("\\.");
             if (entryParts.length == 2) {
@@ -153,7 +152,7 @@ public class MongoStorage extends Storage {
                 }
             } else {
                 String mongoKey = key.getName();
-                String value = chunk.get(key);
+                Object value = chunk.get(key);
                 if ((value == null) && isKey) {
                     throwMissingKey(key.getName());
                 }
@@ -184,7 +183,7 @@ public class MongoStorage extends Storage {
         BasicDBObject updateKey = getAgentDBObject();
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
-        for (Key key : cat.getKeys()) {
+        for (Key<?> key : cat.getKeys()) {
             boolean isKey = key.isPartialCategoryKey();
             String[] entryParts = key.getName().split("\\.");
             if (entryParts.length == 2) {
@@ -207,7 +206,7 @@ public class MongoStorage extends Storage {
                 }
             } else {
                 String mongoKey = key.getName();
-                String value = chunk.get(key);
+                Object value = chunk.get(key);
                 if (value == null) {
                     if (isKey) {
                         throwMissingKey(key.getName());

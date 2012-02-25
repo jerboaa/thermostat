@@ -64,44 +64,44 @@ public class JvmStatVmListener implements VmListener {
     private static final Category vmGcStatsCategory = new Category("vm-gc-stats");
     private static final Category vmMemoryStatsCategory = new Category("vm-memory-stats");
 
-    private static final Key vmGcStatVmIdKey = new Key("vm-id", false);
-    private static final Key vmGcStatTimeStampKey = new Key("timestamp", false);
-    private static final Key vmGcStatCollectorKey = new Key("collector", false);
-    private static final Key vmGcStatRunCountKey = new Key("runtime-count", false);
+    private static final Key<Integer> vmGcStatVmIdKey = new Key<>("vm-id", false);
+    private static final Key<Long> vmGcStatTimeStampKey = new Key<>("timestamp", false);
+    private static final Key<String> vmGcStatCollectorKey = new Key<>("collector", false);
+    private static final Key<Long> vmGcStatRunCountKey = new Key<>("runtime-count", false);
     /** time in microseconds */
-    private static final Key vmGCstatWallTimeKey = new Key("wall-time", false);
+    private static final Key<Long> vmGCstatWallTimeKey = new Key<>("wall-time", false);
 
-    private static final Key vmMemoryStatVmIdKey = new Key("vm-id", false);
-    private static final Key vmMemoryStatTimestampKey = new Key("timestamp", false);
-    private static final Key vmMemoryStatEdenGenKey = new Key("eden.gen", false);
-    private static final Key vmMemoryStatEdenCollectorKey = new Key("eden.collector", false);
-    private static final Key vmMemoryStatEdenCapacityKey = new Key("eden.capacity", false);
-    private static final Key vmMemoryStatEdenMaxCapacityKey = new Key("eden.max-capacity", false);
-    private static final Key vmMemoryStatEdenUsedKey = new Key("eden.used", false);
+    private static final Key<Integer> vmMemoryStatVmIdKey = new Key<>("vm-id", false);
+    private static final Key<Long> vmMemoryStatTimestampKey = new Key<>("timestamp", false);
+    private static final Key<String> vmMemoryStatEdenGenKey = new Key<>("eden.gen", false);
+    private static final Key<String> vmMemoryStatEdenCollectorKey = new Key<>("eden.collector", false);
+    private static final Key<Long> vmMemoryStatEdenCapacityKey = new Key<>("eden.capacity", false);
+    private static final Key<Long> vmMemoryStatEdenMaxCapacityKey = new Key<>("eden.max-capacity", false);
+    private static final Key<Long> vmMemoryStatEdenUsedKey = new Key<>("eden.used", false);
 
-    private static final Key vmMemoryStatS0GenKey = new Key("s0.gen", false);
-    private static final Key vmMemoryStatS0CollectorKey = new Key("s0.collector", false);
-    private static final Key vmMemoryStatS0CapacityKey = new Key("s0.capacity", false);
-    private static final Key vmMemoryStatS0MaxCapacityKey = new Key("s0.max-capacity", false);
-    private static final Key vmMemoryStatS0UsedKey = new Key("s0.used", false);
+    private static final Key<String> vmMemoryStatS0GenKey = new Key<>("s0.gen", false);
+    private static final Key<String> vmMemoryStatS0CollectorKey = new Key<>("s0.collector", false);
+    private static final Key<Long> vmMemoryStatS0CapacityKey = new Key<>("s0.capacity", false);
+    private static final Key<Long> vmMemoryStatS0MaxCapacityKey = new Key<>("s0.max-capacity", false);
+    private static final Key<Long> vmMemoryStatS0UsedKey = new Key<>("s0.used", false);
 
-    private static final Key vmMemoryStatS1GenKey = new Key("s1.gen", false);
-    private static final Key vmMemoryStatS1CollectorKey = new Key("s1.collector", false);
-    private static final Key vmMemoryStatS1CapacityKey = new Key("s1.capacity", false);
-    private static final Key vmMemoryStatS1MaxCapacityKey = new Key("s1.max-capacity", false);
-    private static final Key vmMemoryStatS1UsedKey = new Key("s1.used", false);
+    private static final Key<String> vmMemoryStatS1GenKey = new Key<>("s1.gen", false);
+    private static final Key<String> vmMemoryStatS1CollectorKey = new Key<>("s1.collector", false);
+    private static final Key<Long> vmMemoryStatS1CapacityKey = new Key<>("s1.capacity", false);
+    private static final Key<Long> vmMemoryStatS1MaxCapacityKey = new Key<>("s1.max-capacity", false);
+    private static final Key<Long> vmMemoryStatS1UsedKey = new Key<>("s1.used", false);
 
-    private static final Key vmMemoryStatOldGenKey = new Key("old.gen", false);
-    private static final Key vmMemoryStatOldCollectorKey = new Key("old.collector", false);
-    private static final Key vmMemoryStatOldCapacityKey = new Key("old.capacity", false);
-    private static final Key vmMemoryStatOldMaxCapacityKey = new Key("old.max-capacity", false);
-    private static final Key vmMemoryStatOldUsedKey = new Key("old.used", false);
+    private static final Key<String> vmMemoryStatOldGenKey = new Key<>("old.gen", false);
+    private static final Key<String> vmMemoryStatOldCollectorKey = new Key<>("old.collector", false);
+    private static final Key<Long> vmMemoryStatOldCapacityKey = new Key<>("old.capacity", false);
+    private static final Key<Long> vmMemoryStatOldMaxCapacityKey = new Key<>("old.max-capacity", false);
+    private static final Key<Long> vmMemoryStatOldUsedKey = new Key<>("old.used", false);
 
-    private static final Key vmMemoryStatPermGenKey = new Key("perm.gen", false);
-    private static final Key vmMemoryStatPermCollectorKey = new Key("perm.collector", false);
-    private static final Key vmMemoryStatPermCapacityKey = new Key("perm.capacity", false);
-    private static final Key vmMemoryStatPermMaxCapacityKey = new Key("perm.max-capacity", false);
-    private static final Key vmMemoryStatPermUsedKey = new Key("perm.used", false);
+    private static final Key<String> vmMemoryStatPermGenKey = new Key<>("perm.gen", false);
+    private static final Key<String> vmMemoryStatPermCollectorKey = new Key<>("perm.collector", false);
+    private static final Key<Long> vmMemoryStatPermCapacityKey = new Key<>("perm.capacity", false);
+    private static final Key<Long> vmMemoryStatPermMaxCapacityKey = new Key<>("perm.max-capacity", false);
+    private static final Key<Long> vmMemoryStatPermUsedKey = new Key<>("perm.used", false);
 
     private final int vmId;
     private final SystemBackend backend;
@@ -238,11 +238,11 @@ public class JvmStatVmListener implements VmListener {
         Chunk chunk = new Chunk(vmGcStatsCategory, false);
 
         // TODO leave as original data structures
-        chunk.put(vmGcStatVmIdKey, String.valueOf(vmGcStat.getVmId()));
-        chunk.put(vmGcStatTimeStampKey, String.valueOf(vmGcStat.getTimeStamp()));
+        chunk.put(vmGcStatVmIdKey, vmGcStat.getVmId());
+        chunk.put(vmGcStatTimeStampKey, vmGcStat.getTimeStamp());
         chunk.put(vmGcStatCollectorKey, vmGcStat.getCollectorName());
-        chunk.put(vmGcStatRunCountKey, String.valueOf(vmGcStat.getRunCount()));
-        chunk.put(vmGCstatWallTimeKey, String.valueOf(vmGcStat.getWallTime()));
+        chunk.put(vmGcStatRunCountKey, vmGcStat.getRunCount());
+        chunk.put(vmGCstatWallTimeKey, vmGcStat.getWallTime());
 
         return chunk;
     }
@@ -250,49 +250,49 @@ public class JvmStatVmListener implements VmListener {
     private Chunk makeVmMemoryStatChunk(VmMemoryStat vmMemStat) {
         Chunk chunk = new Chunk(vmMemoryStatsCategory, false);
 
-        chunk.put(vmMemoryStatVmIdKey, String.valueOf(vmMemStat.getVmId()));
-        chunk.put(vmMemoryStatTimestampKey, String.valueOf(vmMemStat.getTimeStamp()));
+        chunk.put(vmMemoryStatVmIdKey, vmMemStat.getVmId());
+        chunk.put(vmMemoryStatTimestampKey, vmMemStat.getTimeStamp());
 
         Generation newGen = vmMemStat.getGeneration("new");
         Space eden = newGen.getSpace("eden");
 
         chunk.put(vmMemoryStatEdenGenKey, newGen.name);
         chunk.put(vmMemoryStatEdenCollectorKey, newGen.collector);
-        chunk.put(vmMemoryStatEdenCapacityKey, String.valueOf(eden.capacity));
-        chunk.put(vmMemoryStatEdenMaxCapacityKey, String.valueOf(eden.maxCapacity));
-        chunk.put(vmMemoryStatEdenUsedKey, String.valueOf(eden.used));
+        chunk.put(vmMemoryStatEdenCapacityKey, eden.capacity);
+        chunk.put(vmMemoryStatEdenMaxCapacityKey, eden.maxCapacity);
+        chunk.put(vmMemoryStatEdenUsedKey, eden.used);
 
         Space s0 = newGen.getSpace("s0");
         chunk.put(vmMemoryStatS0GenKey, newGen.name);
         chunk.put(vmMemoryStatS0CollectorKey, newGen.collector);
-        chunk.put(vmMemoryStatS0CapacityKey, String.valueOf(s0.capacity));
-        chunk.put(vmMemoryStatS0MaxCapacityKey, String.valueOf(s0.maxCapacity));
-        chunk.put(vmMemoryStatS0UsedKey, String.valueOf(s0.used));
+        chunk.put(vmMemoryStatS0CapacityKey, s0.capacity);
+        chunk.put(vmMemoryStatS0MaxCapacityKey, s0.maxCapacity);
+        chunk.put(vmMemoryStatS0UsedKey, s0.used);
 
         Space s1 = newGen.getSpace("s1");
         chunk.put(vmMemoryStatS1GenKey, newGen.name);
         chunk.put(vmMemoryStatS1CollectorKey, newGen.collector);
-        chunk.put(vmMemoryStatS1CapacityKey, String.valueOf(s1.capacity));
-        chunk.put(vmMemoryStatS1MaxCapacityKey, String.valueOf(s1.maxCapacity));
-        chunk.put(vmMemoryStatS1UsedKey, String.valueOf(s1.used));
+        chunk.put(vmMemoryStatS1CapacityKey, s1.capacity);
+        chunk.put(vmMemoryStatS1MaxCapacityKey, s1.maxCapacity);
+        chunk.put(vmMemoryStatS1UsedKey, s1.used);
 
         Generation oldGen = vmMemStat.getGeneration("old");
         Space old = oldGen.getSpace("old");
 
         chunk.put(vmMemoryStatOldGenKey, oldGen.name);
         chunk.put(vmMemoryStatOldCollectorKey, oldGen.collector);
-        chunk.put(vmMemoryStatOldCapacityKey, String.valueOf(old.capacity));
-        chunk.put(vmMemoryStatOldMaxCapacityKey, String.valueOf(old.maxCapacity));
-        chunk.put(vmMemoryStatOldUsedKey, String.valueOf(old.used));
+        chunk.put(vmMemoryStatOldCapacityKey, old.capacity);
+        chunk.put(vmMemoryStatOldMaxCapacityKey, old.maxCapacity);
+        chunk.put(vmMemoryStatOldUsedKey, old.used);
 
         Generation permGen = vmMemStat.getGeneration("perm");
         Space perm = permGen.getSpace("perm");
 
         chunk.put(vmMemoryStatPermGenKey, permGen.name);
         chunk.put(vmMemoryStatPermCollectorKey, permGen.collector);
-        chunk.put(vmMemoryStatPermCapacityKey, String.valueOf(perm.capacity));
-        chunk.put(vmMemoryStatPermMaxCapacityKey, String.valueOf(perm.maxCapacity));
-        chunk.put(vmMemoryStatPermUsedKey, String.valueOf(perm.used));
+        chunk.put(vmMemoryStatPermCapacityKey, perm.capacity);
+        chunk.put(vmMemoryStatPermMaxCapacityKey, perm.maxCapacity);
+        chunk.put(vmMemoryStatPermUsedKey, perm.used);
 
         return chunk;
     }

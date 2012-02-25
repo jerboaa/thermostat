@@ -50,10 +50,10 @@ public class VmClassStatDAOTest {
     @Test
     public void testCategory() {
         assertEquals("vm-class-stats", VmClassStatDAO.vmClassStatsCategory.getName());
-        Collection<Key> keys = VmClassStatDAO.vmClassStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key("vm-id", false)));
-        assertTrue(keys.contains(new Key("timestamp", false)));
-        assertTrue(keys.contains(new Key("loadedClasses", false)));
+        Collection<Key<?>> keys = VmClassStatDAO.vmClassStatsCategory.getKeys();
+        assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
+        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
+        assertTrue(keys.contains(new Key<Long>("loadedClasses", false)));
         assertEquals(3, keys.size());
 
     }

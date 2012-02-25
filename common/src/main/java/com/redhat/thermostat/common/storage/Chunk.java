@@ -47,7 +47,7 @@ public class Chunk {
     private final Category category;
     private final boolean replace;
 
-    private Map<Key, String> values = new HashMap<Key, String>();
+    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
 
     /**
      * 
@@ -70,11 +70,13 @@ public class Chunk {
         return replace;
     }
 
-    public void put(Key entry, String value) {
+    public <T> void put(Key<T> entry, T value) {
         values.put(entry, value);
     }
 
-    public String get(Key entry) {
-        return values.get(entry);
+    @SuppressWarnings("unchecked")
+    public <T> T get(Key<T> entry) {
+        // We only allow matching types in put(), so this cast should be fine.
+        return (T) values.get(entry);
     }
 }

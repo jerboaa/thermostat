@@ -40,10 +40,10 @@ package com.redhat.thermostat.common.storage;
  * A Key is used to refer to data in a {@link Chunk}.  It may also be a partial key to the
  * set of data represented by a {@link Chunk} in a category.
  */
-public class Key {
+public class Key<T> {
 
     // Key used by most Categories.
-    public static Key TIMESTAMP = new Key("timestamp", false);
+    public static Key<Long> TIMESTAMP = new Key<>("timestamp", false);
 
     private String name;
     private boolean isPartialCategoryKey;
@@ -69,7 +69,7 @@ public class Key {
         if ((o == null) || (o.getClass() != this.getClass())) {
             return false;
         }
-        Key e = (Key) o;
+        Key<?> e = (Key<?>) o;
         return (isPartialCategoryKey == e.isPartialCategoryKey()) &&
             name.equals(e.getName());
     }

@@ -113,12 +113,12 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
             public void run() {
                 BasicDBObject queryObject = new BasicDBObject();
                 queryObject.put("agent-id", ref.getAgent().getAgentId());
-                queryObject.put("vm-id", ref.getId());
+                queryObject.put("vm-id", Integer.valueOf(ref.getId()));
                 DBObject vmInfoObject = vmInfoCollection.findOne(queryObject);
-                vmPid.setText((String) vmInfoObject.get("vm-pid"));
-                long actualStartTime = Long.valueOf((String) vmInfoObject.get("start-time"));
+                vmPid.setText(((Integer) vmInfoObject.get("vm-pid")).toString());
+                long actualStartTime = (Long) vmInfoObject.get("start-time");
                 startTime.setText(vmRunningTimeFormat.format(new Date(actualStartTime)));
-                long actualStopTime = Long.valueOf((String) vmInfoObject.get("stop-time"));
+                long actualStopTime = (Long) vmInfoObject.get("stop-time");
                 if (actualStopTime >= actualStartTime) {
                     // Only show a stop time if we have actually stopped.
                     stopTime.setText(vmRunningTimeFormat.format(new Date(actualStopTime)));
@@ -220,7 +220,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     public String[] getCollectorNames() {
         BasicDBObject queryObject = new BasicDBObject();
         queryObject.put("agent-id", ref.getAgent().getAgentId());
-        queryObject.put("vm-id", ref.getId());
+        queryObject.put("vm-id", Integer.valueOf(ref.getId()));
         List results = vmGcStatsCollection.distinct("collector", queryObject);
         List<String> collectorNames = new ArrayList<String>(results);
 
@@ -258,7 +258,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
             ArrayList<DiscreteTimeData<Double>> result = new ArrayList<DiscreteTimeData<Double>>();
             BasicDBObject queryObject = new BasicDBObject();
             queryObject.put("agent-id", facade.ref.getAgent().getAgentId());
-            queryObject.put("vm-id", facade.ref.getId());
+            queryObject.put("vm-id", Integer.valueOf(facade.ref.getId()));
             if (after != Long.MIN_VALUE) {
                 // TODO once we have an index and the 'column' is of type long, use a
                 // query which can utilize an index. this one doesn't
@@ -270,9 +270,9 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
             double walltime;
             while (cursor.hasNext()) {
                 DBObject current = cursor.next();
-                timestamp = Long.valueOf((String) current.get("timestamp"));
+                timestamp = (Long) current.get("timestamp");
                 // convert microseconds to seconds
-                walltime = 1.0E-6 * Long.valueOf((String) current.get("wall-time"));
+                walltime = 1.0E-6 * (Long) current.get("wall-time");
                 result.add(new DiscreteTimeData<Double>(timestamp, walltime));
             }
 
@@ -390,7 +390,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     private VmMemoryStat getLatestMemoryInfo() {
         BasicDBObject query = new BasicDBObject();
         query.put("agent-id", ref.getAgent().getAgentId());
-        query.put("vm-id", ref.getId());
+        query.put("vm-id", Integer.valueOf(ref.getId()));
         // TODO ensure timestamp is an indexed column
         BasicDBObject sortByTimeStamp = new BasicDBObject("timestamp", -1);
         DBCursor cursor;
@@ -409,8 +409,8 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         String[] spaceNames = new String[] { "eden", "s0", "s1", "old", "perm" };
         List<Generation> generations = new ArrayList<Generation>();
 
-        long timestamp = Long.valueOf((String)dbObj.get("timestamp"));
-        int vmId = Integer.valueOf((String)dbObj.get("vm-id"));
+        long timestamp = (Long) dbObj.get("timestamp");
+        int vmId = (Integer) dbObj.get("vm-id");
         for (String spaceName: spaceNames) {
             DBObject info = (DBObject) dbObj.get(spaceName);
             String generationName = (String) info.get("gen");
@@ -430,9 +430,9 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
             }
             Space space = new Space();
             space.name = spaceName;
-            space.capacity = Long.valueOf((String)info.get("capacity"));
-            space.maxCapacity = Long.valueOf((String)info.get("max-capacity"));
-            space.used = Long.valueOf((String) info.get("used"));
+            space.capacity = (Long) info.get("capacity");
+            space.maxCapacity = (Long)info.get("max-capacity");
+            space.used = (Long) info.get("used");
             if (target.spaces == null) {
                 target.spaces = new ArrayList<Space>();
             }

@@ -54,8 +54,8 @@ public class VmClassStatConverterTest {
         Chunk chunk = dao.vmClassStatToChunk(stat);
 
         assertEquals("vm-class-stats", chunk.getCategory().getName());
-        assertEquals("1234", chunk.get(Key.TIMESTAMP));
-        assertEquals("123", chunk.get(new Key("vm-id", false)));
-        assertEquals("12345", chunk.get(new Key("loadedClasses", false)));
+        assertEquals((Long) 1234L, chunk.get(Key.TIMESTAMP));
+        assertEquals((Integer) 123, chunk.get(new Key<Integer>("vm-id", false)));
+        assertEquals((Long) 12345L, chunk.get(new Key<Long>("loadedClasses", false)));
     }
 }

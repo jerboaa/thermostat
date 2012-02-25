@@ -68,20 +68,20 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
     private static final Category vmInfoCategory = new Category("vm-info");
-    private static final Key vmInfoIdKey = new Key("vm-id", true);
-    private static final Key vmInfoPidKey = new Key("vm-pid", false);
-    private static final Key vmInfoRuntimeVersionKey = new Key("runtime-version", false);
-    private static final Key vmInfoJavaHomeKey = new Key("java-home", false);
-    private static final Key vmInfoMainClassKey = new Key("main-class", false);
-    private static final Key vmInfoCommandLineKey = new Key("command-line", false);
-    private static final Key vmInfoVmNameKey = new Key("vm-name", false);
-    private static final Key vmInfoVmArgumentsKey = new Key("vm-arguments", false);
-    private static final Key vmInfoVmInfoKey = new Key("vm-info", false);
-    private static final Key vmInfoVmVersionKey = new Key("vm-version", false);
-    private static final Key vmInfoEnvironmentKey = new Key("environment", false);
-    private static final Key vmInfoLibrariesKey = new Key("libraries", false);
-    private static final Key vmInfoStartTimeKey = new Key("start-time", false);
-    private static final Key vmInfoStopTimeKey = new Key("stop-time", false);
+    private static final Key<Integer> vmInfoIdKey = new Key<>("vm-id", true);
+    private static final Key<Integer> vmInfoPidKey = new Key<>("vm-pid", false);
+    private static final Key<String> vmInfoRuntimeVersionKey = new Key<>("runtime-version", false);
+    private static final Key<String> vmInfoJavaHomeKey = new Key<>("java-home", false);
+    private static final Key<String> vmInfoMainClassKey = new Key<>("main-class", false);
+    private static final Key<String> vmInfoCommandLineKey = new Key<>("command-line", false);
+    private static final Key<String> vmInfoVmArgumentsKey = new Key<>("vm-arguments", false);
+    private static final Key<String> vmInfoVmNameKey = new Key<>("vm-name", false);
+    private static final Key<String> vmInfoVmInfoKey = new Key<>("vm-info", false);
+    private static final Key<String> vmInfoVmVersionKey = new Key<>("vm-version", false);
+    private static final Key<Map<String, String>> vmInfoEnvironmentKey = new Key<>("environment", false);
+    private static final Key<List<String>> vmInfoLibrariesKey = new Key<>("libraries", false);
+    private static final Key<Long> vmInfoStartTimeKey = new Key<>("start-time", false);
+    private static final Key<Long> vmInfoStopTimeKey = new Key<>("stop-time", false);
 
     static {
         vmInfoCategory.addKey(vmInfoIdKey);
@@ -161,6 +161,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                 JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
                 Map<String, String> properties = new HashMap<String, String>();
                 Map<String, String> environment = ProcessEnvironmentBuilder.build(vmId);
+                // TODO actually figure out the loaded libraries.
                 List<String> loadedNativeLibraries = new ArrayList<String>();
                 info = new VmInfo(vmId, startTime, stopTime,
                         extractor.getJavaVersion(), extractor.getJavaHome(),
@@ -206,8 +207,8 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
 
         // FIXME save these as proper objects (ie. not as strings)
 
-        chunk.put(vmInfoIdKey, String.valueOf(info.getVmId()));
-        chunk.put(vmInfoPidKey, String.valueOf(info.getVmPid()));
+        chunk.put(vmInfoIdKey, info.getVmId());
+        chunk.put(vmInfoPidKey, info.getVmPid());
         chunk.put(vmInfoRuntimeVersionKey, info.getJavaVersion());
         chunk.put(vmInfoJavaHomeKey, info.getJavaHome());
         chunk.put(vmInfoMainClassKey, info.getMainClass());
@@ -216,17 +217,17 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         chunk.put(vmInfoVmNameKey, info.getVmName());
         chunk.put(vmInfoVmInfoKey, info.getVmInfo());
         chunk.put(vmInfoVmVersionKey, info.getVmVersion());
-        chunk.put(vmInfoEnvironmentKey, info.getEnvironment().toString());
-        chunk.put(vmInfoLibrariesKey, info.getLoadedNativeLibraries().toString());
-        chunk.put(vmInfoStartTimeKey, String.valueOf(info.getStartTimeStamp()));
-        chunk.put(vmInfoStopTimeKey, String.valueOf(info.getStopTimeStamp()));
+        chunk.put(vmInfoEnvironmentKey, info.getEnvironment());
+        chunk.put(vmInfoLibrariesKey, info.getLoadedNativeLibraries());
+        chunk.put(vmInfoStartTimeKey, info.getStartTimeStamp());
+        chunk.put(vmInfoStopTimeKey, info.getStopTimeStamp());
         return chunk;
     }
 
     private Chunk makeVmInfoUpdateStoppedChunk(int vmId, long stopTimeStamp) {
         Chunk chunk = new Chunk(vmInfoCategory, false);
-        chunk.put(vmInfoIdKey, String.valueOf(vmId));
-        chunk.put(vmInfoStopTimeKey, String.valueOf(stopTimeStamp));
+        chunk.put(vmInfoIdKey, vmId);
+        chunk.put(vmInfoStopTimeKey, stopTimeStamp);
         return chunk;
     }
 

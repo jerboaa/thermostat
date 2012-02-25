@@ -70,8 +70,8 @@ public class JvmStatVmClassListenerTest {
 
         ArgumentCaptor<Chunk> chunkArg = ArgumentCaptor.forClass(Chunk.class);
         verify(backend).store(chunkArg.capture());
-        assertEquals("1234", chunkArg.getValue().get(new Key("loadedClasses", false)));
-        assertEquals("123", chunkArg.getValue().get(new Key("vm-id", false)));
+        assertEquals((Long) 1234L, chunkArg.getValue().get(new Key<Long>("loadedClasses", false)));
+        assertEquals((Integer) 123, chunkArg.getValue().get(new Key<Integer>("vm-id", false)));
     }
 
     @Test

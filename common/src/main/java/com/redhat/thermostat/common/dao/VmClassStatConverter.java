@@ -37,7 +37,6 @@
 package com.redhat.thermostat.common.dao;
 
 import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
@@ -45,9 +44,9 @@ public class VmClassStatConverter {
 
     public Chunk vmClassStatToChunk(VmClassStat vmClassStat) {
         Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        chunk.put(VmClassStatDAO.vmIdKey, String.valueOf(vmClassStat.getVmId()));
-        chunk.put(Key.TIMESTAMP, String.valueOf(vmClassStat.getTimestamp()));
-        chunk.put(VmClassStatDAO.loadedClassesKey, String.valueOf(vmClassStat.getLoadedClasses()));
+        chunk.put(VmClassStatDAO.vmIdKey, vmClassStat.getVmId());
+        chunk.put(Key.TIMESTAMP, vmClassStat.getTimestamp());
+        chunk.put(VmClassStatDAO.loadedClassesKey, vmClassStat.getLoadedClasses());
         return chunk;
     }
 }

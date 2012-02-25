@@ -119,8 +119,8 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
                 osName.setText((String) hostInfo.get("os_name"));
                 osKernel.setText((String) hostInfo.get("os_kernel"));
                 cpuModel.setText((String) hostInfo.get("cpu_model"));
-                cpuCount.setText((String) hostInfo.get("cpu_num"));
-                memoryTotal.setText((String) hostInfo.get("memory_total"));
+                cpuCount.setText(((Integer) hostInfo.get("cpu_num")).toString());
+                memoryTotal.setText(((Long) hostInfo.get("memory_total")).toString());
 
                 doNetworkTableUpdateAsync();
 
@@ -238,11 +238,11 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         long memoryData = 0;
         while (cursor.hasNext()) {
             DBObject stat = cursor.next();
-            timestamp = Long.valueOf((String) stat.get("timestamp"));
+            timestamp = (Long) stat.get("timestamp");
             if (type.getInternalName().equals("used")) {
-                memoryData = Long.valueOf((String) stat.get("total")) - Long.valueOf((String) stat.get("free"));
+                memoryData = (Long) stat.get("total") - (Long) stat.get("free");
             } else {
-                memoryData = Long.valueOf((String) stat.get(type.getInternalName()));
+                memoryData = (Long) stat.get(type.getInternalName());
             }
             data.add(new DiscreteTimeData<Long>(timestamp, memoryData));
         }
@@ -307,8 +307,8 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
             double data = 0;
             while (cursor.hasNext()) {
                 DBObject stat = cursor.next();
-                timestamp = Long.valueOf((String) stat.get("timestamp"));
-                data = Double.valueOf((String) stat.get("5load"));
+                timestamp = (Long) stat.get("timestamp");
+                data = (Double) stat.get("5load");
                 load.add(new DiscreteTimeData<Double>(timestamp, data));
             }
             // TODO we may also want to avoid sending out thousands of values.
