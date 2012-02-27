@@ -50,6 +50,16 @@
   <packaging>jar</packaging>
 
   <name>Thermostat Common</name>
+  <url>${project.parent.url}</url>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
+  </build>
 
   <dependencies>
     <dependency>

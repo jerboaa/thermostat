@@ -49,6 +49,8 @@
   <url>http://icedtea.classpath.org/thermostat/</url>
 
   <properties>
+    <thermostat.releasedate>2012-XX-XX</thermostat.releasedate>
+    <thermostat.email>thermostat@icedtea.classpath.org</thermostat.email>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <thermostat.build.directory>target</thermostat.build.directory>
     <thermostat.java.version>1.7</thermostat.java.version>
