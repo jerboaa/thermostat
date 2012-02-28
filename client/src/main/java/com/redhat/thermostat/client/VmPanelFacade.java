@@ -80,4 +80,6 @@ public interface VmPanelFacade extends AsyncUiFacade {
 
     public DefaultCategoryDataset getCurrentMemory();
 
+    public ChangeableText getVmArguments();
+
 }

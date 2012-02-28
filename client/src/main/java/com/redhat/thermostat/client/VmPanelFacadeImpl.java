@@ -217,6 +217,11 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     }
 
     @Override
+    public ChangeableText getVmArguments() {
+    	return vmArguments;
+    }
+
+    @Override
     public String[] getCollectorNames() {
         BasicDBObject queryObject = new BasicDBObject();
         queryObject.put("agent-id", ref.getAgent().getAgentId());

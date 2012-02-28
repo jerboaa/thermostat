@@ -116,6 +116,8 @@ public class VmPanel extends JPanel {
         javaSection.add(entry);
         entry = new TableEntry(_("VM_INFO_VM"), facade.getVmNameAndVersion());
         javaSection.add(entry);
+        entry = new TableEntry(_("VM_INFO_VM_ARGUMENTS"), facade.getVmArguments());
+        javaSection.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();
         JPanel table = simpleTable.createTable(allSections);
