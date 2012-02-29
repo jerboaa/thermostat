@@ -67,7 +67,6 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
-    private static final Category vmInfoCategory = new Category("vm-info");
     private static final Key<Integer> vmInfoIdKey = new Key<>("vm-id", true);
     private static final Key<Integer> vmInfoPidKey = new Key<>("vm-pid", false);
     private static final Key<String> vmInfoRuntimeVersionKey = new Key<>("runtime-version", false);
@@ -83,22 +82,12 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private static final Key<Long> vmInfoStartTimeKey = new Key<>("start-time", false);
     private static final Key<Long> vmInfoStopTimeKey = new Key<>("stop-time", false);
 
-    static {
-        vmInfoCategory.addKey(vmInfoIdKey);
-        vmInfoCategory.addKey(vmInfoPidKey);
-        vmInfoCategory.addKey(vmInfoRuntimeVersionKey);
-        vmInfoCategory.addKey(vmInfoJavaHomeKey);
-        vmInfoCategory.addKey(vmInfoMainClassKey);
-        vmInfoCategory.addKey(vmInfoCommandLineKey);
-        vmInfoCategory.addKey(vmInfoVmNameKey);
-        vmInfoCategory.addKey(vmInfoVmArgumentsKey);
-        vmInfoCategory.addKey(vmInfoVmInfoKey);
-        vmInfoCategory.addKey(vmInfoVmVersionKey);
-        vmInfoCategory.addKey(vmInfoEnvironmentKey);
-        vmInfoCategory.addKey(vmInfoLibrariesKey);
-        vmInfoCategory.addKey(vmInfoStartTimeKey);
-        vmInfoCategory.addKey(vmInfoStopTimeKey);
-    }
+    private static final Category vmInfoCategory = new Category("vm-info",
+            vmInfoIdKey, vmInfoPidKey, vmInfoRuntimeVersionKey, vmInfoJavaHomeKey,
+            vmInfoMainClassKey, vmInfoCommandLineKey,
+            vmInfoVmArgumentsKey, vmInfoVmNameKey, vmInfoVmInfoKey, vmInfoVmVersionKey,
+            vmInfoEnvironmentKey, vmInfoLibrariesKey,
+            vmInfoStartTimeKey, vmInfoStopTimeKey);
 
     private SystemBackend backend;
 

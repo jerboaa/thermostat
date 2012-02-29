@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.backend.sample;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -117,8 +117,8 @@ public class SampleBackend extends Backend {
     }
 
     @Override
-    protected Iterator<Category> getCategoryIterator() {
-        return new HashSet<Category>().iterator();
+    protected Collection<Category> getCategories() {
+        return new HashSet<Category>();
     }
 
     @Override

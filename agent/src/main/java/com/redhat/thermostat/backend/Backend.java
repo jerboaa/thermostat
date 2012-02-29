@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.backend;
 
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -80,12 +80,12 @@ public abstract class Backend {
 
     public final void setStorage(Storage storage) {
         this.storage = storage;
-        for (Iterator<Category> iter = getCategoryIterator(); iter.hasNext();) {
-            storage.registerCategory(iter.next());
+        for (Category cat : getCategories()) {
+            storage.registerCategory(cat);
         }
     }
 
-    protected abstract Iterator<Category> getCategoryIterator();
+    protected abstract Collection<Category> getCategories();
 
     /**
      * Set the named configuration to the given value.

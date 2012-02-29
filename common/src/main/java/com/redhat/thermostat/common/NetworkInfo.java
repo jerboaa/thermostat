@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.common;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 public class NetworkInfo {
@@ -56,7 +57,7 @@ public class NetworkInfo {
         interfaces.remove(info.getInterfaceName());
     }
 
-    public Iterator<NetworkInterfaceInfo> getInterfacesIterator() {
-        return interfaces.values().iterator();
+    public Collection<NetworkInterfaceInfo> getInterfaces() {
+        return Collections.unmodifiableCollection(interfaces.values());
     }
 }

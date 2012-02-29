@@ -44,12 +44,6 @@ public class VmClassStatDAO {
     static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
     static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
 
-    public static final Category vmClassStatsCategory = new Category("vm-class-stats");
-
-    static {
-        vmClassStatsCategory.addKey(Key.TIMESTAMP);
-        vmClassStatsCategory.addKey(vmIdKey);
-        vmClassStatsCategory.addKey(loadedClassesKey);
-        vmClassStatsCategory.lock(); // TODO: This can be done in a better way! (E.g. pass all keys as constructor var args)
-    }
+    public static final Category vmClassStatsCategory = new Category("vm-class-stats",
+            vmIdKey, Key.TIMESTAMP, loadedClassesKey);
 }

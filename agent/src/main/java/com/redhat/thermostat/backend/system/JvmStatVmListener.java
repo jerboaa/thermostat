@@ -61,18 +61,17 @@ public class JvmStatVmListener implements VmListener {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatVmListener.class);
 
-    private static final Category vmGcStatsCategory = new Category("vm-gc-stats");
-    private static final Category vmMemoryStatsCategory = new Category("vm-memory-stats");
-
     private static final Key<Integer> vmGcStatVmIdKey = new Key<>("vm-id", false);
-    private static final Key<Long> vmGcStatTimeStampKey = new Key<>("timestamp", false);
     private static final Key<String> vmGcStatCollectorKey = new Key<>("collector", false);
     private static final Key<Long> vmGcStatRunCountKey = new Key<>("runtime-count", false);
     /** time in microseconds */
     private static final Key<Long> vmGCstatWallTimeKey = new Key<>("wall-time", false);
 
+    private static final Category vmGcStatsCategory = new Category("vm-gc-stats",
+            vmGcStatVmIdKey, Key.TIMESTAMP, vmGcStatCollectorKey,
+            vmGcStatRunCountKey, vmGCstatWallTimeKey);
+
     private static final Key<Integer> vmMemoryStatVmIdKey = new Key<>("vm-id", false);
-    private static final Key<Long> vmMemoryStatTimestampKey = new Key<>("timestamp", false);
     private static final Key<String> vmMemoryStatEdenGenKey = new Key<>("eden.gen", false);
     private static final Key<String> vmMemoryStatEdenCollectorKey = new Key<>("eden.collector", false);
     private static final Key<Long> vmMemoryStatEdenCapacityKey = new Key<>("eden.capacity", false);
@@ -103,46 +102,21 @@ public class JvmStatVmListener implements VmListener {
     private static final Key<Long> vmMemoryStatPermMaxCapacityKey = new Key<>("perm.max-capacity", false);
     private static final Key<Long> vmMemoryStatPermUsedKey = new Key<>("perm.used", false);
 
+    private static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
+            vmMemoryStatVmIdKey, Key.TIMESTAMP,
+            vmMemoryStatEdenGenKey, vmMemoryStatEdenCollectorKey,
+            vmMemoryStatEdenCapacityKey, vmMemoryStatEdenMaxCapacityKey,vmMemoryStatEdenUsedKey,
+            vmMemoryStatS0GenKey, vmMemoryStatS0CollectorKey, vmMemoryStatS0CapacityKey,
+            vmMemoryStatS0MaxCapacityKey, vmMemoryStatS0UsedKey,
+            vmMemoryStatS1GenKey, vmMemoryStatS1CollectorKey, vmMemoryStatS1CapacityKey,
+            vmMemoryStatS1MaxCapacityKey, vmMemoryStatS1UsedKey,
+            vmMemoryStatOldGenKey, vmMemoryStatOldCollectorKey, vmMemoryStatOldCapacityKey,
+            vmMemoryStatOldMaxCapacityKey, vmMemoryStatOldUsedKey,
+            vmMemoryStatPermGenKey, vmMemoryStatPermCollectorKey, vmMemoryStatPermCapacityKey,
+            vmMemoryStatPermMaxCapacityKey, vmMemoryStatPermUsedKey);
+
     private final int vmId;
     private final SystemBackend backend;
-
-    static {
-        vmGcStatsCategory.addKey(vmGcStatVmIdKey);
-        vmGcStatsCategory.addKey(vmGcStatTimeStampKey);
-        vmGcStatsCategory.addKey(vmGcStatCollectorKey);
-        vmGcStatsCategory.addKey(vmGcStatRunCountKey);
-        vmGcStatsCategory.addKey(vmGCstatWallTimeKey);
-        vmGcStatsCategory.lock();
-
-        vmMemoryStatsCategory.addKey(vmMemoryStatVmIdKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatTimestampKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatEdenGenKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatEdenCollectorKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatEdenCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatEdenMaxCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatEdenUsedKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS0GenKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS0CollectorKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS0CapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS0MaxCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS0UsedKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS1GenKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS1CollectorKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS1CapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS1MaxCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatS1UsedKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatOldGenKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatOldCollectorKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatOldCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatOldMaxCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatOldUsedKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatPermGenKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatPermCollectorKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatPermCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatPermMaxCapacityKey);
-        vmMemoryStatsCategory.addKey(vmMemoryStatPermUsedKey);
-
-    }
 
     public JvmStatVmListener(SystemBackend backend, int vmId) {
         this.backend = backend;
@@ -239,7 +213,7 @@ public class JvmStatVmListener implements VmListener {
 
         // TODO leave as original data structures
         chunk.put(vmGcStatVmIdKey, vmGcStat.getVmId());
-        chunk.put(vmGcStatTimeStampKey, vmGcStat.getTimeStamp());
+        chunk.put(Key.TIMESTAMP, vmGcStat.getTimeStamp());
         chunk.put(vmGcStatCollectorKey, vmGcStat.getCollectorName());
         chunk.put(vmGcStatRunCountKey, vmGcStat.getRunCount());
         chunk.put(vmGCstatWallTimeKey, vmGcStat.getWallTime());
@@ -251,7 +225,7 @@ public class JvmStatVmListener implements VmListener {
         Chunk chunk = new Chunk(vmMemoryStatsCategory, false);
 
         chunk.put(vmMemoryStatVmIdKey, vmMemStat.getVmId());
-        chunk.put(vmMemoryStatTimestampKey, vmMemStat.getTimeStamp());
+        chunk.put(Key.TIMESTAMP, vmMemStat.getTimeStamp());
 
         Generation newGen = vmMemStat.getGeneration("new");
         Space eden = newGen.getSpace("eden");

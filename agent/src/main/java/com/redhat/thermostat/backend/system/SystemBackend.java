@@ -38,7 +38,8 @@ package com.redhat.thermostat.backend.system;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -86,7 +87,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private List<Category> categories = new ArrayList<Category>();
 
-    private Category hostInfoCategory = new Category("host-info");
     private Key<String> hostNameKey = new Key<>("hostname", true);
     private Key<String> osNameKey = new Key<>("os_name", false);
     private Key<String> osKernelKey = new Key<>("os_kernel", false);
@@ -94,17 +94,24 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     private Key<String> cpuModelKey = new Key<>("cpu_model", false);
     private Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
 
-    private Category networkInfoCategory = new Category("network-info");
+    private Category hostInfoCategory = new Category("host-info",
+            hostNameKey, osNameKey, osKernelKey,
+            cpuCountKey, cpuModelKey, hostMemoryTotalKey);
+
     private Key<String> ifaceKey = new Key<>("iface", true);
     private Key<String> ip4AddrKey = new Key<>("ipv4addr", false);
     private Key<String> ip6AddrKey = new Key<>("ipv6addr", false);
 
-    private Category cpuStatCategory = new Category("cpu-stats");
+    private Category networkInfoCategory = new Category("network-info",
+            Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
+
     private Key<Double> cpu5LoadKey = new Key<>("5load", false);
     private Key<Double> cpu10LoadKey = new Key<>("10load", false);
     private Key<Double> cpu15LoadKey = new Key<>("15load", false);
 
-    private Category memoryStatCategory = new Category("memory-stats");
+    private Category cpuStatCategory = new Category("cpu-stats",
+            Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
+
     private Key<Long> memoryTotalKey = new Key<>("total", false);
     private Key<Long> memoryFreeKey = new Key<>("free", false);
     private Key<Long> memoryBuffersKey = new Key<>("buffers", false);
@@ -113,54 +120,23 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     private Key<Long> memorySwapFreeKey = new Key<>("swap-free", false);
     private Key<Long> memoryCommitLimitKey = new Key<>("commit-limit", false);
 
-    private Category vmCpuStatCategory = new Category("vm-cpu-stats");
+    private Category memoryStatCategory = new Category("memory-stats",
+            Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
+            memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
+
     private Key<Integer> vmCpuVmIdKey = new Key<>("vm-id", false);
     private Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
 
+    private Category vmCpuStatCategory = new Category("vm-cpu-stats",
+            vmCpuLoadKey, vmCpuVmIdKey);
+
     {
         // Set up categories that will later be registered.
-        // host-info category.
-        hostInfoCategory.addKey(hostNameKey);
-        hostInfoCategory.addKey(osNameKey);
-        hostInfoCategory.addKey(osKernelKey);
-        hostInfoCategory.addKey(cpuModelKey);
-        hostInfoCategory.addKey(cpuCountKey);
-        hostInfoCategory.addKey(hostMemoryTotalKey);
-        hostInfoCategory.lock();
         categories.add(hostInfoCategory);
-
-        // network-info category
-        networkInfoCategory.addKey(ifaceKey);
-        networkInfoCategory.addKey(ip4AddrKey);
-        networkInfoCategory.addKey(ip6AddrKey);
-        networkInfoCategory.lock();
         categories.add(networkInfoCategory);
-
-        // cpu-stats category.
-        cpuStatCategory.addKey(Key.TIMESTAMP);
-        cpuStatCategory.addKey(cpu5LoadKey);
-        cpuStatCategory.addKey(cpu10LoadKey);
-        cpuStatCategory.addKey(cpu15LoadKey);
-        cpuStatCategory.lock();
         categories.add(cpuStatCategory);
-
-        // memory-stat category.
-        memoryStatCategory.addKey(Key.TIMESTAMP);
-        memoryStatCategory.addKey(memoryTotalKey);
-        memoryStatCategory.addKey(memoryFreeKey);
-        memoryStatCategory.addKey(memoryBuffersKey);
-        memoryStatCategory.addKey(memoryCachedKey);
-        memoryStatCategory.addKey(memorySwapTotalKey);
-        memoryStatCategory.addKey(memorySwapFreeKey);
-        memoryStatCategory.addKey(memoryCommitLimitKey);
-        memoryStatCategory.lock();
         categories.add(memoryStatCategory);
-
-        // vm-cpu-stat category
-        vmCpuStatCategory.addKey(vmCpuLoadKey);
-        vmCpuStatCategory.addKey(vmCpuVmIdKey);
         categories.add(vmCpuStatCategory);
-
         categories.addAll(JvmStatHostListener.getCategories());
         categories.addAll(JvmStatVmListener.getCategories());
         categories.add(VmClassStatDAO.vmClassStatsCategory);
@@ -204,8 +180,8 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
             @Override
             public void run() {
                 store(makeCpuChunk(new CpuStatBuilder().build()));
-                for (Iterator<NetworkInterfaceInfo> iter = NetworkInfoBuilder.build().getInterfacesIterator(); iter.hasNext();) {
-                    store(makeNetworkChunk(iter.next()));
+                for (NetworkInterfaceInfo info: NetworkInfoBuilder.build().getInterfaces()) {
+                    store(makeNetworkChunk(info));
                 }
                 store(makeMemoryChunk(new MemoryStatBuilder().build()));
 
@@ -262,8 +238,8 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     }
 
     @Override
-    protected Iterator<Category> getCategoryIterator() {
-        return categories.iterator();
+    protected Collection<Category> getCategories() {
+        return Collections.unmodifiableCollection(categories);
     }
 
     private Chunk makeCpuChunk(CpuStat cpuStat) {

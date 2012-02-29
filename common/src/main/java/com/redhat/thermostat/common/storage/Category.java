@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -46,7 +46,6 @@ import java.util.Set;
 public class Category {
     private final String name;
     private final List<Key<?>> keys;
-    private boolean locked = false;
 
     private ConnectionKey connectionKey;
 
@@ -59,33 +58,21 @@ public class Category {
      *
      * @throws IllegalArgumentException if a Category is created with a name that has been used before
      */
-    public Category(String name) {
+    public Category(String name, Key<?>... keys) {
         if (categoryNames.contains(name)) {
             throw new IllegalStateException();
         }
         categoryNames.add(name);
         this.name = name;
-        keys = new ArrayList<Key<?>>();
+        this.keys = Collections.unmodifiableList(Arrays.asList(keys));
     }
 
     public String getName() {
         return name;
     }
 
-    public synchronized void lock() {
-        locked = true;
-    }
-
-    public synchronized void addKey(Key<?> key) {
-        if (!locked) {
-            keys.add(key);
-        } else {
-            throw new IllegalStateException("Once locked, a category's keys may not be changed.");
-        }
-    }
-
     public synchronized Collection<Key<?>> getKeys() {
-        return Collections.unmodifiableCollection(keys);
+        return keys;
     }
 
     public void setConnectionKey(ConnectionKey connKey) {
