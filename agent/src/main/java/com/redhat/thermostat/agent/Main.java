@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.storage.MongoStorage;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public final class Main {
@@ -88,8 +89,7 @@ public final class Main {
             try {
                 logger.fine("Starting private mongod instance.");
                 logger.finest("Mongo launch script at: " + mongoScript);
-                Process mongodStarter = Runtime.getRuntime().exec(mongoScript + " start");
-                int result = mongodStarter.waitFor();
+                int result = new LoggedExternalProcess(new String[] { mongoScript, "start" }).runAndReturnResult();
                 if (result != 0) {
                     logger.severe("Error starting local mongod instance.");
                     System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
@@ -143,8 +143,7 @@ public final class Main {
         if (config.getLocalMode()) {
             logger.fine("Stopping private mongod instance.");
             try {
-                Process mongodStopper = Runtime.getRuntime().exec(mongoScript + " stop");
-                int result = mongodStopper.waitFor();
+                int result = new LoggedExternalProcess(new String[] { mongoScript, "stop" }).runAndReturnResult();
                 if (result != 0) {
                     logger.severe("Error stopping local mongod instance.");
                 }

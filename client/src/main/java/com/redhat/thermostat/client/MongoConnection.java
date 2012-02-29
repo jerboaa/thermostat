@@ -49,6 +49,7 @@ import com.mongodb.MongoURI;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.storage.StorageConstants;
+import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MongoConnection extends Connection {
@@ -111,8 +112,8 @@ public class MongoConnection extends Connection {
     private void startLocalAgent() throws LocalAgentException {
         int status = 0;
         try {
-            String agentCommand = props.getProperty(Constants.CLIENT_PROPERTY_AGENT_LAUNCH_SCRIPT) + " --local";
-            localAgentProcess = Runtime.getRuntime().exec(agentCommand);
+            String agentScript = props.getProperty(Constants.CLIENT_PROPERTY_AGENT_LAUNCH_SCRIPT);
+            localAgentProcess = new LoggedExternalProcess(new String[] { agentScript, "--local" }).runAndReturnProcess();
             // Allow some time for things to get started.
             try {
                 // TODO provide some UI feedback here instead of just seeming dead.
