@@ -206,11 +206,10 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
             NetworkInfo networkInfo;
             try {
                 networkInfo = get();
-                for (Iterator<NetworkInterfaceInfo> iter = networkInfo.getInterfacesIterator(); iter.hasNext();) {
-                    NetworkInterfaceInfo networkIfaceInfo = iter.next();
-                    String ifaceName = networkIfaceInfo.getInterfaceName();
-                    String ipv4 = networkIfaceInfo.getIp4Addr();
-                    String ipv6 = networkIfaceInfo.getIp6Addr();
+                for (NetworkInterfaceInfo info : networkInfo.getInterfaces()) {
+                    String ifaceName = info.getInterfaceName();
+                    String ipv4 = info.getIp4Addr();
+                    String ipv6 = info.getIp6Addr();
                     data.add(new Vector<String>(Arrays.asList(new String[] { ifaceName, ipv4, ipv6 })));
                 }
                 facade.networkTableModel.setDataVector(data, facade.networkTableColumnVector);
