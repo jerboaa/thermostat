@@ -54,7 +54,7 @@ THERM_DIR=`dirname "$( cd -P "$( dirname "$SOURCE" )" && pwd )"`
 AGENT_CLASSPATH="${AGENT_CLASSPATH}:${THERM_DIR}/lib/thermostat-agent-@project.version@.jar:${THERM_DIR}/lib/thermostat-common-@project.version@.jar"
 AGENT_MAIN="com.redhat.thermostat.agent.Main"
 
-AGENT_ARGS="--local --properties ${THERM_DIR}/config/agent.properties"
+AGENT_ARGS="--properties ${THERM_DIR}/config/agent.properties"
 
 function usage {
   echo "Usage:"
