@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.Translate._;
+import static com.redhat.thermostat.client.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -92,19 +92,19 @@ public class AboutDialog extends JDialog {
 
         descriptionContainer.add(Box.createGlue());
         descriptionContainer.add(new JLabel(new HtmlTextBuilder().larger(name).toHtml()));
-        descriptionContainer.add(new JLabel(_("ABOUT_DIALOG_VERSION_AND_RELEASE", version, releaseDate)));
+        descriptionContainer.add(new JLabel(localize("ABOUT_DIALOG_VERSION_AND_RELEASE", version, releaseDate)));
         descriptionContainer.add(new JLabel(description));
         descriptionContainer.add(new JLabel(copyright));
-        descriptionContainer.add(new JLabel(_("ABOUT_DIALOG_LICENSE", license)));
-        descriptionContainer.add(new JLabel(_("ABOUT_DIALOG_EMAIL", email)));
-        JLabel websiteLink = new JLabel(_("ABOUT_DIALOG_WEBSITE", website));
+        descriptionContainer.add(new JLabel(localize("ABOUT_DIALOG_LICENSE", license)));
+        descriptionContainer.add(new JLabel(localize("ABOUT_DIALOG_EMAIL", email)));
+        JLabel websiteLink = new JLabel(localize("ABOUT_DIALOG_WEBSITE", website));
         descriptionContainer.add(websiteLink);
         descriptionContainer.add(Box.createGlue());
 
         add(descriptionContainer, BorderLayout.CENTER);
 
         JPanel buttonContainer = new JPanel();
-        JButton closeButton = new JButton(_("BUTTON_CLOSE"));
+        JButton closeButton = new JButton(localize("BUTTON_CLOSE"));
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

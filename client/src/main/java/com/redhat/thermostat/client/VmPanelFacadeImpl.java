@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate._;
+import static com.redhat.thermostat.client.Translate.localize;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -123,7 +123,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                     // Only show a stop time if we have actually stopped.
                     stopTime.setText(vmRunningTimeFormat.format(new Date(actualStopTime)));
                 } else {
-                    stopTime.setText(_("VM_INFO_RUNNING"));
+                    stopTime.setText(localize("VM_INFO_RUNNING"));
                 }
                 javaVersion.setText((String) vmInfoObject.get("runtime-version"));
                 javaHome.setText((String) vmInfoObject.get("java-home"));
@@ -135,7 +135,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 String actualVmVersion = (String) vmInfoObject.get("vm-version");
                 vmVersion.setText(actualVmVersion);
                 vmArguments.setText((String) vmInfoObject.get("vm-arguments"));
-                vmNameAndVersion.setText(_("VM_INFO_VM_NAME_AND_VERSION", actualVmName, actualVmVersion));
+                vmNameAndVersion.setText(localize("VM_INFO_VM_NAME_AND_VERSION", actualVmName, actualVmVersion));
 
                 String[] collectorNames = getCollectorNames();
                 for (String collectorName: collectorNames) {
@@ -348,7 +348,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 return g.name;
             }
         }
-        return _("UNKNOWN_GEN");
+        return localize("UNKNOWN_GEN");
     }
 
     private void doUpdateCurrentMemoryChartAsync() {
@@ -378,9 +378,9 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 for (Generation generation: generations) {
                     List<Space> spaces = generation.spaces;
                     for (Space space: spaces) {
-                        dataset.addValue(space.used, _("VM_CURRENT_MEMORY_CHART_USED"), space.name);
-                        dataset.addValue(space.capacity - space.used, _("VM_CURRENT_MEMORY_CHART_CAPACITY"), space.name);
-                        dataset.addValue(space.maxCapacity - space.capacity, _("VM_CURRENT_MEMORY_CHART_MAX_CAPACITY"), space.name);
+                        dataset.addValue(space.used, localize("VM_CURRENT_MEMORY_CHART_USED"), space.name);
+                        dataset.addValue(space.capacity - space.used, localize("VM_CURRENT_MEMORY_CHART_CAPACITY"), space.name);
+                        dataset.addValue(space.maxCapacity - space.capacity, localize("VM_CURRENT_MEMORY_CHART_MAX_CAPACITY"), space.name);
                     }
                 }
             } catch (InterruptedException ie) {

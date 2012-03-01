@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate._;
+import static com.redhat.thermostat.client.Translate.localize;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,15 +71,15 @@ public class ApplicationInfo {
     }
 
     public String getName() {
-        return appInfo.getProperty("APP_NAME", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_NAME", localize("MISSING_INFO"));
     }
 
     public String getVersion() {
-        return appInfo.getProperty("APP_VERSION", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_VERSION", localize("MISSING_INFO"));
     }
 
     public String getDescription() {
-        return appInfo.getProperty("APP_DESCRIPTION", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_DESCRIPTION", localize("MISSING_INFO"));
     }
 
     public Icon getIcon() {
@@ -91,23 +91,23 @@ public class ApplicationInfo {
     }
 
     public String getReleaseDate() {
-        return appInfo.getProperty("APP_RELEASE_DATE", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_RELEASE_DATE", localize("MISSING_INFO"));
     }
 
     public String getCopyright() {
-        return appInfo.getProperty("APP_COPYRIGHT", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_COPYRIGHT", localize("MISSING_INFO"));
     }
 
     public String getLicenseSummary() {
-        return appInfo.getProperty("APP_LICENSE_SUMMARY", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_LICENSE_SUMMARY", localize("MISSING_INFO"));
     }
 
     public String getEmail() {
-        return appInfo.getProperty("APP_EMAIL", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_EMAIL", localize("MISSING_INFO"));
     }
 
     public String getWebsite() {
-        return appInfo.getProperty("APP_WEBSITE", _("MISSING_INFO"));
+        return appInfo.getProperty("APP_WEBSITE", localize("MISSING_INFO"));
     }
 
 }

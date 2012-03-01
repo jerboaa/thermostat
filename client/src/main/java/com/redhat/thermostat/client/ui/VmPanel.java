@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.Translate._;
+import static com.redhat.thermostat.client.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -77,9 +77,9 @@ public class VmPanel extends JPanel {
 
         JTabbedPane tabPane = new JTabbedPane();
 
-        tabPane.insertTab(_("VM_INFO_TAB_OVERVIEW"), null, createOverviewPanel(), null, 0);
-        tabPane.insertTab(_("VM_INFO_TAB_MEMORY"), null, createMemoryPanel(), null, 1);
-        tabPane.insertTab(_("VM_INFO_TAB_GC"), null, createGcPanel(), _("GARBAGE_COLLECTION"), 2);
+        tabPane.insertTab(localize("VM_INFO_TAB_OVERVIEW"), null, createOverviewPanel(), null, 0);
+        tabPane.insertTab(localize("VM_INFO_TAB_MEMORY"), null, createMemoryPanel(), null, 1);
+        tabPane.insertTab(localize("VM_INFO_TAB_GC"), null, createGcPanel(), localize("GARBAGE_COLLECTION"), 2);
 
         // TODO additional tabs provided by plugins
         // tabPane.insertTab(title, icon, component, tip, 3)
@@ -95,28 +95,28 @@ public class VmPanel extends JPanel {
         TableEntry entry;
         List<Section> allSections = new ArrayList<Section>();
 
-        Section processSection = new Section(_("VM_INFO_SECTION_PROCESS"));
+        Section processSection = new Section(localize("VM_INFO_SECTION_PROCESS"));
         allSections.add(processSection);
 
-        entry = new TableEntry(_("VM_INFO_PROCESS_ID"), facade.getVmPid());
+        entry = new TableEntry(localize("VM_INFO_PROCESS_ID"), facade.getVmPid());
         processSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_START_TIME"), facade.getStartTimeStamp());
+        entry = new TableEntry(localize("VM_INFO_START_TIME"), facade.getStartTimeStamp());
         processSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_STOP_TIME"), facade.getStopTimeStamp());
+        entry = new TableEntry(localize("VM_INFO_STOP_TIME"), facade.getStopTimeStamp());
         processSection.add(entry);
 
-        Section javaSection = new Section(_("VM_INFO_SECTION_JAVA"));
+        Section javaSection = new Section(localize("VM_INFO_SECTION_JAVA"));
         allSections.add(javaSection);
 
-        entry = new TableEntry(_("VM_INFO_MAIN_CLASS"), facade.getMainClass());
+        entry = new TableEntry(localize("VM_INFO_MAIN_CLASS"), facade.getMainClass());
         javaSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_COMMAND_LINE"), facade.getJavaCommandLine());
+        entry = new TableEntry(localize("VM_INFO_COMMAND_LINE"), facade.getJavaCommandLine());
         javaSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_JAVA_VERSION"), facade.getJavaVersion());
+        entry = new TableEntry(localize("VM_INFO_JAVA_VERSION"), facade.getJavaVersion());
         javaSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_VM"), facade.getVmNameAndVersion());
+        entry = new TableEntry(localize("VM_INFO_VM"), facade.getVmNameAndVersion());
         javaSection.add(entry);
-        entry = new TableEntry(_("VM_INFO_VM_ARGUMENTS"), facade.getVmArguments());
+        entry = new TableEntry(localize("VM_INFO_VM_ARGUMENTS"), facade.getVmArguments());
         javaSection.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();
@@ -147,8 +147,8 @@ public class VmPanel extends JPanel {
 
         JFreeChart chart = ChartFactory.createStackedBarChart(
                 null,
-                _("VM_CURRENT_MEMORY_CHART_SPACE"),
-                _("VM_CURRENT_MEMORY_CHART_SIZE"),
+                localize("VM_CURRENT_MEMORY_CHART_SPACE"),
+                localize("VM_CURRENT_MEMORY_CHART_SIZE"),
                 data,
                 PlotOrientation.HORIZONTAL, true, false, false);
 
@@ -198,13 +198,13 @@ public class VmPanel extends JPanel {
         c.gridx = 0;
         c.fill = GridBagConstraints.BOTH;
 
-        detailsPanel.add(Components.header(_("VM_GC_COLLECTOR_OVER_GENERATION", collectorName, facade.getCollectorGeneration(collectorName))), BorderLayout.NORTH);
+        detailsPanel.add(Components.header(localize("VM_GC_COLLECTOR_OVER_GENERATION", collectorName, facade.getCollectorGeneration(collectorName))), BorderLayout.NORTH);
 
         TimeSeriesCollection dataset = facade.getCollectorDataSet(collectorName);
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
-                _("VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL"),
-                _("VM_GC_COLLECTOR_CHART_GC_TIME_LABEL"),
+                localize("VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL"),
+                localize("VM_GC_COLLECTOR_CHART_GC_TIME_LABEL"),
                 dataset,
                 false, false, false);
 

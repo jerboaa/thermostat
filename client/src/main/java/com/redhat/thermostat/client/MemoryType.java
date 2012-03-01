@@ -36,15 +36,15 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate._;
+import static com.redhat.thermostat.client.Translate.localize;
 
 public enum MemoryType {
-    MEMORY_TOTAL("total", _("HOST_MEMORY_TOTAL")),
-    MEMORY_FREE("free", _("HOST_MEMORY_FREE")),
-    MEMORY_USED("used", _("HOST_MEMORY_USED")),
-    SWAP_TOTAL("swap-total", _("HOST_SWAP_TOTAL")),
-    SWAP_FREE("swap-free", _("HOST_SWAP_FREE")),
-    SWAP_BUFFERS("buffers", _("HOST_BUFFERS"));
+    MEMORY_TOTAL("total", localize("HOST_MEMORY_TOTAL")),
+    MEMORY_FREE("free", localize("HOST_MEMORY_FREE")),
+    MEMORY_USED("used", localize("HOST_MEMORY_USED")),
+    SWAP_TOTAL("swap-total", localize("HOST_SWAP_TOTAL")),
+    SWAP_FREE("swap-free", localize("HOST_SWAP_FREE")),
+    SWAP_BUFFERS("buffers", localize("HOST_BUFFERS"));
 
     private String humanReadable;
     private String internalName;

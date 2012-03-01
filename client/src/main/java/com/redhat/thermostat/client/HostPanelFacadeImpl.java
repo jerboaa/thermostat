@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate._;
+import static com.redhat.thermostat.client.Translate.localize;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -100,9 +100,9 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         memoryStatsCollection = db.getCollection("memory-stats");
 
         networkTableColumnVector = new Vector<String>();
-        networkTableColumnVector.add(_("NETWORK_INTERFACE_COLUMN"));
-        networkTableColumnVector.add(_("NETWORK_IPV4_COLUMN"));
-        networkTableColumnVector.add(_("NETWORK_IPV6_COLUMN"));
+        networkTableColumnVector.add(localize("NETWORK_INTERFACE_COLUMN"));
+        networkTableColumnVector.add(localize("NETWORK_IPV4_COLUMN"));
+        networkTableColumnVector.add(localize("NETWORK_IPV6_COLUMN"));
 
         cpuLoadTimeSeriesCollection.addSeries(cpuLoadSeries);
 

@@ -47,11 +47,11 @@ public class Translate {
         resourceBundle = ResourceBundle.getBundle("com.redhat.thermostat.client.strings");
     }
 
-    public static String _(String toTranslate) {
+    public static String localize(String toTranslate) {
         return resourceBundle.getString(toTranslate);
     }
 
-    public static String _(String toTranslate, String... params) {
-        return MessageFormat.format(_(toTranslate), (Object[]) params);
+    public static String localize(String toTranslate, String... params) {
+        return MessageFormat.format(localize(toTranslate), (Object[]) params);
     }
 }
