@@ -82,7 +82,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private static final Key<Long> vmInfoStartTimeKey = new Key<>("start-time", false);
     private static final Key<Long> vmInfoStopTimeKey = new Key<>("stop-time", false);
 
-    private static final Category vmInfoCategory = new Category("vm-info",
+    static final Category vmInfoCategory = new Category("vm-info",
             vmInfoIdKey, vmInfoPidKey, vmInfoRuntimeVersionKey, vmInfoJavaHomeKey,
             vmInfoMainClassKey, vmInfoCommandLineKey,
             vmInfoVmArgumentsKey, vmInfoVmNameKey, vmInfoVmInfoKey, vmInfoVmVersionKey,

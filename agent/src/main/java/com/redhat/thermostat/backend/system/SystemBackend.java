@@ -85,52 +85,52 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
 
-    private List<Category> categories = new ArrayList<Category>();
+    private static List<Category> categories = new ArrayList<Category>();
 
-    private Key<String> hostNameKey = new Key<>("hostname", true);
-    private Key<String> osNameKey = new Key<>("os_name", false);
-    private Key<String> osKernelKey = new Key<>("os_kernel", false);
-    private Key<Integer> cpuCountKey = new Key<>("cpu_num", false);
-    private Key<String> cpuModelKey = new Key<>("cpu_model", false);
-    private Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
+    private static Key<String> hostNameKey = new Key<>("hostname", true);
+    private static Key<String> osNameKey = new Key<>("os_name", false);
+    private static Key<String> osKernelKey = new Key<>("os_kernel", false);
+    private static Key<Integer> cpuCountKey = new Key<>("cpu_num", false);
+    private static Key<String> cpuModelKey = new Key<>("cpu_model", false);
+    private static Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
 
-    private Category hostInfoCategory = new Category("host-info",
+    static Category hostInfoCategory = new Category("host-info",
             hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);
 
-    private Key<String> ifaceKey = new Key<>("iface", true);
-    private Key<String> ip4AddrKey = new Key<>("ipv4addr", false);
-    private Key<String> ip6AddrKey = new Key<>("ipv6addr", false);
+    private static Key<String> ifaceKey = new Key<>("iface", true);
+    private static Key<String> ip4AddrKey = new Key<>("ipv4addr", false);
+    private static Key<String> ip6AddrKey = new Key<>("ipv6addr", false);
 
-    private Category networkInfoCategory = new Category("network-info",
+    static Category networkInfoCategory = new Category("network-info",
             Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
 
-    private Key<Double> cpu5LoadKey = new Key<>("5load", false);
-    private Key<Double> cpu10LoadKey = new Key<>("10load", false);
-    private Key<Double> cpu15LoadKey = new Key<>("15load", false);
+    private static Key<Double> cpu5LoadKey = new Key<>("5load", false);
+    private static Key<Double> cpu10LoadKey = new Key<>("10load", false);
+    private static Key<Double> cpu15LoadKey = new Key<>("15load", false);
 
-    private Category cpuStatCategory = new Category("cpu-stats",
+    static Category cpuStatCategory = new Category("cpu-stats",
             Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
 
-    private Key<Long> memoryTotalKey = new Key<>("total", false);
-    private Key<Long> memoryFreeKey = new Key<>("free", false);
-    private Key<Long> memoryBuffersKey = new Key<>("buffers", false);
-    private Key<Long> memoryCachedKey = new Key<>("cached", false);
-    private Key<Long> memorySwapTotalKey = new Key<>("swap-total", false);
-    private Key<Long> memorySwapFreeKey = new Key<>("swap-free", false);
-    private Key<Long> memoryCommitLimitKey = new Key<>("commit-limit", false);
+    private static Key<Long> memoryTotalKey = new Key<>("total", false);
+    private static Key<Long> memoryFreeKey = new Key<>("free", false);
+    private static Key<Long> memoryBuffersKey = new Key<>("buffers", false);
+    private static Key<Long> memoryCachedKey = new Key<>("cached", false);
+    private static Key<Long> memorySwapTotalKey = new Key<>("swap-total", false);
+    private static Key<Long> memorySwapFreeKey = new Key<>("swap-free", false);
+    private static Key<Long> memoryCommitLimitKey = new Key<>("commit-limit", false);
 
-    private Category memoryStatCategory = new Category("memory-stats",
+    static Category memoryStatCategory = new Category("memory-stats",
             Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
             memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
 
-    private Key<Integer> vmCpuVmIdKey = new Key<>("vm-id", false);
-    private Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
+    private static Key<Integer> vmCpuVmIdKey = new Key<>("vm-id", false);
+    private static Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
 
-    private Category vmCpuStatCategory = new Category("vm-cpu-stats",
+    static Category vmCpuStatCategory = new Category("vm-cpu-stats",
             vmCpuLoadKey, vmCpuVmIdKey);
 
-    {
+    static {
         // Set up categories that will later be registered.
         categories.add(hostInfoCategory);
         categories.add(networkInfoCategory);

@@ -67,7 +67,7 @@ public class JvmStatVmListener implements VmListener {
     /** time in microseconds */
     private static final Key<Long> vmGCstatWallTimeKey = new Key<>("wall-time", false);
 
-    private static final Category vmGcStatsCategory = new Category("vm-gc-stats",
+    static final Category vmGcStatsCategory = new Category("vm-gc-stats",
             vmGcStatVmIdKey, Key.TIMESTAMP, vmGcStatCollectorKey,
             vmGcStatRunCountKey, vmGCstatWallTimeKey);
 
@@ -102,7 +102,7 @@ public class JvmStatVmListener implements VmListener {
     private static final Key<Long> vmMemoryStatPermMaxCapacityKey = new Key<>("perm.max-capacity", false);
     private static final Key<Long> vmMemoryStatPermUsedKey = new Key<>("perm.used", false);
 
-    private static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
+    static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
             vmMemoryStatVmIdKey, Key.TIMESTAMP,
             vmMemoryStatEdenGenKey, vmMemoryStatEdenCollectorKey,
             vmMemoryStatEdenCapacityKey, vmMemoryStatEdenMaxCapacityKey,vmMemoryStatEdenUsedKey,
