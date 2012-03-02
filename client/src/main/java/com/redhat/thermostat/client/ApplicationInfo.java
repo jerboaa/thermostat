@@ -36,7 +36,8 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,6 +47,7 @@ import java.util.logging.Logger;
 
 import javax.swing.Icon;
 
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.IconResource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -71,15 +73,15 @@ public class ApplicationInfo {
     }
 
     public String getName() {
-        return appInfo.getProperty("APP_NAME", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_NAME", localize(LocaleResources.MISSING_INFO));
     }
 
     public String getVersion() {
-        return appInfo.getProperty("APP_VERSION", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_VERSION", localize(LocaleResources.MISSING_INFO));
     }
 
     public String getDescription() {
-        return appInfo.getProperty("APP_DESCRIPTION", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_DESCRIPTION", localize(LocaleResources.MISSING_INFO));
     }
 
     public Icon getIcon() {
@@ -91,23 +93,23 @@ public class ApplicationInfo {
     }
 
     public String getReleaseDate() {
-        return appInfo.getProperty("APP_RELEASE_DATE", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_RELEASE_DATE", localize(LocaleResources.MISSING_INFO));
     }
 
     public String getCopyright() {
-        return appInfo.getProperty("APP_COPYRIGHT", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_COPYRIGHT", localize(LocaleResources.MISSING_INFO));
     }
 
     public String getLicenseSummary() {
-        return appInfo.getProperty("APP_LICENSE_SUMMARY", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_LICENSE_SUMMARY", localize(LocaleResources.MISSING_INFO));
     }
 
     public String getEmail() {
-        return appInfo.getProperty("APP_EMAIL", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_EMAIL", localize(LocaleResources.MISSING_INFO));
     }
 
     public String getWebsite() {
-        return appInfo.getProperty("APP_WEBSITE", localize("MISSING_INFO"));
+        return appInfo.getProperty("APP_WEBSITE", localize(LocaleResources.MISSING_INFO));
     }
 
 }

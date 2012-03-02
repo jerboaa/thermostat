@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -59,6 +59,7 @@ import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.Connection;
 import com.redhat.thermostat.client.Connection.ConnectionType;
+import com.redhat.thermostat.client.locale.LocaleResources;
 
 public class ConnectionSelectionDialog extends JDialog {
 
@@ -71,7 +72,7 @@ public class ConnectionSelectionDialog extends JDialog {
 
     public ConnectionSelectionDialog(JFrame owner, Connection model) {
         super(owner);
-        setTitle(localize("STARTUP_MODE_SELECTION_DIALOG_TITLE"));
+        setTitle(localize(LocaleResources.STARTUP_MODE_SELECTION_DIALOG_TITLE));
         this.model = model;
         setupUi();
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
@@ -94,7 +95,7 @@ public class ConnectionSelectionDialog extends JDialog {
         buttonsPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         bottomPanel.add(buttonsPanel);
 
-        JButton cancelButton = new JButton(localize("BUTTON_CANCEL"));
+        JButton cancelButton = new JButton(localize(LocaleResources.BUTTON_CANCEL));
         cancelButton.setMargin(new Insets(0, 15, 0, 15));
         cancelButton.addActionListener(new CancelListener(this));
         buttonsPanel.add(cancelButton);
@@ -115,21 +116,24 @@ public class ConnectionSelectionDialog extends JDialog {
         c.gridwidth = GridBagConstraints.REMAINDER;
         c.weighty = 0;
 
-        JLabel info = new JLabel(localize("STARTUP_MODE_SELECTION_INTRO"));
+        JLabel info = new JLabel(localize(LocaleResources.STARTUP_MODE_SELECTION_INTRO));
         container.add(info, c);
 
         c.gridy++;
-        String localButtonHtml = buildHtml(localize("STARTUP_MODE_SELECTION_TYPE_LOCAL"), IconResource.COMPUTER.getUrl());
+        String localButtonHtml = buildHtml(localize(LocaleResources.STARTUP_MODE_SELECTION_TYPE_LOCAL),
+                                           IconResource.COMPUTER.getUrl());
         JButton localButton = new JButton(localButtonHtml);
         container.add(localButton, c);
 
         c.gridy++;
-        String remoteButtonHtml = buildHtml(localize("STARTUP_MODE_SELECTION_TYPE_REMOTE"), IconResource.NETWORK_SERVER.getUrl());
+        String remoteButtonHtml = buildHtml(localize(LocaleResources.STARTUP_MODE_SELECTION_TYPE_REMOTE),
+                                            IconResource.NETWORK_SERVER.getUrl());
         JButton remoteButton = new JButton(remoteButtonHtml);
         container.add(remoteButton, c);
 
         c.gridy++;
-        String clusterButtonHtml = buildHtml(localize("STARTUP_MODE_SELECTION_TYPE_CLUSTER"), IconResource.NETWORK_GROUP.getUrl());
+        String clusterButtonHtml = buildHtml(localize(LocaleResources.STARTUP_MODE_SELECTION_TYPE_CLUSTER),
+                                             IconResource.NETWORK_GROUP.getUrl());
         JButton clusterButton = new JButton(clusterButtonHtml);
         container.add(clusterButton, c);
 

@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.client.locale;
 
+import java.io.IOException;
 import java.util.Locale;
-import java.util.MissingResourceException;
+import java.util.Properties;
 
 import junit.framework.Assert;
 
@@ -45,7 +46,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 public class TranslateTest {
 
@@ -63,32 +64,33 @@ public class TranslateTest {
     }
     
     @Test
-    public void testMissingInfo() {
-        String testString = localize("MISSING_INFO");
+    public void testLocalizeWithoutArguments() {
+        String testString = localize(LocaleResources.MISSING_INFO);
         Assert.assertEquals("Missing Information", testString);
     }
     
     @Test
-    public void testLocalization() {
-        String testString = localize("APPLICATION_INFO_VERSION", "test");
+    public void testLocalizeWithArguments() {
+        String testString = localize(LocaleResources.APPLICATION_INFO_VERSION, "test");
         Assert.assertEquals("Version test", testString);
         
-        testString = localize("APPLICATION_INFO_DESCRIPTION");
+        testString = localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
         Assert.assertEquals("A monitoring and serviceability tool for OpenJDK",
                             testString);
     }
     
-    @Test(expected = MissingResourceException.class)
-    public void testLocalizationError1() {
+    @Test
+    public void testLocalizedStringsArePresent() throws IOException {
         
-        localize("INVALID_BLABLABLA_FLUFF");
-        Assert.fail("java.util.MissingResourceException expected");
-    }
-    
-    @Test(expected = MissingResourceException.class)
-    public void testLocalizationError2() {
+        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
         
-        localize("INVALID_BLABLABLA_FLUFF", "test");
-        Assert.fail("java.util.MissingResourceException expected");
+        Properties props = new Properties();
+        props.load(getClass().getResourceAsStream(stringsResource));
+        
+        Assert.assertEquals(LocaleResources.values().length, props.values().size());
+        for (LocaleResources resource : LocaleResources.values()) {
+            Assert.assertTrue("missing property from resource bound file: " + resource,
+                              props.containsKey(resource.name()));
+        }
     }
 }

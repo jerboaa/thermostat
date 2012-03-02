@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
@@ -53,6 +53,7 @@ import javax.swing.JPanel;
 import javax.swing.border.Border;
 
 import com.redhat.thermostat.client.ApplicationInfo;
+import com.redhat.thermostat.client.locale.LocaleResources;
 
 public class AboutDialog extends JDialog {
 
@@ -73,7 +74,6 @@ public class AboutDialog extends JDialog {
         String description = appInfo.getDescription();
         String version = appInfo.getVersion();
         Icon icon = IconResource.QUESTION.getIcon(); // TODO appInfo.getIcon();
-        String releaseDate = appInfo.getReleaseDate();
         String copyright = appInfo.getCopyright();
         String license = appInfo.getLicenseSummary();
         String email = appInfo.getEmail();
@@ -92,19 +92,19 @@ public class AboutDialog extends JDialog {
 
         descriptionContainer.add(Box.createGlue());
         descriptionContainer.add(new JLabel(new HtmlTextBuilder().larger(name).toHtml()));
-        descriptionContainer.add(new JLabel(localize("ABOUT_DIALOG_VERSION_AND_RELEASE", version, releaseDate)));
+        descriptionContainer.add(new JLabel(localize(LocaleResources.APPLICATION_INFO_VERSION, version)));
         descriptionContainer.add(new JLabel(description));
         descriptionContainer.add(new JLabel(copyright));
-        descriptionContainer.add(new JLabel(localize("ABOUT_DIALOG_LICENSE", license)));
-        descriptionContainer.add(new JLabel(localize("ABOUT_DIALOG_EMAIL", email)));
-        JLabel websiteLink = new JLabel(localize("ABOUT_DIALOG_WEBSITE", website));
+        descriptionContainer.add(new JLabel(localize(LocaleResources.APPLICATION_INFO_LICENSE, license)));
+        descriptionContainer.add(new JLabel(localize(LocaleResources.ABOUT_DIALOG_EMAIL, email)));
+        JLabel websiteLink = new JLabel(localize(LocaleResources.ABOUT_DIALOG_WEBSITE, website));
         descriptionContainer.add(websiteLink);
         descriptionContainer.add(Box.createGlue());
 
         add(descriptionContainer, BorderLayout.CENTER);
 
         JPanel buttonContainer = new JPanel();
-        JButton closeButton = new JButton(localize("BUTTON_CLOSE"));
+        JButton closeButton = new JButton(localize(LocaleResources.BUTTON_CLOSE));
         closeButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

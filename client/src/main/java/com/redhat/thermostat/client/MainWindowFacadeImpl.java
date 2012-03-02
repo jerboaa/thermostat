@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -61,6 +61,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
 
@@ -72,7 +73,8 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
     private final DBCollection hostInfoCollection;
     private final DBCollection vmInfoCollection;
 
-    private final DefaultMutableTreeNode publishedRoot = new DefaultMutableTreeNode(localize("MAIN_WINDOW_TREE_ROOT_NAME"));
+    private final DefaultMutableTreeNode publishedRoot = 
+            new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
     private String filterText;

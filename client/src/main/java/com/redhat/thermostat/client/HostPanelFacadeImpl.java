@@ -36,12 +36,11 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -63,6 +62,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.NetworkInfo;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
 
@@ -100,9 +100,9 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         memoryStatsCollection = db.getCollection("memory-stats");
 
         networkTableColumnVector = new Vector<String>();
-        networkTableColumnVector.add(localize("NETWORK_INTERFACE_COLUMN"));
-        networkTableColumnVector.add(localize("NETWORK_IPV4_COLUMN"));
-        networkTableColumnVector.add(localize("NETWORK_IPV6_COLUMN"));
+        networkTableColumnVector.add(localize(LocaleResources.NETWORK_INTERFACE_COLUMN));
+        networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV4_COLUMN));
+        networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV6_COLUMN));
 
         cpuLoadTimeSeriesCollection.addSeries(cpuLoadSeries);
 

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -84,6 +84,7 @@ import com.redhat.thermostat.client.HostRef;
 import com.redhat.thermostat.client.MainWindowFacade;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.VmRef;
+import com.redhat.thermostat.client.locale.LocaleResources;
 
 public class MainWindow extends JFrame {
 
@@ -99,9 +100,13 @@ public class MainWindow extends JFrame {
 
     private final ShutdownClient shutdownAction;
 
+    private ApplicationInfo appInfo; 
+    
     public MainWindow(UiFacadeFactory facadeFactory) {
         super();
-        setTitle(localize("MAIN_WINDOW_TITLE"));
+        
+        appInfo = new ApplicationInfo();
+        setTitle(appInfo.getName());
 
         this.facadeFactory = facadeFactory;
         this.facade = facadeFactory.getMainWindow();
@@ -133,11 +138,11 @@ public class MainWindow extends JFrame {
     private void setupMenus() {
         JMenuBar mainMenuBar = new JMenuBar();
 
-        JMenu fileMenu = new JMenu(localize("MENU_FILE"));
+        JMenu fileMenu = new JMenu(localize(LocaleResources.MENU_FILE));
         fileMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(fileMenu);
 
-        JMenuItem fileConnectMenu = new JMenuItem(localize("MENU_FILE_CONNECT"));
+        JMenuItem fileConnectMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_CONNECT));
         fileConnectMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -148,28 +153,28 @@ public class MainWindow extends JFrame {
 
         fileMenu.add(new Separator());
 
-        JMenuItem fileImportMenu = new JMenuItem(localize("MENU_FILE_IMPORT"));
+        JMenuItem fileImportMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_IMPORT));
         fileMenu.add(fileImportMenu);
 
-        JMenuItem fileExportMenu = new JMenuItem(localize("MENU_FILE_EXPORT"));
+        JMenuItem fileExportMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_EXPORT));
         fileMenu.add(fileExportMenu);
 
         fileMenu.add(new Separator());
 
-        JMenuItem fileExitMenu = new JMenuItem(localize("MENU_FILE_EXIT"));
+        JMenuItem fileExitMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_EXIT));
         fileExitMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
         fileExitMenu.addActionListener(shutdownAction);
         fileMenu.add(fileExitMenu);
 
-        JMenu helpMenu = new JMenu(localize("MENU_HELP"));
+        JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);
 
-        JMenuItem helpAboutMenu = new JMenuItem(localize("MENU_HELP_ABOUT"));
+        JMenuItem helpAboutMenu = new JMenuItem(localize(LocaleResources.MENU_HELP_ABOUT));
         helpAboutMenu.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                AboutDialog aboutDialog = new AboutDialog(new ApplicationInfo());
+                AboutDialog aboutDialog = new AboutDialog(appInfo);
                 aboutDialog.setModal(true);
                 aboutDialog.pack();
                 aboutDialog.setVisible(true);
@@ -344,18 +349,18 @@ public class MainWindow extends JFrame {
                 String hostNameHtml = new HtmlTextBuilder().bold(hostRef.getHostName()).toPartialHtml();
                 String agentIdHtml = new HtmlTextBuilder().bold(hostRef.getAgentId()).toPartialHtml();
                 HtmlTextBuilder builder = new HtmlTextBuilder()
-                    .appendRaw(localize("TREE_HOST_TOOLTIP_HOST_NAME", hostNameHtml))
+                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_HOST_NAME, hostNameHtml))
                     .newLine()
-                    .appendRaw(localize("TREE_HOST_TOOLTIP_AGENT_ID", agentIdHtml));
+                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_AGENT_ID, agentIdHtml));
                 return builder.toHtml();
             } else if (value instanceof VmRef) {
                 VmRef vmRef = (VmRef) value;
                 String vmNameHtml= new HtmlTextBuilder().bold(vmRef.getName()).toPartialHtml();
                 String vmIdHtml = new HtmlTextBuilder().bold(vmRef.getId()).toPartialHtml();
                 HtmlTextBuilder builder = new HtmlTextBuilder()
-                    .appendRaw(localize("TREE_HOST_TOOLTIP_VM_NAME", vmNameHtml))
+                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_VM_NAME, vmNameHtml))
                     .newLine()
-                    .appendRaw(localize("TREE_HOST_TOOLTIP_VM_ID", vmIdHtml));
+                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_VM_ID, vmIdHtml));
                 return builder.toHtml();
             } else {
                 return null;

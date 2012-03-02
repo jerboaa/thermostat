@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
@@ -49,6 +49,7 @@ import javax.swing.JScrollPane;
 import javax.swing.ListModel;
 
 import com.redhat.thermostat.client.SummaryPanelFacade;
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 
@@ -66,12 +67,12 @@ public class SummaryPanel extends JPanel {
         List<Section> sections = new ArrayList<Section>();
         TableEntry entry;
 
-        Section summarySection = new Section(localize("HOME_PANEL_SECTION_SUMMARY"));
+        Section summarySection = new Section(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
         sections.add(summarySection);
 
-        entry = new TableEntry(localize("HOME_PANEL_TOTAL_MACHINES"), facade.getTotalConnectedAgents());
+        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES), facade.getTotalConnectedAgents());
         summarySection.add(entry);
-        entry = new TableEntry(localize("HOME_PANEL_TOTAL_JVMS"), facade.getTotalConnectedVms());
+        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS), facade.getTotalConnectedVms());
         summarySection.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();
@@ -89,7 +90,7 @@ public class SummaryPanel extends JPanel {
     public JPanel createIssuesPanel() {
         JPanel result = new JPanel(new BorderLayout());
 
-        result.add(Components.header(localize("HOME_PANEL_SECTION_ISSUES")), BorderLayout.PAGE_START);
+        result.add(Components.header(localize(LocaleResources.HOME_PANEL_SECTION_ISSUES)), BorderLayout.PAGE_START);
 
         ListModel model = new IssuesListModel(new ArrayList<Object>());
 
@@ -105,7 +106,7 @@ public class SummaryPanel extends JPanel {
 
         private List<? extends Object> delegate;
 
-        private String emptyElement = new String(localize("HOME_PANEL_NO_ISSUES"));
+        private String emptyElement = new String(localize(LocaleResources.HOME_PANEL_NO_ISSUES));
 
         public IssuesListModel(List<? extends Object> actualList) {
             this.delegate = actualList;

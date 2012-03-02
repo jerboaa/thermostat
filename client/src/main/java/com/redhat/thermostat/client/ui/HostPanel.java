@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -63,6 +63,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.HostPanelFacade;
 import com.redhat.thermostat.client.MemoryType;
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Key;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
@@ -91,9 +92,9 @@ public class HostPanel extends JPanel {
 
         JTabbedPane tabPane = new JTabbedPane();
 
-        tabPane.insertTab(localize("HOST_INFO_TAB_OVERVIEW"), null, createOverviewPanel(), null, 0);
-        tabPane.insertTab(localize("HOST_INFO_TAB_CPU"), null, createCpuStatisticsPanel(), null, 1);
-        tabPane.insertTab(localize("HOST_INFO_TAB_MEMORY"), null, createMemoryStatisticsPanel(), null, 2);
+        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, createOverviewPanel(), null, 0);
+        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, createCpuStatisticsPanel(), null, 1);
+        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, createMemoryStatisticsPanel(), null, 2);
 
         // TODO additional tabs provided by plugins
         // tabPane.insertTab(title, icon, component, tip, 3)
@@ -107,20 +108,20 @@ public class HostPanel extends JPanel {
         TableEntry entry;
         List<Section> allSections = new ArrayList<Section>();
 
-        Section basics = new Section(localize("HOST_OVERVIEW_SECTION_BASICS"));
+        Section basics = new Section(localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS));
         allSections.add(basics);
 
-        entry = new TableEntry(localize("HOST_INFO_HOSTNAME"), facade.getHostName());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_HOSTNAME), facade.getHostName());
         basics.add(entry);
 
-        Section hardware = new Section(localize("HOST_OVERVIEW_SECTION_HARDWARE"));
+        Section hardware = new Section(localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE));
         allSections.add(hardware);
 
-        entry = new TableEntry(localize("HOST_INFO_CPU_MODEL"), facade.getCpuModel());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_MODEL), facade.getCpuModel());
         hardware.add(entry);
-        entry = new TableEntry(localize("HOST_INFO_CPU_COUNT"), facade.getCpuCount());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_COUNT), facade.getCpuCount());
         hardware.add(entry);
-        entry = new TableEntry(localize("HOST_INFO_MEMORY_TOTAL"), facade.getTotalMemory());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL), facade.getTotalMemory());
         hardware.add(entry);
 
         JTable networkTable = new JTable(facade.getNetworkTableModel());
@@ -129,15 +130,15 @@ public class HostPanel extends JPanel {
         networkPanel.add(networkTable.getTableHeader(), BorderLayout.PAGE_START);
         networkPanel.add(networkTable, BorderLayout.CENTER);
 
-        Key key = new Key(localize("HOST_INFO_NETWORK"));
+        Key key = new Key(localize(LocaleResources.HOST_INFO_NETWORK));
         hardware.add(new TableEntry(key, new Value(networkPanel)));
 
-        Section software = new Section(localize("HOST_OVERVIEW_SECTION_SOFTWARE"));
+        Section software = new Section(localize(LocaleResources.HOST_OVERVIEW_SECTION_SOFTWARE));
         allSections.add(software);
 
-        entry = new TableEntry(localize("HOST_INFO_OS_NAME"), facade.getOsName());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_OS_NAME), facade.getOsName());
         software.add(entry);
-        entry = new TableEntry(localize("HOST_INFO_OS_KERNEL"), facade.getOsKernel());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_OS_KERNEL), facade.getOsKernel());
         software.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();
@@ -158,13 +159,13 @@ public class HostPanel extends JPanel {
 
         List<Section> allSections = new ArrayList<Section>();
 
-        Section cpuBasics = new Section(localize("HOST_CPU_SECTION_OVERVIEW"));
+        Section cpuBasics = new Section(localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
         allSections.add(cpuBasics);
 
         TableEntry entry;
-        entry = new TableEntry(localize("HOST_INFO_CPU_MODEL"), facade.getCpuModel());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_MODEL), facade.getCpuModel());
         cpuBasics.add(entry);
-        entry = new TableEntry(localize("HOST_INFO_CPU_COUNT"), facade.getCpuCount());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_COUNT), facade.getCpuCount());
         cpuBasics.add(entry);
 
         final SimpleTable simpleTable = new SimpleTable();
@@ -175,8 +176,8 @@ public class HostPanel extends JPanel {
         TimeSeriesCollection dataset = facade.getCpuLoadDataSet();
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
-                localize("HOST_CPU_USAGE_CHART_TIME_LABEL"),
-                localize("HOST_CPU_USAGE_CHART_VALUE_LABEL"),
+                localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL),
+                localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL),
                 dataset,
                 false, false, false);
 
@@ -203,11 +204,11 @@ public class HostPanel extends JPanel {
 
         List<Section> allSections = new ArrayList<Section>();
 
-        Section memoryBasics = new Section(localize("HOST_MEMORY_SECTION_OVERVIEW"));
+        Section memoryBasics = new Section(localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
         allSections.add(memoryBasics);
 
         TableEntry entry;
-        entry = new TableEntry(localize("HOST_INFO_MEMORY_TOTAL"), facade.getTotalMemory());
+        entry = new TableEntry(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL), facade.getTotalMemory());
         memoryBasics.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();
@@ -258,9 +259,9 @@ public class HostPanel extends JPanel {
         }
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                localize("HOST_MEMORY_CHART_TITLE"), // Title
-                localize("HOST_MEMORY_CHART_TIME_LABEL"), // x-axis Label
-                localize("HOST_MEMORY_CHART_SIZE_LABEL"), // y-axis Label
+                localize(LocaleResources.HOST_MEMORY_CHART_TITLE), // Title
+                localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
+                localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL), // y-axis Label
                 dataset, // Dataset
                 false, // Show Legend
                 false, // Use tooltips

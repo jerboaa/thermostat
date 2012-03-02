@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.locale;
 
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
@@ -44,14 +44,14 @@ public class Translate {
     private static ResourceBundle resourceBundle = null;
 
     static {
-        resourceBundle = ResourceBundle.getBundle("com.redhat.thermostat.client.strings");
+        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
     }
 
-    public static String localize(String toTranslate) {
-        return resourceBundle.getString(toTranslate);
+    public static String localize(LocaleResources toTranslate) {
+        return resourceBundle.getString(toTranslate.name());
     }
 
-    public static String localize(String toTranslate, String... params) {
+    public static String localize(LocaleResources toTranslate, String... params) {
         return MessageFormat.format(localize(toTranslate), (Object[]) params);
     }
 }

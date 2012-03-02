@@ -36,7 +36,8 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,6 +48,7 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.Connection.ConnectionListener;
 import com.redhat.thermostat.client.Connection.ConnectionStatus;
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Constants;
@@ -89,8 +91,8 @@ public class Main {
                 if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
                     JOptionPane.showMessageDialog(
                             null,
-                            localize("CONNECTION_FAILED_TO_CONNECT_DESCRIPTION"),
-                            localize("CONNECTION_FAILED_TO_CONNECT_TITLE"),
+                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
+                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
                             JOptionPane.ERROR_MESSAGE);
                     System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
                 }

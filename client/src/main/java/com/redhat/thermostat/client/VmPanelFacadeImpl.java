@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.Translate.localize;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -61,6 +61,7 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
@@ -123,7 +124,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                     // Only show a stop time if we have actually stopped.
                     stopTime.setText(vmRunningTimeFormat.format(new Date(actualStopTime)));
                 } else {
-                    stopTime.setText(localize("VM_INFO_RUNNING"));
+                    stopTime.setText(localize(LocaleResources.VM_INFO_RUNNING));
                 }
                 javaVersion.setText((String) vmInfoObject.get("runtime-version"));
                 javaHome.setText((String) vmInfoObject.get("java-home"));
@@ -135,7 +136,8 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 String actualVmVersion = (String) vmInfoObject.get("vm-version");
                 vmVersion.setText(actualVmVersion);
                 vmArguments.setText((String) vmInfoObject.get("vm-arguments"));
-                vmNameAndVersion.setText(localize("VM_INFO_VM_NAME_AND_VERSION", actualVmName, actualVmVersion));
+                vmNameAndVersion.setText(localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
+                                                  actualVmName, actualVmVersion));
 
                 String[] collectorNames = getCollectorNames();
                 for (String collectorName: collectorNames) {
@@ -348,7 +350,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 return g.name;
             }
         }
-        return localize("UNKNOWN_GEN");
+        return localize(LocaleResources.UNKNOWN_GEN);
     }
 
     private void doUpdateCurrentMemoryChartAsync() {
@@ -378,9 +380,11 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 for (Generation generation: generations) {
                     List<Space> spaces = generation.spaces;
                     for (Space space: spaces) {
-                        dataset.addValue(space.used, localize("VM_CURRENT_MEMORY_CHART_USED"), space.name);
-                        dataset.addValue(space.capacity - space.used, localize("VM_CURRENT_MEMORY_CHART_CAPACITY"), space.name);
-                        dataset.addValue(space.maxCapacity - space.capacity, localize("VM_CURRENT_MEMORY_CHART_MAX_CAPACITY"), space.name);
+                        dataset.addValue(space.used, localize(LocaleResources.VM_CURRENT_MEMORY_CHART_USED), space.name);
+                        dataset.addValue(space.capacity - space.used,
+                                         localize(LocaleResources.VM_CURRENT_MEMORY_CHART_CAPACITY), space.name);
+                        dataset.addValue(space.maxCapacity - space.capacity,
+                                         localize(LocaleResources.VM_CURRENT_MEMORY_CHART_MAX_CAPACITY), space.name);
                     }
                 }
             } catch (InterruptedException ie) {
