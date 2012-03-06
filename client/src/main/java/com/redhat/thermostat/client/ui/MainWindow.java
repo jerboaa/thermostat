@@ -80,11 +80,11 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.ApplicationInfo;
-import com.redhat.thermostat.client.HostRef;
 import com.redhat.thermostat.client.MainWindowFacade;
 import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.VmRef;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
 
 public class MainWindow extends JFrame {
 

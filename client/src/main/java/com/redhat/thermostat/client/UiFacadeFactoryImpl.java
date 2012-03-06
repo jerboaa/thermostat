@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client;
 
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
+
 public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     private MongoConnection connection;

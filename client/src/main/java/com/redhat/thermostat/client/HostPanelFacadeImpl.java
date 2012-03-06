@@ -65,6 +65,7 @@ import com.mongodb.DBObject;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.NetworkInfo;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.dao.HostRef;
 
 public class HostPanelFacadeImpl implements HostPanelFacade {
 

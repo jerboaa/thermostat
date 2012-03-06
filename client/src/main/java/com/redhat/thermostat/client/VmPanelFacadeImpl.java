@@ -65,6 +65,7 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
+import com.redhat.thermostat.common.dao.VmRef;
 
 public class VmPanelFacadeImpl implements VmPanelFacade {
 

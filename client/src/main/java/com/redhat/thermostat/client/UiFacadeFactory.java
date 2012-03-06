@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client;
 
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
+
 public interface UiFacadeFactory {
 
     public MainWindowFacade getMainWindow();

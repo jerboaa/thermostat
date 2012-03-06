@@ -34,17 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.common.dao;
 
-public class VmRef implements Ref {
+public class HostRef implements Ref {
 
-    private final HostRef hostRef;
     private final String uid;
     private final String name;
 
-    public VmRef(HostRef hostRef, Integer id, String name) {
-        this.hostRef = hostRef;
-        this.uid = id.toString();
+    public HostRef(String id, String name) {
+        this.uid = id;
         this.name = name;
     }
 
@@ -53,15 +51,11 @@ public class VmRef implements Ref {
         return name;
     }
 
-    public HostRef getAgent() {
-        return hostRef;
-    }
-
-    public String getId() {
+    public String getAgentId() {
         return uid;
     }
 
-    public String getName() {
+    public String getHostName() {
         return name;
     }
 
@@ -76,8 +70,8 @@ public class VmRef implements Ref {
         if (obj.getClass() != this.getClass()) {
             return false;
         }
-        VmRef other = (VmRef) obj;
-        if (equals(this.hostRef, other.hostRef) && equals(this.uid, other.uid) && equals(this.name, other.name)) {
+        HostRef other = (HostRef) obj;
+        if (equals(this.uid, other.uid) && equals(this.name, other.name)) {
             return true;
         }
         return false;
@@ -94,6 +88,6 @@ public class VmRef implements Ref {
 
     @Override
     public boolean matches(String filter) {
-        return getName().contains(filter) || getId().contains(filter);
+        return getHostName().contains(filter) || getAgentId().contains(filter);
     }
 }

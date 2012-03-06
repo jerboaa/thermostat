@@ -34,60 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.common.dao;
 
-public class HostRef implements Ref {
+public interface Ref {
 
-    private final String uid;
-    private final String name;
+    public boolean matches(String filter);
 
-    public HostRef(String id, String name) {
-        this.uid = id;
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-
-    public String getAgentId() {
-        return uid;
-    }
-
-    public String getHostName() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        HostRef other = (HostRef) obj;
-        if (equals(this.uid, other.uid) && equals(this.name, other.name)) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean equals(Object obj1, Object obj2) {
-        return (obj1 == null && obj2 == null) || (obj1 != null && obj1.equals(obj2));
-    }
-
-    @Override
-    public int hashCode() {
-        return uid.hashCode();
-    }
-
-    @Override
-    public boolean matches(String filter) {
-        return getHostName().contains(filter) || getAgentId().contains(filter);
-    }
 }

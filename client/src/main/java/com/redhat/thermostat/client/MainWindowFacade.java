@@ -38,6 +38,9 @@ package com.redhat.thermostat.client;
 
 import javax.swing.tree.TreeModel;
 
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
+
 public interface MainWindowFacade extends AsyncUiFacade {
 
     public HostRef[] getHosts();

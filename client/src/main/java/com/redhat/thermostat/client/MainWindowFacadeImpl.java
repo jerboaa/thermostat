@@ -62,6 +62,9 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
 
