@@ -81,7 +81,7 @@ public class ApplicationInfo {
     }
 
     public String getDescription() {
-        return appInfo.getProperty("APP_DESCRIPTION", localize(LocaleResources.MISSING_INFO));
+        return localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
     }
 
     public Icon getIcon() {
@@ -101,7 +101,7 @@ public class ApplicationInfo {
     }
 
     public String getLicenseSummary() {
-        return appInfo.getProperty("APP_LICENSE_SUMMARY", localize(LocaleResources.MISSING_INFO));
+        return localize(LocaleResources.APPLICATION_INFO_LICENSE);
     }
 
     public String getEmail() {

@@ -36,53 +36,53 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.io.File;
+import java.awt.Font;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
+import javax.swing.UIManager;
+import javax.swing.plaf.ColorUIResource;
 
-public class IconResource {
-    /* FIXME we need to pick up the icons dynamically */
+public class UIResources {
 
-    private static final String ICON_PREFIX = "/usr/share/icons/gnome/";
+    private static final UIResources resource = new UIResources();
+    
+    private static final ColorUIResource hyperLinkColor =
+            new ColorUIResource(UIManager.getColor("Button.darkShadow"));
+    private static final ColorUIResource hyperLinkActiveColor =
+            new ColorUIResource(UIManager.getColor("Button.focus"));
 
-    // an icon that should always be available and indicate that the actual icon
-    // is missing.
-    public static final IconResource MISSING_ICON = null;
+    private static final Font standard = UIManager.getFont("Label.font");
+    private static final Font header = standard.deriveFont(Font.BOLD);
+    
+    // TODO: check when size is too small
+    private static final Font footer = standard.deriveFont(Font.PLAIN, standard.getSize() - 2);
+    
+    private UIResources() { /* nothing to do */ }
+    
+    // colors
 
-    public static final IconResource ERROR = new IconResource(ICON_PREFIX + "48x48/status/dialog-error.png");
-    public static final IconResource QUESTION = new IconResource(ICON_PREFIX + "48x48/status/dialog-question.png");
-    public static final IconResource WARNING = new IconResource(ICON_PREFIX + "48x48/status/dialog-warning.png");
-
-    public static final IconResource COMPUTER = new IconResource(ICON_PREFIX + "48x48/devices/computer.png");
-    public static final IconResource NETWORK_SERVER = new IconResource(ICON_PREFIX + "48x48/places/network-server.png");
-    public static final IconResource NETWORK_GROUP = new IconResource(ICON_PREFIX + "48x48/places/network-workgroup.png");
-
-    public static final IconResource SEARCH = new IconResource(ICON_PREFIX + "16x16/actions/search.png");
-
-    private final String path;
-
-    private IconResource(String descriptor) {
-        this.path = descriptor;
+    public static UIResources getInstance() {
+        return resource;
     }
-
-    public static IconResource fromPath(String path) {
-        // TODO implement this
-        return null;
+    
+    public ColorUIResource hyperlinkColor() {
+        return hyperLinkColor;
     }
-
-    public Icon getIcon() {
-        if (new File(path).exists()) {
-            return new ImageIcon(path);
-        }
-        return null;
+    
+    public ColorUIResource hyperlinkActiveColor() {
+        return hyperLinkActiveColor;
     }
-
-    public String getPath() {
-        return path;
+    
+    // font resources
+    
+    public Font footerFont() {
+        return footer;
     }
-
-    public String getUrl() {
-        return "file:" + getPath();
+    
+    public Font headerFont() {
+        return header;
+    }
+    
+    public Font standardFont() {
+        return standard;
     }
 }
