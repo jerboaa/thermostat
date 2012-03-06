@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.common.dao;
 
 import java.io.IOException;
 import java.io.OutputStream;

@@ -36,21 +36,25 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.List;
-
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-
-public interface VmClassStatDAO {
-
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+import java.util.Properties;
 
 
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
+public class MongoDAOFactory implements DAOFactory {
 
-    public abstract List<VmClassStat> getLatestClassStats();
+    private MongoConnection connection;
+
+    public MongoDAOFactory(ConnectionProvider connProv) {
+        connection = (MongoConnection) connProv.createConnection();
+    }
+
+    @Override
+    public Connection getConnection() {
+        return connection;
+    }
+
+    @Override
+    public VmClassStatDAO getVmClassStatsDAO(VmRef ref) {
+        return new MongoVmClassStatDAO(connection.getDB(), ref);
+    }
 
 }

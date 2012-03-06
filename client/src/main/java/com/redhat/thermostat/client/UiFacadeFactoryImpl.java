@@ -37,10 +37,12 @@
 package com.redhat.thermostat.client;
 
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.MongoConnection;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
+    // TODO: Eventually, this should disappear and be completely provided by the DAOFactory.
     private MongoConnection connection;
 
     public UiFacadeFactoryImpl(MongoConnection connection) {

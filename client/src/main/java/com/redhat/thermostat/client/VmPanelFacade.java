@@ -82,4 +82,6 @@ public interface VmPanelFacade extends AsyncUiFacade {
 
     public ChangeableText getVmArguments();
 
+    public VmClassStatController getClassesController();
+
 }

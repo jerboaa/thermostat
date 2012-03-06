@@ -36,21 +36,51 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
 
-public interface VmClassStatDAO {
+public class MongoVmClassStatDAO implements VmClassStatDAO {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+    private VmRef ref;
+    private DBCollection vmClassStatsCollection;
 
+    private long lastUpdate = Long.MIN_VALUE;
 
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
+    public MongoVmClassStatDAO(DB db, VmRef vmRef) {
+        ref = vmRef;
+        vmClassStatsCollection = db.getCollection("vm-class-stats");
+    }
 
-    public abstract List<VmClassStat> getLatestClassStats();
+    @Override
+    public List<VmClassStat> getLatestClassStats() {
+        ArrayList<VmClassStat> result = new ArrayList<>();
+        BasicDBObject queryObject = new BasicDBObject();
+        queryObject.put("agent-id", ref.getAgent().getAgentId());
+        queryObject.put("vm-id", Integer.valueOf(ref.getId()));
+        if (lastUpdate != Long.MIN_VALUE) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            queryObject.put("$where", "this.timestamp > " + lastUpdate);
+        }
+        DBCursor cursor = vmClassStatsCollection.find(queryObject);
+        long timestamp;
+        Long loadedClasses;
+        while (cursor.hasNext()) {
+            DBObject current = cursor.next();
+            timestamp = (Long) current.get("timestamp");
+            loadedClasses = (Long) current.get("loadedClasses");
+            int vmId = (Integer) current.get("vm-id");
+            result.add(new VmClassStat(vmId, timestamp, loadedClasses));
+            lastUpdate = Math.max(timestamp, lastUpdate);
+        }
 
+        return result;
+    }
 }

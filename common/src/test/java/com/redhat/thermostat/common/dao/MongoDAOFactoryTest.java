@@ -36,21 +36,45 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.List;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import org.junit.Test;
 
-public interface VmClassStatDAO {
+import com.mongodb.DB;
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+public class MongoDAOFactoryTest {
 
+    @Test
+    public void testGetConnection() {
+        Connection conn = mock(MongoConnection.class);
 
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
+        ConnectionProvider connProvider = mock(ConnectionProvider.class);
+        when(connProvider.createConnection()).thenReturn(conn);
 
-    public abstract List<VmClassStat> getLatestClassStats();
+        DAOFactory daoFactory = new MongoDAOFactory(connProvider);
+        assertSame(conn, daoFactory.getConnection());
+
+    }
+
+    @Test
+    public void testGetVmClassStatsDAO() {
+
+        DB db = mock(DB.class);
+
+        MongoConnection conn = mock(MongoConnection.class);
+        when(conn.getDB()).thenReturn(db);
+
+        ConnectionProvider connProv = mock(ConnectionProvider.class);
+        when(connProv.createConnection()).thenReturn(conn);
+
+        DAOFactory instance = new MongoDAOFactory(connProv);
+
+        VmRef ref = mock(VmRef.class);
+        VmClassStatDAO vmClassStatsDAO = instance.getVmClassStatsDAO(ref);
+
+        assertNotNull(vmClassStatsDAO);
+    }
 
 }

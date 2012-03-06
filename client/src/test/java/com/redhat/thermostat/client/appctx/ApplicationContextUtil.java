@@ -34,23 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.appctx;
 
-import java.util.List;
+public class ApplicationContextUtil {
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-
-public interface VmClassStatDAO {
-
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
-
-
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
-
-    public abstract List<VmClassStat> getLatestClassStats();
-
+    /**
+     * This is here to allow tests to reset the ApplicationContext, while
+     * preventing real code the same (ApplicationContext.reset() is package private).
+     *
+     * It is vital that tests call this from their setUp() and tearDown() methods,
+     * to avoid leaking mocks and stuff from test to test.
+     */
+    public static void resetApplicationContext() {
+        ApplicationContext.reset();
+    }
 }

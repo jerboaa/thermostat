@@ -82,6 +82,7 @@ public class VmPanel extends JPanel {
         tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_MEMORY), null, createMemoryPanel(), null, 1);
         tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_GC), null, createGcPanel(),
                           localize(LocaleResources.GARBAGE_COLLECTION), 2);
+        tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_CLASSES), null, facade.getClassesController().getComponent(), null, 3);
 
         // TODO additional tabs provided by plugins
         // tabPane.insertTab(title, icon, component, tip, 3)

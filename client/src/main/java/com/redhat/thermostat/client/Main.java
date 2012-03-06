@@ -46,12 +46,19 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.Connection.ConnectionListener;
-import com.redhat.thermostat.client.Connection.ConnectionStatus;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.dao.Connection;
+import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
+import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
+import com.redhat.thermostat.common.dao.ConnectionProvider;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.MongoConnection;
+import com.redhat.thermostat.common.dao.MongoConnectionProvider;
+import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Main {
@@ -59,7 +66,6 @@ public class Main {
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
     private ClientArgs arguments;
-    private Connection connection;
     private UiFacadeFactory uiFacadeFactory;
 
     private Main(String[] args) {
@@ -70,12 +76,15 @@ public class Main {
             System.exit(-1);
         }
 
-        connection = new MongoConnection(arguments.getProperties());
+        ConnectionProvider connProv = new MongoConnectionProvider(arguments.getProperties());
+        DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }
 
     private void showGui() {
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
+        Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
         ConnectionSelectionDialog dialog = new ConnectionSelectionDialog((JFrame) null, connection);
         dialog.pack();
         dialog.setModal(true);

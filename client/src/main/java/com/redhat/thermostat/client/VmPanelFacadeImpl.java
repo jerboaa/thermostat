@@ -99,6 +99,8 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
 
     private VmMemoryStat cached;
 
+    private VmClassStatController classesController;
+
     public VmPanelFacadeImpl(VmRef vmRef, DB db) {
         this.ref = vmRef;
         vmInfoCollection = db.getCollection("vm-info");
@@ -106,6 +108,8 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         vmMemoryStatsCollection = db.getCollection("vm-memory-stats");
 
         vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
+
+        classesController = new VmClassStatController(vmRef);
     }
 
     @Override
@@ -167,11 +171,15 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
 
         }, 0, TimeUnit.SECONDS.toMillis(5));
 
+        classesController.start();
+
     }
 
     @Override
     public void stop() {
         timer.cancel();
+
+        classesController.stop();
     }
 
     @Override
@@ -456,6 +464,11 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     @Override
     public DefaultCategoryDataset getCurrentMemory() {
         return currentMemoryDataset;
+    }
+
+    @Override
+    public VmClassStatController getClassesController() {
+        return classesController;
     }
 
 }

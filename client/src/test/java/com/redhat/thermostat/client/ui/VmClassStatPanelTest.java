@@ -34,23 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.ui;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import org.jfree.data.time.TimeSeriesCollection;
+import org.junit.Test;
 
-public interface VmClassStatDAO {
+public class VmClassStatPanelTest {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
-
-
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
-
-    public abstract List<VmClassStat> getLatestClassStats();
+    @Test
+    public void testSetDataSetTwice() {
+        VmClassStatPanel panel = new VmClassStatPanel();
+        TimeSeriesCollection dataSet = new TimeSeriesCollection();
+        panel.setDataSet(dataSet);
+        int numComponents = panel.getComponentCount();
+        panel.setDataSet(dataSet);
+        assertEquals(numComponents, panel.getComponentCount());
+    }
 
 }

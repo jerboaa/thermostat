@@ -34,23 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.ui;
 
-import java.util.List;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.GridBagConstraints;
 
-public interface VmClassStatDAO {
+import javax.swing.JPanel;
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.locale.LocaleResources;
 
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
+public class VmClassStatPanel extends JPanel implements VmClassStatView {
 
-    public abstract List<VmClassStat> getLatestClassStats();
+    private Component chartPanel;
 
+    public VmClassStatPanel() {
+        setBorder(Components.smallBorder());
+        setLayout(new BorderLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 0;
+        c.fill = GridBagConstraints.BOTH;
+
+        add(Components.header(localize(LocaleResources.VM_LOADED_CLASSES)), BorderLayout.NORTH);
+    }
+
+    public void setDataSet(TimeSeriesCollection dataset) {
+        if (chartPanel != null) {
+            remove(chartPanel);
+        }
+
+        JFreeChart chart = ChartFactory.createTimeSeriesChart(
+                null,
+                localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL),
+                localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
+                dataset,
+                false, false, false);
+
+        chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+
+        add(chartPanel, BorderLayout.CENTER);
+
+    }
+
+    @Override
+    public Component getUIComponent() {
+        return this;
+    }
 }

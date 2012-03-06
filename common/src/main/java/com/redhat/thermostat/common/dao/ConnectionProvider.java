@@ -36,21 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.List;
+public interface ConnectionProvider {
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-
-public interface VmClassStatDAO {
-
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
-
-
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
-
-    public abstract List<VmClassStat> getLatestClassStats();
-
+    Connection createConnection();
 }

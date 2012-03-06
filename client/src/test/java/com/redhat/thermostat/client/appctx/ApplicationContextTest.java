@@ -34,23 +34,62 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.appctx;
 
-import java.util.List;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public interface VmClassStatDAO {
+import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.DAOFactory;
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+public class ApplicationContextTest {
 
+    @Before
+    public void setUp() {
+        ApplicationContext.reset();
+    }
 
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
+    @After
+    public void tearDown() {
+        ApplicationContext.reset();
+    }
 
-    public abstract List<VmClassStat> getLatestClassStats();
+    @Test
+    public void verifyGetInstanceNotNull() {
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        assertNotNull(ctx);
+    }
 
+    @Test
+    public void  testDAOFactorySetGet() {
+        DAOFactory daoFactory = mock(DAOFactory.class);
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        ctx.setDAOFactory(daoFactory);
+
+        DAOFactory actual1 = ctx.getDAOFactory();
+        assertSame(daoFactory, actual1);
+    }
+
+    @Test
+    public void  verifyDAOFactoryIsNullWhenNotInitialized() {
+        ApplicationContext ctx = ApplicationContext.getInstance();
+
+        DAOFactory actual = ctx.getDAOFactory();
+        assertNull(actual);
+    }
+
+    @Test
+    public void  verifyDAOFactoryStaysSame() {
+        DAOFactory daoFactory = mock(DAOFactory.class);
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        ctx.setDAOFactory(daoFactory);
+
+        ApplicationContext ctx2 = ApplicationContext.getInstance();
+        DAOFactory actual2 = ctx2.getDAOFactory();
+        assertSame(daoFactory, actual2);
+    }
 }

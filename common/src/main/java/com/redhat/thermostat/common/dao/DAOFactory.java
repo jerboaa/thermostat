@@ -36,25 +36,10 @@
 
 package com.redhat.thermostat.common.dao;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+public interface DAOFactory {
 
-import java.util.Collection;
+    public abstract Connection getConnection();
 
-import org.junit.Test;
+    public abstract VmClassStatDAO getVmClassStatsDAO(VmRef ref);
 
-import com.redhat.thermostat.common.storage.Key;
-
-public class VmClassStatDAOTest {
-
-    @Test
-    public void testCategory() {
-        assertEquals("vm-class-stats", VmClassStatDAO.vmClassStatsCategory.getName());
-        Collection<Key<?>> keys = VmClassStatDAO.vmClassStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
-        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
-        assertTrue(keys.contains(new Key<Long>("loadedClasses", false)));
-        assertEquals(3, keys.size());
-
-    }
 }

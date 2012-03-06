@@ -34,23 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.appctx;
 
-import java.util.List;
+import com.redhat.thermostat.common.dao.DAOFactory;
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+public class ApplicationContext {
 
-public interface VmClassStatDAO {
+    private static ApplicationContext instance = new ApplicationContext();
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+    private DAOFactory daoFactory;
 
+    public static ApplicationContext getInstance() {
+        return instance;
+    }
 
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
+    static void reset() {
+        instance = new ApplicationContext();
+    }
 
-    public abstract List<VmClassStat> getLatestClassStats();
+    private ApplicationContext() {
+        // Nothing to do here, just prevent instantiation of this class outside
+        // the factory method.
+    }
+
+    public void setDAOFactory(DAOFactory daoFactory) {
+        this.daoFactory = daoFactory;
+    }
+
+    public DAOFactory getDAOFactory() {
+        return daoFactory;
+    }
 
 }
