@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -45,21 +45,13 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.storage.Key;
 
-public class JvmStatVmListenerTest {
-
+public class VmMemoryStatDAOTest {
     @Test
     public void testCategories() {
-        assertEquals("vm-gc-stats", JvmStatVmListener.vmGcStatsCategory.getName());
-        Collection<Key<?>> keys = JvmStatVmListener.vmGcStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
-        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
-        assertTrue(keys.contains(new Key<String>("collector", false)));
-        assertTrue(keys.contains(new Key<Long>("runtime-count", false)));
-        assertTrue(keys.contains(new Key<Long>("wall-time", false)));
-        assertEquals(5, keys.size());
-        
-        assertEquals("vm-memory-stats", JvmStatVmListener.vmMemoryStatsCategory.getName());
-        keys = JvmStatVmListener.vmMemoryStatsCategory.getKeys();
+        Collection<Key<?>> keys;
+
+        assertEquals("vm-memory-stats", VmMemoryStatDAO.vmMemoryStatsCategory.getName());
+        keys = VmMemoryStatDAO.vmMemoryStatsCategory.getKeys();
         assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<String>("eden.gen", false)));

@@ -34,48 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+public class CpuStatDAO {
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
+    static Key<Double> cpu5LoadKey = new Key<>("5load", false);
+    static Key<Double> cpu10LoadKey = new Key<>("10load", false);
+    static Key<Double> cpu15LoadKey = new Key<>("15load", false);
 
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
-    }
+    public static final Category cpuStatCategory = new Category("cpu-stats",
+            Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public boolean getReplace() {
-        return replace;
-    }
-
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
-    }
 }

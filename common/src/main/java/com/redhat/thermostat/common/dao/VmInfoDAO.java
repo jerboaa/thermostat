@@ -36,28 +36,36 @@
 
 package com.redhat.thermostat.common.dao;
 
-import static org.junit.Assert.assertEquals;
+import java.util.List;
+import java.util.Map;
 
-import org.junit.Test;
-
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmClassStatConverterTest {
+public class VmInfoDAO {
 
-    @Test
-    public void testVmClassStatToChunk() {
-        VmClassStat stat = new VmClassStat(123, 1234L, 12345L);
+    // FIXME make it non-public
+    public static final Key<Integer> vmInfoIdKey = new Key<>("vm-id", true);
+    static final Key<Integer> vmInfoPidKey = new Key<>("vm-pid", false);
+    static final Key<String> vmInfoRuntimeVersionKey = new Key<>("runtime-version", false);
+    static final Key<String> vmInfoJavaHomeKey = new Key<>("java-home", false);
+    static final Key<String> vmInfoMainClassKey = new Key<>("main-class", false);
+    static final Key<String> vmInfoCommandLineKey = new Key<>("command-line", false);
+    static final Key<String> vmInfoVmArgumentsKey = new Key<>("vm-arguments", false);
+    static final Key<String> vmInfoVmNameKey = new Key<>("vm-name", false);
+    static final Key<String> vmInfoVmInfoKey = new Key<>("vm-info", false);
+    static final Key<String> vmInfoVmVersionKey = new Key<>("vm-version", false);
+    static final Key<Map<String, String>> vmInfoEnvironmentKey = new Key<>("environment", false);
+    static final Key<List<String>> vmInfoLibrariesKey = new Key<>("libraries", false);
+    static final Key<Long> vmInfoStartTimeKey = new Key<>("start-time", false);
+    // FIXME make it non-public
+    public static final Key<Long> vmInfoStopTimeKey = new Key<>("stop-time", false);
 
-        VmClassStatConverter dao = new VmClassStatConverter();
-        Chunk chunk = dao.vmClassStatToChunk(stat);
+    public static final Category vmInfoCategory = new Category("vm-info",
+            vmInfoIdKey, vmInfoPidKey, vmInfoRuntimeVersionKey, vmInfoJavaHomeKey,
+            vmInfoMainClassKey, vmInfoCommandLineKey,
+            vmInfoVmArgumentsKey, vmInfoVmNameKey, vmInfoVmInfoKey, vmInfoVmVersionKey,
+            vmInfoEnvironmentKey, vmInfoLibrariesKey,
+            vmInfoStartTimeKey, vmInfoStopTimeKey);
 
-        assertEquals("vm-class-stats", chunk.getCategory().getName());
-        assertEquals((Long) 1234L, chunk.get(Key.TIMESTAMP));
-        assertEquals((Integer) 123, chunk.get(new Key<Integer>("vm-id", false)));
-        assertEquals((Long) 12345L, chunk.get(new Key<Long>("loadedClasses", false)));
-    }
-
-    // TODO test conversion the other way too
 }

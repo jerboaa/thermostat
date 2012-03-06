@@ -34,48 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertEquals;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+import org.junit.Test;
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
+import com.redhat.thermostat.common.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
-    }
+public class NetworkInterfaceInfoConverterTest {
 
-    public Category getCategory() {
-        return category;
-    }
+    @Test
+    public void testNetworkInfoToChunk() {
+        NetworkInterfaceInfo info = new NetworkInterfaceInfo("eth0");
+        info.setIp4Addr("4");
+        info.setIp6Addr("6");
 
-    public boolean getReplace() {
-        return replace;
-    }
+        Chunk chunk = new NetworkInterfaceInfoConverter().networkInfoToChunk(info);
 
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
+        assertEquals("network-info", chunk.getCategory().getName());
+        assertEquals("eth0", chunk.get(new Key<String>("iface", true)));
+        assertEquals("4", chunk.get(new Key<String>("ipv4addr", false)));
+        assertEquals("6", chunk.get(new Key<String>("ipv6addr", false)));
 
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
     }
 }

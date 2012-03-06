@@ -34,48 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+import org.junit.Test;
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
+import com.redhat.thermostat.common.storage.Key;
 
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
-    }
+public class VmInfoDAOTest {
+    @Test
+    public void testCategory() {
+        assertEquals("vm-info", VmInfoDAO.vmInfoCategory.getName());
+        Collection<Key<?>> keys = VmInfoDAO.vmInfoCategory.getKeys();
+        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
+        assertTrue(keys.contains(new Key<Integer>("vm-pid", false)));
+        assertTrue(keys.contains(new Key<String>("runtime-version", false)));
+        assertTrue(keys.contains(new Key<String>("java-home", false)));
+        assertTrue(keys.contains(new Key<String>("main-class", false)));
+        assertTrue(keys.contains(new Key<String>("command-line", false)));
+        assertTrue(keys.contains(new Key<String>("vm-arguments", false)));
+        assertTrue(keys.contains(new Key<String>("vm-name", false)));
+        assertTrue(keys.contains(new Key<String>("vm-info", false)));
+        assertTrue(keys.contains(new Key<String>("vm-version", false)));
+        assertTrue(keys.contains(new Key<Map<String, String>>("environment", false)));
+        assertTrue(keys.contains(new Key<List<String>>("libraries", false)));
+        assertTrue(keys.contains(new Key<Long>("start-time", false)));
+        assertTrue(keys.contains(new Key<Long>("stop-time", false)));
+        assertEquals(14, keys.size());
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public boolean getReplace() {
-        return replace;
-    }
-
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
     }
 }

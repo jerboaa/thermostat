@@ -34,48 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+public class VmGcStatDAO {
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
+    static final Key<Integer> vmGcStatVmIdKey = new Key<>("vm-id", false);
+    static final Key<String> vmGcStatCollectorKey = new Key<>("collector", false);
+    static final Key<Long> vmGcStatRunCountKey = new Key<>("runtime-count", false);
+    /** time in microseconds */
+    static final Key<Long> vmGCstatWallTimeKey = new Key<>("wall-time", false);
 
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
-    }
+    public static final Category vmGcStatsCategory = new Category("vm-gc-stats",
+            vmGcStatVmIdKey, Key.TIMESTAMP, vmGcStatCollectorKey,
+            vmGcStatRunCountKey, vmGCstatWallTimeKey);
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public boolean getReplace() {
-        return replace;
-    }
-
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
-    }
 }

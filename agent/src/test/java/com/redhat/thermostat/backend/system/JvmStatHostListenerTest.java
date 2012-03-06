@@ -36,24 +36,17 @@
 
 package com.redhat.thermostat.backend.system;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
 import org.mockito.Matchers;
-
-import com.redhat.thermostat.common.storage.Key;
 
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitoredHost;
@@ -92,25 +85,4 @@ public class JvmStatHostListenerTest {
         verify(vm).addVmListener(Matchers.isA(JvmStatVmClassListener.class));
     }
 
-    @Test
-    public void testCategory() {
-        assertEquals("vm-info", JvmStatHostListener.vmInfoCategory.getName());
-        Collection<Key<?>> keys = JvmStatHostListener.vmInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
-        assertTrue(keys.contains(new Key<Integer>("vm-pid", false)));
-        assertTrue(keys.contains(new Key<String>("runtime-version", false)));
-        assertTrue(keys.contains(new Key<String>("java-home", false)));
-        assertTrue(keys.contains(new Key<String>("main-class", false)));
-        assertTrue(keys.contains(new Key<String>("command-line", false)));
-        assertTrue(keys.contains(new Key<String>("vm-arguments", false)));
-        assertTrue(keys.contains(new Key<String>("vm-name", false)));
-        assertTrue(keys.contains(new Key<String>("vm-info", false)));
-        assertTrue(keys.contains(new Key<String>("vm-version", false)));
-        assertTrue(keys.contains(new Key<Map<String, String>>("environment", false)));
-        assertTrue(keys.contains(new Key<List<String>>("libraries", false)));
-        assertTrue(keys.contains(new Key<Long>("start-time", false)));
-        assertTrue(keys.contains(new Key<Long>("stop-time", false)));
-        assertEquals(14, keys.size());
-
-    }
 }

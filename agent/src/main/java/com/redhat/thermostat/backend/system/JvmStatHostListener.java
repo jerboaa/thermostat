@@ -58,36 +58,15 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.common.VmInfo;
+import com.redhat.thermostat.common.dao.VmInfoConverter;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
-
-    private static final Key<Integer> vmInfoIdKey = new Key<>("vm-id", true);
-    private static final Key<Integer> vmInfoPidKey = new Key<>("vm-pid", false);
-    private static final Key<String> vmInfoRuntimeVersionKey = new Key<>("runtime-version", false);
-    private static final Key<String> vmInfoJavaHomeKey = new Key<>("java-home", false);
-    private static final Key<String> vmInfoMainClassKey = new Key<>("main-class", false);
-    private static final Key<String> vmInfoCommandLineKey = new Key<>("command-line", false);
-    private static final Key<String> vmInfoVmArgumentsKey = new Key<>("vm-arguments", false);
-    private static final Key<String> vmInfoVmNameKey = new Key<>("vm-name", false);
-    private static final Key<String> vmInfoVmInfoKey = new Key<>("vm-info", false);
-    private static final Key<String> vmInfoVmVersionKey = new Key<>("vm-version", false);
-    private static final Key<Map<String, String>> vmInfoEnvironmentKey = new Key<>("environment", false);
-    private static final Key<List<String>> vmInfoLibrariesKey = new Key<>("libraries", false);
-    private static final Key<Long> vmInfoStartTimeKey = new Key<>("start-time", false);
-    private static final Key<Long> vmInfoStopTimeKey = new Key<>("stop-time", false);
-
-    static final Category vmInfoCategory = new Category("vm-info",
-            vmInfoIdKey, vmInfoPidKey, vmInfoRuntimeVersionKey, vmInfoJavaHomeKey,
-            vmInfoMainClassKey, vmInfoCommandLineKey,
-            vmInfoVmArgumentsKey, vmInfoVmNameKey, vmInfoVmInfoKey, vmInfoVmVersionKey,
-            vmInfoEnvironmentKey, vmInfoLibrariesKey,
-            vmInfoStartTimeKey, vmInfoStopTimeKey);
 
     private SystemBackend backend;
 
@@ -97,7 +76,6 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
 
     public static Collection<Category> getCategories() {
         ArrayList<Category> categories = new ArrayList<Category>();
-        categories.add(vmInfoCategory);
         return categories;
     }
 
@@ -157,7 +135,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                         extractor.getMainClass(), extractor.getCommandLine(),
                         extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
                         properties, environment, loadedNativeLibraries);
-                backend.store(makeVmInfoChunk(info));
+                backend.store(new VmInfoConverter().vmInfoToChunk(info));
                 logger.finer("Sent VM_STARTED messsage");
             } catch (MonitorException me) {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
@@ -191,32 +169,11 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         }
     }
 
-    private Chunk makeVmInfoChunk(VmInfo info) {
-        Chunk chunk = new Chunk(vmInfoCategory, true);
-
-        // FIXME save these as proper objects (ie. not as strings)
-
-        chunk.put(vmInfoIdKey, info.getVmId());
-        chunk.put(vmInfoPidKey, info.getVmPid());
-        chunk.put(vmInfoRuntimeVersionKey, info.getJavaVersion());
-        chunk.put(vmInfoJavaHomeKey, info.getJavaHome());
-        chunk.put(vmInfoMainClassKey, info.getMainClass());
-        chunk.put(vmInfoCommandLineKey, info.getJavaCommandLine());
-        chunk.put(vmInfoVmArgumentsKey, info.getVmArguments());
-        chunk.put(vmInfoVmNameKey, info.getVmName());
-        chunk.put(vmInfoVmInfoKey, info.getVmInfo());
-        chunk.put(vmInfoVmVersionKey, info.getVmVersion());
-        chunk.put(vmInfoEnvironmentKey, info.getEnvironment());
-        chunk.put(vmInfoLibrariesKey, info.getLoadedNativeLibraries());
-        chunk.put(vmInfoStartTimeKey, info.getStartTimeStamp());
-        chunk.put(vmInfoStopTimeKey, info.getStopTimeStamp());
-        return chunk;
-    }
-
     private Chunk makeVmInfoUpdateStoppedChunk(int vmId, long stopTimeStamp) {
-        Chunk chunk = new Chunk(vmInfoCategory, false);
-        chunk.put(vmInfoIdKey, vmId);
-        chunk.put(vmInfoStopTimeKey, stopTimeStamp);
+        // FIXME later
+        Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        chunk.put(VmInfoDAO.vmInfoIdKey, vmId);
+        chunk.put(VmInfoDAO.vmInfoStopTimeKey, stopTimeStamp);
         return chunk;
     }
 

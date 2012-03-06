@@ -34,48 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.redhat.thermostat.common.HostInfo;
+import com.redhat.thermostat.common.storage.Chunk;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+public class HostInfoConverter {
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
-
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
+    public Chunk hostInfoToChunk(HostInfo hostInfo) {
+        Chunk chunk = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        chunk.put(HostInfoDAO.hostNameKey, hostInfo.getHostname());
+        chunk.put(HostInfoDAO.osNameKey, hostInfo.getOsName());
+        chunk.put(HostInfoDAO.osKernelKey, hostInfo.getOsKernel());
+        chunk.put(HostInfoDAO.cpuCountKey, hostInfo.getCpuCount());
+        chunk.put(HostInfoDAO.cpuModelKey, hostInfo.getCpuModel());
+        chunk.put(HostInfoDAO.hostMemoryTotalKey, hostInfo.getTotalMemory());
+        return chunk;
     }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public boolean getReplace() {
-        return replace;
-    }
-
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
-    }
 }

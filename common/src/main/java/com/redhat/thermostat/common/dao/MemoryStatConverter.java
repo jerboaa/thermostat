@@ -34,48 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.redhat.thermostat.common.MemoryStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+public class MemoryStatConverter {
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
-
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
+    public Chunk memoryStatToChunk(MemoryStat mem) {
+        Chunk chunk = new Chunk(MemoryStatDAO.memoryStatCategory, false);
+        chunk.put(Key.TIMESTAMP, mem.getTimeStamp());
+        chunk.put(MemoryStatDAO.memoryTotalKey, mem.getTotal());
+        chunk.put(MemoryStatDAO.memoryFreeKey, mem.getFree());
+        chunk.put(MemoryStatDAO.memoryBuffersKey, mem.getBuffers());
+        chunk.put(MemoryStatDAO.memoryCachedKey, mem.getCached());
+        chunk.put(MemoryStatDAO.memorySwapTotalKey, mem.getSwapTotal());
+        chunk.put(MemoryStatDAO.memorySwapFreeKey, mem.getSwapFree());
+        chunk.put(MemoryStatDAO.memoryCommitLimitKey, mem.getCommitLimit());
+        return chunk;
     }
 
-    public Category getCategory() {
-        return category;
-    }
-
-    public boolean getReplace() {
-        return replace;
-    }
-
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
-    }
 }

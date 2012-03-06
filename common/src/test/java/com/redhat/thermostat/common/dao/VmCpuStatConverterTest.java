@@ -34,48 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.*;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+import org.junit.Test;
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
+import com.redhat.thermostat.common.VmCpuStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
+public class VmCpuStatConverterTest {
+
+    @Test
+    public void testVmCpuStatToChunk() {
+        VmCpuStat vmCpuStat = new VmCpuStat(123, 456, 7.0);
+        Chunk chunk = new VmCpuStatConverter().vmCpuStatToChunk(vmCpuStat);
+        assertNotNull(chunk);
+        assertEquals("vm-cpu-stats", chunk.getCategory().getName());
+        assertEquals((Long) 123L, chunk.get(Key.TIMESTAMP));
+        assertEquals((Integer) 456, chunk.get(new Key<Long>("vm-id", false)));
+        assertEquals(7.0, chunk.get(new Key<Double>("processor-usage", false)), 0.001);
+
     }
 
-    public Category getCategory() {
-        return category;
-    }
+    // TODO test conversion the other way too
 
-    public boolean getReplace() {
-        return replace;
-    }
-
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
-    }
 }

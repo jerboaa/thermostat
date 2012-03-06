@@ -34,48 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.redhat.thermostat.common.VmInfo;
+import com.redhat.thermostat.common.storage.Chunk;
 
-/**
- * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
- * that exists behind the storage layer.
- */
-public class Chunk {
-    private final Category category;
-    private final boolean replace;
+public class VmInfoConverter {
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
+    public Chunk vmInfoToChunk(VmInfo info) {
+        Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, true);
 
-    /**
-     *
-     * @param category The {@link Category} of this data.  This should be a Category that the {@link Backend}
-     * who is producing this Chunk has registered via {@link Storage#registerCategory()}
-     * @param replace whether this chunk should replace the values based on the keys for this category,
-     * or be added to a set of values in this category
-     */
-    public Chunk(Category category, boolean replace) {
-        this.category = category;
-        this.replace = replace;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public boolean getReplace() {
-        return replace;
-    }
-
-    public <T> void put(Key<T> entry, T value) {
-        values.put(entry, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public <T> T get(Key<T> entry) {
-        // We only allow matching types in put(), so this cast should be fine.
-        return (T) values.get(entry);
+        chunk.put(VmInfoDAO.vmInfoIdKey, info.getVmId());
+        chunk.put(VmInfoDAO.vmInfoPidKey, info.getVmPid());
+        chunk.put(VmInfoDAO.vmInfoRuntimeVersionKey, info.getJavaVersion());
+        chunk.put(VmInfoDAO.vmInfoJavaHomeKey, info.getJavaHome());
+        chunk.put(VmInfoDAO.vmInfoMainClassKey, info.getMainClass());
+        chunk.put(VmInfoDAO.vmInfoCommandLineKey, info.getJavaCommandLine());
+        chunk.put(VmInfoDAO.vmInfoVmArgumentsKey, info.getVmArguments());
+        chunk.put(VmInfoDAO.vmInfoVmNameKey, info.getVmName());
+        chunk.put(VmInfoDAO.vmInfoVmInfoKey, info.getVmInfo());
+        chunk.put(VmInfoDAO.vmInfoVmVersionKey, info.getVmVersion());
+        chunk.put(VmInfoDAO.vmInfoEnvironmentKey, info.getEnvironment());
+        chunk.put(VmInfoDAO.vmInfoLibrariesKey, info.getLoadedNativeLibraries());
+        chunk.put(VmInfoDAO.vmInfoStartTimeKey, info.getStartTimeStamp());
+        chunk.put(VmInfoDAO.vmInfoStopTimeKey, info.getStopTimeStamp());
+        return chunk;
     }
 }

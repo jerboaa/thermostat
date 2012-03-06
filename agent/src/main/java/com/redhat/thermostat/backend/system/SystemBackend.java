@@ -55,15 +55,22 @@ import sun.jvmstat.monitor.MonitoredHost;
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.common.CpuStat;
-import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.VmCpuStat;
+import com.redhat.thermostat.common.dao.CpuStatConverter;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
+import com.redhat.thermostat.common.dao.HostInfoConverter;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.MemoryStatConverter;
+import com.redhat.thermostat.common.dao.MemoryStatDAO;
+import com.redhat.thermostat.common.dao.NetworkInterfaceInfoConverter;
+import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmCpuStatConverter;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmGcStatDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {
@@ -87,59 +94,18 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private static List<Category> categories = new ArrayList<Category>();
 
-    private static Key<String> hostNameKey = new Key<>("hostname", true);
-    private static Key<String> osNameKey = new Key<>("os_name", false);
-    private static Key<String> osKernelKey = new Key<>("os_kernel", false);
-    private static Key<Integer> cpuCountKey = new Key<>("cpu_num", false);
-    private static Key<String> cpuModelKey = new Key<>("cpu_model", false);
-    private static Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
-
-    static Category hostInfoCategory = new Category("host-info",
-            hostNameKey, osNameKey, osKernelKey,
-            cpuCountKey, cpuModelKey, hostMemoryTotalKey);
-
-    private static Key<String> ifaceKey = new Key<>("iface", true);
-    private static Key<String> ip4AddrKey = new Key<>("ipv4addr", false);
-    private static Key<String> ip6AddrKey = new Key<>("ipv6addr", false);
-
-    static Category networkInfoCategory = new Category("network-info",
-            Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
-
-    private static Key<Double> cpu5LoadKey = new Key<>("5load", false);
-    private static Key<Double> cpu10LoadKey = new Key<>("10load", false);
-    private static Key<Double> cpu15LoadKey = new Key<>("15load", false);
-
-    static Category cpuStatCategory = new Category("cpu-stats",
-            Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
-
-    private static Key<Long> memoryTotalKey = new Key<>("total", false);
-    private static Key<Long> memoryFreeKey = new Key<>("free", false);
-    private static Key<Long> memoryBuffersKey = new Key<>("buffers", false);
-    private static Key<Long> memoryCachedKey = new Key<>("cached", false);
-    private static Key<Long> memorySwapTotalKey = new Key<>("swap-total", false);
-    private static Key<Long> memorySwapFreeKey = new Key<>("swap-free", false);
-    private static Key<Long> memoryCommitLimitKey = new Key<>("commit-limit", false);
-
-    static Category memoryStatCategory = new Category("memory-stats",
-            Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
-            memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
-
-    private static Key<Integer> vmCpuVmIdKey = new Key<>("vm-id", false);
-    private static Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
-
-    static Category vmCpuStatCategory = new Category("vm-cpu-stats",
-            vmCpuLoadKey, vmCpuVmIdKey);
 
     static {
         // Set up categories that will later be registered.
-        categories.add(hostInfoCategory);
-        categories.add(networkInfoCategory);
-        categories.add(cpuStatCategory);
-        categories.add(memoryStatCategory);
-        categories.add(vmCpuStatCategory);
-        categories.addAll(JvmStatHostListener.getCategories());
-        categories.addAll(JvmStatVmListener.getCategories());
+        categories.add(CpuStatDAO.cpuStatCategory);
+        categories.add(HostInfoDAO.hostInfoCategory);
+        categories.add(MemoryStatDAO.memoryStatCategory);
+        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory);
         categories.add(VmClassStatDAO.vmClassStatsCategory);
+        categories.add(VmCpuStatDAO.vmCpuStatCategory);
+        categories.add(VmGcStatDAO.vmGcStatsCategory);
+        categories.add(VmInfoDAO.vmInfoCategory);
+        categories.add(VmMemoryStatDAO.vmMemoryStatsCategory);
     }
 
     @Override
@@ -173,21 +139,21 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
         }
-        store(makeHostChunk(HostInfoBuilder.build()));
+        store(new HostInfoConverter().hostInfoToChunk(HostInfoBuilder.build()));
 
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                store(makeCpuChunk(new CpuStatBuilder().build()));
+                store(new CpuStatConverter().cpuStatToChunk(new CpuStatBuilder().build()));
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build().getInterfaces()) {
-                    store(makeNetworkChunk(info));
+                    store(new NetworkInterfaceInfoConverter().networkInfoToChunk(info));
                 }
-                store(makeMemoryChunk(new MemoryStatBuilder().build()));
+                store(new MemoryStatConverter().memoryStatToChunk(new MemoryStatBuilder().build()));
 
                 for (Integer pid : pidsToMonitor) {
                     new VmCpuStatBuilder();
-                    store(makeVmCpuChunk(VmCpuStatBuilder.build(pid)));
+                    store(new VmCpuStatConverter().vmCpuStatToChunk(VmCpuStatBuilder.build(pid)));
                 }
             }
         }, 0, procCheckInterval);
@@ -240,61 +206,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     @Override
     protected Collection<Category> getCategories() {
         return Collections.unmodifiableCollection(categories);
-    }
-
-    private Chunk makeCpuChunk(CpuStat cpuStat) {
-        Chunk chunk = new Chunk(cpuStatCategory, false);
-        chunk.put(Key.TIMESTAMP, cpuStat.getTimeStamp());
-        chunk.put(cpu5LoadKey, cpuStat.getLoad5());
-        chunk.put(cpu10LoadKey, cpuStat.getLoad10());
-        chunk.put(cpu15LoadKey, cpuStat.getLoad15());
-        return chunk;
-    }
-
-    private Chunk makeHostChunk(HostInfo hostInfo) {
-        Chunk chunk = new Chunk(hostInfoCategory, false);
-        chunk.put(hostNameKey, hostInfo.getHostname());
-        chunk.put(osNameKey, hostInfo.getOsName());
-        chunk.put(osKernelKey, hostInfo.getOsKernel());
-        chunk.put(cpuCountKey, hostInfo.getCpuCount());
-        chunk.put(cpuModelKey, hostInfo.getCpuModel());
-        chunk.put(hostMemoryTotalKey, hostInfo.getTotalMemory());
-        return chunk;
-    }
-
-    private Chunk makeNetworkChunk(NetworkInterfaceInfo info) {
-        Chunk chunk = new Chunk(networkInfoCategory, true);
-        chunk.put(ifaceKey, info.getInterfaceName());
-        String ip4 = info.getIp4Addr();
-        if (ip4 != null) {
-            chunk.put(ip4AddrKey, ip4);
-        }
-        String ip6 = info.getIp6Addr();
-        if (ip6 != null) {
-            chunk.put(ip6AddrKey, ip6);
-        }
-        return chunk;
-    }
-
-    private Chunk makeMemoryChunk(MemoryStat mem) {
-        Chunk chunk = new Chunk(memoryStatCategory, false);
-        chunk.put(Key.TIMESTAMP, mem.getTimeStamp());
-        chunk.put(memoryTotalKey, mem.getTotal());
-        chunk.put(memoryFreeKey, mem.getFree());
-        chunk.put(memoryBuffersKey, mem.getBuffers());
-        chunk.put(memoryCachedKey, mem.getCached());
-        chunk.put(memorySwapTotalKey, mem.getSwapTotal());
-        chunk.put(memorySwapFreeKey, mem.getSwapFree());
-        chunk.put(memoryCommitLimitKey, mem.getCommitLimit());
-        return chunk;
-    }
-
-    private Chunk makeVmCpuChunk(VmCpuStat stat) {
-        Chunk chunk = new Chunk(vmCpuStatCategory, false);
-        chunk.put(Key.TIMESTAMP, stat.getTimeStamp());
-        chunk.put(vmCpuVmIdKey, stat.getVmId());
-        chunk.put(vmCpuLoadKey, stat.getCpuLoad());
-        return chunk;
     }
 
     @Override
