@@ -37,7 +37,6 @@
 package com.redhat.thermostat.backend.system;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,7 +53,6 @@ import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
 import com.redhat.thermostat.common.dao.VmGcStatConverter;
 import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class JvmStatVmListener implements VmListener {
@@ -67,11 +65,6 @@ public class JvmStatVmListener implements VmListener {
     public JvmStatVmListener(SystemBackend backend, int vmId) {
         this.backend = backend;
         this.vmId = vmId;
-    }
-
-    public static Collection<Category> getCategories() {
-        ArrayList<Category> categories = new ArrayList<Category>();
-        return categories;
     }
 
     @Override

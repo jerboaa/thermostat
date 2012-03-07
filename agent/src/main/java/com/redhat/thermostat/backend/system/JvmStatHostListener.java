@@ -38,7 +38,6 @@ package com.redhat.thermostat.backend.system;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +59,6 @@ import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.common.VmInfo;
 import com.redhat.thermostat.common.dao.VmInfoConverter;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -73,11 +71,6 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private Map<Integer, JvmStatVmListener> listenerMap = new HashMap<Integer, JvmStatVmListener>();
 
     private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
-
-    public static Collection<Category> getCategories() {
-        ArrayList<Category> categories = new ArrayList<Category>();
-        return categories;
-    }
 
     public void setBackend(SystemBackend backend) {
         this.backend = backend;
