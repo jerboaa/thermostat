@@ -70,9 +70,9 @@ public class SummaryPanel extends JPanel {
         Section summarySection = new Section(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
         sections.add(summarySection);
 
-        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES), facade.getTotalConnectedAgents());
+        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES), this.facade.getTotalConnectedAgents());
         summarySection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS), facade.getTotalConnectedVms());
+        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS), this.facade.getTotalConnectedVms());
         summarySection.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();
@@ -92,15 +92,15 @@ public class SummaryPanel extends JPanel {
 
         result.add(Components.header(localize(LocaleResources.HOME_PANEL_SECTION_ISSUES)), BorderLayout.PAGE_START);
 
-        ListModel model = new IssuesListModel(new ArrayList<Object>());
+        ListModel<Object> model = new IssuesListModel(new ArrayList<>());
 
-        JList issuesList = new JList(model);
+        JList<Object> issuesList = new JList<>(model);
         result.add(new JScrollPane(issuesList), BorderLayout.CENTER);
 
         return result;
     }
 
-    private static class IssuesListModel extends AbstractListModel {
+    private static class IssuesListModel extends AbstractListModel<Object> {
 
         private static final long serialVersionUID = 7131506292620902850L;
 

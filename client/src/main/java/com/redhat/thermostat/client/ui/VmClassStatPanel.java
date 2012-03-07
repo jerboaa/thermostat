@@ -52,6 +52,7 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 
 public class VmClassStatPanel extends JPanel implements VmClassStatView {
 
+    private static final long serialVersionUID = 1067532168697544774L;
     private Component chartPanel;
 
     public VmClassStatPanel() {

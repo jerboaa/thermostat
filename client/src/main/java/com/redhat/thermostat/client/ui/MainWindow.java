@@ -369,6 +369,9 @@ public class MainWindow extends JFrame {
     }
 
     private static class Separator extends JPopupMenu.Separator {
+
+        private static final long serialVersionUID = 3061771592573345826L;
+
         @Override
         public Dimension getPreferredSize() {
             Dimension result = super.getPreferredSize();

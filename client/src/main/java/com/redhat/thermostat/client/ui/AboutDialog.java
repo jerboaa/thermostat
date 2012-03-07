@@ -67,6 +67,8 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class AboutDialog extends JDialog {
 
+    private static final long serialVersionUID = -7611616871710076514L;
+
     private static final Logger logger = LoggingUtils.getLogger(AboutDialog.class);
 
     private String name;

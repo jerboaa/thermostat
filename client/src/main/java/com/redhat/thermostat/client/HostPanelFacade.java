@@ -36,13 +36,15 @@
 
 package com.redhat.thermostat.client;
 
+import java.util.List;
+
 import javax.swing.table.TableModel;
 
 import org.jfree.data.time.TimeSeriesCollection;
 
 public interface HostPanelFacade extends AsyncUiFacade {
 
-    public DiscreteTimeData<Long>[] getMemoryUsage(MemoryType type);
+    public List<DiscreteTimeData<Long>> getMemoryUsage(MemoryType type);
 
     public MemoryType[] getMemoryTypesToDisplay();
 

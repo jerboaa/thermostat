@@ -229,7 +229,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     }
 
     @Override
-    public DiscreteTimeData<Long>[] getMemoryUsage(MemoryType type) {
+    public List<DiscreteTimeData<Long>> getMemoryUsage(MemoryType type) {
         List<DiscreteTimeData<Long>> data = new ArrayList<DiscreteTimeData<Long>>();
         BasicDBObject queryObject = new BasicDBObject();
         queryObject.put("agent-id", agent.getAgentId());
@@ -248,7 +248,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         }
         // TODO we may also want to avoid sending out thousands of values.
         // a subset of the values from this entire array should suffice.
-        return (DiscreteTimeData<Long>[]) data.toArray(new DiscreteTimeData<?>[0]);
+        return data;
     }
 
     @Override
@@ -280,7 +280,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         updater.execute();
     }
 
-    private static class CpuLoadChartUpdater extends SwingWorker<DiscreteTimeData<Double>[], Void> {
+    private static class CpuLoadChartUpdater extends SwingWorker<List<DiscreteTimeData<Double>>, Void> {
 
         private HostPanelFacadeImpl facade;
 
@@ -289,11 +289,11 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         }
 
         @Override
-        protected DiscreteTimeData<Double>[] doInBackground() throws Exception {
+        protected List<DiscreteTimeData<Double>> doInBackground() throws Exception {
             return getCpuLoad(facade.cpuLoadLastUpdateTime);
         }
 
-        private DiscreteTimeData<Double>[] getCpuLoad(long after) {
+        private List<DiscreteTimeData<Double>> getCpuLoad(long after) {
             List<DiscreteTimeData<Double>> load = new ArrayList<DiscreteTimeData<Double>>();
             BasicDBObject queryObject = new BasicDBObject();
             queryObject.put("agent-id", facade.agent.getAgentId());
@@ -313,7 +313,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
             }
             // TODO we may also want to avoid sending out thousands of values.
             // a subset of values from this entire array should suffice.
-            return (DiscreteTimeData<Double>[]) load.toArray(new DiscreteTimeData<?>[0]);
+            return load;
         }
 
         @Override
@@ -324,7 +324,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
                     facade.cpuLoadSeries.clear();
                 }
 
-                DiscreteTimeData<Double>[] data = get();
+                List<DiscreteTimeData<Double>> data = get();
                 appendCpuChartData(data);
 
             } catch (ExecutionException ee) {
@@ -334,8 +334,8 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
             }
         }
 
-        private void appendCpuChartData(DiscreteTimeData<Double>[] cpuData) {
-            if (cpuData.length > 0) {
+        private void appendCpuChartData(List<DiscreteTimeData<Double>> cpuData) {
+            if (cpuData.size() > 0) {
 
                 /*
                  * We have lots of new data to add. we do it in 2 steps:
@@ -343,10 +343,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
                  * 2. Notify the chart that there has been a change. It does
                  * all the expensive computations and redraws itself.
                  */
-
-                DiscreteTimeData<Double> data;
-                for (int i = 0; i < cpuData.length; i++) {
-                    data = cpuData[i];
+                for (DiscreteTimeData<Double> data: cpuData) {
                     facade.cpuLoadLastUpdateTime = Math.max(facade.cpuLoadLastUpdateTime, data.getTimeInMillis());
                     facade.cpuLoadSeries.add(
                             new FixedMillisecond(data.getTimeInMillis()), data.getData(),

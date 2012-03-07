@@ -81,7 +81,6 @@ public class ProcessStatusInfo {
             this.pid = scanner.nextInt();
             scanner.close();
 
-            int execStartNamePos = statusLine.indexOf('(');
             int execEndNamePos = statusLine.lastIndexOf(')');
 
             String cleanStatusLine = statusLine.substring(execEndNamePos + 1);

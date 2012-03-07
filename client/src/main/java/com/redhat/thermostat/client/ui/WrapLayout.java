@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2008 Rob Camick, 2012 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -52,11 +52,11 @@ import javax.swing.SwingUtilities;
 /**
  *  FlowLayout subclass that fully supports wrapping of components.
  */
-public class WrapLayout extends FlowLayout
-{
-	private Dimension preferredLayoutSize;
+public class WrapLayout extends FlowLayout {
 
-	/**
+    private static final long serialVersionUID = -9169664895883997422L;
+
+    /**
 	* Constructs a new <code>WrapLayout</code> with a left
 	* alignment and a default 5-unit horizontal and vertical gap.
 	*/

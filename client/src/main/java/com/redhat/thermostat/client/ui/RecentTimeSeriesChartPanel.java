@@ -79,7 +79,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         JPanel container = new JPanel();
 
         final JTextField durationSelector = new JTextField(5);
-        final JComboBox unitSelector = new JComboBox(controller.getTimeUnits());
+        final JComboBox<TimeUnit> unitSelector = new JComboBox<>(controller.getTimeUnits());
 
         int defaultValue = controller.getTimeValue();
         TimeUnit defaultUnit = controller.getTimeUnit();
@@ -143,7 +143,8 @@ public class RecentTimeSeriesChartPanel extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            JComboBox comboBox = (JComboBox) e.getSource();
+            @SuppressWarnings("unchecked") // We are a TimeUnitChangeListener, specifically.
+            JComboBox<TimeUnit> comboBox = (JComboBox<TimeUnit>) e.getSource();
             TimeUnit time = (TimeUnit) comboBox.getSelectedItem();
             this.unit = time;
             updateChartParameters();

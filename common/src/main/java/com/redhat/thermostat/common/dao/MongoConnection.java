@@ -162,5 +162,6 @@ public class MongoConnection extends Connection {
     }
 
     private class LocalAgentException extends RuntimeException {
+        private static final long serialVersionUID = -4507363475778127729L;
     }
 }

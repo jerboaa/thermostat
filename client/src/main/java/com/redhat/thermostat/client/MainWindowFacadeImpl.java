@@ -227,7 +227,9 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
         }
 
         private void syncTree(DefaultMutableTreeNode sourceRoot, DefaultTreeModel targetModel, DefaultMutableTreeNode targetNode) {
+            @SuppressWarnings("unchecked") // We know what we put into these trees.
             List<DefaultMutableTreeNode> sourceChildren = Collections.list(sourceRoot.children());
+            @SuppressWarnings("unchecked")
             List<DefaultMutableTreeNode> targetChildren = Collections.list(targetNode.children());
             for (DefaultMutableTreeNode sourceChild : sourceChildren) {
                 Ref sourceRef = (Ref) sourceChild.getUserObject();
@@ -266,9 +268,12 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
         }
     }
 
+    @SuppressWarnings("unused") // Used for debugging but not in production code.
     private static void printTree(PrintStream out, TreeNode node, int depth) {
         out.println(StringUtils.repeat("  ", depth) + node.toString());
-        for (TreeNode child : (List<TreeNode>) Collections.list(node.children())) {
+        @SuppressWarnings("unchecked")
+        List<TreeNode> children = Collections.list(node.children());
+        for (TreeNode child : children) {
             printTree(out, child, depth + 1);
         }
     }

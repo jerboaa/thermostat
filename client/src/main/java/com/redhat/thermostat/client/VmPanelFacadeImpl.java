@@ -237,7 +237,8 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         BasicDBObject queryObject = new BasicDBObject();
         queryObject.put("agent-id", ref.getAgent().getAgentId());
         queryObject.put("vm-id", Integer.valueOf(ref.getId()));
-        List results = vmGcStatsCollection.distinct("collector", queryObject);
+        @SuppressWarnings("unchecked") // This is temporary; this will eventually come from a DAO as the correct type.
+        List<String> results = vmGcStatsCollection.distinct("collector", queryObject);
         List<String> collectorNames = new ArrayList<String>(results);
 
         return collectorNames.toArray(new String[0]);
@@ -251,7 +252,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         }
     }
 
-    public static class CollectorChartUpdater extends SwingWorker<DiscreteTimeData<Double>[], Void> {
+    public static class CollectorChartUpdater extends SwingWorker<List<DiscreteTimeData<Double>>, Void> {
 
         private VmPanelFacadeImpl facade;
         private String collectorName;
@@ -262,7 +263,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         }
 
         @Override
-        protected DiscreteTimeData<Double>[] doInBackground() throws Exception {
+        protected List<DiscreteTimeData<Double>> doInBackground() throws Exception {
             Long after = facade.collectorSeriesLastUpdateTime.get(collectorName);
             if (after == null) {
                 after = Long.MIN_VALUE;
@@ -270,7 +271,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
             return getCollectorRunTime(after);
         }
 
-        private DiscreteTimeData<Double>[] getCollectorRunTime(long after) {
+        private List<DiscreteTimeData<Double>> getCollectorRunTime(long after) {
             ArrayList<DiscreteTimeData<Double>> result = new ArrayList<DiscreteTimeData<Double>>();
             BasicDBObject queryObject = new BasicDBObject();
             queryObject.put("agent-id", facade.ref.getAgent().getAgentId());
@@ -292,7 +293,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                 result.add(new DiscreteTimeData<Double>(timestamp, walltime));
             }
 
-            return (DiscreteTimeData<Double>[]) result.toArray(new DiscreteTimeData<?>[0]);
+            return result;
         }
 
         @Override
@@ -311,10 +312,10 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
             }
         }
 
-        private long appendCollectorDataToChart(DiscreteTimeData<Double>[] collectorData, TimeSeries collectorSeries, long prevMaxTime) {
+        private long appendCollectorDataToChart(List<DiscreteTimeData<Double>> collectorData, TimeSeries collectorSeries, long prevMaxTime) {
             long maxTime = prevMaxTime;
 
-            if (collectorData.length > 0) {
+            if (collectorData.size() > 0) {
 
                 /*
                  * We have lots of new data to add. we do it in 2 steps:
@@ -322,10 +323,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
                  * 2. Notify the chart that there has been a change. It
                  * does all the expensive computations and redraws itself.
                  */
-
-                DiscreteTimeData<Double> data;
-                for (int i = 0; i < collectorData.length; i++) {
-                    data = collectorData[i];
+                for (DiscreteTimeData<Double> data : collectorData) {
                     maxTime = Math.max(maxTime, data.getTimeInMillis());
                     collectorSeries.add(
                             new FixedMillisecond(data.getTimeInMillis()), data.getData(),

@@ -251,7 +251,7 @@ public class HostPanel extends JPanel {
 
         for (MemoryType type : facade.getMemoryTypesToDisplay()) {
             XYSeries series = new XYSeries(type.name());
-            DiscreteTimeData<Long>[] data = facade.getMemoryUsage(type);
+            List<DiscreteTimeData<Long>> data = facade.getMemoryUsage(type);
             for (DiscreteTimeData<Long> point : data) {
                 series.add(point.getTimeInMillis(), point.getData());
             }

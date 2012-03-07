@@ -36,9 +36,6 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.Properties;
-
-
 public class MongoDAOFactory implements DAOFactory {
 
     private MongoConnection connection;
