@@ -34,34 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import java.util.List;
+import java.awt.Component;
 
-import org.jfree.data.time.TimeSeriesCollection;
+public interface HostOverviewView {
 
-import com.redhat.thermostat.client.ui.HostOverviewController;
+    void setHostName(String newHostName);
 
-public interface HostPanelFacade extends AsyncUiFacade {
+    void setCpuModel(String newCpuModel);
 
-    public List<DiscreteTimeData<Long>> getMemoryUsage(MemoryType type);
+    void setCpuCount(String newCpuCount);
 
-    public MemoryType[] getMemoryTypesToDisplay();
+    void setTotalMemory(String newTotalMemory);
 
-    public boolean isMemoryTypeDisplayed(MemoryType type);
+    void setOsName(String newOsName);
 
-    public void setDisplayMemoryType(MemoryType type, boolean selected);
+    void setOsKernel(String newOsKernel);
 
-    public ChangeableText getHostName();
+    void setNetworkTableColumns(Object[] columns);
 
-    public ChangeableText getCpuModel();
+    void setNetworkTableData(Object[][] table);
 
-    public ChangeableText getCpuCount();
-
-    public ChangeableText getTotalMemory();
-
-    public TimeSeriesCollection getCpuLoadDataSet();
-
-    public HostOverviewController getOverviewController();
+    Component getUiComponent();
 
 }

@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -45,13 +43,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import javax.swing.SwingWorker;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
 
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
@@ -62,27 +57,19 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.NetworkInfo;
-import com.redhat.thermostat.common.NetworkInterfaceInfo;
+import com.redhat.thermostat.client.ui.HostOverviewController;
 import com.redhat.thermostat.common.dao.HostRef;
 
 public class HostPanelFacadeImpl implements HostPanelFacade {
 
     private final HostRef agent;
-    private final DBCollection hostInfoCollection;
-    private final DBCollection networkInfoCollection;
     private final DBCollection cpuStatsCollection;
     private final DBCollection memoryStatsCollection;
 
     private final ChangeableText hostName = new ChangeableText("");
-    private final ChangeableText osName = new ChangeableText("");
-    private final ChangeableText osKernel = new ChangeableText("");
     private final ChangeableText cpuModel = new ChangeableText("");
     private final ChangeableText cpuCount = new ChangeableText("");
     private final ChangeableText memoryTotal = new ChangeableText("");
-    private final DefaultTableModel networkTableModel = new DefaultTableModel();
-    private final Vector<String> networkTableColumnVector;
 
     private final TimeSeriesCollection cpuLoadTimeSeriesCollection = new TimeSeriesCollection();
     private final TimeSeries cpuLoadSeries = new TimeSeries("cpu-time");
@@ -92,22 +79,19 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
 
     private Set<MemoryType> toDisplay = new HashSet<MemoryType>();
 
+    private final HostOverviewController overviewController;
+
     public HostPanelFacadeImpl(HostRef ref, DB db) {
         this.agent = ref;
 
-        hostInfoCollection = db.getCollection("host-info");
-        networkInfoCollection = db.getCollection("network-info");
         cpuStatsCollection = db.getCollection("cpu-stats");
         memoryStatsCollection = db.getCollection("memory-stats");
-
-        networkTableColumnVector = new Vector<String>();
-        networkTableColumnVector.add(localize(LocaleResources.NETWORK_INTERFACE_COLUMN));
-        networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV4_COLUMN));
-        networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV6_COLUMN));
 
         cpuLoadTimeSeriesCollection.addSeries(cpuLoadSeries);
 
         toDisplay.addAll(Arrays.asList(MemoryType.values()));
+
+        overviewController = new HostOverviewController(ref, db);
     }
 
     @Override
@@ -115,24 +99,19 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
         backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                DBObject hostInfo = hostInfoCollection.findOne(new BasicDBObject("agent-id", agent.getAgentId()));
-                hostName.setText((String) hostInfo.get("hostname"));
-                osName.setText((String) hostInfo.get("os_name"));
-                osKernel.setText((String) hostInfo.get("os_kernel"));
-                cpuModel.setText((String) hostInfo.get("cpu_model"));
-                cpuCount.setText(((Integer) hostInfo.get("cpu_num")).toString());
-                memoryTotal.setText(((Long) hostInfo.get("memory_total")).toString());
-
-                doNetworkTableUpdateAsync();
 
                 doCpuChartUpdateAsync();
             }
         }, 0, TimeUnit.SECONDS.toMillis(5));
+
+        overviewController.start();
     }
 
     @Override
     public void stop() {
         backgroundUpdateTimer.cancel();
+
+        overviewController.stop();
     }
 
     @Override
@@ -151,81 +130,8 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     }
 
     @Override
-    public ChangeableText getOsKernel() {
-        return osKernel;
-    }
-
-    @Override
-    public ChangeableText getOsName() {
-        return osName;
-    }
-
-    @Override
     public ChangeableText getTotalMemory() {
         return memoryTotal;
-    }
-
-    private NetworkInfo getNetworkInfo() {
-        NetworkInfo network = new NetworkInfo();
-        DBCursor cursor = networkInfoCollection.find(new BasicDBObject("agent-id", agent.getAgentId()));
-        while (cursor.hasNext()) {
-            DBObject iface = cursor.next();
-            NetworkInterfaceInfo info = new NetworkInterfaceInfo((String) iface.get("iface"));
-            if (iface.containsField("ipv4addr")) {
-                info.setIp4Addr((String) iface.get("ipv4addr"));
-            }
-            if (iface.containsField("ipv6addr")) {
-                info.setIp6Addr((String) iface.get("ipv6addr"));
-            }
-            network.addNetworkInterfaceInfo(info);
-        }
-
-        return network;
-    }
-
-    private void doNetworkTableUpdateAsync() {
-        new NetworkTableModelUpdater(this).execute();
-    }
-
-    private static class NetworkTableModelUpdater extends SwingWorker<NetworkInfo, Void> {
-
-        private HostPanelFacadeImpl facade;
-
-        public NetworkTableModelUpdater(HostPanelFacadeImpl facade) {
-            this.facade = facade;
-        }
-
-        @Override
-        protected NetworkInfo doInBackground() throws Exception {
-            return facade.getNetworkInfo();
-        }
-
-        @Override
-        protected void done() {
-            Vector<Vector<String>> data = new Vector<Vector<String>>();
-
-            NetworkInfo networkInfo;
-            try {
-                networkInfo = get();
-                for (NetworkInterfaceInfo info : networkInfo.getInterfaces()) {
-                    String ifaceName = info.getInterfaceName();
-                    String ipv4 = info.getIp4Addr();
-                    String ipv6 = info.getIp6Addr();
-                    data.add(new Vector<String>(Arrays.asList(new String[] { ifaceName, ipv4, ipv6 })));
-                }
-                facade.networkTableModel.setDataVector(data, facade.networkTableColumnVector);
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public TableModel getNetworkTableModel() {
-        return networkTableModel;
     }
 
     @Override
@@ -273,6 +179,11 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     @Override
     public TimeSeriesCollection getCpuLoadDataSet() {
         return cpuLoadTimeSeriesCollection;
+    }
+
+    @Override
+    public HostOverviewController getOverviewController() {
+        return overviewController;
     }
 
     private void doCpuChartUpdateAsync() {

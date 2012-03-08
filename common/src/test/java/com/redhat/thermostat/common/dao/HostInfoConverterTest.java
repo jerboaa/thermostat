@@ -37,9 +37,11 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
+import com.mongodb.BasicDBObject;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -60,4 +62,33 @@ public class HostInfoConverterTest {
         assertEquals((Integer)9, chunk.get(new Key<Integer>("cpu_num", false)));
         assertEquals((Long) 99L, chunk.get(new Key<Long>("memory_total", false)));
     }
+
+    @Test
+    public void testDBObjecToHostInfo() {
+        final String HOST_NAME = "a host name";
+        final String OS_NAME = "some os";
+        final String OS_KERNEL = "some kernel";
+        final String CPU_MODEL = "some cpu that runs fast";
+        final int CPU_NUM = -1;
+        final long MEMORY_TOTAL = 0xCAFEBABEl;
+
+        BasicDBObject dbObj = new BasicDBObject();
+        dbObj.put("hostname", HOST_NAME);
+        dbObj.put("os_name", OS_NAME);
+        dbObj.put("os_kernel", OS_KERNEL);
+        dbObj.put("cpu_model", CPU_MODEL);
+        dbObj.put("cpu_num", CPU_NUM);
+        dbObj.put("memory_total", MEMORY_TOTAL);
+
+        HostInfo info = new HostInfoConverter().fromDBObj(dbObj);
+        assertNotNull(info);
+        assertEquals(HOST_NAME, info.getHostname());
+        assertEquals(OS_NAME, info.getOsName());
+        assertEquals(OS_KERNEL, info.getOsKernel());
+        assertEquals(CPU_MODEL, info.getCpuModel());
+        assertEquals(CPU_NUM, info.getCpuCount());
+        assertEquals(MEMORY_TOTAL, info.getTotalMemory());
+
+    }
+
 }
