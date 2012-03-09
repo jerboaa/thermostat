@@ -42,6 +42,7 @@ import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -52,7 +53,6 @@ import java.util.concurrent.TimeUnit;
 import javax.swing.SwingWorker;
 
 import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
@@ -62,9 +62,11 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.VmGcStat;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
+import com.redhat.thermostat.common.dao.VmGcStatConverter;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class VmPanelFacadeImpl implements VmPanelFacade {
@@ -246,94 +248,38 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
 
     private void doUpdateCollectorChartsAsync() {
         String[] collectorNames = getCollectorNames();
-        for (String name: collectorNames) {
-            CollectorChartUpdater updater = new CollectorChartUpdater(this, name);
-            updater.execute();
-        }
-    }
-
-    public static class CollectorChartUpdater extends SwingWorker<List<DiscreteTimeData<Double>>, Void> {
-
-        private VmPanelFacadeImpl facade;
-        private String collectorName;
-
-        public CollectorChartUpdater(VmPanelFacadeImpl facade, String collectorName) {
-            this.facade = facade;
-            this.collectorName = collectorName;
-        }
-
-        @Override
-        protected List<DiscreteTimeData<Double>> doInBackground() throws Exception {
-            Long after = facade.collectorSeriesLastUpdateTime.get(collectorName);
-            if (after == null) {
-                after = Long.MIN_VALUE;
-            }
-            return getCollectorRunTime(after);
-        }
-
-        private List<DiscreteTimeData<Double>> getCollectorRunTime(long after) {
-            ArrayList<DiscreteTimeData<Double>> result = new ArrayList<DiscreteTimeData<Double>>();
-            BasicDBObject queryObject = new BasicDBObject();
-            queryObject.put("agent-id", facade.ref.getAgent().getAgentId());
-            queryObject.put("vm-id", Integer.valueOf(facade.ref.getId()));
-            if (after != Long.MIN_VALUE) {
-                // TODO once we have an index and the 'column' is of type long, use a
-                // query which can utilize an index. this one doesn't
-                queryObject.put("$where", "this.timestamp > " + after);
-            }
-            queryObject.put("collector", collectorName);
-            DBCursor cursor = facade.vmGcStatsCollection.find(queryObject);
-            long timestamp;
-            double walltime;
-            while (cursor.hasNext()) {
-                DBObject current = cursor.next();
-                timestamp = (Long) current.get("timestamp");
-                // convert microseconds to seconds
-                walltime = 1.0E-6 * (Long) current.get("wall-time");
-                result.add(new DiscreteTimeData<Double>(timestamp, walltime));
-            }
-
-            return result;
-        }
-
-        @Override
-        protected void done() {
-            try {
-                Long after = facade.collectorSeriesLastUpdateTime.get(collectorName);
-                if (after == null) {
-                    after = Long.MIN_VALUE;
+        for (final String name: collectorNames) {
+            TimeSeriesUpdater.Converter<Double, DBObject> converter = new TimeSeriesUpdater.Converter<Double, DBObject>() {
+                @Override
+                public DiscreteTimeData<Double> convert(DBObject dbObj) {
+                    VmGcStat stat = new VmGcStatConverter().fromDBObject(dbObj);
+                    // convert microseconds to seconds
+                    double walltime = 1.0E-6 * stat.getWallTime();
+                    return new DiscreteTimeData<Double>(stat.getTimeStamp(), walltime);
                 }
-                after = appendCollectorDataToChart(get(), facade.collectorSeries.get(collectorName), after);
-                facade.collectorSeriesLastUpdateTime.put(collectorName, after);
-            } catch (ExecutionException ee) {
-                ee.printStackTrace();
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            }
-        }
+            };
 
-        private long appendCollectorDataToChart(List<DiscreteTimeData<Double>> collectorData, TimeSeries collectorSeries, long prevMaxTime) {
-            long maxTime = prevMaxTime;
-
-            if (collectorData.size() > 0) {
-
-                /*
-                 * We have lots of new data to add. we do it in 2 steps:
-                 * 1. Add everything with notify off.
-                 * 2. Notify the chart that there has been a change. It
-                 * does all the expensive computations and redraws itself.
-                 */
-                for (DiscreteTimeData<Double> data : collectorData) {
-                    maxTime = Math.max(maxTime, data.getTimeInMillis());
-                    collectorSeries.add(
-                            new FixedMillisecond(data.getTimeInMillis()), data.getData(),
-                            /* notify = */false);
+            Iterable<DBObject> dataSource = new Iterable<DBObject>() {
+                @Override
+                public Iterator<DBObject> iterator() {
+                    BasicDBObject queryObject = new BasicDBObject();
+                    queryObject.put("agent-id", ref.getAgent().getAgentId());
+                    queryObject.put("vm-id", Integer.valueOf(ref.getId()));
+                    queryObject.put("collector", name);
+                    Long lastTime = collectorSeriesLastUpdateTime.get(name);
+                    if (lastTime != null) {
+                        queryObject.put("timestamp", new BasicDBObject("$gt", (long) lastTime));
+                    }
+                    return vmGcStatsCollection.find(queryObject);
                 }
-
-                collectorSeries.fireSeriesChanged();
-            }
-
-            return maxTime;
+            };
+            TimeSeriesUpdater.LastUpdateTimeCallback callback = new TimeSeriesUpdater.LastUpdateTimeCallback() {
+                @Override
+                public void update(long lastUpdateTime) {
+                    collectorSeriesLastUpdateTime.put(name, lastUpdateTime);
+                }
+            };
+            new TimeSeriesUpdater<>(dataSource, collectorSeries.get(name), converter, callback).execute();
         }
     }
 

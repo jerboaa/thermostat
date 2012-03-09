@@ -39,16 +39,13 @@ package com.redhat.thermostat.client;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.SwingWorker;
-
-import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
@@ -58,6 +55,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.client.ui.HostOverviewController;
+import com.redhat.thermostat.common.CpuStat;
+import com.redhat.thermostat.common.dao.CpuStatConverter;
 import com.redhat.thermostat.common.dao.HostRef;
 
 public class HostPanelFacadeImpl implements HostPanelFacade {
@@ -187,84 +186,32 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     }
 
     private void doCpuChartUpdateAsync() {
-        CpuLoadChartUpdater updater = new CpuLoadChartUpdater(this);
-        updater.execute();
-    }
 
-    private static class CpuLoadChartUpdater extends SwingWorker<List<DiscreteTimeData<Double>>, Void> {
+        TimeSeriesUpdater.LastUpdateTimeCallback callback = new TimeSeriesUpdater.LastUpdateTimeCallback() {
 
-        private HostPanelFacadeImpl facade;
-
-        public CpuLoadChartUpdater(HostPanelFacadeImpl impl) {
-            this.facade = impl;
-        }
-
-        @Override
-        protected List<DiscreteTimeData<Double>> doInBackground() throws Exception {
-            return getCpuLoad(facade.cpuLoadLastUpdateTime);
-        }
-
-        private List<DiscreteTimeData<Double>> getCpuLoad(long after) {
-            List<DiscreteTimeData<Double>> load = new ArrayList<DiscreteTimeData<Double>>();
-            BasicDBObject queryObject = new BasicDBObject();
-            queryObject.put("agent-id", facade.agent.getAgentId());
-            if (after != Long.MIN_VALUE) {
-                // TODO once we have an index and the 'column' is of type long, use a
-                // query which can utilize an index. this one doesn't
-                queryObject.put("$where", "this.timestamp > " + after);
+            @Override
+            public void update(long lastUpdateTime) {
+                HostPanelFacadeImpl.this.cpuLoadLastUpdateTime = lastUpdateTime;
             }
-            DBCursor cursor = facade.cpuStatsCollection.find(queryObject);
-            long timestamp = 0;
-            double data = 0;
-            while (cursor.hasNext()) {
-                DBObject stat = cursor.next();
-                timestamp = (Long) stat.get("timestamp");
-                data = (Double) stat.get("5load");
-                load.add(new DiscreteTimeData<Double>(timestamp, data));
+        };
+        Iterable<DBObject> dataSource = new Iterable<DBObject>() {
+            @Override
+            public Iterator<DBObject> iterator() {
+                BasicDBObject query = new BasicDBObject();
+                query.put("agent-id", HostPanelFacadeImpl.this.agent.getAgentId());
+                query.put("timestamp", new BasicDBObject("$gt", cpuLoadLastUpdateTime));
+                return cpuStatsCollection.find(query);
             }
-            // TODO we may also want to avoid sending out thousands of values.
-            // a subset of values from this entire array should suffice.
-            return load;
-        }
-
-        @Override
-        protected void done() {
-            try {
-                if (facade.cpuLoadLastUpdateTime == Long.MIN_VALUE) {
-                    /* TODO clear stuff? */
-                    facade.cpuLoadSeries.clear();
-                }
-
-                List<DiscreteTimeData<Double>> data = get();
-                appendCpuChartData(data);
-
-            } catch (ExecutionException ee) {
-                ee.printStackTrace();
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
+        };
+        TimeSeriesUpdater.Converter<Double, DBObject> converter = new TimeSeriesUpdater.Converter<Double, DBObject>() {
+            @Override
+            public DiscreteTimeData<Double> convert(DBObject dbObj) {
+                CpuStat stat = new CpuStatConverter().fromDB(dbObj);
+                return new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getLoad5());
             }
-        }
+        };
 
-        private void appendCpuChartData(List<DiscreteTimeData<Double>> cpuData) {
-            if (cpuData.size() > 0) {
-
-                /*
-                 * We have lots of new data to add. we do it in 2 steps:
-                 * 1. Add everything with notify off.
-                 * 2. Notify the chart that there has been a change. It does
-                 * all the expensive computations and redraws itself.
-                 */
-                for (DiscreteTimeData<Double> data: cpuData) {
-                    facade.cpuLoadLastUpdateTime = Math.max(facade.cpuLoadLastUpdateTime, data.getTimeInMillis());
-                    facade.cpuLoadSeries.add(
-                            new FixedMillisecond(data.getTimeInMillis()), data.getData(),
-                            /* notify = */false);
-                }
-
-                facade.cpuLoadSeries.fireSeriesChanged();
-            }
-        }
-
+        new TimeSeriesUpdater<Double, DBObject>(dataSource, cpuLoadSeries, converter, callback).execute();
     }
 
 
