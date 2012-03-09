@@ -56,41 +56,24 @@ public class NetworkInfoBuilder {
     private static final Logger logger = LoggingUtils.getLogger(NetworkInfoBuilder.class);
 
     public static List<NetworkInterfaceInfo> build() {
-        List<NetworkInterfaceInfo> info = new ArrayList<NetworkInterfaceInfo>();
+        List<NetworkInterfaceInfo> infos = new ArrayList<NetworkInterfaceInfo>();
         try {
             Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
             for (NetworkInterface iface : Collections.list(ifaces)) {
-                NetworkInterfaceInfo iInfo = new NetworkInterfaceInfo(iface.getName());
+                NetworkInterfaceInfo info = new NetworkInterfaceInfo(iface.getName());
                 for (InetAddress addr : Collections.list(iface.getInetAddresses())) {
                     if (addr instanceof Inet4Address) {
-                        iInfo.setIp4Addr(fixAddr(addr.toString()));
+                        info.setIp4Addr(addr.getHostAddress());
                     } else if (addr instanceof Inet6Address) {
-                        iInfo.setIp6Addr(fixAddr(addr.toString()));
+                        info.setIp6Addr(addr.getHostAddress());
                     }
                 }
-                info.add(iInfo);
+                infos.add(info);
             }
         } catch (SocketException e) {
             logger.log(Level.WARNING, "error enumerating network interfaces");
         }
-        return info;
+        return infos;
     }
 
-    /**
-     * Removes the "hostname/" and the "%scope_id" parts from the
-     * {@link InetAddress#toString()} output.
-     */
-    private static String fixAddr(String addr) {
-        int slashPos = addr.indexOf("/");
-        if (slashPos == -1) {
-            return addr;
-        }
-        String fixed = addr.substring(slashPos + 1);
-        int percentPos = fixed.indexOf("%");
-        if (percentPos == -1) {
-            return fixed;
-        }
-        fixed = fixed.substring(0, percentPos);
-        return fixed;
-    }
 }
