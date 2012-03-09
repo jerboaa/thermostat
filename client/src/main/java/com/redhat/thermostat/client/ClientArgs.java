@@ -36,13 +36,11 @@
 
 package com.redhat.thermostat.client;
 
-import java.awt.Window;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.Properties;
-
-import com.redhat.thermostat.client.ui.LayoutDebugHelper;
 
 public class ClientArgs {
 
@@ -59,8 +57,8 @@ public class ClientArgs {
                 if (i >= args.length) {
                     throw new IllegalArgumentException("--properties argument requires filename.");
                 }
-                try {
-                    props.load(new FileReader(args[i]));
+                try (Reader reader = new FileReader(args[i])){
+                    props.load(reader);
                 } catch (FileNotFoundException e) {
                     // ignore
                 } catch (IOException e) {
@@ -76,28 +74,6 @@ public class ClientArgs {
         // TODO what other arguments do we care about?
         // perhaps skipping the mode selection?
 
-        if (isDebugLayout()) {
-            Thread layoutDebugger = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    LayoutDebugHelper helper = new LayoutDebugHelper();
-                    while (true) {
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException e) {
-                            System.err.println("Layout Debug Helper exiting");
-                        }
-                        Window[] windows = Window.getWindows();
-                        for (Window w : windows) {
-                            helper.debugLayout(w);
-                            w.invalidate();
-                            w.repaint();
-                        }
-                    }
-                }
-            });
-            layoutDebugger.start();
-        }
     }
 
     public boolean isDebugLayout() {

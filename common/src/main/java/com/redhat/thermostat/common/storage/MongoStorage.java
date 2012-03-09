@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.storage;
 import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.bson.BSONObject;
@@ -54,7 +55,7 @@ import com.mongodb.WriteConcern;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.
- * 
+ *
  * In this implementation, each CATEGORY is given a distinct collection.
  */
 public class MongoStorage extends Storage {
@@ -162,12 +163,12 @@ public class MongoStorage extends Storage {
                 }
             }
         }
-        for (String mongoKey : nestedParts.keySet()) {
-            toInsert.append(mongoKey, nestedParts.get(mongoKey));
+        for (Entry<String, BasicDBObject> entry: nestedParts.entrySet()) {
+            toInsert.append(entry.getKey(), entry.getValue());
         }
         if (replace) {
-            for (String mongoKey : replaceKeyNestedParts.keySet()) {
-                replaceKey.append(mongoKey, replaceKeyNestedParts.get(mongoKey));
+            for (Entry<String, BasicDBObject> entry: replaceKeyNestedParts.entrySet()) {
+                replaceKey.append(entry.getKey(), entry.getValue());
             }
             coll.update(replaceKey, toInsert, true, false);
         } else {
@@ -220,11 +221,11 @@ public class MongoStorage extends Storage {
                 }
             }
         }
-        for (String mongoKey : nestedParts.keySet()) {
-            toUpdate.append(mongoKey, nestedParts.get(mongoKey));
+        for (Entry<String, BasicDBObject> entry: nestedParts.entrySet()) {
+            toUpdate.append(entry.getKey(), entry.getValue());
         }
-        for (String mongoKey : updateKeyNestedParts.keySet()) {
-            updateKey.append(mongoKey, updateKeyNestedParts.get(mongoKey));
+        for (Entry<String, BasicDBObject> entry: updateKeyNestedParts.entrySet()) {
+            updateKey.append(entry.getKey(), entry.getValue());
         }
         coll.update(updateKey, toUpdate);
     }
@@ -261,8 +262,8 @@ public class MongoStorage extends Storage {
         result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NAME, backend.getName());
         result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_DESC, backend.getDescription());
         result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_ACTIVE, createBackendActiveDBObject(backend));
-        for (String configName : configMap.keySet()) {
-            result.append(configName, configMap.get(configName));
+        for (Entry<String, String> entry: configMap.entrySet()) {
+            result.append(entry.getKey(), entry.getValue());
         }
         return result;
     }

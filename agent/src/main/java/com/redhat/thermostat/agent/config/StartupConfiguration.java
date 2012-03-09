@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.config;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -223,8 +224,8 @@ public class StartupConfiguration {
                     if (index < args.length) {
                         String propFile = args[index];
                         logger.finest("Properties file: " + propFile);
-                        try {
-                            props.load(new FileReader(propFile));
+                        try (Reader reader = new FileReader(propFile)) {
+                            props.load(reader);
                         } catch (IOException ioe) {
                             throw new LaunchException("Unable to read properties file at " + propFile);
                         }

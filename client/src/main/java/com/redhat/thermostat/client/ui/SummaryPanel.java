@@ -106,7 +106,7 @@ public class SummaryPanel extends JPanel {
 
         private List<? extends Object> delegate;
 
-        private String emptyElement = new String(localize(LocaleResources.HOME_PANEL_NO_ISSUES));
+        private String emptyElement = localize(LocaleResources.HOME_PANEL_NO_ISSUES);
 
         public IssuesListModel(List<? extends Object> actualList) {
             this.delegate = actualList;

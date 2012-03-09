@@ -55,7 +55,7 @@ public class StringUtils {
     }
 
     public static String quote(String toQuote) {
-        return new String("\"" + toQuote + "\"");
+        return "\"" + toQuote + "\"";
     }
 
     public static String repeat(String text, int times) {

@@ -38,6 +38,7 @@ package com.redhat.thermostat.client;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
+import java.awt.Window;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -49,6 +50,7 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
+import com.redhat.thermostat.client.ui.LayoutDebugHelper;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.dao.Connection;
@@ -117,6 +119,33 @@ public class Main {
         MainWindow gui = new MainWindow(uiFacadeFactory);
         gui.pack();
         gui.setVisible(true);
+
+        if (arguments.isDebugLayout()) {
+            Thread layoutDebugger = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    LayoutDebugHelper helper = new LayoutDebugHelper();
+                    try {
+                        while (true) {
+                            Thread.sleep(5000);
+                            Window[] windows = Window.getWindows();
+                            for (Window w : windows) {
+                                helper.debugLayout(w);
+                                w.invalidate();
+                                w.repaint();
+                            }
+                        }
+                    } catch (InterruptedException ie) {
+                        logger.log(Level.INFO, "layout debug helper interrupted; exiting", ie);
+                        // mark thread as interrupted
+                        Thread.currentThread().interrupt();
+                    }
+                }
+            });
+            layoutDebugger.setDaemon(true);
+            layoutDebugger.start();
+        }
+
     }
 
     public static void main(String[] args) {

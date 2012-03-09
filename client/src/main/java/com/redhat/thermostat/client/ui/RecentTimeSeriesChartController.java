@@ -44,8 +44,8 @@ import org.jfree.chart.plot.XYPlot;
 
 public class RecentTimeSeriesChartController {
 
-    private final int DEFAULT_VALUE = 10;
-    private final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
+    private static final int DEFAULT_VALUE = 10;
+    private static final TimeUnit DEFAULT_UNIT = TimeUnit.MINUTES;
 
     private JFreeChart chart;
     private ChartPanel panel;
