@@ -34,30 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.backend.system;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-public class NetworkInfo {
+import java.util.List;
 
-    private Map<String, NetworkInterfaceInfo> interfaces = new HashMap<String, NetworkInterfaceInfo>();
+import org.junit.Test;
 
-    public NetworkInfo() {
-        
+import com.redhat.thermostat.common.NetworkInterfaceInfo;
+
+public class NetworkInfoBuilderTest {
+
+    @Test
+    public void testBuilder() {
+
+        List<NetworkInterfaceInfo> info = NetworkInfoBuilder.build();
+        assertNotNull(info);
+        for (NetworkInterfaceInfo iface: info) {
+            assertNotNull(iface);
+            assertNotNull(iface.getInterfaceName());
+            if (iface.getIp4Addr() != null) {
+                // ipv4 address matches the form XX.XX.XX.XX
+                assertTrue(iface.getIp4Addr().matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}"));
+            }
+            // TODO check for sane ipv6 address
+        }
+
     }
 
-    public synchronized void addNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        interfaces.put(info.getInterfaceName(), info);
-    }
-
-    public synchronized void removeNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        interfaces.remove(info.getInterfaceName());
-    }
-
-    public Collection<NetworkInterfaceInfo> getInterfaces() {
-        return Collections.unmodifiableCollection(interfaces.values());
-    }
 }

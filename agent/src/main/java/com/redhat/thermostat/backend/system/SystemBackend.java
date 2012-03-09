@@ -146,7 +146,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
             @Override
             public void run() {
                 store(new CpuStatConverter().cpuStatToChunk(new CpuStatBuilder().build()));
-                for (NetworkInterfaceInfo info: NetworkInfoBuilder.build().getInterfaces()) {
+                for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
                     store(new NetworkInterfaceInfoConverter().networkInfoToChunk(info));
                 }
                 store(new MemoryStatConverter().memoryStatToChunk(new MemoryStatBuilder().build()));

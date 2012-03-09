@@ -41,12 +41,13 @@ import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.NetworkInfo;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -54,8 +55,8 @@ public class NetworkInfoBuilder {
 
     private static final Logger logger = LoggingUtils.getLogger(NetworkInfoBuilder.class);
 
-    public static NetworkInfo build() {
-        NetworkInfo info = new NetworkInfo();
+    public static List<NetworkInterfaceInfo> build() {
+        List<NetworkInterfaceInfo> info = new ArrayList<NetworkInterfaceInfo>();
         try {
             Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
             for (NetworkInterface iface : Collections.list(ifaces)) {
@@ -67,7 +68,7 @@ public class NetworkInfoBuilder {
                         iInfo.setIp6Addr(fixAddr(addr.toString()));
                     }
                 }
-                info.addNetworkInterfaceInfo(iInfo);
+                info.add(iInfo);
             }
         } catch (SocketException e) {
             logger.log(Level.WARNING, "error enumerating network interfaces");

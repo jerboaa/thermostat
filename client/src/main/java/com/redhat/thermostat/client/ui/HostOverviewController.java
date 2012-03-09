@@ -59,7 +59,6 @@ import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.NetworkInfo;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.dao.HostInfoConverter;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -103,19 +102,19 @@ public class HostOverviewController implements AsyncUiFacade {
         new NetworkTableModelUpdater().execute();
     }
 
-    private class NetworkTableModelUpdater extends SwingWorker<NetworkInfo, Void> {
+    private class NetworkTableModelUpdater extends SwingWorker<List<NetworkInterfaceInfo>, Void> {
 
         @Override
-        protected NetworkInfo doInBackground() throws Exception {
+        protected List<NetworkInterfaceInfo> doInBackground() throws Exception {
             return getNetworkInfo();
         }
 
-        private NetworkInfo getNetworkInfo() {
-            NetworkInfo network = new NetworkInfo();
+        private List<NetworkInterfaceInfo> getNetworkInfo() {
+            List<NetworkInterfaceInfo> network = new ArrayList<NetworkInterfaceInfo>();
             DBCursor cursor = networkInfoCollection.find(new BasicDBObject("agent-id", hostRef.getAgentId()));
             while (cursor.hasNext()) {
                 NetworkInterfaceInfo info = new NetworkInterfaceInfoConverter().fromDBObject(cursor.next());
-                network.addNetworkInterfaceInfo(info);
+                network.add(info);
             }
 
             return network;
@@ -125,10 +124,10 @@ public class HostOverviewController implements AsyncUiFacade {
         protected void done() {
             List<Object[]> data = new ArrayList<Object[]>();
 
-            NetworkInfo networkInfo;
+            List<NetworkInterfaceInfo> networkInfo;
             try {
                 networkInfo = get();
-                for (NetworkInterfaceInfo info: networkInfo.getInterfaces()) {
+                for (NetworkInterfaceInfo info: networkInfo) {
                     String ifaceName = info.getInterfaceName();
                     String ipv4 = info.getIp4Addr();
                     String ipv6 = info.getIp6Addr();
