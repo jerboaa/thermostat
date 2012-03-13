@@ -38,7 +38,12 @@ package com.redhat.thermostat.client;
 
 import static org.mockito.Mockito.*;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+
+import javax.swing.SwingUtilities;
 
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
@@ -65,17 +70,20 @@ public class TimeSeriesUpdaterTest {
 
         LastUpdateTimeCallback lastUpdateTime = mock(TimeSeriesUpdater.LastUpdateTimeCallback.class);
 
+        final CountDownLatch latch = new CountDownLatch(1);
+
         TimeSeriesUpdater<Integer, Integer> tester;
-        tester = new TimeSeriesUpdater<>(dataSource, toUpdate, converter, lastUpdateTime);
+        tester = new TimeSeriesUpdater<Integer, Integer>(dataSource, toUpdate, converter, lastUpdateTime) {
+            @Override
+            protected void done() {
+                super.done();
+                latch.countDown();
+            }
+        };
         tester.execute();
-
-        while (tester.isDone()) {
-            // wait
-        }
-        // isDone() provides a guarantee about the background task, not the EDT.
-        // FIXME can we avoid sleeps in tests?
-        Thread.sleep(100);
-
+        
+        latch.await();
+        
         verify(dataSource).iterator();
         verify(toUpdate).add(new FixedMillisecond(TIMESTAMP), (Integer)DATA_VALUE, false);
         verify(toUpdate).fireSeriesChanged();
