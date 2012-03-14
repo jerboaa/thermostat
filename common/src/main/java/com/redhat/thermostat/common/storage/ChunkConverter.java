@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common.storage;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
@@ -43,19 +46,79 @@ class ChunkConverter {
 
     DBObject chunkToDBObject(Chunk chunk) {
         BasicDBObject dbObject = new BasicDBObject();
+        Map<String, DBObject> dbObjectMap = null;
         for (Key<?> key : chunk.getKeys()) {
-            dbObject.put(key.getName(), chunk.get(key));
+            dbObjectMap = convertChunkKey(chunk, key, dbObject, dbObjectMap);
+        }
+        return dbObject;
+    }
+
+    private Map<String, DBObject> convertChunkKey(Chunk chunk, Key<?> key, DBObject dbObject, Map<String,DBObject> dbObjectMap) {
+        String[] keyParts = key.getName().split("\\.");
+        String initialName = keyParts[0];
+        return convertChunkKeyRecursively(chunk, key, dbObject, keyParts, 0, initialName, dbObjectMap);
+    }
+
+    private Map<String, DBObject> convertChunkKeyRecursively(Chunk chunk, Key<?> key, DBObject dbObject, String[] keyParts, int partIndex,
+                                            String partialKeyName, Map<String, DBObject> dbObjectMap) {
+        if (partIndex == keyParts.length - 1) {
+            dbObject.put(keyParts[partIndex], chunk.get(key));
+        } else {
+            dbObjectMap = lazyCreateDBObjectMap(dbObjectMap);
+            DBObject nestedDbObject = getOrCreateSubObject(partialKeyName, dbObjectMap);
+            dbObject.put(keyParts[partIndex], nestedDbObject);
+            partIndex++;
+            String nextSubKey = keyParts[partIndex];
+            partialKeyName = partialKeyName + "." + nextSubKey;
+            convertChunkKeyRecursively(chunk, key, nestedDbObject, keyParts, partIndex, partialKeyName, dbObjectMap);
+        }
+        return dbObjectMap;
+    }
+
+    
+    private Map<String, DBObject> lazyCreateDBObjectMap(Map<String, DBObject> dbObjectMap) {
+        if (dbObjectMap == null) {
+            dbObjectMap = new HashMap<String, DBObject>();
+        }
+        return dbObjectMap;
+    }
+
+    private DBObject getOrCreateSubObject(String partialKeyName,
+            Map<String, DBObject> dbObjectMap) {
+        DBObject dbObject = dbObjectMap.get(partialKeyName);
+        if (dbObject == null) {
+            dbObject = new BasicDBObject();
+            dbObjectMap.put(partialKeyName, dbObject);
         }
         return dbObject;
     }
 
     public Chunk dbObjectToChunk(DBObject dbObject, Category category) {
         Chunk chunk = new Chunk(category, false);
-        for (String dbKey : dbObject.keySet()) {
-            Key key = category.getKey(dbKey);
-            chunk.put(key, dbObject.get(dbKey));
-        }
-
+        dbObjectToChunkRecurse(chunk, dbObject, category, null);
         return chunk;
+    }
+
+    private void dbObjectToChunkRecurse(Chunk chunk, DBObject dbObject, Category category, String fullKey) {
+        for (String dbKey : dbObject.keySet()) {
+            String newFullKey;
+            if (fullKey == null) {
+                newFullKey = dbKey;
+            } else {
+                newFullKey = fullKey + "." + dbKey;
+            }
+            dbObjectToChunkRecursively(chunk, dbObject, category, dbKey, newFullKey);
+        }
+    }
+
+    private void dbObjectToChunkRecursively(Chunk chunk, DBObject dbObject, Category category, String dbKey, String fullKey) {
+        Object value = dbObject.get(dbKey);
+        if (value instanceof DBObject) {
+            DBObject dbObj = (DBObject) value;
+            dbObjectToChunkRecurse(chunk, dbObj, category, fullKey);
+        } else {
+            Key key = category.getKey(fullKey);
+            chunk.put(key, value);
+        }
     }
 }

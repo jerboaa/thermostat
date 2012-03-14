@@ -81,4 +81,9 @@ public class Key<T> {
         hash = hash * 37 + (name == null ? 0 : name.hashCode());
         return hash;
     }
+
+    @Override
+    public String toString() {
+        return "Key: " + name;
+    }
 }

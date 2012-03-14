@@ -51,7 +51,18 @@ public class ChunkConverterTest {
     private static final Key<String> key4 = new Key<>("key4", false);
     private static final Key<String> key5 = new Key<>("key5", false);
 
-    private static final Category testCategory = new Category("ChunkConverterTest", key1, key2, key3, key4, key5);
+    private static final Key<String> key1_key1 = new Key<>("key1.key1", false);
+    private static final Key<String> key1_key2 = new Key<>("key1.key2", false);
+    private static final Key<String> key1_key2_key1 = new Key<>("key1.key2.key1", false);
+    private static final Key<String> key1_key2_key2 = new Key<>("key1.key2.key2", false);
+    private static final Key<String> key1_key2_key3 = new Key<>("key1.key2.key3", false);
+    private static final Key<String> key2_key1 = new Key<>("key2.key1", false);
+    private static final Key<String> key2_key2 = new Key<>("key2.key2", false);
+    private static final Key<String> key2_key3 = new Key<>("key2.key3", false);
+
+    private static final Category testCategory = new Category("ChunkConverterTest", key1, key2, key3, key4, key5,
+                                                             key1_key1, key1_key2, key2_key1, key2_key2, key2_key3,
+                                                             key1_key2_key1, key1_key2_key2, key1_key2_key3);
 
     @Test
     public void verifyBasicChunkToDBObject() {
@@ -119,5 +130,177 @@ public class ChunkConverterTest {
         assertEquals("test1", chunk.get(key5));
 
     }
-    
+
+    @Test
+    public void verifySimpleNestedChunkToObject() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1_key1, "test1");
+
+        ChunkConverter converter = new ChunkConverter();
+        DBObject dbObject = converter.chunkToDBObject(chunk);
+
+        assertEquals(1, dbObject.keySet().size());
+        assertTrue(dbObject.keySet().contains("key1"));
+        DBObject nested = (DBObject) dbObject.get("key1");
+        assertEquals(1, nested.keySet().size());
+        assertTrue(nested.keySet().contains("key1"));
+        assertEquals("test1", nested.get("key1"));
+    }
+
+    @Test
+    public void verifyComplexNestedChunkToObject() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1_key1, "test1");
+        chunk.put(key1_key2, "test2");
+        chunk.put(key2_key1, "test3");
+        chunk.put(key2_key2, "test4");
+        chunk.put(key2_key3, "test5");
+        chunk.put(key3, "test6");
+
+        ChunkConverter converter = new ChunkConverter();
+        DBObject dbObject = converter.chunkToDBObject(chunk);
+
+        assertEquals(3, dbObject.keySet().size());
+        assertTrue(dbObject.keySet().contains("key1"));
+        assertTrue(dbObject.keySet().contains("key2"));
+        assertTrue(dbObject.keySet().contains("key3"));
+        assertEquals("test6", dbObject.get("key3"));
+
+        DBObject nested1 = (DBObject) dbObject.get("key1");
+        assertEquals(2, nested1.keySet().size());
+        assertTrue(nested1.keySet().contains("key1"));
+        assertTrue(nested1.keySet().contains("key2"));
+        assertEquals("test1", nested1.get("key1"));
+        assertEquals("test2", nested1.get("key2"));
+
+        DBObject nested2 = (DBObject) dbObject.get("key2");
+        assertEquals(3, nested2.keySet().size());
+        assertTrue(nested2.keySet().contains("key1"));
+        assertTrue(nested2.keySet().contains("key2"));
+        assertTrue(nested2.keySet().contains("key3"));
+        assertEquals("test3", nested2.get("key1"));
+        assertEquals("test4", nested2.get("key2"));
+        assertEquals("test5", nested2.get("key3"));
+    }
+
+    @Test
+    public void verifyComplex3LevelChunkToObject() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1_key1, "test1");
+        chunk.put(key1_key2_key1, "test3");
+        chunk.put(key1_key2_key2, "test4");
+        chunk.put(key1_key2_key3, "test5");
+        chunk.put(key3, "test6");
+
+        ChunkConverter converter = new ChunkConverter();
+        DBObject dbObject = converter.chunkToDBObject(chunk);
+
+        assertEquals(2, dbObject.keySet().size());
+        assertTrue(dbObject.keySet().contains("key1"));
+        assertTrue(dbObject.keySet().contains("key3"));
+        assertEquals("test6", dbObject.get("key3"));
+
+        DBObject nested1 = (DBObject) dbObject.get("key1");
+        assertEquals(2, nested1.keySet().size());
+        System.err.println("keys: " + nested1.keySet());
+        assertTrue(nested1.keySet().contains("key1"));
+        assertTrue(nested1.keySet().contains("key2"));
+        assertEquals("test1", nested1.get("key1"));
+
+        DBObject nested2 = (DBObject) nested1.get("key2");
+        assertEquals(3, nested2.keySet().size());
+        assertTrue(nested2.keySet().contains("key1"));
+        assertTrue(nested2.keySet().contains("key2"));
+        assertTrue(nested2.keySet().contains("key3"));
+        assertEquals("test3", nested2.get("key1"));
+        assertEquals("test4", nested2.get("key2"));
+        assertEquals("test5", nested2.get("key3"));
+    }
+
+    @Test
+    public void verifySimpleNestedObjectToChunk() {
+        BasicDBObject nested = new BasicDBObject();
+        nested.put("key1", "test1");
+        BasicDBObject dbObject = new BasicDBObject();
+        dbObject.put("key1", nested);
+
+        ChunkConverter converter = new ChunkConverter();
+        Chunk chunk = converter.dbObjectToChunk(dbObject, testCategory);
+
+        assertSame(testCategory, chunk.getCategory());
+        assertEquals(1, chunk.getKeys().size());
+        assertTrue(chunk.getKeys().contains(key1_key1));
+        assertEquals("test1", chunk.get(key1_key1));
+    }
+
+    @Test
+    public void verifyComplexNestedObjectToChunk() {
+        BasicDBObject nested1 = new BasicDBObject();
+        nested1.put("key1", "test1");
+        nested1.put("key2", "test2");
+
+        BasicDBObject nested2 = new BasicDBObject();
+        nested2.put("key1", "test3");
+        nested2.put("key2", "test4");
+        nested2.put("key3", "test5");
+
+        BasicDBObject dbObject = new BasicDBObject();
+        dbObject.put("key1", nested1);
+        dbObject.put("key2", nested2);
+        dbObject.put("key3", "test6");
+
+        ChunkConverter converter = new ChunkConverter();
+        Chunk chunk = converter.dbObjectToChunk(dbObject, testCategory);
+
+        assertSame(testCategory, chunk.getCategory());
+
+        assertEquals(6, chunk.getKeys().size());
+        assertTrue(chunk.getKeys().contains(key1_key1));
+        assertTrue(chunk.getKeys().contains(key1_key2));
+        assertTrue(chunk.getKeys().contains(key2_key1));
+        assertTrue(chunk.getKeys().contains(key2_key2));
+        assertTrue(chunk.getKeys().contains(key2_key3));
+        assertTrue(chunk.getKeys().contains(key3));
+        assertEquals("test1", chunk.get(key1_key1));
+        assertEquals("test2", chunk.get(key1_key2));
+        assertEquals("test3", chunk.get(key2_key1));
+        assertEquals("test4", chunk.get(key2_key2));
+        assertEquals("test5", chunk.get(key2_key3));
+        assertEquals("test6", chunk.get(key3));
+    }
+
+    @Test
+    public void verifyComplex3LevelObjectToChunk() {
+
+        BasicDBObject nested2 = new BasicDBObject();
+        nested2.put("key1", "test3");
+        nested2.put("key2", "test4");
+        nested2.put("key3", "test5");
+
+        BasicDBObject nested1 = new BasicDBObject();
+        nested1.put("key1", "test1");
+        nested1.put("key2", nested2);
+
+        BasicDBObject dbObject = new BasicDBObject();
+        dbObject.put("key1", nested1);
+        dbObject.put("key3", "test6");
+
+        ChunkConverter converter = new ChunkConverter();
+        Chunk chunk = converter.dbObjectToChunk(dbObject, testCategory);
+
+        assertSame(testCategory, chunk.getCategory());
+
+        assertEquals(5, chunk.getKeys().size());
+        assertTrue(chunk.getKeys().contains(key1_key1));
+        assertTrue(chunk.getKeys().contains(key1_key2_key1));
+        assertTrue(chunk.getKeys().contains(key1_key2_key2));
+        assertTrue(chunk.getKeys().contains(key1_key2_key3));
+        assertTrue(chunk.getKeys().contains(key3));
+
+        assertEquals("test1", chunk.get(key1_key1));
+        assertEquals("test3", chunk.get(key1_key2_key1));
+        assertEquals("test4", chunk.get(key1_key2_key2));
+        assertEquals("test5", chunk.get(key1_key2_key3));
+        assertEquals("test6", chunk.get(key3));
+    }
 }
