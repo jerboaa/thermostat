@@ -36,62 +36,31 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import static org.junit.Assert.*;
 
-public class Category {
-    private final String name;
-    private final Map<String, Key<?>> keys;
+import org.junit.Test;
 
-    private ConnectionKey connectionKey;
+public class ChunkTest {
 
-    private static Set<String> categoryNames = new HashSet<String>();
+    private static final Key<String> key1 = new Key<>("key1", false);
+    private static final Key<String> key2 = new Key<>("key2", false);
+    private static final Key<String> key3 = new Key<>("key3", false);
+    private static final Key<String> key4 = new Key<>("key4", false);
+    private static final Key<String> key5 = new Key<>("key5", false);
 
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name, Key<?>... keys) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
-        }
-        categoryNames.add(name);
-        this.name = name;
-        Map<String, Key<?>> keysMap = new HashMap<String, Key<?>>();
-        for (Key<?> key : keys) {
-            keysMap.put(key.getName(), key);
-        }
-        this.keys = Collections.unmodifiableMap(keysMap);
+    private static final Category testCategory = new Category("ChunkTest", key1, key2, key3, key4, key5);
+
+
+    @Test
+    public void verifyEntriesAreKeptInOrder() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key5, "test1");
+        chunk.put(key4, "test2");
+        chunk.put(key3, "test3");
+        chunk.put(key2, "test4");
+        chunk.put(key1, "test5");
+
+        assertArrayEquals(new Key<?>[]{key5, key4, key3, key2, key1}, chunk.getKeys().toArray());
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public synchronized Collection<Key<?>> getKeys() {
-        return keys.values();
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
-    }
-
-    public Key<?> getKey(String name) {
-        return keys.get(name);
-    }
 }

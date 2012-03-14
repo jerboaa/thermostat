@@ -36,62 +36,26 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 
-public class Category {
-    private final String name;
-    private final Map<String, Key<?>> keys;
+class ChunkConverter {
 
-    private ConnectionKey connectionKey;
-
-    private static Set<String> categoryNames = new HashSet<String>();
-
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name, Key<?>... keys) {
-        if (categoryNames.contains(name)) {
-            throw new IllegalStateException();
+    DBObject chunkToDBObject(Chunk chunk) {
+        BasicDBObject dbObject = new BasicDBObject();
+        for (Key<?> key : chunk.getKeys()) {
+            dbObject.put(key.getName(), chunk.get(key));
         }
-        categoryNames.add(name);
-        this.name = name;
-        Map<String, Key<?>> keysMap = new HashMap<String, Key<?>>();
-        for (Key<?> key : keys) {
-            keysMap.put(key.getName(), key);
+        return dbObject;
+    }
+
+    public Chunk dbObjectToChunk(DBObject dbObject, Category category) {
+        Chunk chunk = new Chunk(category, false);
+        for (String dbKey : dbObject.keySet()) {
+            Key key = category.getKey(dbKey);
+            chunk.put(key, dbObject.get(dbKey));
         }
-        this.keys = Collections.unmodifiableMap(keysMap);
-    }
 
-    public String getName() {
-        return name;
-    }
-
-    public synchronized Collection<Key<?>> getKeys() {
-        return keys.values();
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
-    }
-
-    public Key<?> getKey(String name) {
-        return keys.get(name);
+        return chunk;
     }
 }

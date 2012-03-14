@@ -34,53 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.VmClassStat;
 
-public class MongoVmClassStatDAO implements VmClassStatDAO {
+class MongoCursor implements Cursor {
 
-    private VmRef ref;
-    private DBCollection vmClassStatsCollection;
+    private DBCursor cursor;
+    private Category category;
 
-    private long lastUpdate = Long.MIN_VALUE;
-
-    public MongoVmClassStatDAO(DB db, VmRef vmRef) {
-        ref = vmRef;
-        vmClassStatsCollection = db.getCollection("vm-class-stats");
+    MongoCursor(DBCursor cursor, Category category) {
+        this.cursor = cursor;
+        this.category = category;
     }
 
     @Override
-    public List<VmClassStat> getLatestClassStats() {
-        ArrayList<VmClassStat> result = new ArrayList<>();
-        BasicDBObject queryObject = new BasicDBObject();
-        queryObject.put("agent-id", ref.getAgent().getAgentId());
-        queryObject.put("vm-id", Integer.valueOf(ref.getId()));
-        if (lastUpdate != Long.MIN_VALUE) {
-            // TODO once we have an index and the 'column' is of type long, use
-            // a query which can utilize an index. this one doesn't
-            queryObject.put("$where", "this.timestamp > " + lastUpdate);
-        }
-        DBCursor cursor = vmClassStatsCollection.find(queryObject);
-        long timestamp;
-        Long loadedClasses;
-        while (cursor.hasNext()) {
-            DBObject current = cursor.next();
-            timestamp = (Long) current.get("timestamp");
-            loadedClasses = (Long) current.get("loadedClasses");
-            int vmId = (Integer) current.get("vm-id");
-            result.add(new VmClassStat(vmId, timestamp, loadedClasses));
-            lastUpdate = Math.max(timestamp, lastUpdate);
-        }
-
-        return result;
+    public boolean hasNext() {
+        return cursor.hasNext();
     }
+
+    @Override
+    public Chunk next() {
+        DBObject next = cursor.next();
+        if (next == null) {
+            return null;
+        }
+        ChunkConverter converter = new ChunkConverter();
+        return converter.dbObjectToChunk(next, category);
+    }
+
 }

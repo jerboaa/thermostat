@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A Chunk is a unit containing a set of data that can be added as a whole to the dataset
@@ -47,7 +48,7 @@ public class Chunk {
     private final Category category;
     private final boolean replace;
 
-    private Map<Key<?>, Object> values = new HashMap<Key<?>, Object>();
+    private Map<Key<?>, Object> values = new LinkedHashMap<Key<?>, Object>();
 
     /**
      *
@@ -77,5 +78,9 @@ public class Chunk {
     public <T> T get(Key<T> entry) {
         // We only allow matching types in put(), so this cast should be fine.
         return (T) values.get(entry);
+    }
+
+    public Set<Key<?>> getKeys() {
+        return values.keySet();
     }
 }

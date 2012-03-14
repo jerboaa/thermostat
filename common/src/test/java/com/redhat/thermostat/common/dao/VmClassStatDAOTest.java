@@ -49,22 +49,15 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.common.VmClassStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({DBCollection.class, DB.class })
-public class MongoVmClassStatDAOTest {
+public class VmClassStatDAOTest {
 
     @Test
     public void testCategory() {
@@ -80,20 +73,17 @@ public class MongoVmClassStatDAOTest {
     @Test
     public void testGetLatestClassStatsBasic() {
 
-        DBObject dbValue = PowerMockito.mock(DBObject.class);
-        when(dbValue.get("timestamp")).thenReturn(1234L);
-        when(dbValue.get("vm-id")).thenReturn(321);
-        when(dbValue.get("loadedClasses")).thenReturn(12345L);
+        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
+        chunk.put(Key.TIMESTAMP, 1234L);
+        chunk.put(VmClassStatDAO.vmIdKey, 321);
+        chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
 
-        DBCursor cursor = mock(DBCursor.class);
+        Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(dbValue);
+        when(cursor.next()).thenReturn(chunk);
 
-        DBCollection vmClassStatsCollection = PowerMockito.mock(DBCollection.class);
-        when(vmClassStatsCollection.find(any(DBObject.class))).thenReturn(cursor);
-
-        DB db = mock(DB.class);
-        when(db.getCollection("vm-class-stats")).thenReturn(vmClassStatsCollection);
+        Storage storage = mock(Storage.class);
+        when(storage.find(any(Chunk.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -103,12 +93,12 @@ public class MongoVmClassStatDAOTest {
         when(vmRef.getId()).thenReturn("321");
 
 
-        VmClassStatDAO dao = new MongoVmClassStatDAO(db, vmRef);
+        VmClassStatDAO dao = new VmClassStatDAOImpl(storage, vmRef);
         List<VmClassStat> vmClassStats = dao.getLatestClassStats();
 
-        ArgumentCaptor<DBObject> arg = ArgumentCaptor.forClass(DBObject.class);
-        verify(vmClassStatsCollection).find(arg.capture());
-        assertNull(arg.getValue().get("$where"));
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).find(arg.capture());
+        assertNull(arg.getValue().get(new Key<String>("$where", false)));
 
         assertEquals(1, vmClassStats.size());
         VmClassStat stat = vmClassStats.get(0);
@@ -120,20 +110,17 @@ public class MongoVmClassStatDAOTest {
     @Test
     public void testGetLatestClassStatsTwice() {
 
-        DBObject dbValue = PowerMockito.mock(DBObject.class);
-        when(dbValue.get("timestamp")).thenReturn(1234L);
-        when(dbValue.get("vm-id")).thenReturn(321);
-        when(dbValue.get("loadedClasses")).thenReturn(12345L);
+        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
+        chunk.put(Key.TIMESTAMP, 1234L);
+        chunk.put(VmClassStatDAO.vmIdKey, 321);
+        chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
 
-        DBCursor cursor = mock(DBCursor.class);
+        Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(dbValue);
+        when(cursor.next()).thenReturn(chunk);
 
-        DBCollection vmClassStatsCollection = PowerMockito.mock(DBCollection.class);
-        when(vmClassStatsCollection.find(any(DBObject.class))).thenReturn(cursor);
-
-        DB db = mock(DB.class);
-        when(db.getCollection("vm-class-stats")).thenReturn(vmClassStatsCollection);
+        Storage storage = mock(Storage.class);
+        when(storage.find(any(Chunk.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -143,12 +130,12 @@ public class MongoVmClassStatDAOTest {
         when(vmRef.getId()).thenReturn("321");
 
 
-        VmClassStatDAO dao = new MongoVmClassStatDAO(db, vmRef);
+        VmClassStatDAO dao = new VmClassStatDAOImpl(storage, vmRef);
         dao.getLatestClassStats();
 
         dao.getLatestClassStats();
-        ArgumentCaptor<DBObject> arg = ArgumentCaptor.forClass(DBObject.class);
-        verify(vmClassStatsCollection, times(2)).find(arg.capture());
-        assertEquals("this.timestamp > 1234", arg.getValue().get("$where"));
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage, times(2)).find(arg.capture());
+        assertEquals("this.timestamp > 1234", arg.getValue().get(new Key<String>("$where", false)));
     }
 }

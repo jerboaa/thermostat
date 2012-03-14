@@ -72,4 +72,6 @@ public abstract class Storage {
      */
     public abstract void purge();
 
+    public abstract Cursor find(Chunk query);
+
 }

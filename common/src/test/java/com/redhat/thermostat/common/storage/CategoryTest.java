@@ -36,7 +36,12 @@
 
 package com.redhat.thermostat.common.storage;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
 
 import org.junit.Test;
 
@@ -51,4 +56,44 @@ public class CategoryTest {
         assertTrue(category1.hasBeenRegistered());
     }
 
+    @Test
+    public void testGetKey() {
+        Key<String> key1 = new Key<String>("key1", false);
+        Category category = new Category("testGetKey", key1);
+        assertEquals(key1, category.getKey("key1"));
+    }
+
+    @Test
+    public void testGetNonExistingKey() {
+        Key<String> key1 = new Key<String>("key1", false);
+        Category category = new Category("testGetNonExistingKey", key1);
+        assertNull(category.getKey("key2"));
+    }
+
+    @Test
+    public void testGetKeys() {
+        Key<String> key1 = new Key<String>("key1", false);
+        Key<String> key2 = new Key<String>("key2", false);
+        Key<String> key3 = new Key<String>("key3", false);
+        Key<String> key4 = new Key<String>("key4", false);
+        Category category = new Category("testGetKeys", key1, key2, key3, key4);
+        assertEquals(4, category.getKeys().size());
+        assertTrue(category.getKeys().contains(key1));
+        assertTrue(category.getKeys().contains(key2));
+        assertTrue(category.getKeys().contains(key3));
+        assertTrue(category.getKeys().contains(key4));
+    }
+
+    @Test(expected=UnsupportedOperationException.class)
+    public void verifyThatKeysAreUnmodifiable() {
+        Key<String> key1 = new Key<String>("key1", false);
+        Key<String> key2 = new Key<String>("key2", false);
+        Key<String> key3 = new Key<String>("key3", false);
+        Category category = new Category("verifyThatKeysAreUnmodifiable", key1, key2, key3);
+
+        Collection<Key<?>> keys = category.getKeys();
+
+        keys.remove(key1);
+
+    }
 }

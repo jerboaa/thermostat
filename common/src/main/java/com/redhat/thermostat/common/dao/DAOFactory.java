@@ -36,8 +36,15 @@
 
 package com.redhat.thermostat.common.dao;
 
+import com.redhat.thermostat.common.storage.Storage;
+
 public interface DAOFactory {
 
+    public abstract Storage getStorage();
+
+    /**
+     * TODO: This will be replaced by getStorage() as soon as Storage and Connection have been merged.
+     */
     public abstract Connection getConnection();
 
     public abstract VmClassStatDAO getVmClassStatsDAO(VmRef ref);

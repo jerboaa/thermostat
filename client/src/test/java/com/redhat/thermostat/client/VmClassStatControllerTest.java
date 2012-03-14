@@ -58,7 +58,7 @@ import com.redhat.thermostat.client.ui.VmClassStatView;
 import com.redhat.thermostat.common.VmClassStat;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
-import com.redhat.thermostat.common.dao.MongoVmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmClassStatDAOImpl;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class VmClassStatControllerTest {
@@ -70,7 +70,7 @@ public class VmClassStatControllerTest {
         List<VmClassStat> stats = new ArrayList<VmClassStat>();
         stats.add(stat1);
 
-        MongoVmClassStatDAO vmClassStatDAO = mock(MongoVmClassStatDAO.class);
+        VmClassStatDAOImpl vmClassStatDAO = mock(VmClassStatDAOImpl.class);
         when(vmClassStatDAO.getLatestClassStats()).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);

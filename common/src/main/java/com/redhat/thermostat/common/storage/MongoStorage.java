@@ -48,6 +48,7 @@ import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
@@ -63,7 +64,6 @@ public class MongoStorage extends Storage {
     public static final String KEY_AGENT_ID = "agent-id";
     public static final String SET_MODIFIER = "$set";
 
-    private Mongo mongo = null;
     private DB db = null;
     private Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
 
@@ -75,8 +75,18 @@ public class MongoStorage extends Storage {
     }
 
     private void connect(MongoURI uri) throws UnknownHostException {
-        mongo = new Mongo(uri);
+        Mongo mongo = new Mongo(uri);
         db = mongo.getDB(StorageConstants.THERMOSTAT_DB_NAME);
+    }
+
+    /**
+     * Connects to an already existing connection. TODO: This is here for compatibility with the Connection class
+     * until they have been merged.
+     *
+     * @param db
+     */
+    public void connect(DB db) {
+        this.db = db;
     }
 
     @Override
@@ -288,5 +298,21 @@ public class MongoStorage extends Storage {
         // TODO: We want to return an instance of an inner class here that carries the actual connection
         // and replace the collectionCache. For now this is good enough though.
         return new ConnectionKey(){};
+    }
+
+    @Override
+    public Cursor find(Chunk query) {
+        Category cat = query.getCategory();
+        DBCollection coll = getCachedCollection(cat.getName());
+        ChunkConverter converter = new ChunkConverter();
+        DBCursor dbCursor = coll.find(converter.chunkToDBObject(query));
+        return new MongoCursor(dbCursor, query.getCategory());
+    }
+
+    // TODO: This method is only temporary to enable tests, until we come up with a better design,
+    // in particular, the collection should be stored in the category itself. It must not be called
+    // from production code.
+    void mapCategoryToDBCollection(Category category, DBCollection coll) {
+        collectionCache.put(category.getName(), coll);
     }
 }

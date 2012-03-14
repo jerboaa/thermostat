@@ -36,44 +36,50 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
-import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.storage.MongoStorage;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.redhat.thermostat.common.VmClassStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public class MongoDAOFactory implements DAOFactory {
+public class VmClassStatDAOImpl implements VmClassStatDAO {
 
+    private VmRef ref;
     private Storage storage;
-    private Connection connection;
 
-    public MongoDAOFactory(ConnectionProvider connProv) {
-        final MongoStorage mongoStorage = new MongoStorage();
-        connection = connProv.createConnection();
-        connection.addListener(new ConnectionListener() {
+    private long lastUpdate = Long.MIN_VALUE;
 
-            @Override
-            public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.CONNECTED) {
-                    mongoStorage.connect(((MongoConnection) connection).getDB());
-                }
-            }
-        });
-        storage = mongoStorage;
+    public VmClassStatDAOImpl(Storage storage, VmRef vmRef) {
+        ref = vmRef;
+        this.storage = storage;
     }
 
     @Override
-    public Storage getStorage() {
-        return storage;
-    }
+    public List<VmClassStat> getLatestClassStats() {
+        ArrayList<VmClassStat> result = new ArrayList<>();
+        Chunk query = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
+        query.put(VmClassStatDAO.agentIdKey, ref.getAgent().getAgentId());
+        query.put(VmClassStatDAO.vmIdKey, Integer.valueOf(ref.getId()));
+        if (lastUpdate != Long.MIN_VALUE) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            query.put(VmClassStatDAO.whereKey, "this.timestamp > " + lastUpdate);
+        }
+        Cursor cursor = storage.find(query);
+        long timestamp;
+        long loadedClasses;
+        while (cursor.hasNext()) {
+            Chunk current = cursor.next();
+            timestamp = current.get(Key.TIMESTAMP);
+            loadedClasses = current.get(VmClassStatDAO.loadedClassesKey);
+            int vmId = current.get(VmClassStatDAO.vmIdKey);
+            result.add(new VmClassStat(vmId, timestamp, loadedClasses));
+            lastUpdate = Math.max(timestamp, lastUpdate);
+        }
 
-    @Override
-    public VmClassStatDAO getVmClassStatsDAO(VmRef ref) {
-        return new VmClassStatDAOImpl(storage, ref);
+        return result;
     }
-
-    @Override
-    public Connection getConnection() {
-        return connection;
-    }
-
 }
