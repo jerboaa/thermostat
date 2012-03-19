@@ -36,20 +36,16 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.net.UnknownHostException;
-import java.util.Properties;
 import java.util.logging.Logger;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
-import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.storage.StorageConstants;
-import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MongoConnection extends Connection {
@@ -57,31 +53,24 @@ public class MongoConnection extends Connection {
 
     private Mongo m = null;
     private DB db = null;
-    private boolean hasLocalAgent = false;
-    private Process localAgentProcess = null;
-    private Properties props;
-
-    public MongoConnection(Properties props) {
-        this.props = props;
+    
+    private StartupConfiguration conf;
+    
+    private MongoConnection() { /* nothing to do */ }
+    
+    public MongoConnection(StartupConfiguration conf) {
+        this.conf = conf;
     }
 
     @Override
     public void connect() {
         try {
-            m = new Mongo(getMongoURI());
-            db = m.getDB(StorageConstants.THERMOSTAT_DB_NAME);
+            createConnection();
             /* the mongo java driver does not ensure this connection is actually working */
-            testConnection(db);
-        } catch (MongoException e) {
-            fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-            return;
-        } catch (UnknownHostException e) {
-            fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-            return;
-        } catch (LocalAgentException e) {
-            fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-            return;
-        } catch (NotImplementedException e) {
+            testConnection();
+        } catch (MongoException | UnknownHostException |
+                 NotImplementedException | IllegalArgumentException e)
+        {
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             return;
         }
@@ -89,7 +78,12 @@ public class MongoConnection extends Connection {
         connected = true;
     }
 
-    private static void testConnection(DB db) {
+    private void createConnection() throws MongoException, UnknownHostException {
+        this.m = new Mongo(getMongoURI());
+        this.db = m.getDB(StorageConstants.THERMOSTAT_DB_NAME);
+    }
+    
+    private void testConnection() {
         db.getCollection("agent-config").getCount();
     }
 
@@ -97,9 +91,7 @@ public class MongoConnection extends Connection {
         MongoURI uri = null;
         switch (getType()) {
             case LOCAL:
-                startLocalAgent();
-                uri = new MongoURI("mongodb://127.0.0.1:"
-                        + props.getProperty(Constants.AGENT_PROPERTY_MONGOD_PORT));
+                uri = new MongoURI(conf.getDBUriString());
                 break;
             case REMOTE:
                 throw new NotImplementedException("No mongo URI implemented for REMOTE.");
@@ -107,27 +99,6 @@ public class MongoConnection extends Connection {
                 throw new NotImplementedException("No mongo URI implemented for CLUSTER.");
         }
         return uri;
-    }
-
-    private void startLocalAgent() throws LocalAgentException {
-        int status = 0;
-        try {
-            String agentScript = props.getProperty(Constants.CLIENT_PROPERTY_AGENT_LAUNCH_SCRIPT);
-            localAgentProcess = new LoggedExternalProcess(new String[] { agentScript, "--local" }).runAndReturnProcess();
-            // Allow some time for things to get started.
-            try {
-                // TODO provide some UI feedback here instead of just seeming dead.
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
-                // ignore
-            }
-        } catch (IOException e) {
-            throw new LocalAgentException();
-        }
-        if (status != 0) {
-            throw new LocalAgentException();
-        }
-        hasLocalAgent = true;
     }
 
     public DB getDB() {
@@ -139,29 +110,6 @@ public class MongoConnection extends Connection {
         if (m != null) {
             m.close();
         }
-        if (hasLocalAgent) {
-            stopLocalAgent();
-        }
         connected = false;
-    }
-
-    private void stopLocalAgent() {
-        // TODO this is currently using Agent's 'run until some data avail on stdin' hack.
-        // That hack will go away, at which point we will need another way to shut down.
-        OutputStream agentIn = localAgentProcess.getOutputStream();
-        byte[] anything = { 0x04 };
-        try {
-            agentIn.write(anything);
-            agentIn.flush();
-            localAgentProcess.waitFor();
-        } catch (IOException e) {
-            logger.warning("Error shutting down local agent.");
-        } catch (InterruptedException e) {
-            logger.warning("Interrupted waiting for local agent to shut down.");
-        }
-    }
-
-    private static class LocalAgentException extends RuntimeException {
-        private static final long serialVersionUID = -4507363475778127729L;
     }
 }

@@ -34,52 +34,8 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
-import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
-import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.storage.MongoStorage;
-import com.redhat.thermostat.common.storage.Storage;
-
-public class MongoDAOFactory implements DAOFactory {
-
-    private Storage storage;
-    private Connection connection;
-
-    public MongoDAOFactory(ConnectionProvider connProv) {
-        
-        connection = connProv.createConnection();
-        final MongoStorage mongoStorage = new MongoStorage(connection);
-        connection.addListener(new ConnectionListener() {
-
-            @Override
-            public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.CONNECTED) {
-                    mongoStorage.connect(((MongoConnection) connection).getDB());
-                }
-            }
-        });
-        storage = mongoStorage;
-    }
-
-    @Override
-    public Storage getStorage() {
-        return storage;
-    }
-
-    @Override
-    public VmClassStatDAO getVmClassStatsDAO(VmRef ref) {
-        return new VmClassStatDAOImpl(storage, ref);
-    }
-
-    @Override
-    public Connection getConnection() {
-        return connection;
-    }
-
-    @Override
-    public HostInfoDAO getHostInfoDAO(HostRef ref) {
-        return new HostInfoDAOImpl(storage, ref);
-    }
+public class ConnectionFailedException extends Exception {
 
 }

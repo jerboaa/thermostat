@@ -36,19 +36,19 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.Properties;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 
 public class MongoConnectionProvider implements ConnectionProvider {
 
-    private Properties connectionProperties;
+    private StartupConfiguration configuration;
 
-    public MongoConnectionProvider(Properties connProps) {
-        connectionProperties = connProps;
+    public MongoConnectionProvider(StartupConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
     public Connection createConnection() {
-        return new MongoConnection(connectionProperties);
+        return new MongoConnection(configuration);
     }
 
 }

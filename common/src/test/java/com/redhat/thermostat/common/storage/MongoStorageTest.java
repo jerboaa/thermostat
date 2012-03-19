@@ -79,7 +79,7 @@ public class MongoStorageTest {
 
     @Before
     public void setUp() {
-        storage = new MongoStorage();
+        storage = new MongoStorage(null);
 
         BasicDBObject value1 = new BasicDBObject();
         value1.put("key1", "test1");
@@ -112,7 +112,7 @@ public class MongoStorageTest {
 
     @Test
     public void testCreateConnectionKey() {
-        MongoStorage mongoStorage = new MongoStorage();
+        MongoStorage mongoStorage = new MongoStorage(null);
         Category category = new Category("testCreateConnectionKey");
         ConnectionKey connKey = mongoStorage.createConnectionKey(category);
         assertNotNull(connKey);

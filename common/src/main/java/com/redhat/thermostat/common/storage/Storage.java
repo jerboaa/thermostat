@@ -36,12 +36,19 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.net.UnknownHostException;
 import java.util.UUID;
+
+import com.redhat.thermostat.common.dao.Connection;
 
 public abstract class Storage {
 
-    public abstract void connect(String uri) throws UnknownHostException;
+    protected Connection connection;
+    
+    public Storage (Connection connection) {
+        this.connection = connection;
+    }
+    
+    public abstract void connect() throws ConnectionFailedException;
 
     public abstract void setAgentId(UUID id);
 

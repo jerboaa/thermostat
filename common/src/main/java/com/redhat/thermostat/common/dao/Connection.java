@@ -69,6 +69,7 @@ public abstract class Connection {
 
     public enum ConnectionStatus {
         CONNECTED,
+        CONNECTING,
         FAILED_TO_CONNECT,
         DISCONNECTED,
     }

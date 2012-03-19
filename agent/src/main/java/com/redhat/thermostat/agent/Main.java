@@ -37,21 +37,24 @@
 package com.redhat.thermostat.agent;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.config.StartupConfiguration;
 import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.dao.Connection;
+import com.redhat.thermostat.common.dao.ConnectionProvider;
+import com.redhat.thermostat.common.dao.MongoConnectionProvider;
+import com.redhat.thermostat.common.dao.Connection.ConnectionType;
+import com.redhat.thermostat.common.storage.ConnectionFailedException;
 import com.redhat.thermostat.common.storage.MongoStorage;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public final class Main {
@@ -84,30 +87,20 @@ public final class Main {
 
         LoggingUtils.setGlobalLogLevel(config.getLogLevel());
 
-        String mongoScript = config.getMongoLaunchScript();
+        ConnectionProvider connProv = new MongoConnectionProvider(config);
+        Connection connection = connProv.createConnection();
         if (config.getLocalMode()) {
-            try {
-                logger.fine("Starting private mongod instance.");
-                logger.finest("Mongo launch script at: " + mongoScript);
-                int result = new LoggedExternalProcess(new String[] { mongoScript, "start" }).runAndReturnResult();
-                if (result != 0) {
-                    logger.severe("Error starting local mongod instance.");
-                    System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
-                }
-            } catch (IOException e) {
-                logger.log(Level.SEVERE, "Unable to execute script to start local mongod instance.", e);
-                System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
-            } catch (InterruptedException e) {
-                logger.log(Level.SEVERE, "Interrupted while starting local mongod instance.", e);
-                System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
-            }
+            connection.setType(ConnectionType.LOCAL);
+        } else {
+            connection.setType(ConnectionType.REMOTE);
         }
-        Storage storage = new MongoStorage();
+        
+        Storage storage = new MongoStorage(connection);
         try {
-            storage.connect(config.getDatabaseURIAsString());
+            storage.connect();
             logger.fine("Storage configured with database URI.");
-        } catch (UnknownHostException uhe) {
-            logger.log(Level.SEVERE, "Could not initialize storage layer.", uhe);
+        } catch (ConnectionFailedException ex) {
+            logger.log(Level.SEVERE, "Could not initialize storage layer.", ex);
             System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
         }
 
@@ -140,18 +133,5 @@ public final class Main {
 
         agent.stop();
         logger.fine("Agent stopped.");
-        if (config.getLocalMode()) {
-            logger.fine("Stopping private mongod instance.");
-            try {
-                int result = new LoggedExternalProcess(new String[] { mongoScript, "stop" }).runAndReturnResult();
-                if (result != 0) {
-                    logger.severe("Error stopping local mongod instance.");
-                }
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "Unable to execute script to stop private mongod instance.", e);
-            } catch (InterruptedException e) {
-                logger.log(Level.SEVERE, "Interrupted while stopping local mongod instance.", e);
-            }
-        }
     }
 }

@@ -45,7 +45,7 @@
     <artifactId>thermostat</artifactId>
     <version>0.2-SNAPSHOT</version>
   </parent>
-
+  
   <artifactId>thermostat-common</artifactId>
   <packaging>jar</packaging>
 
@@ -91,6 +91,19 @@
       <artifactId>mongo-java-driver</artifactId>
       <version>2.7.3</version>
     </dependency>
+    <dependency>
+    	<groupId>org.powermock</groupId>
+    	<artifactId>powermock-api-easymock</artifactId>
+    	<version>1.4.11</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.easymock</groupId>
+    	<artifactId>easymock</artifactId>
+    	<version>3.1</version>
+    </dependency>
   </dependencies>
 
+  <properties>
+  	<argLine>-XX:-UseSplitVerifier</argLine>
+  </properties>
 </project>

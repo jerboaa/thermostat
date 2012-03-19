@@ -34,11 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent;
+package com.redhat.thermostat.common.config;
 
 import java.util.logging.Level;
 
-public final class Defaults {
+final class Defaults {
 
 	private Defaults() {
 	    /* Should not be instantiated */

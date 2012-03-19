@@ -50,9 +50,9 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.Mongo;
-import com.mongodb.MongoURI;
 import com.mongodb.WriteConcern;
+import com.redhat.thermostat.common.dao.Connection;
+import com.redhat.thermostat.common.dao.MongoConnection;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.
@@ -60,6 +60,10 @@ import com.mongodb.WriteConcern;
  * In this implementation, each CATEGORY is given a distinct collection.
  */
 public class MongoStorage extends Storage {
+
+    public MongoStorage(Connection connection) {
+        super(connection);
+    }
 
     public static final String KEY_AGENT_ID = "agent-id";
     public static final String SET_MODIFIER = "$set";
@@ -70,13 +74,9 @@ public class MongoStorage extends Storage {
     private UUID agentId = null;
 
     @Override
-    public void connect(String uri) throws UnknownHostException {
-        connect(new MongoURI(uri));
-    }
-
-    private void connect(MongoURI uri) throws UnknownHostException {
-        Mongo mongo = new Mongo(uri);
-        db = mongo.getDB(StorageConstants.THERMOSTAT_DB_NAME);
+    public void connect() throws ConnectionFailedException {
+        connection.connect();
+        db = ((MongoConnection) connection).getDB();
     }
 
     /**

@@ -53,6 +53,8 @@ import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
 import com.redhat.thermostat.client.ui.LayoutDebugHelper;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.Connection;
 import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
 import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
@@ -78,7 +80,17 @@ public class Main {
             System.exit(-1);
         }
 
-        ConnectionProvider connProv = new MongoConnectionProvider(arguments.getProperties());
+        StartupConfiguration config = null;
+        try {
+            config = new StartupConfiguration(System.currentTimeMillis(), args);
+        } catch (LaunchException le) {
+            logger.log(Level.SEVERE,
+                    "Unable to instantiate startup configuration.",
+                    le);
+            System.exit(Constants.EXIT_CONFIGURATION_ERROR);
+        }
+        
+        ConnectionProvider connProv = new MongoConnectionProvider(config);
         DAOFactory daoFactory = new MongoDAOFactory(connProv);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.config;
+package com.redhat.thermostat.common.config;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -51,7 +51,7 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.Defaults;
+import com.redhat.thermostat.common.config.Defaults;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -80,18 +80,13 @@ public class StartupConfiguration {
         initFromArguments(args);
         initFromProperties();
 
-        if (localMode) {
-            completeDatabaseURI = databaseURI + ":" + mongodPort;
-            hostname = Constants.AGENT_LOCAL_HOSTNAME;
-        } else {
-            completeDatabaseURI = databaseURI + ":" + mongosPort;
-            try {
-                InetAddress addr = InetAddress.getLocalHost();
-                hostname = addr.getCanonicalHostName();
-            } catch (UnknownHostException e) {
-                logger.log(Level.FINE, "Error determining local hostname.");
-            }
+        try {
+            InetAddress addr = InetAddress.getLocalHost();
+            hostname = addr.getCanonicalHostName();
+        } catch (UnknownHostException e) {
+            logger.log(Level.FINE, "Error determining local hostname.");
         }
+
         startTimestamp = startTime;
     }
 
@@ -127,7 +122,7 @@ public class StartupConfiguration {
             logLevel = arguments.getLogLevel();
         }
     }
-
+    
     public Level getLogLevel() {
         return logLevel;
     }
@@ -136,9 +131,26 @@ public class StartupConfiguration {
         return mongoScript;
     }
 
-    public String getDatabaseURIAsString() {
+    public synchronized String getDatabaseURIAsString() {
+        if (completeDatabaseURI == null) {
+            if (localMode) {
+                completeDatabaseURI = getDBUriString();
+            } else {
+                completeDatabaseURI = getClusterDBUriString();
+            }
+        }
         return completeDatabaseURI;
     }
+    
+    public String getDBUriString() {
+        return databaseURI + ":" + mongodPort;
+    }
+    
+    // FIXME: this needs to go away, it's an implementation detail
+    public String getClusterDBUriString() {
+        return databaseURI + ":" + mongosPort;
+    }    
+    
 
     public String getHostname() {
         return hostname;
