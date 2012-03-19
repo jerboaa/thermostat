@@ -37,23 +37,25 @@
 package com.redhat.thermostat.common.dao;
 
 import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Storage;
 
-public interface HostInfoDAO {
+public class HostInfoDAOImpl implements HostInfoDAO {
+    private HostRef ref;
+    private Storage storage;
+    private HostInfoConverter converter;
 
-    static Key<String> hostNameKey = new Key<>("hostname", true);
-    static Key<String> osNameKey = new Key<>("os_name", false);
-    static Key<String> osKernelKey = new Key<>("os_kernel", false);
-    static Key<Integer> cpuCountKey = new Key<>("cpu_num", false);
-    static Key<String> cpuModelKey = new Key<>("cpu_model", false);
-    static Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
+    public HostInfoDAOImpl(Storage storage, HostRef hostRef) {
+        ref = hostRef;
+        this.storage = storage;
+        converter = new HostInfoConverter();
+    }
 
-    static final Key<String> agentIdKey = new Key<>("agent-id", false);
-
-    public static final Category hostInfoCategory = new Category("host-info",
-            hostNameKey, osNameKey, osKernelKey,
-            cpuCountKey, cpuModelKey, hostMemoryTotalKey);
-
-    public HostInfo getHostInfo();
+    @Override
+    public HostInfo getHostInfo() {
+        Chunk query = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        query.put(HostInfoDAO.agentIdKey, ref.getAgentId());
+        Chunk result = storage.find(query);
+        return result == null ? null : converter.chunkToHostInfo(result);
+    }
 }

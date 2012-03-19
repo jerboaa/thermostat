@@ -41,7 +41,6 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
-import com.mongodb.BasicDBObject;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -64,7 +63,7 @@ public class HostInfoConverterTest {
     }
 
     @Test
-    public void testDBObjecToHostInfo() {
+    public void testChunktoHostInfo() {
         final String HOST_NAME = "a host name";
         final String OS_NAME = "some os";
         final String OS_KERNEL = "some kernel";
@@ -72,15 +71,16 @@ public class HostInfoConverterTest {
         final int CPU_NUM = -1;
         final long MEMORY_TOTAL = 0xCAFEBABEl;
 
-        BasicDBObject dbObj = new BasicDBObject();
-        dbObj.put("hostname", HOST_NAME);
-        dbObj.put("os_name", OS_NAME);
-        dbObj.put("os_kernel", OS_KERNEL);
-        dbObj.put("cpu_model", CPU_MODEL);
-        dbObj.put("cpu_num", CPU_NUM);
-        dbObj.put("memory_total", MEMORY_TOTAL);
 
-        HostInfo info = new HostInfoConverter().fromDBObj(dbObj);
+        Chunk chunk = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        chunk.put(HostInfoDAO.hostNameKey, HOST_NAME);
+        chunk.put(HostInfoDAO.osNameKey, OS_NAME);
+        chunk.put(HostInfoDAO.osKernelKey, OS_KERNEL);
+        chunk.put(HostInfoDAO.cpuModelKey, CPU_MODEL);
+        chunk.put(HostInfoDAO.cpuCountKey, CPU_NUM);
+        chunk.put(HostInfoDAO.hostMemoryTotalKey, MEMORY_TOTAL);
+
+        HostInfo info = new HostInfoConverter().chunkToHostInfo(chunk);
         assertNotNull(info);
         assertEquals(HOST_NAME, info.getHostname());
         assertEquals(OS_NAME, info.getOsName());

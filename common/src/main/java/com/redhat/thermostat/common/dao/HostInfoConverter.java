@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.mongodb.DBObject;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
@@ -47,20 +46,19 @@ public class HostInfoConverter {
         chunk.put(HostInfoDAO.hostNameKey, hostInfo.getHostname());
         chunk.put(HostInfoDAO.osNameKey, hostInfo.getOsName());
         chunk.put(HostInfoDAO.osKernelKey, hostInfo.getOsKernel());
-        chunk.put(HostInfoDAO.cpuCountKey, hostInfo.getCpuCount());
         chunk.put(HostInfoDAO.cpuModelKey, hostInfo.getCpuModel());
+        chunk.put(HostInfoDAO.cpuCountKey, hostInfo.getCpuCount());
         chunk.put(HostInfoDAO.hostMemoryTotalKey, hostInfo.getTotalMemory());
         return chunk;
     }
 
-    public HostInfo fromDBObj(DBObject dbObj) {
-        String hostName = (String) dbObj.get("hostname");
-        String osName = (String) dbObj.get("os_name");
-        String osKernel = (String) dbObj.get("os_kernel");
-        String cpuModel = (String) dbObj.get("cpu_model");
-        Integer cpuNum = (Integer) dbObj.get("cpu_num");
-        Long totalMemory = (Long) dbObj.get("memory_total");
-        return new HostInfo(hostName, osName, osKernel, cpuModel, cpuNum, totalMemory);
+    public HostInfo chunkToHostInfo(Chunk chunk) {
+        String hostName = chunk.get(HostInfoDAO.hostNameKey);
+        String osName = chunk.get(HostInfoDAO.osNameKey);
+        String osKernel = chunk.get(HostInfoDAO.osKernelKey);
+        String cpuModel = chunk.get(HostInfoDAO.cpuModelKey);
+        int cpuCount = chunk.get(HostInfoDAO.cpuCountKey);
+        long totalMemory = chunk.get(HostInfoDAO.hostMemoryTotalKey);
+        return new HostInfo(hostName, osName, osKernel, cpuModel, cpuCount, totalMemory);
     }
-
 }

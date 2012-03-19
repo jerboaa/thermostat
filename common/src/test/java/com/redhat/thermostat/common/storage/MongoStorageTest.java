@@ -72,6 +72,8 @@ public class MongoStorageTest {
     private static final Key<String> key5 = new Key<>("key5", false);
     private static final Category testCategory = new Category("MongoStorageTest", key1, key2, key3, key4, key5);
 
+    private static final Chunk multiKeyQuery = new Chunk(testCategory, false);
+
     private MongoStorage storage;
     private DBCollection testCollection;
 
@@ -86,12 +88,19 @@ public class MongoStorageTest {
         value2.put("key3", "test3");
         value2.put("key4", "test4");
 
+        multiKeyQuery.put(key5, "test1");
+        multiKeyQuery.put(key4, "test2");
+        multiKeyQuery.put(key3, "test3");
+        multiKeyQuery.put(key2, "test4");
+        multiKeyQuery.put(key1, "test5");
+
         DBCursor cursor = mock(DBCursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
 
         testCollection = PowerMockito.mock(DBCollection.class);
         when(testCollection.find(any(DBObject.class))).thenReturn(cursor);
+        when(testCollection.findOne(any(DBObject.class))).thenReturn(value1);
         storage.mapCategoryToDBCollection(testCategory, testCollection);
     }
 
@@ -110,27 +119,40 @@ public class MongoStorageTest {
     }
 
     @Test 
-    public void verifyFindReturnsCursor() {
+    public void verifyFindAllReturnsCursor() {
         Chunk query = new Chunk(testCategory, false);
-        Cursor cursor = storage.find(query);
+        Cursor cursor = storage.findAll(query);
         assertNotNull(cursor);
     }
 
     @Test
-    public void verifyFindCallsDBCollectionFind() {
-
+    public void verifyFindReturnsChunk() {
         Chunk query = new Chunk(testCategory, false);
-        storage.find(query);
-        verify(testCollection).find(any(DBObject.class));
-
+        query.put(key1, "test1");
+        Chunk result = storage.find(query);
+        assertNotNull(result);
     }
 
     @Test
-    public void verifyFindCallsDBCollectionFindWithCorrectQuery() {
+    public void verifyFindAllCallsDBCollectionFind() {
+        Chunk query = new Chunk(testCategory, false);
+        storage.findAll(query);
+        verify(testCollection).find(any(DBObject.class));
+    }
+
+    @Test
+    public void verifyFindCallsDBCollectionFindOne() {
+        Chunk query = new Chunk(testCategory, false);
+        storage.find(query);
+        verify(testCollection).findOne(any(DBObject.class));
+    }
+
+    @Test
+    public void verifyFindAllCallsDBCollectionFindWithCorrectQuery() {
 
         Chunk query = new Chunk(testCategory, false);
         query.put(key1, "test");
-        storage.find(query);
+        storage.findAll(query);
 
         ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).find(findArg.capture());
@@ -142,15 +164,25 @@ public class MongoStorageTest {
     }
 
     @Test
-    public void verifyFindFindWithMultiKeys() {
+    public void verifyFindCallsDBCollectionFindOneWithCorrectQuery() {
 
         Chunk query = new Chunk(testCategory, false);
-        query.put(key5, "test1");
-        query.put(key4, "test2");
-        query.put(key3, "test3");
-        query.put(key2, "test4");
-        query.put(key1, "test5");
+        query.put(key1, "test");
         storage.find(query);
+
+        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
+        verify(testCollection).findOne(findArg.capture());
+
+        DBObject arg = findArg.getValue();
+        assertEquals(1, arg.keySet().size());
+        assertTrue(arg.keySet().contains("key1"));
+        assertEquals("test", arg.get("key1"));
+    }
+
+    @Test
+    public void verifyFindAllWithMultiKeys() {
+
+        storage.findAll(multiKeyQuery);
 
         ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).find(findArg.capture());
@@ -160,12 +192,25 @@ public class MongoStorageTest {
     }
 
     @Test
-    public void verifyFindReturnsCorrectCursor() {
+    public void verifyFindWithMultiKeys() {
 
+        storage.find(multiKeyQuery);
+
+        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
+        verify(testCollection).findOne(findArg.capture());
+
+        DBObject arg = findArg.getValue();
+        assertArrayEquals(new String[]{ "key5", "key4", "key3", "key2", "key1" }, arg.keySet().toArray());
+    }
+
+    @Test
+    public void verifyFindAllReturnsCorrectCursor() {
+
+        // TODO find a way to test this that isn't just testing MongoCursor
         Chunk query = new Chunk(testCategory, false);
         query.put(key5, "test1");
 
-        Cursor cursor = storage.find(query);
+        Cursor cursor = storage.findAll(query);
 
         assertTrue(cursor.hasNext());
         Chunk chunk1 = cursor.next();

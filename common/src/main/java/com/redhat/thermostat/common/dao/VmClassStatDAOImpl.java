@@ -68,7 +68,7 @@ public class VmClassStatDAOImpl implements VmClassStatDAO {
             // a query which can utilize an index. this one doesn't
             query.put(VmClassStatDAO.whereKey, "this.timestamp > " + lastUpdate);
         }
-        Cursor cursor = storage.find(query);
+        Cursor cursor = storage.findAll(query);
         long timestamp;
         long loadedClasses;
         while (cursor.hasNext()) {

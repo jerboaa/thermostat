@@ -55,12 +55,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.dao.HostInfoConverter;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoConverter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -70,7 +70,7 @@ public class HostOverviewController implements AsyncUiFacade {
     private static final Logger logger = LoggingUtils.getLogger(HostOverviewController.class);
 
     private final HostRef hostRef;
-    private final DBCollection hostInfoCollection;
+    private final HostInfoDAO hostInfoDAO;
     private final DBCollection networkInfoCollection;
 
     private final Timer backgroundUpdateTimer;
@@ -78,8 +78,8 @@ public class HostOverviewController implements AsyncUiFacade {
     private final HostOverviewView view;
 
     public HostOverviewController(HostRef ref, DB db) {
+        hostInfoDAO = ApplicationContext.getInstance().getDAOFactory().getHostInfoDAO(ref);
         this.hostRef = ref;
-        hostInfoCollection = db.getCollection("host-info");
         networkInfoCollection = db.getCollection("network-info");
 
         final Vector<String> networkTableColumnVector;
@@ -150,9 +150,7 @@ public class HostOverviewController implements AsyncUiFacade {
         backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-
-                DBObject dbObj = hostInfoCollection.findOne(new BasicDBObject("agent-id", hostRef.getAgentId()));
-                HostInfo hostInfo = new HostInfoConverter().fromDBObj(dbObj);
+                HostInfo hostInfo = hostInfoDAO.getHostInfo();
                 view.setHostName(hostInfo.getHostname());
                 view.setOsName(hostInfo.getOsName());
                 view.setOsKernel(hostInfo.getOsKernel());

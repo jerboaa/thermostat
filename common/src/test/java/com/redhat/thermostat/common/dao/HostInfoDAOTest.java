@@ -42,7 +42,14 @@ import java.util.Collection;
 
 import org.junit.Test;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import com.redhat.thermostat.common.HostInfo;
+import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
 public class HostInfoDAOTest {
 
@@ -57,5 +64,35 @@ public class HostInfoDAOTest {
         assertTrue(keys.contains(new Key<Integer>("cpu_num", false)));
         assertTrue(keys.contains(new Key<Long>("memory_total", false)));
         assertEquals(6, keys.size());
+    }
+
+    @Test
+    public void testGetHostInfo() {
+        final String HOST_NAME = "a host name";
+        final String OS_NAME = "some os";
+        final String OS_KERNEL = "some kernel";
+        final String CPU_MODEL = "some cpu that runs fast";
+        final int CPU_NUM = -1;
+        final long MEMORY_TOTAL = 0xCAFEBABEl;
+
+        Chunk chunk = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        chunk.put(HostInfoDAO.hostNameKey, HOST_NAME);
+        chunk.put(HostInfoDAO.osNameKey, OS_NAME);
+        chunk.put(HostInfoDAO.osKernelKey, OS_KERNEL);
+        chunk.put(HostInfoDAO.cpuModelKey, CPU_MODEL);
+        chunk.put(HostInfoDAO.cpuCountKey, CPU_NUM);
+        chunk.put(HostInfoDAO.hostMemoryTotalKey, MEMORY_TOTAL);
+
+        Storage storage = mock(Storage.class);
+        when(storage.find(any(Chunk.class))).thenReturn(chunk);
+
+        HostInfo info = new HostInfoDAOImpl(storage, new HostRef("some uid", HOST_NAME)).getHostInfo();
+        assertNotNull(info);
+        assertEquals(HOST_NAME, info.getHostname());
+        assertEquals(OS_NAME, info.getOsName());
+        assertEquals(OS_KERNEL, info.getOsKernel());
+        assertEquals(CPU_MODEL, info.getCpuModel());
+        assertEquals(CPU_NUM, info.getCpuCount());
+        assertEquals(MEMORY_TOTAL, info.getTotalMemory());
     }
 }

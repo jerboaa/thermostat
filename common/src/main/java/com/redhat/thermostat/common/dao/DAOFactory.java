@@ -49,4 +49,6 @@ public interface DAOFactory {
 
     public abstract VmClassStatDAO getVmClassStatsDAO(VmRef ref);
 
+    public abstract HostInfoDAO getHostInfoDAO(HostRef ref);
+
 }

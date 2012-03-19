@@ -76,4 +76,9 @@ public class MongoDAOFactory implements DAOFactory {
         return connection;
     }
 
+    @Override
+    public HostInfoDAO getHostInfoDAO(HostRef ref) {
+        return new HostInfoDAOImpl(storage, ref);
+    }
+
 }

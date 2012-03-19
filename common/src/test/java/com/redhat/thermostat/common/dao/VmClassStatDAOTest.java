@@ -83,7 +83,7 @@ public class VmClassStatDAOTest {
         when(cursor.next()).thenReturn(chunk);
 
         Storage storage = mock(Storage.class);
-        when(storage.find(any(Chunk.class))).thenReturn(cursor);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -97,7 +97,7 @@ public class VmClassStatDAOTest {
         List<VmClassStat> vmClassStats = dao.getLatestClassStats();
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).find(arg.capture());
+        verify(storage).findAll(arg.capture());
         assertNull(arg.getValue().get(new Key<String>("$where", false)));
 
         assertEquals(1, vmClassStats.size());
@@ -120,7 +120,7 @@ public class VmClassStatDAOTest {
         when(cursor.next()).thenReturn(chunk);
 
         Storage storage = mock(Storage.class);
-        when(storage.find(any(Chunk.class))).thenReturn(cursor);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -135,7 +135,7 @@ public class VmClassStatDAOTest {
 
         dao.getLatestClassStats();
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage, times(2)).find(arg.capture());
+        verify(storage, times(2)).findAll(arg.capture());
         assertEquals("this.timestamp > 1234", arg.getValue().get(new Key<String>("$where", false)));
     }
 }
