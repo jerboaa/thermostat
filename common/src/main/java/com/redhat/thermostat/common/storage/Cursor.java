@@ -43,4 +43,6 @@ public interface Cursor {
     Chunk next();
 
     Cursor sort(Chunk orderBy);
+
+    Cursor limit(int i);
 }

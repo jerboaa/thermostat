@@ -72,4 +72,10 @@ class MongoCursor implements Cursor {
         return new MongoCursor(sorted, category);
     }
 
+    @Override
+    public Cursor limit(int i) {
+        DBCursor limited = cursor.limit(i);
+        return new MongoCursor(limited, category);
+    }
+
 }

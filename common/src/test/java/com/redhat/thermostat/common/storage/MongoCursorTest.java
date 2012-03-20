@@ -79,6 +79,7 @@ public class MongoCursorTest {
         when(dbCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(dbCursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
         when(dbCursor.sort(any(DBObject.class))).thenReturn(dbCursor);
+        when(dbCursor.limit(anyInt())).thenReturn(dbCursor);
         cursor = new MongoCursor(dbCursor, testCategory);
 
     }
@@ -127,5 +128,18 @@ public class MongoCursorTest {
         assertTrue(sorted.hasNext());
         sorted.next();
         assertFalse(sorted.hasNext());
+    }
+
+    @Test
+    public void verifyCursorLimit() {
+
+        Cursor sorted = cursor.limit(1);
+
+        verify(dbCursor).limit(1);
+
+        // We cannot really test if the cursor really got limited, this is up to the mongo implementation.
+        // In any case, we can verify that the returned cursor actually is 'active'.
+        assertTrue(sorted.hasNext());
+        sorted.next();
     }
 }
