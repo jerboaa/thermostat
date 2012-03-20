@@ -204,10 +204,27 @@ public class MongoStorageTest {
     }
 
     @Test
+    public void verifyFindReturnsCorrectChunk() {
+
+        // TODO find a way to test this that isn't just testing mock and converters
+        Chunk query = new Chunk(testCategory, false);
+        // Because we mock the DBCollection, the contents of this query don't actually determine the result.
+        query.put(key5, "test1");
+
+        Chunk result = storage.find(query);
+
+        assertNotNull(result);
+        assertArrayEquals(new Key<?>[]{key1, key2}, result.getKeys().toArray());
+        assertEquals("test1", result.get(key1));
+        assertEquals("test2", result.get(key2));
+    }
+
+    @Test
     public void verifyFindAllReturnsCorrectCursor() {
 
         // TODO find a way to test this that isn't just testing MongoCursor
         Chunk query = new Chunk(testCategory, false);
+        // Because we mock the DBCollection, the contents of this query don't actually determine the result.
         query.put(key5, "test1");
 
         Cursor cursor = storage.findAll(query);

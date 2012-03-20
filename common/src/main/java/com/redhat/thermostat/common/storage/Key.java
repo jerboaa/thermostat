@@ -49,6 +49,9 @@ public class Key<T> {
     private boolean isPartialCategoryKey;
 
     public Key(String name, boolean isPartialCategoryKey) {
+        if (name == null || name.length() == 0) {
+            throw new IllegalArgumentException("A Key must have a non-null name of length >= 1.");
+        }
         this.name = name;
         this.isPartialCategoryKey = isPartialCategoryKey;
     }

@@ -36,7 +36,12 @@
 
 package com.redhat.thermostat.common.storage;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -47,20 +52,96 @@ public class ChunkTest {
     private static final Key<String> key3 = new Key<>("key3", false);
     private static final Key<String> key4 = new Key<>("key4", false);
     private static final Key<String> key5 = new Key<>("key5", false);
+    private static final Key<Integer> key6 = new Key<>("key6", false);
+    private static final Key<Object> key7 = new Key<>("key7", false);
+
+    private static final String value1 = "test1";
+    private static final String value2 = "test2";
+    private static final String value3 = "test3";
+    private static final String value4 = "test4";
+    private static final String value5 = "test5";
+    private static final int value6 = 12345;
+    private static final Object value7 = "test7";
 
     private static final Category testCategory = new Category("ChunkTest", key1, key2, key3, key4, key5);
 
+    @Test
+    public void verifyGetCategoryNotNull() {
+        Chunk chunk = new Chunk(testCategory, false);
+        Category cat = chunk.getCategory();
+        assertNotNull(cat);
+    }
+
+    @Test
+    public void verifyGetCategoryReturnsCorrectCategory() {
+        Chunk chunk = new Chunk(testCategory, false);
+        Category cat = chunk.getCategory();
+        assertEquals(cat, testCategory);
+    }
+
+    @Test
+    public void verifyGetReplaceReturnsCorrectValue() {
+        Chunk chunk = new Chunk(testCategory, false);
+        boolean replace = chunk.getReplace();
+        assertFalse(replace);
+        chunk = new Chunk(testCategory, true);
+        replace = chunk.getReplace();
+        assertTrue(replace);
+    }
+
+    @Test
+    public void verifyPutActuallyPuts() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1, value1);
+        int pieces = chunk.getKeys().size();
+        assertEquals(pieces, 1);
+    }
+
+    @Test
+    public void verifyPutPutsCorrectly() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1, value1);
+        String value = chunk.get(key1);
+        assertEquals(value, value1);
+    }
+
+    @Test
+    public void verifyPutAcceptsVariousTypes() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1, value1);
+        chunk.put(key5, value5);
+        chunk.put(key6, value6);
+        chunk.put(key7, value7);
+        int pieces = chunk.getKeys().size();
+        assertEquals(pieces, 4);
+    }
 
     @Test
     public void verifyEntriesAreKeptInOrder() {
         Chunk chunk = new Chunk(testCategory, false);
-        chunk.put(key5, "test1");
-        chunk.put(key4, "test2");
-        chunk.put(key3, "test3");
-        chunk.put(key2, "test4");
-        chunk.put(key1, "test5");
+        chunk.put(key5, value5);
+        chunk.put(key4, value4);
+        chunk.put(key3, value3);
+        chunk.put(key2, value2);
+        chunk.put(key1, value1);
 
         assertArrayEquals(new Key<?>[]{key5, key4, key3, key2, key1}, chunk.getKeys().toArray());
+    }
+
+    @Test
+    public void verifyGetNotNull() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1, value1);
+        String value = chunk.get(key1);
+        assertNotNull(value);
+    }
+
+    @Test
+    public void verifyGetNullWhenExpected() {
+        Chunk chunk = new Chunk(testCategory, false);
+        chunk.put(key1, value1);
+        String value = chunk.get(key2);
+        assertNull(value);
     }
 
 }
