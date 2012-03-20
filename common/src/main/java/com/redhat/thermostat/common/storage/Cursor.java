@@ -41,4 +41,6 @@ public interface Cursor {
     boolean hasNext();
 
     Chunk next();
+
+    Cursor sort(Chunk orderBy);
 }

@@ -42,12 +42,16 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
 
 public class MongoCursorTest {
 
@@ -58,9 +62,12 @@ public class MongoCursorTest {
 
     private static final Category testCategory = new Category("MongoCursorTest", key1, key2, key3, key4);
 
-    @Test
-    public void verifySimpleCursor() {
+    private DBCursor dbCursor;
+    private Cursor cursor;
 
+    @Before
+    public void setUp() {
+        
         BasicDBObject value1 = new BasicDBObject();
         value1.put("key1", "test1");
         value1.put("key2", "test2");
@@ -68,11 +75,22 @@ public class MongoCursorTest {
         value2.put("key3", "test3");
         value2.put("key4", "test4");
 
-        DBCursor dbCursor = mock(DBCursor.class);
+        dbCursor = mock(DBCursor.class);
         when(dbCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(dbCursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
+        when(dbCursor.sort(any(DBObject.class))).thenReturn(dbCursor);
+        cursor = new MongoCursor(dbCursor, testCategory);
 
-        MongoCursor cursor = new MongoCursor(dbCursor, testCategory);
+    }
+
+    @After
+    public void tearDown() {
+        dbCursor = null;
+        cursor = null;
+    }
+
+    @Test
+    public void verifySimpleCursor() {
 
         assertTrue(cursor.hasNext());
         Chunk chunk1 = cursor.next();
@@ -88,6 +106,26 @@ public class MongoCursorTest {
 
         assertFalse(cursor.hasNext());
         assertNull(cursor.next());
-}
+    }
 
+    @Test
+    public void verifyCursorSort() {
+        Chunk orderBy = new Chunk(testCategory, false);
+        orderBy.put(key1, "test1");
+        ArgumentCaptor<DBObject> arg = ArgumentCaptor.forClass(DBObject.class);
+        Cursor sorted = cursor.sort(orderBy);
+
+        verify(dbCursor).sort(arg.capture());
+        DBObject orderByDBObject = arg.getValue();
+        assertEquals(1, orderByDBObject.keySet().size());
+        assertEquals("test1", orderByDBObject.get("key1"));
+
+        // Verify that the sorted cursor is still return the same number of items. We leave the actual
+        // sorting to Mongo and won't check it here.
+        assertTrue(sorted.hasNext());
+        sorted.next();
+        assertTrue(sorted.hasNext());
+        sorted.next();
+        assertFalse(sorted.hasNext());
+    }
 }

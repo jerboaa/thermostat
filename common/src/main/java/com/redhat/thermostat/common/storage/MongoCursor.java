@@ -64,4 +64,12 @@ class MongoCursor implements Cursor {
         return converter.dbObjectToChunk(next, category);
     }
 
+    @Override
+    public Cursor sort(Chunk orderBy) {
+        ChunkConverter chunkConverter = new ChunkConverter();
+        DBObject dbOrderBy = chunkConverter.chunkToDBObject(orderBy);
+        DBCursor sorted = cursor.sort(dbOrderBy);
+        return new MongoCursor(sorted, category);
+    }
+
 }
