@@ -40,6 +40,7 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,28 +55,23 @@ import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.client.ui.SimpleTable.Value;
 
-public class HostOverviewPanel implements HostOverviewView {
+public class HostOverviewPanel extends JPanel implements HostOverviewView {
 
-    private final ChangeableText hostname;
-    private final ChangeableText cpuModel;
-    private final ChangeableText cpuCount;
-    private final ChangeableText totalMemory;
-    private final ChangeableText osName;
-    private final ChangeableText osKernel;
+    private static final long serialVersionUID = 1692529334143017953L;
 
-    private final DefaultTableModel networkTableModel;
+    private final ChangeableText hostname = new ChangeableText("");
+    private final ChangeableText cpuModel = new ChangeableText("");
+    private final ChangeableText cpuCount = new ChangeableText("");
+    private final ChangeableText totalMemory = new ChangeableText("");
+    private final ChangeableText osName = new ChangeableText("");
+    private final ChangeableText osKernel = new ChangeableText("");
+
+    private final DefaultTableModel networkTableModel = new DefaultTableModel();;
     private Object[] networkTableColumns;
     private Object[][] networkTableData;
 
     public HostOverviewPanel() {
-        hostname = new ChangeableText("");
-        cpuModel = new ChangeableText("");
-        cpuCount = new ChangeableText("");
-        totalMemory = new ChangeableText("");
-        osName = new ChangeableText("");
-        osKernel = new ChangeableText("");
-
-        networkTableModel = new DefaultTableModel();
+        initializePanel();
     }
 
     @Override
@@ -122,7 +118,10 @@ public class HostOverviewPanel implements HostOverviewView {
 
     @Override
     public Component getUiComponent() {
+        return this;
+    }
 
+    private void initializePanel() {
         TableEntry entry;
         List<Section> allSections = new ArrayList<Section>();
 
@@ -162,7 +161,10 @@ public class HostOverviewPanel implements HostOverviewView {
         SimpleTable simpleTable = new SimpleTable();
         JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
-        return table;
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        add(table, c);
     }
 
 }

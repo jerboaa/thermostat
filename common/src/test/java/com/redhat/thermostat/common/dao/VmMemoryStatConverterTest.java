@@ -43,6 +43,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.mongodb.BasicDBObject;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
@@ -115,6 +116,73 @@ public class VmMemoryStatConverterTest {
         assertEquals((Long) 13l, chunk.get(new Key<Long>("perm.capacity", false)));
         assertEquals((Long) 14l, chunk.get(new Key<Long>("perm.max-capacity", false)));
 
+    }
+
+    @Test
+    public void testDBObjectToVmMemoryStat() {
+        final long TIMESTAMP = 1234l;
+        final int VM_ID = 4567;
+
+        BasicDBObject dbObject = new BasicDBObject();
+
+        dbObject.put("timestamp", TIMESTAMP);
+        dbObject.put("vm-id", VM_ID);
+        BasicDBObject eden = new BasicDBObject();
+        eden.put("gen", "new");
+        eden.put("collector", "new-collector");
+        eden.put("used", 1l);
+        eden.put("capacity", 2l);
+        eden.put("max-capacity", 3l);
+        dbObject.put("eden", eden);
+
+        BasicDBObject s0 = new BasicDBObject();
+        s0.put("gen", "new");
+        s0.put("collector", "new-collector");
+        s0.put("used", 4l);
+        s0.put("capacity", 5l);
+        s0.put("max-capacity", 6l);
+        dbObject.put("s0", s0);
+
+        BasicDBObject s1 = new BasicDBObject();
+        s1.put("gen", "new");
+        s1.put("collector", "new-collector");
+        s1.put("used", 7l);
+        s1.put("capacity", 8l);
+        s1.put("max-capacity", 9l);
+        dbObject.put("s1", s1);
+
+        BasicDBObject old = new BasicDBObject();
+        old.put("gen", "old");
+        old.put("collector", "old-collector");
+        old.put("used", 10l);
+        old.put("capacity", 11l);
+        old.put("max-capacity", 12l);
+        dbObject.put("old", old);
+
+        BasicDBObject perm = new BasicDBObject();
+        perm.put("gen", "perm");
+        perm.put("collector", "perm-collector");
+        perm.put("used", 13l);
+        perm.put("capacity", 14l);
+        perm.put("max-capacity", 15l);
+        dbObject.put("perm", perm);
+
+        VmMemoryStat stat = new VmMemoryStatConverter().createVmMemoryStatFromDBObject(dbObject);
+
+        assertNotNull(stat);
+        assertEquals(TIMESTAMP, stat.getTimeStamp());
+        assertEquals(VM_ID, stat.getVmId());
+
+        assertEquals(3, stat.getGenerations().size());
+
+        assertEquals(3, stat.getGeneration("new").spaces.size());
+        assertEquals("new-collector", stat.getGeneration("new").collector);
+
+        assertEquals(1, stat.getGeneration("old").spaces.size());
+        assertEquals("old-collector", stat.getGeneration("old").collector);
+
+        assertEquals(1, stat.getGeneration("perm").spaces.size());
+        assertEquals("perm-collector", stat.getGeneration("perm").collector);
     }
 
 }

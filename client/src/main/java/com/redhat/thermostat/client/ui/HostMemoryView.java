@@ -34,25 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.ui.VmClassStatController;
-import com.redhat.thermostat.client.ui.VmGcController;
-import com.redhat.thermostat.client.ui.VmMemoryController;
-import com.redhat.thermostat.client.ui.VmOverviewController;
+import java.awt.Component;
+import java.util.List;
 
-/**
- * Represents information specific to a JVM running on a host somewhere. This is
- * used to populate the UI for a VM's information.
- */
-public interface VmPanelFacade extends AsyncUiFacade {
+import com.redhat.thermostat.client.DiscreteTimeData;
 
-    public VmOverviewController getOverviewController();
+public interface HostMemoryView {
 
-    public VmMemoryController getMemoryController();
+    public interface GraphVisibilityChangeListener {
+        public void show(String tag);
 
-    public VmClassStatController getClassesController();
+        public void hide(String tag);
+    }
 
-    public VmGcController getGcController();
+    void setTotalMemory(String totalMemory);
+
+    void addMemoryChart(String tag, String humanReadableName);
+
+    void removeMemoryChart(String tag);
+
+    void showMemoryChart(String tag);
+
+    void hideMemoryChart(String tag);
+
+    void addMemoryData(String tag, List<DiscreteTimeData<? extends Number>> data);
+
+    void clearMemoryData(String tag);
+
+    void addListener(GraphVisibilityChangeListener listener);
+
+    void removeListener(GraphVisibilityChangeListener listener);
+
+    Component getUiComponent();
 
 }

@@ -38,7 +38,6 @@ package com.redhat.thermostat.client;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,14 +45,10 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jfree.data.general.DatasetChangeEvent;
-import org.jfree.data.general.DatasetChangeListener;
-import org.jfree.data.time.TimeSeriesCollection;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.client.ui.VmClassStatController;
 import com.redhat.thermostat.client.ui.VmClassStatView;
 import com.redhat.thermostat.common.VmClassStat;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -79,22 +74,11 @@ public class VmClassStatControllerTest {
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);
 
-        final DatasetChangeListener l = mock(DatasetChangeListener.class);
         final VmClassStatView view = mock(VmClassStatView.class);
-        doAnswer(new Answer<Void>() {
-
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                Object[] args = invocation.getArguments();
-                TimeSeriesCollection timeSeriesColl = (TimeSeriesCollection) args[0];
-                timeSeriesColl.addChangeListener(l);
-                return null;
-            }
-            
-        }).when(view).setDataSet(any(TimeSeriesCollection.class));
 
         // TODO: Consider to pass the ClassesView or a factory for it to the controller instead.
         VmClassStatController controller = new VmClassStatController(ref) {
+            @Override
             protected VmClassStatView createView() {
                 return view;
             }
@@ -109,7 +93,7 @@ public class VmClassStatControllerTest {
             return;
         }
 
-        verify(l, atLeast(1)).datasetChanged(any(DatasetChangeEvent.class));
+        verify(view, atLeast(1)).addClassCount(any(List.class));
         // We don't verify atMost() since we might increase the update rate in the future.
     }
 

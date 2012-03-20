@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.mongodb.DBObject;
 import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.VmMemoryStat.Space;
@@ -47,7 +51,7 @@ public class VmMemoryStatConverter {
     public Chunk vmMemoryStatToChunk(VmMemoryStat vmMemStat) {
         Chunk chunk = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
 
-        chunk.put(VmMemoryStatDAO.vmMemoryStatVmIdKey, vmMemStat.getVmId());
+        chunk.put(VmMemoryStatDAO.vmIdKey, vmMemStat.getVmId());
         chunk.put(Key.TIMESTAMP, vmMemStat.getTimeStamp());
 
         Generation newGen = vmMemStat.getGeneration("new");
@@ -92,6 +96,45 @@ public class VmMemoryStatConverter {
         chunk.put(VmMemoryStatDAO.vmMemoryStatPermUsedKey, perm.used);
 
         return chunk;
+    }
+
+    public VmMemoryStat createVmMemoryStatFromDBObject(DBObject dbObj) {
+        // FIXME so much hardcoding :'(
+
+        String[] spaceNames = new String[] { "eden", "s0", "s1", "old", "perm" };
+        List<Generation> generations = new ArrayList<Generation>();
+
+        long timestamp = (Long) dbObj.get("timestamp");
+        int vmId = (Integer) dbObj.get("vm-id");
+        for (String spaceName: spaceNames) {
+            DBObject info = (DBObject) dbObj.get(spaceName);
+            String generationName = (String) info.get("gen");
+            Generation target = null;
+            for (Generation generation: generations) {
+                if (generation.name.equals(generationName)) {
+                    target = generation;
+                }
+            }
+            if (target == null) {
+                target = new Generation();
+                target.name = generationName;
+                generations.add(target);
+            }
+            if (target.collector == null) {
+                target.collector = (String) info.get("collector");
+            }
+            Space space = new Space();
+            space.name = spaceName;
+            space.capacity = (Long) info.get("capacity");
+            space.maxCapacity = (Long) info.get("max-capacity");
+            space.used = (Long) info.get("used");
+            if (target.spaces == null) {
+                target.spaces = new ArrayList<Space>();
+            }
+            target.spaces.add(space);
+        }
+
+        return new VmMemoryStat(timestamp, vmId, generations);
     }
 
 }

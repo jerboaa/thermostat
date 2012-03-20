@@ -40,6 +40,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
+import com.mongodb.BasicDBObject;
 import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -60,5 +61,38 @@ public class MemoryStatConverterTest {
         assertEquals((Long) 5l, chunk.get(new Key<Long>("swap-total", false)));
         assertEquals((Long) 6l, chunk.get(new Key<Long>("swap-free", false)));
         assertEquals((Long) 7l, chunk.get(new Key<Long>("commit-limit", false)));
+    }
+
+    @Test
+    public void testDbObjectToMemoryStat() {
+        long TIMESTAMP = 1;
+        long TOTAL = 2;
+        long FREE = 3;
+        long BUFFERS = 4;
+        long CACHED = 5;
+        long SWAP_TOTAL = 6;
+        long SWAP_FREE = 7;
+        long COMMIT_LIMIT = 8;
+
+        BasicDBObject dbObj = new BasicDBObject();
+        dbObj.put("timestamp", TIMESTAMP);
+        dbObj.put("total", TOTAL);
+        dbObj.put("free", FREE);
+        dbObj.put("buffers", BUFFERS);
+        dbObj.put("cached", CACHED);
+        dbObj.put("swap-total", SWAP_TOTAL);
+        dbObj.put("swap-free", SWAP_FREE);
+        dbObj.put("commit-limit", COMMIT_LIMIT);
+
+        MemoryStat stat = new MemoryStatConverter().dbObjectToMemoryStat(dbObj);
+
+        assertEquals(TIMESTAMP, stat.getTimeStamp());
+        assertEquals(TOTAL, stat.getTotal());
+        assertEquals(FREE, stat.getFree());
+        assertEquals(BUFFERS, stat.getBuffers());
+        assertEquals(CACHED, stat.getCached());
+        assertEquals(SWAP_TOTAL, stat.getSwapTotal());
+        assertEquals(SWAP_FREE, stat.getSwapFree());
+        assertEquals(COMMIT_LIMIT, stat.getCommitLimit());
     }
 }

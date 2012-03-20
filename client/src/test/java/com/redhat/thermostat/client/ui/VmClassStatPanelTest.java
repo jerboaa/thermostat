@@ -37,19 +37,25 @@
 package com.redhat.thermostat.client.ui;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.jfree.data.time.TimeSeriesCollection;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.junit.Test;
+
+import com.redhat.thermostat.client.DiscreteTimeData;
 
 public class VmClassStatPanelTest {
 
     @Test
-    public void testSetDataSetTwice() {
+    public void testAddDataTwice() {
         VmClassStatPanel panel = new VmClassStatPanel();
-        TimeSeriesCollection dataSet = new TimeSeriesCollection();
-        panel.setDataSet(dataSet);
+        List<DiscreteTimeData<Long>> data = new ArrayList<>();
+        panel.addClassCount(data);
         int numComponents = panel.getComponentCount();
-        panel.setDataSet(dataSet);
+        assertTrue(numComponents > 0);
+        panel.addClassCount(data);
         assertEquals(numComponents, panel.getComponentCount());
     }
 

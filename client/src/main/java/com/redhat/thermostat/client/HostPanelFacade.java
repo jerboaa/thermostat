@@ -36,32 +36,16 @@
 
 package com.redhat.thermostat.client;
 
-import java.util.List;
-
-import org.jfree.data.time.TimeSeriesCollection;
-
+import com.redhat.thermostat.client.ui.HostCpuController;
+import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.client.ui.HostOverviewController;
 
 public interface HostPanelFacade extends AsyncUiFacade {
 
-    public List<DiscreteTimeData<Long>> getMemoryUsage(MemoryType type);
-
-    public MemoryType[] getMemoryTypesToDisplay();
-
-    public boolean isMemoryTypeDisplayed(MemoryType type);
-
-    public void setDisplayMemoryType(MemoryType type, boolean selected);
-
-    public ChangeableText getHostName();
-
-    public ChangeableText getCpuModel();
-
-    public ChangeableText getCpuCount();
-
-    public ChangeableText getTotalMemory();
-
-    public TimeSeriesCollection getCpuLoadDataSet();
-
     public HostOverviewController getOverviewController();
+
+    public HostCpuController getCpuController();
+
+    public HostMemoryController getMemoryController();
 
 }

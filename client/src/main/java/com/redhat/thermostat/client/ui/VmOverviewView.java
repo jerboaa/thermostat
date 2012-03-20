@@ -34,25 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.ui.VmClassStatController;
-import com.redhat.thermostat.client.ui.VmGcController;
-import com.redhat.thermostat.client.ui.VmMemoryController;
-import com.redhat.thermostat.client.ui.VmOverviewController;
+import java.awt.Component;
 
-/**
- * Represents information specific to a JVM running on a host somewhere. This is
- * used to populate the UI for a VM's information.
- */
-public interface VmPanelFacade extends AsyncUiFacade {
+public interface VmOverviewView {
 
-    public VmOverviewController getOverviewController();
+    void setVmPid(String pid);
 
-    public VmMemoryController getMemoryController();
+    void setVmStartTimeStamp(String timestamp);
 
-    public VmClassStatController getClassesController();
+    void setVmStopTimeStamp(String timeStamp);
 
-    public VmGcController getGcController();
+    void setMainClass(String mainClass);
+
+    void setJavaCommandLine(String javaCommandLine);
+
+    void setJavaHome(String string);
+
+    void setJavaVersion(String javaVersion);
+
+    void setVmNameAndVersion(String vmNameAndVersion);
+
+    void setVmArguments(String vmArguments);
+
+    void setVmInfo(String string);
+
+    Component getUiComponent();
 
 }

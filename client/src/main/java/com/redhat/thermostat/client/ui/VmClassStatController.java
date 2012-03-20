@@ -34,90 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
-import javax.swing.SwingWorker;
-
-import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-
+import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
-import com.redhat.thermostat.client.ui.VmClassStatPanel;
-import com.redhat.thermostat.client.ui.VmClassStatView;
 import com.redhat.thermostat.common.VmClassStat;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class VmClassStatController implements AsyncUiFacade {
 
-    private static final Logger logger = LoggingUtils.getLogger(VmClassStatController.class);
-
-    private class UpdateChartDataTimerTask extends TimerTask {
-
+    private class UpdateChartData extends TimerTask {
         @Override
         public void run() {
-            UpdateChartDataWorker worker = new UpdateChartDataWorker();
-            worker.execute();
-        }
-        
-    }
-
-    private class UpdateChartDataWorker extends SwingWorker<List<DiscreteTimeData<Long>>, Void> {
-
-        @Override
-        protected List<DiscreteTimeData<Long>> doInBackground() throws Exception {
             List<VmClassStat> latestClassStats = dao.getLatestClassStats();
             List<DiscreteTimeData<Long>> timeData = new ArrayList<>();
             for (VmClassStat stat : latestClassStats) {
                 timeData.add(new DiscreteTimeData<Long>(stat.getTimestamp(), stat.getLoadedClasses()));
             }
-            
-            return timeData;
-        }
-        
-        @Override
-        protected void done() {
-            try {
-                appendCollectorDataToChart(get(), classSeries);
-            } catch (ExecutionException ee) {
-                logger.throwing("VmClassStatController.UpdateChartDataWorker", "done", ee);
-            } catch (InterruptedException ie) {
-                // Preserve interrupted flag to let the EDT handle this.
-                Thread.currentThread().interrupt();
-            }
+            classesView.addClassCount(timeData);
         }
 
-        private void appendCollectorDataToChart(List<DiscreteTimeData<Long>> collectorData, TimeSeries collectorSeries) {
-            if (collectorData.size() > 0) {
-
-                /*
-                 * We have lots of new data to add. we do it in 2 steps:
-                 * 1. Add everything with notify off.
-                 * 2. Notify the chart that there has been a change. It
-                 * does all the expensive computations and redraws itself.
-                 */
-
-                for (DiscreteTimeData<Long> data : collectorData) {
-                    collectorSeries.add(
-                            new FixedMillisecond(data.getTimeInMillis()), data.getData(),
-                            /* notify = */false);
-                }
-
-                collectorSeries.fireSeriesChanged();
-            }
-
-        }
     }
 
     private VmClassStatView classesView;
@@ -127,15 +72,9 @@ public class VmClassStatController implements AsyncUiFacade {
 
     private VmClassStatDAO dao;
 
-    private TimeSeries classSeries;
-    private TimeSeriesCollection classSeriesCollection;
-
     public VmClassStatController(VmRef ref) {
         dao = ApplicationContext.getInstance().getDAOFactory().getVmClassStatsDAO(ref);
         classesView = createView();
-        classSeries = new TimeSeries("loadedClasses");
-        classSeriesCollection = new TimeSeriesCollection(classSeries);
-        classesView.setDataSet(classSeriesCollection);
     }
 
     protected VmClassStatView createView() {
@@ -147,7 +86,7 @@ public class VmClassStatController implements AsyncUiFacade {
         if (timer == null) {
             timer = new Timer();
         }
-        TimerTask updateTimerTask = new UpdateChartDataTimerTask();
+        TimerTask updateTimerTask = new UpdateChartData();
         timer.scheduleAtFixedRate(updateTimerTask, 0, TimeUnit.SECONDS.toMillis(5));
     }
 
@@ -158,7 +97,7 @@ public class VmClassStatController implements AsyncUiFacade {
     }
 
     public Component getComponent() {
-        return classesView.getUIComponent();
+        return classesView.getUiComponent();
     }
 
 }
