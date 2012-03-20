@@ -49,6 +49,8 @@ import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -90,6 +92,9 @@ public class MainWindow extends JFrame {
 
     private static final long serialVersionUID = 5608972421496808177L;
 
+    // TODO: When we break out a view interface, this constant needs to go there.
+    public static final String HOST_VM_TREE_FILTER_PROPERTY = "hostVMTreeFilter";
+
     private final UiFacadeFactory facadeFactory;
     private final MainWindowFacade facade;
 
@@ -101,7 +106,9 @@ public class MainWindow extends JFrame {
     private final ShutdownClient shutdownAction;
 
     private ApplicationInfo appInfo; 
-    
+
+    private PropertyChangeSupport viewPropertySupport = new PropertyChangeSupport(this);
+
     public MainWindow(UiFacadeFactory facadeFactory) {
         super();
         
@@ -110,10 +117,11 @@ public class MainWindow extends JFrame {
 
         this.facadeFactory = facadeFactory;
         this.facade = facadeFactory.getMainWindow();
-
+        facade.initListeners(this);
         shutdownAction = new ShutdownClient(facade, this);
 
         searchField = new JTextField();
+        searchField.setName("hostVMTreeFilter");
         TreeModel model = facade.getHostVmTree();
         agentVmTree = new JTree(model);
         model.addTreeModelListener(new KeepRootExpandedListener(agentVmTree));
@@ -221,10 +229,10 @@ public class MainWindow extends JFrame {
                 } catch (BadLocationException ble) {
                     // ignore
                 }
-                facade.setHostVmTreeFilter(filter);
+                // We don't have information about the old value, and are not interested either, so we send null.
+                fireViewPropertyChange(HOST_VM_TREE_FILTER_PROPERTY, null, searchField.getText());
             }
         });
-
         searchPanel.add(searchField);
         // TODO move this icon inside the search field
         JLabel searchIcon = new JLabel(IconResource.SEARCH.getIcon());
@@ -382,4 +390,15 @@ public class MainWindow extends JFrame {
         }
     }
 
+    public void addViewPropertyListener(PropertyChangeListener l) {
+        viewPropertySupport.addPropertyChangeListener(l);
+    }
+
+    public void removeViewPropertyListener(PropertyChangeListener l) {
+        viewPropertySupport.removePropertyChangeListener(l);
+    }
+
+    private void fireViewPropertyChange(String propertyName, Object oldValue, Object newValue) {
+        viewPropertySupport.firePropertyChange(propertyName, oldValue, newValue);
+    }
 }

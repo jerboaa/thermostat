@@ -38,6 +38,7 @@ package com.redhat.thermostat.client;
 
 import javax.swing.tree.TreeModel;
 
+import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 
@@ -50,5 +51,11 @@ public interface MainWindowFacade extends AsyncUiFacade {
     public TreeModel getHostVmTree();
 
     public void setHostVmTreeFilter(String filter);
+
+    /**
+     * TODO: This method is only here temporarily until we inversed the dependency between the MainWindow
+     * and MainWindowFacadeImpl classes.
+     */
+    public void initListeners(MainWindow mainWindow);
 
 }

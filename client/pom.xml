@@ -65,6 +65,18 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.easytesting</groupId>
+      <artifactId>fest-swing</artifactId>
+      <version>1.2.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-lang3</artifactId>
+      <version>3.1</version>
+      <scope>test</scope>
+    </dependency>
+  	<dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common</artifactId>
       <version>${project.version}</version>

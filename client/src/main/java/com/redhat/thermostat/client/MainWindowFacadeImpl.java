@@ -38,6 +38,8 @@ package com.redhat.thermostat.client;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +64,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -276,6 +279,21 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
         for (TreeNode child : children) {
             printTree(out, child, depth + 1);
         }
+    }
+
+    @Override
+    public void initListeners(MainWindow mainWindow) {
+        mainWindow.addViewPropertyListener(new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                if (evt.getPropertyName().equals(MainWindow.HOST_VM_TREE_FILTER_PROPERTY)) {
+                    String filter = (String) evt.getNewValue();
+                    setHostVmTreeFilter(filter);
+                }
+            }
+            
+        });
     }
 
 }
