@@ -40,36 +40,35 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.GridBagConstraints;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.locale.LocaleResources;
 
 public class VmClassStatPanel extends JPanel implements VmClassStatView {
 
     private static final long serialVersionUID = 1067532168697544774L;
-    private Component chartPanel;
+
+    private final TimeSeriesCollection dataset = new TimeSeriesCollection();
 
     public VmClassStatPanel() {
+        // any name works
+        dataset.addSeries(new TimeSeries("class-stat"));
+
         setBorder(Components.smallBorder());
         setLayout(new BorderLayout());
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.fill = GridBagConstraints.BOTH;
-
         add(Components.header(localize(LocaleResources.VM_LOADED_CLASSES)), BorderLayout.NORTH);
-    }
-
-    public void setDataSet(TimeSeriesCollection dataset) {
-        if (chartPanel != null) {
-            remove(chartPanel);
-        }
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
@@ -78,14 +77,40 @@ public class VmClassStatPanel extends JPanel implements VmClassStatView {
                 dataset,
                 false, false, false);
 
-        chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        Component chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
         add(chartPanel, BorderLayout.CENTER);
+    }
+
+    @Override
+    public void addClassCount(List<DiscreteTimeData<Long>> data) {
+        final List<DiscreteTimeData<Long>> copy = new ArrayList<>(data);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                TimeSeries series = dataset.getSeries(0);
+                for (DiscreteTimeData<Long> data: copy) {
+                    series.add(new FixedMillisecond(data.getTimeInMillis()), data.getData(), false);
+                }
+                series.fireSeriesChanged();
+            }
+        });
 
     }
 
     @Override
-    public Component getUIComponent() {
+    public void clearClassCount() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                TimeSeries series = dataset.getSeries(0);
+                series.clear();
+            }
+        });
+    }
+
+    @Override
+    public Component getUiComponent() {
         return this;
     }
 }

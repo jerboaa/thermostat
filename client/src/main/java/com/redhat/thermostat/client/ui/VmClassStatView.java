@@ -37,11 +37,15 @@
 package com.redhat.thermostat.client.ui;
 
 import java.awt.Component;
+import java.util.List;
 
-import org.jfree.data.time.TimeSeriesCollection;
+import com.redhat.thermostat.client.DiscreteTimeData;
 
 public interface VmClassStatView {
 
-    void setDataSet(TimeSeriesCollection dataset);
-    Component getUIComponent();
+    void clearClassCount();
+
+    void addClassCount(List<DiscreteTimeData<Long>> data);
+
+    Component getUiComponent();
 }

@@ -36,378 +36,57 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
-import java.text.DateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-
-import javax.swing.SwingWorker;
-
-import org.jfree.data.category.DefaultCategoryDataset;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-
-import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.VmGcStat;
-import com.redhat.thermostat.common.VmMemoryStat;
-import com.redhat.thermostat.common.VmMemoryStat.Generation;
-import com.redhat.thermostat.common.VmMemoryStat.Space;
-import com.redhat.thermostat.common.dao.VmGcStatConverter;
+import com.redhat.thermostat.client.ui.VmClassStatController;
+import com.redhat.thermostat.client.ui.VmGcController;
+import com.redhat.thermostat.client.ui.VmMemoryController;
+import com.redhat.thermostat.client.ui.VmOverviewController;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class VmPanelFacadeImpl implements VmPanelFacade {
 
-    private final VmRef ref;
-    private final DBCollection vmInfoCollection;
-    private final DBCollection vmGcStatsCollection;
-    private final DBCollection vmMemoryStatsCollection;
-
-    private final ChangeableText vmPid = new ChangeableText("");
-    private final ChangeableText startTime = new ChangeableText("");
-    private final ChangeableText stopTime = new ChangeableText("");
-    private final ChangeableText javaVersion = new ChangeableText("");
-    private final ChangeableText javaHome = new ChangeableText("");
-    private final ChangeableText mainClass = new ChangeableText("");
-    private final ChangeableText commandLine = new ChangeableText("");
-    private final ChangeableText vmName = new ChangeableText("");
-    private final ChangeableText vmInfo = new ChangeableText("");
-    private final ChangeableText vmVersion = new ChangeableText("");
-    private final ChangeableText vmArguments = new ChangeableText("");
-    private final ChangeableText vmNameAndVersion = new ChangeableText("");
-
-    private final DefaultCategoryDataset currentMemoryDataset = new DefaultCategoryDataset();
-
-    private final Map<String, TimeSeriesCollection> collectorSeriesCollection = new HashMap<String, TimeSeriesCollection>();
-    private final Map<String, TimeSeries> collectorSeries = new HashMap<String, TimeSeries>();
-    private final Map<String, Long> collectorSeriesLastUpdateTime = new HashMap<String, Long>();
-
-    private final Timer timer = new Timer();
-
-    private final DateFormat vmRunningTimeFormat;
-
-    private VmMemoryStat cached;
-
-    private VmClassStatController classesController;
+    private final VmOverviewController overviewController;
+    private final VmMemoryController memoryController;
+    private final VmClassStatController classesController;
+    private final VmGcController gcController;
 
     public VmPanelFacadeImpl(VmRef vmRef, DB db) {
-        this.ref = vmRef;
-        vmInfoCollection = db.getCollection("vm-info");
-        vmGcStatsCollection = db.getCollection("vm-gc-stats");
-        vmMemoryStatsCollection = db.getCollection("vm-memory-stats");
-
-        vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
-
+        overviewController = new VmOverviewController(vmRef, db);
+        memoryController = new VmMemoryController(vmRef, db);
+        gcController = new VmGcController(vmRef, db);
         classesController = new VmClassStatController(vmRef);
     }
 
     @Override
     public void start() {
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                BasicDBObject queryObject = new BasicDBObject();
-                queryObject.put("agent-id", ref.getAgent().getAgentId());
-                queryObject.put("vm-id", Integer.valueOf(ref.getId()));
-                DBObject vmInfoObject = vmInfoCollection.findOne(queryObject);
-                vmPid.setText(((Integer) vmInfoObject.get("vm-pid")).toString());
-                long actualStartTime = (Long) vmInfoObject.get("start-time");
-                startTime.setText(vmRunningTimeFormat.format(new Date(actualStartTime)));
-                long actualStopTime = (Long) vmInfoObject.get("stop-time");
-                if (actualStopTime >= actualStartTime) {
-                    // Only show a stop time if we have actually stopped.
-                    stopTime.setText(vmRunningTimeFormat.format(new Date(actualStopTime)));
-                } else {
-                    stopTime.setText(localize(LocaleResources.VM_INFO_RUNNING));
-                }
-                javaVersion.setText((String) vmInfoObject.get("runtime-version"));
-                javaHome.setText((String) vmInfoObject.get("java-home"));
-                mainClass.setText((String) vmInfoObject.get("main-class"));
-                commandLine.setText((String) vmInfoObject.get("command-line"));
-                String actualVmName = (String) vmInfoObject.get("vm-name");
-                vmName.setText(actualVmName);
-                vmInfo.setText((String) vmInfoObject.get("vm-info"));
-                String actualVmVersion = (String) vmInfoObject.get("vm-version");
-                vmVersion.setText(actualVmVersion);
-                vmArguments.setText((String) vmInfoObject.get("vm-arguments"));
-                vmNameAndVersion.setText(localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                                                  actualVmName, actualVmVersion));
-
-                String[] collectorNames = getCollectorNames();
-                for (String collectorName: collectorNames) {
-                    TimeSeriesCollection seriesCollection = collectorSeriesCollection.get(collectorName);
-                    if (seriesCollection == null) {
-                        seriesCollection = new TimeSeriesCollection();
-                        collectorSeriesCollection.put(collectorName, seriesCollection);
-                    }
-                    TimeSeries series = collectorSeries.get(collectorName);
-                    if (series == null) {
-                        series = new TimeSeries(collectorName);
-                        collectorSeries.put(collectorName, series);
-                    }
-                    if (seriesCollection.getSeries(collectorName) == null) {
-                        seriesCollection.addSeries(series);
-                    }
-                    if (!collectorSeriesLastUpdateTime.containsKey(collectorName)) {
-                        collectorSeriesLastUpdateTime.put(collectorName, Long.MIN_VALUE);
-                    }
-                }
-
-                doUpdateCurrentMemoryChartAsync();
-                doUpdateCollectorChartsAsync();
-
-            }
-
-        }, 0, TimeUnit.SECONDS.toMillis(5));
-
+        overviewController.start();
+        memoryController.start();
+        gcController.start();
         classesController.start();
 
     }
 
     @Override
     public void stop() {
-        timer.cancel();
-
+        overviewController.stop();
+        memoryController.stop();
+        gcController.stop();
         classesController.stop();
     }
 
     @Override
-    public ChangeableText getVmPid() {
-        return vmPid;
+    public VmOverviewController getOverviewController() {
+        return overviewController;
     }
 
     @Override
-    public ChangeableText getJavaCommandLine() {
-        return commandLine;
+    public VmMemoryController getMemoryController() {
+        return memoryController;
     }
 
     @Override
-    public ChangeableText getJavaVersion() {
-        return javaVersion;
-    }
-
-    @Override
-    public ChangeableText getMainClass() {
-        return mainClass;
-    }
-
-    @Override
-    public ChangeableText getStartTimeStamp() {
-        return startTime;
-    }
-
-    @Override
-    public ChangeableText getStopTimeStamp() {
-        return stopTime;
-    }
-
-    @Override
-    public ChangeableText getVmNameAndVersion() {
-        return vmNameAndVersion;
-    }
-
-    @Override
-    public ChangeableText getVmName() {
-        return vmName;
-    }
-
-    @Override
-    public ChangeableText getVmVersion() {
-        return vmVersion;
-    }
-
-    @Override
-    public ChangeableText getVmArguments() {
-    	return vmArguments;
-    }
-
-    @Override
-    public String[] getCollectorNames() {
-        BasicDBObject queryObject = new BasicDBObject();
-        queryObject.put("agent-id", ref.getAgent().getAgentId());
-        queryObject.put("vm-id", Integer.valueOf(ref.getId()));
-        @SuppressWarnings("unchecked") // This is temporary; this will eventually come from a DAO as the correct type.
-        List<String> results = vmGcStatsCollection.distinct("collector", queryObject);
-        List<String> collectorNames = new ArrayList<String>(results);
-
-        return collectorNames.toArray(new String[0]);
-    }
-
-    private void doUpdateCollectorChartsAsync() {
-        String[] collectorNames = getCollectorNames();
-        for (final String name: collectorNames) {
-            TimeSeriesUpdater.Converter<Double, DBObject> converter = new TimeSeriesUpdater.Converter<Double, DBObject>() {
-                @Override
-                public DiscreteTimeData<Double> convert(DBObject dbObj) {
-                    VmGcStat stat = new VmGcStatConverter().fromDBObject(dbObj);
-                    // convert microseconds to seconds
-                    double walltime = 1.0E-6 * stat.getWallTime();
-                    return new DiscreteTimeData<Double>(stat.getTimeStamp(), walltime);
-                }
-            };
-
-            Iterable<DBObject> dataSource = new Iterable<DBObject>() {
-                @Override
-                public Iterator<DBObject> iterator() {
-                    BasicDBObject queryObject = new BasicDBObject();
-                    queryObject.put("agent-id", ref.getAgent().getAgentId());
-                    queryObject.put("vm-id", Integer.valueOf(ref.getId()));
-                    queryObject.put("collector", name);
-                    Long lastTime = collectorSeriesLastUpdateTime.get(name);
-                    if (lastTime != null) {
-                        queryObject.put("timestamp", new BasicDBObject("$gt", (long) lastTime));
-                    }
-                    return vmGcStatsCollection.find(queryObject);
-                }
-            };
-            TimeSeriesUpdater.LastUpdateTimeCallback callback = new TimeSeriesUpdater.LastUpdateTimeCallback() {
-                @Override
-                public void update(long lastUpdateTime) {
-                    collectorSeriesLastUpdateTime.put(name, lastUpdateTime);
-                }
-            };
-            new TimeSeriesUpdater<>(dataSource, collectorSeries.get(name), converter, callback).execute();
-        }
-    }
-
-    @Override
-    public TimeSeriesCollection getCollectorDataSet(String collectorName) {
-        TimeSeriesCollection seriesCollection = collectorSeriesCollection.get(collectorName);
-        if (seriesCollection == null) {
-            seriesCollection = new TimeSeriesCollection();
-            collectorSeriesCollection.put(collectorName, seriesCollection);
-        }
-        return seriesCollection;
-    }
-
-    @Override
-    public String getCollectorGeneration(String collectorName) {
-        if (cached == null) {
-            getLatestMemoryInfo();
-        }
-        for (Generation g: cached.getGenerations()) {
-            if (g.collector.equals(collectorName)) {
-                return g.name;
-            }
-        }
-        return localize(LocaleResources.UNKNOWN_GEN);
-    }
-
-    private void doUpdateCurrentMemoryChartAsync() {
-        UpdateCurrentMemory worker = new UpdateCurrentMemory(this);
-        worker.execute();
-    }
-
-    private static class UpdateCurrentMemory extends SwingWorker<VmMemoryStat, Void> {
-
-        private final VmPanelFacadeImpl facade;
-
-        public UpdateCurrentMemory(VmPanelFacadeImpl facade) {
-            this.facade = facade;
-        }
-
-        @Override
-        protected VmMemoryStat doInBackground() throws Exception {
-            return facade.getLatestMemoryInfo();
-        }
-
-        @Override
-        protected void done() {
-            try {
-                VmMemoryStat info = get();
-                DefaultCategoryDataset dataset = facade.currentMemoryDataset;
-                List<Generation> generations = info.getGenerations();
-                for (Generation generation: generations) {
-                    List<Space> spaces = generation.spaces;
-                    for (Space space: spaces) {
-                        dataset.addValue(space.used, localize(LocaleResources.VM_CURRENT_MEMORY_CHART_USED), space.name);
-                        dataset.addValue(space.capacity - space.used,
-                                         localize(LocaleResources.VM_CURRENT_MEMORY_CHART_CAPACITY), space.name);
-                        dataset.addValue(space.maxCapacity - space.capacity,
-                                         localize(LocaleResources.VM_CURRENT_MEMORY_CHART_MAX_CAPACITY), space.name);
-                    }
-                }
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            } catch (ExecutionException ee) {
-                ee.printStackTrace();
-            }
-        }
-
-    }
-
-    private VmMemoryStat getLatestMemoryInfo() {
-        BasicDBObject query = new BasicDBObject();
-        query.put("agent-id", ref.getAgent().getAgentId());
-        query.put("vm-id", Integer.valueOf(ref.getId()));
-        // TODO ensure timestamp is an indexed column
-        BasicDBObject sortByTimeStamp = new BasicDBObject("timestamp", -1);
-        DBCursor cursor;
-        cursor = vmMemoryStatsCollection.find(query).sort(sortByTimeStamp).limit(1);
-        if (cursor.hasNext()) {
-            DBObject current = cursor.next();
-            return createVmMemoryStatFromDBObject(current);
-        }
-
-        return null;
-    }
-
-    private VmMemoryStat createVmMemoryStatFromDBObject(DBObject dbObj) {
-        // FIXME so much hardcoding :'(
-
-        String[] spaceNames = new String[] { "eden", "s0", "s1", "old", "perm" };
-        List<Generation> generations = new ArrayList<Generation>();
-
-        long timestamp = (Long) dbObj.get("timestamp");
-        int vmId = (Integer) dbObj.get("vm-id");
-        for (String spaceName: spaceNames) {
-            DBObject info = (DBObject) dbObj.get(spaceName);
-            String generationName = (String) info.get("gen");
-            Generation target = null;
-            for (Generation generation: generations) {
-                if (generation.name.equals(generationName)) {
-                    target = generation;
-                }
-            }
-            if (target == null) {
-                target = new Generation();
-                target.name = generationName;
-                generations.add(target);
-            }
-            if (target.collector == null) {
-                target.collector = (String) info.get("collector");
-            }
-            Space space = new Space();
-            space.name = spaceName;
-            space.capacity = (Long) info.get("capacity");
-            space.maxCapacity = (Long)info.get("max-capacity");
-            space.used = (Long) info.get("used");
-            if (target.spaces == null) {
-                target.spaces = new ArrayList<Space>();
-            }
-            target.spaces.add(space);
-        }
-
-        cached = new VmMemoryStat(timestamp, vmId , generations);
-        return cached;
-    }
-
-    @Override
-    public DefaultCategoryDataset getCurrentMemory() {
-        return currentMemoryDataset;
+    public VmGcController getGcController() {
+        return gcController;
     }
 
     @Override

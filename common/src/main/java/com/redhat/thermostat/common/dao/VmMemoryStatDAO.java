@@ -36,12 +36,15 @@
 
 package com.redhat.thermostat.common.dao;
 
+import com.redhat.thermostat.common.VmMemoryStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmMemoryStatDAO {
+public abstract class VmMemoryStatDAO {
 
-    static final Key<Integer> vmMemoryStatVmIdKey = new Key<>("vm-id", false);
+    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
+    static final Key<String> agentIdKey = new Key<>("agent-id", false);
+
     static final Key<String> vmMemoryStatEdenGenKey = new Key<>("eden.gen", false);
     static final Key<String> vmMemoryStatEdenCollectorKey = new Key<>("eden.collector", false);
     static final Key<Long> vmMemoryStatEdenCapacityKey = new Key<>("eden.capacity", false);
@@ -73,7 +76,7 @@ public class VmMemoryStatDAO {
     static final Key<Long> vmMemoryStatPermUsedKey = new Key<>("perm.used", false);
 
     public static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
-            vmMemoryStatVmIdKey, Key.TIMESTAMP,
+            vmIdKey, Key.TIMESTAMP,
             vmMemoryStatEdenGenKey, vmMemoryStatEdenCollectorKey,
             vmMemoryStatEdenCapacityKey, vmMemoryStatEdenMaxCapacityKey,vmMemoryStatEdenUsedKey,
             vmMemoryStatS0GenKey, vmMemoryStatS0CollectorKey, vmMemoryStatS0CapacityKey,
@@ -84,5 +87,7 @@ public class VmMemoryStatDAO {
             vmMemoryStatOldMaxCapacityKey, vmMemoryStatOldUsedKey,
             vmMemoryStatPermGenKey, vmMemoryStatPermCollectorKey, vmMemoryStatPermCapacityKey,
             vmMemoryStatPermMaxCapacityKey, vmMemoryStatPermUsedKey);
+
+    public abstract VmMemoryStat getLatestMemoryStat();
 
 }
