@@ -44,11 +44,6 @@ import static org.mockito.Mockito.when;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
-
 import org.apache.commons.lang3.ObjectUtils;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
@@ -94,9 +89,6 @@ public class MainWindowTest {
     @Test
     public void testHostVMTreeFilterPropertySupport() {
         MainWindowFacade mainWindowFacade = mock(MainWindowFacade.class);
-        TreeNode root = new DefaultMutableTreeNode();
-        TreeModel treeModel = new DefaultTreeModel(root);
-        when(mainWindowFacade.getHostVmTree()).thenReturn(treeModel);
 
         SummaryPanelFacade summaryPanelFacade = mock(SummaryPanelFacade.class);
         when(summaryPanelFacade.getTotalConnectedAgents()).thenReturn(new ChangeableText("totalConnectedAgents"));

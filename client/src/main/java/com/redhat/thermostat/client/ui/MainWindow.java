@@ -51,6 +51,11 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+import java.io.PrintStream;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
@@ -65,6 +70,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
+import javax.swing.SwingWorker;
 import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -78,17 +84,135 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.ApplicationInfo;
+import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainWindowFacade;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.StringUtils;
 
 public class MainWindow extends JFrame {
+
+    /**
+     * Updates a TreeModel in the background in an Swing EDT-safe manner.
+     */
+    private static class BackgroundTreeModelWorker extends SwingWorker<DefaultMutableTreeNode, Void> {
+
+        private final DefaultTreeModel treeModel;
+        private DefaultMutableTreeNode treeRoot;
+        private String filterText;
+        private HostsVMsLoader hostsVMsLoader;
+
+        public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root, String filterText, HostsVMsLoader hostsVMsLoader) {
+            this.filterText = filterText;
+            this.treeModel = model;
+            this.treeRoot = root;
+            this.hostsVMsLoader = hostsVMsLoader;
+        }
+
+        @Override
+        protected DefaultMutableTreeNode doInBackground() throws Exception {
+            DefaultMutableTreeNode root = new DefaultMutableTreeNode();
+            Collection<HostRef> hostsInRemoteModel = hostsVMsLoader.getHosts();
+            buildSubTree(root, hostsInRemoteModel, filterText);
+            return root;
+        }
+
+        private boolean buildSubTree(DefaultMutableTreeNode parent, Collection<? extends Ref> objectsInRemoteModel, String filter) {
+            boolean subTreeMatches = false;
+            for (Ref inRemoteModel : objectsInRemoteModel) {
+                DefaultMutableTreeNode inTreeNode = new DefaultMutableTreeNode(inRemoteModel);
+
+                boolean shouldInsert = false;
+                if (filter == null || inRemoteModel.matches(filter)) {
+                    shouldInsert = true;
+                }
+
+                Collection<? extends Ref> children = getChildren(inRemoteModel);
+                boolean subtreeResult = buildSubTree(inTreeNode, children, filter);
+                if (subtreeResult) {
+                    shouldInsert = true;
+                }
+
+                if (shouldInsert) {
+                    parent.add(inTreeNode);
+                    subTreeMatches = true;
+                }
+            }
+            return subTreeMatches;
+        }
+
+        @Override
+        protected void done() {
+            DefaultMutableTreeNode sourceRoot;
+            try {
+                sourceRoot = get();
+                syncTree(sourceRoot, treeModel, treeRoot);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private Collection<? extends Ref> getChildren(Ref parent) {
+            if (parent == null) {
+                return hostsVMsLoader.getHosts();
+            } else if (parent instanceof HostRef) {
+                HostRef host = (HostRef) parent;
+                return hostsVMsLoader.getVMs(host);
+            }
+            return Collections.emptyList();
+        }
+
+        private void syncTree(DefaultMutableTreeNode sourceRoot, DefaultTreeModel targetModel, DefaultMutableTreeNode targetNode) {
+            @SuppressWarnings("unchecked") // We know what we put into these trees.
+            List<DefaultMutableTreeNode> sourceChildren = Collections.list(sourceRoot.children());
+            @SuppressWarnings("unchecked")
+            List<DefaultMutableTreeNode> targetChildren = Collections.list(targetNode.children());
+            for (DefaultMutableTreeNode sourceChild : sourceChildren) {
+                Ref sourceRef = (Ref) sourceChild.getUserObject();
+                DefaultMutableTreeNode targetChild = null;
+                for (DefaultMutableTreeNode aChild : targetChildren) {
+                    Ref targetRef = (Ref) aChild.getUserObject();
+                    if (targetRef.equals(sourceRef)) {
+                        targetChild = aChild;
+                        break;
+                    }
+                }
+
+                if (targetChild == null) {
+                    targetChild = new DefaultMutableTreeNode(sourceRef);
+                    targetModel.insertNodeInto(targetChild, targetNode, targetNode.getChildCount());
+                }
+
+                syncTree(sourceChild, targetModel, targetChild);
+            }
+
+            for (DefaultMutableTreeNode targetChild : targetChildren) {
+                Ref targetRef = (Ref) targetChild.getUserObject();
+                boolean matchFound = false;
+                for (DefaultMutableTreeNode sourceChild : sourceChildren) {
+                    Ref sourceRef = (Ref) sourceChild.getUserObject();
+                    if (targetRef.equals(sourceRef)) {
+                        matchFound = true;
+                        break;
+                    }
+                }
+
+                if (!matchFound) {
+                    targetModel.removeNodeFromParent(targetChild);
+                }
+            }
+        }
+    }
 
     private static final long serialVersionUID = 5608972421496808177L;
 
@@ -109,6 +233,10 @@ public class MainWindow extends JFrame {
 
     private PropertyChangeSupport viewPropertySupport = new PropertyChangeSupport(this);
 
+    private final DefaultMutableTreeNode publishedRoot = 
+            new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
+    private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
+
     public MainWindow(UiFacadeFactory facadeFactory) {
         super();
         
@@ -117,12 +245,12 @@ public class MainWindow extends JFrame {
 
         this.facadeFactory = facadeFactory;
         this.facade = facadeFactory.getMainWindow();
-        facade.initListeners(this);
+        facade.initView(this);
         shutdownAction = new ShutdownClient(facade, this);
 
         searchField = new JTextField();
         searchField.setName("hostVMTreeFilter");
-        TreeModel model = facade.getHostVmTree();
+        TreeModel model = publishedTreeModel;
         agentVmTree = new JTree(model);
         model.addTreeModelListener(new KeepRootExpandedListener(agentVmTree));
         agentVmTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -401,4 +529,20 @@ public class MainWindow extends JFrame {
     private void fireViewPropertyChange(String propertyName, Object oldValue, Object newValue) {
         viewPropertySupport.firePropertyChange(propertyName, oldValue, newValue);
     }
+
+    public void updateTree(String filter, HostsVMsLoader hostsVMsLoader) {
+        BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot, filter, hostsVMsLoader);
+        worker.execute();
+    }
+
+    @SuppressWarnings("unused") // Used for debugging but not in production code.
+    private static void printTree(PrintStream out, TreeNode node, int depth) {
+        out.println(StringUtils.repeat("  ", depth) + node.toString());
+        @SuppressWarnings("unchecked")
+        List<TreeNode> children = Collections.list(node.children());
+        for (TreeNode child : children) {
+            printTree(out, child, depth + 1);
+        }
+    }
+
 }

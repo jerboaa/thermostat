@@ -36,16 +36,16 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.client.ui.MainWindow;
+import java.util.Collection;
 
-public interface MainWindowFacade extends AsyncUiFacade {
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
 
-    public void setHostVmTreeFilter(String filter);
+/**
+ * Provides a way to load the current hosts and VMs.
+ */
+public interface HostsVMsLoader {
 
-    /**
-     * TODO: This method is only here temporarily until we inversed the dependency between the MainWindow
-     * and MainWindowFacadeImpl classes.
-     */
-    public void initView(MainWindow mainWindow);
-
+    Collection<HostRef> getHosts();
+    Collection<VmRef> getVMs(HostRef host);
 }

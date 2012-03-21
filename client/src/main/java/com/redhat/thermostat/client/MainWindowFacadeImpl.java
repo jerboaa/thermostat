@@ -36,42 +36,28 @@
 
 package com.redhat.thermostat.client;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.SwingWorker;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
-import javax.swing.tree.TreeNode;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.StringUtils;
 
-public class MainWindowFacadeImpl implements MainWindowFacade {
+public class MainWindowFacadeImpl implements MainWindowFacade, HostsVMsLoader {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowFacadeImpl.class);
 
@@ -79,13 +65,11 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
     private final DBCollection hostInfoCollection;
     private final DBCollection vmInfoCollection;
 
-    private final DefaultMutableTreeNode publishedRoot = 
-            new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
-    private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
-
-    private String filterText;
-
     private final Timer backgroundUpdater = new Timer();
+
+    private MainWindow view;
+
+    private String filter;
 
     public MainWindowFacadeImpl(DB db) {
         this.agentConfigCollection = db.getCollection("agent-config");
@@ -109,7 +93,7 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
     }
 
     @Override
-    public HostRef[] getHosts() {
+    public Collection<HostRef> getHosts() {
         List<HostRef> hostRefs = new ArrayList<HostRef>();
 
         DBCursor cursor = agentConfigCollection.find();
@@ -124,11 +108,11 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
             }
         }
         logger.log(Level.FINER, "found " + hostRefs.size() + " connected agents");
-        return hostRefs.toArray(new HostRef[0]);
+        return hostRefs;
     }
 
     @Override
-    public VmRef[] getVms(HostRef hostRef) {
+    public Collection<VmRef> getVMs(HostRef hostRef) {
         List<VmRef> vmRefs = new ArrayList<VmRef>();
         DBCursor cursor = vmInfoCollection.find(new BasicDBObject("agent-id", hostRef.getAgentId()));
         while (cursor.hasNext()) {
@@ -140,149 +124,22 @@ public class MainWindowFacadeImpl implements MainWindowFacade {
             vmRefs.add(ref);
         }
 
-        return vmRefs.toArray(new VmRef[0]);
-    }
-
-    @Override
-    public TreeModel getHostVmTree() {
-        return publishedTreeModel;
-    }
-
-    private Ref[] getChildren(Ref parent) {
-        if (parent == null) {
-            return getHosts();
-        } else if (parent instanceof HostRef) {
-            HostRef host = (HostRef) parent;
-            return getVms(host);
-        }
-        return new Ref[0];
+        return vmRefs;
     }
 
     @Override
     public void setHostVmTreeFilter(String filter) {
-        this.filterText = filter;
+        this.filter = filter;
         doUpdateTreeAsync();
     }
 
     public void doUpdateTreeAsync() {
-        BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(this, publishedTreeModel, publishedRoot);
-        worker.execute();
-    }
-
-    /**
-     * Updates a TreeModel in the background in an Swing EDT-safe manner.
-     */
-    private static class BackgroundTreeModelWorker extends SwingWorker<DefaultMutableTreeNode, Void> {
-
-        private final DefaultTreeModel treeModel;
-        private MainWindowFacadeImpl facade;
-        private DefaultMutableTreeNode treeRoot;
-
-        public BackgroundTreeModelWorker(MainWindowFacadeImpl facade, DefaultTreeModel model, DefaultMutableTreeNode root) {
-            this.facade = facade;
-            this.treeModel = model;
-            this.treeRoot = root;
-        }
-
-        @Override
-        protected DefaultMutableTreeNode doInBackground() throws Exception {
-            DefaultMutableTreeNode root = new DefaultMutableTreeNode();
-            List<HostRef> hostsInRemoteModel = Arrays.asList(facade.getHosts());
-            buildSubTree(root, hostsInRemoteModel, facade.filterText);
-            return root;
-        }
-
-        private boolean buildSubTree(DefaultMutableTreeNode parent, List<? extends Ref> objectsInRemoteModel, String filter) {
-            boolean subTreeMatches = false;
-            for (Ref inRemoteModel : objectsInRemoteModel) {
-                DefaultMutableTreeNode inTreeNode = new DefaultMutableTreeNode(inRemoteModel);
-
-                boolean shouldInsert = false;
-                if (filter == null || inRemoteModel.matches(filter)) {
-                    shouldInsert = true;
-                }
-
-                List<Ref> children = Arrays.asList(facade.getChildren(inRemoteModel));
-                boolean subtreeResult = buildSubTree(inTreeNode, children, filter);
-                if (subtreeResult) {
-                    shouldInsert = true;
-                }
-
-                if (shouldInsert) {
-                    parent.add(inTreeNode);
-                    subTreeMatches = true;
-                }
-            }
-            return subTreeMatches;
-        }
-
-        @Override
-        protected void done() {
-            DefaultMutableTreeNode sourceRoot;
-            try {
-                sourceRoot = get();
-                syncTree(sourceRoot, treeModel, treeRoot);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void syncTree(DefaultMutableTreeNode sourceRoot, DefaultTreeModel targetModel, DefaultMutableTreeNode targetNode) {
-            @SuppressWarnings("unchecked") // We know what we put into these trees.
-            List<DefaultMutableTreeNode> sourceChildren = Collections.list(sourceRoot.children());
-            @SuppressWarnings("unchecked")
-            List<DefaultMutableTreeNode> targetChildren = Collections.list(targetNode.children());
-            for (DefaultMutableTreeNode sourceChild : sourceChildren) {
-                Ref sourceRef = (Ref) sourceChild.getUserObject();
-                DefaultMutableTreeNode targetChild = null;
-                for (DefaultMutableTreeNode aChild : targetChildren) {
-                    Ref targetRef = (Ref) aChild.getUserObject();
-                    if (targetRef.equals(sourceRef)) {
-                        targetChild = aChild;
-                        break;
-                    }
-                }
-
-                if (targetChild == null) {
-                    targetChild = new DefaultMutableTreeNode(sourceRef);
-                    targetModel.insertNodeInto(targetChild, targetNode, targetNode.getChildCount());
-                }
-
-                syncTree(sourceChild, targetModel, targetChild);
-            }
-
-            for (DefaultMutableTreeNode targetChild : targetChildren) {
-                Ref targetRef = (Ref) targetChild.getUserObject();
-                boolean matchFound = false;
-                for (DefaultMutableTreeNode sourceChild : sourceChildren) {
-                    Ref sourceRef = (Ref) sourceChild.getUserObject();
-                    if (targetRef.equals(sourceRef)) {
-                        matchFound = true;
-                        break;
-                    }
-                }
-
-                if (!matchFound) {
-                    targetModel.removeNodeFromParent(targetChild);
-                }
-            }
-        }
-    }
-
-    @SuppressWarnings("unused") // Used for debugging but not in production code.
-    private static void printTree(PrintStream out, TreeNode node, int depth) {
-        out.println(StringUtils.repeat("  ", depth) + node.toString());
-        @SuppressWarnings("unchecked")
-        List<TreeNode> children = Collections.list(node.children());
-        for (TreeNode child : children) {
-            printTree(out, child, depth + 1);
-        }
+        view.updateTree(filter, this);
     }
 
     @Override
-    public void initListeners(MainWindow mainWindow) {
+    public void initView(MainWindow mainWindow) {
+        this.view = mainWindow;
         mainWindow.addViewPropertyListener(new PropertyChangeListener() {
 
             @Override
