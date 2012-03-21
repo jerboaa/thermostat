@@ -219,6 +219,8 @@ public class MainWindow extends JFrame {
     // TODO: When we break out a view interface, this constant needs to go there.
     public static final String HOST_VM_TREE_FILTER_PROPERTY = "hostVMTreeFilter";
 
+    public static final String SHUTDOWN_PROPERTY = "shutdown";
+
     private final UiFacadeFactory facadeFactory;
     private final MainWindowFacade facade;
 
@@ -246,7 +248,7 @@ public class MainWindow extends JFrame {
         this.facadeFactory = facadeFactory;
         this.facade = facadeFactory.getMainWindow();
         facade.initView(this);
-        shutdownAction = new ShutdownClient(facade, this);
+        shutdownAction = new ShutdownClient();
 
         searchField = new JTextField();
         searchField.setName("hostVMTreeFilter");
@@ -410,15 +412,7 @@ public class MainWindow extends JFrame {
         return result;
     }
 
-    public static class ShutdownClient extends WindowAdapter implements ActionListener {
-
-        private JFrame toDispose;
-        private MainWindowFacade facade;
-
-        public ShutdownClient(MainWindowFacade facade, JFrame toDispose) {
-            this.facade = facade;
-            this.toDispose = toDispose;
-        }
+    public class ShutdownClient extends WindowAdapter implements ActionListener {
 
         @Override
         public void windowClosing(WindowEvent e) {
@@ -431,8 +425,8 @@ public class MainWindow extends JFrame {
         }
 
         private void shutdown() {
-            toDispose.dispose();
-            facade.stop();
+            dispose();
+            fireViewPropertyChange(SHUTDOWN_PROPERTY, false, true);
         }
     }
 

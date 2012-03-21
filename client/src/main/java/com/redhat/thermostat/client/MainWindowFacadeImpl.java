@@ -144,9 +144,12 @@ public class MainWindowFacadeImpl implements MainWindowFacade, HostsVMsLoader {
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
-                if (evt.getPropertyName().equals(MainWindow.HOST_VM_TREE_FILTER_PROPERTY)) {
+                String propertyName = evt.getPropertyName(); 
+                if (propertyName.equals(MainWindow.HOST_VM_TREE_FILTER_PROPERTY)) {
                     String filter = (String) evt.getNewValue();
                     setHostVmTreeFilter(filter);
+                } else if (propertyName.equals(MainWindow.SHUTDOWN_PROPERTY)) {
+                    stop();
                 }
             }
             

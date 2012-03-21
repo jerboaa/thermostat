@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.ui;
 import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.beans.PropertyChangeEvent;
@@ -48,6 +49,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
 import org.hamcrest.Description;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentMatcher;
@@ -85,9 +88,12 @@ public class MainWindowTest {
         }
     }
 
-    @Category(GUITest.class)
-    @Test
-    public void testHostVMTreeFilterPropertySupport() {
+    private FrameFixture frameFixture;
+    private MainWindow window;
+    private PropertyChangeListener l;
+
+    @Before
+    public void setUp() {
         MainWindowFacade mainWindowFacade = mock(MainWindowFacade.class);
 
         SummaryPanelFacade summaryPanelFacade = mock(SummaryPanelFacade.class);
@@ -98,11 +104,24 @@ public class MainWindowTest {
         when(uiFacadeFactory.getMainWindow()).thenReturn(mainWindowFacade);
         when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
 
-        MainWindow window = new MainWindow(uiFacadeFactory);
-        PropertyChangeListener l = mock(PropertyChangeListener.class);
+        window = new MainWindow(uiFacadeFactory);
+        l = mock(PropertyChangeListener.class);
         window.addViewPropertyListener(l);
 
-        FrameFixture frameFixture = new FrameFixture(window);
+        frameFixture = new FrameFixture(window);
+    }
+
+    @After
+    public void tearDown() {
+        frameFixture.cleanUp();
+        frameFixture = null;
+        window = null;
+        l = null;
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void testHostVMTreeFilterPropertySupport() {
         frameFixture.show();
         JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox("hostVMTreeFilter");
         hostVMTreeFilterField.enterText("test");
@@ -114,4 +133,14 @@ public class MainWindowTest {
         inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.HOST_VM_TREE_FILTER_PROPERTY, null, "test"))));
     }
 
+    @Category(GUITest.class)
+    @Test
+    public void verifyThatCloseFiresShutdownEvent() {
+
+        frameFixture.show();
+
+        frameFixture.close();
+        frameFixture.requireNotVisible();
+        verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.SHUTDOWN_PROPERTY, false, true))));
+    }
 }
