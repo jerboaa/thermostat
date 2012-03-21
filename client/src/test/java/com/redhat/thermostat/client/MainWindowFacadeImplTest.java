@@ -37,8 +37,9 @@
 package com.redhat.thermostat.client;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -49,8 +50,8 @@ import java.beans.PropertyChangeListener;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatcher;
 
 import com.mongodb.DB;
 import com.redhat.thermostat.client.ui.MainWindow;
@@ -70,16 +71,10 @@ public class MainWindowFacadeImplTest {
         controller = new MainWindowFacadeImpl(db);
         controller = spy(controller);
         view = mock(MainWindow.class);
-        doAnswer(new Answer<Void>() {
-
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                l = (PropertyChangeListener) invocation.getArguments()[0];
-                return null;
-            }
-            
-        }).when(view).addViewPropertyListener(any(PropertyChangeListener.class));
+        ArgumentCaptor<PropertyChangeListener> grabListener = ArgumentCaptor.forClass(PropertyChangeListener.class);
+        doNothing().when(view).addViewPropertyListener(grabListener.capture());
         controller.initView(view);
+        l = grabListener.getValue();
     }
 
     @After
