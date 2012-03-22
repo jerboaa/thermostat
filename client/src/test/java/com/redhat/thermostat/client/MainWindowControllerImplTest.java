@@ -54,17 +54,16 @@ import org.mockito.ArgumentCaptor;
 import com.mongodb.DB;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 
-public class MainWindowFacadeImplTest {
+public class MainWindowControllerImplTest {
 
     private PropertyChangeListener l;
 
-    private MainWindowFacadeImpl controller;
+    private MainWindowControllerImpl controller;
 
-    private MainWindow view;
+    private MainView view;
 
     private Timer mainWindowTimer;
 
@@ -77,11 +76,10 @@ public class MainWindowFacadeImplTest {
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
         DB db = mock(DB.class);
-        controller = new MainWindowFacadeImpl(db);
-        view = mock(MainWindow.class);
+        view = mock(MainView.class);
         ArgumentCaptor<PropertyChangeListener> grabListener = ArgumentCaptor.forClass(PropertyChangeListener.class);
         doNothing().when(view).addViewPropertyListener(grabListener.capture());
-        controller.initView(view);
+        controller = new MainWindowControllerImpl(db, view);
         l = grabListener.getValue();
     }
 
@@ -96,7 +94,7 @@ public class MainWindowFacadeImplTest {
     @Test
     public void verifyThatShutdownEventStopsController() {
 
-        l.propertyChange(new PropertyChangeEvent(view, MainWindow.SHUTDOWN_PROPERTY, false, true));
+        l.propertyChange(new PropertyChangeEvent(view, MainView.ViewProperty.SHUTDOWN.toString(), false, true));
 
         verify(mainWindowTimer).stop();
 
@@ -105,9 +103,20 @@ public class MainWindowFacadeImplTest {
     @Test
     public void verifyThatHostsVmsFilterChangeUpdatesTree() {
 
-        l.propertyChange(new PropertyChangeEvent(view, MainWindow.HOST_VM_TREE_FILTER_PROPERTY, null, "test"));
+        l.propertyChange(new PropertyChangeEvent(view, MainView.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, "test"));
 
         verify(view).updateTree(eq("test"), any(HostsVMsLoader.class));
 
+    }
+
+    @Test
+    public void verifyTimerGetsStartedOnConstruction() {
+        verify(mainWindowTimer).start();
+    }
+
+    @Test
+    public void verifyShowMainWindowActuallyCallsView() {
+        controller.showMainMainWindow();
+        verify(view).showMainWindow();
     }
 }

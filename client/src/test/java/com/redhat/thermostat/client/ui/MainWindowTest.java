@@ -46,6 +46,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import org.apache.commons.lang3.ObjectUtils;
+import org.fest.swing.edt.GuiActionRunner;
+import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
 import org.hamcrest.Description;
@@ -57,7 +59,6 @@ import org.mockito.ArgumentMatcher;
 import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.ChangeableText;
-import com.redhat.thermostat.client.MainWindowFacade;
 import com.redhat.thermostat.client.SummaryPanelFacade;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.test.GUITest;
@@ -94,14 +95,12 @@ public class MainWindowTest {
 
     @Before
     public void setUp() {
-        MainWindowFacade mainWindowFacade = mock(MainWindowFacade.class);
 
         SummaryPanelFacade summaryPanelFacade = mock(SummaryPanelFacade.class);
         when(summaryPanelFacade.getTotalConnectedAgents()).thenReturn(new ChangeableText("totalConnectedAgents"));
         when(summaryPanelFacade.getTotalConnectedVms()).thenReturn(new ChangeableText("connectedVms"));
 
         UiFacadeFactory uiFacadeFactory = mock(UiFacadeFactory.class);
-        when(uiFacadeFactory.getMainWindow()).thenReturn(mainWindowFacade);
         when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
 
         window = new MainWindow(uiFacadeFactory);
@@ -127,10 +126,10 @@ public class MainWindowTest {
         hostVMTreeFilterField.enterText("test");
 
         InOrder inOrder = inOrder(l);
-        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.HOST_VM_TREE_FILTER_PROPERTY, null, "t"))));
-        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.HOST_VM_TREE_FILTER_PROPERTY, null, "te"))));
-        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.HOST_VM_TREE_FILTER_PROPERTY, null, "tes"))));
-        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.HOST_VM_TREE_FILTER_PROPERTY, null, "test"))));
+        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, "t"))));
+        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, "te"))));
+        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, "tes"))));
+        inOrder.verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, "test"))));
     }
 
     @Category(GUITest.class)
@@ -141,6 +140,19 @@ public class MainWindowTest {
 
         frameFixture.close();
         frameFixture.requireNotVisible();
-        verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.SHUTDOWN_PROPERTY, false, true))));
+        verify(l).propertyChange(argThat(new PropertyChangeEventMatcher(new PropertyChangeEvent(window, MainWindow.ViewProperty.SHUTDOWN.toString(), false, true))));
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void verifyShowMainWindowShowsWindow() {
+        GuiActionRunner.execute(new GuiTask() {
+            
+            @Override
+            protected void executeInEDT() throws Throwable {
+                window.showMainWindow();
+            }
+        });
+        frameFixture.requireVisible();
     }
 }

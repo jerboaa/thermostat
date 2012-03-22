@@ -36,17 +36,11 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 
-public interface UiFacadeFactory {
+public interface MainWindowController extends AsyncUiFacade {
 
-    public MainWindowController getMainWindow();
+    public void setHostVmTreeFilter(String filter);
 
-    public SummaryPanelFacade getSummaryPanel();
-
-    public HostPanelFacade getHostPanel(HostRef ref);
-
-    public VmPanelFacade getVmPanel(VmRef ref);
+    public void showMainMainWindow();
 
 }

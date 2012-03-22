@@ -36,16 +36,19 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.client.ui.MainWindow;
+import java.beans.PropertyChangeListener;
 
-public interface MainWindowFacade extends AsyncUiFacade {
+public interface MainView {
 
-    public void setHostVmTreeFilter(String filter);
+    enum ViewProperty {
+        HOST_VM_TREE_FILTER,
+        SHUTDOWN
+    }
 
-    /**
-     * TODO: This method is only here temporarily until we inversed the dependency between the MainWindow
-     * and MainWindowFacadeImpl classes.
-     */
-    public void initView(MainWindow mainWindow);
+    void addViewPropertyListener(PropertyChangeListener capture);
+
+    void updateTree(String eq, HostsVMsLoader any);
+
+    void showMainWindow();
 
 }

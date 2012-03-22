@@ -132,9 +132,8 @@ public class Main {
 
         uiFacadeFactory = new UiFacadeFactoryImpl((MongoConnection) connection);
 
-        MainWindow gui = new MainWindow(uiFacadeFactory);
-        gui.pack();
-        gui.setVisible(true);
+        MainWindowController mainController = uiFacadeFactory.getMainWindow();
+        mainController.showMainMainWindow();
 
         if (arguments.isDebugLayout()) {
             Thread layoutDebugger = new Thread(new Runnable() {

@@ -51,15 +51,14 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
-import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class MainWindowFacadeImpl implements MainWindowFacade, HostsVMsLoader {
+public class MainWindowControllerImpl implements MainWindowController, HostsVMsLoader {
 
-    private static final Logger logger = LoggingUtils.getLogger(MainWindowFacadeImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
 
     private final DBCollection agentConfigCollection;
     private final DBCollection hostInfoCollection;
@@ -67,16 +66,18 @@ public class MainWindowFacadeImpl implements MainWindowFacade, HostsVMsLoader {
 
     private Timer backgroundUpdater;
 
-    private MainWindow view;
+    private MainView view;
 
     private String filter;
 
-    public MainWindowFacadeImpl(DB db) {
+    public MainWindowControllerImpl(DB db, MainView view) {
         this.agentConfigCollection = db.getCollection("agent-config");
         this.hostInfoCollection = db.getCollection("host-info");
         this.vmInfoCollection = db.getCollection("vm-info");
 
+        initView(view);
         initializeTimer();
+        start();
     }
 
     private void initializeTimer() {
@@ -148,23 +149,27 @@ public class MainWindowFacadeImpl implements MainWindowFacade, HostsVMsLoader {
         view.updateTree(filter, this);
     }
 
-    @Override
-    public void initView(MainWindow mainWindow) {
-        this.view = mainWindow;
-        mainWindow.addViewPropertyListener(new PropertyChangeListener() {
+    private void initView(MainView mainView) {
+        this.view = mainView;
+        mainView.addViewPropertyListener(new PropertyChangeListener() {
 
             @Override
             public void propertyChange(PropertyChangeEvent evt) {
                 String propertyName = evt.getPropertyName(); 
-                if (propertyName.equals(MainWindow.HOST_VM_TREE_FILTER_PROPERTY)) {
+                if (propertyName.equals(MainView.ViewProperty.HOST_VM_TREE_FILTER.toString())) {
                     String filter = (String) evt.getNewValue();
                     setHostVmTreeFilter(filter);
-                } else if (propertyName.equals(MainWindow.SHUTDOWN_PROPERTY)) {
+                } else if (propertyName.equals(MainView.ViewProperty.SHUTDOWN.toString())) {
                     stop();
                 }
             }
             
         });
+    }
+
+    @Override
+    public void showMainMainWindow() {
+        view.showMainWindow();
     }
 
 }

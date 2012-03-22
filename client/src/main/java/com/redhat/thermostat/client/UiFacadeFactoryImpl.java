@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client;
 
+import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MongoConnection;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -50,8 +51,9 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
-    public MainWindowFacade getMainWindow() {
-        return new MainWindowFacadeImpl(connection.getDB());
+    public MainWindowController getMainWindow() {
+        MainView mainView = new MainWindow(this);
+        return new MainWindowControllerImpl(connection.getDB(), mainView);
     }
 
     @Override

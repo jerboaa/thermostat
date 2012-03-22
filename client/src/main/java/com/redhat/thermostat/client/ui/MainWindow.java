@@ -90,7 +90,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.ApplicationInfo;
 import com.redhat.thermostat.client.HostsVMsLoader;
-import com.redhat.thermostat.client.MainWindowFacade;
+import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -98,7 +98,7 @@ import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.StringUtils;
 
-public class MainWindow extends JFrame {
+public class MainWindow extends JFrame implements MainView {
 
     /**
      * Updates a TreeModel in the background in an Swing EDT-safe manner.
@@ -216,13 +216,7 @@ public class MainWindow extends JFrame {
 
     private static final long serialVersionUID = 5608972421496808177L;
 
-    // TODO: When we break out a view interface, this constant needs to go there.
-    public static final String HOST_VM_TREE_FILTER_PROPERTY = "hostVMTreeFilter";
-
-    public static final String SHUTDOWN_PROPERTY = "shutdown";
-
     private final UiFacadeFactory facadeFactory;
-    private final MainWindowFacade facade;
 
     private JPanel contentArea = null;
 
@@ -246,8 +240,6 @@ public class MainWindow extends JFrame {
         setTitle(appInfo.getName());
 
         this.facadeFactory = facadeFactory;
-        this.facade = facadeFactory.getMainWindow();
-        facade.initView(this);
         shutdownAction = new ShutdownClient();
 
         searchField = new JTextField();
@@ -269,8 +261,6 @@ public class MainWindow extends JFrame {
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(shutdownAction);
-
-        this.facade.start();
     }
 
     private void setupMenus() {
@@ -360,7 +350,7 @@ public class MainWindow extends JFrame {
                     // ignore
                 }
                 // We don't have information about the old value, and are not interested either, so we send null.
-                fireViewPropertyChange(HOST_VM_TREE_FILTER_PROPERTY, null, searchField.getText());
+                fireViewPropertyChange(MainView.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, searchField.getText());
             }
         });
         searchPanel.add(searchField);
@@ -426,7 +416,7 @@ public class MainWindow extends JFrame {
 
         private void shutdown() {
             dispose();
-            fireViewPropertyChange(SHUTDOWN_PROPERTY, false, true);
+            fireViewPropertyChange(ViewProperty.SHUTDOWN.toString(), false, true);
         }
     }
 
@@ -537,6 +527,12 @@ public class MainWindow extends JFrame {
         for (TreeNode child : children) {
             printTree(out, child, depth + 1);
         }
+    }
+
+    @Override
+    public void showMainWindow() {
+        pack();
+        setVisible(true);
     }
 
 }
