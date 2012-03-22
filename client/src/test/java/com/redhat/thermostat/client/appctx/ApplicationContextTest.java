@@ -44,6 +44,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.DAOFactory;
 
 public class ApplicationContextTest {
@@ -91,5 +92,34 @@ public class ApplicationContextTest {
         ApplicationContext ctx2 = ApplicationContext.getInstance();
         DAOFactory actual2 = ctx2.getDAOFactory();
         assertSame(daoFactory, actual2);
+    }
+
+    @Test
+    public void  testTimerFactorySetGet() {
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        ctx.setTimerFactory(timerFactory);
+
+        TimerFactory actual1 = ctx.getTimerFactory();
+        assertSame(timerFactory, actual1);
+    }
+
+    @Test
+    public void  verifyTimerFactoryIsNullWhenNotInitialized() {
+        ApplicationContext ctx = ApplicationContext.getInstance();
+
+        TimerFactory actual = ctx.getTimerFactory();
+        assertNull(actual);
+    }
+
+    @Test
+    public void  verifyTimerFactoryStaysSame() {
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        ctx.setTimerFactory(timerFactory);
+
+        ApplicationContext ctx2 = ApplicationContext.getInstance();
+        TimerFactory actual2 = ctx2.getTimerFactory();
+        assertSame(timerFactory, actual2);
     }
 }

@@ -54,6 +54,8 @@ import com.redhat.thermostat.client.ui.LayoutDebugHelper;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.ThreadPoolTimerFactory;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.Connection;
 import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
@@ -93,6 +95,8 @@ public class Main {
         ConnectionProvider connProv = new MongoConnectionProvider(config);
         DAOFactory daoFactory = new MongoDAOFactory(connProv);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
+        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
     }
 
     private void showGui() {

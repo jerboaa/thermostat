@@ -34,46 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.appctx;
+package com.redhat.thermostat.common;
 
-import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.DAOFactory;
+import java.util.concurrent.TimeUnit;
 
-public class ApplicationContext {
+public interface Timer {
 
-    private static ApplicationContext instance = new ApplicationContext();
-
-    private DAOFactory daoFactory;
-
-    private TimerFactory timerFactory;
-
-    public static ApplicationContext getInstance() {
-        return instance;
+    enum SchedulingType {
+        ONCE, FIXED_RATE, FIXED_DELAY;
     }
 
-    static void reset() {
-        instance = new ApplicationContext();
-    }
-
-    private ApplicationContext() {
-        // Nothing to do here, just prevent instantiation of this class outside
-        // the factory method.
-    }
-
-    public void setDAOFactory(DAOFactory daoFactory) {
-        this.daoFactory = daoFactory;
-    }
-
-    public DAOFactory getDAOFactory() {
-        return daoFactory;
-    }
-
-    public void setTimerFactory(TimerFactory timerFactory) {
-        this.timerFactory = timerFactory;
-    }
-
-    public TimerFactory getTimerFactory() {
-        return timerFactory;
-    }
-
+    void start();
+    void stop();
+    void setAction(Runnable action);
+    void setDelay(long delay);
+    void setPeriod(long period);
+    void setSchedulingType(SchedulingType schedulingType);
+    void setTimeUnit(TimeUnit timeUnit);
 }

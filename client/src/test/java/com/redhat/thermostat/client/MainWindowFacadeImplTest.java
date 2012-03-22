@@ -37,12 +37,11 @@
 package com.redhat.thermostat.client;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -51,10 +50,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatcher;
 
 import com.mongodb.DB;
+import com.redhat.thermostat.client.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.client.ui.MainWindow;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
 
 public class MainWindowFacadeImplTest {
 
@@ -64,17 +65,21 @@ public class MainWindowFacadeImplTest {
 
     private MainWindow view;
 
+    private Timer mainWindowTimer;
+
     @Before
     public void setUp() {
-        
+        ApplicationContextUtil.resetApplicationContext();
         DB db = mock(DB.class);
         controller = new MainWindowFacadeImpl(db);
-        controller = spy(controller);
         view = mock(MainWindow.class);
         ArgumentCaptor<PropertyChangeListener> grabListener = ArgumentCaptor.forClass(PropertyChangeListener.class);
         doNothing().when(view).addViewPropertyListener(grabListener.capture());
         controller.initView(view);
         l = grabListener.getValue();
+        mainWindowTimer = mock(Timer.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(timerFactory.createTimer()).thenReturn(mainWindowTimer);
     }
 
     @After
@@ -82,6 +87,7 @@ public class MainWindowFacadeImplTest {
         view = null;
         controller = null;
         l = null;
+        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test
@@ -89,7 +95,7 @@ public class MainWindowFacadeImplTest {
 
         l.propertyChange(new PropertyChangeEvent(view, MainWindow.SHUTDOWN_PROPERTY, false, true));
 
-        verify(controller).stop();
+        verify(mainWindowTimer).stop();
 
     }
 

@@ -41,8 +41,6 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,7 +50,9 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.ui.MainWindow;
+import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -65,7 +65,7 @@ public class MainWindowFacadeImpl implements MainWindowFacade, HostsVMsLoader {
     private final DBCollection hostInfoCollection;
     private final DBCollection vmInfoCollection;
 
-    private final Timer backgroundUpdater = new Timer();
+    private Timer backgroundUpdater;
 
     private MainWindow view;
 
@@ -75,21 +75,32 @@ public class MainWindowFacadeImpl implements MainWindowFacade, HostsVMsLoader {
         this.agentConfigCollection = db.getCollection("agent-config");
         this.hostInfoCollection = db.getCollection("host-info");
         this.vmInfoCollection = db.getCollection("vm-info");
+
+        initializeTimer();
     }
 
-    @Override
-    public void start() {
-        backgroundUpdater.scheduleAtFixedRate(new TimerTask() {
+    private void initializeTimer() {
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        backgroundUpdater = ctx.getTimerFactory().createTimer();
+        backgroundUpdater.setAction(new Runnable() {
             @Override
             public void run() {
                 doUpdateTreeAsync();
             }
-        }, 0, TimeUnit.SECONDS.toMillis(10));
+        });
+        backgroundUpdater.setDelay(0);
+        backgroundUpdater.setPeriod(10);
+        backgroundUpdater.setTimeUnit(TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void start() {
+        backgroundUpdater.start();
     }
 
     @Override
     public void stop() {
-        backgroundUpdater.cancel();
+        backgroundUpdater.stop();
     }
 
     @Override
