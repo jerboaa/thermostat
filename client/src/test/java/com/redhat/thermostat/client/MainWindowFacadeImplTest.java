@@ -52,6 +52,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.mongodb.DB;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Timer;
@@ -70,6 +71,11 @@ public class MainWindowFacadeImplTest {
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
+        mainWindowTimer = mock(Timer.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(timerFactory.createTimer()).thenReturn(mainWindowTimer);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+
         DB db = mock(DB.class);
         controller = new MainWindowFacadeImpl(db);
         view = mock(MainWindow.class);
@@ -77,9 +83,6 @@ public class MainWindowFacadeImplTest {
         doNothing().when(view).addViewPropertyListener(grabListener.capture());
         controller.initView(view);
         l = grabListener.getValue();
-        mainWindowTimer = mock(Timer.class);
-        TimerFactory timerFactory = mock(TimerFactory.class);
-        when(timerFactory.createTimer()).thenReturn(mainWindowTimer);
     }
 
     @After
