@@ -43,40 +43,30 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.dao.CpuStatConverter;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 
 public class HostCpuController implements AsyncUiFacade {
 
-    private final HostRef hostRef;
-
     private final HostCpuView view;
     private final Timer backgroundUpdateTimer = new Timer();
 
     private final HostInfoDAO hostInfoDAO;
-    private final DBCollection cpuStatsCollection;
+    private final CpuStatDAO cpuStatDAO;
 
-    private long cpuLoadLastUpdateTime = Long.MIN_VALUE;
-
-    public HostCpuController(HostRef ref, DB db) {
-        hostRef = ref;
-
+    public HostCpuController(HostRef ref) {
         view = createView();
         view.clearCpuLoadData();
-
-        cpuStatsCollection = db.getCollection("cpu-stats");
-        hostInfoDAO = ApplicationContext.getInstance().getDAOFactory().getHostInfoDAO(ref);
+        DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
+        hostInfoDAO = daos.getHostInfoDAO(ref);
+        cpuStatDAO = daos.getCpuStatDAO(ref);
     }
 
     @Override
@@ -88,7 +78,7 @@ public class HostCpuController implements AsyncUiFacade {
                 HostInfo hostInfo = hostInfoDAO.getHostInfo();
 
                 view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
-                view.setCpuModel(String.valueOf(hostInfo.getCpuModel()));
+                view.setCpuModel(hostInfo.getCpuModel());
 
                 doCpuChartUpdate();
             }
@@ -101,20 +91,11 @@ public class HostCpuController implements AsyncUiFacade {
     }
 
     private void doCpuChartUpdate() {
-
-        BasicDBObject query = new BasicDBObject();
-        query.put("agent-id", this.hostRef.getAgentId());
-        query.put("timestamp", new BasicDBObject("$gt", cpuLoadLastUpdateTime));
-
-        DBCursor cursor = cpuStatsCollection.find(query);
-
+        List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats();
         List<DiscreteTimeData<Double>> result = new ArrayList<DiscreteTimeData<Double>>();
-        for (DBObject dbObj: cursor) {
-                CpuStat stat = new CpuStatConverter().fromDB(dbObj);
-                cpuLoadLastUpdateTime = Math.max(cpuLoadLastUpdateTime, stat.getTimeStamp());
-                result.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getLoad5()));
+        for (CpuStat stat : cpuStats) {
+            result.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getLoad5()));
         }
-
         view.addCpuLoadData(result);
     }
 

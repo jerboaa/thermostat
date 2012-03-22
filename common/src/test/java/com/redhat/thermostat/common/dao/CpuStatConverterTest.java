@@ -52,13 +52,24 @@ public class CpuStatConverterTest {
         Chunk chunk = new CpuStatConverter().cpuStatToChunk(stat);
         assertNotNull(chunk);
         assertEquals("cpu-stats", chunk.getCategory().getName());
-        assertEquals((Long) 10L, chunk.get(new Key<Long>("timestamp", false)));
-        assertEquals(5.0, chunk.get(new Key<Double>("5load", false)), 0.001);
-        assertEquals(10.0, chunk.get(new Key<Double>("10load", false)), 0.001);
-        assertEquals(15.0, chunk.get(new Key<Double>("15load", false)), 0.001);
-
+        assertEquals((Long) 10L, chunk.get(Key.TIMESTAMP));
+        assertEquals(5.0, chunk.get(CpuStatDAO.cpu5LoadKey), 0.001);
+        assertEquals(10.0, chunk.get(CpuStatDAO.cpu10LoadKey), 0.001);
+        assertEquals(15.0, chunk.get(CpuStatDAO.cpu15LoadKey), 0.001);
     }
 
-    // TODO test conversion the other way too
-
+    @Test
+    public void testChunkToCpuStat() {
+        Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
+        chunk.put(Key.TIMESTAMP, 10L);
+        chunk.put(CpuStatDAO.cpu5LoadKey, 5.0);
+        chunk.put(CpuStatDAO.cpu10LoadKey, 10.0);
+        chunk.put(CpuStatDAO.cpu15LoadKey, 15.0);
+        CpuStat stat = new CpuStatConverter().chunkToCpuStat(chunk);
+        assertNotNull(stat);
+        assertEquals(10L, stat.getTimeStamp());
+        assertEquals(5.0, stat.getLoad5(), 0.001);
+        assertEquals(10.0, stat.getLoad10(), 0.001);
+        assertEquals(15.0, stat.getLoad15(), 0.001);
+    }
 }

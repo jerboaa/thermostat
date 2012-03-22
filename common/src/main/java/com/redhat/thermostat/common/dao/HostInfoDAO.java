@@ -49,8 +49,6 @@ public interface HostInfoDAO {
     static Key<String> cpuModelKey = new Key<>("cpu_model", false);
     static Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
 
-    static final Key<String> agentIdKey = new Key<>("agent-id", false);
-
     public static final Category hostInfoCategory = new Category("host-info",
             hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);

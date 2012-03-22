@@ -77,4 +77,39 @@ public class MongoDAOFactoryTest {
         assertNotNull(vmClassStatsDAO);
     }
 
+    @Test
+    public void testGetHostInfoDAO() {
+        DB db = mock(DB.class);
+
+        MongoConnection conn = mock(MongoConnection.class);
+        when(conn.getDB()).thenReturn(db);
+
+        ConnectionProvider connProv = mock(ConnectionProvider.class);
+        when(connProv.createConnection()).thenReturn(conn);
+
+        DAOFactory instance = new MongoDAOFactory(connProv);
+
+        HostRef ref = mock(HostRef.class);
+        HostInfoDAO dao = instance.getHostInfoDAO(ref);
+
+        assertNotNull(dao);
+    }
+
+    @Test
+    public void testGetCpuStatDAO() {
+        DB db = mock(DB.class);
+
+        MongoConnection conn = mock(MongoConnection.class);
+        when(conn.getDB()).thenReturn(db);
+
+        ConnectionProvider connProv = mock(ConnectionProvider.class);
+        when(connProv.createConnection()).thenReturn(conn);
+
+        DAOFactory instance = new MongoDAOFactory(connProv);
+
+        HostRef ref = mock(HostRef.class);
+        CpuStatDAO dao = instance.getCpuStatDAO(ref);
+
+        assertNotNull(dao);
+    }
 }

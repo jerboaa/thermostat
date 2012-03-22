@@ -34,52 +34,57 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+package com.redhat.thermostat.client.ui;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.appctx.ApplicationContext;
-import com.redhat.thermostat.client.ui.VmClassStatController;
-import com.redhat.thermostat.client.ui.VmClassStatView;
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.dao.VmRef;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class VmClassStatControllerTest {
+import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.CpuStat;
+import com.redhat.thermostat.common.HostInfo;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.MongoDAOFactory;
+
+public class CpuStatControllerTest {
 
     @Test
-    public void testChartUpdate() {
+    public void testUpdate() {
 
-        VmClassStat stat1 = new VmClassStat(123, 12345, 1234);
-        List<VmClassStat> stats = new ArrayList<VmClassStat>();
-        stats.add(stat1);
+        CpuStat stat = new CpuStat(10L, 5.0, 10.0, 15.0);
+        List<CpuStat> stats = new ArrayList<CpuStat>();
+        stats.add(stat);
 
-        VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
-        when(vmClassStatDAO.getLatestClassStats()).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
+        CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
+        when(cpuStatDAO.getLatestCpuStats()).thenReturn(stats).thenReturn(new ArrayList<CpuStat>());
+
+        HostInfo hostInfo = new HostInfo("someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, 1024);
+        HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
+        when(hostInfoDAO.getHostInfo()).thenReturn(hostInfo);
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getVmClassStatsDAO(any(VmRef.class))).thenReturn(vmClassStatDAO);
+        when(daoFactory.getCpuStatDAO(any(HostRef.class))).thenReturn(cpuStatDAO);
+        when(daoFactory.getHostInfoDAO(any(HostRef.class))).thenReturn(hostInfoDAO);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
-        VmRef ref = mock(VmRef.class);
+        HostRef ref = mock(HostRef.class);
 
-        final VmClassStatView view = mock(VmClassStatView.class);
+        final HostCpuView view = mock(HostCpuView.class);
 
         // TODO: Consider to pass the ClassesView or a factory for it to the controller instead.
-        VmClassStatController controller = new VmClassStatController(ref) {
+        HostCpuController controller = new HostCpuController(ref) {
             @Override
-            protected VmClassStatView createView() {
+            protected HostCpuView createView() {
                 return view;
             }
         };
@@ -93,8 +98,9 @@ public class VmClassStatControllerTest {
             return;
         }
 
-        verify(view, atLeast(1)).addClassCount(any(List.class));
+        verify(view, atLeast(1)).addCpuLoadData(any(List.class));
+        verify(view, atLeast(1)).setCpuCount(any(String.class));
+        verify(view, atLeast(1)).setCpuModel(any(String.class));
         // We don't verify atMost() since we might increase the update rate in the future.
     }
-
 }
