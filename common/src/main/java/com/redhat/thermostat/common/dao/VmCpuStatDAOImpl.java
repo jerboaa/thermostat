@@ -36,25 +36,47 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.redhat.thermostat.common.VmCpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
-public class VmCpuStatConverter {
+public class VmCpuStatDAOImpl extends VmCpuStatDAO {
 
-    public Chunk vmCpuStatToChunk(VmCpuStat vmCpuStat) {
-        Chunk chunk = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
-        chunk.put(Key.TIMESTAMP, vmCpuStat.getTimeStamp());
-        chunk.put(VmCpuStatDAO.vmIdKey, vmCpuStat.getVmId());
-        chunk.put(VmCpuStatDAO.vmCpuLoadKey, vmCpuStat.getCpuLoad());
-        return chunk;
+    private final Storage storage;
+    private final VmRef vmRef;
+
+    private long lastUpdate = Long.MIN_VALUE;;
+
+    public VmCpuStatDAOImpl(Storage storage, VmRef vmRef) {
+        this.storage = storage;
+        this.vmRef = vmRef;
     }
 
-    public VmCpuStat chunkToVmCpuStat(Chunk chunk) {
-        long timestamp = chunk.get(Key.TIMESTAMP);
-        int vmId = chunk.get(VmCpuStatDAO.vmIdKey);
-        double processorUsage = chunk.get(VmCpuStatDAO.vmCpuLoadKey);
-        return new VmCpuStat(timestamp, vmId, processorUsage);
-    }
+    @Override
+    public List<VmCpuStat> getLatestVmCpuStats() {
+        ArrayList<VmCpuStat> result = new ArrayList<>();
+        Chunk query = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
+        query.put(Key.AGENT_ID, vmRef.getAgent().getAgentId());
+        query.put(VmCpuStatDAO.vmIdKey, Integer.valueOf(vmRef.getId()));
+        if (lastUpdate != Long.MIN_VALUE) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            query.put(VmCpuStatDAO.whereKey, "this.timestamp > " + lastUpdate);
+        }
+        Cursor cursor = storage.findAll(query);
+        while (cursor.hasNext()) {
+            Chunk current = cursor.next();
+            VmCpuStat stat = new VmCpuStatConverter().chunkToVmCpuStat(current);
+            result.add(stat);
+            lastUpdate = Math.max(stat.getTimeStamp(), lastUpdate);
+        }
 
+        return result;
+
+    }
 }

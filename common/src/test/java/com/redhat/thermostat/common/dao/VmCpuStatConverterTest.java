@@ -46,18 +46,36 @@ import com.redhat.thermostat.common.storage.Key;
 
 public class VmCpuStatConverterTest {
 
+    final long TIMESTAMP = 12345l;
+    final int VM_ID = 678;
+    final double PROCESSOR_USAGE = 9.9;
+
     @Test
     public void testVmCpuStatToChunk() {
-        VmCpuStat vmCpuStat = new VmCpuStat(123, 456, 7.0);
+
+        VmCpuStat vmCpuStat = new VmCpuStat(TIMESTAMP, VM_ID, PROCESSOR_USAGE);
         Chunk chunk = new VmCpuStatConverter().vmCpuStatToChunk(vmCpuStat);
         assertNotNull(chunk);
         assertEquals("vm-cpu-stats", chunk.getCategory().getName());
-        assertEquals((Long) 123L, chunk.get(Key.TIMESTAMP));
-        assertEquals((Integer) 456, chunk.get(new Key<Long>("vm-id", false)));
-        assertEquals(7.0, chunk.get(new Key<Double>("processor-usage", false)), 0.001);
+        assertEquals((Long)TIMESTAMP, chunk.get(Key.TIMESTAMP));
+        assertEquals((Integer) VM_ID, chunk.get(new Key<Long>("vm-id", false)));
+        assertEquals(PROCESSOR_USAGE, chunk.get(new Key<Double>("processor-usage", false)), 0.001);
 
     }
 
-    // TODO test conversion the other way too
+    @Test
+    public void testChunkToVmCpuStat() {
+        Chunk chunk = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
+        chunk.put(Key.TIMESTAMP, TIMESTAMP);
+        chunk.put(VmCpuStatDAO.vmIdKey, VM_ID);
+        chunk.put(VmCpuStatDAO.vmCpuLoadKey, PROCESSOR_USAGE);
+
+        VmCpuStat stat = new VmCpuStatConverter().chunkToVmCpuStat(chunk);
+        assertNotNull(stat);
+        assertEquals(TIMESTAMP, stat.getTimeStamp());
+        assertEquals(VM_ID, stat.getVmId());
+        assertEquals(PROCESSOR_USAGE, stat.getCpuLoad(), 0.001);
+
+    }
 
 }

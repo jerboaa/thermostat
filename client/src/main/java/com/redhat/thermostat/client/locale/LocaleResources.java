@@ -37,19 +37,19 @@
 package com.redhat.thermostat.client.locale;
 
 public enum LocaleResources {
-    
+
     MISSING_INFO,
-    
+
     MAIN_WINDOW_TREE_ROOT_NAME,
-    
+
     CONNECTION_FAILED_TO_CONNECT_TITLE,
     CONNECTION_FAILED_TO_CONNECT_DESCRIPTION,
-    
+
     BUTTON_CLOSE,
     BUTTON_NEXT,
     BUTTON_CANCEL,
     BUTTON_OK,
-    
+
     MENU_FILE,
     MENU_FILE_CONNECT,
     MENU_FILE_IMPORT,
@@ -57,7 +57,7 @@ public enum LocaleResources {
     MENU_FILE_EXIT,
     MENU_HELP,
     MENU_HELP_ABOUT,
-    
+
     GARBAGE_COLLECTION,
     YOUNG_GEN,
     EDEN_GEN,
@@ -67,7 +67,7 @@ public enum LocaleResources {
     PERM_GEN,
     UNKNOWN_GEN,
     SOME_GENERATION,
-    
+
     SECONDS,
     MINUTES,
     HOURS,
@@ -98,7 +98,7 @@ public enum LocaleResources {
     HOME_PANEL_TOTAL_JVMS,
     HOME_PANEL_SECTION_ISSUES,
     HOME_PANEL_NO_ISSUES,
-    
+
     HOST_INFO_TAB_OVERVIEW,
     HOST_INFO_TAB_MEMORY,
     HOST_INFO_TAB_CPU,
@@ -113,14 +113,14 @@ public enum LocaleResources {
     HOST_INFO_CPU_MODEL,
     HOST_INFO_OS_NAME,
     HOST_INFO_OS_KERNEL,
-    
+
     HOST_INFO_MEMORY_TOTAL,
     HOST_INFO_NETWORK,
 
     NETWORK_INTERFACE_COLUMN,
     NETWORK_IPV4_COLUMN,
     NETWORK_IPV6_COLUMN,
-    
+
     HOST_CPU_SECTION_OVERVIEW,
     HOST_CPU_USAGE_CHART_TIME_LABEL,
     HOST_CPU_USAGE_CHART_VALUE_LABEL,
@@ -136,8 +136,11 @@ public enum LocaleResources {
     HOST_BUFFERS,
 
     VM_INFO_TAB_OVERVIEW,
+    VM_INFO_TAB_CPU,
     VM_INFO_TAB_MEMORY,
     VM_INFO_TAB_GC,
+    VM_INFO_TAB_CLASSES,
+
     VM_INFO_SECTION_PROCESS,
     VM_INFO_SECTION_JAVA,
     VM_INFO_PROCESS_ID,
@@ -153,7 +156,10 @@ public enum LocaleResources {
     VM_INFO_PROPERTIES,
     VM_INFO_ENVIRONMENT,
     VM_INFO_LIBRARIES,
-    
+
+    VM_CPU_CHART_LOAD_LABEL,
+    VM_CPU_CHART_TIME_LABEL,
+
     VM_CURRENT_MEMORY_CHART_USED,
     VM_CURRENT_MEMORY_CHART_CAPACITY,
     VM_CURRENT_MEMORY_CHART_MAX_CAPACITY,
@@ -164,11 +170,10 @@ public enum LocaleResources {
     VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL,
     VM_GC_COLLECTOR_CHART_GC_TIME_LABEL,
 
-    VM_INFO_TAB_CLASSES,
     VM_LOADED_CLASSES,
     VM_CLASSES_CHART_REAL_TIME_LABEL,
     VM_CLASSES_CHART_LOADED_CLASSES_LABEL;
-    
+
     static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.client.locale.strings";
 }

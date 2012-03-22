@@ -37,13 +37,25 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.VmCpuStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
 public class VmCpuStatDAOTest {
 
@@ -55,7 +67,76 @@ public class VmCpuStatDAOTest {
         assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
         assertTrue(keys.contains(new Key<Integer>("processor-usage", false)));
         assertEquals(3, keys.size());
+    }
 
+    @Test
+    public void testGetLatestCpuStatsBasic() {
+
+        Chunk chunk = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
+        chunk.put(Key.TIMESTAMP, 1234L);
+        chunk.put(Key.AGENT_ID, "test-agent-id");
+        chunk.put(VmCpuStatDAO.vmIdKey, 321);
+        chunk.put(VmCpuStatDAO.vmCpuLoadKey, 9.9);
+
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(chunk);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn("system");
+
+        VmRef vmRef = mock(VmRef.class);
+        when(vmRef.getAgent()).thenReturn(hostRef);
+        when(vmRef.getId()).thenReturn("321");
+
+
+        VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage, vmRef);
+        List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats();
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).findAll(arg.capture());
+        assertNull(arg.getValue().get(new Key<String>("$where", false)));
+
+        assertEquals(1, vmCpuStats.size());
+        VmCpuStat stat = vmCpuStats.get(0);
+        assertEquals(1234L, stat.getTimeStamp());
+        assertEquals(9.9, stat.getCpuLoad(), 0.001);
+        assertEquals(321, stat.getVmId());
+    }
+
+    @Test
+    public void testGetLatestCpuStatsTwice() {
+
+        Chunk chunk = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
+        chunk.put(Key.AGENT_ID, "test-agent-id");
+        chunk.put(Key.TIMESTAMP, 1234L);
+        chunk.put(VmCpuStatDAO.vmIdKey, 321);
+        chunk.put(VmCpuStatDAO.vmCpuLoadKey, 9.9);
+
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(chunk);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn("system");
+
+        VmRef vmRef = mock(VmRef.class);
+        when(vmRef.getAgent()).thenReturn(hostRef);
+        when(vmRef.getId()).thenReturn("321");
+
+        VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage, vmRef);
+        dao.getLatestVmCpuStats();
+
+        dao.getLatestVmCpuStats();
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage, times(2)).findAll(arg.capture());
+        assertEquals("this.timestamp > 1234", arg.getValue().get(new Key<String>("$where", false)));
     }
 
 }

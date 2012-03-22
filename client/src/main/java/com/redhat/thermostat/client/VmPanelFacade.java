@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client;
 
 import com.redhat.thermostat.client.ui.VmClassStatController;
+import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.client.ui.VmGcController;
 import com.redhat.thermostat.client.ui.VmMemoryController;
 import com.redhat.thermostat.client.ui.VmOverviewController;
@@ -49,10 +50,13 @@ public interface VmPanelFacade extends AsyncUiFacade {
 
     public VmOverviewController getOverviewController();
 
+    public VmCpuController getCpuController();
+
     public VmMemoryController getMemoryController();
 
     public VmClassStatController getClassesController();
 
     public VmGcController getGcController();
+
 
 }
