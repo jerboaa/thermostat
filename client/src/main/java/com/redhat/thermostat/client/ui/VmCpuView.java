@@ -34,27 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.common.VmCpuStat;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Key;
+import java.awt.Component;
+import java.util.List;
 
-public class VmCpuStatConverter {
+import com.redhat.thermostat.client.DiscreteTimeData;
 
-    public Chunk vmCpuStatToChunk(VmCpuStat vmCpuStat) {
-        Chunk chunk = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
-        chunk.put(Key.TIMESTAMP, vmCpuStat.getTimeStamp());
-        chunk.put(VmCpuStatDAO.vmIdKey, vmCpuStat.getVmId());
-        chunk.put(VmCpuStatDAO.vmCpuLoadKey, vmCpuStat.getCpuLoad());
-        return chunk;
-    }
+public interface VmCpuView {
 
-    public VmCpuStat chunkToVmCpuStat(Chunk chunk) {
-        long timestamp = chunk.get(Key.TIMESTAMP);
-        int vmId = chunk.get(VmCpuStatDAO.vmIdKey);
-        double processorUsage = chunk.get(VmCpuStatDAO.vmCpuLoadKey);
-        return new VmCpuStat(timestamp, vmId, processorUsage);
-    }
+    void addData(List<DiscreteTimeData<? extends Number>> data);
+
+    void clearData();
+
+    Component getUiComponent();
 
 }

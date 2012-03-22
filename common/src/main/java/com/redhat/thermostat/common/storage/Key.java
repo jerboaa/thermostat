@@ -44,6 +44,7 @@ public class Key<T> {
 
     // Key used by most Categories.
     public static Key<Long> TIMESTAMP = new Key<>("timestamp", false);
+    public static Key<String> AGENT_ID = new Key<>("agent-id", false);
 
     private String name;
     private boolean isPartialCategoryKey;

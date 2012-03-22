@@ -47,7 +47,7 @@ public class MongoDAOFactory implements DAOFactory {
     private Connection connection;
 
     public MongoDAOFactory(ConnectionProvider connProv) {
-        
+
         connection = connProv.createConnection();
         final MongoStorage mongoStorage = new MongoStorage(connection);
         connection.addListener(new ConnectionListener() {
@@ -65,6 +65,11 @@ public class MongoDAOFactory implements DAOFactory {
     @Override
     public Storage getStorage() {
         return storage;
+    }
+
+    @Override
+    public VmCpuStatDAO getVmCpuStatDAO(VmRef ref) {
+        return new VmCpuStatDAOImpl(storage, ref);
     }
 
     @Override

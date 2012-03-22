@@ -38,6 +38,7 @@ package com.redhat.thermostat.client;
 
 import com.mongodb.DB;
 import com.redhat.thermostat.client.ui.VmClassStatController;
+import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.client.ui.VmGcController;
 import com.redhat.thermostat.client.ui.VmMemoryController;
 import com.redhat.thermostat.client.ui.VmOverviewController;
@@ -46,12 +47,14 @@ import com.redhat.thermostat.common.dao.VmRef;
 public class VmPanelFacadeImpl implements VmPanelFacade {
 
     private final VmOverviewController overviewController;
+    private final VmCpuController cpuController;
     private final VmMemoryController memoryController;
     private final VmClassStatController classesController;
     private final VmGcController gcController;
 
     public VmPanelFacadeImpl(VmRef vmRef, DB db) {
         overviewController = new VmOverviewController(vmRef, db);
+        cpuController = new VmCpuController(vmRef);
         memoryController = new VmMemoryController(vmRef, db);
         gcController = new VmGcController(vmRef, db);
         classesController = new VmClassStatController(vmRef);
@@ -60,6 +63,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     @Override
     public void start() {
         overviewController.start();
+        cpuController.start();
         memoryController.start();
         gcController.start();
         classesController.start();
@@ -69,6 +73,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     @Override
     public void stop() {
         overviewController.stop();
+        cpuController.stop();
         memoryController.stop();
         gcController.stop();
         classesController.stop();
@@ -77,6 +82,11 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     @Override
     public VmOverviewController getOverviewController() {
         return overviewController;
+    }
+
+    @Override
+    public VmCpuController getCpuController() {
+        return cpuController;
     }
 
     @Override

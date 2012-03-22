@@ -34,23 +34,69 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.ui;
 
+import java.awt.Component;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.DiscreteTimeData;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.VmCpuStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 
-public abstract class VmCpuStatDAO {
+public class VmCpuController implements AsyncUiFacade {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
-    static final Key<String> whereKey = new Key<>("$where", false);
+    private final VmCpuStatDAO dao;
+    private final VmCpuView view;
 
-    public static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
-            Key.TIMESTAMP, vmCpuLoadKey, vmIdKey);
+    private final Timer timer = new Timer();
 
-    public abstract List<VmCpuStat> getLatestVmCpuStats();
+    public VmCpuController(VmRef ref) {
+        dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO(ref);
+        view = createView();
+    }
+
+    protected VmCpuView createView() {
+        return new VmCpuPanel();
+    }
+
+    @Override
+    public void start() {
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                doUpdateVmCpuCharts();
+            }
+
+        }, 0, TimeUnit.SECONDS.toMillis(5));
+
+    }
+
+    private void doUpdateVmCpuCharts() {
+        List<VmCpuStat> stats = dao.getLatestVmCpuStats();
+        List<DiscreteTimeData<? extends Number>> toDisplay = new ArrayList<>(stats.size());
+        for (VmCpuStat stat: stats) {
+            DiscreteTimeData<? extends Number> data =
+                    new DiscreteTimeData<Number>(stat.getTimeStamp(), stat.getCpuLoad());
+            toDisplay.add(data);
+        }
+
+        view.addData(toDisplay);
+    }
+
+    @Override
+    public void stop() {
+        timer.cancel();
+    }
+
+    public Component getComponent() {
+        return view.getUiComponent();
+    }
 
 }

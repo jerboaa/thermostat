@@ -47,6 +47,8 @@ public interface DAOFactory {
      */
     public abstract Connection getConnection();
 
+    public abstract VmCpuStatDAO getVmCpuStatDAO(VmRef ref);
+
     public abstract VmClassStatDAO getVmClassStatsDAO(VmRef ref);
 
     public abstract HostInfoDAO getHostInfoDAO(HostRef ref);
