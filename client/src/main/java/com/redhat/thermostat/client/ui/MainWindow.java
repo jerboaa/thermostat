@@ -43,14 +43,10 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.beans.PropertyChangeListener;
-import java.beans.PropertyChangeSupport;
 import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Collections;
@@ -92,9 +88,9 @@ import com.redhat.thermostat.client.ApplicationInfo;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.ViewActionListener;
-import com.redhat.thermostat.client.ViewActionSupport;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -229,7 +225,7 @@ public class MainWindow extends JFrame implements MainView {
 
     private ApplicationInfo appInfo; 
 
-    private ViewActionSupport<Action> actionSupport = new ViewActionSupport<>(this);
+    private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
     private final DefaultMutableTreeNode publishedRoot = 
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
@@ -273,9 +269,9 @@ public class MainWindow extends JFrame implements MainView {
         mainMenuBar.add(fileMenu);
 
         JMenuItem fileConnectMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_CONNECT));
-        fileConnectMenu.addActionListener(new ActionListener() {
+        fileConnectMenu.addActionListener(new java.awt.event.ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
                 // TODO present a connection dialog
             }
         });
@@ -301,9 +297,9 @@ public class MainWindow extends JFrame implements MainView {
         mainMenuBar.add(helpMenu);
 
         JMenuItem helpAboutMenu = new JMenuItem(localize(LocaleResources.MENU_HELP_ABOUT));
-        helpAboutMenu.addActionListener(new ActionListener() {
+        helpAboutMenu.addActionListener(new java.awt.event.ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
                 AboutDialog aboutDialog = new AboutDialog(appInfo);
                 aboutDialog.setModal(true);
                 aboutDialog.pack();
@@ -403,7 +399,7 @@ public class MainWindow extends JFrame implements MainView {
         return result;
     }
 
-    public class ShutdownClient extends WindowAdapter implements ActionListener {
+    public class ShutdownClient extends WindowAdapter implements java.awt.event.ActionListener {
 
         @Override
         public void windowClosing(WindowEvent e) {
@@ -411,7 +407,7 @@ public class MainWindow extends JFrame implements MainView {
         }
 
         @Override
-        public void actionPerformed(ActionEvent e) {
+        public void actionPerformed(java.awt.event.ActionEvent e) {
             shutdown();
         }
 
@@ -503,16 +499,16 @@ public class MainWindow extends JFrame implements MainView {
         }
     }
 
-    public void addViewActionListener(ViewActionListener<Action> l) {
-        actionSupport.addViewActionListener(l);
+    public void addActionListener(ActionListener<Action> l) {
+        actionNotifier.addActionListener(l);
     }
 
-    public void removeViewActionListener(ViewActionListener<Action> l) {
-        actionSupport.removeViewActionListener(l);
+    public void removeViewActionListener(ActionListener<Action> l) {
+        actionNotifier.removeActionListener(l);
     }
 
     private void fireViewAction(Action action) {
-        actionSupport.fireViewAction(action);
+        actionNotifier.fireAction(action);
     }
 
     public void updateTree(String filter, HostsVMsLoader hostsVMsLoader) {

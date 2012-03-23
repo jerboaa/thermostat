@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -51,6 +49,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -151,10 +151,10 @@ public class MainWindowControllerImpl implements MainWindowController, HostsVMsL
 
     private void initView(MainView mainView) {
         this.view = mainView;
-        mainView.addViewActionListener(new ViewActionListener<MainView.Action>() {
+        mainView.addActionListener(new ActionListener<MainView.Action>() {
 
             @Override
-            public void viewActionPerformed(ViewActionEvent<MainView.Action> evt) {
+            public void actionPerformed(ActionEvent<MainView.Action> evt) {
                 MainView.Action action = evt.getActionId();
                 switch (action) {
                 case HOST_VM_TREE_FILTER:

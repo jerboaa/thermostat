@@ -43,9 +43,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -54,12 +51,14 @@ import org.mockito.ArgumentCaptor;
 import com.mongodb.DB;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 
 public class MainWindowControllerImplTest {
 
-    private ViewActionListener<MainView.Action> l;
+    private ActionListener<MainView.Action> l;
 
     private MainWindowControllerImpl controller;
 
@@ -77,8 +76,8 @@ public class MainWindowControllerImplTest {
 
         DB db = mock(DB.class);
         view = mock(MainView.class);
-        ArgumentCaptor<ViewActionListener> grabListener = ArgumentCaptor.forClass(ViewActionListener.class);
-        doNothing().when(view).addViewActionListener(grabListener.capture());
+        ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(grabListener.capture());
         controller = new MainWindowControllerImpl(db, view);
         l = grabListener.getValue();
     }
@@ -94,7 +93,7 @@ public class MainWindowControllerImplTest {
     @Test
     public void verifyThatShutdownEventStopsController() {
 
-        l.viewActionPerformed(new ViewActionEvent<MainView.Action>(view, MainView.Action.SHUTDOWN));
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SHUTDOWN));
 
         verify(mainWindowTimer).stop();
 
@@ -105,7 +104,7 @@ public class MainWindowControllerImplTest {
 
         when(view.getHostVmTreeFilter()).thenReturn("test");
 
-        l.viewActionPerformed(new ViewActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_TREE_FILTER));
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_TREE_FILTER));
 
         verify(view).updateTree(eq("test"), any(HostsVMsLoader.class));
 

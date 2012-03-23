@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client;
 
+import com.redhat.thermostat.common.ActionListener;
+
 
 public interface MainView {
 
@@ -44,7 +46,7 @@ public interface MainView {
         SHUTDOWN
     }
 
-    void addViewActionListener(ViewActionListener<Action> capture);
+    void addActionListener(ActionListener<Action> capture);
 
     void updateTree(String eq, HostsVMsLoader any);
 

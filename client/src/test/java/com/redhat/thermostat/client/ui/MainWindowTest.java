@@ -60,8 +60,8 @@ import com.redhat.thermostat.client.ChangeableText;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.SummaryPanelFacade;
 import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.ViewActionEvent;
-import com.redhat.thermostat.client.ViewActionListener;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.test.GUITest;
 
 public class MainWindowTest {
@@ -92,7 +92,7 @@ public class MainWindowTest {
 
     private FrameFixture frameFixture;
     private MainWindow window;
-    private ViewActionListener<MainView.Action> l;
+    private ActionListener<MainView.Action> l;
 
     @Before
     public void setUp() {
@@ -105,8 +105,8 @@ public class MainWindowTest {
         when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
 
         window = new MainWindow(uiFacadeFactory);
-        l = mock(ViewActionListener.class);
-        window.addViewActionListener(l);
+        l = mock(ActionListener.class);
+        window.addActionListener(l);
 
         frameFixture = new FrameFixture(window);
     }
@@ -126,7 +126,7 @@ public class MainWindowTest {
         JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox("hostVMTreeFilter");
         hostVMTreeFilterField.enterText("test");
 
-        verify(l, times(4)).viewActionPerformed(new ViewActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
+        verify(l, times(4)).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
     }
 
     @Category(GUITest.class)
@@ -137,7 +137,7 @@ public class MainWindowTest {
 
         frameFixture.close();
         frameFixture.requireNotVisible();
-        verify(l).viewActionPerformed(new ViewActionEvent<MainView.Action>(window, MainView.Action.SHUTDOWN));
+        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHUTDOWN));
     }
 
     @Category(GUITest.class)
