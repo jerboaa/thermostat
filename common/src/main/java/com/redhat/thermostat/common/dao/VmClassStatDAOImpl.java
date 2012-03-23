@@ -66,7 +66,7 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
         if (lastUpdate != Long.MIN_VALUE) {
             // TODO once we have an index and the 'column' is of type long, use
             // a query which can utilize an index. this one doesn't
-            query.put(VmClassStatDAO.whereKey, "this.timestamp > " + lastUpdate);
+            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
         }
         Cursor cursor = storage.findAll(query);
         long timestamp;

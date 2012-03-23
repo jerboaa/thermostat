@@ -45,6 +45,8 @@ import javax.swing.SwingWorker;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
 
+import com.redhat.thermostat.common.model.DiscreteTimeData;
+
 /**
  * Updates a TimeSeries by asynchronously fetching data and updating the
  * TimeSeries on the Swing EDT.

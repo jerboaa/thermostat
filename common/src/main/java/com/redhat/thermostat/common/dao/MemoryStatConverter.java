@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.mongodb.DBObject;
 import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -56,17 +55,16 @@ public class MemoryStatConverter {
         return chunk;
     }
 
-    public MemoryStat dbObjectToMemoryStat(DBObject dbObj) {
-        long timestamp = (Long) dbObj.get("timestamp");
-        long total = (Long) dbObj.get("total");
-        long free = (Long) dbObj.get("free");
-        long buffers = (Long) dbObj.get("buffers");
-        long cached = (Long) dbObj.get("cached");
-        long swapTotal = (Long) dbObj.get("swap-total");
-        long swapFree = (Long) dbObj.get("swap-free");
-        long commitLimit = (Long) dbObj.get("commit-limit");
+    public MemoryStat chunkToMemoryStat(Chunk chunk) {
+        long timestamp = chunk.get(Key.TIMESTAMP);
+        long total = chunk.get(MemoryStatDAO.memoryTotalKey);
+        long free = chunk.get(MemoryStatDAO.memoryFreeKey);
+        long buffers = chunk.get(MemoryStatDAO.memoryBuffersKey);
+        long cached = chunk.get(MemoryStatDAO.memoryCachedKey);
+        long swapTotal = chunk.get(MemoryStatDAO.memorySwapTotalKey);
+        long swapFree = chunk.get(MemoryStatDAO.memorySwapFreeKey);
+        long commitLimit = chunk.get(MemoryStatDAO.memoryCommitLimitKey);
 
         return new MemoryStat(timestamp, total, free, buffers, cached, swapTotal, swapFree, commitLimit);
     }
-
 }

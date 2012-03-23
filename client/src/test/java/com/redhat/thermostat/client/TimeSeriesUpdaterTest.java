@@ -50,6 +50,7 @@ import org.jfree.data.time.TimeSeries;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.TimeSeriesUpdater.LastUpdateTimeCallback;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class TimeSeriesUpdaterTest {
 

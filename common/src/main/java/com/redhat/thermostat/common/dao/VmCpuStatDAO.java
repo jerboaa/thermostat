@@ -46,7 +46,6 @@ public abstract class VmCpuStatDAO {
 
     static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
     static final Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
-    static final Key<String> whereKey = new Key<>("$where", false);
 
     public static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
             Key.TIMESTAMP, vmCpuLoadKey, vmIdKey);

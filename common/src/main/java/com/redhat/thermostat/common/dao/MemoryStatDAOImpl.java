@@ -36,64 +36,45 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
-import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.storage.MongoStorage;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.redhat.thermostat.common.MemoryStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public class MongoDAOFactory implements DAOFactory {
+class MemoryStatDAOImpl implements MemoryStatDAO {
 
     private Storage storage;
-    private Connection connection;
+    private HostRef hostRef;
 
-    public MongoDAOFactory(ConnectionProvider connProv) {
+    private long lastUpdate = Long.MIN_VALUE;
 
-        connection = connProv.createConnection();
-        final MongoStorage mongoStorage = new MongoStorage(connection);
-        connection.addListener(new ConnectionListener() {
-
-            @Override
-            public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.CONNECTED) {
-                    mongoStorage.connect(((MongoConnection) connection).getDB());
-                }
-            }
-        });
-        storage = mongoStorage;
+    public MemoryStatDAOImpl(Storage storage, HostRef hostRef) {
+        this.storage = storage;
+        this.hostRef = hostRef;
     }
 
     @Override
-    public Storage getStorage() {
-        return storage;
-    }
-
-    @Override
-    public VmCpuStatDAO getVmCpuStatDAO(VmRef ref) {
-        return new VmCpuStatDAOImpl(storage, ref);
-    }
-
-    @Override
-    public VmClassStatDAO getVmClassStatsDAO(VmRef ref) {
-        return new VmClassStatDAOImpl(storage, ref);
-    }
-
-    @Override
-    public Connection getConnection() {
-        return connection;
-    }
-
-    @Override
-    public HostInfoDAO getHostInfoDAO(HostRef ref) {
-        return new HostInfoDAOImpl(storage, ref);
-    }
-
-    @Override
-    public CpuStatDAO getCpuStatDAO(HostRef ref) {
-        return new CpuStatDAOImpl(storage, ref);
-    }
-
-    @Override
-    public MemoryStatDAO getMemoryStatDAO(HostRef ref) {
-        return new MemoryStatDAOImpl(storage, ref);
+    public List<MemoryStat> getLatestMemoryStats() {
+        Chunk query = new Chunk(MemoryStatDAO.memoryStatCategory, false);
+        query.put(Key.AGENT_ID, hostRef.getAgentId());
+        if (lastUpdate != Long.MIN_VALUE) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
+        }
+        Cursor cursor = storage.findAll(query);
+        MemoryStatConverter converter = new MemoryStatConverter();
+        List<MemoryStat> result = new ArrayList<>();
+        while (cursor.hasNext()) {
+            Chunk chunk = cursor.next();
+            MemoryStat stat = converter.chunkToMemoryStat(chunk);
+            result.add(stat);
+            lastUpdate = Math.max(stat.getTimeStamp(), lastUpdate);
+        }
+        return result;
     }
 }

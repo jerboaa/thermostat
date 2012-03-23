@@ -56,8 +56,8 @@ import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class VmGcPanel extends JPanel implements VmGcView {
 

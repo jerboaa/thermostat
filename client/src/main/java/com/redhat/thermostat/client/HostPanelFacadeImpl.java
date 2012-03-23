@@ -52,7 +52,7 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     public HostPanelFacadeImpl(HostRef ref, DB db) {
         overviewController = new HostOverviewController(ref, db);
         cpuController = new HostCpuController(ref);
-        memoryController = new HostMemoryController(ref, db);
+        memoryController = new HostMemoryController(ref);
     }
 
     @Override

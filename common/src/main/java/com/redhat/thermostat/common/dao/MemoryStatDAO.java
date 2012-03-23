@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.List;
+
+import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public class MemoryStatDAO {
+public interface MemoryStatDAO {
 
     static Key<Long> memoryTotalKey = new Key<>("total", false);
     static Key<Long> memoryFreeKey = new Key<>("free", false);
@@ -53,4 +56,5 @@ public class MemoryStatDAO {
             Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
             memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
 
+    public List<MemoryStat> getLatestMemoryStats();
 }

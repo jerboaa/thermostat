@@ -60,10 +60,10 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.ChangeableText;
-import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionListener {
 
@@ -172,12 +172,12 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionLis
     }
 
     @Override
-    public void addListener(GraphVisibilityChangeListener listener) {
+    public void addGraphVisibilityListener(GraphVisibilityChangeListener listener) {
         listeners.add(listener);
     }
 
     @Override
-    public void removeListener(GraphVisibilityChangeListener listener) {
+    public void removeGraphVisibilityListener(GraphVisibilityChangeListener listener) {
         listeners.remove(listener);
     }
 

@@ -40,7 +40,6 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.mongodb.BasicDBObject;
 import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -64,7 +63,7 @@ public class MemoryStatConverterTest {
     }
 
     @Test
-    public void testDbObjectToMemoryStat() {
+    public void testChunkToMemoryStat() {
         long TIMESTAMP = 1;
         long TOTAL = 2;
         long FREE = 3;
@@ -74,17 +73,17 @@ public class MemoryStatConverterTest {
         long SWAP_FREE = 7;
         long COMMIT_LIMIT = 8;
 
-        BasicDBObject dbObj = new BasicDBObject();
-        dbObj.put("timestamp", TIMESTAMP);
-        dbObj.put("total", TOTAL);
-        dbObj.put("free", FREE);
-        dbObj.put("buffers", BUFFERS);
-        dbObj.put("cached", CACHED);
-        dbObj.put("swap-total", SWAP_TOTAL);
-        dbObj.put("swap-free", SWAP_FREE);
-        dbObj.put("commit-limit", COMMIT_LIMIT);
+        Chunk chunk = new Chunk(MemoryStatDAO.memoryStatCategory, false);
+        chunk.put(Key.TIMESTAMP, TIMESTAMP);
+        chunk.put(MemoryStatDAO.memoryTotalKey, TOTAL);
+        chunk.put(MemoryStatDAO.memoryFreeKey, FREE);
+        chunk.put(MemoryStatDAO.memoryBuffersKey, BUFFERS);
+        chunk.put(MemoryStatDAO.memoryCachedKey, CACHED);
+        chunk.put(MemoryStatDAO.memorySwapTotalKey, SWAP_TOTAL);
+        chunk.put(MemoryStatDAO.memorySwapFreeKey, SWAP_FREE);
+        chunk.put(MemoryStatDAO.memoryCommitLimitKey, COMMIT_LIMIT);
 
-        MemoryStat stat = new MemoryStatConverter().dbObjectToMemoryStat(dbObj);
+        MemoryStat stat = new MemoryStatConverter().chunkToMemoryStat(chunk);
 
         assertEquals(TIMESTAMP, stat.getTimeStamp());
         assertEquals(TOTAL, stat.getTotal());

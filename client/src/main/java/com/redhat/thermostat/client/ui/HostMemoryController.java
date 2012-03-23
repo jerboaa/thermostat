@@ -36,80 +36,66 @@
 
 package com.redhat.thermostat.client.ui;
 
+import static com.redhat.thermostat.client.locale.Translate.localize;
+
 import java.awt.Component;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
-import com.redhat.thermostat.client.DiscreteTimeData;
-import com.redhat.thermostat.client.MemoryType;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.HostMemoryView.GraphVisibilityChangeListener;
-import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.MemoryStat;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.MemoryStatConverter;
+import com.redhat.thermostat.common.dao.MemoryStatDAO;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.common.model.MemoryType;
 
 public class HostMemoryController implements AsyncUiFacade {
 
     private final HostMemoryView view;
 
-    private final HostRef hostRef;
     private final HostInfoDAO hostInfoDAO;
-    private final DBCollection memoryStatsCollection;
+    private final MemoryStatDAO memoryStatDAO;
 
     private final Timer backgroundUpdateTimer;
+    private final GraphVisibilityChangeListener listener = new ShowHideGraph();
 
-    private final Map<MemoryType, Long> lastUpdateTime = new HashMap<>();
-    private final List<MemoryType> currentlyDisplayed = new CopyOnWriteArrayList<>();
-
-    public HostMemoryController(HostRef hostRef, DB db) {
-        this.hostRef = hostRef;
-
-        currentlyDisplayed.addAll(Arrays.asList(MemoryType.values()));
-
-        hostInfoDAO = ApplicationContext.getInstance().getDAOFactory().getHostInfoDAO(hostRef);
-        memoryStatsCollection = db.getCollection("memory-stats");
-
-        for (MemoryType type: MemoryType.values()) {
-            lastUpdateTime.put(type, Long.MIN_VALUE);
-        }
+    public HostMemoryController(HostRef hostRef) {
+        DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
+        hostInfoDAO = daos.getHostInfoDAO(hostRef);
+        memoryStatDAO = daos.getMemoryStatDAO(hostRef);
 
         view = createView();
 
-        view.addListener(new ShowHideGraph());
+        view.addMemoryChart(MemoryType.MEMORY_TOTAL.name(), localize(LocaleResources.HOST_MEMORY_TOTAL));
+        view.addMemoryChart(MemoryType.MEMORY_FREE.name(), localize(LocaleResources.HOST_MEMORY_FREE));
+        view.addMemoryChart(MemoryType.MEMORY_USED.name(), localize(LocaleResources.HOST_MEMORY_USED));
+        view.addMemoryChart(MemoryType.SWAP_TOTAL.name(), localize(LocaleResources.HOST_SWAP_TOTAL));
+        view.addMemoryChart(MemoryType.SWAP_FREE.name(), localize(LocaleResources.HOST_SWAP_FREE));
+        view.addMemoryChart(MemoryType.BUFFERS.name(), localize(LocaleResources.HOST_BUFFERS));
+
+        view.addGraphVisibilityListener(listener);
 
         backgroundUpdateTimer = new Timer();
-
     }
 
     @Override
     public void start() {
-        for (MemoryType type: currentlyDisplayed) {
-            view.addMemoryChart(type.name(), type.toString());
+        for (MemoryType type : MemoryType.values()) {
             view.showMemoryChart(type.name());
         }
 
         backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-
-                HostInfo hostInfo = hostInfoDAO.getHostInfo();
-
-                view.setTotalMemory(String.valueOf(hostInfo.getTotalMemory()));
+                view.setTotalMemory(String.valueOf(hostInfoDAO.getHostInfo().getTotalMemory()));
                 doMemoryChartUpdate();
             }
 
@@ -120,8 +106,8 @@ public class HostMemoryController implements AsyncUiFacade {
     @Override
     public void stop() {
         backgroundUpdateTimer.cancel();
-        for (MemoryType type: currentlyDisplayed) {
-            view.removeMemoryChart(type.name());
+        for (MemoryType type : MemoryType.values()) {
+            view.hideMemoryChart(type.name());
         }
     }
 
@@ -129,50 +115,34 @@ public class HostMemoryController implements AsyncUiFacade {
         return view.getUiComponent();
     }
 
-    private HostMemoryView createView() {
+    protected HostMemoryView createView() {
         return new HostMemoryPanel();
     }
 
     private void doMemoryChartUpdate() {
-        for (final MemoryType type: currentlyDisplayed) {
-            BasicDBObject query = new BasicDBObject();
-            query.put("agent-id", hostRef.getAgentId());
-            query.put("timestamp", new BasicDBObject("$gt", lastUpdateTime.get(type)));
-            DBCursor cursor = memoryStatsCollection.find(query);
-
-            List<DiscreteTimeData<? extends Number>> toAdd = new LinkedList<>();
-            long lastUpdate = Long.MIN_VALUE;
-
-            for (DBObject toConvert: cursor) {
-                MemoryStat stat = new MemoryStatConverter().dbObjectToMemoryStat(toConvert);
-                long data = 0;
-                switch (type) {
-                    case MEMORY_FREE:
-                        data = stat.getFree();
-                        break;
-                    case MEMORY_TOTAL:
-                        data = stat.getTotal();
-                        break;
-                    case MEMORY_USED:
-                        data = stat.getTotal() - stat.getFree();
-                        break;
-                    case SWAP_BUFFERS:
-                        data = stat.getBuffers();
-                        break;
-                    case SWAP_FREE:
-                        data = stat.getFree();
-                        break;
-                    case SWAP_TOTAL:
-                        data = stat.getTotal();
-                        break;
-
-                }
-                lastUpdate = Math.max(lastUpdate, stat.getTimeStamp());
-                toAdd.add(new DiscreteTimeData<Long>(stat.getTimeStamp(), data));
-            }
-            view.addMemoryData(type.name(), toAdd);
-            lastUpdateTime.put(type, lastUpdate);
+        List<DiscreteTimeData<? extends Number>> memFree = new LinkedList<>();
+        List<DiscreteTimeData<? extends Number>> memTotal = new LinkedList<>();
+        List<DiscreteTimeData<? extends Number>> memUsed = new LinkedList<>();
+        List<DiscreteTimeData<? extends Number>> buf = new LinkedList<>();
+        List<DiscreteTimeData<? extends Number>> swapTotal = new LinkedList<>();
+        List<DiscreteTimeData<? extends Number>> swapFree = new LinkedList<>();
+        
+        for (MemoryStat stat : memoryStatDAO.getLatestMemoryStats()) {
+            long timeStamp = stat.getTimeStamp();
+            memFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getFree()));
+            memTotal.add(new DiscreteTimeData<Long>(timeStamp, stat.getTotal()));
+            memUsed.add(new DiscreteTimeData<Long>(timeStamp, stat.getTotal() - stat.getFree()));
+            buf.add(new DiscreteTimeData<Long>(timeStamp, stat.getBuffers()));
+            swapTotal.add(new DiscreteTimeData<Long>(timeStamp, stat.getSwapTotal()));
+            swapFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getSwapFree()));
         }
+
+        view.addMemoryData(MemoryType.MEMORY_FREE.name(), memFree);
+        view.addMemoryData(MemoryType.MEMORY_TOTAL.name(), memTotal);
+        view.addMemoryData(MemoryType.MEMORY_USED.name(), memUsed);
+        view.addMemoryData(MemoryType.BUFFERS.name(), buf);
+        view.addMemoryData(MemoryType.SWAP_FREE.name(), swapFree);
+        view.addMemoryData(MemoryType.SWAP_TOTAL.name(), swapTotal);
     }
 
     private class ShowHideGraph implements GraphVisibilityChangeListener {
@@ -184,7 +154,5 @@ public class HostMemoryController implements AsyncUiFacade {
         public void hide(String tag) {
             view.hideMemoryChart(tag);
         }
-
     }
-
 }

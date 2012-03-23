@@ -54,10 +54,10 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.ChangeableText;
-import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class HostCpuPanel extends JPanel implements HostCpuView {
 

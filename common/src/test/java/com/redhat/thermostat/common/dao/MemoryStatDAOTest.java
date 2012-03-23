@@ -37,13 +37,25 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.MemoryStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
 public class MemoryStatDAOTest {
     @Test
@@ -60,5 +72,56 @@ public class MemoryStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("commit-limit", false)));
         assertEquals(8, keys.size());
 
+    }
+
+    @Test
+    public void testGetLatestMemoryStats() {
+        long TIMESTAMP = 1;
+        long TOTAL = 2;
+        long FREE = 3;
+        long BUFFERS = 4;
+        long CACHED = 5;
+        long SWAP_TOTAL = 6;
+        long SWAP_FREE = 7;
+        long COMMIT_LIMIT = 8;
+
+        Chunk chunk = new Chunk(MemoryStatDAO.memoryStatCategory, false);
+        chunk.put(Key.TIMESTAMP, TIMESTAMP);
+        chunk.put(MemoryStatDAO.memoryTotalKey, TOTAL);
+        chunk.put(MemoryStatDAO.memoryFreeKey, FREE);
+        chunk.put(MemoryStatDAO.memoryBuffersKey, BUFFERS);
+        chunk.put(MemoryStatDAO.memoryCachedKey, CACHED);
+        chunk.put(MemoryStatDAO.memorySwapTotalKey, SWAP_TOTAL);
+        chunk.put(MemoryStatDAO.memorySwapFreeKey, SWAP_FREE);
+        chunk.put(MemoryStatDAO.memoryCommitLimitKey, COMMIT_LIMIT);
+
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(chunk);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn("system");
+
+        MemoryStatDAO dao = new MemoryStatDAOImpl(storage, hostRef);
+        List<MemoryStat> memoryStats = dao.getLatestMemoryStats();
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).findAll(arg.capture());
+        assertNull(arg.getValue().get(new Key<String>("$where", false)));
+
+        assertEquals(1, memoryStats.size());
+        MemoryStat stat = memoryStats.get(0);
+
+        assertEquals(TIMESTAMP, stat.getTimeStamp());
+        assertEquals(TOTAL, stat.getTotal());
+        assertEquals(FREE, stat.getFree());
+        assertEquals(BUFFERS, stat.getBuffers());
+        assertEquals(CACHED, stat.getCached());
+        assertEquals(SWAP_TOTAL, stat.getSwapTotal());
+        assertEquals(SWAP_FREE, stat.getSwapFree());
+        assertEquals(COMMIT_LIMIT, stat.getCommitLimit());
     }
 }

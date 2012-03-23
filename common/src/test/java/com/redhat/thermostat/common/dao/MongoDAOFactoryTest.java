@@ -40,76 +40,58 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.mongodb.DB;
 
 public class MongoDAOFactoryTest {
 
+    private MongoConnection conn;
+    private ConnectionProvider connProvider;
+    private DAOFactory daoFactory;
+    private DB db;
+    HostRef hostRef;
+    VmRef vmRef;
+
+    @Before
+    public void setUp() {
+        conn = mock(MongoConnection.class);
+        connProvider = mock(ConnectionProvider.class);
+        when(connProvider.createConnection()).thenReturn(conn);
+        db = mock(DB.class);
+        when(conn.getDB()).thenReturn(db);
+        hostRef = mock(HostRef.class);
+        vmRef = mock(VmRef.class);
+        daoFactory = new MongoDAOFactory(connProvider);
+    }
+
     @Test
     public void testGetConnection() {
-        Connection conn = mock(MongoConnection.class);
-
-        ConnectionProvider connProvider = mock(ConnectionProvider.class);
-        when(connProvider.createConnection()).thenReturn(conn);
-
-        DAOFactory daoFactory = new MongoDAOFactory(connProvider);
         assertSame(conn, daoFactory.getConnection());
-
     }
 
     @Test
     public void testGetVmClassStatsDAO() {
-
-        DB db = mock(DB.class);
-
-        MongoConnection conn = mock(MongoConnection.class);
-        when(conn.getDB()).thenReturn(db);
-
-        ConnectionProvider connProv = mock(ConnectionProvider.class);
-        when(connProv.createConnection()).thenReturn(conn);
-
-        DAOFactory instance = new MongoDAOFactory(connProv);
-
-        VmRef ref = mock(VmRef.class);
-        VmClassStatDAO vmClassStatsDAO = instance.getVmClassStatsDAO(ref);
-
+        VmClassStatDAO vmClassStatsDAO = daoFactory.getVmClassStatsDAO(vmRef);
         assertNotNull(vmClassStatsDAO);
     }
 
     @Test
     public void testGetHostInfoDAO() {
-        DB db = mock(DB.class);
-
-        MongoConnection conn = mock(MongoConnection.class);
-        when(conn.getDB()).thenReturn(db);
-
-        ConnectionProvider connProv = mock(ConnectionProvider.class);
-        when(connProv.createConnection()).thenReturn(conn);
-
-        DAOFactory instance = new MongoDAOFactory(connProv);
-
-        HostRef ref = mock(HostRef.class);
-        HostInfoDAO dao = instance.getHostInfoDAO(ref);
-
+        HostInfoDAO dao = daoFactory.getHostInfoDAO(hostRef);
         assertNotNull(dao);
     }
 
     @Test
     public void testGetCpuStatDAO() {
-        DB db = mock(DB.class);
+        CpuStatDAO dao = daoFactory.getCpuStatDAO(hostRef);
+        assertNotNull(dao);
+    }
 
-        MongoConnection conn = mock(MongoConnection.class);
-        when(conn.getDB()).thenReturn(db);
-
-        ConnectionProvider connProv = mock(ConnectionProvider.class);
-        when(connProv.createConnection()).thenReturn(conn);
-
-        DAOFactory instance = new MongoDAOFactory(connProv);
-
-        HostRef ref = mock(HostRef.class);
-        CpuStatDAO dao = instance.getCpuStatDAO(ref);
-
+    @Test
+    public void testGetMemoryStatDAO() {
+        MemoryStatDAO dao = daoFactory.getMemoryStatDAO(hostRef);
         assertNotNull(dao);
     }
 }

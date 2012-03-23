@@ -44,7 +44,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.DiscreteTimeData;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class VmClassStatPanelTest {
 

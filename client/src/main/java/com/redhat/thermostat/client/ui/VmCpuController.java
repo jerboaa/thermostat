@@ -44,11 +44,11 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.AsyncUiFacade;
-import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.VmCpuStat;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class VmCpuController implements AsyncUiFacade {
 

@@ -47,9 +47,6 @@ public interface VmClassStatDAO {
     static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
     static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
 
-    static final Key<String> whereKey = new Key<>("$where", false);
-
-
     public static final Category vmClassStatsCategory = new Category(
             "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
 

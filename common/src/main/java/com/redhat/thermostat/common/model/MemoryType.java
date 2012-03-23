@@ -34,39 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
-
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
-import com.redhat.thermostat.client.locale.LocaleResources;
+package com.redhat.thermostat.common.model;
 
 public enum MemoryType {
-    MEMORY_TOTAL("total", localize(LocaleResources.HOST_MEMORY_TOTAL)),
-    MEMORY_FREE("free", localize(LocaleResources.HOST_MEMORY_FREE)),
-    MEMORY_USED("used", localize(LocaleResources.HOST_MEMORY_USED)),
-    SWAP_TOTAL("swap-total", localize(LocaleResources.HOST_SWAP_TOTAL)),
-    SWAP_FREE("swap-free", localize(LocaleResources.HOST_SWAP_FREE)),
-    SWAP_BUFFERS("buffers", localize(LocaleResources.HOST_BUFFERS));
-
-    private String humanReadable;
-    private String internalName;
-
-    private MemoryType(String key, String humanReadable) {
-        this.internalName = key;
-        this.humanReadable = humanReadable;
-    }
-
-    public String getInternalName() {
-        return internalName;
-    }
-
-    public String getLabel() {
-        return humanReadable;
-    }
-
-    @Override
-    public String toString() {
-        return humanReadable;
-    }
-
+    MEMORY_TOTAL,
+    MEMORY_FREE,
+    MEMORY_USED,
+    SWAP_TOTAL,
+    SWAP_FREE,
+    BUFFERS;
 }

@@ -44,7 +44,6 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.AsyncUiFacade;
-import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.HostInfo;
@@ -52,6 +51,7 @@ import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class HostCpuController implements AsyncUiFacade {
 

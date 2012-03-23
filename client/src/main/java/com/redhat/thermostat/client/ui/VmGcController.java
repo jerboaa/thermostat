@@ -55,7 +55,6 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
-import com.redhat.thermostat.client.DiscreteTimeData;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.VmGcStat;
 import com.redhat.thermostat.common.VmMemoryStat;
@@ -63,6 +62,7 @@ import com.redhat.thermostat.common.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.dao.VmGcStatConverter;
 import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class VmGcController implements AsyncUiFacade {
 

@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.List;
 
-import com.redhat.thermostat.client.DiscreteTimeData;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public interface HostCpuView {
 
