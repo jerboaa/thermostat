@@ -92,6 +92,8 @@ import com.redhat.thermostat.client.ApplicationInfo;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.UiFacadeFactory;
+import com.redhat.thermostat.client.ViewActionListener;
+import com.redhat.thermostat.client.ViewActionSupport;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
@@ -227,7 +229,7 @@ public class MainWindow extends JFrame implements MainView {
 
     private ApplicationInfo appInfo; 
 
-    private PropertyChangeSupport viewPropertySupport = new PropertyChangeSupport(this);
+    private ViewActionSupport<Action> actionSupport = new ViewActionSupport<>(this);
 
     private final DefaultMutableTreeNode publishedRoot = 
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
@@ -349,8 +351,7 @@ public class MainWindow extends JFrame implements MainView {
                 } catch (BadLocationException ble) {
                     // ignore
                 }
-                // We don't have information about the old value, and are not interested either, so we send null.
-                fireViewPropertyChange(MainView.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, searchField.getText());
+                fireViewAction(MainView.Action.HOST_VM_TREE_FILTER);
             }
         });
         searchPanel.add(searchField);
@@ -416,7 +417,7 @@ public class MainWindow extends JFrame implements MainView {
 
         private void shutdown() {
             dispose();
-            fireViewPropertyChange(ViewProperty.SHUTDOWN.toString(), false, true);
+            fireViewAction(Action.SHUTDOWN);
         }
     }
 
@@ -502,16 +503,16 @@ public class MainWindow extends JFrame implements MainView {
         }
     }
 
-    public void addViewPropertyListener(PropertyChangeListener l) {
-        viewPropertySupport.addPropertyChangeListener(l);
+    public void addViewActionListener(ViewActionListener<Action> l) {
+        actionSupport.addViewActionListener(l);
     }
 
-    public void removeViewPropertyListener(PropertyChangeListener l) {
-        viewPropertySupport.removePropertyChangeListener(l);
+    public void removeViewActionListener(ViewActionListener<Action> l) {
+        actionSupport.removeViewActionListener(l);
     }
 
-    private void fireViewPropertyChange(String propertyName, Object oldValue, Object newValue) {
-        viewPropertySupport.firePropertyChange(propertyName, oldValue, newValue);
+    private void fireViewAction(Action action) {
+        actionSupport.fireViewAction(action);
     }
 
     public void updateTree(String filter, HostsVMsLoader hostsVMsLoader) {
@@ -533,6 +534,11 @@ public class MainWindow extends JFrame implements MainView {
     public void showMainWindow() {
         pack();
         setVisible(true);
+    }
+
+    @Override
+    public String getHostVmTreeFilter() {
+        return searchField.getText();
     }
 
 }

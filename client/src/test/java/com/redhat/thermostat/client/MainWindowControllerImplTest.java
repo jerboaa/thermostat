@@ -59,7 +59,7 @@ import com.redhat.thermostat.common.TimerFactory;
 
 public class MainWindowControllerImplTest {
 
-    private PropertyChangeListener l;
+    private ViewActionListener<MainView.Action> l;
 
     private MainWindowControllerImpl controller;
 
@@ -77,8 +77,8 @@ public class MainWindowControllerImplTest {
 
         DB db = mock(DB.class);
         view = mock(MainView.class);
-        ArgumentCaptor<PropertyChangeListener> grabListener = ArgumentCaptor.forClass(PropertyChangeListener.class);
-        doNothing().when(view).addViewPropertyListener(grabListener.capture());
+        ArgumentCaptor<ViewActionListener> grabListener = ArgumentCaptor.forClass(ViewActionListener.class);
+        doNothing().when(view).addViewActionListener(grabListener.capture());
         controller = new MainWindowControllerImpl(db, view);
         l = grabListener.getValue();
     }
@@ -94,7 +94,7 @@ public class MainWindowControllerImplTest {
     @Test
     public void verifyThatShutdownEventStopsController() {
 
-        l.propertyChange(new PropertyChangeEvent(view, MainView.ViewProperty.SHUTDOWN.toString(), false, true));
+        l.viewActionPerformed(new ViewActionEvent<MainView.Action>(view, MainView.Action.SHUTDOWN));
 
         verify(mainWindowTimer).stop();
 
@@ -103,7 +103,9 @@ public class MainWindowControllerImplTest {
     @Test
     public void verifyThatHostsVmsFilterChangeUpdatesTree() {
 
-        l.propertyChange(new PropertyChangeEvent(view, MainView.ViewProperty.HOST_VM_TREE_FILTER.toString(), null, "test"));
+        when(view.getHostVmTreeFilter()).thenReturn("test");
+
+        l.viewActionPerformed(new ViewActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_TREE_FILTER));
 
         verify(view).updateTree(eq("test"), any(HostsVMsLoader.class));
 

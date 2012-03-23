@@ -36,19 +36,20 @@
 
 package com.redhat.thermostat.client;
 
-import java.beans.PropertyChangeListener;
 
 public interface MainView {
 
-    enum ViewProperty {
+    enum Action {
         HOST_VM_TREE_FILTER,
         SHUTDOWN
     }
 
-    void addViewPropertyListener(PropertyChangeListener capture);
+    void addViewActionListener(ViewActionListener<Action> capture);
 
     void updateTree(String eq, HostsVMsLoader any);
 
     void showMainWindow();
+
+    String getHostVmTreeFilter();
 
 }

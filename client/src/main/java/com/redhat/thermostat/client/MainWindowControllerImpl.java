@@ -151,16 +151,21 @@ public class MainWindowControllerImpl implements MainWindowController, HostsVMsL
 
     private void initView(MainView mainView) {
         this.view = mainView;
-        mainView.addViewPropertyListener(new PropertyChangeListener() {
+        mainView.addViewActionListener(new ViewActionListener<MainView.Action>() {
 
             @Override
-            public void propertyChange(PropertyChangeEvent evt) {
-                String propertyName = evt.getPropertyName(); 
-                if (propertyName.equals(MainView.ViewProperty.HOST_VM_TREE_FILTER.toString())) {
-                    String filter = (String) evt.getNewValue();
+            public void viewActionPerformed(ViewActionEvent<MainView.Action> evt) {
+                MainView.Action action = evt.getActionId();
+                switch (action) {
+                case HOST_VM_TREE_FILTER:
+                    String filter = view.getHostVmTreeFilter();
                     setHostVmTreeFilter(filter);
-                } else if (propertyName.equals(MainView.ViewProperty.SHUTDOWN.toString())) {
+                    break;
+                case SHUTDOWN:
                     stop();
+                    break;
+                default:
+                    assert false;
                 }
             }
             
