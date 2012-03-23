@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.mongodb.DBObject;
 import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -52,13 +51,11 @@ public class CpuStatConverter {
         return chunk;
     }
 
-    public CpuStat fromDB(DBObject dbObj) {
-        long timestamp = (long) dbObj.get("timestamp");
-        double load5 = (Double) dbObj.get("5load");
-        double load10 = (Double) dbObj.get("10load");
-        double load15 = (Double) dbObj.get("15load");
+    public CpuStat chunkToCpuStat(Chunk chunk) {
+        long timestamp = chunk.get(Key.TIMESTAMP);
+        double load5 = chunk.get(CpuStatDAO.cpu5LoadKey);
+        double load10 = chunk.get(CpuStatDAO.cpu10LoadKey);
+        double load15 = chunk.get(CpuStatDAO.cpu15LoadKey);
         return new CpuStat(timestamp, load5, load10, load15);
     }
-
-
 }

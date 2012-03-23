@@ -36,16 +36,22 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.List;
+
+import com.redhat.thermostat.common.CpuStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public class CpuStatDAO {
+public interface CpuStatDAO {
 
     static Key<Double> cpu5LoadKey = new Key<>("5load", false);
     static Key<Double> cpu10LoadKey = new Key<>("10load", false);
     static Key<Double> cpu15LoadKey = new Key<>("15load", false);
 
+    static final Key<String> whereKey = new Key<>("$where", false);
+
     public static final Category cpuStatCategory = new Category("cpu-stats",
             Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
 
+    public List<CpuStat> getLatestCpuStats();
 }

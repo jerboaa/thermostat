@@ -42,7 +42,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.TestUtils;
 
-public class DistributionIdentityTest {
+public class DistributionInformationTest {
 
     @Test
     public void testName() {

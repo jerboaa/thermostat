@@ -53,4 +53,6 @@ public interface DAOFactory {
 
     public abstract HostInfoDAO getHostInfoDAO(HostRef ref);
 
+    public abstract CpuStatDAO getCpuStatDAO(HostRef ref);
+
 }

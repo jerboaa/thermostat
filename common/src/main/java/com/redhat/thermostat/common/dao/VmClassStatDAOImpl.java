@@ -45,7 +45,7 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public class VmClassStatDAOImpl implements VmClassStatDAO {
+class VmClassStatDAOImpl implements VmClassStatDAO {
 
     private VmRef ref;
     private Storage storage;
@@ -61,7 +61,7 @@ public class VmClassStatDAOImpl implements VmClassStatDAO {
     public List<VmClassStat> getLatestClassStats() {
         ArrayList<VmClassStat> result = new ArrayList<>();
         Chunk query = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        query.put(VmClassStatDAO.agentIdKey, ref.getAgent().getAgentId());
+        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
         query.put(VmClassStatDAO.vmIdKey, Integer.valueOf(ref.getId()));
         if (lastUpdate != Long.MIN_VALUE) {
             // TODO once we have an index and the 'column' is of type long, use

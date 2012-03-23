@@ -36,23 +36,46 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.CpuStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
-public interface VmClassStatDAO {
+class CpuStatDAOImpl implements CpuStatDAO {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+    private Storage storage;
+    private HostRef hostRef;
 
-    static final Key<String> whereKey = new Key<>("$where", false);
+    private long lastUpdate = Long.MIN_VALUE;
 
+    public CpuStatDAOImpl(Storage storage, HostRef hostRef) {
+        this.storage = storage;
+        this.hostRef = hostRef;
+    }
 
-    public static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", vmIdKey, Key.TIMESTAMP, loadedClassesKey);
-
-    public List<VmClassStat> getLatestClassStats();
+    @Override
+    public List<CpuStat> getLatestCpuStats() {
+        ArrayList<CpuStat> result = new ArrayList<>();
+        Chunk query = new Chunk(CpuStatDAO.cpuStatCategory, false);
+        query.put(Key.AGENT_ID, hostRef.getAgentId());
+        if (lastUpdate != Long.MIN_VALUE) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            query.put(VmClassStatDAO.whereKey, "this.timestamp > " + lastUpdate);
+        }
+        Cursor cursor = storage.findAll(query);
+        CpuStatConverter converter = new CpuStatConverter();
+        while (cursor.hasNext()) {
+            Chunk chunk = cursor.next();
+            CpuStat stat = converter.chunkToCpuStat(chunk);
+            result.add(stat);
+            lastUpdate = Math.max(stat.getTimeStamp(), lastUpdate);
+        }
+        return result;
+    }
 
 }

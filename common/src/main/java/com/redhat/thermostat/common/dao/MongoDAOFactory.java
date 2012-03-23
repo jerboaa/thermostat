@@ -87,4 +87,9 @@ public class MongoDAOFactory implements DAOFactory {
         return new HostInfoDAOImpl(storage, ref);
     }
 
+    @Override
+    public CpuStatDAO getCpuStatDAO(HostRef ref) {
+        return new CpuStatDAOImpl(storage, ref);
+    }
+
 }

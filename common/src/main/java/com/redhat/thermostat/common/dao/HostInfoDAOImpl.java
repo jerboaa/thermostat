@@ -38,9 +38,10 @@ package com.redhat.thermostat.common.dao;
 
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public class HostInfoDAOImpl implements HostInfoDAO {
+class HostInfoDAOImpl implements HostInfoDAO {
     private HostRef ref;
     private Storage storage;
     private HostInfoConverter converter;
@@ -54,7 +55,7 @@ public class HostInfoDAOImpl implements HostInfoDAO {
     @Override
     public HostInfo getHostInfo() {
         Chunk query = new Chunk(HostInfoDAO.hostInfoCategory, false);
-        query.put(HostInfoDAO.agentIdKey, ref.getAgentId());
+        query.put(Key.AGENT_ID, ref.getAgentId());
         Chunk result = storage.find(query);
         return result == null ? null : converter.chunkToHostInfo(result);
     }

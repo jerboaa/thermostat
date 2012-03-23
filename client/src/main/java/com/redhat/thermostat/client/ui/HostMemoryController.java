@@ -59,7 +59,6 @@ import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.ui.HostMemoryView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.common.HostInfo;
 import com.redhat.thermostat.common.MemoryStat;
-import com.redhat.thermostat.common.dao.HostInfoConverter;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatConverter;

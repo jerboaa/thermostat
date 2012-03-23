@@ -43,7 +43,6 @@ import com.redhat.thermostat.common.storage.Key;
 public abstract class VmMemoryStatDAO {
 
     static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-    static final Key<String> agentIdKey = new Key<>("agent-id", false);
 
     static final Key<String> vmMemoryStatEdenGenKey = new Key<>("eden.gen", false);
     static final Key<String> vmMemoryStatEdenCollectorKey = new Key<>("eden.collector", false);
