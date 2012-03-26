@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.mongodb.DBObject;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
@@ -56,14 +55,10 @@ public class NetworkInterfaceInfoConverter {
         return chunk;
     }
 
-    public NetworkInterfaceInfo fromDBObject(DBObject obj) {
-        NetworkInterfaceInfo info = new NetworkInterfaceInfo((String) obj.get("iface"));
-        if (obj.containsField("ipv4addr")) {
-            info.setIp4Addr((String) obj.get("ipv4addr"));
-        }
-        if (obj.containsField("ipv6addr")) {
-            info.setIp6Addr((String) obj.get("ipv6addr"));
-        }
+    public NetworkInterfaceInfo chunkToNetworkInfo(Chunk chunk) {
+        NetworkInterfaceInfo info = new NetworkInterfaceInfo(chunk.get(NetworkInterfaceInfoDAO.ifaceKey));
+        info.setIp4Addr(chunk.get(NetworkInterfaceInfoDAO.ip4AddrKey));
+        info.setIp6Addr(chunk.get(NetworkInterfaceInfoDAO.ip6AddrKey));
         return info;
     }
 }

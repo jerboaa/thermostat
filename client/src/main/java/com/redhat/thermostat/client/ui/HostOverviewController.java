@@ -51,16 +51,13 @@ import java.util.logging.Logger;
 
 import javax.swing.SwingWorker;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
 import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoConverter;
+import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -71,16 +68,17 @@ public class HostOverviewController implements AsyncUiFacade {
 
     private final HostRef hostRef;
     private final HostInfoDAO hostInfoDAO;
-    private final DBCollection networkInfoCollection;
+    private final NetworkInterfaceInfoDAO networkInfoDAO;
 
     private final Timer backgroundUpdateTimer;
 
     private final HostOverviewView view;
 
-    public HostOverviewController(HostRef ref, DB db) {
-        hostInfoDAO = ApplicationContext.getInstance().getDAOFactory().getHostInfoDAO(ref);
+    public HostOverviewController(HostRef ref) {
         this.hostRef = ref;
-        networkInfoCollection = db.getCollection("network-info");
+        DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
+        hostInfoDAO = df.getHostInfoDAO(hostRef);
+        networkInfoDAO = df.getNetworkInterfaceInfoDAO(hostRef);
 
         final Vector<String> networkTableColumnVector;
         networkTableColumnVector = new Vector<String>();
@@ -106,18 +104,7 @@ public class HostOverviewController implements AsyncUiFacade {
 
         @Override
         protected List<NetworkInterfaceInfo> doInBackground() throws Exception {
-            return getNetworkInfo();
-        }
-
-        private List<NetworkInterfaceInfo> getNetworkInfo() {
-            List<NetworkInterfaceInfo> network = new ArrayList<NetworkInterfaceInfo>();
-            DBCursor cursor = networkInfoCollection.find(new BasicDBObject("agent-id", hostRef.getAgentId()));
-            while (cursor.hasNext()) {
-                NetworkInterfaceInfo info = new NetworkInterfaceInfoConverter().fromDBObject(cursor.next());
-                network.add(info);
-            }
-
-            return network;
+            return networkInfoDAO.getNetworkInterfaces();
         }
 
         @Override

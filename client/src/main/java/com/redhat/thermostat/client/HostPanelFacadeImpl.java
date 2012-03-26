@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client;
 
-import com.mongodb.DB;
-
 import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.client.ui.HostOverviewController;
@@ -49,8 +47,8 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     private final HostCpuController cpuController;
     private final HostMemoryController memoryController;
 
-    public HostPanelFacadeImpl(HostRef ref, DB db) {
-        overviewController = new HostOverviewController(ref, db);
+    public HostPanelFacadeImpl(HostRef ref) {
+        overviewController = new HostOverviewController(ref);
         cpuController = new HostCpuController(ref);
         memoryController = new HostMemoryController(ref);
     }

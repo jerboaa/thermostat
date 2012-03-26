@@ -94,4 +94,10 @@ public class MongoDAOFactoryTest {
         MemoryStatDAO dao = daoFactory.getMemoryStatDAO(hostRef);
         assertNotNull(dao);
     }
+
+    @Test
+    public void testGetNetworkInterfaceInfoDAO() {
+        NetworkInterfaceInfoDAO dao = daoFactory.getNetworkInterfaceInfoDAO(hostRef);
+        assertNotNull(dao);
+    }
 }

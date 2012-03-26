@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.List;
+
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public class NetworkInterfaceInfoDAO {
+public interface NetworkInterfaceInfoDAO {
 
     static Key<String> ifaceKey = new Key<>("iface", true);
     static Key<String> ip4AddrKey = new Key<>("ipv4addr", false);
@@ -47,4 +50,6 @@ public class NetworkInterfaceInfoDAO {
 
     public static final Category networkInfoCategory = new Category("network-info",
             Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
+
+    public List<NetworkInterfaceInfo> getNetworkInterfaces();
 }

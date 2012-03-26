@@ -37,13 +37,25 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.Collection;
+import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
 public class NetworkInterfaceInfoDAOTest {
 
@@ -58,5 +70,42 @@ public class NetworkInterfaceInfoDAOTest {
         assertTrue(keys.contains(new Key<String>("ipv4addr", false)));
         assertTrue(keys.contains(new Key<String>("ipv6addr", false)));
         assertEquals(4, keys.size());
+    }
+
+    @Test
+    public void testGetNetworkInterfaces() {
+        final String INTERFACE_NAME = "some interface. maybe eth0";
+        final String IPV4_ADDR = "256.256.256.256";
+        final String IPV6_ADDR = "100:100:100::::1";
+
+        Chunk chunk = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, false);
+        chunk.put(NetworkInterfaceInfoDAO.ifaceKey, INTERFACE_NAME);
+        chunk.put(NetworkInterfaceInfoDAO.ip4AddrKey, IPV4_ADDR);
+        chunk.put(NetworkInterfaceInfoDAO.ip6AddrKey, IPV6_ADDR);
+
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(chunk);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn("system");
+
+        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage, hostRef);
+        List<NetworkInterfaceInfo> netInfo = dao.getNetworkInterfaces();
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).findAll(arg.capture());
+        assertNull(arg.getValue().get(new Key<String>("$where", false)));
+
+        assertEquals(1, netInfo.size());
+
+        NetworkInterfaceInfo info = netInfo.get(0);
+
+        assertEquals(INTERFACE_NAME, info.getInterfaceName());
+        assertEquals(IPV4_ADDR, info.getIp4Addr());
+        assertEquals(IPV6_ADDR, info.getIp6Addr());
     }
 }

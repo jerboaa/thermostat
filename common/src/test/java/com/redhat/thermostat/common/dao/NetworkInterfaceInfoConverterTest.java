@@ -41,7 +41,6 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
-import com.mongodb.BasicDBObject;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -64,17 +63,17 @@ public class NetworkInterfaceInfoConverterTest {
     }
 
     @Test
-    public void testDBObjectToNetworkInfo() {
+    public void testChunkToNetworkInfo() {
         final String INTERFACE_NAME = "some interface. maybe eth0";
         final String IPV4_ADDR = "256.256.256.256";
         final String IPV6_ADDR = "100:100:100::::1";
 
-        BasicDBObject dbObj = new BasicDBObject();
-        dbObj.put("iface", INTERFACE_NAME);
-        dbObj.put("ipv4addr", IPV4_ADDR);
-        dbObj.put("ipv6addr", IPV6_ADDR);
+        Chunk chunk = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, false);
+        chunk.put(NetworkInterfaceInfoDAO.ifaceKey, INTERFACE_NAME);
+        chunk.put(NetworkInterfaceInfoDAO.ip4AddrKey, IPV4_ADDR);
+        chunk.put(NetworkInterfaceInfoDAO.ip6AddrKey, IPV6_ADDR);
 
-        NetworkInterfaceInfo info = new NetworkInterfaceInfoConverter().fromDBObject(dbObj);
+        NetworkInterfaceInfo info = new NetworkInterfaceInfoConverter().chunkToNetworkInfo(chunk);
         assertNotNull(info);
         assertEquals(INTERFACE_NAME, info.getInterfaceName());
         assertEquals(IPV4_ADDR, info.getIp4Addr());

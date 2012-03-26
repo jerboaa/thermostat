@@ -96,4 +96,9 @@ public class MongoDAOFactory implements DAOFactory {
     public MemoryStatDAO getMemoryStatDAO(HostRef ref) {
         return new MemoryStatDAOImpl(storage, ref);
     }
+
+    @Override
+    public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO(HostRef ref) {
+        return new NetworkInterfaceInfoDAOImpl(storage, ref);
+    }
 }

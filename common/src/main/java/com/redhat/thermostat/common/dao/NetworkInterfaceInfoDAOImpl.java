@@ -34,44 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.client.ui.MainWindow;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.MongoConnection;
-import com.redhat.thermostat.common.dao.VmRef;
+import java.util.ArrayList;
+import java.util.List;
 
-public class UiFacadeFactoryImpl implements UiFacadeFactory {
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
-    // TODO: Eventually, this should disappear and be completely provided by the DAOFactory.
-    private MongoConnection connection;
+public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
-    public UiFacadeFactoryImpl(MongoConnection connection) {
-        this.connection = connection;
+    private Storage storage;
+    private HostRef ref;
+
+    public NetworkInterfaceInfoDAOImpl(Storage storage, HostRef ref) {
+        this.storage = storage;
+        this.ref = ref;
     }
 
     @Override
-    public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow(this);
-        return new MainWindowControllerImpl(connection.getDB(), mainView);
-    }
+    public List<NetworkInterfaceInfo> getNetworkInterfaces() {
+        Chunk query = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, false);
+        query.put(Key.AGENT_ID, ref.getAgentId());
 
-    @Override
-    public SummaryPanelFacade getSummaryPanel() {
-        return new SummaryPanelFacadeImpl(connection.getDB());
-
-    }
-
-    @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return new HostPanelFacadeImpl(ref);
-
-    }
-
-    @Override
-    public VmPanelFacade getVmPanel(VmRef ref) {
-        return new VmPanelFacadeImpl(ref, connection.getDB());
-
+        Cursor cursor = storage.findAll(query);
+        NetworkInterfaceInfoConverter converter = new NetworkInterfaceInfoConverter();
+        List<NetworkInterfaceInfo> result = new ArrayList<>();
+        while (cursor.hasNext()) {
+            Chunk chunk = cursor.next();
+            NetworkInterfaceInfo stat = converter.chunkToNetworkInfo(chunk);
+            result.add(stat);
+        }
+        return result;
     }
 
 }
