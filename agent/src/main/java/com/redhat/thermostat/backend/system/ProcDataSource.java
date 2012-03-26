@@ -36,49 +36,35 @@
 
 package com.redhat.thermostat.backend.system;
 
-import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.Reader;
 
-import com.redhat.thermostat.common.model.CpuStat;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+public class ProcDataSource {
 
-public class CpuStatBuilder {
+    private static final String LOAD_FILE = "/proc/loadavg";
+    private static final String MEMINFO_FILE = "/proc/meminfo";
+    private static final String CPUINFO_FILE = "/proc/cpuinfo";
 
-    private static final Logger logger = LoggingUtils.getLogger(CpuStatBuilder.class);
-
-    private final ProcDataSource dataSource;
-
-    public CpuStatBuilder(ProcDataSource dataSource) {
-        this.dataSource = dataSource;
+    /**
+     * Returns a reader for /proc/cpuinfo
+     */
+    public Reader getCpuInfoReader() throws IOException {
+        return new FileReader(CPUINFO_FILE);
     }
 
-    public CpuStat build() {
-        try (BufferedReader reader = new BufferedReader(dataSource.getCpuLoadReader())) {
-            return build(reader);
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read data source for cpu info");
-        }
-        return new CpuStat(System.currentTimeMillis(),
-                CpuStat.INVALID_LOAD, CpuStat.INVALID_LOAD, CpuStat.INVALID_LOAD);
+    /**
+     * Returns a reader for /proc/loadavg
+     */
+    public Reader getCpuLoadReader() throws IOException {
+        return new FileReader(LOAD_FILE);
     }
 
-    private CpuStat build(BufferedReader reader) throws IOException {
-        long timestamp = System.currentTimeMillis();
-        double load5 = CpuStat.INVALID_LOAD;
-        double load10 = CpuStat.INVALID_LOAD;
-        double load15 = CpuStat.INVALID_LOAD;
-        String[] loadAvgParts = reader.readLine().split(" +");
-        if (loadAvgParts.length >= 3) {
-            try {
-                load5 = Double.valueOf(loadAvgParts[0]);
-                load10 = Double.valueOf(loadAvgParts[1]);
-                load15 = Double.valueOf(loadAvgParts[2]);
-            } catch (NumberFormatException nfe) {
-                logger.log(Level.WARNING, "error extracting load");
-            }
-        }
-        return new CpuStat(timestamp, load5, load10, load15);
+    /**
+     * Returns a reader for /proc/meminfo
+     */
+    public Reader getMemInfoReader() throws IOException {
+        return new FileReader(MEMINFO_FILE);
     }
+
 }

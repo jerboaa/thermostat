@@ -36,49 +36,42 @@
 
 package com.redhat.thermostat.backend.system;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.io.StringReader;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.common.model.CpuStat;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class CpuStatBuilder {
+public class CpuStatBuilderTest {
 
-    private static final Logger logger = LoggingUtils.getLogger(CpuStatBuilder.class);
-
-    private final ProcDataSource dataSource;
-
-    public CpuStatBuilder(ProcDataSource dataSource) {
-        this.dataSource = dataSource;
+    @Test
+    public void testSimpleBuild() {
+        ProcDataSource dataSource = new ProcDataSource();
+        CpuStat stat = new CpuStatBuilder(dataSource).build();
+        assertNotNull(stat);
     }
 
-    public CpuStat build() {
-        try (BufferedReader reader = new BufferedReader(dataSource.getCpuLoadReader())) {
-            return build(reader);
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read data source for cpu info");
-        }
-        return new CpuStat(System.currentTimeMillis(),
-                CpuStat.INVALID_LOAD, CpuStat.INVALID_LOAD, CpuStat.INVALID_LOAD);
-    }
+    @Test
+    public void testBuildCpuStatFromFile() throws IOException {
+        String line = "0.05 0.08 0.06 1/368 16413";
+        BufferedReader reader = new BufferedReader(new StringReader(line));
 
-    private CpuStat build(BufferedReader reader) throws IOException {
-        long timestamp = System.currentTimeMillis();
-        double load5 = CpuStat.INVALID_LOAD;
-        double load10 = CpuStat.INVALID_LOAD;
-        double load15 = CpuStat.INVALID_LOAD;
-        String[] loadAvgParts = reader.readLine().split(" +");
-        if (loadAvgParts.length >= 3) {
-            try {
-                load5 = Double.valueOf(loadAvgParts[0]);
-                load10 = Double.valueOf(loadAvgParts[1]);
-                load15 = Double.valueOf(loadAvgParts[2]);
-            } catch (NumberFormatException nfe) {
-                logger.log(Level.WARNING, "error extracting load");
-            }
-        }
-        return new CpuStat(timestamp, load5, load10, load15);
+        ProcDataSource dataSource = mock(ProcDataSource.class);
+        when(dataSource.getCpuLoadReader()).thenReturn(reader);
+        CpuStat stat = new CpuStatBuilder(dataSource).build();
+
+        verify(dataSource).getCpuLoadReader();
+        assertEquals(0.05, stat.getLoad5(), 0.01);
+        assertEquals(0.08, stat.getLoad10(), 0.01);
+        assertEquals(0.06, stat.getLoad15(), 0.01);
+
     }
 }

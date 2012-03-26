@@ -139,17 +139,18 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
         }
-        store(new HostInfoConverter().hostInfoToChunk(HostInfoBuilder.build()));
+        store(new HostInfoConverter().hostInfoToChunk(new HostInfoBuilder(new ProcDataSource()).build()));
 
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                store(new CpuStatConverter().cpuStatToChunk(new CpuStatBuilder().build()));
+                ProcDataSource dataSource = new ProcDataSource();
+                store(new CpuStatConverter().cpuStatToChunk(new CpuStatBuilder(dataSource).build()));
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
                     store(new NetworkInterfaceInfoConverter().networkInfoToChunk(info));
                 }
-                store(new MemoryStatConverter().memoryStatToChunk(new MemoryStatBuilder().build()));
+                store(new MemoryStatConverter().memoryStatToChunk(new MemoryStatBuilder(dataSource).build()));
 
                 for (Integer pid : pidsToMonitor) {
                     new VmCpuStatBuilder();

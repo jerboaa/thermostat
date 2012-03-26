@@ -37,7 +37,6 @@
 package com.redhat.thermostat.backend.system;
 
 import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -54,8 +53,6 @@ public class MemoryStatBuilder {
 
     private static final long UNAVAILABLE = -1;
 
-    private static final String MEMINFO_FILE = "/proc/meminfo";
-
     private static final String KEY_MEMORY_TOTAL = "MemTotal";
     private static final String KEY_MEMORY_FREE = "MemFree";
     private static final String KEY_BUFFERS = "Buffers";
@@ -66,7 +63,13 @@ public class MemoryStatBuilder {
 
     private static final Logger logger = LoggingUtils.getLogger(MemoryStatBuilder.class);
 
-    public MemoryStat build() {
+    private final ProcDataSource dataSource;
+
+    public MemoryStatBuilder(ProcDataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    protected MemoryStat build() {
         long timestamp = System.currentTimeMillis();
 
         long total = UNAVAILABLE;
@@ -76,9 +79,8 @@ public class MemoryStatBuilder {
         long buffers = UNAVAILABLE;
         long cached = UNAVAILABLE;
         long commitLimit = UNAVAILABLE;
-        BufferedReader reader = null;
-        try {
-            reader = new BufferedReader(new FileReader(MEMINFO_FILE));
+
+        try (BufferedReader reader = new BufferedReader(dataSource.getMemInfoReader())) {
             String line = null;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(":");
@@ -100,21 +102,12 @@ public class MemoryStatBuilder {
                     } else if (key.equals(KEY_COMMIT_LIMIT)) {
                         commitLimit = value;
                     }
-
                 }
             }
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read " + MEMINFO_FILE);
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    logger.log(Level.WARNING, "unable to close " + MEMINFO_FILE);
-
-                }
-            }
+        } catch (IOException ioe) {
+            logger.log(Level.WARNING, "unable to read memory info");
         }
+
         return new MemoryStat(timestamp, total, free, buffers, cached, swapTotal, swapFree, commitLimit);
     }
 
@@ -138,7 +131,7 @@ public class MemoryStatBuilder {
                 }
             }
         } catch (NumberFormatException nfe) {
-            logger.log(Level.WARNING, "error extracting memory info from " + MEMINFO_FILE);
+            logger.log(Level.WARNING, "error extracting memory info");
         }
 
         return result;
