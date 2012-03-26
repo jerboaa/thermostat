@@ -55,7 +55,6 @@ import sun.jvmstat.monitor.MonitoredHost;
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.common.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.dao.CpuStatConverter;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoConverter;
@@ -70,6 +69,7 @@ import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 

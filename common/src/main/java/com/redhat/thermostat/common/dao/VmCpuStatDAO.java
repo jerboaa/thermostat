@@ -38,7 +38,7 @@ package com.redhat.thermostat.common.dao;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.VmCpuStat;
+import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 

@@ -39,7 +39,7 @@ package com.redhat.thermostat.backend.system;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.redhat.thermostat.common.VmCpuStat;
+import com.redhat.thermostat.common.model.VmCpuStat;
 
 public class VmCpuStatBuilder {
 

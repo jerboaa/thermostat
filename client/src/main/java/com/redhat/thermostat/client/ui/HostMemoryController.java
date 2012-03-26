@@ -49,12 +49,12 @@ import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.HostMemoryView.GraphVisibilityChangeListener;
-import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.model.MemoryType;
 
 public class HostMemoryController implements AsyncUiFacade {

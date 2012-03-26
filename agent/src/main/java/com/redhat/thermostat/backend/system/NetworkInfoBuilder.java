@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class NetworkInfoBuilder {

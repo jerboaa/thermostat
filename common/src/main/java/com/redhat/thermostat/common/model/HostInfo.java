@@ -34,41 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.common.model;
 
-public class CpuStat {
+public class HostInfo {
 
-    public static final double INVALID_LOAD = Double.MIN_VALUE;
+    private final String hostname;
+    private final String osName;
+    private final String osKernel;
+    private final String cpuModel;
+    private final int cpuCount;
+    private final long totalMemory;
 
-    private final double load5;
-    private final double load10;
-    private final double load15;
-    private final long timeStamp;
-
-    public CpuStat(long timestamp, double load5, double load10, double load15) {
-        this.timeStamp = timestamp;
-        this.load5 = load5;
-        this.load10 = load10;
-        this.load15 = load15;
+    public HostInfo(String hostname, String osName, String osKernel, String cpuModel, int cpuCount, long totalMemory) {
+        this.hostname = hostname;
+        this.osName = osName;
+        this.osKernel = osKernel;
+        this.cpuModel = cpuModel;
+        this.cpuCount = cpuCount;
+        this.totalMemory = totalMemory;
     }
 
-    public double getLoad5() {
-        return load5;
+    public String getHostname() {
+        return hostname;
     }
 
-    public double getLoad10() {
-        return load10;
+    public String getOsName() {
+        return osName;
     }
 
-    public double getLoad15() {
-        return load15;
+    public String getOsKernel() {
+        return osKernel;
     }
 
-    public double[] getLoad() {
-        return new double[] { load5, load10, load15 };
+    public String getCpuModel() {
+        return cpuModel;
     }
 
-    public long getTimeStamp() {
-        return timeStamp;
+    public int getCpuCount() {
+        return cpuCount;
     }
+
+    /**
+     * Total memory in bytes
+     */
+    public long getTotalMemory() {
+        return totalMemory;
+    }
+
 }

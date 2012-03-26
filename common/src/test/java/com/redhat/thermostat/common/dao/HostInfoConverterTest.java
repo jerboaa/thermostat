@@ -41,7 +41,7 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.HostInfo;
+import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 

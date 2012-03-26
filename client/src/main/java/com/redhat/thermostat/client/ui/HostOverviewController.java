@@ -58,11 +58,11 @@ import com.mongodb.DBCursor;
 import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoConverter;
+import com.redhat.thermostat.common.model.HostInfo;
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class HostOverviewController implements AsyncUiFacade {

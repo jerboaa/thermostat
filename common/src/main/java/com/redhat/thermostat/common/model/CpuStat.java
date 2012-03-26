@@ -34,45 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.common.model;
 
-public class NetworkInterfaceInfo {
+public class CpuStat {
 
-    private String iFace;
-    private String ip4Addr;
-    private String ip6Addr;
+    public static final double INVALID_LOAD = Double.MIN_VALUE;
 
-    public NetworkInterfaceInfo(String iFace) {
-        this.iFace = iFace;
-        this.ip4Addr = null;
-        this.ip6Addr = null;
+    private final double load5;
+    private final double load10;
+    private final double load15;
+    private final long timeStamp;
+
+    public CpuStat(long timestamp, double load5, double load10, double load15) {
+        this.timeStamp = timestamp;
+        this.load5 = load5;
+        this.load10 = load10;
+        this.load15 = load15;
     }
 
-    public String getInterfaceName() {
-        return iFace;
+    public double getLoad5() {
+        return load5;
     }
 
-    public String getIp4Addr() {
-        return ip4Addr;
+    public double getLoad10() {
+        return load10;
     }
 
-    public void setIp4Addr(String newAddr) {
-        ip4Addr = newAddr;
+    public double getLoad15() {
+        return load15;
     }
 
-    public void clearIp4Addr() {
-        ip4Addr = null;
+    public double[] getLoad() {
+        return new double[] { load5, load10, load15 };
     }
 
-    public String getIp6Addr() {
-        return ip6Addr;
-    }
-
-    public void setIp6Addr(String newAddr) {
-        ip6Addr = newAddr;
-    }
-
-    public void clearIp6Addr() {
-        ip6Addr = null;
+    public long getTimeStamp() {
+        return timeStamp;
     }
 }

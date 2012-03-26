@@ -39,7 +39,7 @@ package com.redhat.thermostat.common.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.MemoryStat;
+import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;

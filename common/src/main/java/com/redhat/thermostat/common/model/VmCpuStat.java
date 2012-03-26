@@ -34,51 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.common.model;
 
-public class HostInfo {
+public class VmCpuStat {
 
-    private final String hostname;
-    private final String osName;
-    private final String osKernel;
-    private final String cpuModel;
-    private final int cpuCount;
-    private final long totalMemory;
+    private final long timestamp;
+    private final int vmId;
+    private final double cpuLoad;
 
-    public HostInfo(String hostname, String osName, String osKernel, String cpuModel, int cpuCount, long totalMemory) {
-        this.hostname = hostname;
-        this.osName = osName;
-        this.osKernel = osKernel;
-        this.cpuModel = cpuModel;
-        this.cpuCount = cpuCount;
-        this.totalMemory = totalMemory;
+    public VmCpuStat(long timestamp, int vmId, double cpuLoad) {
+        this.timestamp = timestamp;
+        this.vmId = vmId;
+        this.cpuLoad = cpuLoad;
     }
 
-    public String getHostname() {
-        return hostname;
+    public long getTimeStamp() {
+        return timestamp;
     }
 
-    public String getOsName() {
-        return osName;
+    public int getVmId() {
+        return vmId;
     }
 
-    public String getOsKernel() {
-        return osKernel;
+    public double getCpuLoad() {
+        return cpuLoad;
     }
-
-    public String getCpuModel() {
-        return cpuModel;
-    }
-
-    public int getCpuCount() {
-        return cpuCount;
-    }
-
-    /**
-     * Total memory in bytes
-     */
-    public long getTotalMemory() {
-        return totalMemory;
-    }
-
 }

@@ -44,9 +44,9 @@ import java.util.List;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
-import com.redhat.thermostat.common.VmMemoryStat;
-import com.redhat.thermostat.common.VmMemoryStat.Generation;
-import com.redhat.thermostat.common.VmMemoryStat.Space;
+import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 

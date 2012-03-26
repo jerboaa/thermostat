@@ -48,13 +48,13 @@ import java.util.List;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.appctx.ApplicationContext;
-import com.redhat.thermostat.common.HostInfo;
-import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.model.HostInfo;
+import com.redhat.thermostat.common.model.MemoryStat;
 
 public class HostMemoryControllerTest {
 

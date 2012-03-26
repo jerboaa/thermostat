@@ -43,8 +43,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.MemoryStat;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**

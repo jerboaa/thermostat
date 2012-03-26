@@ -40,7 +40,7 @@ import static org.junit.Assert.*;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.MemoryStat;
+import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 

@@ -42,7 +42,7 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
-import com.redhat.thermostat.common.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 

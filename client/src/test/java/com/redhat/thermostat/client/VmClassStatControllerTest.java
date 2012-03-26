@@ -50,11 +50,11 @@ import org.junit.Test;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.ui.VmClassStatController;
 import com.redhat.thermostat.client.ui.VmClassStatView;
-import com.redhat.thermostat.common.VmClassStat;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmClassStat;
 
 public class VmClassStatControllerTest {
 

@@ -37,7 +37,7 @@
 package com.redhat.thermostat.common.dao;
 
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
 public class NetworkInterfaceInfoConverter {

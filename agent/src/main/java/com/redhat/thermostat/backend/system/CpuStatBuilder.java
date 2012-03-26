@@ -42,7 +42,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.CpuStat;
+import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**

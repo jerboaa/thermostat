@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.HostInfo;
+import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 

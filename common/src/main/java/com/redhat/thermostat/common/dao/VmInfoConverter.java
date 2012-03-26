@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.VmInfo;
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
 public class VmInfoConverter {

@@ -48,11 +48,11 @@ import java.util.List;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.appctx.ApplicationContext;
-import com.redhat.thermostat.common.VmCpuStat;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAOImpl;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmCpuStat;
 
 
 public class VmCpuControllerTest {

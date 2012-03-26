@@ -45,7 +45,7 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.VmInfo;
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 

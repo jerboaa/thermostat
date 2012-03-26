@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.CpuStat;
+import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 

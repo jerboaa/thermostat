@@ -56,9 +56,9 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
-import com.redhat.thermostat.common.VmInfo;
 import com.redhat.thermostat.common.dao.VmInfoConverter;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 

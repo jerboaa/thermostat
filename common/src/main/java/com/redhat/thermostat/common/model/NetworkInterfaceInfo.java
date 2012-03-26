@@ -34,59 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.common.model;
 
-public class MemoryStat {
-    private final long timestamp;
-    private final long total;
-    private final long free;
-    private final long buffers;
-    private final long cached;
-    private final long swapTotal;
-    private final long swapFree;
-    private final long commitLimit;
+public class NetworkInterfaceInfo {
 
-    public MemoryStat(long timestamp, long total, long free, long buffers, long cached, long swapTotal, long swapFree, long commitLimit) {
-        this.timestamp = timestamp;
-        this.total = total;
-        this.free = free;
-        this.buffers = buffers;
-        this.cached = cached;
-        this.swapTotal = swapTotal;
-        this.swapFree = swapFree;
-        this.commitLimit = commitLimit;
+    private String iFace;
+    private String ip4Addr;
+    private String ip6Addr;
+
+    public NetworkInterfaceInfo(String iFace) {
+        this.iFace = iFace;
+        this.ip4Addr = null;
+        this.ip6Addr = null;
     }
 
-    public long getTimeStamp() {
-        return timestamp;
+    public String getInterfaceName() {
+        return iFace;
     }
 
-    public long getTotal() {
-        return total;
+    public String getIp4Addr() {
+        return ip4Addr;
     }
 
-    public long getFree() {
-        return free;
+    public void setIp4Addr(String newAddr) {
+        ip4Addr = newAddr;
     }
 
-    public long getBuffers() {
-        return buffers;
+    public void clearIp4Addr() {
+        ip4Addr = null;
     }
 
-    public long getCached() {
-        return cached;
+    public String getIp6Addr() {
+        return ip6Addr;
     }
 
-    public long getSwapTotal() {
-        return swapTotal;
+    public void setIp6Addr(String newAddr) {
+        ip6Addr = newAddr;
     }
 
-    public long getSwapFree() {
-        return swapFree;
+    public void clearIp6Addr() {
+        ip6Addr = null;
     }
-
-    public long getCommitLimit() {
-        return commitLimit;
-    }
-
 }

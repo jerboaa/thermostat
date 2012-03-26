@@ -37,7 +37,7 @@
 package com.redhat.thermostat.common.dao;
 
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.VmGcStat;
+import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
