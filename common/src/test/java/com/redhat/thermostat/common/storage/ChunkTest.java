@@ -64,6 +64,7 @@ public class ChunkTest {
     private static final Object value7 = "test7";
 
     private static final Category testCategory = new Category("ChunkTest", key1, key2, key3, key4, key5);
+    private static final Category testCategory2 = new Category("ChunkTest2", key1, key2, key3, key4, key5);
 
     @Test
     public void verifyGetCategoryNotNull() {
@@ -144,4 +145,92 @@ public class ChunkTest {
         assertNull(value);
     }
 
+
+    @Test
+    public void testEqualsBasicEquals() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        Chunk chunk2 = new Chunk(testCategory, false);
+        assertTrue(chunk1.equals(chunk2));
+    }
+
+    @Test
+    public void testEqualsDifferentCategory() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        Chunk chunk2 = new Chunk(testCategory2, false);
+        assertFalse(chunk1.equals(chunk2));
+    }
+
+    @Test
+    public void testEqualsDifferentReplace() {
+        // TODO: Do we want to differentiate chunks by that flag? I think not. Maybe it doesn't even belong in chunk.
+        Chunk chunk1 = new Chunk(testCategory, false);
+        Chunk chunk2 = new Chunk(testCategory, true);
+        assertTrue(chunk1.equals(chunk2));
+    }
+
+    @Test
+    public void testEqualsDifferentType() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        assertFalse(chunk1.equals("fluff"));
+    }
+
+    @Test
+    public void testEqualsNull() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        assertFalse(chunk1.equals(null));
+    }
+
+    @Test
+    public void testEqualsDifferentNumberOfValues() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        chunk1.put(key1, "value1");
+        chunk1.put(key2, "value2");
+        Chunk chunk2 = new Chunk(testCategory, true);
+        chunk2.put(key1, "value1");
+        assertFalse(chunk1.equals(chunk2));
+    }
+
+    @Test
+    public void testEqualsDifferentKeys() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        chunk1.put(key1, "value1");
+        chunk1.put(key2, "value2");
+        Chunk chunk2 = new Chunk(testCategory, true);
+        chunk2.put(key1, "value1");
+        chunk2.put(key3, "value2");
+        assertFalse(chunk1.equals(chunk2));
+    }
+
+    @Test
+    public void testEqualsDifferentValues() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        chunk1.put(key1, "value1");
+        chunk1.put(key2, "value2.1");
+        Chunk chunk2 = new Chunk(testCategory, true);
+        chunk2.put(key1, "value1");
+        chunk2.put(key2, "value2.2");
+        assertFalse(chunk1.equals(chunk2));
+    }
+
+    @Test
+    public void testEqualsSameValues() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        chunk1.put(key1, "value1");
+        chunk1.put(key2, "value2");
+        Chunk chunk2 = new Chunk(testCategory, true);
+        chunk2.put(key1, "value1");
+        chunk2.put(key2, "value2");
+        assertTrue(chunk1.equals(chunk2));
+    }
+
+    @Test
+    public void testEqualsNullValues() {
+        Chunk chunk1 = new Chunk(testCategory, false);
+        chunk1.put(key1, "value1");
+        chunk1.put(key2, null);
+        Chunk chunk2 = new Chunk(testCategory, true);
+        chunk2.put(key1, "value1");
+        chunk2.put(key2, null);
+        assertTrue(chunk1.equals(chunk2));
+    }
 }

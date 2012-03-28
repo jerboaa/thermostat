@@ -72,7 +72,7 @@ public class MongoStorageTest {
     private static final Key<String> key5 = new Key<>("key5", false);
     private static final Category testCategory = new Category("MongoStorageTest", key1, key2, key3, key4, key5);
 
-    private static final Chunk multiKeyQuery = new Chunk(testCategory, false);
+    private Chunk multiKeyQuery;
 
     private MongoStorage storage;
     private DBCollection testCollection;
@@ -88,6 +88,7 @@ public class MongoStorageTest {
         value2.put("key3", "test3");
         value2.put("key4", "test4");
 
+        multiKeyQuery = new Chunk(testCategory, false);
         multiKeyQuery.put(key5, "test1");
         multiKeyQuery.put(key4, "test2");
         multiKeyQuery.put(key3, "test3");
@@ -100,6 +101,7 @@ public class MongoStorageTest {
 
         testCollection = PowerMockito.mock(DBCollection.class);
         when(testCollection.find(any(DBObject.class))).thenReturn(cursor);
+        when(testCollection.find()).thenReturn(cursor);
         when(testCollection.findOne(any(DBObject.class))).thenReturn(value1);
         storage.mapCategoryToDBCollection(testCategory, testCollection);
     }
@@ -108,6 +110,7 @@ public class MongoStorageTest {
     public void tearDown() {
         storage = null;
         testCollection = null;
+        multiKeyQuery = null;
     }
 
     @Test
@@ -229,6 +232,23 @@ public class MongoStorageTest {
 
         Cursor cursor = storage.findAll(query);
 
+        verifyDefaultCursor(cursor);
+    }
+
+    @Test
+    public void verifyFindAllFromCategoryCallsDBCollectionFindAll() {
+        storage.findAllFromCategory(testCategory);
+        verify(testCollection).find();
+    }
+
+    @Test
+    public void verifyFindAllFromCategoryReturnsCorrectCursor() {
+        Cursor cursor = storage.findAllFromCategory(testCategory);
+
+        verifyDefaultCursor(cursor);
+    }
+
+    private void verifyDefaultCursor(Cursor cursor) {
         assertTrue(cursor.hasNext());
         Chunk chunk1 = cursor.next();
         assertArrayEquals(new Key<?>[]{key1, key2}, chunk1.getKeys().toArray());

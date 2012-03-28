@@ -38,6 +38,8 @@ package com.redhat.thermostat.common.storage;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -83,4 +85,36 @@ public class Chunk {
     public Set<Key<?>> getKeys() {
         return values.keySet();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (! (o instanceof Chunk)) {
+            return false;
+        }
+        Chunk other = (Chunk) o;
+        return equalCategory(other) && equalValues(other);
+
+    }
+
+    private boolean equalCategory(Chunk other) {
+        return category == other.category;
+    }
+
+    private boolean equalValues(Chunk other) {
+        if (values.size() != other.values.size()) {
+            return false;
+        }
+        for (Entry<Key<?>, Object> entry : values.entrySet()) {
+            if (! equalEntry(other, entry)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean equalEntry(Chunk other, Entry<Key<?>, Object> entry) {
+        Key<?> key = entry.getKey();
+        return other.values.containsKey(key) && Objects.equals(other.values.get(key), values.get(key));
+    }
+
 }

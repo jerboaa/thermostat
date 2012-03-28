@@ -34,54 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.UUID;
+import java.util.Collection;
 
-import com.redhat.thermostat.common.dao.Connection;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
 
-public abstract class Storage {
+public interface HostRefDAO {
 
-    protected Connection connection;
-    
-    public Storage (Connection connection) {
-        this.connection = connection;
-    }
-    
-    public abstract void connect() throws ConnectionFailedException;
+    static final Key<String> agentIdKey = new Key<>("agent-id", false);
+    static final Category agentConfigCategory = new Category("agent-config", agentIdKey);
 
-    public abstract void setAgentId(UUID id);
+    Collection<HostRef> getHosts();
 
-    public abstract void addAgentInformation(AgentInformation agentInfo);
-
-    public abstract void removeAgentInformation();
-
-    /**
-     * @return {@code null} if the value is invalid or missing
-     */
-    public abstract String getBackendConfig(String backendName, String configurationKey);
-
-    public final void registerCategory(Category category) {
-        if (category.hasBeenRegistered()) {
-            throw new IllegalStateException("Category may only be associated with one backend.");
-        }
-        ConnectionKey connKey = createConnectionKey(category);
-        category.setConnectionKey(connKey);
-    }
-
-    public abstract ConnectionKey createConnectionKey(Category category);
-
-    public abstract void putChunk(Chunk chunk);
-
-    public abstract void updateChunk(Chunk chunk);
-
-    /* Drop all data related to the currently running agent.
-     */
-    public abstract void purge();
-
-    public abstract Cursor findAll(Chunk query);
-
-    public abstract Chunk find(Chunk query);
-
-    public abstract Cursor findAllFromCategory(Category category);
 }

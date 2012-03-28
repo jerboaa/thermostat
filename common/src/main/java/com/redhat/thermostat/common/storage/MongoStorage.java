@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -323,5 +322,12 @@ public class MongoStorage extends Storage {
         ChunkConverter converter = new ChunkConverter();
         DBObject dbResult = coll.findOne(converter.chunkToDBObject(query));
         return dbResult == null ? null : converter.dbObjectToChunk(dbResult, cat);
+    }
+
+    @Override
+    public Cursor findAllFromCategory(Category category) {
+        DBCollection coll = getCachedCollection(category.getName());
+        DBCursor dbCursor = coll.find();
+        return new MongoCursor(dbCursor, category);
     }
 }

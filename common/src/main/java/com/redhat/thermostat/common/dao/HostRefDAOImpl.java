@@ -34,54 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import com.redhat.thermostat.common.dao.Connection;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Storage;
 
-public abstract class Storage {
+class HostRefDAOImpl implements HostRefDAO {
 
-    protected Connection connection;
-    
-    public Storage (Connection connection) {
-        this.connection = connection;
+    private Storage storage;
+
+    HostRefDAOImpl(Storage storage) {
+        this.storage = storage;
     }
-    
-    public abstract void connect() throws ConnectionFailedException;
 
-    public abstract void setAgentId(UUID id);
-
-    public abstract void addAgentInformation(AgentInformation agentInfo);
-
-    public abstract void removeAgentInformation();
-
-    /**
-     * @return {@code null} if the value is invalid or missing
-     */
-    public abstract String getBackendConfig(String backendName, String configurationKey);
-
-    public final void registerCategory(Category category) {
-        if (category.hasBeenRegistered()) {
-            throw new IllegalStateException("Category may only be associated with one backend.");
+    @Override
+    public Collection<HostRef> getHosts() {
+        Collection<HostRef> hosts = new ArrayList<HostRef>();
+        Cursor agentsCursor = storage.findAllFromCategory(agentConfigCategory);
+        while (agentsCursor.hasNext()) {
+            Chunk agentConfig = agentsCursor.next();
+            HostRef host = getHostFromAgent(agentConfig);
+            hosts.add(host);
         }
-        ConnectionKey connKey = createConnectionKey(category);
-        category.setConnectionKey(connKey);
+        return hosts;
     }
 
-    public abstract ConnectionKey createConnectionKey(Category category);
+    private HostRef getHostFromAgent(Chunk agentConfig) {
+        String agentId = agentConfig.get(agentIdKey);
+        Chunk hostQuery = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostQuery.put(agentIdKey, agentId);
+        Chunk host = storage.find(hostQuery);
+        String hostname = host.get(HostInfoDAO.hostNameKey);
+        return new HostRef(agentId, hostname);
+    }
 
-    public abstract void putChunk(Chunk chunk);
-
-    public abstract void updateChunk(Chunk chunk);
-
-    /* Drop all data related to the currently running agent.
-     */
-    public abstract void purge();
-
-    public abstract Cursor findAll(Chunk query);
-
-    public abstract Chunk find(Chunk query);
-
-    public abstract Cursor findAllFromCategory(Category category);
 }
