@@ -118,12 +118,7 @@ public class JvmStatVmListener implements VmListener {
                 g.name = extractor.getGenerationName(generation);
                 g.capacity = extractor.getGenerationCapacity(generation);
                 g.maxCapacity = extractor.getGenerationMaxCapacity(generation);
-                try {
-                    g.collector = extractor.getGenerationCollector(generation);
-                } catch (IllegalArgumentException iae) {
-                    /* no collector for this generation */
-                    g.collector = Generation.COLLECTOR_NONE;
-                }
+                g.collector = extractor.getGenerationCollector(generation);
                 long maxSpaces = extractor.getTotalSpaces(generation);
                 List<Space> spaces = new ArrayList<Space>();
                 g.spaces = spaces;

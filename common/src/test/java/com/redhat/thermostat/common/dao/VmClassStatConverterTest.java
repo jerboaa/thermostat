@@ -59,5 +59,17 @@ public class VmClassStatConverterTest {
         assertEquals((Long) 12345L, chunk.get(new Key<Long>("loadedClasses", false)));
     }
 
-    // TODO test conversion the other way too
+    @Test
+    public void testChunkToVmClassStat() {
+        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
+        chunk.put(VmClassStatDAO.vmIdKey, 123);
+        chunk.put(Key.TIMESTAMP, 1234L);
+        chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
+
+        VmClassStat stat = new VmClassStatConverter().chunkToVmClassStat(chunk);
+
+        assertEquals(123, stat.getVmId());
+        assertEquals(1234L, stat.getTimestamp());
+        assertEquals(12345L, stat.getLoadedClasses());
+    }
 }

@@ -81,7 +81,7 @@ public class VmOverviewController implements AsyncUiFacade {
             public void run() {
                 BasicDBObject queryObject = new BasicDBObject();
                 queryObject.put("agent-id", vmRef.getAgent().getAgentId());
-                queryObject.put("vm-id", Integer.valueOf(vmRef.getId()));
+                queryObject.put("vm-id", vmRef.getId());
                 DBObject vmInfoObject = vmInfoCollection.findOne(queryObject);
                 view.setVmPid(((Integer) vmInfoObject.get("vm-pid")).toString());
                 long actualStartTime = (Long) vmInfoObject.get("start-time");

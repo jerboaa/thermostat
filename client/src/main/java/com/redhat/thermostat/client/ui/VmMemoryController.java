@@ -42,13 +42,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
-import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
@@ -58,15 +54,13 @@ public class VmMemoryController implements AsyncUiFacade {
 
     private final VmRef vmRef;
     private final VmMemoryView view;
-    private final DBCollection vmMemoryStatsCollection;
+    private final VmMemoryStatDAO dao;
 
     private final Timer timer = new Timer();
 
-    public VmMemoryController(VmRef vmRef, DB db) {
+    public VmMemoryController(VmRef vmRef) {
         this.vmRef = vmRef;
-
-        vmMemoryStatsCollection = db.getCollection("vm-memory-stats");
-
+        dao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO(this.vmRef);
         view = createView();
     }
 
@@ -75,7 +69,7 @@ public class VmMemoryController implements AsyncUiFacade {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                VmMemoryStat info = getLatestMemoryStat();
+                VmMemoryStat info = dao.getLatestMemoryStat();
                 List<Generation> generations = info.getGenerations();
                 for (Generation generation: generations) {
                     List<Space> spaces = generation.spaces;
@@ -87,22 +81,6 @@ public class VmMemoryController implements AsyncUiFacade {
             }
 
         }, 0, TimeUnit.SECONDS.toMillis(5));
-    }
-
-    private VmMemoryStat getLatestMemoryStat() {
-        BasicDBObject query = new BasicDBObject();
-        query.put("agent-id", vmRef.getAgent().getAgentId());
-        query.put("vm-id", Integer.valueOf(vmRef.getId()));
-        // TODO ensure timestamp is an indexed column
-        BasicDBObject sortByTimeStamp = new BasicDBObject("timestamp", -1);
-        DBCursor cursor;
-        cursor = vmMemoryStatsCollection.find(query).sort(sortByTimeStamp).limit(1);
-        if (cursor.hasNext()) {
-            DBObject current = cursor.next();
-            return new VmMemoryStatConverter().createVmMemoryStatFromDBObject(current);
-        }
-
-        return null;
     }
 
     @Override

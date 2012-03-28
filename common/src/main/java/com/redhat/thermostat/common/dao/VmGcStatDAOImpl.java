@@ -34,54 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import java.util.ArrayList;
+import java.util.List;
 
-class MongoCursor implements Cursor {
+import com.redhat.thermostat.common.model.VmGcStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
-    private DBCursor cursor;
-    private Category category;
+public class VmGcStatDAOImpl implements VmGcStatDAO {
 
-    MongoCursor(DBCursor cursor, Category category) {
-        this.cursor = cursor;
-        this.category = category;
+    private Storage storage;
+    private VmRef ref;
+
+    private long lastUpdate = Long.MIN_VALUE;
+
+    public VmGcStatDAOImpl(Storage storage, VmRef ref) {
+        this.storage = storage;
+        this.ref = ref;
     }
 
     @Override
-    public boolean hasNext() {
-        return cursor.hasNext();
-    }
-
-    @Override
-    public Chunk next() {
-        DBObject next = cursor.next();
-        if (next == null) {
-            return null;
+    public List<VmGcStat> getLatestVmGcStats() {
+        List<VmGcStat> result = new ArrayList<>();
+        Chunk query = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
+        query.put(VmGcStatDAO.vmIdKey, ref.getId());
+        if (lastUpdate != Long.MIN_VALUE) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
         }
-        ChunkConverter converter = new ChunkConverter();
-        return converter.dbObjectToChunk(next, category);
-    }
-
-    @Override
-    public Cursor sort(Key<?> orderBy, SortDirection direction) {
-        if (!category.getKeys().contains(orderBy)) {
-            throw new IllegalArgumentException("Key not present in this Cursor's category.");
-        }   /* TODO: There are other possible error conditions.  Once there is API to configure
-             * indexing/optimization, we may want to prevent or log predictably bad performance
-             * sorting requests.
-             */
-        DBObject dbOrderBy = new BasicDBObject(orderBy.getName(), direction.getValue());
-        DBCursor sorted = cursor.sort(dbOrderBy);
-        return new MongoCursor(sorted, category);
-    }
-
-    @Override
-    public Cursor limit(int i) {
-        DBCursor limited = cursor.limit(i);
-        return new MongoCursor(limited, category);
+        Cursor cursor = storage.findAll(query);
+        VmGcStatConverter converter = new VmGcStatConverter();
+        while (cursor.hasNext()) {
+            Chunk current = cursor.next();
+            VmGcStat stat = converter.chunkToVmGcStat(current);
+            result.add(stat);
+            lastUpdate = Math.max(stat.getTimeStamp(), lastUpdate);
+        }
+        return result;
     }
 
 }

@@ -62,22 +62,19 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
         ArrayList<VmClassStat> result = new ArrayList<>();
         Chunk query = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
         query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(VmClassStatDAO.vmIdKey, Integer.valueOf(ref.getId()));
+        query.put(VmClassStatDAO.vmIdKey, ref.getId());
         if (lastUpdate != Long.MIN_VALUE) {
             // TODO once we have an index and the 'column' is of type long, use
             // a query which can utilize an index. this one doesn't
             query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
         }
         Cursor cursor = storage.findAll(query);
-        long timestamp;
-        long loadedClasses;
+        VmClassStatConverter converter = new VmClassStatConverter();
         while (cursor.hasNext()) {
             Chunk current = cursor.next();
-            timestamp = current.get(Key.TIMESTAMP);
-            loadedClasses = current.get(VmClassStatDAO.loadedClassesKey);
-            int vmId = current.get(VmClassStatDAO.vmIdKey);
-            result.add(new VmClassStat(vmId, timestamp, loadedClasses));
-            lastUpdate = Math.max(timestamp, lastUpdate);
+            VmClassStat stat = converter.chunkToVmClassStat(current);
+            result.add(stat);
+            lastUpdate = Math.max(stat.getTimestamp(), lastUpdate);
         }
 
         return result;

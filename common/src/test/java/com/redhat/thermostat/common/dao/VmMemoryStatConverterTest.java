@@ -43,7 +43,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.mongodb.BasicDBObject;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
@@ -119,55 +118,46 @@ public class VmMemoryStatConverterTest {
     }
 
     @Test
-    public void testDBObjectToVmMemoryStat() {
+    public void testChunkToVmMemoryStat() {
         final long TIMESTAMP = 1234l;
         final int VM_ID = 4567;
 
-        BasicDBObject dbObject = new BasicDBObject();
+        Chunk chunk = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
 
-        dbObject.put("timestamp", TIMESTAMP);
-        dbObject.put("vm-id", VM_ID);
-        BasicDBObject eden = new BasicDBObject();
-        eden.put("gen", "new");
-        eden.put("collector", "new-collector");
-        eden.put("used", 1l);
-        eden.put("capacity", 2l);
-        eden.put("max-capacity", 3l);
-        dbObject.put("eden", eden);
+        chunk.put(Key.TIMESTAMP, TIMESTAMP);
+        chunk.put(VmMemoryStatDAO.vmIdKey, VM_ID);
 
-        BasicDBObject s0 = new BasicDBObject();
-        s0.put("gen", "new");
-        s0.put("collector", "new-collector");
-        s0.put("used", 4l);
-        s0.put("capacity", 5l);
-        s0.put("max-capacity", 6l);
-        dbObject.put("s0", s0);
+        chunk.put(VmMemoryStatDAO.edenGenKey, "new");
+        chunk.put(VmMemoryStatDAO.edenCollectorKey, "new-collector");
+        chunk.put(VmMemoryStatDAO.edenUsedKey, 1l);
+        chunk.put(VmMemoryStatDAO.edenCapacityKey, 2l);
+        chunk.put(VmMemoryStatDAO.edenMaxCapacityKey, 3l);
 
-        BasicDBObject s1 = new BasicDBObject();
-        s1.put("gen", "new");
-        s1.put("collector", "new-collector");
-        s1.put("used", 7l);
-        s1.put("capacity", 8l);
-        s1.put("max-capacity", 9l);
-        dbObject.put("s1", s1);
+        chunk.put(VmMemoryStatDAO.s0GenKey, "new");
+        chunk.put(VmMemoryStatDAO.s0CollectorKey, "new-collector");
+        chunk.put(VmMemoryStatDAO.s0UsedKey, 4l);
+        chunk.put(VmMemoryStatDAO.s0CapacityKey, 5l);
+        chunk.put(VmMemoryStatDAO.s0MaxCapacityKey, 6l);
 
-        BasicDBObject old = new BasicDBObject();
-        old.put("gen", "old");
-        old.put("collector", "old-collector");
-        old.put("used", 10l);
-        old.put("capacity", 11l);
-        old.put("max-capacity", 12l);
-        dbObject.put("old", old);
+        chunk.put(VmMemoryStatDAO.s1GenKey, "new");
+        chunk.put(VmMemoryStatDAO.s1CollectorKey, "new-collector");
+        chunk.put(VmMemoryStatDAO.s1UsedKey, 7l);
+        chunk.put(VmMemoryStatDAO.s1CapacityKey, 8l);
+        chunk.put(VmMemoryStatDAO.s1MaxCapacityKey, 9l);
 
-        BasicDBObject perm = new BasicDBObject();
-        perm.put("gen", "perm");
-        perm.put("collector", "perm-collector");
-        perm.put("used", 13l);
-        perm.put("capacity", 14l);
-        perm.put("max-capacity", 15l);
-        dbObject.put("perm", perm);
+        chunk.put(VmMemoryStatDAO.oldGenKey, "old");
+        chunk.put(VmMemoryStatDAO.oldCollectorKey, "old-collector");
+        chunk.put(VmMemoryStatDAO.oldUsedKey, 10l);
+        chunk.put(VmMemoryStatDAO.oldCapacityKey, 11l);
+        chunk.put(VmMemoryStatDAO.oldMaxCapacityKey, 12l);
 
-        VmMemoryStat stat = new VmMemoryStatConverter().createVmMemoryStatFromDBObject(dbObject);
+        chunk.put(VmMemoryStatDAO.permGenKey, "perm");
+        chunk.put(VmMemoryStatDAO.permCollectorKey, "perm-collector");
+        chunk.put(VmMemoryStatDAO.permUsedKey, 13l);
+        chunk.put(VmMemoryStatDAO.permCapacityKey, 14l);
+        chunk.put(VmMemoryStatDAO.permMaxCapacityKey, 15l);
+
+        VmMemoryStat stat = new VmMemoryStatConverter().chunkToVmMemoryStat(chunk);
 
         assertNotNull(stat);
         assertEquals(TIMESTAMP, stat.getTimeStamp());
@@ -184,5 +174,4 @@ public class VmMemoryStatConverterTest {
         assertEquals(1, stat.getGeneration("perm").spaces.size());
         assertEquals("perm-collector", stat.getGeneration("perm").collector);
     }
-
 }

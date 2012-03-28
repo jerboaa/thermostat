@@ -49,4 +49,11 @@ public class VmClassStatConverter {
         chunk.put(VmClassStatDAO.loadedClassesKey, vmClassStat.getLoadedClasses());
         return chunk;
     }
+
+    public VmClassStat chunkToVmClassStat(Chunk chunk) {
+        long timestamp = chunk.get(Key.TIMESTAMP);
+        long loadedClasses = chunk.get(VmClassStatDAO.loadedClassesKey);
+        int vmId = chunk.get(VmClassStatDAO.vmIdKey);
+        return new VmClassStat(vmId, timestamp, loadedClasses);
+    }
 }

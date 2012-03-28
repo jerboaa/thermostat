@@ -55,8 +55,8 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     public VmPanelFacadeImpl(VmRef vmRef, DB db) {
         overviewController = new VmOverviewController(vmRef, db);
         cpuController = new VmCpuController(vmRef);
-        memoryController = new VmMemoryController(vmRef, db);
-        gcController = new VmGcController(vmRef, db);
+        memoryController = new VmMemoryController(vmRef);
+        gcController = new VmGcController(vmRef);
         classesController = new VmClassStatController(vmRef);
     }
 

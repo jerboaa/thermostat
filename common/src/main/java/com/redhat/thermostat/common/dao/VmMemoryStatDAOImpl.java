@@ -34,54 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
-class MongoCursor implements Cursor {
+public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
-    private DBCursor cursor;
-    private Category category;
+    private final Storage storage;
+    private final VmRef ref;
 
-    MongoCursor(DBCursor cursor, Category category) {
-        this.cursor = cursor;
-        this.category = category;
+    public VmMemoryStatDAOImpl(Storage storage, VmRef ref) {
+        this.storage = storage;
+        this.ref = ref;
     }
 
     @Override
-    public boolean hasNext() {
-        return cursor.hasNext();
-    }
-
-    @Override
-    public Chunk next() {
-        DBObject next = cursor.next();
-        if (next == null) {
-            return null;
-        }
-        ChunkConverter converter = new ChunkConverter();
-        return converter.dbObjectToChunk(next, category);
-    }
-
-    @Override
-    public Cursor sort(Key<?> orderBy, SortDirection direction) {
-        if (!category.getKeys().contains(orderBy)) {
-            throw new IllegalArgumentException("Key not present in this Cursor's category.");
-        }   /* TODO: There are other possible error conditions.  Once there is API to configure
-             * indexing/optimization, we may want to prevent or log predictably bad performance
-             * sorting requests.
-             */
-        DBObject dbOrderBy = new BasicDBObject(orderBy.getName(), direction.getValue());
-        DBCursor sorted = cursor.sort(dbOrderBy);
-        return new MongoCursor(sorted, category);
-    }
-
-    @Override
-    public Cursor limit(int i) {
-        DBCursor limited = cursor.limit(i);
-        return new MongoCursor(limited, category);
+    public VmMemoryStat getLatestMemoryStat() {
+        Chunk query = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
+        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
+        query.put(VmMemoryStatDAO.vmIdKey, ref.getId());
+        Cursor cursor = storage.findAll(query).sort(Key.AGENT_ID, Cursor.SortDirection.DESCENDING).limit(1);
+        return new VmMemoryStatConverter().chunkToVmMemoryStat(cursor.next());
     }
 
 }

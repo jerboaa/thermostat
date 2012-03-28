@@ -51,6 +51,10 @@ public interface DAOFactory {
 
     public VmClassStatDAO getVmClassStatsDAO(VmRef ref);
 
+    public VmGcStatDAO getVmGcStatDAO(VmRef ref);
+
+    public VmMemoryStatDAO getVmMemoryStatDAO(VmRef vmRef);
+
     public HostInfoDAO getHostInfoDAO(HostRef ref);
 
     public CpuStatDAO getCpuStatDAO(HostRef ref);
@@ -58,4 +62,5 @@ public interface DAOFactory {
     public MemoryStatDAO getMemoryStatDAO(HostRef ref);
 
     public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO(HostRef hostRef);
+
 }

@@ -90,7 +90,7 @@ public class VmCpuStatDAOTest {
 
         VmRef vmRef = mock(VmRef.class);
         when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn("321");
+        when(vmRef.getId()).thenReturn(321);
 
 
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage, vmRef);
@@ -128,7 +128,7 @@ public class VmCpuStatDAOTest {
 
         VmRef vmRef = mock(VmRef.class);
         when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn("321");
+        when(vmRef.getId()).thenReturn(321);
 
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage, vmRef);
         dao.getLatestVmCpuStats();

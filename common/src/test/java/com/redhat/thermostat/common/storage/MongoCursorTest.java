@@ -41,8 +41,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.After;
 import org.junit.Before;
@@ -111,16 +114,13 @@ public class MongoCursorTest {
 
     @Test
     public void verifyCursorSort() {
-        Chunk orderBy = new Chunk(testCategory, false);
-        orderBy.put(key1, "test1");
         ArgumentCaptor<DBObject> arg = ArgumentCaptor.forClass(DBObject.class);
-        Cursor sorted = cursor.sort(orderBy);
+        Cursor sorted = cursor.sort(key1, Cursor.SortDirection.ASCENDING);
 
         verify(dbCursor).sort(arg.capture());
         DBObject orderByDBObject = arg.getValue();
         assertEquals(1, orderByDBObject.keySet().size());
-        assertEquals("test1", orderByDBObject.get("key1"));
-
+        assertEquals((Integer) Cursor.SortDirection.ASCENDING.getValue(), orderByDBObject.get(key1.getName()));
         // Verify that the sorted cursor is still return the same number of items. We leave the actual
         // sorting to Mongo and won't check it here.
         assertTrue(sorted.hasNext());
