@@ -46,6 +46,9 @@ public class ProcDataSource {
     private static final String MEMINFO_FILE = "/proc/meminfo";
     private static final String CPUINFO_FILE = "/proc/cpuinfo";
 
+    private static final String PID_STAT_FILE = "/proc/${pid}/stat";
+    private static final String PID_ENVIRON_FILE = "/proc/${pid}/environ";
+
     /**
      * Returns a reader for /proc/cpuinfo
      */
@@ -65,6 +68,24 @@ public class ProcDataSource {
      */
     public Reader getMemInfoReader() throws IOException {
         return new FileReader(MEMINFO_FILE);
+    }
+
+    /**
+     * Returns a reader for /proc/$PID/stat
+     */
+    public Reader getStatReader(int pid) throws IOException {
+        return new FileReader(getPidFile(PID_STAT_FILE, pid));
+    }
+
+    /**
+     * Returns a reader for /proc/$PID/environ
+     */
+    public Reader getEnvironReader(int pid) throws IOException {
+        return new FileReader(getPidFile(PID_ENVIRON_FILE, pid));
+    }
+
+    private String getPidFile(String fileName, int pid) {
+        return fileName.replace("${pid}", Integer.toString(pid));
     }
 
 }

@@ -36,11 +36,10 @@
 
 package com.redhat.thermostat.backend.system;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,56 +52,51 @@ public class ProcessEnvironmentBuilder {
 
     private static final Logger logger = LoggingUtils.getLogger(ProcessEnvironmentBuilder.class);
 
-    private ProcessEnvironmentBuilder() {
-        /* should not be instantiated */
+    private final ProcDataSource dataSource;
+
+    public ProcessEnvironmentBuilder(ProcDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
-    public static Map<String, String> build(int pid) {
+    public Map<String, String> build(int pid) {
+        try (Reader reader = dataSource.getEnvironReader(pid)) {
+            return build(reader);
+        } catch (IOException ioe) {
+            logger.log(Level.WARNING, "error reading env", ioe);
+        }
+
+        return Collections.emptyMap();
+    }
+
+    private Map<String,String> build(Reader reader) throws IOException {
+
         Map<String, String> env = new HashMap<String, String>();
 
-        String filename = "/proc/" + pid + "/environ";
-        try {
-            Reader reader = new FileReader(filename);
-            try {
-                char[] fileBuffer = new char[1024];
-                int fileBufferIndex = 0;
-                char[] buffer = new char[1024];
-                int read = 0;
-                while (true) {
-                    read = reader.read(buffer);
-                    if (read == -1) {
-                        break;
-                    }
-
-                    if (read + fileBufferIndex > fileBuffer.length) {
-                        char[] newFileBuffer = new char[fileBuffer.length * 2];
-                        System.arraycopy(fileBuffer, 0, newFileBuffer, 0, fileBufferIndex);
-                        fileBuffer = newFileBuffer;
-                    }
-                    System.arraycopy(buffer, 0, fileBuffer, fileBufferIndex, read);
-                    fileBufferIndex = fileBufferIndex + read;
-
-                }
-                List<String> parts = getParts(fileBuffer, fileBufferIndex);
-                for (String part : parts) {
-                    int splitterPos = part.indexOf("=");
-                    String key = part.substring(0, splitterPos);
-                    String value = part.substring(splitterPos + 1);
-                    env.put(key, value);
-                }
-            } catch (IOException e) {
-                logger.log(Level.WARNING, "error reading " + filename, e);
-            } finally {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    logger.log(Level.WARNING, "error closing " + filename);
-                }
+        char[] fileBuffer = new char[1024];
+        int fileBufferIndex = 0;
+        char[] buffer = new char[1024];
+        int read = 0;
+        while (true) {
+            read = reader.read(buffer);
+            if (read == -1) {
+                break;
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            logger.log(Level.WARNING, "file " + filename + " not found");
+
+            if (read + fileBufferIndex > fileBuffer.length) {
+                char[] newFileBuffer = new char[fileBuffer.length * 2];
+                System.arraycopy(fileBuffer, 0, newFileBuffer, 0, fileBufferIndex);
+                fileBuffer = newFileBuffer;
+            }
+            System.arraycopy(buffer, 0, fileBuffer, fileBufferIndex, read);
+            fileBufferIndex = fileBufferIndex + read;
+
+        }
+        List<String> parts = getParts(fileBuffer, fileBufferIndex);
+        for (String part : parts) {
+            int splitterPos = part.indexOf("=");
+            String key = part.substring(0, splitterPos);
+            String value = part.substring(splitterPos + 1);
+            env.put(key, value);
         }
 
         return env;
@@ -112,7 +106,7 @@ public class ProcessEnvironmentBuilder {
      * Split a char array, where items are separated by a null into into a list
      * of strings
      */
-    private static List<String> getParts(char[] nullSeparatedBuffer, int bufferLength) {
+    private List<String> getParts(char[] nullSeparatedBuffer, int bufferLength) {
         int maxLength = Math.min(nullSeparatedBuffer.length, bufferLength);
         List<String> parts = new ArrayList<String>();
 
