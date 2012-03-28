@@ -36,48 +36,48 @@
 
 package com.redhat.thermostat.backend.system;
 
-import java.util.HashMap;
-import java.util.Map;
+import static org.junit.Assert.assertNotNull;
 
-import com.redhat.thermostat.common.model.VmCpuStat;
+import java.io.IOException;
+import java.io.Reader;
 
-public class VmCpuStatBuilder {
+import org.junit.Test;
 
-    // pid -> ticks
-    private static Map<Integer, Long> lastProcessTicks = new HashMap<Integer, Long>();
-    // pid -> last time the ticks were updated
-    private static Map<Integer, Long> lastProcessTickTime = new HashMap<Integer, Long>();
+import com.redhat.thermostat.TestUtils;
 
-    private static long clockTicksPerSecond = SysConf.getClockTicksPerSecond();
+public class ProcDataSourceTest {
 
-    /**
-     * To build the stat, this method needs to be called repeatedly. The first
-     * time (in the entire run time) it is called, the result will most be
-     * useless. The second (and later calls) should produce usable results.
-     *
-     * @param pid
-     * @return
-     */
-    public static synchronized VmCpuStat build(Integer pid) {
+    @Test
+    public void testGetCpuInfoReader() throws IOException {
+        Reader r = new ProcDataSource().getCpuInfoReader();
+        assertNotNull(r);
+    }
 
-        ProcDataSource dataSource = new ProcDataSource();
-        ProcessStatusInfo info = new ProcessStatusInfoBuilder(dataSource).build(pid);
-        long miliTime = System.currentTimeMillis();
-        long time = System.nanoTime();
-        long programTicks = (info.getKernelTime() + info.getUserTime());
-        double cpuLoad = 0.0;
+    @Test
+    public void testGetCpuLoadReader() throws IOException {
+        Reader r = new ProcDataSource().getCpuLoadReader();
+        assertNotNull(r);
+    }
 
-        if (lastProcessTicks.containsKey(pid)) {
-            double timeDelta = (time - lastProcessTickTime.get(pid)) * 1E-9;
-            long programTicksDelta = programTicks - lastProcessTicks.get(pid);
-            cpuLoad = programTicksDelta * (100.0 / timeDelta / clockTicksPerSecond);
-        }
+    @Test
+    public void testGetMemInfoReader() throws IOException {
+        Reader r = new ProcDataSource().getMemInfoReader();
+        assertNotNull(r);
+    }
 
-        lastProcessTicks.put(pid, programTicks);
-        lastProcessTickTime.put(pid, time);
+    @Test
+    public void testGetStatReader() throws IOException {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getStatReader(pid);
+        assertNotNull(r);
+    }
 
 
-        return new VmCpuStat(miliTime, pid, cpuLoad);
+    @Test
+    public void testGetEnvironReader() throws IOException {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getEnvironReader(pid);
+        assertNotNull(r);
     }
 
 }
