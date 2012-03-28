@@ -89,8 +89,8 @@ public class MainWindowControllerImpl implements MainWindowController, HostsVMsL
                 doUpdateTreeAsync();
             }
         });
-        backgroundUpdater.setDelay(0);
-        backgroundUpdater.setPeriod(10);
+        backgroundUpdater.setInitialDelay(0);
+        backgroundUpdater.setDelay(10);
         backgroundUpdater.setTimeUnit(TimeUnit.SECONDS);
     }
 

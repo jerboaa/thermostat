@@ -54,6 +54,8 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 
 public class ThreadPoolTimerFactoryTest {
 
+    private static final long DELAY = 200;
+
     private Timer timer;
 
     @Before
@@ -72,7 +74,7 @@ public class ThreadPoolTimerFactoryTest {
         Runnable action = mock(Runnable.class);
         timer.setAction(action);
         timer.start();
-        Thread.sleep(10);
+        Thread.sleep(DELAY / 2);
         verify(action).run();
     }
 
@@ -87,13 +89,13 @@ public class ThreadPoolTimerFactoryTest {
     public void testDefaultWithDelay() throws InterruptedException {
         Runnable action = mock(Runnable.class);
         timer.setAction(action);
-        timer.setDelay(50);
+        timer.setInitialDelay(DELAY);
         timer.start();
-        Thread.sleep(10);
+        Thread.sleep(DELAY / 2);
         verify(action, never()).run();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
         verify(action).run();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
         verify(action).run();
     }
 
@@ -101,14 +103,14 @@ public class ThreadPoolTimerFactoryTest {
     public void testTimeUnitSecond() throws InterruptedException {
         Runnable action = mock(Runnable.class);
         timer.setAction(action);
-        timer.setDelay(1);
+        timer.setInitialDelay(1);
         timer.setTimeUnit(TimeUnit.SECONDS);
         timer.start();
-        Thread.sleep(100);
+        Thread.sleep(500);
         verify(action, never()).run();
         Thread.sleep(1000);
         verify(action).run();
-        Thread.sleep(50);
+        Thread.sleep(1000);
         verify(action).run();
     }
 
@@ -124,24 +126,27 @@ public class ThreadPoolTimerFactoryTest {
 
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(45);
+                // Wait a little less than delay to
+                // 1. Verify more easily that the duration of the task does not push back the activation of next task.
+                // 2. Not congest the timer thread (which would happen if we take >= DELAY).
+                Thread.sleep(DELAY * 9 / 10 );
                 return null;
             }
             
         }).when(action).run();
         timer.setAction(action);
-        timer.setDelay(50);
-        timer.setPeriod(50);
+        timer.setInitialDelay(DELAY);
+        timer.setDelay(DELAY);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
         timer.start();
-        Thread.sleep(10);
+        Thread.sleep(DELAY / 2);
         verify(action, never()).run();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
         verify(action).run();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
         verify(action, times(2)).run();
         timer.stop();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
         verify(action, times(2)).run();
     }
 
@@ -158,26 +163,28 @@ public class ThreadPoolTimerFactoryTest {
 
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                Thread.sleep(50);
+                Thread.sleep(DELAY / 2);
                 return null;
             }
             
         }).when(action).run();
         timer.setAction(action);
-        timer.setDelay(50);
-        timer.setPeriod(50);
+        timer.setInitialDelay(DELAY);
+        timer.setDelay(DELAY);
         timer.setSchedulingType(SchedulingType.FIXED_DELAY);
         timer.start();
-        Thread.sleep(10);
+        Thread.sleep(DELAY / 2);
         verify(action, never()).run();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
         verify(action).run();
-        Thread.sleep(50);
+        Thread.sleep(DELAY / 2);
         verify(action).run();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
+        verify(action, times(2)).run();
+        Thread.sleep(DELAY / 2);
         verify(action, times(2)).run();
         timer.stop();
-        Thread.sleep(50);
+        Thread.sleep(DELAY);
         verify(action, times(2)).run();
     }
 }

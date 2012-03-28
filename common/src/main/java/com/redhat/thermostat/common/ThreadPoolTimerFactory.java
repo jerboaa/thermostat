@@ -95,12 +95,12 @@ public class ThreadPoolTimerFactory implements TimerFactory {
         }
 
         @Override
-        public void setDelay(long delay) {
+        public void setInitialDelay(long delay) {
             this.delay = delay;
         }
 
         @Override
-        public void setPeriod(long period) {
+        public void setDelay(long period) {
             this.period = period;
         }
 

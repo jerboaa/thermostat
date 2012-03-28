@@ -47,8 +47,8 @@ public interface Timer {
     void start();
     void stop();
     void setAction(Runnable action);
-    void setDelay(long delay);
-    void setPeriod(long period);
+    void setInitialDelay(long initialDelay);
+    void setDelay(long period);
     void setSchedulingType(SchedulingType schedulingType);
     void setTimeUnit(TimeUnit timeUnit);
 }
