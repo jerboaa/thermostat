@@ -108,6 +108,10 @@ public class MongoDAOFactory implements DAOFactory {
     }
 
     @Override
+    public VmInfoDAO getVmInfoDAO(VmRef ref) {
+        return new VmInfoDAOImpl(storage, ref);
+    }
+
     public VmMemoryStatDAO getVmMemoryStatDAO(VmRef ref) {
         return new VmMemoryStatDAOImpl(storage, ref);
     }

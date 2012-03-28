@@ -45,29 +45,28 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 
 public class VmOverviewController implements AsyncUiFacade {
 
     private final VmRef vmRef;
-    private final DBCollection vmInfoCollection;
+    private final VmInfoDAO dao;
     private final DateFormat vmRunningTimeFormat;
 
     private final Timer timer;
 
     private final VmOverviewView view;
 
-    public VmOverviewController(VmRef vmRef, DB db) {
+    public VmOverviewController(VmRef vmRef) {
         this.vmRef = vmRef;
         this.view = createView();
 
-        vmInfoCollection = db.getCollection("vm-info");
+        dao = ApplicationContext.getInstance().getDAOFactory().getVmInfoDAO(this.vmRef);
 
         vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
         timer = new Timer();
@@ -79,30 +78,27 @@ public class VmOverviewController implements AsyncUiFacade {
 
             @Override
             public void run() {
-                BasicDBObject queryObject = new BasicDBObject();
-                queryObject.put("agent-id", vmRef.getAgent().getAgentId());
-                queryObject.put("vm-id", vmRef.getId());
-                DBObject vmInfoObject = vmInfoCollection.findOne(queryObject);
-                view.setVmPid(((Integer) vmInfoObject.get("vm-pid")).toString());
-                long actualStartTime = (Long) vmInfoObject.get("start-time");
+                VmInfo info = dao.getVmInfo();
+                view.setVmPid(((Integer) info.getVmPid()).toString());
+                long actualStartTime = info.getStartTimeStamp();
                 view.setVmStartTimeStamp(vmRunningTimeFormat.format(new Date(actualStartTime)));
-                long actualStopTime = (Long) vmInfoObject.get("stop-time");
+                long actualStopTime = info.getStopTimeStamp();
                 if (actualStopTime >= actualStartTime) {
                     // Only show a stop time if we have actually stopped.
                     view.setVmStopTimeStamp(vmRunningTimeFormat.format(new Date(actualStopTime)));
                 } else {
                     view.setVmStopTimeStamp(localize(LocaleResources.VM_INFO_RUNNING));
                 }
-                view.setJavaVersion((String) vmInfoObject.get("runtime-version"));
-                view.setJavaHome((String) vmInfoObject.get("java-home"));
-                view.setMainClass((String) vmInfoObject.get("main-class"));
-                view.setJavaCommandLine((String) vmInfoObject.get("command-line"));
-                String actualVmName = (String) vmInfoObject.get("vm-name");
-                view.setVmInfo((String) vmInfoObject.get("vm-info"));
-                String actualVmVersion = (String) vmInfoObject.get("vm-version");
+                view.setJavaVersion(info.getJavaVersion());
+                view.setJavaHome(info.getJavaHome());
+                view.setMainClass(info.getMainClass());
+                view.setJavaCommandLine(info.getJavaCommandLine());
+                String actualVmName = info.getVmName();
+                view.setVmInfo(info.getVmInfo());
+                String actualVmVersion = info.getVmInfo();
                 view.setVmNameAndVersion(localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
                         actualVmName, actualVmVersion));
-                view.setVmArguments((String) vmInfoObject.get("vm-arguments"));
+                view.setVmArguments(info.getVmArguments());
             }
 
         }, 0, TimeUnit.SECONDS.toMillis(5));

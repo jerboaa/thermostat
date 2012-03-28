@@ -84,6 +84,12 @@ public class MongoDAOFactoryTest {
     }
 
     @Test
+    public void testGetVmInfoDAO() {
+        VmInfoDAO dao = daoFactory.getVmInfoDAO(vmRef);
+        assertNotNull(dao);
+    }
+
+    @Test
     public void testGetVmMemoryStatDAO() {
         VmMemoryStatDAO dao = daoFactory.getVmMemoryStatDAO(vmRef);
         assertNotNull(dao);

@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client;
 
-import com.mongodb.DB;
 import com.redhat.thermostat.client.ui.VmClassStatController;
 import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.client.ui.VmGcController;
@@ -52,8 +51,8 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     private final VmClassStatController classesController;
     private final VmGcController gcController;
 
-    public VmPanelFacadeImpl(VmRef vmRef, DB db) {
-        overviewController = new VmOverviewController(vmRef, db);
+    public VmPanelFacadeImpl(VmRef vmRef) {
+        overviewController = new VmOverviewController(vmRef);
         cpuController = new VmCpuController(vmRef);
         memoryController = new VmMemoryController(vmRef);
         gcController = new VmGcController(vmRef);

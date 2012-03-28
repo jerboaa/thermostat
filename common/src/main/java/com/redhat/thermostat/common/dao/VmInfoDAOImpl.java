@@ -36,33 +36,30 @@
 
 package com.redhat.thermostat.common.dao;
 
+import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public interface DAOFactory {
+public class VmInfoDAOImpl implements VmInfoDAO {
 
-    public Storage getStorage();
+    private Storage storage;
+    private VmRef ref;
+    private VmInfoConverter converter;
 
-    /**
-     * TODO: This will be replaced by getStorage() as soon as Storage and Connection have been merged.
-     */
-    public Connection getConnection();
+    public VmInfoDAOImpl(Storage storage, VmRef ref) {
+        this.storage = storage;
+        this.ref = ref;
+        this.converter = new VmInfoConverter();
+    }
 
-    public VmCpuStatDAO getVmCpuStatDAO(VmRef ref);
-
-    public VmClassStatDAO getVmClassStatsDAO(VmRef ref);
-
-    public VmGcStatDAO getVmGcStatDAO(VmRef ref);
-
-    public VmInfoDAO getVmInfoDAO(VmRef ref);
-
-    public VmMemoryStatDAO getVmMemoryStatDAO(VmRef ref);
-
-    public HostInfoDAO getHostInfoDAO(HostRef ref);
-
-    public CpuStatDAO getCpuStatDAO(HostRef ref);
-
-    public MemoryStatDAO getMemoryStatDAO(HostRef ref);
-
-    public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO(HostRef ref);
+    @Override
+    public VmInfo getVmInfo() {
+        Chunk query = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
+        query.put(VmInfoDAO.vmIdKey, ref.getId());
+        Chunk result = storage.find(query);
+        return converter.chunkToVmInfo(result);
+    }
 
 }

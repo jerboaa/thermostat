@@ -43,39 +43,108 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Key;
 
 public class VmInfoConverterTest {
 
+    private int vmId;
+    private long startTime;
+    private long stopTime;
+    private String jVersion;
+    private String jHome;
+    private String mainClass;
+    private String commandLine;
+    private String vmName;
+    private String vmInfo;
+    private String vmVersion;
+    private String vmArgs;
+    private Map<String, String> props;
+    private Map<String, String> env;
+    private List<String> libs;
+
+    @Before
+    public void setUp() {
+        vmId = 1;
+        startTime = 2;
+        stopTime = 3;
+        jVersion = "java 1.0";
+        jHome = "/path/to/jdk/home";
+        mainClass = "Hello.class";
+        commandLine = "World";
+        vmArgs = "-XX=+FastestJITPossible";
+        vmName = "Hotspot";
+        vmInfo = "Some info";
+        vmVersion = "1.0";
+        props = new HashMap<>();
+        env = new HashMap<>();
+        libs = new ArrayList<>();
+    }
+
     @Test
     public void testVmInfoToChunk() {
-        Map<String, String> environment = new HashMap<String, String>();
-        Map<String, String> properties = new HashMap<String, String>();
-        List<String> loadedNativeLibraries = new ArrayList<String>();
-        VmInfo info = new VmInfo(0, 1, 2,
-                "java-version", "java-home", "main-class", "command-line",
-                "vm-name", "vm-info", "vm-version", "vm-arguments",
-                properties, environment, loadedNativeLibraries);
+        VmInfo info = new VmInfo(vmId, startTime, stopTime,
+                jVersion, jHome, mainClass, commandLine,
+                vmName, vmInfo, vmVersion, vmArgs,
+                props, env, libs);
 
         Chunk chunk = new VmInfoConverter().vmInfoToChunk(info);
 
         assertNotNull(chunk);
-        assertEquals((Integer) 0, chunk.get(new Key<Integer>("vm-id", true)));
-        assertEquals((Integer) 0, chunk.get(new Key<Integer>("vm-pid", false)));
-        assertEquals((Long) 1l, chunk.get(new Key<Long>("start-time", false)));
-        assertEquals((Long) 2l, chunk.get(new Key<Long>("stop-time", false)));
-        assertEquals("java-version", chunk.get(new Key<String>("runtime-version", false)));
-        assertEquals("java-home", chunk.get(new Key<String>("java-home", false)));
-        assertEquals("main-class", chunk.get(new Key<String>("main-class", false)));
-        assertEquals("command-line", chunk.get(new Key<String>("command-line", false)));
-        assertEquals("vm-name", chunk.get(new Key<String>("vm-name", false)));
-        assertEquals("vm-info", chunk.get(new Key<String>("vm-info", false)));
-        assertEquals("vm-version", chunk.get(new Key<String>("vm-version", false)));
-        assertEquals("vm-arguments", chunk.get(new Key<String>("vm-arguments", false)));
+        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
+        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
+        assertEquals((Long) startTime, chunk.get(VmInfoDAO.startTimeKey));
+        assertEquals((Long) stopTime, chunk.get(VmInfoDAO.stopTimeKey));
+        assertEquals(jVersion, chunk.get(VmInfoDAO.runtimeVersionKey));
+        assertEquals(jHome, chunk.get(VmInfoDAO.javaHomeKey));
+        assertEquals(mainClass, chunk.get(VmInfoDAO.mainClassKey));
+        assertEquals(commandLine, chunk.get(VmInfoDAO.commandLineKey));
+        assertEquals(vmName, chunk.get(VmInfoDAO.vmNameKey));
+        assertEquals(vmInfo, chunk.get(VmInfoDAO.vmInfoKey));
+        assertEquals(vmVersion, chunk.get(VmInfoDAO.vmVersionKey));
+        assertEquals(vmArgs, chunk.get(VmInfoDAO.vmArgumentsKey));
+
+        // FIXME test environment, properties and loaded native libraries later
+    }
+
+    @Test
+    public void testChunkToVmInfo() {
+        Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, true);
+
+        chunk.put(VmInfoDAO.vmIdKey, vmId);
+        chunk.put(VmInfoDAO.vmPidKey, vmId);
+        chunk.put(VmInfoDAO.startTimeKey, startTime);
+        chunk.put(VmInfoDAO.stopTimeKey, stopTime);
+        chunk.put(VmInfoDAO.runtimeVersionKey, jVersion);
+        chunk.put(VmInfoDAO.javaHomeKey, jHome);
+        chunk.put(VmInfoDAO.mainClassKey, mainClass);
+        chunk.put(VmInfoDAO.commandLineKey, commandLine);
+        chunk.put(VmInfoDAO.vmNameKey, vmName);
+        chunk.put(VmInfoDAO.vmInfoKey, vmInfo);
+        chunk.put(VmInfoDAO.vmVersionKey, vmVersion);
+        chunk.put(VmInfoDAO.vmArgumentsKey, vmArgs);
+        chunk.put(VmInfoDAO.propertiesKey, props);
+        chunk.put(VmInfoDAO.environmentKey, env);
+        chunk.put(VmInfoDAO.librariesKey, libs);
+
+        VmInfo info = new VmInfoConverter().chunkToVmInfo(chunk);
+
+        assertNotNull(info);
+        assertEquals((Integer) vmId, (Integer) info.getVmId());
+        assertEquals((Integer) vmId, (Integer) info.getVmPid());
+        assertEquals((Long) startTime, (Long) info.getStartTimeStamp());
+        assertEquals((Long) stopTime, (Long) info.getStopTimeStamp());
+        assertEquals(jVersion, info.getJavaVersion());
+        assertEquals(jHome, info.getJavaHome());
+        assertEquals(mainClass, info.getMainClass());
+        assertEquals(commandLine, info.getJavaCommandLine());
+        assertEquals(vmName, info.getVmName());
+        assertEquals(vmInfo, info.getVmInfo());
+        assertEquals(vmVersion, info.getVmVersion());
+        assertEquals(vmArgs, info.getVmArguments());
 
         // FIXME test environment, properties and loaded native libraries later
     }

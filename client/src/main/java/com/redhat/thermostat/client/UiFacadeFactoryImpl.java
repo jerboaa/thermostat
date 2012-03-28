@@ -70,7 +70,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     @Override
     public VmPanelFacade getVmPanel(VmRef ref) {
-        return new VmPanelFacadeImpl(ref, connection.getDB());
+        return new VmPanelFacadeImpl(ref);
 
     }
 
