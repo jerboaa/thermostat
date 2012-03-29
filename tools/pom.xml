@@ -44,22 +44,13 @@
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat</artifactId>
     <version>0.2-SNAPSHOT</version>
+    <relativePath>..</relativePath>
   </parent>
-  
-  <artifactId>thermostat-common</artifactId>
+
+  <artifactId>thermostat-tools</artifactId>
   <packaging>jar</packaging>
 
-  <name>Thermostat Common</name>
-  <url>${project.parent.url}</url>
-
-  <build>
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-      </resource>
-    </resources>
-  </build>
+  <name>Thermostat Tools</name>
 
   <dependencies>
     <dependency>
@@ -75,40 +66,15 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <version>1.4.11</version>
-      <scope>test</scope>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <version>1.4.11</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mongodb</groupId>
-      <artifactId>mongo-java-driver</artifactId>
-      <version>2.7.3</version>
-    </dependency>
-    <dependency>
-    	<groupId>org.powermock</groupId>
-    	<artifactId>powermock-api-easymock</artifactId>
-    	<version>1.4.11</version>
-    </dependency>
-    <dependency>
-    	<groupId>org.easymock</groupId>
-    	<artifactId>easymock</artifactId>
-    	<version>3.1</version>
-    </dependency>
-    <dependency>
-    	<groupId>net.sf.jopt-simple</groupId>
-    	<artifactId>jopt-simple</artifactId>
-    	<version>4.3</version>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
-  <properties>
-  	<argLine>-XX:-UseSplitVerifier</argLine>
-  </properties>
 </project>

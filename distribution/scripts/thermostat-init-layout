@@ -37,22 +37,40 @@
 #####################################################################
 #
 # Some necessary variables.
-JAVA_DIR="@java.dir@"
-JAVA="@java.home@/bin/java"
+if [ "$THERMOSTAT_HOME" = "" ]; then
+    echo "THERMOSTAT_HOME not set!"
 
-THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+else
+    THERMOSTAT_STORAGE="${THERMOSTAT_HOME}/storage/db"
+    THERMOSTAT_LOG="${THERMOSTAT_HOME}/storage/log"
+    THERMOSTAT_PID="${THERMOSTAT_HOME}/storage/run"
+    THERMOSTAT_BACKEND="${THERMOSTAT_HOME}/backends/system"
+    THERMOSTAT_BIN="${THERMOSTAT_HOME}/bin"
+    THERMOSTAT_AGENT_LOG="${THERMOSTAT_HOME}/agent/log"
+    THERMOSTAT_AGENT_RUN="${THERMOSTAT_HOME}/agent/run"
+    THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
-JCOMMON_JAR="${THERMOSTAT_LIBS}/jcommon.jar"
-MONGO_JAR="${THERMOSTAT_LIBS}/mongo.jar"
-BSON_JAR="${THERMOSTAT_LIBS}/bson.jar"
-JOPT_JAR="${THERMOSTAT_LIBS}/jopt-simple-4.3.jar"
-TOOLS_JAR="@java.home@/../lib/tools.jar"
-
-SERVICE_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${JOPT_JAR}"
-
-THERM_DIR=${THERMOSTAT_LIBS}
-
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar:${THERM_DIR}/thermostat-tools-@project.version@.jar"
-SERVICE_MAIN="com.redhat.thermostat.agent.AgentService"
-
-${JAVA} -cp ${SERVICE_CLASSPATH} ${SERVICE_MAIN} $@
+    echo "creating $THERMOSTAT_STORAGE"
+    mkdir -p $THERMOSTAT_STORAGE
+    
+    echo "creating $THERMOSTAT_LOG"
+    mkdir -p $THERMOSTAT_LOG
+    
+    echo "creating $THERMOSTAT_PID"
+    mkdir -p $THERMOSTAT_PID
+    
+    echo "creating $THERMOSTAT_BACKEND"
+    mkdir -p $THERMOSTAT_BACKEND
+    
+    echo "creating $THERMOSTAT_BIN"
+    mkdir -p $THERMOSTAT_BIN
+    
+    echo "creating $THERMOSTAT_AGENT_LOG"
+    mkdir -p $THERMOSTAT_AGENT_LOG
+    
+    echo "creating $THERMOSTAT_AGENT_RUN"
+    mkdir -p $THERMOSTAT_AGENT_RUN
+    
+    echo "creating $THERMOSTAT_LIBS"
+    mkdir -p $THERMOSTAT_LIBS
+fi
