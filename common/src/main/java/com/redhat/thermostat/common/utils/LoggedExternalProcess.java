@@ -40,6 +40,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class LoggedExternalProcess extends Thread {
@@ -48,6 +49,10 @@ public class LoggedExternalProcess extends Thread {
     private BufferedReader reader;
     private String[] commands;
 
+    public LoggedExternalProcess(List<String> commands) {
+        this(commands.toArray(new String[0]));
+    }
+    
     public LoggedExternalProcess(String[] commands) {
         this.commands = Arrays.copyOf(commands, commands.length);
         setDaemon(true);
