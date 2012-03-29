@@ -36,25 +36,35 @@
 
 package com.redhat.thermostat.client;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.mongodb.DB;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.HostRefDAO;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.dao.VmRefDAO;
 
 public class MainWindowControllerImplTest {
 
@@ -66,6 +76,9 @@ public class MainWindowControllerImplTest {
 
     private Timer mainWindowTimer;
 
+    private HostRefDAO mockHostRefDAO;
+    private VmRefDAO mockVmRefDAO;
+
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -74,18 +87,34 @@ public class MainWindowControllerImplTest {
         when(timerFactory.createTimer()).thenReturn(mainWindowTimer);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
-        DB db = mock(DB.class);
+        setupDAOs();
+
         view = mock(MainView.class);
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
-        controller = new MainWindowControllerImpl(db, view);
+        controller = new MainWindowControllerImpl(view);
         l = grabListener.getValue();
+
+    }
+
+    private void setupDAOs() {
+        mockHostRefDAO = mock(HostRefDAO.class);
+
+        mockVmRefDAO = mock(VmRefDAO.class);
+
+        DAOFactory daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getHostRefDAO()).thenReturn(mockHostRefDAO);
+        when(daoFactory.getVmRefDAO()).thenReturn(mockVmRefDAO);
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+
     }
 
     @After
     public void tearDown() {
         view = null;
         controller = null;
+        mockHostRefDAO = null;
+        mockVmRefDAO = null;
         l = null;
         ApplicationContextUtil.resetApplicationContext();
     }
@@ -119,5 +148,49 @@ public class MainWindowControllerImplTest {
     public void verifyShowMainWindowActuallyCallsView() {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
+    }
+
+    @Test
+    public void verifyUpdateHostsVMsLoadsCorrectHosts() {
+
+        Collection<HostRef> expectedHosts = new ArrayList<>();
+        expectedHosts.add(new HostRef("123", "fluffhost1"));
+        expectedHosts.add(new HostRef("456", "fluffhost2"));
+
+        when(mockHostRefDAO.getHosts()).thenReturn(expectedHosts);
+
+        controller.doUpdateTreeAsync();
+
+        ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
+        verify(view).updateTree(anyString(), arg.capture());
+        HostsVMsLoader loader = arg.getValue();
+
+        Collection<HostRef> actualHosts = loader.getHosts();
+        assertEqualCollection(expectedHosts, actualHosts);
+    }
+
+    @Test
+    public void verifyUpdateHostsVMsLoadsCorrectVMs() {
+
+        Collection<VmRef> expectedVMs = new ArrayList<>();
+        HostRef host = new HostRef("123", "fluffhost1");
+        expectedVMs.add(new VmRef(host, 123, "vm1"));
+        expectedVMs.add(new VmRef(host, 456, "vm2"));
+
+        when(mockVmRefDAO.getVMs(any(HostRef.class))).thenReturn(expectedVMs);
+
+        controller.doUpdateTreeAsync();
+
+        ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
+        verify(view).updateTree(anyString(), arg.capture());
+        HostsVMsLoader loader = arg.getValue();
+
+        Collection<VmRef> actualVMs = loader.getVMs(host);
+        assertEqualCollection(expectedVMs, actualVMs);
+    }
+
+    private void assertEqualCollection(Collection<?> expected, Collection<?> actual) {
+        assertEquals(expected.size(), actual.size());
+        assertTrue(expected.containsAll(actual));
     }
 }

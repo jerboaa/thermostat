@@ -65,4 +65,8 @@ public interface DAOFactory {
 
     public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO(HostRef ref);
 
+    public HostRefDAO getHostRefDAO();
+
+    public VmRefDAO getVmRefDAO();
+
 }

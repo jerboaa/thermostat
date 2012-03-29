@@ -36,33 +36,22 @@
 
 package com.redhat.thermostat.client;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.HostRefDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.dao.VmRefDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class MainWindowControllerImpl implements MainWindowController, HostsVMsLoader {
-
-    private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
-
-    private final DBCollection agentConfigCollection;
-    private final DBCollection hostInfoCollection;
-    private final DBCollection vmInfoCollection;
+public class MainWindowControllerImpl implements MainWindowController {
 
     private Timer backgroundUpdater;
 
@@ -70,14 +59,33 @@ public class MainWindowControllerImpl implements MainWindowController, HostsVMsL
 
     private String filter;
 
-    public MainWindowControllerImpl(DB db, MainView view) {
-        this.agentConfigCollection = db.getCollection("agent-config");
-        this.hostInfoCollection = db.getCollection("host-info");
-        this.vmInfoCollection = db.getCollection("vm-info");
+    private HostRefDAO hostRefDAO;
+    private VmRefDAO vmRefDAO;
+
+    public MainWindowControllerImpl(MainView view) {
+
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        DAOFactory daoFactory = ctx.getDAOFactory();
+        hostRefDAO = daoFactory.getHostRefDAO();
+        vmRefDAO = daoFactory.getVmRefDAO();
 
         initView(view);
         initializeTimer();
         start();
+    }
+
+    private class HostsVMsLoaderImpl implements HostsVMsLoader {
+
+        @Override
+        public Collection<HostRef> getHosts() {
+            return hostRefDAO.getHosts();
+        }
+
+        @Override
+        public Collection<VmRef> getVMs(HostRef host) {
+            return vmRefDAO.getVMs(host);
+        }
+        
     }
 
     private void initializeTimer() {
@@ -105,48 +113,14 @@ public class MainWindowControllerImpl implements MainWindowController, HostsVMsL
     }
 
     @Override
-    public Collection<HostRef> getHosts() {
-        List<HostRef> hostRefs = new ArrayList<HostRef>();
-
-        DBCursor cursor = agentConfigCollection.find();
-        while (cursor.hasNext()) {
-            DBObject doc = cursor.next();
-            String id = (String) doc.get("agent-id");
-            if (id != null) {
-                DBObject hostInfo = hostInfoCollection.findOne(new BasicDBObject("agent-id", id));
-                String hostName = (String) hostInfo.get("hostname");
-                HostRef agent = new HostRef(id, hostName);
-                hostRefs.add(agent);
-            }
-        }
-        logger.log(Level.FINER, "found " + hostRefs.size() + " connected agents");
-        return hostRefs;
-    }
-
-    @Override
-    public Collection<VmRef> getVMs(HostRef hostRef) {
-        List<VmRef> vmRefs = new ArrayList<VmRef>();
-        DBCursor cursor = vmInfoCollection.find(new BasicDBObject("agent-id", hostRef.getAgentId()));
-        while (cursor.hasNext()) {
-            DBObject vmObject = cursor.next();
-            Integer id = (Integer) vmObject.get("vm-id");
-            // TODO can we do better than the main class?
-            String mainClass = (String) vmObject.get("main-class");
-            VmRef ref = new VmRef(hostRef, id, mainClass);
-            vmRefs.add(ref);
-        }
-
-        return vmRefs;
-    }
-
-    @Override
     public void setHostVmTreeFilter(String filter) {
         this.filter = filter;
         doUpdateTreeAsync();
     }
 
     public void doUpdateTreeAsync() {
-        view.updateTree(filter, this);
+        HostsVMsLoader loader = new HostsVMsLoaderImpl();
+        view.updateTree(filter, loader);
     }
 
     private void initView(MainView mainView) {

@@ -53,7 +53,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow(this);
-        return new MainWindowControllerImpl(connection.getDB(), mainView);
+        return new MainWindowControllerImpl(mainView);
     }
 
     @Override
