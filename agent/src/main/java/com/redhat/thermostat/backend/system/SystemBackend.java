@@ -77,11 +77,6 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {
 
-    private static final String NAME = "system";
-    private static final String DESCRIPTION = "gathers basic information from the system";
-    private static final String VENDOR = "thermostat project";
-    private static final String VERSION = "0.01";
-
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
     private long procCheckInterval = 1000; // TODO make this configurable.
@@ -116,26 +111,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         categories.add(VmGcStatDAO.vmGcStatsCategory);
         categories.add(VmInfoDAO.vmInfoCategory);
         categories.add(VmMemoryStatDAO.vmMemoryStatsCategory);
-    }
-
-    @Override
-    public String getName() {
-        return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
-
-    @Override
-    public String getVendor() {
-        return VENDOR;
-    }
-
-    @Override
-    public String getVersion() {
-        return VERSION;
     }
 
     @Override

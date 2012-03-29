@@ -56,6 +56,12 @@ public abstract class Backend {
     private Storage storage = null;
     private boolean observeNewJvm = attachToNewProcessByDefault();
 
+    private String version;
+    private String vendor;
+    private String description;
+    
+    private BackendID id;
+    
     /**
      * 
      * @param configMap a map containing the settings that this backend has been configured with.
@@ -89,34 +95,67 @@ public abstract class Backend {
 
     /**
      * Set the named configuration to the given value.
+     * The basic special properties {@code name}, {@code version} and
+     * {@code description} are parsed here.
+     * 
+     * <br /><br />
+     * 
+     * Subclasses can just override the
+     * {@link #setConfigurationValueImpl(String, String)}
+     * method if they are not interested in parsing and setting those
+     * properties directly.
+     * 
      * @param name
      * @param value
      * @throws IllegalArgumentException if either the key does not refer to a valid configuration option
      *                                  for this backend or the value is not valid for the key
      */
     protected void setConfigurationValue(String name, String value) {
-        throw new IllegalArgumentException("Backend " + getName() + " does not support any specific configuration values.");
+        
+        if (name.equals(BackendsProperties.DESCRIPTION.name())) {
+            this.description = value;
+        } else if (name.equals(BackendsProperties.VERSION.name())) {
+            this.version = value;
+        } else if (name.equals(BackendsProperties.VENDOR.name())) {
+            this.vendor = value;
+        } else {
+            setConfigurationValueImpl(name, value);
+        }
     }
-
+    
+    /**
+     * Set the named configuration to the given value.
+     * By default, does nothing.
+     */
+    protected void setConfigurationValueImpl(String name, String value) {}
+    
     /**
      * @return the name of the {@link Backend}
      */
-    public abstract String getName();
+    public String getName() {
+        return id.getSimpleName();
+    }
 
     /**
      * @returns the description of the {@link Backend}
      */
-    public abstract String getDescription();
+    public String getDescription() {
+        return description;
+    }
 
     /**
      * @return the vendor of the {@link Backend}
      */
-    public abstract String getVendor();
+    public String getVendor() {
+        return vendor;
+    }
 
     /** 
      * @return the version of the {@link Backend}
      */
-    public abstract String getVersion();
+    public String getVersion() {
+        return version;
+    }
 
     /** Get a map containing the current settings of this backend.
      * Implementors of this abstract class which have some settings that
@@ -195,5 +234,13 @@ public abstract class Backend {
 
     public void update(Chunk chunk) {
         storage.updateChunk(chunk);
+    }
+
+    void setID(BackendID backendID) {
+        this.id = backendID;
+    }
+    
+    public BackendID getID() {
+        return id;
     }
 }

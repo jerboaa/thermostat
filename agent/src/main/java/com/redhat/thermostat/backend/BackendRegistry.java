@@ -33,18 +33,18 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-
+ 
 package com.redhat.thermostat.backend;
 
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.backend.system.SystemBackend;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -58,33 +58,30 @@ public class BackendRegistry {
 
     private final Map<String, Backend> registeredBackends;
 
-    public BackendRegistry(StartupConfiguration config, Storage storage) throws BackendLoadException {
+    public BackendRegistry(AgentStartupConfiguration config, Storage storage) throws BackendLoadException {
+        
         registeredBackends = new HashMap<String, Backend>();
-
-        /*
-         * Configure the always-on backends
-         */
-        Backend systemBackend = new SystemBackend();
-        logger.log(Level.FINE, "Initializing backend: \"" + systemBackend.getClass().getCanonicalName() + "\"");
-        systemBackend.setInitialConfiguration(config.getStartupBackendConfigMap(systemBackend.getName()));
-        systemBackend.setStorage(storage);
-        register(systemBackend);
-
+        
+        List<BackendID> backends = config.getBackends();
+        
         /*
          * Configure the dynamic/custom backends
          */
-        for (String backendClassName : config.getStartupBackendClassNames()) {
-            logger.log(Level.FINE, "Initializing backend: \"" + backendClassName + "\"");
+        for (BackendID backendID : backends) {
+            logger.log(Level.FINE, "Initializing backend: \"" + backendID.getClassName() + "\"");
             Backend backend = null;
             try {
-                Class<? > c = Class.forName(backendClassName);
+                Class<? > c = Class.forName(backendID.getClassName());
                 Class<? extends Backend> narrowed = c.asSubclass(Backend.class);
                 Constructor<? extends Backend> backendConstructor = narrowed.getConstructor();
                 backend = backendConstructor.newInstance();
-                backend.setInitialConfiguration(config.getStartupBackendConfigMap(backend.getName()));
+                
+                backend.setID(backendID);
+                
+                backend.setInitialConfiguration(BackendRegistryUtils.retrieveBackendConfigs(backend.getName()));
                 backend.setStorage(storage);
             } catch (Exception e) {
-                throw new BackendLoadException("Could not instantiate configured backend class: " + backendClassName, e);
+                throw new BackendLoadException("Could not instantiate configured backend class: " + backendID.getClassName(), e);
             }
             register(backend);
         }
