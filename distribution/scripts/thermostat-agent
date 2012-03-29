@@ -53,6 +53,6 @@ SERVICE_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${JOPT_J
 THERM_DIR=${THERMOSTAT_LIBS}
 
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar:${THERM_DIR}/thermostat-tools-@project.version@.jar"
-SERVICE_MAIN="com.redhat.thermostat.agent.AgentService"
+SERVICE_MAIN="com.redhat.thermostat.agent.AgentApplication"
 
 ${JAVA} -cp ${SERVICE_CLASSPATH} ${SERVICE_MAIN} $@
