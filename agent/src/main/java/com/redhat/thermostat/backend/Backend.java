@@ -67,7 +67,7 @@ public abstract class Backend {
      * @param configMap a map containing the settings that this backend has been configured with.
      * @throws LaunchException if map contains values that this backend does not accept.
      */
-    public final void setInitialConfiguration(Map<String, String> configMap) throws BackendLoadException {
+    protected final void setInitialConfiguration(Map<String, String> configMap) throws BackendLoadException {
         if (initialConfigurationComplete) {
             throw new BackendLoadException("A backend may only receive intitial configuration once.");
         }

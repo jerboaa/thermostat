@@ -37,6 +37,7 @@
 package com.redhat.thermostat.backend.sample;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -47,8 +48,8 @@ import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-/** Just an example backend implementation.  This is really just to test the loading and configuration mechanisms
- *
+/**
+ * Just an example backend implementation.  This is really just to test the loading and configuration mechanisms
  */
 public class SampleBackend extends Backend {
     private final String NAME = "sample-backend";
@@ -59,6 +60,8 @@ public class SampleBackend extends Backend {
 
     private Logger logger = LoggingUtils.getLogger(SampleBackend.class);
 
+    private final Map<String, String> config = new HashMap<>();
+
     public SampleBackend() {
         super();
     }
@@ -67,6 +70,7 @@ public class SampleBackend extends Backend {
     protected void setConfigurationValue(String name, String value) {
         logger.log(Level.FINE, "Setting configuration value for backend: " + this.NAME);
         logger.log(Level.FINE, "key: " + name + "    value: " + value);
+        config.put(name, value);
     }
 
     @Override
@@ -91,12 +95,12 @@ public class SampleBackend extends Backend {
 
     @Override
     public Map<String, String> getConfigurationMap() {
-        return new HashMap<String, String>();
+        return Collections.unmodifiableMap(config);
     }
 
     @Override
     public String getConfigurationValue(String key) {
-        throw new IllegalArgumentException("SampleBackend does not actually accept any configuration.");
+        return config.get(key);
     }
 
     @Override

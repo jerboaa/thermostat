@@ -79,6 +79,10 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
+    private final List<Category> categories = new ArrayList<Category>();
+
+    private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
+
     private long procCheckInterval = 1000; // TODO make this configurable.
 
     private Timer timer = null;
@@ -87,21 +91,11 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     private MonitoredHost host = null;
     private JvmStatHostListener hostListener = new JvmStatHostListener();
 
-    private Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
-
     private final VmCpuStatBuilder vmCpuBuilder;
 
-    private static List<Category> categories = new ArrayList<Category>();
-
     public SystemBackend() {
-        Clock clock = new SystemClock();
-        ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
-        long ticksPerSecond = SysConf.getClockTicksPerSecond();
-        vmCpuBuilder = new VmCpuStatBuilder(clock, ticksPerSecond, builder);
-    }
-
-    static {
         // Set up categories that will later be registered.
+
         categories.add(CpuStatDAO.cpuStatCategory);
         categories.add(HostInfoDAO.hostInfoCategory);
         categories.add(MemoryStatDAO.memoryStatCategory);
@@ -111,6 +105,11 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         categories.add(VmGcStatDAO.vmGcStatsCategory);
         categories.add(VmInfoDAO.vmInfoCategory);
         categories.add(VmMemoryStatDAO.vmMemoryStatsCategory);
+
+        Clock clock = new SystemClock();
+        ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
+        long ticksPerSecond = SysConf.getClockTicksPerSecond();
+        vmCpuBuilder = new VmCpuStatBuilder(clock, ticksPerSecond, builder);
     }
 
     @Override
@@ -169,6 +168,8 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
         timer.cancel();
         timer = null;
+
+        removeJvmStatusListener(this);
 
         try {
             host.removeHostListener(hostListener);
