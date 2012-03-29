@@ -36,19 +36,23 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.List;
+
+import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmGcStatDAO {
+public interface VmGcStatDAO {
 
-    static final Key<Integer> vmGcStatVmIdKey = new Key<>("vm-id", false);
-    static final Key<String> vmGcStatCollectorKey = new Key<>("collector", false);
-    static final Key<Long> vmGcStatRunCountKey = new Key<>("runtime-count", false);
+    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
+    static final Key<String> collectorKey = new Key<>("collector", false);
+    static final Key<Long> runCountKey = new Key<>("runtime-count", false);
     /** time in microseconds */
-    static final Key<Long> vmGCstatWallTimeKey = new Key<>("wall-time", false);
+    static final Key<Long> wallTimeKey = new Key<>("wall-time", false);
 
     public static final Category vmGcStatsCategory = new Category("vm-gc-stats",
-            vmGcStatVmIdKey, Key.TIMESTAMP, vmGcStatCollectorKey,
-            vmGcStatRunCountKey, vmGCstatWallTimeKey);
+            vmIdKey, Key.TIMESTAMP, collectorKey,
+            runCountKey, wallTimeKey);
 
+    public List<VmGcStat> getLatestVmGcStats();
 }

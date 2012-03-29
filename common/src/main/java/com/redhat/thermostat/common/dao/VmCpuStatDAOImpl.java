@@ -62,7 +62,7 @@ public class VmCpuStatDAOImpl extends VmCpuStatDAO {
         ArrayList<VmCpuStat> result = new ArrayList<>();
         Chunk query = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
         query.put(Key.AGENT_ID, vmRef.getAgent().getAgentId());
-        query.put(VmCpuStatDAO.vmIdKey, Integer.valueOf(vmRef.getId()));
+        query.put(VmCpuStatDAO.vmIdKey, vmRef.getId());
         if (lastUpdate != Long.MIN_VALUE) {
             // TODO once we have an index and the 'column' is of type long, use
             // a query which can utilize an index. this one doesn't

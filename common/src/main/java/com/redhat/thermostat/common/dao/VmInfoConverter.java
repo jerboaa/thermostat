@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.List;
+import java.util.Map;
+
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
@@ -44,20 +47,40 @@ public class VmInfoConverter {
     public Chunk vmInfoToChunk(VmInfo info) {
         Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, true);
 
-        chunk.put(VmInfoDAO.vmInfoIdKey, info.getVmId());
-        chunk.put(VmInfoDAO.vmInfoPidKey, info.getVmPid());
-        chunk.put(VmInfoDAO.vmInfoRuntimeVersionKey, info.getJavaVersion());
-        chunk.put(VmInfoDAO.vmInfoJavaHomeKey, info.getJavaHome());
-        chunk.put(VmInfoDAO.vmInfoMainClassKey, info.getMainClass());
-        chunk.put(VmInfoDAO.vmInfoCommandLineKey, info.getJavaCommandLine());
-        chunk.put(VmInfoDAO.vmInfoVmArgumentsKey, info.getVmArguments());
-        chunk.put(VmInfoDAO.vmInfoVmNameKey, info.getVmName());
-        chunk.put(VmInfoDAO.vmInfoVmInfoKey, info.getVmInfo());
-        chunk.put(VmInfoDAO.vmInfoVmVersionKey, info.getVmVersion());
-        chunk.put(VmInfoDAO.vmInfoEnvironmentKey, info.getEnvironment());
-        chunk.put(VmInfoDAO.vmInfoLibrariesKey, info.getLoadedNativeLibraries());
-        chunk.put(VmInfoDAO.vmInfoStartTimeKey, info.getStartTimeStamp());
-        chunk.put(VmInfoDAO.vmInfoStopTimeKey, info.getStopTimeStamp());
+        chunk.put(VmInfoDAO.vmIdKey, info.getVmId());
+        chunk.put(VmInfoDAO.vmPidKey, info.getVmPid());
+        chunk.put(VmInfoDAO.startTimeKey, info.getStartTimeStamp());
+        chunk.put(VmInfoDAO.stopTimeKey, info.getStopTimeStamp());
+        chunk.put(VmInfoDAO.runtimeVersionKey, info.getJavaVersion());
+        chunk.put(VmInfoDAO.javaHomeKey, info.getJavaHome());
+        chunk.put(VmInfoDAO.mainClassKey, info.getMainClass());
+        chunk.put(VmInfoDAO.commandLineKey, info.getJavaCommandLine());
+        chunk.put(VmInfoDAO.vmNameKey, info.getVmName());
+        chunk.put(VmInfoDAO.vmInfoKey, info.getVmInfo());
+        chunk.put(VmInfoDAO.vmVersionKey, info.getVmVersion());
+        chunk.put(VmInfoDAO.vmArgumentsKey, info.getVmArguments());
+        chunk.put(VmInfoDAO.propertiesKey, info.getProperties());
+        chunk.put(VmInfoDAO.environmentKey, info.getEnvironment());
+        chunk.put(VmInfoDAO.librariesKey, info.getLoadedNativeLibraries());
         return chunk;
+    }
+
+    public VmInfo chunkToVmInfo(Chunk chunk) {
+        int vmId = chunk.get(VmInfoDAO.vmIdKey);
+        long startTime = chunk.get(VmInfoDAO.startTimeKey);
+        long stopTime = chunk.get(VmInfoDAO.stopTimeKey);
+        String jVersion = chunk.get(VmInfoDAO.runtimeVersionKey);
+        String jHome = chunk.get(VmInfoDAO.javaHomeKey);
+        String mainClass = chunk.get(VmInfoDAO.mainClassKey);
+        String commandLine = chunk.get(VmInfoDAO.commandLineKey);
+        String vmName = chunk.get(VmInfoDAO.vmNameKey);
+        String vmInfo = chunk.get(VmInfoDAO.vmInfoKey);
+        String vmVersion = chunk.get(VmInfoDAO.vmVersionKey);
+        String vmArgs = chunk.get(VmInfoDAO.vmArgumentsKey);
+        Map<String, String> props = chunk.get(VmInfoDAO.propertiesKey);
+        Map<String, String> env = chunk.get(VmInfoDAO.propertiesKey);
+        List<String> libs = chunk.get(VmInfoDAO.librariesKey);
+        return new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName,
+                vmInfo, vmVersion, vmArgs, props, env, libs);
     }
 }

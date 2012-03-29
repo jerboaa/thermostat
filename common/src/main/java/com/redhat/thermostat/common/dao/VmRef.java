@@ -39,12 +39,14 @@ package com.redhat.thermostat.common.dao;
 public class VmRef implements Ref {
 
     private final HostRef hostRef;
-    private final String uid;
+    private final Integer uid;
+    private final String uidString;
     private final String name;
 
     public VmRef(HostRef hostRef, Integer id, String name) {
         this.hostRef = hostRef;
-        this.uid = id.toString();
+        this.uid = id;
+        this.uidString = id.toString();
         this.name = name;
     }
 
@@ -57,8 +59,12 @@ public class VmRef implements Ref {
         return hostRef;
     }
 
-    public String getId() {
+    public Integer getId() {
         return uid;
+    }
+
+    public String getIdString() {
+        return uidString;
     }
 
     public String getName() {
@@ -94,6 +100,6 @@ public class VmRef implements Ref {
 
     @Override
     public boolean matches(String filter) {
-        return getName().contains(filter) || getId().contains(filter);
+        return getName().contains(filter) || getIdString().contains(filter);
     }
 }

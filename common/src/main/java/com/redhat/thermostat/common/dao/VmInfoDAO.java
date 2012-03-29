@@ -39,33 +39,36 @@ package com.redhat.thermostat.common.dao;
 import java.util.List;
 import java.util.Map;
 
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmInfoDAO {
+public interface VmInfoDAO {
 
     // FIXME make it non-public
-    public static final Key<Integer> vmInfoIdKey = new Key<>("vm-id", true);
-    static final Key<Integer> vmInfoPidKey = new Key<>("vm-pid", false);
-    static final Key<String> vmInfoRuntimeVersionKey = new Key<>("runtime-version", false);
-    static final Key<String> vmInfoJavaHomeKey = new Key<>("java-home", false);
-    static final Key<String> vmInfoMainClassKey = new Key<>("main-class", false);
-    static final Key<String> vmInfoCommandLineKey = new Key<>("command-line", false);
-    static final Key<String> vmInfoVmArgumentsKey = new Key<>("vm-arguments", false);
-    static final Key<String> vmInfoVmNameKey = new Key<>("vm-name", false);
-    static final Key<String> vmInfoVmInfoKey = new Key<>("vm-info", false);
-    static final Key<String> vmInfoVmVersionKey = new Key<>("vm-version", false);
-    static final Key<Map<String, String>> vmInfoEnvironmentKey = new Key<>("environment", false);
-    static final Key<List<String>> vmInfoLibrariesKey = new Key<>("libraries", false);
-    static final Key<Long> vmInfoStartTimeKey = new Key<>("start-time", false);
+    public static final Key<Integer> vmIdKey = new Key<>("vm-id", true);
+    static final Key<Integer> vmPidKey = new Key<>("vm-pid", false);
+    static final Key<String> runtimeVersionKey = new Key<>("runtime-version", false);
+    static final Key<String> javaHomeKey = new Key<>("java-home", false);
+    static final Key<String> mainClassKey = new Key<>("main-class", false);
+    static final Key<String> commandLineKey = new Key<>("command-line", false);
+    static final Key<String> vmArgumentsKey = new Key<>("vm-arguments", false);
+    static final Key<String> vmNameKey = new Key<>("vm-name", false);
+    static final Key<String> vmInfoKey = new Key<>("vm-info", false);
+    static final Key<String> vmVersionKey = new Key<>("vm-version", false);
+    static final Key<Map<String, String>> propertiesKey = new Key<>("properties", false);
+    static final Key<Map<String, String>> environmentKey = new Key<>("environment", false);
+    static final Key<List<String>> librariesKey = new Key<>("libraries", false);
+    static final Key<Long> startTimeKey = new Key<>("start-time", false);
     // FIXME make it non-public
-    public static final Key<Long> vmInfoStopTimeKey = new Key<>("stop-time", false);
+    public static final Key<Long> stopTimeKey = new Key<>("stop-time", false);
 
     public static final Category vmInfoCategory = new Category("vm-info",
-            vmInfoIdKey, vmInfoPidKey, vmInfoRuntimeVersionKey, vmInfoJavaHomeKey,
-            vmInfoMainClassKey, vmInfoCommandLineKey,
-            vmInfoVmArgumentsKey, vmInfoVmNameKey, vmInfoVmInfoKey, vmInfoVmVersionKey,
-            vmInfoEnvironmentKey, vmInfoLibrariesKey,
-            vmInfoStartTimeKey, vmInfoStopTimeKey);
+            vmIdKey, vmPidKey, runtimeVersionKey, javaHomeKey,
+            mainClassKey, commandLineKey,
+            vmArgumentsKey, vmNameKey, vmInfoKey, vmVersionKey,
+            propertiesKey, environmentKey, librariesKey,
+            startTimeKey, stopTimeKey);
 
+    public VmInfo getVmInfo();
 }

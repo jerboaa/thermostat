@@ -55,86 +55,127 @@ public class VmMemoryStatConverter {
         chunk.put(Key.TIMESTAMP, vmMemStat.getTimeStamp());
 
         Generation newGen = vmMemStat.getGeneration("new");
-        Space eden = newGen.getSpace("eden");
 
-        chunk.put(VmMemoryStatDAO.vmMemoryStatEdenGenKey, newGen.name);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatEdenCollectorKey, newGen.collector);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatEdenCapacityKey, eden.capacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatEdenMaxCapacityKey, eden.maxCapacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatEdenUsedKey, eden.used);
+        Space eden = newGen.getSpace("eden");
+        chunk.put(VmMemoryStatDAO.edenGenKey, newGen.name);
+        chunk.put(VmMemoryStatDAO.edenCollectorKey, newGen.collector);
+        chunk.put(VmMemoryStatDAO.edenCapacityKey, eden.capacity);
+        chunk.put(VmMemoryStatDAO.edenMaxCapacityKey, eden.maxCapacity);
+        chunk.put(VmMemoryStatDAO.edenUsedKey, eden.used);
 
         Space s0 = newGen.getSpace("s0");
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS0GenKey, newGen.name);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS0CollectorKey, newGen.collector);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS0CapacityKey, s0.capacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS0MaxCapacityKey, s0.maxCapacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS0UsedKey, s0.used);
+        chunk.put(VmMemoryStatDAO.s0GenKey, newGen.name);
+        chunk.put(VmMemoryStatDAO.s0CollectorKey, newGen.collector);
+        chunk.put(VmMemoryStatDAO.s0CapacityKey, s0.capacity);
+        chunk.put(VmMemoryStatDAO.s0MaxCapacityKey, s0.maxCapacity);
+        chunk.put(VmMemoryStatDAO.s0UsedKey, s0.used);
 
         Space s1 = newGen.getSpace("s1");
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS1GenKey, newGen.name);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS1CollectorKey, newGen.collector);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS1CapacityKey, s1.capacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS1MaxCapacityKey, s1.maxCapacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatS1UsedKey, s1.used);
+        chunk.put(VmMemoryStatDAO.s1GenKey, newGen.name);
+        chunk.put(VmMemoryStatDAO.s1CollectorKey, newGen.collector);
+        chunk.put(VmMemoryStatDAO.s1CapacityKey, s1.capacity);
+        chunk.put(VmMemoryStatDAO.s1MaxCapacityKey, s1.maxCapacity);
+        chunk.put(VmMemoryStatDAO.s1UsedKey, s1.used);
 
         Generation oldGen = vmMemStat.getGeneration("old");
-        Space old = oldGen.getSpace("old");
 
-        chunk.put(VmMemoryStatDAO.vmMemoryStatOldGenKey, oldGen.name);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatOldCollectorKey, oldGen.collector);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatOldCapacityKey, old.capacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatOldMaxCapacityKey, old.maxCapacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatOldUsedKey, old.used);
+        Space old = oldGen.getSpace("old");
+        chunk.put(VmMemoryStatDAO.oldGenKey, oldGen.name);
+        chunk.put(VmMemoryStatDAO.oldCollectorKey, oldGen.collector);
+        chunk.put(VmMemoryStatDAO.oldCapacityKey, old.capacity);
+        chunk.put(VmMemoryStatDAO.oldMaxCapacityKey, old.maxCapacity);
+        chunk.put(VmMemoryStatDAO.oldUsedKey, old.used);
 
         Generation permGen = vmMemStat.getGeneration("perm");
-        Space perm = permGen.getSpace("perm");
 
-        chunk.put(VmMemoryStatDAO.vmMemoryStatPermGenKey, permGen.name);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatPermCollectorKey, permGen.collector);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatPermCapacityKey, perm.capacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatPermMaxCapacityKey, perm.maxCapacity);
-        chunk.put(VmMemoryStatDAO.vmMemoryStatPermUsedKey, perm.used);
+        Space perm = permGen.getSpace("perm");
+        chunk.put(VmMemoryStatDAO.permGenKey, permGen.name);
+        chunk.put(VmMemoryStatDAO.permCollectorKey, permGen.collector);
+        chunk.put(VmMemoryStatDAO.permCapacityKey, perm.capacity);
+        chunk.put(VmMemoryStatDAO.permMaxCapacityKey, perm.maxCapacity);
+        chunk.put(VmMemoryStatDAO.permUsedKey, perm.used);
 
         return chunk;
     }
 
-    public VmMemoryStat createVmMemoryStatFromDBObject(DBObject dbObj) {
-        // FIXME so much hardcoding :'(
+    public VmMemoryStat chunkToVmMemoryStat(Chunk chunk) {
+        Space space = null;
+        List<Space> spaces = null;
 
-        String[] spaceNames = new String[] { "eden", "s0", "s1", "old", "perm" };
-        List<Generation> generations = new ArrayList<Generation>();
+        List<Generation> gens = new ArrayList<>();
+        Generation newGen = new Generation();
+        spaces = new ArrayList<>();
+        newGen.spaces = spaces;
+        newGen.name = "new";
+        newGen.capacity = 0;
+        newGen.maxCapacity = 0;
+        // FIXME Something is wrong here when we have the collector stored
+        // as part of 3 spaces in Chunk but is only one thing in Stat
+        newGen.collector = chunk.get(VmMemoryStatDAO.edenCollectorKey);
 
-        long timestamp = (Long) dbObj.get("timestamp");
-        int vmId = (Integer) dbObj.get("vm-id");
-        for (String spaceName: spaceNames) {
-            DBObject info = (DBObject) dbObj.get(spaceName);
-            String generationName = (String) info.get("gen");
-            Generation target = null;
-            for (Generation generation: generations) {
-                if (generation.name.equals(generationName)) {
-                    target = generation;
-                }
-            }
-            if (target == null) {
-                target = new Generation();
-                target.name = generationName;
-                generations.add(target);
-            }
-            if (target.collector == null) {
-                target.collector = (String) info.get("collector");
-            }
-            Space space = new Space();
-            space.name = spaceName;
-            space.capacity = (Long) info.get("capacity");
-            space.maxCapacity = (Long) info.get("max-capacity");
-            space.used = (Long) info.get("used");
-            if (target.spaces == null) {
-                target.spaces = new ArrayList<Space>();
-            }
-            target.spaces.add(space);
-        }
+        space = new Space();
+        space.name = chunk.get(VmMemoryStatDAO.edenGenKey);
+        space.capacity = chunk.get(VmMemoryStatDAO.edenCapacityKey);
+        space.maxCapacity = chunk.get(VmMemoryStatDAO.edenMaxCapacityKey);
+        space.used = chunk.get(VmMemoryStatDAO.edenUsedKey);
+        spaces.add(space);
+        newGen.capacity += space.capacity;
+        newGen.maxCapacity += space.maxCapacity;
 
-        return new VmMemoryStat(timestamp, vmId, generations);
+        space = new Space();
+        space.name = chunk.get(VmMemoryStatDAO.s0GenKey);
+        space.capacity = chunk.get(VmMemoryStatDAO.s0CapacityKey);
+        space.maxCapacity = chunk.get(VmMemoryStatDAO.s0MaxCapacityKey);
+        space.used = chunk.get(VmMemoryStatDAO.s0UsedKey);
+        spaces.add(space);
+        newGen.capacity += space.capacity;
+        newGen.maxCapacity += space.maxCapacity;
+
+        space = new Space();
+        space.name = chunk.get(VmMemoryStatDAO.s1GenKey);
+        space.capacity = chunk.get(VmMemoryStatDAO.s1CapacityKey);
+        space.maxCapacity = chunk.get(VmMemoryStatDAO.s1MaxCapacityKey);
+        space.used = chunk.get(VmMemoryStatDAO.s1UsedKey);
+        spaces.add(space);
+        newGen.capacity += space.capacity;
+        newGen.maxCapacity += space.maxCapacity;
+
+        gens.add(newGen);
+
+        Generation oldGen = new Generation();
+        spaces = new ArrayList<>();
+        oldGen.spaces = spaces;
+        oldGen.name = "old";
+        oldGen.collector = chunk.get(VmMemoryStatDAO.oldCollectorKey);
+
+        space = new Space();
+        space.name = chunk.get(VmMemoryStatDAO.oldGenKey);
+        space.capacity = chunk.get(VmMemoryStatDAO.oldCapacityKey);
+        space.maxCapacity = chunk.get(VmMemoryStatDAO.oldMaxCapacityKey);
+        space.used = chunk.get(VmMemoryStatDAO.oldUsedKey);
+        spaces.add(space);
+        oldGen.capacity = space.capacity;
+        oldGen.maxCapacity = space.capacity;
+
+        gens.add(oldGen);
+
+        Generation permGen = new Generation();
+        spaces = new ArrayList<>();
+        permGen.spaces = spaces;
+        permGen.name = "perm";
+        permGen.collector = chunk.get(VmMemoryStatDAO.permCollectorKey);
+
+        space = new Space();
+        space.name = chunk.get(VmMemoryStatDAO.permGenKey);
+        space.capacity = chunk.get(VmMemoryStatDAO.permCapacityKey);
+        space.maxCapacity = chunk.get(VmMemoryStatDAO.permMaxCapacityKey);
+        space.used = chunk.get(VmMemoryStatDAO.permUsedKey);
+        spaces.add(space);
+        permGen.capacity = space.capacity;
+        permGen.maxCapacity = space.capacity;
+
+        gens.add(permGen);
+
+        return new VmMemoryStat(chunk.get(Key.TIMESTAMP), chunk.get(VmMemoryStatDAO.vmIdKey), gens);
     }
-
 }

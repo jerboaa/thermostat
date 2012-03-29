@@ -36,33 +36,47 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import com.redhat.thermostat.common.model.VmGcStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public interface DAOFactory {
+public class VmGcStatDAOImpl implements VmGcStatDAO {
 
-    public Storage getStorage();
+    private Storage storage;
+    private VmRef ref;
 
-    /**
-     * TODO: This will be replaced by getStorage() as soon as Storage and Connection have been merged.
-     */
-    public Connection getConnection();
+    private long lastUpdate = Long.MIN_VALUE;
 
-    public VmCpuStatDAO getVmCpuStatDAO(VmRef ref);
+    public VmGcStatDAOImpl(Storage storage, VmRef ref) {
+        this.storage = storage;
+        this.ref = ref;
+    }
 
-    public VmClassStatDAO getVmClassStatsDAO(VmRef ref);
-
-    public VmGcStatDAO getVmGcStatDAO(VmRef ref);
-
-    public VmInfoDAO getVmInfoDAO(VmRef ref);
-
-    public VmMemoryStatDAO getVmMemoryStatDAO(VmRef ref);
-
-    public HostInfoDAO getHostInfoDAO(HostRef ref);
-
-    public CpuStatDAO getCpuStatDAO(HostRef ref);
-
-    public MemoryStatDAO getMemoryStatDAO(HostRef ref);
-
-    public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO(HostRef ref);
+    @Override
+    public List<VmGcStat> getLatestVmGcStats() {
+        List<VmGcStat> result = new ArrayList<>();
+        Chunk query = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
+        query.put(VmGcStatDAO.vmIdKey, ref.getId());
+        if (lastUpdate != Long.MIN_VALUE) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
+        }
+        Cursor cursor = storage.findAll(query);
+        VmGcStatConverter converter = new VmGcStatConverter();
+        while (cursor.hasNext()) {
+            Chunk current = cursor.next();
+            VmGcStat stat = converter.chunkToVmGcStat(current);
+            result.add(stat);
+            lastUpdate = Math.max(stat.getTimeStamp(), lastUpdate);
+        }
+        return result;
+    }
 
 }

@@ -48,19 +48,45 @@ public class VmGcStatConverterTest {
 
     @Test
     public void testVmGcStatToChunk() {
-        final long RUN_COUNT = 10;
-        final long WALL_TIME = 9;
-        VmGcStat stat = new VmGcStat(123, 456, "collector1", RUN_COUNT, WALL_TIME);
+        final Integer VM_ID = 123;
+        final Long TIMESTAMP = 456L;
+        final String COLLECTOR = "collector1";
+        final Long RUN_COUNT = 10L;
+        final Long WALL_TIME = 9L;
+
+        VmGcStat stat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
         Chunk chunk = new VmGcStatConverter().vmGcStatToChunk(stat);
+
         assertNotNull(chunk);
         assertEquals("vm-gc-stats", chunk.getCategory().getName());
-        assertEquals((Long)456L, chunk.get(new Key<Long>("timestamp", false)));
-        assertEquals((Integer)123, chunk.get(new Key<Integer>("vm-id", false)));
-        assertEquals("collector1", chunk.get(new Key<String>("collector", false)));
-        assertEquals((Long)RUN_COUNT, chunk.get(new Key<Long>("runtime-count", false)));
-        assertEquals((Long)WALL_TIME, chunk.get(new Key<Long>("wall-time", false)));
-
+        assertEquals(TIMESTAMP, chunk.get(new Key<Long>("timestamp", false)));
+        assertEquals(VM_ID, chunk.get(new Key<Integer>("vm-id", false)));
+        assertEquals(COLLECTOR, chunk.get(new Key<String>("collector", false)));
+        assertEquals(RUN_COUNT, chunk.get(new Key<Long>("runtime-count", false)));
+        assertEquals(WALL_TIME, chunk.get(new Key<Long>("wall-time", false)));
     }
 
-    // TODO test conversion the other way too
+    @Test
+    public void testChunkToVmGcStat() {
+        final Integer VM_ID = 123;
+        final Long TIMESTAMP = 456L;
+        final String COLLECTOR = "collector1";
+        final Long RUN_COUNT = 10L;
+        final Long WALL_TIME = 9L;
+
+        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        chunk.put(Key.TIMESTAMP, TIMESTAMP);
+        chunk.put(VmGcStatDAO.vmIdKey, VM_ID);
+        chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);
+        chunk.put(VmGcStatDAO.runCountKey, RUN_COUNT);
+        chunk.put(VmGcStatDAO.wallTimeKey, WALL_TIME);
+        VmGcStat stat = new VmGcStatConverter().chunkToVmGcStat(chunk);
+
+        assertNotNull(stat);
+        assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
+        assertEquals(VM_ID, (Integer) stat.getVmId());
+        assertEquals(COLLECTOR, stat.getCollectorName());
+        assertEquals(RUN_COUNT, (Long) stat.getRunCount());
+        assertEquals(WALL_TIME, (Long) stat.getWallTime());
+    }
 }

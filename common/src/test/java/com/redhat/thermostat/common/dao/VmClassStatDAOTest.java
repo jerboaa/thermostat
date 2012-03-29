@@ -90,7 +90,7 @@ public class VmClassStatDAOTest {
 
         VmRef vmRef = mock(VmRef.class);
         when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn("321");
+        when(vmRef.getId()).thenReturn(321);
 
 
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage, vmRef);
@@ -127,7 +127,7 @@ public class VmClassStatDAOTest {
 
         VmRef vmRef = mock(VmRef.class);
         when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn("321");
+        when(vmRef.getId()).thenReturn(321);
 
 
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage, vmRef);

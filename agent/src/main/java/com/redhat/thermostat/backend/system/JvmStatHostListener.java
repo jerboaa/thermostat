@@ -166,8 +166,8 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private Chunk makeVmInfoUpdateStoppedChunk(int vmId, long stopTimeStamp) {
         // FIXME later
         Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        chunk.put(VmInfoDAO.vmInfoIdKey, vmId);
-        chunk.put(VmInfoDAO.vmInfoStopTimeKey, stopTimeStamp);
+        chunk.put(VmInfoDAO.vmIdKey, vmId);
+        chunk.put(VmInfoDAO.stopTimeKey, stopTimeStamp);
         return chunk;
     }
 

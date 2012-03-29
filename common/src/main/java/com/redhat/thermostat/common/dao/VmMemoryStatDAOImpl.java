@@ -36,33 +36,29 @@
 
 package com.redhat.thermostat.common.dao;
 
+import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public interface DAOFactory {
+public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
-    public Storage getStorage();
+    private final Storage storage;
+    private final VmRef ref;
 
-    /**
-     * TODO: This will be replaced by getStorage() as soon as Storage and Connection have been merged.
-     */
-    public Connection getConnection();
+    public VmMemoryStatDAOImpl(Storage storage, VmRef ref) {
+        this.storage = storage;
+        this.ref = ref;
+    }
 
-    public VmCpuStatDAO getVmCpuStatDAO(VmRef ref);
-
-    public VmClassStatDAO getVmClassStatsDAO(VmRef ref);
-
-    public VmGcStatDAO getVmGcStatDAO(VmRef ref);
-
-    public VmInfoDAO getVmInfoDAO(VmRef ref);
-
-    public VmMemoryStatDAO getVmMemoryStatDAO(VmRef ref);
-
-    public HostInfoDAO getHostInfoDAO(HostRef ref);
-
-    public CpuStatDAO getCpuStatDAO(HostRef ref);
-
-    public MemoryStatDAO getMemoryStatDAO(HostRef ref);
-
-    public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO(HostRef ref);
+    @Override
+    public VmMemoryStat getLatestMemoryStat() {
+        Chunk query = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
+        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
+        query.put(VmMemoryStatDAO.vmIdKey, ref.getId());
+        Cursor cursor = storage.findAll(query).sort(Key.AGENT_ID, Cursor.SortDirection.DESCENDING).limit(1);
+        return new VmMemoryStatConverter().chunkToVmMemoryStat(cursor.next());
+    }
 
 }

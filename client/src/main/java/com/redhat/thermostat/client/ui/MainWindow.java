@@ -473,7 +473,7 @@ public class MainWindow extends JFrame implements MainView {
             } else if (value instanceof VmRef) {
                 VmRef vmRef = (VmRef) value;
                 String vmNameHtml= new HtmlTextBuilder().bold(vmRef.getName()).toPartialHtml();
-                String vmIdHtml = new HtmlTextBuilder().bold(vmRef.getId()).toPartialHtml();
+                String vmIdHtml = new HtmlTextBuilder().bold(vmRef.getIdString()).toPartialHtml();
                 HtmlTextBuilder builder = new HtmlTextBuilder()
                     .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_VM_NAME, vmNameHtml))
                     .newLine()

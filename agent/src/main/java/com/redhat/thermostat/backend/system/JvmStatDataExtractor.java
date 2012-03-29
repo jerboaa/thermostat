@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.backend.system;
 
+import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
+
 import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
@@ -134,7 +136,7 @@ public class JvmStatDataExtractor {
     public String getGenerationCollector(long generation) throws MonitorException {
         Monitor m = vm.findByName("sun.gc.collector." + generation + ".name");
         if (m == null) {
-            throw new IllegalArgumentException("not found");
+            return Generation.COLLECTOR_NONE;
         }
         return (String) m.getValue();
     }

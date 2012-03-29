@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.mongodb.DBObject;
 import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
@@ -46,21 +45,21 @@ public class VmGcStatConverter {
     public Chunk vmGcStatToChunk(VmGcStat vmGcStat) {
         Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
 
-        chunk.put(VmGcStatDAO.vmGcStatVmIdKey, vmGcStat.getVmId());
+        chunk.put(VmGcStatDAO.vmIdKey, vmGcStat.getVmId());
         chunk.put(Key.TIMESTAMP, vmGcStat.getTimeStamp());
-        chunk.put(VmGcStatDAO.vmGcStatCollectorKey, vmGcStat.getCollectorName());
-        chunk.put(VmGcStatDAO.vmGcStatRunCountKey, vmGcStat.getRunCount());
-        chunk.put(VmGcStatDAO.vmGCstatWallTimeKey, vmGcStat.getWallTime());
+        chunk.put(VmGcStatDAO.collectorKey, vmGcStat.getCollectorName());
+        chunk.put(VmGcStatDAO.runCountKey, vmGcStat.getRunCount());
+        chunk.put(VmGcStatDAO.wallTimeKey, vmGcStat.getWallTime());
 
         return chunk;
     }
 
-    public VmGcStat fromDBObject(DBObject dbObj) {
-        int vmId = (Integer) dbObj.get("vm-id");
-        String collectorName = (String) dbObj.get("collector");
-        long timestamp = (Long) dbObj.get("timestamp");
-        long runCount = (Long) dbObj.get("runtime-count");
-        long wallTime = (Long) dbObj.get("wall-time");
+    public VmGcStat chunkToVmGcStat(Chunk chunk) {
+        int vmId = chunk.get(VmGcStatDAO.vmIdKey);
+        long timestamp = chunk.get(Key.TIMESTAMP);
+        String collectorName = chunk.get(VmGcStatDAO.collectorKey);
+        long runCount = chunk.get(VmGcStatDAO.runCountKey);
+        long wallTime = chunk.get(VmGcStatDAO.wallTimeKey);
 
         return new VmGcStat(vmId, timestamp, collectorName, runCount, wallTime);
     }

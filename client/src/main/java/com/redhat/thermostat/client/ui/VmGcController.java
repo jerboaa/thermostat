@@ -49,15 +49,12 @@ import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
 import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.dao.VmGcStatConverter;
-import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.VmGcStatDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.VmGcStat;
@@ -69,21 +66,20 @@ public class VmGcController implements AsyncUiFacade {
     private final VmRef vmRef;
     private final VmGcView view;
 
-    private final DBCollection vmGcStatsCollection;
-    private final DBCollection vmMemoryStatsCollection;
-
-    private final Map<String, Long> collectorSeriesLastUpdateTime = new HashMap<String, Long>();
+    private final VmGcStatDAO gcDao;
+    private final VmMemoryStatDAO memDao;
 
     private final Set<String> addedCollectors = new TreeSet<String>();
 
     private final Timer timer = new Timer();
 
-    public VmGcController(VmRef ref, DB db) {
+    public VmGcController(VmRef ref) {
         this.vmRef = ref;
         this.view = createView();
 
-        vmGcStatsCollection = db.getCollection("vm-gc-stats");
-        vmMemoryStatsCollection = db.getCollection("vm-memory-stats");
+        DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
+        gcDao = df.getVmGcStatDAO(vmRef);
+        memDao = df.getVmMemoryStatDAO(vmRef);
     }
 
     protected VmGcView createView() {
@@ -95,8 +91,7 @@ public class VmGcController implements AsyncUiFacade {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                doUpdateCollectorChartsAsync();
-
+                doUpdateCollectorData();
             }
 
         }, 0, TimeUnit.SECONDS.toMillis(5));
@@ -107,7 +102,7 @@ public class VmGcController implements AsyncUiFacade {
         for (String name: addedCollectors) {
             view.removeChart(name);
         }
-
+        addedCollectors.clear();
         timer.cancel();
     }
 
@@ -117,70 +112,30 @@ public class VmGcController implements AsyncUiFacade {
                 collectorName, generationName);
     }
 
-    public String[] getCollectorNames() {
-        BasicDBObject queryObject = new BasicDBObject();
-        queryObject.put("agent-id", vmRef.getAgent().getAgentId());
-        queryObject.put("vm-id", Integer.valueOf(vmRef.getId()));
-        @SuppressWarnings("unchecked")
-        // This is temporary; this will eventually come from a DAO as the correct type.
-        List<String> results = vmGcStatsCollection.distinct("collector", queryObject);
-        List<String> collectorNames = new ArrayList<String>(results);
-
-        return collectorNames.toArray(new String[0]);
-    }
-
-    private void doUpdateCollectorChartsAsync() {
-        String[] collectorNames = getCollectorNames();
-        for (final String name: collectorNames) {
+    private void doUpdateCollectorData() {
+        Map<String, List<DiscreteTimeData<? extends Number>>> dataToAdd = new HashMap<>();
+        for (VmGcStat stat : gcDao.getLatestVmGcStats()) {
+            double walltime = 1.0E-6 * stat.getWallTime();
+            String collector = stat.getCollectorName();
+            List<DiscreteTimeData<? extends Number>> data = dataToAdd.get(collector);
+            if (data == null) {
+                data = new ArrayList<DiscreteTimeData<? extends Number>>();
+                dataToAdd.put(collector, data);
+            }
+            data.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), walltime));
+        }
+        for (Map.Entry<String, List<DiscreteTimeData<? extends Number>>> entry : dataToAdd.entrySet()) {
+            String name = entry.getKey();
             if (!addedCollectors.contains(name)) {
                 view.addChart(name, chartName(name, getCollectorGeneration(name)));
                 addedCollectors.add(name);
             }
-
-            BasicDBObject queryObject = new BasicDBObject();
-            queryObject.put("agent-id", vmRef.getAgent().getAgentId());
-            queryObject.put("vm-id", Integer.valueOf(vmRef.getId()));
-            queryObject.put("collector", name);
-            Long lastTime = collectorSeriesLastUpdateTime.get(name);
-            if (lastTime != null) {
-                queryObject.put("timestamp", new BasicDBObject("$gt", (long) lastTime));
-            }
-
-            DBCursor cursor = vmGcStatsCollection.find(queryObject);
-
-            List<DiscreteTimeData<? extends Number>> toAdd = new ArrayList<>();
-            long lastUpdateTime = Long.MIN_VALUE;
-            for (DBObject dbObj: cursor) {
-                VmGcStat stat = new VmGcStatConverter().fromDBObject(dbObj);
-                lastUpdateTime = Math.max(lastUpdateTime, stat.getTimeStamp());
-                // convert microseconds to seconds
-                double walltime = 1.0E-6 * stat.getWallTime();
-                toAdd.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), walltime));
-
-            }
-            view.addData(name, toAdd);
-            collectorSeriesLastUpdateTime.put(name, lastUpdateTime);
+            view.addData(entry.getKey(), entry.getValue());
         }
-    }
-
-    private VmMemoryStat getLatestMemoryStat() {
-        BasicDBObject query = new BasicDBObject();
-        query.put("agent-id", vmRef.getAgent().getAgentId());
-        query.put("vm-id", Integer.valueOf(vmRef.getId()));
-        // TODO ensure timestamp is an indexed column
-        BasicDBObject sortByTimeStamp = new BasicDBObject("timestamp", -1);
-        DBCursor cursor;
-        cursor = vmMemoryStatsCollection.find(query).sort(sortByTimeStamp).limit(1);
-        if (cursor.hasNext()) {
-            DBObject current = cursor.next();
-            return new VmMemoryStatConverter().createVmMemoryStatFromDBObject(current);
-        }
-
-        return null;
     }
 
     public String getCollectorGeneration(String collectorName) {
-        VmMemoryStat info = getLatestMemoryStat();
+        VmMemoryStat info = memDao.getLatestMemoryStat();
 
         for (Generation g: info.getGenerations()) {
             if (g.collector.equals(collectorName)) {

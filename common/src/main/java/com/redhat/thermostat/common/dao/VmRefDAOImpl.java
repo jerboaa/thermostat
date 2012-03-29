@@ -78,9 +78,9 @@ class VmRefDAOImpl implements VmRefDAO {
     }
 
     private VmRef buildVmRefFromChunk(Chunk vmChunk, HostRef host) {
-        Integer id = vmChunk.get(VmInfoDAO.vmInfoIdKey);
+        Integer id = vmChunk.get(VmInfoDAO.vmIdKey);
         // TODO can we do better than the main class?
-        String mainClass = vmChunk.get(VmInfoDAO.vmInfoMainClassKey);
+        String mainClass = vmChunk.get(VmInfoDAO.mainClassKey);
         VmRef ref = new VmRef(host, id, mainClass);
         return ref;
     }

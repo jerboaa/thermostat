@@ -74,12 +74,12 @@ public class VmRefDAOTest {
         query2.put(HostRefDAO.agentIdKey, "456");
 
         Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        vm1.put(VmInfoDAO.vmInfoIdKey, 123);
-        vm1.put(VmInfoDAO.vmInfoMainClassKey, "mainClass1");
+        vm1.put(VmInfoDAO.vmIdKey, 123);
+        vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
 
         Chunk vm2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        vm2.put(VmInfoDAO.vmInfoIdKey, 456);
-        vm2.put(VmInfoDAO.vmInfoMainClassKey, "mainClass2");
+        vm2.put(VmInfoDAO.vmIdKey, 456);
+        vm2.put(VmInfoDAO.mainClassKey, "mainClass2");
 
         Cursor singleVMCursor = mock(Cursor.class);
         when(singleVMCursor.hasNext()).thenReturn(true).thenReturn(false);

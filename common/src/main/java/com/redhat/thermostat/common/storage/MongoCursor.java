@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.storage;
 
+import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
@@ -65,9 +66,14 @@ class MongoCursor implements Cursor {
     }
 
     @Override
-    public Cursor sort(Chunk orderBy) {
-        ChunkConverter chunkConverter = new ChunkConverter();
-        DBObject dbOrderBy = chunkConverter.chunkToDBObject(orderBy);
+    public Cursor sort(Key<?> orderBy, SortDirection direction) {
+        if (!category.getKeys().contains(orderBy)) {
+            throw new IllegalArgumentException("Key not present in this Cursor's category.");
+        }   /* TODO: There are other possible error conditions.  Once there is API to configure
+             * indexing/optimization, we may want to prevent or log predictably bad performance
+             * sorting requests.
+             */
+        DBObject dbOrderBy = new BasicDBObject(orderBy.getName(), direction.getValue());
         DBCursor sorted = cursor.sort(dbOrderBy);
         return new MongoCursor(sorted, category);
     }

@@ -38,11 +38,26 @@ package com.redhat.thermostat.common.storage;
 
 public interface Cursor {
 
+    public enum SortDirection {
+        ASCENDING(1),
+        DESCENDING(-1);
+
+        private int value;
+
+        private SortDirection(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
     boolean hasNext();
 
     Chunk next();
 
-    Cursor sort(Chunk orderBy);
+    Cursor sort(Key<?> orderBy, SortDirection direction);
 
     Cursor limit(int i);
 }
