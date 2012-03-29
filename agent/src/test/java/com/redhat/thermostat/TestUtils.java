@@ -36,7 +36,19 @@
 
 package com.redhat.thermostat;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.util.Properties;
+import java.util.Random;
+
+import junit.framework.Assert;
+
+import org.junit.BeforeClass;
+
+import com.redhat.thermostat.agent.config.AgentProperties;
+import com.redhat.thermostat.backend.BackendsProperties;
 
 public class TestUtils {
 
@@ -49,5 +61,47 @@ public class TestUtils {
     public static boolean isLinux() {
         return (System.getProperty("os.name").toLowerCase().contains("linux"));
     }
+        
+    public static String setupAgentConfigs() throws IOException {
+        // need to create dummy config files for the tests
+        Random random = new Random();
 
+        String tmpDir = System.getProperty("java.io.tmpdir") + File.separatorChar +
+                Math.abs(random.nextInt()) + File.separatorChar;
+
+        System.setProperty("THERMOSTAT_HOME", tmpDir);
+        File agent = new File(tmpDir, "agent");
+        agent.mkdirs();
+
+        File tmpConfigs = new File(agent, "agent.properties");
+
+        new File(agent, "run").mkdirs();
+        new File(agent, "logs").mkdirs();
+
+        File backends = new File(tmpDir, "backends");
+        File system = new File(backends, "system");
+        system.mkdirs();
+        
+        Properties props = new Properties();            
+
+        props.setProperty(AgentProperties.BACKENDS.name(), "system");
+        props.setProperty(AgentProperties.LOG_LEVEL.name(), "WARNING");
+
+        props.store(new FileOutputStream(tmpConfigs), "thermostat agent test properties");
+
+        // now write the configs for the backends
+        tmpConfigs = new File(system, "backend.properties");
+        props = new Properties();
+        props.setProperty(BackendsProperties.BACKEND_CLASS.name(),
+                          "com.redhat.thermostat.backend.system.SystemBackend");
+        props.setProperty(BackendsProperties.DESCRIPTION.name(),
+                          "fluff backend for tests");
+        props.setProperty(BackendsProperties.VENDOR.name(),
+                          "Red Hat, Inc.");
+        props.setProperty(BackendsProperties.VERSION.name(),
+                          "1.0");
+        props.store(new FileOutputStream(tmpConfigs), "thermostat system backend properties");
+        
+        return tmpDir;
+    }
 }

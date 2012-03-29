@@ -56,6 +56,9 @@ public class VmCpuStat {
         return vmId;
     }
 
+    /**
+     * The cpu load in percent (as in 100.0 for 100%)
+     */
     public double getCpuLoad() {
         return cpuLoad;
     }

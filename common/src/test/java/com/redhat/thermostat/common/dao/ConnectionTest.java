@@ -103,7 +103,7 @@ public class ConnectionTest {
     public void testInvalidLocalConnection() throws InterruptedException {
         
         StartupConfiguration conf = mock(StartupConfiguration.class);
-        when(conf.getDBUriString()).thenReturn("fluff");
+        when(conf.getDBConnectionString()).thenReturn("fluff");
         ConnectionProvider connProv = new MongoConnectionProvider(conf);
         
         Connection connection = connProv.createConnection();

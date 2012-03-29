@@ -48,6 +48,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.client.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
 import com.redhat.thermostat.client.ui.LayoutDebugHelper;
@@ -82,15 +83,7 @@ public class Main {
             System.exit(-1);
         }
 
-        StartupConfiguration config = null;
-        try {
-            config = new StartupConfiguration(System.currentTimeMillis(), args);
-        } catch (LaunchException le) {
-            logger.log(Level.SEVERE,
-                    "Unable to instantiate startup configuration.",
-                    le);
-            System.exit(Constants.EXIT_CONFIGURATION_ERROR);
-        }
+        StartupConfiguration config = new ConnectionConfiguration();
         
         ConnectionProvider connProv = new MongoConnectionProvider(config);
         DAOFactory daoFactory = new MongoDAOFactory(connProv);

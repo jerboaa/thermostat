@@ -101,6 +101,11 @@
     	<artifactId>easymock</artifactId>
     	<version>3.1</version>
     </dependency>
+    <dependency>
+    	<groupId>net.sf.jopt-simple</groupId>
+    	<artifactId>jopt-simple</artifactId>
+    	<version>4.3</version>
+    </dependency>
   </dependencies>
 
   <properties>

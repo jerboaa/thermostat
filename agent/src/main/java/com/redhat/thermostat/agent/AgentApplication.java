@@ -37,64 +37,59 @@
 package com.redhat.thermostat.agent;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.config.AgentConfigsUtils;
+import com.redhat.thermostat.agent.config.AgentOptionParser;
+import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.Connection;
 import com.redhat.thermostat.common.dao.ConnectionProvider;
 import com.redhat.thermostat.common.dao.MongoConnectionProvider;
-import com.redhat.thermostat.common.dao.Connection.ConnectionType;
 import com.redhat.thermostat.common.storage.ConnectionFailedException;
 import com.redhat.thermostat.common.storage.MongoStorage;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.tools.BasicApplication;
 
-public final class Main {
+public final class AgentApplication extends BasicApplication {
 
-    private Main() {
-        throw new IllegalStateException("Should not be instantiated");
+    private AgentStartupConfiguration configuration;
+    private AgentOptionParser parser;
+    
+    @Override
+    public void parseArguments(List<String> args) throws InvalidConfigurationException {
+        configuration = AgentConfigsUtils.createAgentConfigs();
+        parser = new AgentOptionParser(configuration, args);
+        parser.parse();
     }
 
-    public static void main(String[] args) {
-        long startTimestamp = System.currentTimeMillis();
-
-        List<String> argsAsList = new ArrayList<String>(Arrays.asList(args));
-        while (argsAsList.contains(Constants.AGENT_ARGUMENT_DEVEL)) {
-            argsAsList.remove(Constants.AGENT_ARGUMENT_DEVEL);
+    @Override
+    public AgentStartupConfiguration getConfiguration() {
+        return configuration;
+    }
+    
+    private void runAgent() {
+        long startTime = System.currentTimeMillis();
+        configuration.setStartTime(startTime);
+        
+        if (configuration.isDebugConsole()) {
             LoggingUtils.useDevelConsole();
         }
-
-        LoggingUtils.setGlobalLogLevel(Level.ALL);
-        Logger logger = LoggingUtils.getLogger(Main.class);
-
-        StartupConfiguration config = null;
-        try {
-            config = new StartupConfiguration(startTimestamp, argsAsList.toArray(new String[0]));
-        } catch (LaunchException le) {
-            logger.log(Level.SEVERE,
-                    "Unable to instantiate startup configuration.",
-                    le);
-            System.exit(Constants.EXIT_CONFIGURATION_ERROR);
-        }
-
-        LoggingUtils.setGlobalLogLevel(config.getLogLevel());
-
-        ConnectionProvider connProv = new MongoConnectionProvider(config);
-        Connection connection = connProv.createConnection();
-        if (config.getLocalMode()) {
-            connection.setType(ConnectionType.LOCAL);
-        } else {
-            connection.setType(ConnectionType.REMOTE);
-        }
         
+        LoggingUtils.setGlobalLogLevel(configuration.getLogLevel());
+        Logger logger = LoggingUtils.getLogger(AgentApplication.class);
+
+        ConnectionProvider connProv = new MongoConnectionProvider(configuration);
+        Connection connection = connProv.createConnection();
+
         Storage storage = new MongoStorage(connection);
         try {
             storage.connect();
@@ -106,13 +101,13 @@ public final class Main {
 
         BackendRegistry backendRegistry = null;
         try {
-            backendRegistry = new BackendRegistry(config, storage);
+            backendRegistry = new BackendRegistry(configuration, storage);
         } catch (BackendLoadException ble) {
             logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", ble);
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        Agent agent = new Agent(backendRegistry, config, storage);
+        Agent agent = new Agent(backendRegistry, configuration, storage);
         storage.setAgentId(agent.getId());
         try {
             logger.fine("Starting agent.");
@@ -132,6 +127,19 @@ public final class Main {
         }
 
         agent.stop();
-        logger.fine("Agent stopped.");
+        logger.fine("Agent stopped.");       
+    }
+    
+    @Override
+    public void run() {
+         if (!parser.isHelp()) {
+             runAgent();
+         }
+    }
+
+    public static void main(String[] args) throws InvalidConfigurationException {        
+        AgentApplication service = new AgentApplication();
+        service.parseArguments(Arrays.asList(args));
+        service.run();
     }
 }

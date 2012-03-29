@@ -39,60 +39,20 @@
 # Some necessary variables.
 JAVA_DIR="@java.dir@"
 JAVA="@java.home@/bin/java"
-JCOMMON_JAR="${JAVA_DIR}/jcommon.jar"
-MONGO_JAR="${JAVA_DIR}/mongo.jar"
-BSON_JAR="${JAVA_DIR}/bson.jar"
+
+THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+
+JCOMMON_JAR="${THERMOSTAT_LIBS}/jcommon.jar"
+MONGO_JAR="${THERMOSTAT_LIBS}/mongo.jar"
+BSON_JAR="${THERMOSTAT_LIBS}/bson.jar"
+JOPT_JAR="${THERMOSTAT_LIBS}/jopt-simple-4.3.jar"
 TOOLS_JAR="@java.home@/../lib/tools.jar"
-AGENT_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}"
-# Find the directory where thermostat is installed.
-# Note this will not work if there are symlinks to resolve that
-# are not full paths.
-SOURCE="${BASH_SOURCE[0]}"
-while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
-THERM_DIR=`dirname "$( cd -P "$( dirname "$SOURCE" )" && pwd )"`
-# Some other necessary variables.
-AGENT_CLASSPATH="${AGENT_CLASSPATH}:${THERM_DIR}/lib/thermostat-agent-@project.version@.jar:${THERM_DIR}/lib/thermostat-common-@project.version@.jar"
-AGENT_MAIN="com.redhat.thermostat.agent.Main"
 
-AGENT_ARGS="--properties ${THERM_DIR}/config/agent.properties"
+SERVICE_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${JOPT_JAR}"
 
-function usage {
-  echo "Usage:"
-  echo "  thermostat-agent <--local|--remote|--cluster>"
-}
+THERM_DIR=${THERMOSTAT_LIBS}
 
-function run_agent {
-  ${JAVA} -cp ${AGENT_CLASSPATH} ${AGENT_MAIN} ${AGENT_ARGS}
-}
+SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar:${THERM_DIR}/thermostat-tools-@project.version@.jar"
+SERVICE_MAIN="com.redhat.thermostat.agent.AgentApplication"
 
-function run_local {
-  AGENT_ARGS="${AGENT_ARGS} --local"
-  run_agent
-  exit $?
-}
-
-function run_remote {
-  echo "Remote agent not yet supported."
-  exit -1
-}
-
-function run_cluster {
-  echo "Cluster agent not yet supported."
-  exit -1
-}
-
-if [ $# != 1 ]; then
-  usage
-  exit -1
-fi
-
-if [ $1 = "--local" ]; then
-  run_local
-elif [ $1 = "--remote" ]; then
-  run_remote
-elif [ $1 = "--cluster" ]; then
-  run_cluster
-else
-  usage
-  exit -1
-fi
+${JAVA} -cp ${SERVICE_CLASSPATH} ${SERVICE_MAIN} $@

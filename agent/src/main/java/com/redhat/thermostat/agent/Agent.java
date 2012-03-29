@@ -39,11 +39,11 @@ package com.redhat.thermostat.agent;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.agent.config.ConfigurationWatcher;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
-import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.storage.AgentInformation;
 import com.redhat.thermostat.common.storage.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
@@ -58,16 +58,16 @@ public class Agent {
 
     private final UUID id;
     private final BackendRegistry backendRegistry;
-    private final StartupConfiguration config;
+    private final AgentStartupConfiguration config;
 
     private Storage storage;
     private Thread configWatcherThread = null;
 
-    public Agent(BackendRegistry backendRegistry, StartupConfiguration config, Storage storage) {
+    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, Storage storage) {
         this(backendRegistry, UUID.randomUUID(), config, storage);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, StartupConfiguration config, Storage storage) {
+    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, Storage storage) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
@@ -133,9 +133,10 @@ public class Agent {
             configWatcherThread = null;
             storage.removeAgentInformation();
             stopBackends();
-            if (config.getLocalMode()) {
-                storage.purge();
-            }
+            // TODO
+//            if (config.getLocalMode()) {
+//                storage.purge();
+//            }
         } else {
             logger.warning("Attempt to stop agent which is not active");
         }

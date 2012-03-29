@@ -88,16 +88,7 @@ public class MongoConnection extends Connection {
     }
 
     private MongoURI getMongoURI() {
-        MongoURI uri = null;
-        switch (getType()) {
-            case LOCAL:
-                uri = new MongoURI(conf.getDBUriString());
-                break;
-            case REMOTE:
-                throw new NotImplementedException("No mongo URI implemented for REMOTE.");
-            case CLUSTER:
-                throw new NotImplementedException("No mongo URI implemented for CLUSTER.");
-        }
+        MongoURI uri = new MongoURI(conf.getDBConnectionString());
         return uri;
     }
 

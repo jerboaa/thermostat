@@ -62,6 +62,7 @@
     <module>agent</module>
     <module>client</module>
     <module>distribution</module>
+    <module>tools</module>
   </modules>
 
   <build>
