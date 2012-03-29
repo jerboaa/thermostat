@@ -34,32 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.model;
+package com.redhat.thermostat.common;
 
-public class VmCpuStat {
+public class SystemClock implements Clock {
 
-    private final long timestamp;
-    private final int vmId;
-    private final double cpuLoad;
-
-    public VmCpuStat(long timestamp, int vmId, double cpuLoad) {
-        this.timestamp = timestamp;
-        this.vmId = vmId;
-        this.cpuLoad = cpuLoad;
+    @Override
+    public long getRealTimeMillis() {
+        return System.currentTimeMillis();
     }
 
-    public long getTimeStamp() {
-        return timestamp;
+    @Override
+    public long getMonotonicTimeNanos() {
+        return System.nanoTime();
     }
 
-    public int getVmId() {
-        return vmId;
-    }
-
-    /**
-     * The cpu load in percent (as in 100.0 for 100%)
-     */
-    public double getCpuLoad() {
-        return cpuLoad;
-    }
 }

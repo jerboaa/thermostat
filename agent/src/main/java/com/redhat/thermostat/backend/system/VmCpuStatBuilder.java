@@ -39,16 +39,25 @@ package com.redhat.thermostat.backend.system;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.model.VmCpuStat;
 
 public class VmCpuStatBuilder {
 
     // pid -> ticks
-    private static Map<Integer, Long> lastProcessTicks = new HashMap<Integer, Long>();
+    private final Map<Integer, Long> lastProcessTicks = new HashMap<Integer, Long>();
     // pid -> last time the ticks were updated
-    private static Map<Integer, Long> lastProcessTickTime = new HashMap<Integer, Long>();
+    private final Map<Integer, Long> lastProcessTickTime = new HashMap<Integer, Long>();
 
-    private static long clockTicksPerSecond = SysConf.getClockTicksPerSecond();
+    private final Clock clock;
+    private final long ticksPerSecond;
+    private final ProcessStatusInfoBuilder statusBuilder;
+
+    public VmCpuStatBuilder(Clock clock, long ticksPerSecond, ProcessStatusInfoBuilder statusBuilder) {
+        this.clock = clock;
+        this.ticksPerSecond = ticksPerSecond;
+        this.statusBuilder = statusBuilder;
+    }
 
     /**
      * To build the stat, this method needs to be called repeatedly. The first
@@ -58,26 +67,43 @@ public class VmCpuStatBuilder {
      * @param pid
      * @return
      */
-    public static synchronized VmCpuStat build(Integer pid) {
+    public synchronized VmCpuStat build(Integer pid) {
+        if (!lastProcessTicks.containsKey(pid) || !lastProcessTickTime.containsKey(pid)) {
+            throw new IllegalArgumentException("unknown pid");
+        }
 
-        ProcDataSource dataSource = new ProcDataSource();
-        ProcessStatusInfo info = new ProcessStatusInfoBuilder(dataSource).build(pid);
-        long miliTime = System.currentTimeMillis();
-        long time = System.nanoTime();
+        ProcessStatusInfo info = statusBuilder.build(pid);
+        long miliTime = clock.getRealTimeMillis();
+        long time = clock.getMonotonicTimeNanos();
         long programTicks = (info.getKernelTime() + info.getUserTime());
         double cpuLoad = 0.0;
 
-        if (lastProcessTicks.containsKey(pid)) {
-            double timeDelta = (time - lastProcessTickTime.get(pid)) * 1E-9;
-            long programTicksDelta = programTicks - lastProcessTicks.get(pid);
-            cpuLoad = programTicksDelta * (100.0 / timeDelta / clockTicksPerSecond);
-        }
+        double timeDelta = (time - lastProcessTickTime.get(pid)) * 1E-9;
+        long programTicksDelta = programTicks - lastProcessTicks.get(pid);
+        // 100 as in 100 percent.
+        cpuLoad = programTicksDelta * (100.0 / timeDelta / ticksPerSecond);
 
         lastProcessTicks.put(pid, programTicks);
         lastProcessTickTime.put(pid, time);
 
-
         return new VmCpuStat(miliTime, pid, cpuLoad);
+    }
+
+    public synchronized boolean knowsAbout(int pid) {
+        return (lastProcessTickTime.containsKey(pid) && lastProcessTicks.containsKey(pid));
+    }
+
+    public synchronized void learnAbout(int pid) {
+        long time = clock.getMonotonicTimeNanos();
+        ProcessStatusInfo info = statusBuilder.build(pid);
+
+        lastProcessTickTime.put(pid, time);
+        lastProcessTicks.put(pid, info.getUserTime()+ info.getKernelTime());
+    }
+
+    public synchronized void forgetAbout(int pid) {
+        lastProcessTicks.remove(pid);
+        lastProcessTickTime.remove(pid);
     }
 
 }

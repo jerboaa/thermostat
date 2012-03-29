@@ -55,6 +55,8 @@ import sun.jvmstat.monitor.MonitoredHost;
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.dao.CpuStatConverter;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoConverter;
@@ -92,8 +94,16 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
 
+    private final VmCpuStatBuilder vmCpuBuilder;
+
     private static List<Category> categories = new ArrayList<Category>();
 
+    public SystemBackend() {
+        Clock clock = new SystemClock();
+        ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
+        long ticksPerSecond = SysConf.getClockTicksPerSecond();
+        vmCpuBuilder = new VmCpuStatBuilder(clock, ticksPerSecond, builder);
+    }
 
     static {
         // Set up categories that will later be registered.
@@ -153,8 +163,11 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
                 store(new MemoryStatConverter().memoryStatToChunk(new MemoryStatBuilder(dataSource).build()));
 
                 for (Integer pid : pidsToMonitor) {
-                    new VmCpuStatBuilder();
-                    store(new VmCpuStatConverter().vmCpuStatToChunk(VmCpuStatBuilder.build(pid)));
+                    if (vmCpuBuilder.knowsAbout(pid)) {
+                        store(new VmCpuStatConverter().vmCpuStatToChunk(vmCpuBuilder.build(pid)));
+                    } else {
+                        vmCpuBuilder.learnAbout(pid);
+                    }
                 }
             }
         }, 0, procCheckInterval);
@@ -234,5 +247,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     @Override
     public void jvmStopped(int vmId) {
         pidsToMonitor.remove(vmId);
+        vmCpuBuilder.forgetAbout(vmId);
     }
 }
