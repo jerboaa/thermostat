@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat;
+package com.redhat.thermostat.common;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -42,13 +42,6 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.util.Properties;
 import java.util.Random;
-
-import junit.framework.Assert;
-
-import org.junit.BeforeClass;
-
-import com.redhat.thermostat.agent.config.AgentProperties;
-import com.redhat.thermostat.backend.BackendsProperties;
 
 public class TestUtils {
 
@@ -84,21 +77,21 @@ public class TestUtils {
         
         Properties props = new Properties();            
 
-        props.setProperty(AgentProperties.BACKENDS.name(), "system");
-        props.setProperty(AgentProperties.LOG_LEVEL.name(), "WARNING");
+        props.setProperty("BACKENDS", "system");
+        props.setProperty("LOG_LEVEL", "WARNING");
 
         props.store(new FileOutputStream(tmpConfigs), "thermostat agent test properties");
 
         // now write the configs for the backends
         tmpConfigs = new File(system, "backend.properties");
         props = new Properties();
-        props.setProperty(BackendsProperties.BACKEND_CLASS.name(),
+        props.setProperty("BACKEND_CLASS",
                           "com.redhat.thermostat.backend.system.SystemBackend");
-        props.setProperty(BackendsProperties.DESCRIPTION.name(),
+        props.setProperty("DESCRIPTION",
                           "fluff backend for tests");
-        props.setProperty(BackendsProperties.VENDOR.name(),
+        props.setProperty("VENDOR",
                           "Red Hat, Inc.");
-        props.setProperty(BackendsProperties.VERSION.name(),
+        props.setProperty("VERSION",
                           "1.0");
         props.store(new FileOutputStream(tmpConfigs), "thermostat system backend properties");
         
