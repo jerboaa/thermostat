@@ -41,7 +41,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.redhat.thermostat.agent.AgentService;
+import com.redhat.thermostat.agent.AgentApplication;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -57,13 +57,13 @@ import com.redhat.thermostat.tools.db.DBService;
 public class ThermostatService implements Application, ActionListener<ApplicationState> {
     
     private Application database;
-    private AgentService agent;
+    private AgentApplication agent;
     
     private ActionNotifier<ApplicationState> notifier;
     
     public ThermostatService() {
         database = new DBService();
-        agent = new AgentService();
+        agent = new AgentApplication();
         notifier = new ActionNotifier<>(this);
     }
     
