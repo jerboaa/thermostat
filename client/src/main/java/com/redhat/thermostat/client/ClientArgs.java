@@ -36,51 +36,22 @@
 
 package com.redhat.thermostat.client;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.Reader;
-import java.util.Properties;
-
 public class ClientArgs {
 
     private boolean isDebugLayout = Boolean.getBoolean("thermostat.debug-layout");
-    private Properties props = new Properties();
 
     public ClientArgs(String[] args) {
-        boolean hasValidPropertiesArg = false;
         for (int i=0; i < args.length; i++) {
             if (args[i].equals("--debug-layout")) {
                 isDebugLayout = true;
-            } else if (args[i].equals("--properties")) {
-                i++;
-                if (i >= args.length) {
-                    throw new IllegalArgumentException("--properties argument requires filename.");
-                }
-                try (Reader reader = new FileReader(args[i])){
-                    props.load(reader);
-                } catch (FileNotFoundException e) {
-                    // ignore
-                } catch (IOException e) {
-                    // ignore
-                }
-                // Ok props file must be good.
-                hasValidPropertiesArg = true;
             }
-        }
-        if (!hasValidPropertiesArg) {
-            throw new IllegalArgumentException("Properties argument with valid properties file is required.");
         }
         // TODO what other arguments do we care about?
         // perhaps skipping the mode selection?
-
     }
 
     public boolean isDebugLayout() {
         return isDebugLayout;
     }
 
-    public Properties getProperties() {
-        return props;
-    }
 }
