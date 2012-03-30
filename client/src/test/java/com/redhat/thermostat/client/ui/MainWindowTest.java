@@ -43,8 +43,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.beans.PropertyChangeEvent;
+import java.util.Objects;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
@@ -78,9 +78,9 @@ public class MainWindowTest {
         public boolean matches(Object argument) {
             PropertyChangeEvent other = (PropertyChangeEvent) argument;
             return event.getSource() == other.getSource()
-                    && ObjectUtils.equals(event.getPropertyName(), other.getPropertyName())
-                    && ObjectUtils.equals(event.getNewValue(), other.getNewValue())
-                    && ObjectUtils.equals(event.getOldValue(), other.getOldValue());
+                    && Objects.equals(event.getPropertyName(), other.getPropertyName())
+                    && Objects.equals(event.getNewValue(), other.getNewValue())
+                    && Objects.equals(event.getOldValue(), other.getOldValue());
         }
 
         @Override
