@@ -43,16 +43,22 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.storage.Category;
 
 public class SampleBackendTest {
 
+    private SampleBackend b;
+
+    @Before
+    public void setUp() {
+        b = new SampleBackend();
+    }
+
     @Test
     public void testBackendInfo() {
-        Backend b = new SampleBackend();
         assertNotNull(b.getName());
         assertNotNull(b.getVersion());
         assertNotNull(b.getVendor());
@@ -61,7 +67,6 @@ public class SampleBackendTest {
 
     @Test
     public void testBasicBackend() {
-        Backend b = new SampleBackend();
         assertFalse(b.isActive());
         b.activate();
         assertTrue(b.isActive());
@@ -71,7 +76,6 @@ public class SampleBackendTest {
 
     @Test
     public void testActivateTwice() {
-        Backend b = new SampleBackend();
         b.activate();
         b.activate();
         assert (b.isActive());
@@ -79,7 +83,6 @@ public class SampleBackendTest {
 
     @Test
     public void testDeactiateWhenNotActive() {
-        Backend b = new SampleBackend();
         b.deactivate();
         b.deactivate();
         assertFalse(b.isActive());
@@ -87,14 +90,12 @@ public class SampleBackendTest {
 
     @Test
     public void testCategoriesAreSane() {
-        SampleBackend b = new SampleBackend();
         Collection<Category> categories = b.getCategories();
         assertEquals(0, categories.size());
     }
 
     @Test
     public void testDefaultConfiguration() {
-        SampleBackend b = new SampleBackend();
         assertTrue(b.getConfigurationMap().isEmpty());
         assertTrue(b.getConfigurationValue("foo") == null);
 
@@ -102,7 +103,6 @@ public class SampleBackendTest {
 
     @Test
     public void testModifyConfiguration() {
-        SampleBackend b = new SampleBackend();
         b.setConfigurationValue("speed", "fast");
         assertEquals("fast", b.getConfigurationValue("speed"));
     }

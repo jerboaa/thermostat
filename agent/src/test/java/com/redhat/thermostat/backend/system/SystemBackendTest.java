@@ -42,9 +42,9 @@ import static org.mockito.Mockito.mock;
 
 import java.util.Collection;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
@@ -59,11 +59,17 @@ import com.redhat.thermostat.common.storage.Storage;
 
 public class SystemBackendTest {
 
-    @Test
-    public void testBasicBackend() {
-        Backend b = new SystemBackend();
+    private SystemBackend b;
+
+    @Before
+    public void setUp() {
+        b = new SystemBackend();
         Storage s = mock(Storage.class);
         b.setStorage(s);
+    }
+
+    @Test
+    public void testBasicBackend() {
         assertFalse(b.isActive());
         b.activate();
         assertTrue(b.isActive());
@@ -73,9 +79,6 @@ public class SystemBackendTest {
 
     @Test
     public void testActivateTwice() {
-        Backend b = new SystemBackend();
-        Storage s = mock(Storage.class);
-        b.setStorage(s);
         b.activate();
         b.activate();
         assert(b.isActive());
@@ -83,9 +86,6 @@ public class SystemBackendTest {
 
     @Test
     public void testDeactiateWhenNotActive() {
-        Backend b = new SystemBackend();
-        Storage s = mock(Storage.class);
-        b.setStorage(s);
         b.deactivate();
         b.deactivate();
         assertFalse(b.isActive());
@@ -93,7 +93,6 @@ public class SystemBackendTest {
 
     @Test
     public void testCategoriesAreSane() {
-        SystemBackend b = new SystemBackend();
         Collection<Category> categories = b.getCategories();
 
         assertTrue(categories.contains(CpuStatDAO.cpuStatCategory));
