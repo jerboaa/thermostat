@@ -62,7 +62,7 @@ public class ProcessEnvironmentBuilderTest {
     private final Random r = new Random();
 
     @Test
-    public void test() {
+    public void testBasicBuild() {
         ProcDataSource dataSource = new ProcDataSource();
         Map<String, String> result = new ProcessEnvironmentBuilder(dataSource).build(TestUtils.getProcessId());
         assertNotNull(result);
