@@ -39,12 +39,12 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -56,7 +56,7 @@ import com.redhat.thermostat.common.model.HostInfo;
 public class HostCpuController implements AsyncUiFacade {
 
     private final HostCpuView view;
-    private final Timer backgroundUpdateTimer = new Timer();
+    private final Timer backgroundUpdateTimer;
 
     private final HostInfoDAO hostInfoDAO;
     private final CpuStatDAO cpuStatDAO;
@@ -67,27 +67,40 @@ public class HostCpuController implements AsyncUiFacade {
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
         hostInfoDAO = daos.getHostInfoDAO(ref);
         cpuStatDAO = daos.getCpuStatDAO(ref);
+
+        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        backgroundUpdateTimer.setAction(new Runnable() {
+            
+            @Override
+            public void run() {
+                updateView();
+            }
+
+        });
+        backgroundUpdateTimer.setInitialDelay(0);
+        backgroundUpdateTimer.setDelay(5);
+        backgroundUpdateTimer.setTimeUnit(TimeUnit.SECONDS);
+        backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
+    }
+
+    // TODO: Consider doing this in a background thread (move to view and use SwingWorker or such).
+    private void updateView() {
+        HostInfo hostInfo = hostInfoDAO.getHostInfo();
+
+        view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
+        view.setCpuModel(hostInfo.getCpuModel());
+
+        doCpuChartUpdate();
     }
 
     @Override
     public void start() {
-        backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-
-                HostInfo hostInfo = hostInfoDAO.getHostInfo();
-
-                view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
-                view.setCpuModel(hostInfo.getCpuModel());
-
-                doCpuChartUpdate();
-            }
-        }, 0, TimeUnit.SECONDS.toMillis(5));
+        backgroundUpdateTimer.start();
     }
 
     @Override
     public void stop() {
-        backgroundUpdateTimer.cancel();
+        backgroundUpdateTimer.stop();
     }
 
     private void doCpuChartUpdate() {
