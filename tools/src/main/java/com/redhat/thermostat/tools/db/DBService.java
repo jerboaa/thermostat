@@ -36,20 +36,16 @@
 
 package com.redhat.thermostat.tools.db;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.utils.LoggedExternalProcess;
+import com.redhat.thermostat.tools.ApplicationException;
 import com.redhat.thermostat.tools.BasicApplication;
 
 public class DBService extends BasicApplication {
@@ -57,13 +53,7 @@ public class DBService extends BasicApplication {
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
     
-    private static final String [] MONGO_BASIC_ARGS = {
-        "mongod", "--quiet", "--fork", "--nojournal", "--noauth", "--bind_ip"
-    };
-    
-    private static final String [] MONGO_SHUTDOWN_ARGS = {
-        "mongod", "--shutdown", "--dbpath"
-    };
+    private MongoProcessRunner runner;
     
     @Override
     public void parseArguments(List<String> args) throws InvalidConfigurationException {
@@ -123,111 +113,24 @@ public class DBService extends BasicApplication {
         }
     }
     
-    private void startService() throws IOException, InterruptedException {
-        
-        String pid = checkPid();
-        if (pid != null) {
-            String message = "cannot start server " + configuration.getDBPath() +
-                    ", found pid file rom previous run, please, cleanup";
-            display(message);
-            notifyFail();
-            return;
-        }
-        
-        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
-       
-        // check that the db directory exist
-        display("starting storage server...");
-
-        commands.add(configuration.getBindIP());
-
-        commands.add("--dbpath");
-        commands.add(configuration.getDBPath().getCanonicalPath());
-
-        commands.add("--logpath");
-        commands.add(configuration.getLogFile().getCanonicalPath());
-
-        commands.add("--pidfilepath");
-        commands.add(configuration.getPidFile().getCanonicalPath());
-
-        commands.add("--port");
-        if (configuration.isLocal()) {
-            commands.add(Long.toString(configuration.getLocalPort()));
-        } else {
-            commands.add(Long.toString(configuration.getClusterPort()));
-        }
-        
-        LoggedExternalProcess process = new LoggedExternalProcess(commands);
-        int status = process.runAndReturnResult();
-        if (status == 0) {
-            pid = checkPid();
-            if (pid == null) status = -1;
-        }
-        
-        if (status == 0) {
-            display("server listening on ip: " + configuration.getDBConnectionString());
-            display("log file is here: " + configuration.getLogFile());
-            display("pid: " + pid);
-            notifySuccess();
-            
-        } else {
-            
-            String message = "cannot start server " + configuration.getDBPath() +
-                             ", exit status: " + status +
-                             ". Please check that your configuration is valid";
-            display(message);
-            notifyFail();
-        }
+    private void startService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
+        runner.startService();
+        notifySuccess();
     }
     
-    private String checkPid() {
-        String pid = null;
-        // check the pid to be sure
-        File pidfile = configuration.getPidFile();
-        Charset charset = Charset.defaultCharset();
-        if (pidfile.exists()) {
-            try (BufferedReader reader = Files.newBufferedReader(pidfile.toPath(), charset)) {
-                pid = reader.readLine();
-                if (pid == null || pid.isEmpty()) {
-                    pid = null;
-                }
-            } catch (IOException ignore) {
-                ignore.printStackTrace();
-                pid = null;
-            }
-        }
-        
-        return pid;
-    }
     
-    private void stopService() throws IOException, InterruptedException, InvalidConfigurationException {
+    private void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
         check();
-        
-        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_SHUTDOWN_ARGS));
-        commands.add(configuration.getDBPath().getCanonicalPath());
-
-        LoggedExternalProcess process = new LoggedExternalProcess(commands);
-        int status = process.runAndReturnResult();
-        if (status == 0) {
-            display("server shutdown complete: " + configuration.getDBPath());
-            display("log file is here: " + configuration.getLogFile());
-            notifySuccess();
-            
-        } else {
-            // TODO: check the pid and see if it's running or not
-            // perhaps was already down
-            String message = "cannot shutdown server " + configuration.getDBPath() +
-                    ", exit status: " + status +
-                    ". Please check that your configuration is valid";
-            display(message);
-            notifyFail();
-        }
+        runner.stopService();
+        notifySuccess();
     }
     
     @Override
     public void run() {
         
         if (parser.isDryRun()) return;
+        
+        runner = createRunner();
         
         try {
             switch (parser.getAction()) {
@@ -244,10 +147,14 @@ public class DBService extends BasicApplication {
         }
     }
     
+    MongoProcessRunner createRunner() {
+        return new MongoProcessRunner(configuration, parser.isQuiet());
+    }
+
     private void check() throws InvalidConfigurationException {
         if (!configuration.getDBPath().exists() ||
-                !configuration.getLogFile().getParentFile().exists() || 
-                !configuration.getPidFile().getParentFile().exists())
+            !configuration.getLogFile().getParentFile().exists() || 
+            !configuration.getPidFile().getParentFile().exists())
         {
             throw new InvalidConfigurationException("database directories do not exist...");
         }
@@ -261,12 +168,6 @@ public class DBService extends BasicApplication {
     @Override
     public DBStartupConfiguration getConfiguration() {
         return configuration;
-    }
-    
-    private void display(String message) {
-        if (!parser.isQuiet()) {
-            System.out.println(message);
-        }
     }
     
     public static void main(String[] args) throws InvalidConfigurationException {
