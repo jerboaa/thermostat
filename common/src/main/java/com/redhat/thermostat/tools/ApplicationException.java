@@ -34,34 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.tools;
 
-import com.redhat.thermostat.common.model.VmMemoryStat;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Storage;
+public class ApplicationException extends Exception {
 
-public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
-
-    private final Storage storage;
-    private final VmRef ref;
-
-    public VmMemoryStatDAOImpl(Storage storage, VmRef ref) {
-        this.storage = storage;
-        this.ref = ref;
+    public ApplicationException() {
     }
 
-    @Override
-    public VmMemoryStat getLatestMemoryStat() {
-        Chunk query = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
-        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(VmMemoryStatDAO.vmIdKey, ref.getId());
-        Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
-        if (cursor.hasNext()) {
-            return new VmMemoryStatConverter().chunkToVmMemoryStat(cursor.next());
-        }
-        return null;
+    public ApplicationException(String message) {
+        super(message);
+    }
+
+    public ApplicationException(Throwable cause) {
+        super(cause);
+    }
+
+    public ApplicationException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ApplicationException(String message, Throwable cause,
+            boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 
 }

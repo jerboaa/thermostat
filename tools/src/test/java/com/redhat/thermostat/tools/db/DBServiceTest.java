@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.tools.db;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -53,6 +56,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.tools.ApplicationException;
 import com.redhat.thermostat.tools.ApplicationState;
 
 public class DBServiceTest {
@@ -121,14 +125,37 @@ public class DBServiceTest {
         Assert.assertEquals(URL, conf.getUrl());
     }
     
-    //@Test
-    public void testListeners() throws InvalidConfigurationException, InterruptedException {
+    private DBService prepareService(boolean startSuccess) throws IOException,
+            InterruptedException, InvalidConfigurationException, ApplicationException
+    {
+        final MongoProcessRunner runner = mock(MongoProcessRunner.class);
+        if (!startSuccess) {
+           doThrow(new ApplicationException("mock exception")).when(runner).startService();
+        }
+        
+        // TODO: stop not tested yet, but be sure it's not called from the code
+        doThrow(new ApplicationException("mock exception")).when(runner).stopService();
+        
         List<String> args = new ArrayList<>();
         args.add("--quiet");
         args.add("--start");
-        
-        DBService service = new DBService();
+
+        DBService service = new DBService() {
+            @Override
+            MongoProcessRunner createRunner() {
+                return runner;
+            }
+        };
         service.parseArguments(args);
+        
+        return service;
+    }
+    
+    @Test
+    public void testListeners() throws InvalidConfigurationException,
+            InterruptedException, IOException, ApplicationException
+    {
+        DBService service = prepareService(true);
         
         final CountDownLatch latch = new CountDownLatch(0);
         final boolean[] result = new boolean[1];
@@ -151,31 +178,14 @@ public class DBServiceTest {
         latch.await();
         
         Assert.assertTrue(result[0]);
-    
-        // FIXME: the server doesn't stop right away, but it's detached
-        // so we need to give some time... but there should be a better
-        // way than sleep...
-        Thread.sleep(2500);
-        
-        args = new ArrayList<>();
-        args.add("--quiet");
-        args.add("--stop");
-
-        // stop everything
-        service.parseArguments(args);
-        service.run();
     }
     
-    //@Test
-    public void testListenersFail() throws InvalidConfigurationException, InterruptedException {
-        List<String> args = new ArrayList<>();
-        args.add("--quiet");
-        
-        // unlikely is already running, since it's a random db directory...
-        args.add("--stop");
-
-        DBService service = new DBService();
-        service.parseArguments(args);
+    
+    @Test
+    public void testListenersFail() throws InvalidConfigurationException,
+            InterruptedException, IOException, ApplicationException
+    {
+        DBService service = prepareService(false);
         
         final CountDownLatch latch = new CountDownLatch(0);
         final boolean[] result = new boolean[1];

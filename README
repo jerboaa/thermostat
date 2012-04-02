@@ -2,15 +2,23 @@ Thank you for downloading Thermostat.
 
 REQUIREMENTS:
 
-MongoDB and associated Java driver
+Maven (it will download all the java dependencies for you)
+
+MongoDB
 http://www.mongodb.org/
 
-JFreeChart
-http://www.jfree.org/jfreechart/
 
 BUILDING THERMOSTAT:
 
-1. Read ant-build.properties, including in-line documentation, and edit as appropriate to
-   ensure required libraries can be found and the build otherwise configured to your liking.
-2. Run "ant dist".
-3. The resultant Thermostat system can now be found under the directory dist/
+1. Run "mvn clean package". All tests should pass and the build should succeed.
+   Requires a graphical environment for the ui tests.
+2. The resultant Thermostat system can now be found under the directory
+   distribution/target.
+
+RUNNING THERMOSTAT:
+
+1. To start the agent and the db:
+   bin/thermostat-service --start
+
+2. To start the client:
+   bin/thermostat-client-gui
