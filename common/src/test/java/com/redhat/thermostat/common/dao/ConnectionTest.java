@@ -36,103 +36,77 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.concurrent.CountDownLatch;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import junit.framework.Assert;
-
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
 import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.dao.Connection.ConnectionType;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.powermock.api.easymock.PowerMock.createPartialMockAndInvokeDefaultConstructor;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(MongoConnection.class)
 public class ConnectionTest {
-    
-    /**
-     * Test if the appropriate events are notified upon connection
-     * success
-     * @throws Exception 
-     */
-    @Test
-    public void testLocalConnection() throws Exception {
-        
-        // FIXME: We should not use this level of mocking, but this will be
-        // fixed when the Storage and Connection classes refactoring
-        // will be complete.
-        Connection connection =
-                createPartialMockAndInvokeDefaultConstructor(MongoConnection.class,
-                                                             "createConnection",
-                                                             "testConnection");
-        final boolean [] testPassed = new boolean[1];
-        testPassed[0] = false;
-        final CountDownLatch latch = new CountDownLatch(1);
-        
-        connection.addListener(new ConnectionListener() {
+
+    private Connection connection;
+
+    private ConnectionListener listener1;
+    private ConnectionListener listener2;
+
+    @Before
+    public void setUp() {
+
+        connection = new Connection() {
+            
             @Override
-            public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.CONNECTING) {
-                    // only release the latch when we are done
-                    return;
-                }
-                if (newStatus == ConnectionStatus.CONNECTED) {
-                    testPassed[0] = true;
-                }
-                latch.countDown();
-            }
-        });
-        connection.connect();
-        
-        latch.await();
-        Assert.assertTrue(testPassed[0]);
-    }
-    
-    /**
-     * Test if the connection fails given an invalid db url
-     */
-    @Test
-    public void testInvalidLocalConnection() throws InterruptedException {
-        
-        StartupConfiguration conf = mock(StartupConfiguration.class);
-        when(conf.getDBConnectionString()).thenReturn("fluff");
-        ConnectionProvider connProv = new MongoConnectionProvider(conf);
-        
-        Connection connection = connProv.createConnection();
-        Assert.assertNotNull(connection);
-        
-        connection.setType(ConnectionType.LOCAL);
-        Assert.assertTrue(ConnectionType.LOCAL == connection.getType());
-        
-        final boolean [] testPassed = new boolean[1];
-        testPassed[0] = false;
-        final CountDownLatch latch = new CountDownLatch(1);
-        
-        connection.addListener(new ConnectionListener() {
-            @Override
-            public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.CONNECTING) {
-                    // only release the latch when we are done
-                    return;
-                }
+            public void disconnect() {
+                // TODO Auto-generated method stub
                 
-                if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
-                    testPassed[0] = true;
-                }
-                latch.countDown();
             }
-        });
-        connection.connect();
-        
-        latch.await();
-        Assert.assertTrue(testPassed[0]);
+            
+            @Override
+            public void connect() {
+                // TODO Auto-generated method stub
+                
+            }
+        };
+        listener1 = mock(ConnectionListener.class);
+        listener2 = mock(ConnectionListener.class);
+        connection.addListener(listener1);
+        connection.addListener(listener2);
     }
+
+    @After
+    public void tearDown() {
+        connection = null;
+        listener1 = null;
+        listener2 = null;
+    }
+
+    @Test
+    public void testListenersConnecting() throws Exception {
+        verifyListenersStatus(ConnectionStatus.CONNECTING);
+    }
+
+    @Test
+    public void testListenersConnected() throws Exception {
+        verifyListenersStatus(ConnectionStatus.CONNECTED);
+    }
+
+    @Test
+    public void testListenersFailedToConnect() throws Exception {
+        verifyListenersStatus(ConnectionStatus.FAILED_TO_CONNECT);
+    }
+
+    @Test
+    public void testListenersDisconnected() throws Exception {
+        verifyListenersStatus(ConnectionStatus.DISCONNECTED);
+    }
+
+    private void verifyListenersStatus(ConnectionStatus status) {
+        connection.fireChanged(status);
+        verify(listener1).changed(status);
+        verify(listener2).changed(status);
+    }
+
 }

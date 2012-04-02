@@ -147,18 +147,6 @@
         <version>${powermock.version}</version>
       </dependency>
 
-      <!-- TODO: We should get rid of the following 2 dependencies! -->
-      <dependency>
-    	<groupId>org.powermock</groupId>
-    	<artifactId>powermock-api-easymock</artifactId>
-    	<version>${powermock.version}</version>
-      </dependency>
-      <dependency>
-        <groupId>org.easymock</groupId>
-        <artifactId>easymock</artifactId>
-        <version>${easymock.version}</version>
-      </dependency>
-
       <dependency>
         <groupId>org.jfree</groupId>
         <artifactId>jfreechart</artifactId>
