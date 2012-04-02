@@ -38,12 +38,24 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
 public class VmMemoryStatDAOTest {
     @Test
@@ -80,5 +92,74 @@ public class VmMemoryStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("perm.max-capacity", false)));
         assertTrue(keys.contains(new Key<Long>("perm.used", false)));
         assertEquals(27, keys.size());
+    }
+
+    @Test
+    public void testGetLatest() {
+        final int VM_ID = 0xcafe;
+        final String AGENT_ID = "agent";
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn(AGENT_ID);
+
+        VmRef vmRef = mock(VmRef.class);
+        when(vmRef.getAgent()).thenReturn(hostRef);
+        when(vmRef.getId()).thenReturn(VM_ID);
+
+        Storage storage = mock(Storage.class);
+
+        final Object[] savedQuery = new Object[1];
+        final Cursor cursor = mock(Cursor.class);
+        when(storage.findAll(any(Chunk.class))).thenAnswer(new Answer<Cursor>() {
+            @Override
+            public Cursor answer(InvocationOnMock invocation) throws Throwable {
+                savedQuery[0] = invocation.getArguments()[0];
+                return cursor;
+            }
+
+        });
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
+        when(cursor.limit(any(Integer.class))).thenReturn(cursor);
+        when(cursor.hasNext()).thenReturn(false);
+
+        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage, vmRef);
+        impl.getLatestMemoryStat();
+
+        ArgumentCaptor<Key> sortKey = ArgumentCaptor.forClass(Key.class);
+        ArgumentCaptor<SortDirection> sortDirection = ArgumentCaptor.forClass(SortDirection.class);
+        verify(cursor).sort(sortKey.capture(), sortDirection.capture());
+
+        Chunk query = (Chunk) savedQuery[0];
+        assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
+        assertEquals((Integer)VM_ID, query.get(VmMemoryStatDAO.vmIdKey));
+
+        assertTrue(sortKey.getValue().equals(Key.TIMESTAMP));
+        assertTrue(sortDirection.getValue().equals(SortDirection.DESCENDING));
+    }
+
+    @Test
+    public void testGetLatestReturnsNullWhenStorageEmpty() {
+        final int VM_ID = 0xcafe;
+        final String AGENT_ID = "agent";
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn(AGENT_ID);
+
+        VmRef vmRef = mock(VmRef.class);
+        when(vmRef.getAgent()).thenReturn(hostRef);
+        when(vmRef.getId()).thenReturn(VM_ID);
+
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
+        when(cursor.limit(any(Integer.class))).thenReturn(cursor);
+        when(cursor.hasNext()).thenReturn(false);
+        when(cursor.next()).thenReturn(null);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+
+        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage, vmRef);
+        VmMemoryStat latest = impl.getLatestMemoryStat();
+        assertTrue(latest == null);
     }
 }

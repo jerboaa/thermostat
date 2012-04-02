@@ -57,8 +57,11 @@ public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
         Chunk query = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
         query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
         query.put(VmMemoryStatDAO.vmIdKey, ref.getId());
-        Cursor cursor = storage.findAll(query).sort(Key.AGENT_ID, Cursor.SortDirection.DESCENDING).limit(1);
-        return new VmMemoryStatConverter().chunkToVmMemoryStat(cursor.next());
+        Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
+        if (cursor.hasNext()) {
+            return new VmMemoryStatConverter().chunkToVmMemoryStat(cursor.next());
+        }
+        return null;
     }
 
 }
