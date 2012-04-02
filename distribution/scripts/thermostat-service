@@ -40,6 +40,10 @@
 JAVA_DIR="@java.dir@"
 JAVA="@java.home@/bin/java"
 
+if [ x"$THERMOSTAT_HOME" = x ] ; then
+  THERMOSTAT_HOME="@thermostat.home@"
+fi
+export THERMOSTAT_HOME
 THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
 JCOMMON_JAR="${THERMOSTAT_LIBS}/jcommon.jar"
@@ -48,7 +52,8 @@ BSON_JAR="${THERMOSTAT_LIBS}/bson.jar"
 JOPT_JAR="${THERMOSTAT_LIBS}/jopt-simple-4.3.jar"
 TOOLS_JAR="@java.home@/../lib/tools.jar"
 
-SERVICE_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${JOPT_JAR}"
+#SERVICE_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${JOPT_JAR}"
+SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
 
 THERM_DIR=${THERMOSTAT_LIBS}
 
@@ -56,3 +61,4 @@ SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.v
 SERVICE_MAIN="com.redhat.thermostat.tools.ThermostatService"
 
 ${JAVA} -cp ${SERVICE_CLASSPATH} ${SERVICE_MAIN} "$@"
+exit $?
