@@ -55,6 +55,18 @@
     <thermostat.build.directory>target</thermostat.build.directory>
     <thermostat.java.version>1.7</thermostat.java.version>
     <java.dir>/usr/share/java</java.dir>
+
+    <junit.version>4.10</junit.version>
+    <mockito.version>1.9.0</mockito.version>
+    <fest.version>1.2.1</fest.version>
+    <powermock.version>1.4.11</powermock.version>
+	<easymock.version>3.1</easymock.version>
+
+    <jdktools.version>1.7.0</jdktools.version>
+    <jfreechart.version>1.0.14</jfreechart.version>
+    <mongo-driver.version>2.7.3</mongo-driver.version>
+    <jopt.version>4.3</jopt.version>
+
   </properties>
 
   <modules>
@@ -106,4 +118,69 @@
       </plugins>
     </pluginManagement>
   </build>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>${mockito.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.easytesting</groupId>
+        <artifactId>fest-swing</artifactId>
+        <version>${fest.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-api-mockito</artifactId>
+        <version>${powermock.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.powermock</groupId>
+        <artifactId>powermock-module-junit4</artifactId>
+        <version>${powermock.version}</version>
+      </dependency>
+
+      <!-- TODO: We should get rid of the following 2 dependencies! -->
+      <dependency>
+    	<groupId>org.powermock</groupId>
+    	<artifactId>powermock-api-easymock</artifactId>
+    	<version>${powermock.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.easymock</groupId>
+        <artifactId>easymock</artifactId>
+        <version>${easymock.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jfree</groupId>
+        <artifactId>jfreechart</artifactId>
+        <version>${jfreechart.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.mongodb</groupId>
+        <artifactId>mongo-java-driver</artifactId>
+        <version>${mongo-driver.version}</version>
+      </dependency>
+      <dependency>
+    	<groupId>net.sf.jopt-simple</groupId>
+    	<artifactId>jopt-simple</artifactId>
+    	<version>${jopt.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.sun</groupId>
+        <artifactId>tools</artifactId>
+        <version>${jdktools.version}</version>
+      </dependency>
+    
+    </dependencies>
+  </dependencyManagement>
 </project>
