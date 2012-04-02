@@ -36,71 +36,63 @@
 
 package com.redhat.thermostat.client;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.mockito.Matchers.isNotNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.concurrent.TimeUnit;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.client.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.TimerFactory;
 
-public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
+public class SummaryPanelFacadeImplTest {
 
-    private final DBCollection agentConfigCollection;
-    private final DBCollection vmInfoCollection;
+    private Timer timer;
 
-    private final ChangeableText connectedAgentText;
-    private final ChangeableText connectedVmText;
-
-    private final Timer backgroundUpdateTimer;
-
-    public SummaryPanelFacadeImpl(DB db) {
-        this.agentConfigCollection = db.getCollection("agent-config");
-        this.vmInfoCollection = db.getCollection("vm-info");
-
-        this.connectedVmText = new ChangeableText("");
-        this.connectedAgentText = new ChangeableText("");
-
-        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
-        backgroundUpdateTimer.setAction(new Runnable() {
-            
-            @Override
-            public void run() {
-                connectedVmText.setText(String.valueOf(vmInfoCollection.getCount()));
-                connectedAgentText.setText(String.valueOf(agentConfigCollection.getCount()));
-            }
-        });
-        backgroundUpdateTimer.setInitialDelay(0);
-        backgroundUpdateTimer.setDelay(10);
-        backgroundUpdateTimer.setTimeUnit(TimeUnit.SECONDS);
-        backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
+    @Before
+    public void setUp() {
+        ApplicationContextUtil.resetApplicationContext();
+        timer = mock(Timer.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
     }
 
-    @Override
-    public void start() {
-        backgroundUpdateTimer.start();
+    @After
+    public void tearDown() {
+        timer = null;
+        ApplicationContextUtil.resetApplicationContext();
     }
 
-    @Override
-    public void stop() {
-        backgroundUpdateTimer.stop();
-    }
+    @Test
+    public void testTimer() {
 
-    @Override
-    public ChangeableText getTotalConnectedVms() {
-        return connectedVmText;
-    }
+        DB db = mock(DB.class);
 
-    @Override
-    public ChangeableText getTotalConnectedAgents() {
-        return connectedAgentText;
-    }
+        SummaryPanelFacadeImpl summaryPanelCtrl = new SummaryPanelFacadeImpl(db);
+        summaryPanelCtrl.start();
 
-    @Override
-    public List<String> getIssues() {
-        return new ArrayList<String>();
+        verify(timer).setAction(isNotNull(Runnable.class));
+        verify(timer).setDelay(10);
+        verify(timer).setTimeUnit(TimeUnit.SECONDS);
+        verify(timer).setInitialDelay(0);
+        verify(timer).setSchedulingType(SchedulingType.FIXED_RATE);
+        verify(timer).start();
+
+        summaryPanelCtrl.stop();
+
+        verify(timer).stop();
+
+        // TODO: Also test for the actual action, as soon as the MVC refactoring is done.
     }
 
 }
