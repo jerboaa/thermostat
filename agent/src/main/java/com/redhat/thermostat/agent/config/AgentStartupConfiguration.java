@@ -88,6 +88,10 @@ public class AgentStartupConfiguration implements StartupConfiguration {
             
             // a file must exist, at least with the class name
             File backendSettings = ConfigUtils.getBackendPropertyFile(backendName);
+            if (!backendSettings.exists())
+                throw new InvalidConfigurationException("backends configuration " +
+                                                        "directory doesn't exist: " +
+                                                        backendSettings);
             Properties backendProps = new Properties();
             try {
                 backendProps.load(new FileInputStream(backendSettings));
