@@ -42,14 +42,13 @@ import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public abstract class VmCpuStatDAO {
+public interface VmCpuStatDAO {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
     static final Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
 
-    public static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
-            Key.TIMESTAMP, vmCpuLoadKey, vmIdKey);
+    static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
+            Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey);
 
-    public abstract List<VmCpuStat> getLatestVmCpuStats();
+    public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref);
 
 }

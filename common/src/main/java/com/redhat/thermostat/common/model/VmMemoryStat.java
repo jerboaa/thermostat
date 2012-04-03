@@ -38,7 +38,7 @@ package com.redhat.thermostat.common.model;
 
 import java.util.List;
 
-public class VmMemoryStat {
+public class VmMemoryStat implements TimeStampedPojo {
 
     public static class Generation {
         public static final String COLLECTOR_NONE = "none";
@@ -80,6 +80,7 @@ public class VmMemoryStat {
         return vmId;
     }
 
+    @Override
     public long getTimeStamp() {
         return timestamp;
     }

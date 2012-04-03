@@ -54,7 +54,7 @@ public class VmCpuStatConverterTest {
     public void testVmCpuStatToChunk() {
 
         VmCpuStat vmCpuStat = new VmCpuStat(TIMESTAMP, VM_ID, PROCESSOR_USAGE);
-        Chunk chunk = new VmCpuStatConverter().vmCpuStatToChunk(vmCpuStat);
+        Chunk chunk = new VmCpuStatConverter().toChunk(vmCpuStat);
         assertNotNull(chunk);
         assertEquals("vm-cpu-stats", chunk.getCategory().getName());
         assertEquals((Long)TIMESTAMP, chunk.get(Key.TIMESTAMP));
@@ -67,10 +67,10 @@ public class VmCpuStatConverterTest {
     public void testChunkToVmCpuStat() {
         Chunk chunk = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(VmCpuStatDAO.vmIdKey, VM_ID);
+        chunk.put(Key.VM_ID, VM_ID);
         chunk.put(VmCpuStatDAO.vmCpuLoadKey, PROCESSOR_USAGE);
 
-        VmCpuStat stat = new VmCpuStatConverter().chunkToVmCpuStat(chunk);
+        VmCpuStat stat = new VmCpuStatConverter().fromChunk(chunk);
         assertNotNull(stat);
         assertEquals(TIMESTAMP, stat.getTimeStamp());
         assertEquals(VM_ID, stat.getVmId());

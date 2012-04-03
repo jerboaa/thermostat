@@ -39,9 +39,10 @@ package com.redhat.thermostat.common.dao;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
-public class NetworkInterfaceInfoConverter {
+public class NetworkInterfaceInfoConverter implements Converter<NetworkInterfaceInfo> {
 
-    public Chunk networkInfoToChunk(NetworkInterfaceInfo info) {
+    @Override
+    public Chunk toChunk(NetworkInterfaceInfo info) {
         Chunk chunk = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, true);
         chunk.put(NetworkInterfaceInfoDAO.ifaceKey, info.getInterfaceName());
         String ip4 = info.getIp4Addr();
@@ -55,7 +56,8 @@ public class NetworkInterfaceInfoConverter {
         return chunk;
     }
 
-    public NetworkInterfaceInfo chunkToNetworkInfo(Chunk chunk) {
+    @Override
+    public NetworkInterfaceInfo fromChunk(Chunk chunk) {
         NetworkInterfaceInfo info = new NetworkInterfaceInfo(chunk.get(NetworkInterfaceInfoDAO.ifaceKey));
         info.setIp4Addr(chunk.get(NetworkInterfaceInfoDAO.ip4AddrKey));
         info.setIp6Addr(chunk.get(NetworkInterfaceInfoDAO.ip6AddrKey));

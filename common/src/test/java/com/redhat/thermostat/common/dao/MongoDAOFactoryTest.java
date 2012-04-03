@@ -73,49 +73,49 @@ public class MongoDAOFactoryTest {
 
     @Test
     public void testGetVmClassStatsDAO() {
-        VmClassStatDAO dao = daoFactory.getVmClassStatsDAO(vmRef);
+        VmClassStatDAO dao = daoFactory.getVmClassStatsDAO();
         assertNotNull(dao);
     }
 
     @Test
     public void testGetVmGcStatDAO() {
-        VmGcStatDAO dao = daoFactory.getVmGcStatDAO(vmRef);
+        VmGcStatDAO dao = daoFactory.getVmGcStatDAO();
         assertNotNull(dao);
     }
 
     @Test
     public void testGetVmInfoDAO() {
-        VmInfoDAO dao = daoFactory.getVmInfoDAO(vmRef);
+        VmInfoDAO dao = daoFactory.getVmInfoDAO();
         assertNotNull(dao);
     }
 
     @Test
     public void testGetVmMemoryStatDAO() {
-        VmMemoryStatDAO dao = daoFactory.getVmMemoryStatDAO(vmRef);
+        VmMemoryStatDAO dao = daoFactory.getVmMemoryStatDAO();
         assertNotNull(dao);
     }
 
     @Test
     public void testGetHostInfoDAO() {
-        HostInfoDAO dao = daoFactory.getHostInfoDAO(hostRef);
+        HostInfoDAO dao = daoFactory.getHostInfoDAO();
         assertNotNull(dao);
     }
 
     @Test
     public void testGetCpuStatDAO() {
-        CpuStatDAO dao = daoFactory.getCpuStatDAO(hostRef);
+        CpuStatDAO dao = daoFactory.getCpuStatDAO();
         assertNotNull(dao);
     }
 
     @Test
     public void testGetMemoryStatDAO() {
-        MemoryStatDAO dao = daoFactory.getMemoryStatDAO(hostRef);
+        MemoryStatDAO dao = daoFactory.getMemoryStatDAO();
         assertNotNull(dao);
     }
 
     @Test
     public void testGetNetworkInterfaceInfoDAO() {
-        NetworkInterfaceInfoDAO dao = daoFactory.getNetworkInterfaceInfoDAO(hostRef);
+        NetworkInterfaceInfoDAO dao = daoFactory.getNetworkInterfaceInfoDAO();
         assertNotNull(dao);
     }
 

@@ -143,8 +143,8 @@ public class VmInfoDAOTest {
         when(vmRef.getAgent()).thenReturn(hostRef);
         when(vmRef.getId()).thenReturn(321);
 
-        VmInfoDAO dao = new VmInfoDAOImpl(storage, vmRef);
-        VmInfo info = dao.getVmInfo();
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        VmInfo info = dao.getVmInfo(vmRef);
 
         assertNotNull(info);
         assertEquals((Integer) vmId, (Integer) info.getVmId());

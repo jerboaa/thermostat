@@ -63,7 +63,7 @@ import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 
 public class VmGcController implements AsyncUiFacade {
 
-    private final VmRef vmRef;
+    private final VmRef ref;
     private final VmGcView view;
 
     private final VmGcStatDAO gcDao;
@@ -74,12 +74,12 @@ public class VmGcController implements AsyncUiFacade {
     private final Timer timer = new Timer();
 
     public VmGcController(VmRef ref) {
-        this.vmRef = ref;
+        this.ref = ref;
         this.view = createView();
 
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
-        gcDao = df.getVmGcStatDAO(vmRef);
-        memDao = df.getVmMemoryStatDAO(vmRef);
+        gcDao = df.getVmGcStatDAO();
+        memDao = df.getVmMemoryStatDAO();
     }
 
     protected VmGcView createView() {
@@ -114,7 +114,7 @@ public class VmGcController implements AsyncUiFacade {
 
     private void doUpdateCollectorData() {
         Map<String, List<DiscreteTimeData<? extends Number>>> dataToAdd = new HashMap<>();
-        for (VmGcStat stat : gcDao.getLatestVmGcStats()) {
+        for (VmGcStat stat : gcDao.getLatestVmGcStats(ref)) {
             double walltime = 1.0E-6 * stat.getWallTime();
             String collector = stat.getCollectorName();
             List<DiscreteTimeData<? extends Number>> data = dataToAdd.get(collector);
@@ -135,7 +135,7 @@ public class VmGcController implements AsyncUiFacade {
     }
 
     public String getCollectorGeneration(String collectorName) {
-        VmMemoryStat info = memDao.getLatestMemoryStat();
+        VmMemoryStat info = memDao.getLatestMemoryStat(ref);
 
         for (Generation g: info.getGenerations()) {
             if (g.collector.equals(collectorName)) {

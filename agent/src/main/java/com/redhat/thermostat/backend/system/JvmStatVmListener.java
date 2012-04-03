@@ -97,7 +97,7 @@ public class JvmStatVmListener implements VmListener {
                         extractor.getCollectorName(i),
                         extractor.getCollectorInvocations(i),
                         extractor.getCollectorTime(i));
-                backend.store(new VmGcStatConverter().vmGcStatToChunk(stat));
+                backend.store(new VmGcStatConverter().toChunk(stat));
             }
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering gc info for vm " + vmId, e);
@@ -132,7 +132,7 @@ public class JvmStatVmListener implements VmListener {
                     s.used = extractor.getSpaceUsed(generation, space);
                 }
             }
-            backend.store(new VmMemoryStatConverter().vmMemoryStatToChunk(stat));
+            backend.store(new VmMemoryStatConverter().toChunk(stat));
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);
         }

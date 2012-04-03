@@ -52,9 +52,9 @@ public interface MemoryStatDAO {
     static Key<Long> memorySwapFreeKey = new Key<>("swap-free", false);
     static Key<Long> memoryCommitLimitKey = new Key<>("commit-limit", false);
 
-    public static final Category memoryStatCategory = new Category("memory-stats",
+    static final Category memoryStatCategory = new Category("memory-stats",
             Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
             memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
 
-    public List<MemoryStat> getLatestMemoryStats();
+    public List<MemoryStat> getLatestMemoryStats(HostRef ref);
 }

@@ -52,15 +52,15 @@ import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 
 public class VmMemoryController implements AsyncUiFacade {
 
-    private final VmRef vmRef;
+    private final VmRef ref;
     private final VmMemoryView view;
     private final VmMemoryStatDAO dao;
 
     private final Timer timer = new Timer();
 
-    public VmMemoryController(VmRef vmRef) {
-        this.vmRef = vmRef;
-        dao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO(this.vmRef);
+    public VmMemoryController(VmRef ref) {
+        this.ref = ref;
+        dao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
         view = createView();
     }
 
@@ -69,7 +69,7 @@ public class VmMemoryController implements AsyncUiFacade {
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                VmMemoryStat info = dao.getLatestMemoryStat();
+                VmMemoryStat info = dao.getLatestMemoryStat(ref);
                 List<Generation> generations = info.getGenerations();
                 for (Generation generation: generations) {
                     List<Space> spaces = generation.spaces;

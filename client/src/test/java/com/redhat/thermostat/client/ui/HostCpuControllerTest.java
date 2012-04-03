@@ -93,16 +93,16 @@ public class HostCpuControllerTest {
         // Setup DAOs.
         HostInfo hostInfo = new HostInfo("fluffhost1", "fluffOs1", "fluffKernel1", "fluffCpu1", 12345, 98765);
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
-        when(hostInfoDAO.getHostInfo()).thenReturn(hostInfo);
+        when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
         CpuStat cpuStat1 = new CpuStat(1l, 10.0, 20.0, 30.0);
         CpuStat cpuStat2 = new CpuStat(2l, 15.0, 25.0, 35.0);
         CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
-        when(cpuStatDAO.getLatestCpuStats()).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
+        when(cpuStatDAO.getLatestCpuStats(any(HostRef.class))).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
 
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO(any(HostRef.class))).thenReturn(hostInfoDAO);
-        when(daoFactory.getCpuStatDAO(any(HostRef.class))).thenReturn(cpuStatDAO);
+        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfoDAO);
+        when(daoFactory.getCpuStatDAO()).thenReturn(cpuStatDAO);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 

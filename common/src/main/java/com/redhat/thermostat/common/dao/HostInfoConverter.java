@@ -39,9 +39,10 @@ package com.redhat.thermostat.common.dao;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
-public class HostInfoConverter {
+public class HostInfoConverter implements Converter<HostInfo> {
 
-    public Chunk hostInfoToChunk(HostInfo hostInfo) {
+    @Override
+    public Chunk toChunk(HostInfo hostInfo) {
         Chunk chunk = new Chunk(HostInfoDAO.hostInfoCategory, false);
         chunk.put(HostInfoDAO.hostNameKey, hostInfo.getHostname());
         chunk.put(HostInfoDAO.osNameKey, hostInfo.getOsName());
@@ -52,7 +53,8 @@ public class HostInfoConverter {
         return chunk;
     }
 
-    public HostInfo chunkToHostInfo(Chunk chunk) {
+    @Override
+    public HostInfo fromChunk(Chunk chunk) {
         String hostName = chunk.get(HostInfoDAO.hostNameKey);
         String osName = chunk.get(HostInfoDAO.osNameKey);
         String osKernel = chunk.get(HostInfoDAO.osKernelKey);

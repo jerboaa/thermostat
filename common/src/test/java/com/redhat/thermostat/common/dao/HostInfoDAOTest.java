@@ -86,7 +86,7 @@ public class HostInfoDAOTest {
         Storage storage = mock(Storage.class);
         when(storage.find(any(Chunk.class))).thenReturn(chunk);
 
-        HostInfo info = new HostInfoDAOImpl(storage, new HostRef("some uid", HOST_NAME)).getHostInfo();
+        HostInfo info = new HostInfoDAOImpl(storage).getHostInfo(new HostRef("some uid", HOST_NAME));
         assertNotNull(info);
         assertEquals(HOST_NAME, info.getHostname());
         assertEquals(OS_NAME, info.getOsName());

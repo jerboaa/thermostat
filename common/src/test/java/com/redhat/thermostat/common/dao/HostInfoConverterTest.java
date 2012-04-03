@@ -51,7 +51,7 @@ public class HostInfoConverterTest {
     public void testHostInfoToChunk() {
         HostInfo info = new HostInfo("a-host", "an-os", "a-kernel", "a-cpu", 9, 99);
 
-        Chunk chunk = new HostInfoConverter().hostInfoToChunk(info);
+        Chunk chunk = new HostInfoConverter().toChunk(info);
 
         assertEquals("host-info", chunk.getCategory().getName());
         assertEquals("a-host", chunk.get(new Key<String>("hostname", true)));
@@ -80,7 +80,7 @@ public class HostInfoConverterTest {
         chunk.put(HostInfoDAO.cpuCountKey, CPU_NUM);
         chunk.put(HostInfoDAO.hostMemoryTotalKey, MEMORY_TOTAL);
 
-        HostInfo info = new HostInfoConverter().chunkToHostInfo(chunk);
+        HostInfo info = new HostInfoConverter().fromChunk(chunk);
         assertNotNull(info);
         assertEquals(HOST_NAME, info.getHostname());
         assertEquals(OS_NAME, info.getOsName());

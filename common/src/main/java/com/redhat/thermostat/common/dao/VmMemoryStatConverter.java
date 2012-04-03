@@ -39,19 +39,19 @@ package com.redhat.thermostat.common.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.mongodb.DBObject;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmMemoryStatConverter {
+public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
 
-    public Chunk vmMemoryStatToChunk(VmMemoryStat vmMemStat) {
+    @Override
+    public Chunk toChunk(VmMemoryStat vmMemStat) {
         Chunk chunk = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
 
-        chunk.put(VmMemoryStatDAO.vmIdKey, vmMemStat.getVmId());
+        chunk.put(Key.VM_ID, vmMemStat.getVmId());
         chunk.put(Key.TIMESTAMP, vmMemStat.getTimeStamp());
 
         Generation newGen = vmMemStat.getGeneration("new");
@@ -98,7 +98,8 @@ public class VmMemoryStatConverter {
         return chunk;
     }
 
-    public VmMemoryStat chunkToVmMemoryStat(Chunk chunk) {
+    @Override
+    public VmMemoryStat fromChunk(Chunk chunk) {
         Space space = null;
         List<Space> spaces = null;
 
@@ -176,6 +177,6 @@ public class VmMemoryStatConverter {
 
         gens.add(permGen);
 
-        return new VmMemoryStat(chunk.get(Key.TIMESTAMP), chunk.get(VmMemoryStatDAO.vmIdKey), gens);
+        return new VmMemoryStat(chunk.get(Key.TIMESTAMP), chunk.get(Key.VM_ID), gens);
     }
 }

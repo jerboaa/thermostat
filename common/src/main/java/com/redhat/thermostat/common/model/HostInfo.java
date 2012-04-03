@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
-public class HostInfo {
+public class HostInfo implements Pojo {
 
     private final String hostname;
     private final String osName;

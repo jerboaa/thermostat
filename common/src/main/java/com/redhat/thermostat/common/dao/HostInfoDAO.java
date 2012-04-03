@@ -49,9 +49,9 @@ public interface HostInfoDAO {
     static Key<String> cpuModelKey = new Key<>("cpu_model", false);
     static Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
 
-    public static final Category hostInfoCategory = new Category("host-info",
+    static final Category hostInfoCategory = new Category("host-info",
             hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);
 
-    public HostInfo getHostInfo();
+    HostInfo getHostInfo(HostRef ref);
 }

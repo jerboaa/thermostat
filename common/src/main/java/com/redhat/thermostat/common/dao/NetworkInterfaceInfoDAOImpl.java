@@ -45,18 +45,16 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
+class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     private Storage storage;
-    private HostRef ref;
 
-    public NetworkInterfaceInfoDAOImpl(Storage storage, HostRef ref) {
+    NetworkInterfaceInfoDAOImpl(Storage storage) {
         this.storage = storage;
-        this.ref = ref;
     }
 
     @Override
-    public List<NetworkInterfaceInfo> getNetworkInterfaces() {
+    public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
         Chunk query = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, false);
         query.put(Key.AGENT_ID, ref.getAgentId());
 
@@ -65,7 +63,7 @@ public class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
         List<NetworkInterfaceInfo> result = new ArrayList<>();
         while (cursor.hasNext()) {
             Chunk chunk = cursor.next();
-            NetworkInterfaceInfo stat = converter.chunkToNetworkInfo(chunk);
+            NetworkInterfaceInfo stat = converter.fromChunk(chunk);
             result.add(stat);
         }
         return result;

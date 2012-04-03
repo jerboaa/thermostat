@@ -42,9 +42,10 @@ import java.util.Map;
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 
-public class VmInfoConverter {
+public class VmInfoConverter implements Converter<VmInfo> {
 
-    public Chunk vmInfoToChunk(VmInfo info) {
+    @Override
+    public Chunk toChunk(VmInfo info) {
         Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, true);
 
         chunk.put(VmInfoDAO.vmIdKey, info.getVmId());
@@ -65,7 +66,8 @@ public class VmInfoConverter {
         return chunk;
     }
 
-    public VmInfo chunkToVmInfo(Chunk chunk) {
+    @Override
+    public VmInfo fromChunk(Chunk chunk) {
         int vmId = chunk.get(VmInfoDAO.vmIdKey);
         long startTime = chunk.get(VmInfoDAO.startTimeKey);
         long stopTime = chunk.get(VmInfoDAO.stopTimeKey);

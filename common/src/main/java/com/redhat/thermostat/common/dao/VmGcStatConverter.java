@@ -40,12 +40,13 @@ import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmGcStatConverter {
+public class VmGcStatConverter implements Converter<VmGcStat> {
 
-    public Chunk vmGcStatToChunk(VmGcStat vmGcStat) {
+    @Override
+    public Chunk toChunk(VmGcStat vmGcStat) {
         Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
 
-        chunk.put(VmGcStatDAO.vmIdKey, vmGcStat.getVmId());
+        chunk.put(Key.VM_ID, vmGcStat.getVmId());
         chunk.put(Key.TIMESTAMP, vmGcStat.getTimeStamp());
         chunk.put(VmGcStatDAO.collectorKey, vmGcStat.getCollectorName());
         chunk.put(VmGcStatDAO.runCountKey, vmGcStat.getRunCount());
@@ -54,8 +55,9 @@ public class VmGcStatConverter {
         return chunk;
     }
 
-    public VmGcStat chunkToVmGcStat(Chunk chunk) {
-        int vmId = chunk.get(VmGcStatDAO.vmIdKey);
+    @Override
+    public VmGcStat fromChunk(Chunk chunk) {
+        int vmId = chunk.get(Key.VM_ID);
         long timestamp = chunk.get(Key.TIMESTAMP);
         String collectorName = chunk.get(VmGcStatDAO.collectorKey);
         long runCount = chunk.get(VmGcStatDAO.runCountKey);

@@ -48,8 +48,8 @@ public interface NetworkInterfaceInfoDAO {
     static Key<String> ip4AddrKey = new Key<>("ipv4addr", false);
     static Key<String> ip6AddrKey = new Key<>("ipv6addr", false);
 
-    public static final Category networkInfoCategory = new Category("network-info",
+    static final Category networkInfoCategory = new Category("network-info",
             Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
 
-    public List<NetworkInterfaceInfo> getNetworkInterfaces();
+    public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref);
 }

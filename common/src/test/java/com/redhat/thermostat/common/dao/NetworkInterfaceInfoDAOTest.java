@@ -93,8 +93,8 @@ public class NetworkInterfaceInfoDAOTest {
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
 
-        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage, hostRef);
-        List<NetworkInterfaceInfo> netInfo = dao.getNetworkInterfaces();
+        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
+        List<NetworkInterfaceInfo> netInfo = dao.getNetworkInterfaces(hostRef);
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage).findAll(arg.capture());

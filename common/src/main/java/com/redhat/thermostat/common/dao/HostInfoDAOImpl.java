@@ -42,21 +42,19 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 class HostInfoDAOImpl implements HostInfoDAO {
-    private HostRef ref;
     private Storage storage;
     private HostInfoConverter converter;
 
-    public HostInfoDAOImpl(Storage storage, HostRef hostRef) {
-        ref = hostRef;
+    public HostInfoDAOImpl(Storage storage) {
         this.storage = storage;
         converter = new HostInfoConverter();
     }
 
     @Override
-    public HostInfo getHostInfo() {
+    public HostInfo getHostInfo(HostRef ref) {
         Chunk query = new Chunk(HostInfoDAO.hostInfoCategory, false);
         query.put(Key.AGENT_ID, ref.getAgentId());
         Chunk result = storage.find(query);
-        return result == null ? null : converter.chunkToHostInfo(result);
+        return result == null ? null : converter.fromChunk(result);
     }
 }

@@ -53,7 +53,7 @@ public class NetworkInterfaceInfoConverterTest {
         info.setIp4Addr("4");
         info.setIp6Addr("6");
 
-        Chunk chunk = new NetworkInterfaceInfoConverter().networkInfoToChunk(info);
+        Chunk chunk = new NetworkInterfaceInfoConverter().toChunk(info);
 
         assertEquals("network-info", chunk.getCategory().getName());
         assertEquals("eth0", chunk.get(new Key<String>("iface", true)));
@@ -73,7 +73,7 @@ public class NetworkInterfaceInfoConverterTest {
         chunk.put(NetworkInterfaceInfoDAO.ip4AddrKey, IPV4_ADDR);
         chunk.put(NetworkInterfaceInfoDAO.ip6AddrKey, IPV6_ADDR);
 
-        NetworkInterfaceInfo info = new NetworkInterfaceInfoConverter().chunkToNetworkInfo(chunk);
+        NetworkInterfaceInfo info = new NetworkInterfaceInfoConverter().fromChunk(chunk);
         assertNotNull(info);
         assertEquals(INTERFACE_NAME, info.getInterfaceName());
         assertEquals(IPV4_ADDR, info.getIp4Addr());

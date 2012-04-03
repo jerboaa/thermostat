@@ -41,25 +41,23 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public class VmInfoDAOImpl implements VmInfoDAO {
+class VmInfoDAOImpl implements VmInfoDAO {
 
     private Storage storage;
-    private VmRef ref;
     private VmInfoConverter converter;
 
-    public VmInfoDAOImpl(Storage storage, VmRef ref) {
+    VmInfoDAOImpl(Storage storage) {
         this.storage = storage;
-        this.ref = ref;
         this.converter = new VmInfoConverter();
     }
 
     @Override
-    public VmInfo getVmInfo() {
+    public VmInfo getVmInfo(VmRef ref) {
         Chunk query = new Chunk(VmInfoDAO.vmInfoCategory, false);
         query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
         query.put(VmInfoDAO.vmIdKey, ref.getId());
         Chunk result = storage.find(query);
-        return converter.chunkToVmInfo(result);
+        return converter.fromChunk(result);
     }
 
 }

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
-public class VmGcStat {
+public class VmGcStat implements TimeStampedPojo {
 
     private final long timestamp;
     private final int vmId;
@@ -64,6 +64,7 @@ public class VmGcStat {
         return wallTime;
     }
 
+    @Override
     public long getTimeStamp() {
         return timestamp;
     }

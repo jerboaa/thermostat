@@ -55,7 +55,7 @@ public class VmGcStatConverterTest {
         final Long WALL_TIME = 9L;
 
         VmGcStat stat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
-        Chunk chunk = new VmGcStatConverter().vmGcStatToChunk(stat);
+        Chunk chunk = new VmGcStatConverter().toChunk(stat);
 
         assertNotNull(chunk);
         assertEquals("vm-gc-stats", chunk.getCategory().getName());
@@ -76,11 +76,11 @@ public class VmGcStatConverterTest {
 
         Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(VmGcStatDAO.vmIdKey, VM_ID);
+        chunk.put(Key.VM_ID, VM_ID);
         chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);
         chunk.put(VmGcStatDAO.runCountKey, RUN_COUNT);
         chunk.put(VmGcStatDAO.wallTimeKey, WALL_TIME);
-        VmGcStat stat = new VmGcStatConverter().chunkToVmGcStat(chunk);
+        VmGcStat stat = new VmGcStatConverter().fromChunk(chunk);
 
         assertNotNull(stat);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());

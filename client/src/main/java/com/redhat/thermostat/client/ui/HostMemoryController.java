@@ -63,14 +63,16 @@ public class HostMemoryController implements AsyncUiFacade {
 
     private final HostInfoDAO hostInfoDAO;
     private final MemoryStatDAO memoryStatDAO;
+    private final HostRef ref;
 
     private final Timer backgroundUpdateTimer;
     private final GraphVisibilityChangeListener listener = new ShowHideGraph();
 
-    public HostMemoryController(HostRef hostRef) {
+    public HostMemoryController(HostRef ref) {
+        this.ref = ref;
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
-        hostInfoDAO = daos.getHostInfoDAO(hostRef);
-        memoryStatDAO = daos.getMemoryStatDAO(hostRef);
+        hostInfoDAO = daos.getHostInfoDAO();
+        memoryStatDAO = daos.getMemoryStatDAO();
 
         view = createView();
 
@@ -95,7 +97,7 @@ public class HostMemoryController implements AsyncUiFacade {
         backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                view.setTotalMemory(String.valueOf(hostInfoDAO.getHostInfo().getTotalMemory()));
+                view.setTotalMemory(String.valueOf(hostInfoDAO.getHostInfo(ref).getTotalMemory()));
                 doMemoryChartUpdate();
             }
 
@@ -127,7 +129,7 @@ public class HostMemoryController implements AsyncUiFacade {
         List<DiscreteTimeData<? extends Number>> swapTotal = new LinkedList<>();
         List<DiscreteTimeData<? extends Number>> swapFree = new LinkedList<>();
         
-        for (MemoryStat stat : memoryStatDAO.getLatestMemoryStats()) {
+        for (MemoryStat stat : memoryStatDAO.getLatestMemoryStats(ref)) {
             long timeStamp = stat.getTimeStamp();
             memFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getFree()));
             memTotal.add(new DiscreteTimeData<Long>(timeStamp, stat.getTotal()));

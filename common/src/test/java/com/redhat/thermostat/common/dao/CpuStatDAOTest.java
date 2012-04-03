@@ -88,8 +88,8 @@ public class CpuStatDAOTest {
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
 
-        CpuStatDAO dao = new CpuStatDAOImpl(storage, hostRef);
-        List<CpuStat> cpuStats = dao.getLatestCpuStats();
+        CpuStatDAO dao = new CpuStatDAOImpl(storage);
+        List<CpuStat> cpuStats = dao.getLatestCpuStats(hostRef);
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage).findAll(arg.capture());
@@ -121,9 +121,9 @@ public class CpuStatDAOTest {
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
 
-        CpuStatDAO dao = new CpuStatDAOImpl(storage, hostRef);
-        dao.getLatestCpuStats();
-        dao.getLatestCpuStats();
+        CpuStatDAO dao = new CpuStatDAOImpl(storage);
+        dao.getLatestCpuStats(hostRef);
+        dao.getLatestCpuStats(hostRef);
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());

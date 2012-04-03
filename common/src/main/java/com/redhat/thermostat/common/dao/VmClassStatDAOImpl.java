@@ -36,47 +36,32 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 class VmClassStatDAOImpl implements VmClassStatDAO {
 
-    private VmRef ref;
     private Storage storage;
 
-    private long lastUpdate = Long.MIN_VALUE;
+    private Converter<VmClassStat> converter = new VmClassStatConverter();
 
-    public VmClassStatDAOImpl(Storage storage, VmRef vmRef) {
-        ref = vmRef;
+    private Map<VmRef, VmLatestPojoListGetter<VmClassStat>> getters = new HashMap<>();
+
+    VmClassStatDAOImpl(Storage storage) {
         this.storage = storage;
     }
 
     @Override
-    public List<VmClassStat> getLatestClassStats() {
-        ArrayList<VmClassStat> result = new ArrayList<>();
-        Chunk query = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(VmClassStatDAO.vmIdKey, ref.getId());
-        if (lastUpdate != Long.MIN_VALUE) {
-            // TODO once we have an index and the 'column' is of type long, use
-            // a query which can utilize an index. this one doesn't
-            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
+    public List<VmClassStat> getLatestClassStats(VmRef ref) {
+        VmLatestPojoListGetter<VmClassStat> getter = getters.get(ref);
+        if (getter == null) {
+            getter = new VmLatestPojoListGetter<VmClassStat>(storage, VmClassStatDAO.vmClassStatsCategory, converter, ref);
+            getters.put(ref, getter);
         }
-        Cursor cursor = storage.findAll(query);
-        VmClassStatConverter converter = new VmClassStatConverter();
-        while (cursor.hasNext()) {
-            Chunk current = cursor.next();
-            VmClassStat stat = converter.chunkToVmClassStat(current);
-            result.add(stat);
-            lastUpdate = Math.max(stat.getTimestamp(), lastUpdate);
-        }
-
-        return result;
+        return getter.getLatest();
     }
 }

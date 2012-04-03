@@ -129,7 +129,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                         extractor.getMainClass(), extractor.getCommandLine(),
                         extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
                         properties, environment, loadedNativeLibraries);
-                backend.store(new VmInfoConverter().vmInfoToChunk(info));
+                backend.store(new VmInfoConverter().toChunk(info));
                 logger.finer("Sent VM_STARTED messsage");
             } catch (MonitorException me) {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);

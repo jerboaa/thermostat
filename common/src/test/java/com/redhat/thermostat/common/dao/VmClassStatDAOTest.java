@@ -75,7 +75,7 @@ public class VmClassStatDAOTest {
 
         Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
         chunk.put(Key.TIMESTAMP, 1234L);
-        chunk.put(VmClassStatDAO.vmIdKey, 321);
+        chunk.put(Key.VM_ID, 321);
         chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
 
         Cursor cursor = mock(Cursor.class);
@@ -93,8 +93,8 @@ public class VmClassStatDAOTest {
         when(vmRef.getId()).thenReturn(321);
 
 
-        VmClassStatDAO dao = new VmClassStatDAOImpl(storage, vmRef);
-        List<VmClassStat> vmClassStats = dao.getLatestClassStats();
+        VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
+        List<VmClassStat> vmClassStats = dao.getLatestClassStats(vmRef);
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage).findAll(arg.capture());
@@ -102,7 +102,7 @@ public class VmClassStatDAOTest {
 
         assertEquals(1, vmClassStats.size());
         VmClassStat stat = vmClassStats.get(0);
-        assertEquals(1234L, stat.getTimestamp());
+        assertEquals(1234L, stat.getTimeStamp());
         assertEquals(12345L, stat.getLoadedClasses());
         assertEquals(321, stat.getVmId());
     }
@@ -112,7 +112,7 @@ public class VmClassStatDAOTest {
 
         Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
         chunk.put(Key.TIMESTAMP, 1234L);
-        chunk.put(VmClassStatDAO.vmIdKey, 321);
+        chunk.put(Key.VM_ID, 321);
         chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
 
         Cursor cursor = mock(Cursor.class);
@@ -130,10 +130,10 @@ public class VmClassStatDAOTest {
         when(vmRef.getId()).thenReturn(321);
 
 
-        VmClassStatDAO dao = new VmClassStatDAOImpl(storage, vmRef);
-        dao.getLatestClassStats();
+        VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
+        dao.getLatestClassStats(vmRef);
 
-        dao.getLatestClassStats();
+        dao.getLatestClassStats(vmRef);
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());
         assertEquals("this.timestamp > 1234", arg.getValue().get(new Key<String>("$where", false)));

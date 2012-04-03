@@ -40,9 +40,10 @@ import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
-public class MemoryStatConverter {
+public class MemoryStatConverter implements Converter<MemoryStat> {
 
-    public Chunk memoryStatToChunk(MemoryStat mem) {
+    @Override
+    public Chunk toChunk(MemoryStat mem) {
         Chunk chunk = new Chunk(MemoryStatDAO.memoryStatCategory, false);
         chunk.put(Key.TIMESTAMP, mem.getTimeStamp());
         chunk.put(MemoryStatDAO.memoryTotalKey, mem.getTotal());
@@ -55,7 +56,8 @@ public class MemoryStatConverter {
         return chunk;
     }
 
-    public MemoryStat chunkToMemoryStat(Chunk chunk) {
+    @Override
+    public MemoryStat fromChunk(Chunk chunk) {
         long timestamp = chunk.get(Key.TIMESTAMP);
         long total = chunk.get(MemoryStatDAO.memoryTotalKey);
         long free = chunk.get(MemoryStatDAO.memoryFreeKey);

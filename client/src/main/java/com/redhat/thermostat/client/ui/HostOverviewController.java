@@ -66,7 +66,7 @@ public class HostOverviewController implements AsyncUiFacade {
 
     private static final Logger logger = LoggingUtils.getLogger(HostOverviewController.class);
 
-    private final HostRef hostRef;
+    private final HostRef ref;
     private final HostInfoDAO hostInfoDAO;
     private final NetworkInterfaceInfoDAO networkInfoDAO;
 
@@ -75,10 +75,10 @@ public class HostOverviewController implements AsyncUiFacade {
     private final HostOverviewView view;
 
     public HostOverviewController(HostRef ref) {
-        this.hostRef = ref;
+        this.ref = ref;
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
-        hostInfoDAO = df.getHostInfoDAO(hostRef);
-        networkInfoDAO = df.getNetworkInterfaceInfoDAO(hostRef);
+        hostInfoDAO = df.getHostInfoDAO();
+        networkInfoDAO = df.getNetworkInterfaceInfoDAO();
 
         final Vector<String> networkTableColumnVector;
         networkTableColumnVector = new Vector<String>();
@@ -104,7 +104,7 @@ public class HostOverviewController implements AsyncUiFacade {
 
         @Override
         protected List<NetworkInterfaceInfo> doInBackground() throws Exception {
-            return networkInfoDAO.getNetworkInterfaces();
+            return networkInfoDAO.getNetworkInterfaces(ref);
         }
 
         @Override
@@ -137,7 +137,7 @@ public class HostOverviewController implements AsyncUiFacade {
         backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                HostInfo hostInfo = hostInfoDAO.getHostInfo();
+                HostInfo hostInfo = hostInfoDAO.getHostInfo(ref);
                 view.setHostName(hostInfo.getHostname());
                 view.setOsName(hostInfo.getOsName());
                 view.setOsKernel(hostInfo.getOsKernel());

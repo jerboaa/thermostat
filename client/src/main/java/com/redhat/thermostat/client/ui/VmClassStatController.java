@@ -55,10 +55,10 @@ public class VmClassStatController implements AsyncUiFacade {
     private class UpdateChartData extends TimerTask {
         @Override
         public void run() {
-            List<VmClassStat> latestClassStats = dao.getLatestClassStats();
+            List<VmClassStat> latestClassStats = dao.getLatestClassStats(ref);
             List<DiscreteTimeData<Long>> timeData = new ArrayList<>();
             for (VmClassStat stat : latestClassStats) {
-                timeData.add(new DiscreteTimeData<Long>(stat.getTimestamp(), stat.getLoadedClasses()));
+                timeData.add(new DiscreteTimeData<Long>(stat.getTimeStamp(), stat.getLoadedClasses()));
             }
             classesView.addClassCount(timeData);
         }
@@ -66,14 +66,15 @@ public class VmClassStatController implements AsyncUiFacade {
     }
 
     private VmClassStatView classesView;
+    private VmRef ref;
+    private VmClassStatDAO dao;
 
     // TODO: Use application wide ScheduledExecutorService thread pool.
     private Timer timer;
 
-    private VmClassStatDAO dao;
-
     public VmClassStatController(VmRef ref) {
-        dao = ApplicationContext.getInstance().getDAOFactory().getVmClassStatsDAO(ref);
+        this.ref = ref;
+        dao = ApplicationContext.getInstance().getDAOFactory().getVmClassStatsDAO();
         classesView = createView();
     }
 

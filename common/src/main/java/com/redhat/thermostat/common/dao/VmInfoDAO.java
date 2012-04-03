@@ -45,8 +45,7 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface VmInfoDAO {
 
-    // FIXME make it non-public
-    public static final Key<Integer> vmIdKey = new Key<>("vm-id", true);
+    static final Key<Integer> vmIdKey = new Key<>("vm-id", true);
     static final Key<Integer> vmPidKey = new Key<>("vm-pid", false);
     static final Key<String> runtimeVersionKey = new Key<>("runtime-version", false);
     static final Key<String> javaHomeKey = new Key<>("java-home", false);
@@ -60,15 +59,14 @@ public interface VmInfoDAO {
     static final Key<Map<String, String>> environmentKey = new Key<>("environment", false);
     static final Key<List<String>> librariesKey = new Key<>("libraries", false);
     static final Key<Long> startTimeKey = new Key<>("start-time", false);
-    // FIXME make it non-public
-    public static final Key<Long> stopTimeKey = new Key<>("stop-time", false);
+    static final Key<Long> stopTimeKey = new Key<>("stop-time", false);
 
-    public static final Category vmInfoCategory = new Category("vm-info",
+    static final Category vmInfoCategory = new Category("vm-info",
             vmIdKey, vmPidKey, runtimeVersionKey, javaHomeKey,
             mainClassKey, commandLineKey,
             vmArgumentsKey, vmNameKey, vmInfoKey, vmVersionKey,
             propertiesKey, environmentKey, librariesKey,
             startTimeKey, stopTimeKey);
 
-    public VmInfo getVmInfo();
+    public VmInfo getVmInfo(VmRef ref);
 }

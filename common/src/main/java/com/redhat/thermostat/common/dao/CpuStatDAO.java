@@ -48,8 +48,8 @@ public interface CpuStatDAO {
     static Key<Double> cpu10LoadKey = new Key<>("10load", false);
     static Key<Double> cpu15LoadKey = new Key<>("15load", false);
 
-    public static final Category cpuStatCategory = new Category("cpu-stats",
+    static final Category cpuStatCategory = new Category("cpu-stats",
             Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
 
-    public List<CpuStat> getLatestCpuStats();
+    List<CpuStat> getLatestCpuStats(HostRef ref);
 }

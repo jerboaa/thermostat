@@ -105,8 +105,8 @@ public class MemoryStatDAOTest {
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
 
-        MemoryStatDAO dao = new MemoryStatDAOImpl(storage, hostRef);
-        List<MemoryStat> memoryStats = dao.getLatestMemoryStats();
+        MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
+        List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef);
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage).findAll(arg.capture());
@@ -156,9 +156,9 @@ public class MemoryStatDAOTest {
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
 
-        MemoryStatDAO dao = new MemoryStatDAOImpl(storage, hostRef);
-        dao.getLatestMemoryStats();
-        dao.getLatestMemoryStats();
+        MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
+        dao.getLatestMemoryStats(hostRef);
+        dao.getLatestMemoryStats(hostRef);
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());

@@ -42,8 +42,6 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface VmMemoryStatDAO {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
-
     static final Key<String> edenGenKey = new Key<>("eden.gen", false);
     static final Key<String> edenCollectorKey = new Key<>("eden.collector", false);
     static final Key<Long> edenCapacityKey = new Key<>("eden.capacity", false);
@@ -74,8 +72,8 @@ public interface VmMemoryStatDAO {
     static final Key<Long> permMaxCapacityKey = new Key<>("perm.max-capacity", false);
     static final Key<Long> permUsedKey = new Key<>("perm.used", false);
 
-    public static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
-            vmIdKey, Key.TIMESTAMP,
+    static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
+            Key.VM_ID, Key.TIMESTAMP,
             edenGenKey, edenCollectorKey,
             edenCapacityKey, edenMaxCapacityKey,edenUsedKey,
             s0GenKey, s0CollectorKey, s0CapacityKey,
@@ -87,6 +85,6 @@ public interface VmMemoryStatDAO {
             permGenKey, permCollectorKey, permCapacityKey,
             permMaxCapacityKey, permUsedKey);
 
-    public VmMemoryStat getLatestMemoryStat();
+    public VmMemoryStat getLatestMemoryStat(VmRef ref);
 
 }

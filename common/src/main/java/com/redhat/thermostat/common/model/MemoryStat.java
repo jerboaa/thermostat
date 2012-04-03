@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
-public class MemoryStat {
+public class MemoryStat implements TimeStampedPojo {
     private final long timestamp;
     private final long total;
     private final long free;
@@ -57,6 +57,7 @@ public class MemoryStat {
         this.commitLimit = commitLimit;
     }
 
+    @Override
     public long getTimeStamp() {
         return timestamp;
     }
