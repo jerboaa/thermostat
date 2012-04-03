@@ -36,31 +36,47 @@
 
 package com.redhat.thermostat.backend;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
-import junit.framework.Assert;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import com.redhat.thermostat.TestUtils;
-import com.redhat.thermostat.backend.system.SystemBackend;
+import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
-public class BackendRegistryUtilsTest {
-    
-    @Before
-    public void setUp() throws IOException {
-        TestUtils.setupAgentConfigs();
-    }
-    
-    @Test
-    public void test() throws InvalidConfigurationException {
-        Map<String, String> backendProps = BackendRegistryUtils.retrieveBackendConfigs("system");
-        Assert.assertTrue(backendProps.containsKey(BackendsProperties.BACKEND_CLASS.name()));
+class BackendConfigurationLoader {
+
+    public Map<String, String> retrieveBackendConfigs(String name) throws InvalidConfigurationException {
         
-        String className = backendProps.get(BackendsProperties.BACKEND_CLASS.name());
-        Assert.assertEquals(SystemBackend.class.getCanonicalName(), className);
+        // reads the backend
+        File backend = new File(ConfigUtils.getBackendsBaseDirectory(), name);
+        backend = new File(backend, BackendsProperties.PROPERTY_FILE);
+        if (!backend.isFile() || !backend.canRead()) {
+            throw new InvalidConfigurationException("invalid backend configuration file: " + backend);
+        }
+        
+        Properties props = new Properties();
+        try {
+            props.load(new FileInputStream(backend));
+        } catch (IOException e) {
+            throw new InvalidConfigurationException("invalid backend configuration file", e);
+        }
+        
+        return toMap(props);
+    }
+
+    private static Map<String, String> toMap(Properties props) {
+
+        Map<String, String> configMap = new HashMap<>();
+        for (Entry<Object, Object> e : props.entrySet()) {
+            String key = (String) e.getKey();
+            String value = (String) e.getValue();
+            
+            configMap.put(key, value);
+        }
+        return configMap;
     }
 }
