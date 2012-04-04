@@ -36,40 +36,25 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
+import com.redhat.thermostat.common.model.TimeStampedPojo;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-class HostRefDAOImpl implements HostRefDAO {
+class VmLatestPojoListGetter<T extends TimeStampedPojo> extends HostLatestPojoListGetter<T> {
 
-    private Storage storage;
+    private VmRef vmRef;
 
-    HostRefDAOImpl(Storage storage) {
-        this.storage = storage;
+    VmLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, VmRef ref) {
+        super(storage, cat, converter, ref.getAgent());
+        vmRef = ref;
     }
 
     @Override
-    public Collection<HostRef> getHosts() {
-        Collection<HostRef> hosts = new ArrayList<HostRef>();
-        Cursor agentsCursor = storage.findAllFromCategory(agentConfigCategory);
-        while (agentsCursor.hasNext()) {
-            Chunk agentConfig = agentsCursor.next();
-            HostRef host = getHostFromAgent(agentConfig);
-            hosts.add(host);
-        }
-        return hosts;
+    protected Chunk buildQuery() {
+        Chunk query = super.buildQuery();
+        query.put(Key.VM_ID, vmRef.getId());
+        return query;
     }
-
-    private HostRef getHostFromAgent(Chunk agentConfig) {
-        String agentId = agentConfig.get(agentIdKey);
-        Chunk hostQuery = new Chunk(HostInfoDAO.hostInfoCategory, false);
-        hostQuery.put(agentIdKey, agentId);
-        Chunk host = storage.find(hostQuery);
-        String hostname = host.get(HostInfoDAO.hostNameKey);
-        return new HostRef(agentId, hostname);
-    }
-
 }

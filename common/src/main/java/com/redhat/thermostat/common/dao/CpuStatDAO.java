@@ -42,14 +42,15 @@ import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public interface CpuStatDAO {
+public interface CpuStatDAO extends Countable {
 
     static Key<Double> cpu5LoadKey = new Key<>("5load", false);
     static Key<Double> cpu10LoadKey = new Key<>("10load", false);
     static Key<Double> cpu15LoadKey = new Key<>("15load", false);
 
-    public static final Category cpuStatCategory = new Category("cpu-stats",
-            Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
+    static final Category cpuStatCategory = new Category("cpu-stats",
+            Key.AGENT_ID, Key.TIMESTAMP, cpu5LoadKey, cpu10LoadKey, cpu15LoadKey);
 
-    public List<CpuStat> getLatestCpuStats();
+    List<CpuStat> getLatestCpuStats(HostRef ref);
+
 }

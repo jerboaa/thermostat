@@ -51,7 +51,7 @@ public class VmClassStatConverterTest {
         VmClassStat stat = new VmClassStat(123, 1234L, 12345L);
 
         VmClassStatConverter dao = new VmClassStatConverter();
-        Chunk chunk = dao.vmClassStatToChunk(stat);
+        Chunk chunk = dao.toChunk(stat);
 
         assertEquals("vm-class-stats", chunk.getCategory().getName());
         assertEquals((Long) 1234L, chunk.get(Key.TIMESTAMP));
@@ -62,14 +62,14 @@ public class VmClassStatConverterTest {
     @Test
     public void testChunkToVmClassStat() {
         Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        chunk.put(VmClassStatDAO.vmIdKey, 123);
+        chunk.put(Key.VM_ID, 123);
         chunk.put(Key.TIMESTAMP, 1234L);
         chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
 
-        VmClassStat stat = new VmClassStatConverter().chunkToVmClassStat(chunk);
+        VmClassStat stat = new VmClassStatConverter().fromChunk(chunk);
 
         assertEquals(123, stat.getVmId());
-        assertEquals(1234L, stat.getTimestamp());
+        assertEquals(1234L, stat.getTimeStamp());
         assertEquals(12345L, stat.getLoadedClasses());
     }
 }

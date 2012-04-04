@@ -36,27 +36,47 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 class HostInfoDAOImpl implements HostInfoDAO {
-    private HostRef ref;
     private Storage storage;
     private HostInfoConverter converter;
 
-    public HostInfoDAOImpl(Storage storage, HostRef hostRef) {
-        ref = hostRef;
+    public HostInfoDAOImpl(Storage storage) {
         this.storage = storage;
         converter = new HostInfoConverter();
     }
 
     @Override
-    public HostInfo getHostInfo() {
-        Chunk query = new Chunk(HostInfoDAO.hostInfoCategory, false);
+    public HostInfo getHostInfo(HostRef ref) {
+        Chunk query = new Chunk(hostInfoCategory, false);
         query.put(Key.AGENT_ID, ref.getAgentId());
         Chunk result = storage.find(query);
-        return result == null ? null : converter.chunkToHostInfo(result);
+        return result == null ? null : converter.fromChunk(result);
+    }
+
+    @Override
+    public Collection<HostRef> getHosts() {
+        Collection<HostRef> hosts = new ArrayList<HostRef>();
+        Cursor hostsCursor = storage.findAllFromCategory(hostInfoCategory);
+        while(hostsCursor.hasNext()) {
+            Chunk hostChunk = hostsCursor.next();
+            String agentId = hostChunk.get(Key.AGENT_ID);
+            String hostName = hostChunk.get(hostNameKey);
+            hosts.add(new HostRef(agentId, hostName));
+        }
+        return hosts;
+    }
+
+    @Override
+    public long getCount() {
+        return storage.getCount(hostInfoCategory);
     }
 }

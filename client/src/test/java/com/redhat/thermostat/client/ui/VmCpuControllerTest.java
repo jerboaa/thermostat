@@ -50,7 +50,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
-import com.redhat.thermostat.common.dao.VmCpuStatDAOImpl;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmCpuStat;
 
@@ -64,11 +64,11 @@ public class VmCpuControllerTest {
         List<VmCpuStat> stats = new ArrayList<VmCpuStat>();
         stats.add(stat1);
 
-        VmCpuStatDAOImpl vmCpuStatDAO = mock(VmCpuStatDAOImpl.class);
-        when(vmCpuStatDAO.getLatestVmCpuStats()).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
+        VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
+        when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class))).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getVmCpuStatDAO(any(VmRef.class))).thenReturn(vmCpuStatDAO);
+        when(daoFactory.getVmCpuStatDAO()).thenReturn(vmCpuStatDAO);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);

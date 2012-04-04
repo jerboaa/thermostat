@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
-public class VmClassStat {
+public class VmClassStat implements TimeStampedPojo {
 
     private int vmId;
     private long timestamp;
@@ -52,7 +52,8 @@ public class VmClassStat {
         return vmId;
     }
 
-    public long getTimestamp() {
+    @Override
+    public long getTimeStamp() {
         return timestamp;
     }
 

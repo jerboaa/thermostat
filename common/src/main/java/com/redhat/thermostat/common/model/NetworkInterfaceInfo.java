@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
-public class NetworkInterfaceInfo {
+public class NetworkInterfaceInfo implements Pojo {
 
     private String iFace;
     private String ip4Addr;

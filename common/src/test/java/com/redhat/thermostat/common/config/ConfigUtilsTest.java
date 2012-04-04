@@ -38,23 +38,17 @@ package com.redhat.thermostat.common.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Random;
 
 import junit.framework.Assert;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.TestUtils;
-
 public class ConfigUtilsTest {
-
-    private String oldLocation;
     
     @Before
     public void setUp() throws IOException {
-        TestUtils.setupAgentConfigs();
+        System.setProperty("THERMOSTAT_HOME", "/tmp/");
     }
     
     @Test
@@ -64,6 +58,8 @@ public class ConfigUtilsTest {
         
         Assert.assertEquals(path, ConfigUtils.getThermostatHome());
         
+        Assert.assertEquals(path + "agent" + s + "agent.properties",
+                            ConfigUtils.getAgentConfigurationFile().getCanonicalPath());
         Assert.assertEquals(path + "backends", ConfigUtils.getBackendsBaseDirectory().getCanonicalPath());
         Assert.assertEquals(path + "storage", ConfigUtils.getStorageBaseDirectory().getCanonicalPath());
         Assert.assertEquals(path + "storage" + s + "db.properties",

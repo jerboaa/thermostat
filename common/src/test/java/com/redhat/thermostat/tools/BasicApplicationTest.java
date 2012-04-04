@@ -34,18 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.tools;
 
-import java.util.Collection;
+import static org.junit.Assert.*;
 
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import java.util.List;
 
-public interface HostRefDAO {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    static final Key<String> agentIdKey = new Key<>("agent-id", false);
-    static final Category agentConfigCategory = new Category("agent-config", agentIdKey);
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 
-    Collection<HostRef> getHosts();
+public class BasicApplicationTest {
 
+    private BasicApplication application;
+
+    @Before
+    public void setUp() {
+        application = new BasicApplication() {
+            @Override
+            public void parseArguments(List<String> args)
+                    throws InvalidConfigurationException { }
+
+            @Override
+            public void run() {}
+
+            @Override
+            public StartupConfiguration getConfiguration() {
+                return null;
+            }
+
+            @Override
+            public void printHelp() {}
+        };
+    }
+
+    @After
+    public void tearDown() {
+        application = null;
+    }
+
+    @Test
+    public void testNotfier() {
+        assertNotNull(application.getNotifier());
+    }
 }

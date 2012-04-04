@@ -40,7 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class VmInfo {
+public class VmInfo implements Pojo {
 
     private int vmPid = 0;
     private long startTime = System.currentTimeMillis();

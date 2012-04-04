@@ -50,7 +50,7 @@ public class MemoryStatConverterTest {
     public void testMemoryStatToChunk() {
         MemoryStat stat = new MemoryStat(0, 1, 2, 3, 4, 5, 6, 7);
 
-        Chunk chunk = new MemoryStatConverter().memoryStatToChunk(stat);
+        Chunk chunk = new MemoryStatConverter().toChunk(stat);
 
         assertEquals((Long) 0l, chunk.get(Key.TIMESTAMP));
         assertEquals((Long) 1l, chunk.get(new Key<Long>("total", false)));
@@ -83,7 +83,7 @@ public class MemoryStatConverterTest {
         chunk.put(MemoryStatDAO.memorySwapFreeKey, SWAP_FREE);
         chunk.put(MemoryStatDAO.memoryCommitLimitKey, COMMIT_LIMIT);
 
-        MemoryStat stat = new MemoryStatConverter().chunkToMemoryStat(chunk);
+        MemoryStat stat = new MemoryStatConverter().fromChunk(chunk);
 
         assertEquals(TIMESTAMP, stat.getTimeStamp());
         assertEquals(TOTAL, stat.getTotal());

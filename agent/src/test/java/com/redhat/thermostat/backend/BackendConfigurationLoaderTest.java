@@ -34,54 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.backend;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.io.IOException;
+import java.util.Map;
 
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Storage;
+import junit.framework.Assert;
 
-class VmRefDAOImpl implements VmRefDAO {
+import org.junit.Before;
+import org.junit.Test;
 
-    private Storage storage;
+import com.redhat.thermostat.TestUtils;
+import com.redhat.thermostat.backend.system.SystemBackend;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
-    VmRefDAOImpl(Storage storage) {
-        this.storage = storage;
+public class BackendConfigurationLoaderTest {
+    
+    @Before
+    public void setUp() throws IOException {
+        TestUtils.setupAgentConfigs();
     }
-
-    @Override
-    public Collection<VmRef> getVMs(HostRef host) {
-
-        Chunk query = buildQuery(host);
-        Cursor cursor = storage.findAll(query);
-        return buildVMsFromQuery(cursor, host);
-    }
-
-    private Chunk buildQuery(HostRef host) {
-        Chunk query = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        query.put(HostRefDAO.agentIdKey, host.getAgentId());
-        return query;
-    }
-
-    private Collection<VmRef> buildVMsFromQuery(Cursor cursor, HostRef host) {
-        List<VmRef> vmRefs = new ArrayList<VmRef>();
-        while (cursor.hasNext()) {
-            Chunk vmChunk = cursor.next();
-            VmRef vm = buildVmRefFromChunk(vmChunk, host);
-            vmRefs.add(vm);
-        }
-
-        return vmRefs;
-    }
-
-    private VmRef buildVmRefFromChunk(Chunk vmChunk, HostRef host) {
-        Integer id = vmChunk.get(VmInfoDAO.vmIdKey);
-        // TODO can we do better than the main class?
-        String mainClass = vmChunk.get(VmInfoDAO.mainClassKey);
-        VmRef ref = new VmRef(host, id, mainClass);
-        return ref;
+    
+    @Test
+    public void test() throws InvalidConfigurationException {
+        Map<String, String> backendProps = new BackendConfigurationLoader().retrieveBackendConfigs("system");
+        Assert.assertTrue(backendProps.containsKey(BackendsProperties.BACKEND_CLASS.name()));
+        
+        String className = backendProps.get(BackendsProperties.BACKEND_CLASS.name());
+        Assert.assertEquals(SystemBackend.class.getCanonicalName(), className);
     }
 }

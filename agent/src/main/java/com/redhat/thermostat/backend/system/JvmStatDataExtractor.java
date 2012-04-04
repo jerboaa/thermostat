@@ -134,6 +134,8 @@ public class JvmStatDataExtractor {
     }
 
     public String getGenerationCollector(long generation) throws MonitorException {
+        // this is just re-implementing getCollectorName()
+        // TODO check generation number and collector number are always associated
         Monitor m = vm.findByName("sun.gc.collector." + generation + ".name");
         if (m == null) {
             return Generation.COLLECTOR_NONE;

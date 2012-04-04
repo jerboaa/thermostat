@@ -40,19 +40,21 @@ import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmCpuStatConverter {
+public class VmCpuStatConverter implements Converter<VmCpuStat> {
 
-    public Chunk vmCpuStatToChunk(VmCpuStat vmCpuStat) {
+    @Override
+    public Chunk toChunk(VmCpuStat vmCpuStat) {
         Chunk chunk = new Chunk(VmCpuStatDAO.vmCpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, vmCpuStat.getTimeStamp());
-        chunk.put(VmCpuStatDAO.vmIdKey, vmCpuStat.getVmId());
+        chunk.put(Key.VM_ID, vmCpuStat.getVmId());
         chunk.put(VmCpuStatDAO.vmCpuLoadKey, vmCpuStat.getCpuLoad());
         return chunk;
     }
 
-    public VmCpuStat chunkToVmCpuStat(Chunk chunk) {
+    @Override
+    public VmCpuStat fromChunk(Chunk chunk) {
         long timestamp = chunk.get(Key.TIMESTAMP);
-        int vmId = chunk.get(VmCpuStatDAO.vmIdKey);
+        int vmId = chunk.get(Key.VM_ID);
         double processorUsage = chunk.get(VmCpuStatDAO.vmCpuLoadKey);
         return new VmCpuStat(timestamp, vmId, processorUsage);
     }

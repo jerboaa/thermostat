@@ -40,9 +40,10 @@ import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
-public class CpuStatConverter {
+public class CpuStatConverter implements Converter<CpuStat> {
 
-    public Chunk cpuStatToChunk(CpuStat cpuStat) {
+    @Override
+    public Chunk toChunk(CpuStat cpuStat) {
         Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, cpuStat.getTimeStamp());
         chunk.put(CpuStatDAO.cpu5LoadKey, cpuStat.getLoad5());
@@ -51,7 +52,8 @@ public class CpuStatConverter {
         return chunk;
     }
 
-    public CpuStat chunkToCpuStat(Chunk chunk) {
+    @Override
+    public CpuStat fromChunk(Chunk chunk) {
         long timestamp = chunk.get(Key.TIMESTAMP);
         double load5 = chunk.get(CpuStatDAO.cpu5LoadKey);
         double load10 = chunk.get(CpuStatDAO.cpu10LoadKey);

@@ -34,12 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.backend;
 
-import java.util.Collection;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
 
-public interface VmRefDAO {
+import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
-    Collection<VmRef> getVMs(HostRef host);
+class BackendConfigurationLoader {
 
+    public Map<String, String> retrieveBackendConfigs(String name) throws InvalidConfigurationException {
+        
+        // reads the backend
+        File backend = new File(ConfigUtils.getBackendsBaseDirectory(), name);
+        backend = new File(backend, BackendsProperties.PROPERTY_FILE);
+        if (!backend.isFile() || !backend.canRead()) {
+            throw new InvalidConfigurationException("invalid backend configuration file: " + backend);
+        }
+        
+        Properties props = new Properties();
+        try {
+            props.load(new FileInputStream(backend));
+        } catch (IOException e) {
+            throw new InvalidConfigurationException("invalid backend configuration file", e);
+        }
+        
+        return toMap(props);
+    }
+
+    private static Map<String, String> toMap(Properties props) {
+
+        Map<String, String> configMap = new HashMap<>();
+        for (Entry<Object, Object> e : props.entrySet()) {
+            String key = (String) e.getKey();
+            String value = (String) e.getValue();
+            
+            configMap.put(key, value);
+        }
+        return configMap;
+    }
 }

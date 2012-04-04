@@ -40,20 +40,22 @@ import com.redhat.thermostat.common.model.VmClassStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 
-public class VmClassStatConverter {
+public class VmClassStatConverter implements Converter<VmClassStat> {
 
-    public Chunk vmClassStatToChunk(VmClassStat vmClassStat) {
+    @Override
+    public Chunk toChunk(VmClassStat vmClassStat) {
         Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        chunk.put(VmClassStatDAO.vmIdKey, vmClassStat.getVmId());
-        chunk.put(Key.TIMESTAMP, vmClassStat.getTimestamp());
+        chunk.put(Key.VM_ID, vmClassStat.getVmId());
+        chunk.put(Key.TIMESTAMP, vmClassStat.getTimeStamp());
         chunk.put(VmClassStatDAO.loadedClassesKey, vmClassStat.getLoadedClasses());
         return chunk;
     }
 
-    public VmClassStat chunkToVmClassStat(Chunk chunk) {
+    @Override
+    public VmClassStat fromChunk(Chunk chunk) {
         long timestamp = chunk.get(Key.TIMESTAMP);
         long loadedClasses = chunk.get(VmClassStatDAO.loadedClassesKey);
-        int vmId = chunk.get(VmClassStatDAO.vmIdKey);
+        int vmId = chunk.get(Key.VM_ID);
         return new VmClassStat(vmId, timestamp, loadedClasses);
     }
 }

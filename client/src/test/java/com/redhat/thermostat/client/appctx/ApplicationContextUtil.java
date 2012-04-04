@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.appctx;
 
+import com.redhat.thermostat.client.appctx.ApplicationContext;
+
 public class ApplicationContextUtil {
 
     /**

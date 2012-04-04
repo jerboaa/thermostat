@@ -54,7 +54,7 @@ import com.redhat.thermostat.common.model.VmInfo;
 
 public class VmOverviewController implements AsyncUiFacade {
 
-    private final VmRef vmRef;
+    private final VmRef ref;
     private final VmInfoDAO dao;
     private final DateFormat vmRunningTimeFormat;
 
@@ -63,10 +63,10 @@ public class VmOverviewController implements AsyncUiFacade {
     private final VmOverviewView view;
 
     public VmOverviewController(VmRef vmRef) {
-        this.vmRef = vmRef;
+        this.ref = vmRef;
         this.view = createView();
 
-        dao = ApplicationContext.getInstance().getDAOFactory().getVmInfoDAO(this.vmRef);
+        dao = ApplicationContext.getInstance().getDAOFactory().getVmInfoDAO();
 
         vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
         timer = new Timer();
@@ -78,7 +78,7 @@ public class VmOverviewController implements AsyncUiFacade {
 
             @Override
             public void run() {
-                VmInfo info = dao.getVmInfo();
+                VmInfo info = dao.getVmInfo(ref);
                 view.setVmPid(((Integer) info.getVmPid()).toString());
                 long actualStartTime = info.getStartTimeStamp();
                 view.setVmStartTimeStamp(vmRunningTimeFormat.format(new Date(actualStartTime)));

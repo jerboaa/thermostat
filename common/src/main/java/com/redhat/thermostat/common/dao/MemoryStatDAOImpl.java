@@ -36,45 +36,37 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.redhat.thermostat.common.model.MemoryStat;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 class MemoryStatDAOImpl implements MemoryStatDAO {
 
     private Storage storage;
-    private HostRef hostRef;
 
-    private long lastUpdate = Long.MIN_VALUE;
+    private Converter<MemoryStat> converter = new MemoryStatConverter();
 
-    public MemoryStatDAOImpl(Storage storage, HostRef hostRef) {
+    private Map<HostRef, HostLatestPojoListGetter<MemoryStat>> getters = new HashMap<>();
+
+    MemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
-        this.hostRef = hostRef;
     }
 
     @Override
-    public List<MemoryStat> getLatestMemoryStats() {
-        Chunk query = new Chunk(MemoryStatDAO.memoryStatCategory, false);
-        query.put(Key.AGENT_ID, hostRef.getAgentId());
-        if (lastUpdate != Long.MIN_VALUE) {
-            // TODO once we have an index and the 'column' is of type long, use
-            // a query which can utilize an index. this one doesn't
-            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
+    public List<MemoryStat> getLatestMemoryStats(HostRef ref) {
+        HostLatestPojoListGetter<MemoryStat> getter = getters.get(ref);
+        if (getter == null) {
+            getter = new HostLatestPojoListGetter<MemoryStat>(storage, memoryStatCategory, converter, ref);
+            getters.put(ref, getter);
         }
-        Cursor cursor = storage.findAll(query);
-        MemoryStatConverter converter = new MemoryStatConverter();
-        List<MemoryStat> result = new ArrayList<>();
-        while (cursor.hasNext()) {
-            Chunk chunk = cursor.next();
-            MemoryStat stat = converter.chunkToMemoryStat(chunk);
-            result.add(stat);
-            lastUpdate = Math.max(stat.getTimeStamp(), lastUpdate);
-        }
-        return result;
+        return getter.getLatest();
+    }
+
+    @Override
+    public long getCount() {
+        return storage.getCount(memoryStatCategory);
     }
 }

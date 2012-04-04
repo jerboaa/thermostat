@@ -94,10 +94,6 @@ public class ConfigUtils {
         File backendsConfigDir = ConfigUtils.getBackendsBaseDirectory();
         File backendConfig = new File(backendsConfigDir, backendName);
         backendConfig = new File(backendConfig, "backend.properties");
-        if (!backendConfig.exists())
-            throw new InvalidConfigurationException("backends configuration " +
-                                                    "directory doesn't exist: " + 
-                                                    backendConfig);
         return backendConfig;
     }
 

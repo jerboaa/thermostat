@@ -38,17 +38,9 @@ package com.redhat.thermostat.client;
 
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.MongoConnection;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class UiFacadeFactoryImpl implements UiFacadeFactory {
-
-    // TODO: Eventually, this should disappear and be completely provided by the DAOFactory.
-    private MongoConnection connection;
-
-    public UiFacadeFactoryImpl(MongoConnection connection) {
-        this.connection = connection;
-    }
 
     @Override
     public MainWindowController getMainWindow() {
@@ -58,7 +50,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     @Override
     public SummaryPanelFacade getSummaryPanel() {
-        return new SummaryPanelFacadeImpl(connection.getDB());
+        return new SummaryPanelFacadeImpl();
 
     }
 

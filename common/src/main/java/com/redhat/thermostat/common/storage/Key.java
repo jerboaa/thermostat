@@ -45,6 +45,7 @@ public class Key<T> {
     // Keys used by most Categories.
     public static final Key<Long> TIMESTAMP = new Key<>("timestamp", false);
     public static final Key<String> AGENT_ID = new Key<>("agent-id", false);
+    public static final Key<Integer> VM_ID = new Key<>("vm-id", false);
     public static final Key<String> WHERE = new Key<>("$where", false);
 
     private String name;

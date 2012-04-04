@@ -48,20 +48,9 @@ public abstract class BasicApplication implements Application {
     public BasicApplication() {
         this.notifier = new ActionNotifier<>(this);
     }
-  
-    protected void notifyFail() {
-        notifier.fireAction(ApplicationState.FAIL);
-    }
-    
-    protected void notifySuccess() {
-        notifier.fireAction(ApplicationState.SUCCESS);
-    }
-    
+
     @Override
     public ActionNotifier<ApplicationState> getNotifier() {
         return notifier;
     }
-    
-    @Override
-    public void printHelp() {}
 }

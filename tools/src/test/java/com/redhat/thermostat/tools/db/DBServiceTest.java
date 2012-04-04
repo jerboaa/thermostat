@@ -157,20 +157,29 @@ public class DBServiceTest {
     {
         DBService service = prepareService(true);
         
-        final CountDownLatch latch = new CountDownLatch(0);
-        final boolean[] result = new boolean[1];
+        final CountDownLatch latch = new CountDownLatch(2);
+        
+        final boolean[] result = new boolean[2];
         service.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
             @Override
             public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
                 switch (actionEvent.getActionId()) {
                 case FAIL:
                     result[0] = false;
+                    latch.countDown();
+                    latch.countDown();
                     break;
+                    
                 case SUCCESS:
                     result[0] = true;
+                    latch.countDown();
                     break;
+
+                case START:
+                    result[1] = true;
+                    latch.countDown();
+                    break;                    
                 }
-                latch.countDown();
             }
         });
         
@@ -178,8 +187,8 @@ public class DBServiceTest {
         latch.await();
         
         Assert.assertTrue(result[0]);
+        Assert.assertTrue(result[1]);
     }
-    
     
     @Test
     public void testListenersFail() throws InvalidConfigurationException,
@@ -187,7 +196,7 @@ public class DBServiceTest {
     {
         DBService service = prepareService(false);
         
-        final CountDownLatch latch = new CountDownLatch(0);
+        final CountDownLatch latch = new CountDownLatch(1);
         final boolean[] result = new boolean[1];
         service.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
             @Override
@@ -196,6 +205,7 @@ public class DBServiceTest {
                 case FAIL:
                     result[0] = true;
                     break;
+                    
                 case SUCCESS:
                     result[0] = false;
                     break;

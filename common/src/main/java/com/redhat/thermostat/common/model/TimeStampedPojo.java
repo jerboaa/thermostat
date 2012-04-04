@@ -34,21 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.model;
 
-import java.util.List;
+/**
+ * Any Pojo which is taken as a timestamped piece of data should
+ * implement this interface.
+ */
+public interface TimeStampedPojo extends Pojo {
 
-import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-
-public interface VmClassStatDAO {
-
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
-
-    static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);
-
-    public List<VmClassStat> getLatestClassStats(VmRef ref);
+    public long getTimeStamp();
 
 }

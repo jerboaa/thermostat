@@ -34,49 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend;
+package com.redhat.thermostat.common.dao;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Properties;
+import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.storage.Chunk;
 
-import com.redhat.thermostat.common.config.ConfigUtils;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
+interface Converter<T extends Pojo> {
 
-class BackendRegistryUtils {
+    Chunk toChunk(T pojo);
 
-    public static Map<String, String> retrieveBackendConfigs(String name) throws InvalidConfigurationException {
-        
-        // reads the backend
-        File backend = new File(ConfigUtils.getBackendsBaseDirectory(), name);
-        backend = new File(backend, BackendsProperties.PROPERTY_FILE);
-        if (!backend.isFile() || !backend.canRead()) {
-            throw new InvalidConfigurationException("invalid backend configuration file: " + backend);
-        }
-        
-        Properties props = new Properties();
-        try {
-            props.load(new FileInputStream(backend));
-        } catch (IOException e) {
-            throw new InvalidConfigurationException("invalid backend configuration file", e);
-        }
-        
-        return getStartupBackendConfigMap(props);
-    }
-
-    private static Map<String, String> getStartupBackendConfigMap(Properties props) {
-
-        Map<String, String> configMap = new HashMap<>();
-        for (Entry<Object, Object> e : props.entrySet()) {
-            String key = (String) e.getKey();
-            String value = (String) e.getValue();
-            
-            configMap.put(key, value);
-        }
-        return configMap;
-    }
+    T fromChunk(Chunk chunk);
 }

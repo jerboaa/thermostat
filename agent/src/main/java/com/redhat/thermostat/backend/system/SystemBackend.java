@@ -102,7 +102,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         categories.add(NetworkInterfaceInfoDAO.networkInfoCategory);
         categories.add(VmClassStatDAO.vmClassStatsCategory);
         categories.add(VmCpuStatDAO.vmCpuStatCategory);
-        categories.add(VmGcStatDAO.vmGcStatsCategory);
+        categories.add(VmGcStatDAO.vmGcStatCategory);
         categories.add(VmInfoDAO.vmInfoCategory);
         categories.add(VmMemoryStatDAO.vmMemoryStatsCategory);
 
@@ -123,22 +123,22 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
         }
-        store(new HostInfoConverter().hostInfoToChunk(new HostInfoBuilder(new ProcDataSource()).build()));
+        store(new HostInfoConverter().toChunk(new HostInfoBuilder(new ProcDataSource()).build()));
 
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 ProcDataSource dataSource = new ProcDataSource();
-                store(new CpuStatConverter().cpuStatToChunk(new CpuStatBuilder(dataSource).build()));
+                store(new CpuStatConverter().toChunk(new CpuStatBuilder(dataSource).build()));
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
-                    store(new NetworkInterfaceInfoConverter().networkInfoToChunk(info));
+                    store(new NetworkInterfaceInfoConverter().toChunk(info));
                 }
-                store(new MemoryStatConverter().memoryStatToChunk(new MemoryStatBuilder(dataSource).build()));
+                store(new MemoryStatConverter().toChunk(new MemoryStatBuilder(dataSource).build()));
 
                 for (Integer pid : pidsToMonitor) {
                     if (vmCpuBuilder.knowsAbout(pid)) {
-                        store(new VmCpuStatConverter().vmCpuStatToChunk(vmCpuBuilder.build(pid)));
+                        store(new VmCpuStatConverter().toChunk(vmCpuBuilder.build(pid)));
                     } else {
                         vmCpuBuilder.learnAbout(pid);
                     }

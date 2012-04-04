@@ -36,19 +36,8 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.List;
+interface Countable {
 
-import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-
-public interface VmClassStatDAO {
-
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
-
-    static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);
-
-    public List<VmClassStat> getLatestClassStats(VmRef ref);
+    public long getCount();
 
 }

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
-public class CpuStat {
+public class CpuStat implements TimeStampedPojo {
 
     public static final double INVALID_LOAD = Double.MIN_VALUE;
 
@@ -68,6 +68,7 @@ public class CpuStat {
         return new double[] { load5, load10, load15 };
     }
 
+    @Override
     public long getTimeStamp() {
         return timeStamp;
     }

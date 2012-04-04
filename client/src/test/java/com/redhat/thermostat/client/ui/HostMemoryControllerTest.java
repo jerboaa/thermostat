@@ -62,17 +62,17 @@ public class HostMemoryControllerTest {
     public void testUpdate() {
         HostInfo hostInfo = new HostInfo("someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, 1024);
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
-        when(hostInfoDAO.getHostInfo()).thenReturn(hostInfo);
+        when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
         MemoryStat memoryStat = new MemoryStat(1, 2, 3, 4, 5, 6, 7, 8);
         List<MemoryStat> memoryStats = new LinkedList<>();
         memoryStats.add(memoryStat);
         MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
-        when(memoryStatDAO.getLatestMemoryStats()).thenReturn(memoryStats);
+        when(memoryStatDAO.getLatestMemoryStats(any(HostRef.class))).thenReturn(memoryStats);
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getHostInfoDAO(any(HostRef.class))).thenReturn(hostInfoDAO);
-        when(daoFactory.getMemoryStatDAO(any(HostRef.class))).thenReturn(memoryStatDAO);
+        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfoDAO);
+        when(daoFactory.getMemoryStatDAO()).thenReturn(memoryStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         HostRef ref = mock(HostRef.class);

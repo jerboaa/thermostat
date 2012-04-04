@@ -34,33 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend;
+package com.redhat.thermostat.common.dao;
 
-import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
-import junit.framework.Assert;
+import com.redhat.thermostat.common.model.Pojo;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import com.redhat.thermostat.TestUtils;
-import com.redhat.thermostat.backend.system.SystemBackend;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-
-public class BackendRegistryUtilsTest {
-    
-    @Before
-    public void setUp() throws IOException {
-        TestUtils.setupAgentConfigs();
-    }
-    
-    @Test
-    public void test() throws InvalidConfigurationException {
-        Map<String, String> backendProps = BackendRegistryUtils.retrieveBackendConfigs("system");
-        Assert.assertTrue(backendProps.containsKey(BackendsProperties.BACKEND_CLASS.name()));
-        
-        String className = backendProps.get(BackendsProperties.BACKEND_CLASS.name());
-        Assert.assertEquals(SystemBackend.class.getCanonicalName(), className);
-    }
+interface LatestPojoListGetter<T extends Pojo> {
+    List<T> getLatest();
 }

@@ -80,7 +80,7 @@ class JvmStatVmClassListener implements VmListener {
             long timestamp = System.currentTimeMillis();
             VmClassStat stat = new VmClassStat(vmId, timestamp, loadedClasses);
             VmClassStatConverter dao = new VmClassStatConverter();
-            backend.store(dao.vmClassStatToChunk(stat));
+            backend.store(dao.toChunk(stat));
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering class info for vm " + vmId, e);
         }

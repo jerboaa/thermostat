@@ -70,9 +70,9 @@ public class SummaryPanel extends JPanel {
         Section summarySection = new Section(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
         sections.add(summarySection);
 
-        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES), this.facade.getTotalConnectedAgents());
+        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES), this.facade.getTotalMonitoredHosts());
         summarySection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS), this.facade.getTotalConnectedVms());
+        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS), this.facade.getTotalMonitoredVms());
         summarySection.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();

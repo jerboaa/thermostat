@@ -84,7 +84,7 @@ public class VmMemoryStatConverterTest {
 
         VmMemoryStat stat = new VmMemoryStat(1, 2, generations);
 
-        Chunk chunk = new VmMemoryStatConverter().vmMemoryStatToChunk(stat);
+        Chunk chunk = new VmMemoryStatConverter().toChunk(stat);
 
         assertNotNull(chunk);
         assertEquals((Long) 1l, chunk.get(new Key<Long>("timestamp", false)));
@@ -125,7 +125,7 @@ public class VmMemoryStatConverterTest {
         Chunk chunk = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
 
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(VmMemoryStatDAO.vmIdKey, VM_ID);
+        chunk.put(Key.VM_ID, VM_ID);
 
         chunk.put(VmMemoryStatDAO.edenGenKey, "new");
         chunk.put(VmMemoryStatDAO.edenCollectorKey, "new-collector");
@@ -157,7 +157,7 @@ public class VmMemoryStatConverterTest {
         chunk.put(VmMemoryStatDAO.permCapacityKey, 14l);
         chunk.put(VmMemoryStatDAO.permMaxCapacityKey, 15l);
 
-        VmMemoryStat stat = new VmMemoryStatConverter().chunkToVmMemoryStat(chunk);
+        VmMemoryStat stat = new VmMemoryStatConverter().fromChunk(chunk);
 
         assertNotNull(stat);
         assertEquals(TIMESTAMP, stat.getTimeStamp());

@@ -36,41 +36,108 @@
 
 package com.redhat.thermostat.backend;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
-import org.junit.Assert;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.TestUtils;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.backend.system.SystemBackend;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Storage;
 
 public class BackendRegistryTest {
 
+    public static class MockBackend extends Backend {
+        @Override
+        protected Collection<Category> getCategories() {
+            return Collections.emptyList();
+        }
+        @Override
+        public String getConfigurationValue(String key) {
+            return null;
+        }
+        @Override
+        public boolean activate() {
+            return true;
+        }
+        @Override
+        public boolean deactivate() {
+            return false;
+        }
+        @Override
+        public boolean isActive() {
+            return false;
+        }
+        @Override
+        public boolean attachToNewProcessByDefault() {
+            return false;
+        }
+    }
+
+    private List<BackendID> backends;
+    private AgentStartupConfiguration config;
+    private BackendConfigurationLoader configLoader;
+    private Storage storage;
+
     @Before
-    public void setUp() throws IOException {
-        TestUtils.setupAgentConfigs();
-    }
-    
-    @Test
-    public void test() throws BackendLoadException {
-        
-        List<BackendID> backends = new ArrayList<>();
-        backends.add(new BackendID("system", SystemBackend.class.getCanonicalName()));
-        
-        Storage storage = mock(Storage.class);        
-        AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
+    public void setUp() throws InvalidConfigurationException {
+        backends = new ArrayList<>();
+
+        storage = mock(Storage.class);
+        config = mock(AgentStartupConfiguration.class);
         when(config.getBackends()).thenReturn(backends);
-        
-        BackendRegistry registry = new BackendRegistry(config, storage);
-        Assert.assertEquals(1, registry.getAll().size());
-        Assert.assertNotNull(registry.getByName("system"));
+
+        configLoader = mock(BackendConfigurationLoader.class);
+        when(configLoader.retrieveBackendConfigs(any(String.class))).thenReturn(new HashMap<String,String>());
     }
+
+    @After
+    public void tearDown() {
+        backends = null;
+        config = null;
+        configLoader = null;
+        storage = null;
+    }
+
+    @Test
+    public void testRegisterBackend() throws BackendLoadException, InvalidConfigurationException {
+        /* setup fake backend */
+        backends.add(new BackendID("mock", MockBackend.class.getName()));
+
+        BackendRegistry registry = new BackendRegistry(config, configLoader, storage);
+        assertEquals(1, registry.getAll().size());
+        assertNotNull(registry.getByName("mock"));
+    }
+
+    @Test
+    public void testNoBackendsRegistered() throws InvalidConfigurationException, BackendLoadException {
+        BackendRegistry registry = new BackendRegistry(config, configLoader, storage);
+        assertEquals(0, registry.getAll().size());
+        assertEquals(null, registry.getByName("system"));
+        assertEquals(null, registry.getByName("mock"));
+    }
+
+    @Test (expected=BackendLoadException.class)
+    public void testRegisterBackendTwice() throws BackendLoadException, InvalidConfigurationException {
+        /* setup fake backends */
+
+        backends.add(new BackendID("mock", MockBackend.class.getClass().getName()));
+        backends.add(new BackendID("mock", MockBackend.class.getClass().getName()));
+
+        /* load the backends */
+        new BackendRegistry(config, configLoader, storage);
+    }
+
 }

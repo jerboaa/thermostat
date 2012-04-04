@@ -47,9 +47,9 @@ import com.redhat.thermostat.common.storage.Key;
 public class CpuStatConverterTest {
 
     @Test
-    public void testCpuStatToChunk() {
+    public void testToChunk() {
         CpuStat stat = new CpuStat(10, 5.0, 10.0, 15.0);
-        Chunk chunk = new CpuStatConverter().cpuStatToChunk(stat);
+        Chunk chunk = new CpuStatConverter().toChunk(stat);
         assertNotNull(chunk);
         assertEquals("cpu-stats", chunk.getCategory().getName());
         assertEquals((Long) 10L, chunk.get(Key.TIMESTAMP));
@@ -59,13 +59,13 @@ public class CpuStatConverterTest {
     }
 
     @Test
-    public void testChunkToCpuStat() {
+    public void testFromChunk() {
         Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, 10L);
         chunk.put(CpuStatDAO.cpu5LoadKey, 5.0);
         chunk.put(CpuStatDAO.cpu10LoadKey, 10.0);
         chunk.put(CpuStatDAO.cpu15LoadKey, 15.0);
-        CpuStat stat = new CpuStatConverter().chunkToCpuStat(chunk);
+        CpuStat stat = new CpuStatConverter().fromChunk(chunk);
         assertNotNull(stat);
         assertEquals(10L, stat.getTimeStamp());
         assertEquals(5.0, stat.getLoad5(), 0.001);

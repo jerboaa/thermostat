@@ -36,46 +36,37 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.redhat.thermostat.common.model.CpuStat;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 class CpuStatDAOImpl implements CpuStatDAO {
 
     private Storage storage;
-    private HostRef hostRef;
 
-    private long lastUpdate = Long.MIN_VALUE;
+    private Converter<CpuStat> converter = new CpuStatConverter();;
 
-    public CpuStatDAOImpl(Storage storage, HostRef hostRef) {
+    private Map<HostRef, HostLatestPojoListGetter<CpuStat>> getters = new HashMap<>();
+
+    CpuStatDAOImpl(Storage storage) {
         this.storage = storage;
-        this.hostRef = hostRef;
     }
 
     @Override
-    public List<CpuStat> getLatestCpuStats() {
-        ArrayList<CpuStat> result = new ArrayList<>();
-        Chunk query = new Chunk(CpuStatDAO.cpuStatCategory, false);
-        query.put(Key.AGENT_ID, hostRef.getAgentId());
-        if (lastUpdate != Long.MIN_VALUE) {
-            // TODO once we have an index and the 'column' is of type long, use
-            // a query which can utilize an index. this one doesn't
-            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
+    public List<CpuStat> getLatestCpuStats(HostRef ref) {
+        HostLatestPojoListGetter<CpuStat> getter = getters.get(ref);
+        if (getter == null) {
+            getter = new HostLatestPojoListGetter<CpuStat>(storage, cpuStatCategory, converter, ref);
+            getters.put(ref, getter);
         }
-        Cursor cursor = storage.findAll(query);
-        CpuStatConverter converter = new CpuStatConverter();
-        while (cursor.hasNext()) {
-            Chunk chunk = cursor.next();
-            CpuStat stat = converter.chunkToCpuStat(chunk);
-            result.add(stat);
-            lastUpdate = Math.max(stat.getTimeStamp(), lastUpdate);
-        }
-        return result;
+        return getter.getLatest();
     }
 
+    @Override
+    public long getCount() {
+        return storage.getCount(cpuStatCategory);
+    }
 }

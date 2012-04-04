@@ -62,14 +62,14 @@ public class VmGcStatDAOTest {
 
     @Test
     public void testCategory() {
-        assertEquals("vm-gc-stats", VmGcStatDAO.vmGcStatsCategory.getName());
-        Collection<Key<?>> keys = VmGcStatDAO.vmGcStatsCategory.getKeys();
+        assertEquals("vm-gc-stats", VmGcStatDAO.vmGcStatCategory.getName());
+        Collection<Key<?>> keys = VmGcStatDAO.vmGcStatCategory.getKeys();
         assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<String>("collector", false)));
         assertTrue(keys.contains(new Key<Long>("runtime-count", false)));
         assertTrue(keys.contains(new Key<Long>("wall-time", false)));
-        assertEquals(5, keys.size());
+        assertEquals(6, keys.size());
     }
 
     @Test
@@ -81,9 +81,9 @@ public class VmGcStatDAOTest {
         final Long RUN_COUNT = 10L;
         final Long WALL_TIME = 9L;
 
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(VmGcStatDAO.vmIdKey, VM_ID);
+        chunk.put(Key.VM_ID, VM_ID);
         chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);
         chunk.put(VmGcStatDAO.runCountKey, RUN_COUNT);
         chunk.put(VmGcStatDAO.wallTimeKey, WALL_TIME);
@@ -103,8 +103,8 @@ public class VmGcStatDAOTest {
         when(vmRef.getId()).thenReturn(321);
 
 
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage, vmRef);
-        List<VmGcStat> vmGcStats = dao.getLatestVmGcStats();
+        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
+        List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef);
 
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage).findAll(arg.capture());
@@ -128,9 +128,9 @@ public class VmGcStatDAOTest {
         final Long RUN_COUNT = 10L;
         final Long WALL_TIME = 9L;
 
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(VmGcStatDAO.vmIdKey, VM_ID);
+        chunk.put(Key.VM_ID, VM_ID);
         chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);
         chunk.put(VmGcStatDAO.runCountKey, RUN_COUNT);
         chunk.put(VmGcStatDAO.wallTimeKey, WALL_TIME);
@@ -149,10 +149,10 @@ public class VmGcStatDAOTest {
         when(vmRef.getAgent()).thenReturn(hostRef);
         when(vmRef.getId()).thenReturn(321);
 
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage, vmRef);
-        dao.getLatestVmGcStats();
+        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
+        dao.getLatestVmGcStats(vmRef);
 
-        dao.getLatestVmGcStats();
+        dao.getLatestVmGcStats(vmRef);
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());
         assertEquals("this.timestamp > 456", arg.getValue().get(new Key<String>("$where", false)));

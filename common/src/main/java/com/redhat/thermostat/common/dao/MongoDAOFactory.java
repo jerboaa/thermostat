@@ -43,13 +43,14 @@ import com.redhat.thermostat.common.storage.Storage;
 
 public class MongoDAOFactory implements DAOFactory {
 
-    private Storage storage;
-    private Connection connection;
+    private final Connection connection;
+    private final Storage storage;
 
     public MongoDAOFactory(ConnectionProvider connProv) {
 
         connection = connProv.createConnection();
         final MongoStorage mongoStorage = new MongoStorage(connection);
+        storage = mongoStorage;
         connection.addListener(new ConnectionListener() {
 
             @Override
@@ -59,22 +60,6 @@ public class MongoDAOFactory implements DAOFactory {
                 }
             }
         });
-        storage = mongoStorage;
-    }
-
-    @Override
-    public Storage getStorage() {
-        return storage;
-    }
-
-    @Override
-    public VmCpuStatDAO getVmCpuStatDAO(VmRef ref) {
-        return new VmCpuStatDAOImpl(storage, ref);
-    }
-
-    @Override
-    public VmClassStatDAO getVmClassStatsDAO(VmRef ref) {
-        return new VmClassStatDAOImpl(storage, ref);
     }
 
     @Override
@@ -83,46 +68,46 @@ public class MongoDAOFactory implements DAOFactory {
     }
 
     @Override
-    public HostInfoDAO getHostInfoDAO(HostRef ref) {
-        return new HostInfoDAOImpl(storage, ref);
+    public HostInfoDAO getHostInfoDAO() {
+        return new HostInfoDAOImpl(storage);
     }
 
     @Override
-    public CpuStatDAO getCpuStatDAO(HostRef ref) {
-        return new CpuStatDAOImpl(storage, ref);
+    public CpuStatDAO getCpuStatDAO() {
+        return new CpuStatDAOImpl(storage);
     }
 
     @Override
-    public MemoryStatDAO getMemoryStatDAO(HostRef ref) {
-        return new MemoryStatDAOImpl(storage, ref);
+    public MemoryStatDAO getMemoryStatDAO() {
+        return new MemoryStatDAOImpl(storage);
     }
 
     @Override
-    public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO(HostRef ref) {
-        return new NetworkInterfaceInfoDAOImpl(storage, ref);
+    public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO() {
+        return new NetworkInterfaceInfoDAOImpl(storage);
     }
 
     @Override
-    public VmGcStatDAO getVmGcStatDAO(VmRef ref) {
-        return new VmGcStatDAOImpl(storage, ref);
+    public VmInfoDAO getVmInfoDAO() {
+        return new VmInfoDAOImpl(storage);
     }
 
     @Override
-    public VmInfoDAO getVmInfoDAO(VmRef ref) {
-        return new VmInfoDAOImpl(storage, ref);
+    public VmCpuStatDAO getVmCpuStatDAO() {
+        return new VmCpuStatDAOImpl(storage);
     }
 
-    public VmMemoryStatDAO getVmMemoryStatDAO(VmRef ref) {
-        return new VmMemoryStatDAOImpl(storage, ref);
-    }
-
-    @Override
-    public HostRefDAO getHostRefDAO() {
-        return new HostRefDAOImpl(storage);
+    public VmMemoryStatDAO getVmMemoryStatDAO() {
+        return new VmMemoryStatDAOImpl(storage);
     }
 
     @Override
-    public VmRefDAO getVmRefDAO() {
-        return new VmRefDAOImpl(storage);
+    public VmClassStatDAO getVmClassStatsDAO() {
+        return new VmClassStatDAOImpl(storage);
+    }
+
+    @Override
+    public VmGcStatDAO getVmGcStatDAO() {
+        return new VmGcStatDAOImpl(storage);
     }
 }

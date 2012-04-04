@@ -37,69 +37,65 @@
 package com.redhat.thermostat.common.dao;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.model.TimeStampedPojo;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-class VmInfoDAOImpl implements VmInfoDAO {
+class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoListGetter<T> {
 
     private Storage storage;
-    private VmInfoConverter converter;
+    private Category cat;
+    private Converter<T> converter;
+    private HostRef ref;
 
-    VmInfoDAOImpl(Storage storage) {
+    private Map<HostRef, Long> lastUpdateTimes = new HashMap<>();
+
+    HostLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, HostRef ref) {
         this.storage = storage;
-        this.converter = new VmInfoConverter();
+        this.cat = cat;
+        this.converter = converter;
+        this.ref = ref;
     }
 
     @Override
-    public VmInfo getVmInfo(VmRef ref) {
-        Chunk query = new Chunk(vmInfoCategory, false);
-        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(vmIdKey, ref.getId());
-        Chunk result = storage.find(query);
-        return converter.fromChunk(result);
+    public List<T> getLatest() {
+        Chunk query = buildQuery();
+        return getLatest(query);
     }
 
-    @Override
-    public Collection<VmRef> getVMs(HostRef host) {
-
-        Chunk query = buildQuery(host);
+    private List<T> getLatest(Chunk query) {
+        // TODO if multiple threads will be using this utility class, there may be some issues
+        // with the updateTimes
+        Long lastUpdate = lastUpdateTimes.get(ref);
         Cursor cursor = storage.findAll(query);
-        return buildVMsFromQuery(cursor, host);
-    }
-
-    private Chunk buildQuery(HostRef host) {
-        Chunk query = new Chunk(vmInfoCategory, false);
-        query.put(Key.AGENT_ID, host.getAgentId());
-        return query;
-    }
-
-    private Collection<VmRef> buildVMsFromQuery(Cursor cursor, HostRef host) {
-        List<VmRef> vmRefs = new ArrayList<VmRef>();
+        List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
-            Chunk vmChunk = cursor.next();
-            VmRef vm = buildVmRefFromChunk(vmChunk, host);
-            vmRefs.add(vm);
+            Chunk chunk = cursor.next();
+            T pojo = converter.fromChunk(chunk);
+            result.add(pojo);
+            lastUpdateTimes.put(ref, Math.max(pojo.getTimeStamp(), lastUpdate));
         }
-
-        return vmRefs;
+        return result;
     }
 
-    private VmRef buildVmRefFromChunk(Chunk vmChunk, HostRef host) {
-        Integer id = vmChunk.get(vmIdKey);
-        // TODO can we do better than the main class?
-        String mainClass = vmChunk.get(mainClassKey);
-        VmRef ref = new VmRef(host, id, mainClass);
-        return ref;
-    }
-
-    @Override
-    public long getCount() {
-        return storage.getCount(vmInfoCategory);
+    protected Chunk buildQuery() {
+        Chunk query = new Chunk(cat, false);
+        query.put(Key.AGENT_ID, ref.getAgentId());
+        Long lastUpdate = lastUpdateTimes.get(ref);
+        if (lastUpdate != null) {
+            // TODO once we have an index and the 'column' is of type long, use
+            // a query which can utilize an index. this one doesn't
+            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
+        } else {
+            lastUpdateTimes.put(ref, Long.MIN_VALUE);
+        }
+        return query;
     }
 }

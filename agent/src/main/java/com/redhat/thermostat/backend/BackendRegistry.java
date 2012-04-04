@@ -59,7 +59,10 @@ public class BackendRegistry {
     private final Map<String, Backend> registeredBackends;
 
     public BackendRegistry(AgentStartupConfiguration config, Storage storage) throws BackendLoadException {
-        
+        this(config, new BackendConfigurationLoader(), storage);
+    }
+
+    public BackendRegistry(AgentStartupConfiguration config, BackendConfigurationLoader backendConfigLoader, Storage storage) throws BackendLoadException {
         registeredBackends = new HashMap<String, Backend>();
         
         List<BackendID> backends = config.getBackends();
@@ -78,7 +81,7 @@ public class BackendRegistry {
                 
                 backend.setID(backendID);
                 
-                backend.setInitialConfiguration(BackendRegistryUtils.retrieveBackendConfigs(backend.getName()));
+                backend.setInitialConfiguration(backendConfigLoader.retrieveBackendConfigs(backend.getName()));
                 backend.setStorage(storage);
             } catch (Exception e) {
                 throw new BackendLoadException("Could not instantiate configured backend class: " + backendID.getClassName(), e);

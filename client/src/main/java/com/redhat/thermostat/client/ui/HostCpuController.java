@@ -60,13 +60,15 @@ public class HostCpuController implements AsyncUiFacade {
 
     private final HostInfoDAO hostInfoDAO;
     private final CpuStatDAO cpuStatDAO;
+    private final HostRef ref;
 
     public HostCpuController(HostRef ref) {
+        this.ref = ref;
         view = createView();
         view.clearCpuLoadData();
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
-        hostInfoDAO = daos.getHostInfoDAO(ref);
-        cpuStatDAO = daos.getCpuStatDAO(ref);
+        hostInfoDAO = daos.getHostInfoDAO();
+        cpuStatDAO = daos.getCpuStatDAO();
 
         backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
@@ -85,7 +87,7 @@ public class HostCpuController implements AsyncUiFacade {
 
     // TODO: Consider doing this in a background thread (move to view and use SwingWorker or such).
     private void updateView() {
-        HostInfo hostInfo = hostInfoDAO.getHostInfo();
+        HostInfo hostInfo = hostInfoDAO.getHostInfo(ref);
 
         view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
         view.setCpuModel(hostInfo.getCpuModel());
@@ -104,7 +106,7 @@ public class HostCpuController implements AsyncUiFacade {
     }
 
     private void doCpuChartUpdate() {
-        List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats();
+        List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats(ref);
         List<DiscreteTimeData<Double>> result = new ArrayList<DiscreteTimeData<Double>>();
         for (CpuStat stat : cpuStats) {
             result.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getLoad5()));

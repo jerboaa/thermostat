@@ -98,8 +98,8 @@ public class MainWindowTest {
     public void setUp() {
 
         SummaryPanelFacade summaryPanelFacade = mock(SummaryPanelFacade.class);
-        when(summaryPanelFacade.getTotalConnectedAgents()).thenReturn(new ChangeableText("totalConnectedAgents"));
-        when(summaryPanelFacade.getTotalConnectedVms()).thenReturn(new ChangeableText("connectedVms"));
+        when(summaryPanelFacade.getTotalMonitoredHosts()).thenReturn(new ChangeableText("totalConnectedAgents"));
+        when(summaryPanelFacade.getTotalMonitoredVms()).thenReturn(new ChangeableText("connectedVms"));
 
         UiFacadeFactory uiFacadeFactory = mock(UiFacadeFactory.class);
         when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);

@@ -42,24 +42,22 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
-public class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
+class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private final Storage storage;
-    private final VmRef ref;
 
-    public VmMemoryStatDAOImpl(Storage storage, VmRef ref) {
+    VmMemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
-        this.ref = ref;
     }
 
     @Override
-    public VmMemoryStat getLatestMemoryStat() {
-        Chunk query = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
+    public VmMemoryStat getLatestMemoryStat(VmRef ref) {
+        Chunk query = new Chunk(vmMemoryStatsCategory, false);
         query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(VmMemoryStatDAO.vmIdKey, ref.getId());
+        query.put(Key.VM_ID, ref.getId());
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
         if (cursor.hasNext()) {
-            return new VmMemoryStatConverter().chunkToVmMemoryStat(cursor.next());
+            return new VmMemoryStatConverter().fromChunk(cursor.next());
         }
         return null;
     }

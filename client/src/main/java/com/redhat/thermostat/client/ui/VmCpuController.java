@@ -52,13 +52,15 @@ import com.redhat.thermostat.common.model.VmCpuStat;
 
 public class VmCpuController implements AsyncUiFacade {
 
+    private final VmRef ref;
     private final VmCpuStatDAO dao;
     private final VmCpuView view;
 
     private final Timer timer = new Timer();
 
     public VmCpuController(VmRef ref) {
-        dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO(ref);
+        this.ref = ref;
+        dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO();
         view = createView();
     }
 
@@ -79,7 +81,7 @@ public class VmCpuController implements AsyncUiFacade {
     }
 
     private void doUpdateVmCpuCharts() {
-        List<VmCpuStat> stats = dao.getLatestVmCpuStats();
+        List<VmCpuStat> stats = dao.getLatestVmCpuStats(ref);
         List<DiscreteTimeData<? extends Number>> toDisplay = new ArrayList<>(stats.size());
         for (VmCpuStat stat: stats) {
             DiscreteTimeData<? extends Number> data =

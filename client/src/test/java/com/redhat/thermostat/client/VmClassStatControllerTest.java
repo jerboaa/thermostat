@@ -66,10 +66,10 @@ public class VmClassStatControllerTest {
         stats.add(stat1);
 
         VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
-        when(vmClassStatDAO.getLatestClassStats()).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
+        when(vmClassStatDAO.getLatestClassStats(any(VmRef.class))).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getVmClassStatsDAO(any(VmRef.class))).thenReturn(vmClassStatDAO);
+        when(daoFactory.getVmClassStatsDAO()).thenReturn(vmClassStatDAO);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);

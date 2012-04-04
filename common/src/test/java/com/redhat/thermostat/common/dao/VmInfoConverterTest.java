@@ -91,7 +91,7 @@ public class VmInfoConverterTest {
                 vmName, vmInfo, vmVersion, vmArgs,
                 props, env, libs);
 
-        Chunk chunk = new VmInfoConverter().vmInfoToChunk(info);
+        Chunk chunk = new VmInfoConverter().toChunk(info);
 
         assertNotNull(chunk);
         assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
@@ -130,7 +130,7 @@ public class VmInfoConverterTest {
         chunk.put(VmInfoDAO.environmentKey, env);
         chunk.put(VmInfoDAO.librariesKey, libs);
 
-        VmInfo info = new VmInfoConverter().chunkToVmInfo(chunk);
+        VmInfo info = new VmInfoConverter().fromChunk(chunk);
 
         assertNotNull(info);
         assertEquals((Integer) vmId, (Integer) info.getVmId());

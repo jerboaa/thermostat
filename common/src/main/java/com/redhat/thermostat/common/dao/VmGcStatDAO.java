@@ -44,15 +44,14 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface VmGcStatDAO {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", false);
     static final Key<String> collectorKey = new Key<>("collector", false);
     static final Key<Long> runCountKey = new Key<>("runtime-count", false);
     /** time in microseconds */
     static final Key<Long> wallTimeKey = new Key<>("wall-time", false);
 
-    public static final Category vmGcStatsCategory = new Category("vm-gc-stats",
-            vmIdKey, Key.TIMESTAMP, collectorKey,
+    static final Category vmGcStatCategory = new Category("vm-gc-stats",
+            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,
             runCountKey, wallTimeKey);
 
-    public List<VmGcStat> getLatestVmGcStats();
+    public List<VmGcStat> getLatestVmGcStats(VmRef ref);
 }

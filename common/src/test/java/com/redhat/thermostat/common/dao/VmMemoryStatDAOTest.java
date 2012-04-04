@@ -91,7 +91,7 @@ public class VmMemoryStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("perm.capacity", false)));
         assertTrue(keys.contains(new Key<Long>("perm.max-capacity", false)));
         assertTrue(keys.contains(new Key<Long>("perm.used", false)));
-        assertEquals(27, keys.size());
+        assertEquals(28, keys.size());
     }
 
     @Test
@@ -122,8 +122,8 @@ public class VmMemoryStatDAOTest {
         when(cursor.limit(any(Integer.class))).thenReturn(cursor);
         when(cursor.hasNext()).thenReturn(false);
 
-        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage, vmRef);
-        impl.getLatestMemoryStat();
+        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
+        impl.getLatestMemoryStat(vmRef);
 
         ArgumentCaptor<Key> sortKey = ArgumentCaptor.forClass(Key.class);
         ArgumentCaptor<SortDirection> sortDirection = ArgumentCaptor.forClass(SortDirection.class);
@@ -131,7 +131,7 @@ public class VmMemoryStatDAOTest {
 
         Chunk query = (Chunk) savedQuery[0];
         assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
-        assertEquals((Integer)VM_ID, query.get(VmMemoryStatDAO.vmIdKey));
+        assertEquals((Integer)VM_ID, query.get(Key.VM_ID));
 
         assertTrue(sortKey.getValue().equals(Key.TIMESTAMP));
         assertTrue(sortDirection.getValue().equals(SortDirection.DESCENDING));
@@ -158,8 +158,8 @@ public class VmMemoryStatDAOTest {
         Storage storage = mock(Storage.class);
         when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
 
-        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage, vmRef);
-        VmMemoryStat latest = impl.getLatestMemoryStat();
+        VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
+        VmMemoryStat latest = impl.getLatestMemoryStat(vmRef);
         assertTrue(latest == null);
     }
 }
