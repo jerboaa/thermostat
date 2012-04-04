@@ -134,6 +134,14 @@ public class CpuStatDAOTest {
     }
 
     @Test
+    public void testPutCpuStat() {
+        Storage storage = mock(Storage.class);
+        CpuStat stat = new CpuStat(1, 5.0, 15.0, 10.0);
+        CpuStatDAO dao = new CpuStatDAOImpl(storage);
+        dao.putCpuStat(stat);
+    }
+
+    @Test
     public void testGetCount() {
         Storage storage = mock(Storage.class);
         when(storage.getCount(any(Category.class))).thenReturn(5L);

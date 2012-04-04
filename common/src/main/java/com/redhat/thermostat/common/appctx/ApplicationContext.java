@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.appctx;
+package com.redhat.thermostat.common.appctx;
 
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.DAOFactory;

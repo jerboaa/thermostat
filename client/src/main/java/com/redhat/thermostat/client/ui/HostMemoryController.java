@@ -46,9 +46,9 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.AsyncUiFacade;
-import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.HostMemoryView.GraphVisibilityChangeListener;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;

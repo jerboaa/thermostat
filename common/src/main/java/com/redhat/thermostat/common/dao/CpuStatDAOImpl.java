@@ -69,4 +69,9 @@ class CpuStatDAOImpl implements CpuStatDAO {
     public long getCount() {
         return storage.getCount(cpuStatCategory);
     }
+
+    @Override
+    public void putCpuStat(CpuStat stat) {
+        storage.putChunk(converter.toChunk(stat));
+    }
 }

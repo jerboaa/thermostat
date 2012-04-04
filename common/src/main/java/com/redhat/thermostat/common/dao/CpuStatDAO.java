@@ -53,4 +53,6 @@ public interface CpuStatDAO extends Countable {
 
     List<CpuStat> getLatestCpuStats(HostRef ref);
 
+    void putCpuStat(CpuStat stat);
+
 }

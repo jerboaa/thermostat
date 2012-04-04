@@ -34,9 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.appctx;
+package com.redhat.thermostat.common.appctx;
 
-import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 
 public class ApplicationContextUtil {
 

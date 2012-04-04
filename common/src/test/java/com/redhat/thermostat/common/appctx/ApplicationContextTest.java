@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.appctx;
+package com.redhat.thermostat.common.appctx;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -43,8 +43,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 
 public class ApplicationContextTest {
