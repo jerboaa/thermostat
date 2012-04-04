@@ -61,6 +61,7 @@ public class HostInfoDAOTest {
     public void testCategory() {
         assertEquals("host-info", HostInfoDAO.hostInfoCategory.getName());
         Collection<Key<?>> keys = HostInfoDAO.hostInfoCategory.getKeys();
+        assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<String>("hostname", true)));
         assertTrue(keys.contains(new Key<String>("os_name", false)));
         assertTrue(keys.contains(new Key<String>("os_kernel", false)));

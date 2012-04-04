@@ -63,6 +63,7 @@ public class VmCpuStatDAOTest {
     public void testCategory() {
         assertEquals("vm-cpu-stats", VmCpuStatDAO.vmCpuStatCategory.getName());
         Collection<Key<?>> keys = VmCpuStatDAO.vmCpuStatCategory.getKeys();
+        assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
         assertTrue(keys.contains(new Key<Integer>("processor-usage", false)));

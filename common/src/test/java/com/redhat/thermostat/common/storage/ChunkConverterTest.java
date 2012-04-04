@@ -60,9 +60,13 @@ public class ChunkConverterTest {
     private static final Key<String> key2_key2 = new Key<>("key2.key2", false);
     private static final Key<String> key2_key3 = new Key<>("key2.key3", false);
 
+    private static final String mongoId = "_id";
+    private static final Key<String> invalidMongoIdKey = new Key<>(mongoId, false);
+
     private static final Category testCategory = new Category("ChunkConverterTest", key1, key2, key3, key4, key5,
                                                              key1_key1, key1_key2, key2_key1, key2_key2, key2_key3,
                                                              key1_key2_key1, key1_key2_key2, key1_key2_key3);
+    private static final Category smallerCategory = new Category("SmallerTest", key1, key2);
 
     @Test
     public void verifyBasicChunkToDBObject() {
@@ -202,7 +206,6 @@ public class ChunkConverterTest {
 
         DBObject nested1 = (DBObject) dbObject.get("key1");
         assertEquals(2, nested1.keySet().size());
-        System.err.println("keys: " + nested1.keySet());
         assertTrue(nested1.keySet().contains("key1"));
         assertTrue(nested1.keySet().contains("key2"));
         assertEquals("test1", nested1.get("key1"));
@@ -302,5 +305,30 @@ public class ChunkConverterTest {
         assertEquals("test4", chunk.get(key1_key2_key2));
         assertEquals("test5", chunk.get(key1_key2_key3));
         assertEquals("test6", chunk.get(key3));
+    }
+
+    @Test
+    public void verifyDBObjectToChunkIgnoresMongoID() {
+        DBObject obj = new BasicDBObject(mongoId, "mongo_private_info");
+        ChunkConverter converter = new ChunkConverter();
+        Chunk chunk = converter.dbObjectToChunk(obj, new Category("invalidCategory", invalidMongoIdKey));
+
+        assertEquals(0, chunk.getKeys().size());
+    }
+
+    @Test
+    public void verifyDBObjectToChunkAvoidsNonExistentKeys() {
+        DBObject obj = new BasicDBObject("key1", "data1");
+        obj.put("key2", "data2");
+        obj.put("key3", "data3"); // This one is not a part of smallerCategory
+        ChunkConverter converter = new ChunkConverter();
+        Chunk chunk = converter.dbObjectToChunk(obj, smallerCategory);
+
+        assertEquals(2, chunk.getKeys().size());
+        assertFalse(chunk.getKeys().contains(key3));
+        assertTrue(chunk.getKeys().contains(key1));
+        assertTrue(chunk.getKeys().contains(key2));
+        assertEquals("data1", chunk.get(key1));
+        assertEquals("data2", chunk.get(key2));
     }
 }

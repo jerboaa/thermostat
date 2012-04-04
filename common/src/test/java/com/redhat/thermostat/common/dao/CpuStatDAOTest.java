@@ -64,6 +64,7 @@ public class CpuStatDAOTest {
     public void testCategory() {
         assertEquals("cpu-stats", CpuStatDAO.cpuStatCategory.getName());
         Collection<Key<?>> keys = CpuStatDAO.cpuStatCategory.getKeys();
+        assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<Double>("5load", false)));
         assertTrue(keys.contains(new Key<Double>("10load", false)));

@@ -65,6 +65,7 @@ public class NetworkInterfaceInfoDAOTest {
 
         assertEquals("network-info", NetworkInterfaceInfoDAO.networkInfoCategory.getName());
         keys = NetworkInterfaceInfoDAO.networkInfoCategory.getKeys();
+        assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<String>("iface", true)));
         assertTrue(keys.contains(new Key<String>("ipv4addr", false)));

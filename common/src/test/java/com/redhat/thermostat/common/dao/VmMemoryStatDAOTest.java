@@ -64,6 +64,7 @@ public class VmMemoryStatDAOTest {
 
         assertEquals("vm-memory-stats", VmMemoryStatDAO.vmMemoryStatsCategory.getName());
         keys = VmMemoryStatDAO.vmMemoryStatsCategory.getKeys();
+        assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<String>("eden.gen", false)));
@@ -125,6 +126,7 @@ public class VmMemoryStatDAOTest {
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         impl.getLatestMemoryStat(vmRef);
 
+        @SuppressWarnings("rawtypes")
         ArgumentCaptor<Key> sortKey = ArgumentCaptor.forClass(Key.class);
         ArgumentCaptor<SortDirection> sortDirection = ArgumentCaptor.forClass(SortDirection.class);
         verify(cursor).sort(sortKey.capture(), sortDirection.capture());

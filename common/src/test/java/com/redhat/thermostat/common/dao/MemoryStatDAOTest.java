@@ -63,6 +63,7 @@ public class MemoryStatDAOTest {
     public void testCategory() {
         assertEquals("memory-stats", MemoryStatDAO.memoryStatCategory.getName());
         Collection<Key<?>> keys = MemoryStatDAO.memoryStatCategory.getKeys();
+        assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<Long>("total", false)));
         assertTrue(keys.contains(new Key<Long>("free", false)));
