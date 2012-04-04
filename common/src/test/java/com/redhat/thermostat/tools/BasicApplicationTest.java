@@ -36,21 +36,48 @@
 
 package com.redhat.thermostat.tools;
 
-import com.redhat.thermostat.common.ActionNotifier;
+import static org.junit.Assert.*;
 
-/**
- * Common base class for all daemon and application
- */
-public abstract class BasicApplication implements Application {
-    
-    private ActionNotifier<ApplicationState> notifier;
-    
-    public BasicApplication() {
-        this.notifier = new ActionNotifier<>(this);
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.config.StartupConfiguration;
+
+public class BasicApplicationTest {
+
+    private BasicApplication application;
+
+    @Before
+    public void setUp() {
+        application = new BasicApplication() {
+            @Override
+            public void parseArguments(List<String> args)
+                    throws InvalidConfigurationException { }
+
+            @Override
+            public void run() {}
+
+            @Override
+            public StartupConfiguration getConfiguration() {
+                return null;
+            }
+
+            @Override
+            public void printHelp() {}
+        };
     }
 
-    @Override
-    public ActionNotifier<ApplicationState> getNotifier() {
-        return notifier;
+    @After
+    public void tearDown() {
+        application = null;
+    }
+
+    @Test
+    public void testNotfier() {
+        assertNotNull(application.getNotifier());
     }
 }

@@ -46,6 +46,7 @@ import java.util.Properties;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.tools.ApplicationException;
+import com.redhat.thermostat.tools.ApplicationState;
 import com.redhat.thermostat.tools.BasicApplication;
 
 public class DBService extends BasicApplication {
@@ -69,7 +70,6 @@ public class DBService extends BasicApplication {
         
         parser = new DBOptionParser(configuration, args);
         parser.parse();
-        
     }
     
     private void readAndSetProperties(File propertyFile) throws InvalidConfigurationException {
@@ -115,19 +115,20 @@ public class DBService extends BasicApplication {
     
     private void startService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
         runner.startService();
-        notifySuccess();
+        getNotifier().fireAction(ApplicationState.START);
     }
     
     
     private void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
         check();
         runner.stopService();
-        notifySuccess();
+        getNotifier().fireAction(ApplicationState.STOP);
     }
     
     @Override
     public void run() {
         
+        // dry run means we don't do anything at all
         if (parser.isDryRun()) return;
         
         runner = createRunner();
@@ -140,10 +141,13 @@ public class DBService extends BasicApplication {
             case STOP:
                 stopService();
                 break;
+             default:
+                break;
             }
+            getNotifier().fireAction(ApplicationState.SUCCESS);
+            
         } catch (Exception e) {
-            // TODO: exception should be at least logged
-            notifyFail();
+            getNotifier().fireAction(ApplicationState.FAIL);
         }
     }
     

@@ -142,4 +142,9 @@ public final class AgentApplication extends BasicApplication {
         service.parseArguments(Arrays.asList(args));
         service.run();
     }
+
+    @Override
+    public void printHelp() {
+        // TODO: add help
+    }
 }
