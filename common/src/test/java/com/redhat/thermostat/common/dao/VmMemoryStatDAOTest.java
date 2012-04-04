@@ -91,7 +91,7 @@ public class VmMemoryStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("perm.capacity", false)));
         assertTrue(keys.contains(new Key<Long>("perm.max-capacity", false)));
         assertTrue(keys.contains(new Key<Long>("perm.used", false)));
-        assertEquals(27, keys.size());
+        assertEquals(28, keys.size());
     }
 
     @Test

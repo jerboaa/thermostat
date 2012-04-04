@@ -62,14 +62,14 @@ public class VmGcStatDAOTest {
 
     @Test
     public void testCategory() {
-        assertEquals("vm-gc-stats", VmGcStatDAO.vmGcStatsCategory.getName());
-        Collection<Key<?>> keys = VmGcStatDAO.vmGcStatsCategory.getKeys();
+        assertEquals("vm-gc-stats", VmGcStatDAO.vmGcStatCategory.getName());
+        Collection<Key<?>> keys = VmGcStatDAO.vmGcStatCategory.getKeys();
         assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<String>("collector", false)));
         assertTrue(keys.contains(new Key<Long>("runtime-count", false)));
         assertTrue(keys.contains(new Key<Long>("wall-time", false)));
-        assertEquals(5, keys.size());
+        assertEquals(6, keys.size());
     }
 
     @Test
@@ -81,7 +81,7 @@ public class VmGcStatDAOTest {
         final Long RUN_COUNT = 10L;
         final Long WALL_TIME = 9L;
 
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
         chunk.put(Key.VM_ID, VM_ID);
         chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);
@@ -128,7 +128,7 @@ public class VmGcStatDAOTest {
         final Long RUN_COUNT = 10L;
         final Long WALL_TIME = 9L;
 
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
         chunk.put(Key.VM_ID, VM_ID);
         chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);

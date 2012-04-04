@@ -42,7 +42,7 @@ import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public interface MemoryStatDAO {
+public interface MemoryStatDAO extends Countable {
 
     static Key<Long> memoryTotalKey = new Key<>("total", false);
     static Key<Long> memoryFreeKey = new Key<>("free", false);
@@ -53,7 +53,7 @@ public interface MemoryStatDAO {
     static Key<Long> memoryCommitLimitKey = new Key<>("commit-limit", false);
 
     static final Category memoryStatCategory = new Category("memory-stats",
-            Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
+            Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
             memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
 
     public List<MemoryStat> getLatestMemoryStats(HostRef ref);

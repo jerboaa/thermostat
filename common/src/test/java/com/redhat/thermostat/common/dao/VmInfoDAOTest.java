@@ -49,11 +49,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
@@ -73,6 +76,7 @@ public class VmInfoDAOTest {
     private Map<String, String> props;
     private Map<String, String> env;
     private List<String> libs;
+    private VmInfoDAO dao;
 
     @Before
     public void setUp() {
@@ -90,6 +94,13 @@ public class VmInfoDAOTest {
         props = new HashMap<>();
         env = new HashMap<>();
         libs = new ArrayList<>();
+        Storage storage = setupStorageForSingleVM();
+        dao = new VmInfoDAOImpl(storage);
+    }
+
+    @After
+    public void tearDown() {
+        dao = null;
     }
 
     @Test
@@ -111,7 +122,7 @@ public class VmInfoDAOTest {
         assertTrue(keys.contains(new Key<List<String>>("libraries", false)));
         assertTrue(keys.contains(new Key<Long>("start-time", false)));
         assertTrue(keys.contains(new Key<Long>("stop-time", false)));
-        assertEquals(15, keys.size());
+        assertEquals(16, keys.size());
     }
 
     @Test
@@ -161,5 +172,68 @@ public class VmInfoDAOTest {
         assertEquals(vmArgs, info.getVmArguments());
 
         // FIXME test environment, properties and loaded native libraries later
+    }
+
+    private Storage setupStorageForSingleVM() {
+        Chunk query1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        query1.put(Key.AGENT_ID, "123");
+
+        Chunk query2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        query2.put(Key.AGENT_ID, "456");
+
+        Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        vm1.put(VmInfoDAO.vmIdKey, 123);
+        vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
+
+        Chunk vm2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        vm2.put(VmInfoDAO.vmIdKey, 456);
+        vm2.put(VmInfoDAO.mainClassKey, "mainClass2");
+
+        Cursor singleVMCursor = mock(Cursor.class);
+        when(singleVMCursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(singleVMCursor.next()).thenReturn(vm1);
+
+        Cursor multiVMsCursor = mock(Cursor.class);
+        when(multiVMsCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(multiVMsCursor.next()).thenReturn(vm1).thenReturn(vm2);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(query1)).thenReturn(singleVMCursor);
+        when(storage.findAll(query2)).thenReturn(multiVMsCursor);
+        return storage;
+    }
+
+    @Test
+    public void testSingleVM() {
+        HostRef host = new HostRef("123", "fluffhost");
+
+        Collection<VmRef> vms = dao.getVMs(host);
+
+        assertCollection(vms, new VmRef(host, 123, "mainClass1"));
+    }
+
+    @Test
+    public void testMultiVMs() {
+        HostRef host = new HostRef("456", "fluffhost");
+
+        Collection<VmRef> vms = dao.getVMs(host);
+
+        assertCollection(vms, new VmRef(host, 123, "mainClass1"), new VmRef(host, 456, "mainClass2"));
+    }
+
+    private void assertCollection(Collection<VmRef> vms, VmRef... expectedVMs) {
+        assertEquals(expectedVMs.length, vms.size());
+        for (VmRef expectedVM : expectedVMs) {
+            assertTrue(vms.contains(expectedVM));
+        }
+    }
+
+    @Test
+    public void testGetCount() {
+        Storage storage = mock(Storage.class);
+        when(storage.getCount(any(Category.class))).thenReturn(5L);
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        Long count = dao.getCount();
+        assertEquals((Long) 5L, count);
     }
 }

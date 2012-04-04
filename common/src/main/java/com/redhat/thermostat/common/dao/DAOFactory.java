@@ -61,8 +61,4 @@ public interface DAOFactory {
 
     public VmGcStatDAO getVmGcStatDAO();
 
-    public HostRefDAO getHostRefDAO();
-
-    public VmRefDAO getVmRefDAO();
-
 }

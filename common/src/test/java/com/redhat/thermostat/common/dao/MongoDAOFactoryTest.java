@@ -118,16 +118,4 @@ public class MongoDAOFactoryTest {
         NetworkInterfaceInfoDAO dao = daoFactory.getNetworkInterfaceInfoDAO();
         assertNotNull(dao);
     }
-
-    @Test
-    public void testGetHostRefDAO() {
-        HostRefDAO dao = daoFactory.getHostRefDAO();
-        assertNotNull(dao);
-    }
-
-    @Test
-    public void testGetVmRefDAO() {
-        VmRefDAO dao = daoFactory.getVmRefDAO();
-        assertNotNull(dao);
-    }
 }

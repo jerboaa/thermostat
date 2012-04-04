@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.common.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
@@ -47,7 +49,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.redhat.thermostat.common.model.HostInfo;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
@@ -63,7 +67,7 @@ public class HostInfoDAOTest {
         assertTrue(keys.contains(new Key<String>("cpu_model", false)));
         assertTrue(keys.contains(new Key<Integer>("cpu_num", false)));
         assertTrue(keys.contains(new Key<Long>("memory_total", false)));
-        assertEquals(6, keys.size());
+        assertEquals(7, keys.size());
     }
 
     @Test
@@ -94,5 +98,78 @@ public class HostInfoDAOTest {
         assertEquals(CPU_MODEL, info.getCpuModel());
         assertEquals(CPU_NUM, info.getCpuCount());
         assertEquals(MEMORY_TOTAL, info.getTotalMemory());
+    }
+
+    @Test
+    public void testGetHostsSingleHost() {
+
+        Storage storage = setupStorageForSingleHost();
+
+        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage);
+        Collection<HostRef> hosts = hostsDAO.getHosts();
+
+        assertEquals(1, hosts.size());
+        assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
+    }
+
+    private Storage setupStorageForSingleHost() {
+
+        Chunk hostConfig = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig.put(HostInfoDAO.hostNameKey, "fluffhost1");
+        hostConfig.put(Key.AGENT_ID, "123");
+
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(hostConfig);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAllFromCategory(HostInfoDAO.hostInfoCategory)).thenReturn(cursor);
+
+        return storage;
+    }
+
+    @Test
+    public void testGetHosts3Hosts() {
+
+        Storage storage = setupStorageFor3Hosts();
+
+        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage);
+        Collection<HostRef> hosts = hostsDAO.getHosts();
+
+        assertEquals(3, hosts.size());
+        assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
+        assertTrue(hosts.contains(new HostRef("456", "fluffhost2")));
+        assertTrue(hosts.contains(new HostRef("789", "fluffhost3")));
+    }
+
+    private Storage setupStorageFor3Hosts() {
+
+        Chunk hostConfig1 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig1.put(HostInfoDAO.hostNameKey, "fluffhost1");
+        hostConfig1.put(Key.AGENT_ID, "123");
+        Chunk hostConfig2 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig2.put(HostInfoDAO.hostNameKey, "fluffhost2");
+        hostConfig2.put(Key.AGENT_ID, "456");
+        Chunk hostConfig3 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig3.put(HostInfoDAO.hostNameKey, "fluffhost3");
+        hostConfig3.put(Key.AGENT_ID, "789");
+
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(hostConfig1).thenReturn(hostConfig2).thenReturn(hostConfig3);
+
+        Storage storage = mock(Storage.class);
+        when(storage.findAllFromCategory(HostInfoDAO.hostInfoCategory)).thenReturn(cursor);
+
+        return storage;
+    }
+
+    @Test
+    public void testGetCount() {
+        Storage storage = mock(Storage.class);
+        when(storage.getCount(any(Category.class))).thenReturn(5L);
+        HostInfoDAO dao = new HostInfoDAOImpl(storage);
+        Long count = dao.getCount();
+        assertEquals((Long) 5L, count);
     }
 }

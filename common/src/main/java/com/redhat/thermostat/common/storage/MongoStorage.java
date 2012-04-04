@@ -161,14 +161,16 @@ public class MongoStorage extends Storage {
                     replaceKeyNested.append(entryParts[1], replaceKeyNested);
                 }
             } else {
-                String mongoKey = key.getName();
-                Object value = chunk.get(key);
-                if ((value == null) && isKey) {
-                    throwMissingKey(key.getName());
-                }
-                toInsert.append(mongoKey, value);
-                if (replace && isKey) {
-                    replaceKey.append(mongoKey, value);
+                if (!key.equals(Key.AGENT_ID)) {
+                    String mongoKey = key.getName();
+                    Object value = chunk.get(key);
+                    if ((value == null) && isKey) {
+                        throwMissingKey(key.getName());
+                    }
+                    toInsert.append(mongoKey, value);
+                    if (replace && isKey) {
+                        replaceKey.append(mongoKey, value);
+                    }
                 }
             }
         }
@@ -245,7 +247,7 @@ public class MongoStorage extends Storage {
 
     private DBCollection getCachedCollection(String collName) {
         DBCollection coll = collectionCache.get(collName);
-        if (coll == null) {
+        if (coll == null && db.collectionExists(collName)) {
             coll = db.getCollection(collName);
             if (coll != null) {
                 collectionCache.put(collName, coll);
@@ -294,6 +296,11 @@ public class MongoStorage extends Storage {
 
     @Override
     public ConnectionKey createConnectionKey(Category category) {
+        // TODO: There is probably some better place to do this, perhaps related to the inner class
+        // idea mentioned below.
+        if (!db.collectionExists(category.getName())) {
+            db.createCollection(category.getName(), new BasicDBObject("capped", false));
+        }
         // TODO: We want to return an instance of an inner class here that carries the actual connection
         // and replace the collectionCache. For now this is good enough though.
         return new ConnectionKey(){};
@@ -329,5 +336,14 @@ public class MongoStorage extends Storage {
         DBCollection coll = getCachedCollection(category.getName());
         DBCursor dbCursor = coll.find();
         return new MongoCursor(dbCursor, category);
+    }
+
+    @Override
+    public long getCount(Category category) {
+        DBCollection coll = getCachedCollection(category.getName());
+        if (coll != null) {
+            return coll.getCount();
+        }
+        return 0L;
     }
 }

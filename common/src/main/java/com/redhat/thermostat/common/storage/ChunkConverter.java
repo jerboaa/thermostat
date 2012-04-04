@@ -38,11 +38,15 @@ package com.redhat.thermostat.common.storage;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class ChunkConverter {
+
+    private static final Logger logger = LoggingUtils.getLogger(ChunkConverter.class);
 
     DBObject chunkToDBObject(Chunk chunk) {
         BasicDBObject dbObject = new BasicDBObject();
@@ -101,13 +105,15 @@ class ChunkConverter {
 
     private void dbObjectToChunkRecurse(Chunk chunk, DBObject dbObject, Category category, String fullKey) {
         for (String dbKey : dbObject.keySet()) {
-            String newFullKey;
-            if (fullKey == null) {
-                newFullKey = dbKey;
-            } else {
-                newFullKey = fullKey + "." + dbKey;
+            if (!dbKey.equals("_id")) { // Mongo adds this to any stored document.
+                String newFullKey;
+                if (fullKey == null) {
+                    newFullKey = dbKey;
+                } else {
+                    newFullKey = fullKey + "." + dbKey;
+                }
+                dbObjectToChunkRecursively(chunk, dbObject, category, dbKey, newFullKey);
             }
-            dbObjectToChunkRecursively(chunk, dbObject, category, dbKey, newFullKey);
         }
     }
 
@@ -118,7 +124,11 @@ class ChunkConverter {
             dbObjectToChunkRecurse(chunk, dbObj, category, fullKey);
         } else {
             Key key = category.getKey(fullKey);
-            chunk.put(key, value);
+            if (key != null) {
+                chunk.put(key, value);
+            } else {
+                logger.warning("No key matching \"" + fullKey + "\" in category \"" + category + "\"");
+            }
         }
     }
 }

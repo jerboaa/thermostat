@@ -55,7 +55,7 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
-        Chunk query = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, false);
+        Chunk query = new Chunk(networkInfoCategory, false);
         query.put(Key.AGENT_ID, ref.getAgentId());
 
         Cursor cursor = storage.findAll(query);

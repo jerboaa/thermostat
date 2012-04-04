@@ -40,36 +40,40 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 
 public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
 
-    private final DBCollection agentConfigCollection;
-    private final DBCollection vmInfoCollection;
+    private final HostInfoDAO hostsDAO;
+    private final VmInfoDAO vmsDAO;
 
-    private final ChangeableText connectedAgentText;
-    private final ChangeableText connectedVmText;
+    private final ChangeableText totalHostsText;
+    private final ChangeableText totalVmsText;
 
     private final Timer backgroundUpdateTimer;
 
-    public SummaryPanelFacadeImpl(DB db) {
-        this.agentConfigCollection = db.getCollection("agent-config");
-        this.vmInfoCollection = db.getCollection("vm-info");
+    public SummaryPanelFacadeImpl() {
+        
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        DAOFactory daoFactory = ctx.getDAOFactory();
+        hostsDAO = daoFactory.getHostInfoDAO();
+        vmsDAO = daoFactory.getVmInfoDAO();
 
-        this.connectedVmText = new ChangeableText("");
-        this.connectedAgentText = new ChangeableText("");
+        this.totalVmsText = new ChangeableText("");
+        this.totalHostsText = new ChangeableText("");
 
         backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
             
             @Override
             public void run() {
-                connectedVmText.setText(String.valueOf(vmInfoCollection.getCount()));
-                connectedAgentText.setText(String.valueOf(agentConfigCollection.getCount()));
+                totalVmsText.setText(String.valueOf(vmsDAO.getCount()));
+                totalHostsText.setText(String.valueOf(hostsDAO.getCount()));
             }
         });
         backgroundUpdateTimer.setInitialDelay(0);
@@ -89,13 +93,13 @@ public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
     }
 
     @Override
-    public ChangeableText getTotalConnectedVms() {
-        return connectedVmText;
+    public ChangeableText getTotalMonitoredVms() {
+        return totalVmsText;
     }
 
     @Override
-    public ChangeableText getTotalConnectedAgents() {
-        return connectedAgentText;
+    public ChangeableText getTotalMonitoredHosts() {
+        return totalHostsText;
     }
 
     @Override

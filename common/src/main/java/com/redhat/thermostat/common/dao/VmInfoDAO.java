@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -43,7 +44,7 @@ import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public interface VmInfoDAO {
+public interface VmInfoDAO extends Countable {
 
     static final Key<Integer> vmIdKey = new Key<>("vm-id", true);
     static final Key<Integer> vmPidKey = new Key<>("vm-pid", false);
@@ -62,11 +63,13 @@ public interface VmInfoDAO {
     static final Key<Long> stopTimeKey = new Key<>("stop-time", false);
 
     static final Category vmInfoCategory = new Category("vm-info",
-            vmIdKey, vmPidKey, runtimeVersionKey, javaHomeKey,
+            Key.AGENT_ID, vmIdKey, vmPidKey, runtimeVersionKey, javaHomeKey,
             mainClassKey, commandLineKey,
             vmArgumentsKey, vmNameKey, vmInfoKey, vmVersionKey,
             propertiesKey, environmentKey, librariesKey,
             startTimeKey, stopTimeKey);
 
     public VmInfo getVmInfo(VmRef ref);
+
+    Collection<VmRef> getVMs(HostRef host);
 }

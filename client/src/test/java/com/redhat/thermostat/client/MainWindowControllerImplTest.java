@@ -61,10 +61,10 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.HostRefDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.dao.VmRefDAO;
 
 public class MainWindowControllerImplTest {
 
@@ -76,8 +76,8 @@ public class MainWindowControllerImplTest {
 
     private Timer mainWindowTimer;
 
-    private HostRefDAO mockHostRefDAO;
-    private VmRefDAO mockVmRefDAO;
+    private HostInfoDAO mockHostsDAO;
+    private VmInfoDAO mockVmsDAO;
 
     @Before
     public void setUp() {
@@ -98,13 +98,13 @@ public class MainWindowControllerImplTest {
     }
 
     private void setupDAOs() {
-        mockHostRefDAO = mock(HostRefDAO.class);
+        mockHostsDAO = mock(HostInfoDAO.class);
 
-        mockVmRefDAO = mock(VmRefDAO.class);
+        mockVmsDAO = mock(VmInfoDAO.class);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostRefDAO()).thenReturn(mockHostRefDAO);
-        when(daoFactory.getVmRefDAO()).thenReturn(mockVmRefDAO);
+        when(daoFactory.getHostInfoDAO()).thenReturn(mockHostsDAO);
+        when(daoFactory.getVmInfoDAO()).thenReturn(mockVmsDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
     }
@@ -113,8 +113,8 @@ public class MainWindowControllerImplTest {
     public void tearDown() {
         view = null;
         controller = null;
-        mockHostRefDAO = null;
-        mockVmRefDAO = null;
+        mockHostsDAO = null;
+        mockVmsDAO = null;
         l = null;
         ApplicationContextUtil.resetApplicationContext();
     }
@@ -157,7 +157,7 @@ public class MainWindowControllerImplTest {
         expectedHosts.add(new HostRef("123", "fluffhost1"));
         expectedHosts.add(new HostRef("456", "fluffhost2"));
 
-        when(mockHostRefDAO.getHosts()).thenReturn(expectedHosts);
+        when(mockHostsDAO.getHosts()).thenReturn(expectedHosts);
 
         controller.doUpdateTreeAsync();
 
@@ -177,7 +177,7 @@ public class MainWindowControllerImplTest {
         expectedVMs.add(new VmRef(host, 123, "vm1"));
         expectedVMs.add(new VmRef(host, 456, "vm2"));
 
-        when(mockVmRefDAO.getVMs(any(HostRef.class))).thenReturn(expectedVMs);
+        when(mockVmsDAO.getVMs(any(HostRef.class))).thenReturn(expectedVMs);
 
         controller.doUpdateTreeAsync();
 

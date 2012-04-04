@@ -52,6 +52,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.MemoryStat;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
@@ -70,7 +71,7 @@ public class MemoryStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("swap-total", false)));
         assertTrue(keys.contains(new Key<Long>("swap-free", false)));
         assertTrue(keys.contains(new Key<Long>("commit-limit", false)));
-        assertEquals(8, keys.size());
+        assertEquals(9, keys.size());
 
     }
 
@@ -163,5 +164,14 @@ public class MemoryStatDAOTest {
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());
         assertEquals("this.timestamp > 1", arg.getValue().get(new Key<String>("$where", false)));
+    }
+
+    @Test
+    public void testGetCount() {
+        Storage storage = mock(Storage.class);
+        when(storage.getCount(any(Category.class))).thenReturn(5L);
+        MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
+        Long count = dao.getCount();
+        assertEquals((Long) 5L, count);
     }
 }

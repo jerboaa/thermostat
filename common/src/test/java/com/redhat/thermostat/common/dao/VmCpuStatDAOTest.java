@@ -66,7 +66,7 @@ public class VmCpuStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
         assertTrue(keys.contains(new Key<Integer>("processor-usage", false)));
-        assertEquals(3, keys.size());
+        assertEquals(4, keys.size());
     }
 
     @Test

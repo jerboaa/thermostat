@@ -36,40 +36,8 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
-import java.util.Collection;
+interface Countable {
 
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Storage;
-
-class HostRefDAOImpl implements HostRefDAO {
-
-    private Storage storage;
-
-    HostRefDAOImpl(Storage storage) {
-        this.storage = storage;
-    }
-
-    @Override
-    public Collection<HostRef> getHosts() {
-        Collection<HostRef> hosts = new ArrayList<HostRef>();
-        Cursor agentsCursor = storage.findAllFromCategory(agentConfigCategory);
-        while (agentsCursor.hasNext()) {
-            Chunk agentConfig = agentsCursor.next();
-            HostRef host = getHostFromAgent(agentConfig);
-            hosts.add(host);
-        }
-        return hosts;
-    }
-
-    private HostRef getHostFromAgent(Chunk agentConfig) {
-        String agentId = agentConfig.get(agentIdKey);
-        Chunk hostQuery = new Chunk(HostInfoDAO.hostInfoCategory, false);
-        hostQuery.put(agentIdKey, agentId);
-        Chunk host = storage.find(hostQuery);
-        String hostname = host.get(HostInfoDAO.hostNameKey);
-        return new HostRef(agentId, hostname);
-    }
+    public long getCount();
 
 }

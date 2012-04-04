@@ -45,10 +45,10 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.HostRefDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.dao.VmRefDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MainWindowControllerImpl implements MainWindowController {
@@ -59,15 +59,15 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private String filter;
 
-    private HostRefDAO hostRefDAO;
-    private VmRefDAO vmRefDAO;
+    private final HostInfoDAO hostsDAO;
+    private final VmInfoDAO vmsDAO;
 
     public MainWindowControllerImpl(MainView view) {
 
         ApplicationContext ctx = ApplicationContext.getInstance();
         DAOFactory daoFactory = ctx.getDAOFactory();
-        hostRefDAO = daoFactory.getHostRefDAO();
-        vmRefDAO = daoFactory.getVmRefDAO();
+        hostsDAO = daoFactory.getHostInfoDAO();
+        vmsDAO = daoFactory.getVmInfoDAO();
 
         initView(view);
         initializeTimer();
@@ -78,12 +78,12 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         @Override
         public Collection<HostRef> getHosts() {
-            return hostRefDAO.getHosts();
+            return hostsDAO.getHosts();
         }
 
         @Override
         public Collection<VmRef> getVMs(HostRef host) {
-            return vmRefDAO.getVMs(host);
+            return vmsDAO.getVMs(host);
         }
         
     }

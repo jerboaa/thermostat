@@ -47,7 +47,7 @@ public interface VmCpuStatDAO {
     static final Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
 
     static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
-            Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey);
+            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey);
 
     public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref);
 

@@ -47,12 +47,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.mongodb.DB;
 import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 
 public class SummaryPanelFacadeImplTest {
 
@@ -64,7 +67,17 @@ public class SummaryPanelFacadeImplTest {
         timer = mock(Timer.class);
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationContext ctx = ApplicationContext.getInstance();
+        ctx.setTimerFactory(timerFactory);
+
+        HostInfoDAO hDAO = mock(HostInfoDAO.class);
+        VmInfoDAO vDAO = mock(VmInfoDAO.class);
+
+        DAOFactory daoFactory = mock(MongoDAOFactory.class);
+        when(daoFactory.getHostInfoDAO()).thenReturn(hDAO);
+        when(daoFactory.getVmInfoDAO()).thenReturn(vDAO);
+
+        ctx.setDAOFactory(daoFactory);
     }
 
     @After
@@ -76,9 +89,7 @@ public class SummaryPanelFacadeImplTest {
     @Test
     public void testTimer() {
 
-        DB db = mock(DB.class);
-
-        SummaryPanelFacadeImpl summaryPanelCtrl = new SummaryPanelFacadeImpl(db);
+        SummaryPanelFacadeImpl summaryPanelCtrl = new SummaryPanelFacadeImpl();
         summaryPanelCtrl.start();
 
         verify(timer).setAction(isNotNull(Runnable.class));

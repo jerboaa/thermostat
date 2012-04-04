@@ -49,8 +49,8 @@ public interface VmGcStatDAO {
     /** time in microseconds */
     static final Key<Long> wallTimeKey = new Key<>("wall-time", false);
 
-    static final Category vmGcStatsCategory = new Category("vm-gc-stats",
-            Key.VM_ID, Key.TIMESTAMP, collectorKey,
+    static final Category vmGcStatCategory = new Category("vm-gc-stats",
+            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,
             runCountKey, wallTimeKey);
 
     public List<VmGcStat> getLatestVmGcStats(VmRef ref);

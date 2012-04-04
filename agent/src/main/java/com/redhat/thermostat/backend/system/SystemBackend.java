@@ -102,7 +102,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         categories.add(NetworkInterfaceInfoDAO.networkInfoCategory);
         categories.add(VmClassStatDAO.vmClassStatsCategory);
         categories.add(VmCpuStatDAO.vmCpuStatCategory);
-        categories.add(VmGcStatDAO.vmGcStatsCategory);
+        categories.add(VmGcStatDAO.vmGcStatCategory);
         categories.add(VmInfoDAO.vmInfoCategory);
         categories.add(VmMemoryStatDAO.vmMemoryStatsCategory);
 

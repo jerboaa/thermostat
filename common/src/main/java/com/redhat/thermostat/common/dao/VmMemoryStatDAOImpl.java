@@ -52,7 +52,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        Chunk query = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
+        Chunk query = new Chunk(vmMemoryStatsCategory, false);
         query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
         query.put(Key.VM_ID, ref.getId());
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);

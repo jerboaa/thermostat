@@ -43,6 +43,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -57,12 +58,13 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(DBCollection.class)
+@PrepareForTest({DBCollection.class, DB.class})
 public class MongoStorageTest {
 
     private static final Key<String> key1 = new Key<>("key1", false);
@@ -71,15 +73,19 @@ public class MongoStorageTest {
     private static final Key<String> key4 = new Key<>("key4", false);
     private static final Key<String> key5 = new Key<>("key5", false);
     private static final Category testCategory = new Category("MongoStorageTest", key1, key2, key3, key4, key5);
+    private static final Category emptyTestCategory = new Category("MongoEmptyCategory");
 
     private Chunk multiKeyQuery;
 
     private MongoStorage storage;
-    private DBCollection testCollection;
+    private DB db;
+    private DBCollection testCollection, emptyTestCollection;
 
     @Before
     public void setUp() {
         storage = new MongoStorage(null);
+        db = PowerMockito.mock(DB.class);
+        storage.connect(db);
 
         BasicDBObject value1 = new BasicDBObject();
         value1.put("key1", "test1");
@@ -103,7 +109,13 @@ public class MongoStorageTest {
         when(testCollection.find(any(DBObject.class))).thenReturn(cursor);
         when(testCollection.find()).thenReturn(cursor);
         when(testCollection.findOne(any(DBObject.class))).thenReturn(value1);
+        when(testCollection.getCount()).thenReturn(2L);
         storage.mapCategoryToDBCollection(testCategory, testCollection);
+        emptyTestCollection = PowerMockito.mock(DBCollection.class);
+        when(emptyTestCollection.getCount()).thenReturn(0L);
+        storage.mapCategoryToDBCollection(emptyTestCategory, emptyTestCollection);
+        when(db.collectionExists(anyString())).thenReturn(false);
+        when(db.createCollection(anyString(), any(DBObject.class))).thenReturn(testCollection);
     }
 
     @After
@@ -116,6 +128,7 @@ public class MongoStorageTest {
     @Test
     public void testCreateConnectionKey() {
         MongoStorage mongoStorage = new MongoStorage(null);
+        mongoStorage.connect(db);
         Category category = new Category("testCreateConnectionKey");
         ConnectionKey connKey = mongoStorage.createConnectionKey(category);
         assertNotNull(connKey);
@@ -246,6 +259,24 @@ public class MongoStorageTest {
         Cursor cursor = storage.findAllFromCategory(testCategory);
 
         verifyDefaultCursor(cursor);
+    }
+
+    @Test
+    public void verifyGetCount() {
+        long count = storage.getCount(testCategory);
+        assertEquals(2, count);
+    }
+
+    @Test
+    public void verifyGetCountForEmptyCategory() {
+        long count = storage.getCount(emptyTestCategory);
+        assertEquals(0, count);
+    }
+
+    @Test
+    public void verifyGetCountForNonexistentCategory() {
+        long count = storage.getCount(new Category("NonExistent"));
+        assertEquals(0, count);
     }
 
     private void verifyDefaultCursor(Cursor cursor) {
