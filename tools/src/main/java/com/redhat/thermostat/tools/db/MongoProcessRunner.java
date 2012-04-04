@@ -44,13 +44,19 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import com.redhat.thermostat.tools.ApplicationException;
+import com.redhat.thermostat.tools.unix.UnixProcess;
 
 class MongoProcessRunner {
+    
+    private static final Logger logger = LoggingUtils.getLogger(MongoProcessRunner.class);
     
     private static final String [] MONGO_BASIC_ARGS = {
         "mongod", "--quiet", "--fork", "--nojournal", "--noauth", "--bind_ip"
@@ -67,10 +73,11 @@ class MongoProcessRunner {
         this.configuration = configuration;
         this.isQuiet = quiet;
     }
-    
-    private String checkPid() {
+   
+    private String getPid() {
+        
         String pid = null;
-        // check the pid to be sure
+        
         File pidfile = configuration.getPidFile();
         Charset charset = Charset.defaultCharset();
         if (pidfile.exists()) {
@@ -79,8 +86,8 @@ class MongoProcessRunner {
                 if (pid == null || pid.isEmpty()) {
                     pid = null;
                 }
-            } catch (IOException ignore) {
-                ignore.printStackTrace();
+            } catch (IOException ex) {
+                logger.log(Level.WARNING, "Exception while reading pid file", ex);
                 pid = null;
             }
         }
@@ -100,8 +107,7 @@ class MongoProcessRunner {
             display("log file is here: " + configuration.getLogFile());
             
         } else {
-            // TODO: check the pid and see if it's running or not
-            // perhaps was already down
+            
             String message = "cannot shutdown server " + configuration.getDBPath() +
                     ", exit status: " + status +
                     ". Please check that your configuration is valid";
@@ -110,12 +116,29 @@ class MongoProcessRunner {
         }
     }
     
+    private boolean checkExistingProcess() {
+        String pid = getPid();
+        if (pid == null)
+            return false;
+        
+        String processName = UnixProcess.getInstance().getProcessName(getPid());
+        // TODO: check if we want mongos or mongod from the configs
+        return processName != null && processName.equalsIgnoreCase("mongod");
+    }
+    
     void startService() throws IOException, InterruptedException, ApplicationException {
         
-        String pid = checkPid();
+        String pid = getPid();
         if (pid != null) {
             String message = "cannot start server " + configuration.getDBPath() +
-                    ", found pid file rom previous run, please, cleanup";
+                             ", found pid file from previous run";
+            
+            if (!checkExistingProcess()) {
+                message += ", but no matching process running, please, cleanup";
+            } else {
+                message += ", an instance is running with pid: " + pid;
+            }
+            
             display(message);
             throw new ApplicationException(message);
         }
@@ -146,7 +169,7 @@ class MongoProcessRunner {
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = process.runAndReturnResult();
         if (status == 0) {
-            pid = checkPid();
+            pid = getPid();
             if (pid == null) status = -1;
         }
         
