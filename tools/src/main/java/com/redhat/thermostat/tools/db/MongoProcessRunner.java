@@ -52,7 +52,7 @@ import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import com.redhat.thermostat.tools.ApplicationException;
-import com.redhat.thermostat.tools.unix.UnixProcess;
+import com.redhat.thermostat.tools.unix.UnixProcessUtilities;
 
 class MongoProcessRunner {
     
@@ -121,7 +121,7 @@ class MongoProcessRunner {
         if (pid == null)
             return false;
         
-        String processName = UnixProcess.getInstance().getProcessName(getPid());
+        String processName = UnixProcessUtilities.getInstance().getProcessName(getPid());
         // TODO: check if we want mongos or mongod from the configs
         return processName != null && processName.equalsIgnoreCase("mongod");
     }
