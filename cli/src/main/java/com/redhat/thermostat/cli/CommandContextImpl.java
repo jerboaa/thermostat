@@ -39,9 +39,11 @@ package com.redhat.thermostat.cli;
 class CommandContextImpl implements CommandContext {
 
     private String[] arguments;
+    private CommandRegistry commandRegistry;
 
-    CommandContextImpl(String[] args) {
+    CommandContextImpl(String[] args, CommandRegistry cmdReg) {
         arguments = args;
+        commandRegistry = cmdReg;
     }
 
     @Override
@@ -52,6 +54,11 @@ class CommandContextImpl implements CommandContext {
     @Override
     public String[] getArguments() {
         return arguments;
+    }
+
+    @Override
+    public CommandRegistry getCommandRegistry() {
+        return commandRegistry;
     }
 
 }

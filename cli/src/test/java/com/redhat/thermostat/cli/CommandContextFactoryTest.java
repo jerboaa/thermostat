@@ -50,6 +50,9 @@ public class CommandContextFactoryTest {
         assertSame(System.err, ctx.getConsole().getError());
         assertSame(System.in, ctx.getConsole().getInput());
         assertArrayEquals(new String[] {"arg1", "arg2"}, ctx.getArguments());
+        assertNotNull(cmdCtxFactory.getCommandRegistry());
+        assertNotNull(ctx.getCommandRegistry());
+        assertSame(cmdCtxFactory.getCommandRegistry(), ctx.getCommandRegistry());
     }
 
 }

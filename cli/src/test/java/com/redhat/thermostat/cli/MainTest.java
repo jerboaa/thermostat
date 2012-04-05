@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.cli;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 
@@ -46,36 +46,20 @@ import org.junit.Test;
 
 public class MainTest {
 
-    private static class TestCmd1 implements Command {
+    private static class TestCmd1 implements TestCommand.Handle {
 
         @Override
         public void run(CommandContext ctx) {
-            String arg1 = ctx.getArguments()[0];
-            String arg2 = ctx.getArguments()[1];
-            ctx.getConsole().getOutput().print(arg1 + ", " + arg2);
-        }
-
-        @Override
-        public String getName() {
-            return "test1";
+            ctx.getConsole().getOutput().print(ctx.getArguments()[0] + ", " + ctx.getArguments()[1]);
         }
 
     }
 
-    private static class TestCmd2 implements Command {
-
+    private static class TestCmd2 implements TestCommand.Handle {
         @Override
         public void run(CommandContext ctx) {
-            String arg1 = ctx.getArguments()[0];
-            String arg2 = ctx.getArguments()[1];
-            ctx.getConsole().getOutput().print(arg2 + ": " + arg1);
+            ctx.getConsole().getOutput().print(ctx.getArguments()[1] + ": " + ctx.getArguments()[0]);
         }
-
-        @Override
-        public String getName() {
-            return "test2";
-        }
-
     }
 
     private TestCommandContextFactory  ctxFactory;
@@ -87,7 +71,11 @@ public class MainTest {
         ctxFactory = new TestCommandContextFactory();
         CommandContextFactory.setInstance(ctxFactory);
 
-        CommandRegistry.getInstance().registerCommands(Arrays.asList(new TestCmd1(), new TestCmd2()));
+        TestCommand cmd1 = new TestCommand("test1", new TestCmd1());
+        cmd1.setDescription("description 1");
+        TestCommand cmd2 = new TestCommand("test2", new TestCmd2());
+        cmd2.setDescription("description 2");
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2));
 
     }
 
@@ -103,6 +91,15 @@ public class MainTest {
         ctxFactory.reset();
 
         runAndVerifyCommand(new String[] {"test2", "Hello", "World"}, "World: Hello");
+    }
+
+    @Test
+    public void testMainNoArgs() {
+        String expected = "list of commands:\n\n"
+                          + " help\t\tshow help for a given command or help overview\n"
+                          + " test1\t\tdescription 1\n"
+                          + " test2\t\tdescription 2\n";
+        runAndVerifyCommand(new String[0], expected);
     }
 
     private void runAndVerifyCommand(String[] args, String expected) {

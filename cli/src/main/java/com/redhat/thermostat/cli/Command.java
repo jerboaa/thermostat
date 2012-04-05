@@ -42,4 +42,7 @@ interface Command {
 
     String getName();
 
+    String getDescription();
+
+    String getUsage();
 }

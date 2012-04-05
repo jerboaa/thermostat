@@ -36,12 +36,18 @@
 
 package com.redhat.thermostat.cli;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import static org.mockito.Mockito.*;
 
 public class CommandRegistryTest {
 
@@ -82,5 +88,13 @@ public class CommandRegistryTest {
         CommandContext ctx = cf.createContext(new String[0]);
         actualCmd.run(ctx);
         verify(cmd).run(ctx);
+    }
+
+    @Test
+    public void testGetCommands() {
+        Collection<Command> cmds = registry.getRegisteredCommands();
+        assertTrue(cmds.contains(cmd1));
+        assertTrue(cmds.contains(cmd2));
+        assertEquals(2, cmds.size());
     }
 }

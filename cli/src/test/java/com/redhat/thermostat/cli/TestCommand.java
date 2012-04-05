@@ -36,11 +36,52 @@
 
 package com.redhat.thermostat.cli;
 
-class CommandContextFactoryImpl extends CommandContextFactory {
 
-    @Override
-    CommandContext createContext(final String[] args) {
-        return new CommandContextImpl(args);
+class TestCommand implements Command {
+
+    private String name;
+    private Handle handle;
+    private String description;
+    private String usage;
+
+    static interface Handle {
+        public void run(CommandContext ctx);
     }
 
+    TestCommand(String name) {
+        this(name, null);
+    }
+
+    TestCommand(String name, Handle r) {
+        this.name = name;
+        this.handle = r;
+    }
+
+    @Override
+    public void run(CommandContext ctx) {
+        handle.run(ctx);
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    void setDescription(String desc) {
+        description = desc;
+    }
+
+    @Override
+    public String getUsage() {
+        return usage;
+    }
+
+    void setUsage(String usage) {
+        this.usage = usage;
+    }
 }

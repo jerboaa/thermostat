@@ -43,9 +43,15 @@ import java.io.PrintStream;
 
 class TestCommandContextFactory extends CommandContextFactory {
 
-    private ByteArrayOutputStream out = new ByteArrayOutputStream();
-    private ByteArrayOutputStream err = new ByteArrayOutputStream();
-    private ByteArrayInputStream in = new ByteArrayInputStream(new byte[0]);
+    private ByteArrayOutputStream out;
+    private ByteArrayOutputStream err;
+    private ByteArrayInputStream in;
+
+    TestCommandContextFactory() {
+        reset();
+    }
+
+    private CommandRegistry commandRegistry = new CommandRegistry();
 
     private class TestConsole implements Console {
 
@@ -79,24 +85,35 @@ class TestCommandContextFactory extends CommandContextFactory {
             public String[] getArguments() {
                 return args;
             }
+
+            @Override
+            public CommandRegistry getCommandRegistry() {
+                return commandRegistry;
+            }
             
         };
     }
 
-    public Object getOutput() {
+    @Override
+    CommandRegistry getCommandRegistry() {
+        return commandRegistry;
+    }
+
+    String getOutput() {
         return new String(out.toByteArray());
     }
 
-    public void setInput(String input) {
+    void setInput(String input) {
         in = new ByteArrayInputStream(input.getBytes());
     }
 
-    public Object getError() {
+    Object getError() {
         return new String(err.toByteArray());
     }
 
-    public void reset() {
+    void reset() {
         out = new ByteArrayOutputStream();
         err = new ByteArrayOutputStream();
+        in = new ByteArrayInputStream(new byte[0]);
     }
 }

@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.cli;
 
-abstract class CommandContextFactory {
+class CommandContextFactory {
 
-    private static CommandContextFactory instance = new CommandContextFactoryImpl();
+    private static CommandContextFactory instance = new CommandContextFactory();
 
     static CommandContextFactory getInstance() {
         return instance;
@@ -48,6 +48,14 @@ abstract class CommandContextFactory {
         instance = ctxFactory;
     }
 
-    abstract CommandContext createContext(String[] args);
+    private CommandRegistry commandRegistry = new CommandRegistry();
+
+    CommandContext createContext(final String[] args) {
+        return new CommandContextImpl(args, commandRegistry);
+    }
+
+    CommandRegistry getCommandRegistry() {
+        return commandRegistry;
+    }
 
 }

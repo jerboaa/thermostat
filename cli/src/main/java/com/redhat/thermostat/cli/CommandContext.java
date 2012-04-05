@@ -42,4 +42,6 @@ interface CommandContext {
 
     String[] getArguments();
 
+    CommandRegistry getCommandRegistry();
+
 }

@@ -47,8 +47,7 @@ public class CLITestEnvironment {
     }
 
     private static void reset() {
-        CommandContextFactory.setInstance(new CommandContextFactoryImpl());
-        CommandRegistry.setInstance(new CommandRegistry());
+        CommandContextFactory.setInstance(new CommandContextFactory());
     }
 
 }

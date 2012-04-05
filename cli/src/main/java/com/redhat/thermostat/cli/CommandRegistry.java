@@ -36,20 +36,12 @@
 
 package com.redhat.thermostat.cli;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 class CommandRegistry {
-
-    private static CommandRegistry instance = new CommandRegistry();
-
-    static CommandRegistry getInstance() {
-        return instance;
-    }
-
-    static void setInstance(CommandRegistry commandRegistry) {
-        instance = commandRegistry;
-    }
 
     private Map<String,Command> commands;
 
@@ -61,7 +53,7 @@ class CommandRegistry {
         commands.put(cmd.getName(), cmd);
     }
 
-    void registerCommands(Iterable<Command> cmds) {
+    void registerCommands(Iterable<? extends Command> cmds) {
         for (Command cmd : cmds) {
             registerCommand(cmd);
         }
@@ -69,6 +61,10 @@ class CommandRegistry {
 
     Command getCommand(String name) {
         return commands.get(name);
+    }
+
+    Collection<Command> getRegisteredCommands() {
+        return Collections.unmodifiableCollection(commands.values());
     }
 
 }
