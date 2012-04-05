@@ -55,6 +55,8 @@ public enum LocaleResources {
     MENU_FILE_IMPORT,
     MENU_FILE_EXPORT,
     MENU_FILE_EXIT,
+    MENU_EDIT,
+    MENU_EDIT_CONFIGURE_AGENT,
     MENU_HELP,
     MENU_HELP_ABOUT,
 
@@ -172,7 +174,11 @@ public enum LocaleResources {
 
     VM_LOADED_CLASSES,
     VM_CLASSES_CHART_REAL_TIME_LABEL,
-    VM_CLASSES_CHART_LOADED_CLASSES_LABEL;
+    VM_CLASSES_CHART_LOADED_CLASSES_LABEL,
+
+    CONFIGURE_AGENT_WINDOW_TITLE,
+    CONFIGURE_AGENT_AGENTS_LIST,
+    CONFIGURE_ENABLE_BACKENDS;
 
     static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.client.locale.strings";

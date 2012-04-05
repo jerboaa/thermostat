@@ -43,6 +43,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -84,6 +85,8 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import com.redhat.thermostat.client.Configuration;
+import com.redhat.thermostat.client.AgentConfigurationSource;
 import com.redhat.thermostat.client.ApplicationInfo;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
@@ -223,17 +226,17 @@ public class MainWindow extends JFrame implements MainView {
 
     private final ShutdownClient shutdownAction;
 
-    private ApplicationInfo appInfo; 
+    private ApplicationInfo appInfo;
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
-    private final DefaultMutableTreeNode publishedRoot = 
+    private final DefaultMutableTreeNode publishedRoot =
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
     public MainWindow(UiFacadeFactory facadeFactory) {
         super();
-        
+
         appInfo = new ApplicationInfo();
         setTitle(appInfo.getName());
 
@@ -291,6 +294,18 @@ public class MainWindow extends JFrame implements MainView {
         fileExitMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
         fileExitMenu.addActionListener(shutdownAction);
         fileMenu.add(fileExitMenu);
+
+        JMenu editMenu = new JMenu(localize(LocaleResources.MENU_EDIT));
+        mainMenuBar.add(editMenu);
+
+        JMenuItem configureAgentMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_AGENT));
+        configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new Configuration().showAgentConfiguration();
+            }
+        });
+        editMenu.add(configureAgentMenuItem);
 
         JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
@@ -499,6 +514,7 @@ public class MainWindow extends JFrame implements MainView {
         }
     }
 
+    @Override
     public void addActionListener(ActionListener<Action> l) {
         actionNotifier.addActionListener(l);
     }
@@ -511,6 +527,7 @@ public class MainWindow extends JFrame implements MainView {
         actionNotifier.fireAction(action);
     }
 
+    @Override
     public void updateTree(String filter, HostsVMsLoader hostsVMsLoader) {
         BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot, filter, hostsVMsLoader);
         worker.execute();
