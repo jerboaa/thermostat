@@ -113,7 +113,7 @@ public class ThermostatService implements Application, ActionListener<Applicatio
         if (actionEvent.getSource().equals(database)) {
             switch (actionEvent.getActionId()) {
             // we are only interested in starting the agent if
-            // we started the service
+            // we started the database ourselves
             case START:
                 String dbUrl = database.getConfiguration().getDBConnectionString();
                 List<String> args = new ArrayList<>();
