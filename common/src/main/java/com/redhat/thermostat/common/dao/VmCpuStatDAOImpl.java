@@ -59,7 +59,7 @@ class VmCpuStatDAOImpl implements VmCpuStatDAO {
     public List<VmCpuStat> getLatestVmCpuStats(VmRef ref) {
         VmLatestPojoListGetter<VmCpuStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmCpuStat>(storage, VmGcStatDAO.vmGcStatsCategory, converter, ref);
+            getter = new VmLatestPojoListGetter<VmCpuStat>(storage, vmCpuStatCategory, converter, ref);
             getters.put(ref, getter);
         }
         return getter.getLatest();

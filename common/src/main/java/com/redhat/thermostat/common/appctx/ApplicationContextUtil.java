@@ -34,18 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.appctx;
 
-import java.util.Collection;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+public class ApplicationContextUtil {
 
-public interface HostRefDAO {
-
-    static final Key<String> agentIdKey = new Key<>("agent-id", false);
-    static final Category agentConfigCategory = new Category("agent-config", agentIdKey);
-
-    Collection<HostRef> getHosts();
-
+    /**
+     * This is here to allow tests to reset the ApplicationContext, while
+     * preventing real code the same (ApplicationContext.reset() is package private).
+     *
+     * It is vital that tests call this from their setUp() and tearDown() methods,
+     * to avoid leaking mocks and stuff from test to test.
+     */
+    public static void resetApplicationContext() {
+        ApplicationContext.reset();
+    }
 }

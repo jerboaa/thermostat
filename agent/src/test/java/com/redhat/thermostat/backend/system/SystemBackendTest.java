@@ -101,7 +101,7 @@ public class SystemBackendTest {
         assertTrue(categories.contains(NetworkInterfaceInfoDAO.networkInfoCategory));
         assertTrue(categories.contains(VmClassStatDAO.vmClassStatsCategory));
         assertTrue(categories.contains(VmCpuStatDAO.vmCpuStatCategory));
-        assertTrue(categories.contains(VmGcStatDAO.vmGcStatsCategory));
+        assertTrue(categories.contains(VmGcStatDAO.vmGcStatCategory));
         assertTrue(categories.contains(VmInfoDAO.vmInfoCategory));
         assertTrue(categories.contains(VmMemoryStatDAO.vmMemoryStatsCategory));
     }

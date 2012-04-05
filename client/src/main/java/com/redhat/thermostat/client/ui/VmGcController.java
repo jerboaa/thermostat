@@ -50,8 +50,8 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.AsyncUiFacade;
-import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;

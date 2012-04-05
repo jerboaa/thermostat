@@ -34,46 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.appctx;
+package com.redhat.thermostat.cli;
 
-import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.DAOFactory;
+abstract class CommandContextFactory {
 
-public class ApplicationContext {
+    private static CommandContextFactory instance = new CommandContextFactoryImpl();
 
-    private static ApplicationContext instance = new ApplicationContext();
-
-    private DAOFactory daoFactory;
-
-    private TimerFactory timerFactory;
-
-    public static ApplicationContext getInstance() {
+    static CommandContextFactory getInstance() {
         return instance;
     }
 
-    static void reset() {
-        instance = new ApplicationContext();
+    static void setInstance(CommandContextFactory ctxFactory) {
+        instance = ctxFactory;
     }
 
-    private ApplicationContext() {
-        // Nothing to do here, just prevent instantiation of this class outside
-        // the factory method.
-    }
-
-    public void setDAOFactory(DAOFactory daoFactory) {
-        this.daoFactory = daoFactory;
-    }
-
-    public DAOFactory getDAOFactory() {
-        return daoFactory;
-    }
-
-    public void setTimerFactory(TimerFactory timerFactory) {
-        this.timerFactory = timerFactory;
-    }
-
-    public TimerFactory getTimerFactory() {
-        return timerFactory;
-    }
+    abstract CommandContext createContext(String[] args);
 
 }

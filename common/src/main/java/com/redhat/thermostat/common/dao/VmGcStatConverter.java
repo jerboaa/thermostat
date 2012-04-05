@@ -44,7 +44,7 @@ public class VmGcStatConverter implements Converter<VmGcStat> {
 
     @Override
     public Chunk toChunk(VmGcStat vmGcStat) {
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
 
         chunk.put(Key.VM_ID, vmGcStat.getVmId());
         chunk.put(Key.TIMESTAMP, vmGcStat.getTimeStamp());

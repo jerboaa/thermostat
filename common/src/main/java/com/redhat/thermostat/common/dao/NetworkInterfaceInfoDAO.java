@@ -49,7 +49,7 @@ public interface NetworkInterfaceInfoDAO {
     static Key<String> ip6AddrKey = new Key<>("ipv6addr", false);
 
     static final Category networkInfoCategory = new Category("network-info",
-            Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
+            Key.AGENT_ID, Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
 
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref);
 }

@@ -34,12 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.cli;
 
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.ServiceLoader;
 
-public interface VmRefDAO {
+public class Main {
 
-    Collection<VmRef> getVMs(HostRef host);
+    public static void main(String[] args) {
+        new Main().run(args);
+    }
 
+    private void run(String[] args) {
+        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class);
+        CommandRegistry registry = CommandRegistry.getInstance();
+        registry.registerCommands(cmds);
+        Command cmd = registry.getCommand(args[0]);
+        CommandContext ctx = CommandContextFactory.getInstance().createContext(Arrays.copyOfRange(args, 1, args.length));
+        cmd.run(ctx);
+    }
 }

@@ -59,10 +59,19 @@ class CpuStatDAOImpl implements CpuStatDAO {
     public List<CpuStat> getLatestCpuStats(HostRef ref) {
         HostLatestPojoListGetter<CpuStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new HostLatestPojoListGetter<CpuStat>(storage, CpuStatDAO.cpuStatCategory, converter, ref);
+            getter = new HostLatestPojoListGetter<CpuStat>(storage, cpuStatCategory, converter, ref);
             getters.put(ref, getter);
         }
         return getter.getLatest();
     }
 
+    @Override
+    public long getCount() {
+        return storage.getCount(cpuStatCategory);
+    }
+
+    @Override
+    public void putCpuStat(CpuStat stat) {
+        storage.putChunk(converter.toChunk(stat));
+    }
 }

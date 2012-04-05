@@ -36,8 +36,13 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
@@ -53,11 +58,48 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public VmInfo getVmInfo(VmRef ref) {
-        Chunk query = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        Chunk query = new Chunk(vmInfoCategory, false);
         query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(VmInfoDAO.vmIdKey, ref.getId());
+        query.put(vmIdKey, ref.getId());
         Chunk result = storage.find(query);
         return converter.fromChunk(result);
     }
 
+    @Override
+    public Collection<VmRef> getVMs(HostRef host) {
+
+        Chunk query = buildQuery(host);
+        Cursor cursor = storage.findAll(query);
+        return buildVMsFromQuery(cursor, host);
+    }
+
+    private Chunk buildQuery(HostRef host) {
+        Chunk query = new Chunk(vmInfoCategory, false);
+        query.put(Key.AGENT_ID, host.getAgentId());
+        return query;
+    }
+
+    private Collection<VmRef> buildVMsFromQuery(Cursor cursor, HostRef host) {
+        List<VmRef> vmRefs = new ArrayList<VmRef>();
+        while (cursor.hasNext()) {
+            Chunk vmChunk = cursor.next();
+            VmRef vm = buildVmRefFromChunk(vmChunk, host);
+            vmRefs.add(vm);
+        }
+
+        return vmRefs;
+    }
+
+    private VmRef buildVmRefFromChunk(Chunk vmChunk, HostRef host) {
+        Integer id = vmChunk.get(vmIdKey);
+        // TODO can we do better than the main class?
+        String mainClass = vmChunk.get(mainClassKey);
+        VmRef ref = new VmRef(host, id, mainClass);
+        return ref;
+    }
+
+    @Override
+    public long getCount() {
+        return storage.getCount(vmInfoCategory);
+    }
 }

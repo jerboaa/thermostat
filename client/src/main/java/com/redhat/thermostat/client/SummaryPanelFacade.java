@@ -40,9 +40,9 @@ import java.util.List;
 
 public interface SummaryPanelFacade extends AsyncUiFacade {
 
-    public ChangeableText getTotalConnectedVms();
+    public ChangeableText getTotalMonitoredVms();
 
-    public ChangeableText getTotalConnectedAgents();
+    public ChangeableText getTotalMonitoredHosts();
 
     public List<String> getIssues();
 

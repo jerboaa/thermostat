@@ -110,14 +110,4 @@ public class MongoDAOFactory implements DAOFactory {
     public VmGcStatDAO getVmGcStatDAO() {
         return new VmGcStatDAOImpl(storage);
     }
-
-    @Override
-    public HostRefDAO getHostRefDAO() {
-        return new HostRefDAOImpl(storage);
-    }
-
-    @Override
-    public VmRefDAO getVmRefDAO() {
-        return new VmRefDAOImpl(storage);
-    }
 }

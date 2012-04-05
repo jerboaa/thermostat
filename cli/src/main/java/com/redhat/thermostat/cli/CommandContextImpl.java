@@ -34,20 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.appctx;
+package com.redhat.thermostat.cli;
 
-import com.redhat.thermostat.client.appctx.ApplicationContext;
+class CommandContextImpl implements CommandContext {
 
-public class ApplicationContextUtil {
+    private String[] arguments;
 
-    /**
-     * This is here to allow tests to reset the ApplicationContext, while
-     * preventing real code the same (ApplicationContext.reset() is package private).
-     *
-     * It is vital that tests call this from their setUp() and tearDown() methods,
-     * to avoid leaking mocks and stuff from test to test.
-     */
-    public static void resetApplicationContext() {
-        ApplicationContext.reset();
+    CommandContextImpl(String[] args) {
+        arguments = args;
     }
+
+    @Override
+    public Console getConsole() {
+        return new SystemConsole();
+    }
+
+    @Override
+    public String[] getArguments() {
+        return arguments;
+    }
+
 }

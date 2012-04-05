@@ -34,54 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.appctx;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.dao.DAOFactory;
 
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Storage;
+public class ApplicationContext {
 
-class VmRefDAOImpl implements VmRefDAO {
+    private static ApplicationContext instance = new ApplicationContext();
 
-    private Storage storage;
+    private DAOFactory daoFactory;
 
-    VmRefDAOImpl(Storage storage) {
-        this.storage = storage;
+    private TimerFactory timerFactory;
+
+    public static ApplicationContext getInstance() {
+        return instance;
     }
 
-    @Override
-    public Collection<VmRef> getVMs(HostRef host) {
-
-        Chunk query = buildQuery(host);
-        Cursor cursor = storage.findAll(query);
-        return buildVMsFromQuery(cursor, host);
+    static void reset() {
+        instance = new ApplicationContext();
     }
 
-    private Chunk buildQuery(HostRef host) {
-        Chunk query = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        query.put(HostRefDAO.agentIdKey, host.getAgentId());
-        return query;
+    private ApplicationContext() {
+        // Nothing to do here, just prevent instantiation of this class outside
+        // the factory method.
     }
 
-    private Collection<VmRef> buildVMsFromQuery(Cursor cursor, HostRef host) {
-        List<VmRef> vmRefs = new ArrayList<VmRef>();
-        while (cursor.hasNext()) {
-            Chunk vmChunk = cursor.next();
-            VmRef vm = buildVmRefFromChunk(vmChunk, host);
-            vmRefs.add(vm);
-        }
-
-        return vmRefs;
+    public void setDAOFactory(DAOFactory daoFactory) {
+        this.daoFactory = daoFactory;
     }
 
-    private VmRef buildVmRefFromChunk(Chunk vmChunk, HostRef host) {
-        Integer id = vmChunk.get(VmInfoDAO.vmIdKey);
-        // TODO can we do better than the main class?
-        String mainClass = vmChunk.get(VmInfoDAO.mainClassKey);
-        VmRef ref = new VmRef(host, id, mainClass);
-        return ref;
+    public DAOFactory getDAOFactory() {
+        return daoFactory;
     }
+
+    public void setTimerFactory(TimerFactory timerFactory) {
+        this.timerFactory = timerFactory;
+    }
+
+    public TimerFactory getTimerFactory() {
+        return timerFactory;
+    }
+
 }

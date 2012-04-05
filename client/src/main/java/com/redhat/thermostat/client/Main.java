@@ -47,23 +47,20 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.appctx.ApplicationContext;
 import com.redhat.thermostat.client.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
 import com.redhat.thermostat.client.ui.LayoutDebugHelper;
-import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.Connection;
 import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
 import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.dao.ConnectionProvider;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoConnection;
 import com.redhat.thermostat.common.dao.MongoConnectionProvider;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -123,7 +120,7 @@ public class Main {
         connection.connect();
         connection.removeListener(connectionListener);
 
-        uiFacadeFactory = new UiFacadeFactoryImpl((MongoConnection) connection);
+        uiFacadeFactory = new UiFacadeFactoryImpl();
 
         MainWindowController mainController = uiFacadeFactory.getMainWindow();
         mainController.showMainMainWindow();

@@ -36,11 +36,13 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.Collection;
+
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 
-public interface HostInfoDAO {
+public interface HostInfoDAO extends Countable {
 
     static Key<String> hostNameKey = new Key<>("hostname", true);
     static Key<String> osNameKey = new Key<>("os_name", false);
@@ -50,8 +52,10 @@ public interface HostInfoDAO {
     static Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
 
     static final Category hostInfoCategory = new Category("host-info",
-            hostNameKey, osNameKey, osKernelKey,
+            Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);
 
     HostInfo getHostInfo(HostRef ref);
+
+    Collection<HostRef> getHosts();
 }

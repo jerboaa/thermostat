@@ -74,7 +74,7 @@ public class VmGcStatConverterTest {
         final Long RUN_COUNT = 10L;
         final Long WALL_TIME = 9L;
 
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatsCategory, false);
+        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
         chunk.put(Key.VM_ID, VM_ID);
         chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);

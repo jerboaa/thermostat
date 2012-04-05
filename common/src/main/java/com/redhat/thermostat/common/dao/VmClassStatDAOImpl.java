@@ -59,7 +59,7 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
     public List<VmClassStat> getLatestClassStats(VmRef ref) {
         VmLatestPojoListGetter<VmClassStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmClassStat>(storage, VmClassStatDAO.vmClassStatsCategory, converter, ref);
+            getter = new VmLatestPojoListGetter<VmClassStat>(storage, vmClassStatsCategory, converter, ref);
             getters.put(ref, getter);
         }
         return getter.getLatest();

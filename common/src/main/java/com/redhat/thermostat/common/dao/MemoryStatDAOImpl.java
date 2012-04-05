@@ -59,9 +59,14 @@ class MemoryStatDAOImpl implements MemoryStatDAO {
     public List<MemoryStat> getLatestMemoryStats(HostRef ref) {
         HostLatestPojoListGetter<MemoryStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new HostLatestPojoListGetter<MemoryStat>(storage, MemoryStatDAO.memoryStatCategory, converter, ref);
+            getter = new HostLatestPojoListGetter<MemoryStat>(storage, memoryStatCategory, converter, ref);
             getters.put(ref, getter);
         }
         return getter.getLatest();
+    }
+
+    @Override
+    public long getCount() {
+        return storage.getCount(memoryStatCategory);
     }
 }

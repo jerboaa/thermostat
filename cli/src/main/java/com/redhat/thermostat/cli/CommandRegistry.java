@@ -34,42 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.cli;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Storage;
+class CommandRegistry {
 
-class HostRefDAOImpl implements HostRefDAO {
+    private static CommandRegistry instance = new CommandRegistry();
 
-    private Storage storage;
-
-    HostRefDAOImpl(Storage storage) {
-        this.storage = storage;
+    static CommandRegistry getInstance() {
+        return instance;
     }
 
-    @Override
-    public Collection<HostRef> getHosts() {
-        Collection<HostRef> hosts = new ArrayList<HostRef>();
-        Cursor agentsCursor = storage.findAllFromCategory(agentConfigCategory);
-        while (agentsCursor.hasNext()) {
-            Chunk agentConfig = agentsCursor.next();
-            HostRef host = getHostFromAgent(agentConfig);
-            hosts.add(host);
+    static void setInstance(CommandRegistry commandRegistry) {
+        instance = commandRegistry;
+    }
+
+    private Map<String,Command> commands;
+
+    CommandRegistry() {
+        commands = new HashMap<>();
+    }
+
+    private void registerCommand(Command cmd) {
+        commands.put(cmd.getName(), cmd);
+    }
+
+    void registerCommands(Iterable<Command> cmds) {
+        for (Command cmd : cmds) {
+            registerCommand(cmd);
         }
-        return hosts;
     }
 
-    private HostRef getHostFromAgent(Chunk agentConfig) {
-        String agentId = agentConfig.get(agentIdKey);
-        Chunk hostQuery = new Chunk(HostInfoDAO.hostInfoCategory, false);
-        hostQuery.put(agentIdKey, agentId);
-        Chunk host = storage.find(hostQuery);
-        String hostname = host.get(HostInfoDAO.hostNameKey);
-        return new HostRef(agentId, hostname);
+    Command getCommand(String name) {
+        return commands.get(name);
     }
 
 }

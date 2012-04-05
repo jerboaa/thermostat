@@ -47,7 +47,7 @@ public interface VmClassStatDAO {
     static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
 
     static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);
+            "vm-class-stats", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);
 
     public List<VmClassStat> getLatestClassStats(VmRef ref);
 

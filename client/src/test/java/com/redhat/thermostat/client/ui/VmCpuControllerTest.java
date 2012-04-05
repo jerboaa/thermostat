@@ -47,7 +47,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.appctx.ApplicationContext;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;

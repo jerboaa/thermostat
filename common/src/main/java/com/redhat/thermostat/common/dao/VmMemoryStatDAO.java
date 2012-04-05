@@ -73,7 +73,7 @@ public interface VmMemoryStatDAO {
     static final Key<Long> permUsedKey = new Key<>("perm.used", false);
 
     static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
-            Key.VM_ID, Key.TIMESTAMP,
+            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP,
             edenGenKey, edenCollectorKey,
             edenCapacityKey, edenMaxCapacityKey,edenUsedKey,
             s0GenKey, s0CollectorKey, s0CapacityKey,
