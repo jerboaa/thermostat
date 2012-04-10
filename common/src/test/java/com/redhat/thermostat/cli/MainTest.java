@@ -75,7 +75,7 @@ public class MainTest {
         cmd1.setDescription("description 1");
         TestCommand cmd2 = new TestCommand("test2", new TestCmd2());
         cmd2.setDescription("description 2");
-        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2));
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2, new HelpCommand()));
 
     }
 
