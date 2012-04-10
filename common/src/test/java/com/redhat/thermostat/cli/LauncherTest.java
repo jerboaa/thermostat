@@ -96,9 +96,9 @@ public class LauncherTest {
     @Test
     public void testMainNoArgs() {
         String expected = "list of commands:\n\n"
-                          + " help\t\tshow help for a given command or help overview\n"
-                          + " test1\t\tdescription 1\n"
-                          + " test2\t\tdescription 2\n";
+                        + " help          show help for a given command or help overview\n"
+                        + " test1         description 1\n"
+                        + " test2         description 2\n";
         runAndVerifyCommand(new String[0], expected);
     }
 
@@ -113,13 +113,13 @@ public class LauncherTest {
         });
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
-        Launcher.main(new String[] { "error" });
+        new Launcher().run(new String[] { "error" });
         assertEquals("test error\n", ctxFactory.getError());
 
     }
 
     private void runAndVerifyCommand(String[] args, String expected) {
-        Launcher.main(args);
+        new Launcher().run(args);
         assertEquals(expected, ctxFactory.getOutput());
     }
 }

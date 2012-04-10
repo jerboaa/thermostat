@@ -84,15 +84,15 @@ public class HelpCommandTest {
 
         TestCommand cmd1 = new TestCommand("test1");
         cmd1.setDescription("test command 1");
-        TestCommand cmd2 = new TestCommand("test2");
+        TestCommand cmd2 = new TestCommand("test2longname");
         cmd2.setDescription("test command 2");
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2));
 
         HelpCommand cmd = new HelpCommand();
         cmd.run(ctxFactory.createContext(new String[0]));
         String expected = "list of commands:\n\n"
-                          + " test1\t\ttest command 1\n"
-                          + " test2\t\ttest command 2\n";
+                        + " test1         test command 1\n"
+                        + " test2longname test command 2\n";
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
     }
@@ -122,7 +122,7 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(new String[] { "test12" }));
 
         String expected = "list of commands:\n\n"
-                + " test1\t\ttest command 1\n";
+                        + " test1         test command 1\n";
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
     }

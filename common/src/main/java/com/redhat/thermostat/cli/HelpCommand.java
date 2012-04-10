@@ -40,6 +40,10 @@ import java.util.Collection;
 
 public class HelpCommand implements Command {
 
+    /**
+     * 
+     */
+    private static final int COMMANDS_COLUMNS_WIDTH = 15;
     private static final String NAME = "help";
     private static final String DESCRIPTION = "show help for a given command or help overview";
     private static final String USAGE = "help [COMMAND]\n\n"
@@ -73,7 +77,9 @@ public class HelpCommand implements Command {
     private void printCommandSummary(StringBuilder out, Command cmd) {
         out.append(" ");
         out.append(cmd.getName());
-        out.append("\t\t");
+        for (int i = 0; i < COMMANDS_COLUMNS_WIDTH - cmd.getName().length() - 1; i++) {
+            out.append(" ");
+        }
         out.append(cmd.getDescription());
         out.append("\n");
     }

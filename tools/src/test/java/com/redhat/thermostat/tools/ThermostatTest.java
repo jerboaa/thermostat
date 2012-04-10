@@ -34,57 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.tools;
 
-import java.util.Arrays;
-import java.util.ServiceLoader;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-public class Launcher {
+import org.junit.Test;
 
-    private String[] args;
+import com.redhat.thermostat.cli.Launcher;
 
-    public void run(String[] args) {
-        this.args = args;
-        registerDefaultCommands();
-        if (hasNoArguments()) {
-            runHelpCommand();
-        } else {
-            runCommandFromArguments();
-        }
-    }
 
-    private boolean hasNoArguments() {
-        return args.length == 0;
-    }
+public class ThermostatTest {
 
-    private void runHelpCommand() {
-        runCommand("help", new String[0]);
-    }
-
-    private void runCommandFromArguments() {
-        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length));
-    }
-
-    private void runCommand(String cmdName, String[] cmdArgs) {
-        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
-        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
-        Command cmd = registry.getCommand(cmdName);
-        CommandContext ctx = cmdCtxFactory.createContext(cmdArgs);
-        runCommandWithContext(cmd, ctx);
-    }
-
-    private void runCommandWithContext(Command cmd, CommandContext ctx) {
-        try {
-            cmd.run(ctx);
-        } catch (CommandException e) {
-            ctx.getConsole().getError().println(e.getMessage());
-        }
-    }
-
-    private void registerDefaultCommands() {
-        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
-        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
-        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class);
-        registry.registerCommands(cmds);
+    @Test
+    public void testThermostatMain() {
+        Launcher launcher = mock(Launcher.class);
+        Thermostat.setLauncher(launcher);
+        Thermostat.main(new String[] { "test1", "test2" });
+        verify(launcher).run(new String[] { "test1", "test2" });
     }
 }
