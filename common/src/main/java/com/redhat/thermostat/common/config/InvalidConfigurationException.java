@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.config;
 
+
 public class InvalidConfigurationException extends Exception {
 
     public InvalidConfigurationException() {

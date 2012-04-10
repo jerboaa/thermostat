@@ -44,7 +44,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MainTest {
+public class LauncherTest {
 
     private static class TestCmd1 implements TestCommand.Handle {
 
@@ -102,8 +102,24 @@ public class MainTest {
         runAndVerifyCommand(new String[0], expected);
     }
 
+    @Test
+    public void testMainExceptionInCommand() {
+        TestCommand errorCmd = new TestCommand("error", new TestCommand.Handle() {
+            
+            @Override
+            public void run(CommandContext ctx) throws CommandException {
+                throw new CommandException("test error");
+            }
+        });
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
+
+        Launcher.main(new String[] { "error" });
+        assertEquals("test error\n", ctxFactory.getError());
+
+    }
+
     private void runAndVerifyCommand(String[] args, String expected) {
-        Main.main(args);
+        Launcher.main(args);
         assertEquals(expected, ctxFactory.getOutput());
     }
 }

@@ -34,56 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.agent;
 
-import java.util.Arrays;
-import java.util.ServiceLoader;
+import static org.junit.Assert.assertEquals;
 
-public class Main {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    public static void main(String[] args) {
-        new Main(args).run();
+public class AgentApplicationTest {
+
+    // TODO: Test i18nized versions when they come.
+
+    private AgentApplication agent;
+
+    @Before
+    public void setUp() {
+        agent = new AgentApplication();
     }
 
-    private Main(String[] args) {
-        this.args = args;
+    @After
+    public void tearDown() {
+        agent = null;
     }
 
-    private String[] args;
-
-    private void run() {
-        registerDefaultCommands();
-        if (hasNoArguments()) {
-            runHelpCommand();
-        } else {
-            runCommandFromArguments();
-        }
+    @Test
+    public void testName() {
+        String name = agent.getName();
+        assertEquals("agent", name);
     }
 
-    private boolean hasNoArguments() {
-        return args.length == 0;
+    @Test
+    public void testDescription() {
+        String description = agent.getDescription();
+        assertEquals("starts and stops the thermostat agent", description);
     }
 
-    private void runHelpCommand() {
-        runCommand("help", new String[0]);
-    }
-
-    private void runCommandFromArguments() {
-        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length));
-    }
-
-    private void runCommand(String cmdName, String[] cmdArgs) {
-        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
-        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
-        Command cmd = registry.getCommand(cmdName);
-        CommandContext ctx = cmdCtxFactory.createContext(cmdArgs);
-        cmd.run(ctx);
-    }
-
-    private void registerDefaultCommands() {
-        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
-        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
-        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class);
-        registry.registerCommands(cmds);
+    @Test
+    public void testUsage() {
+        String usage = agent.getUsage();
+        assertEquals("agent start|stop\n\n"
+                + "starts and stops the thermostat agent" + "\n\n\t"
+                + "With argument 'start', start the agent.\n\t"
+                + "With argument 'stop', stop the agent.", usage);
     }
 }

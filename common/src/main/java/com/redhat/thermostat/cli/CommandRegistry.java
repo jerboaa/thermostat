@@ -41,7 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-class CommandRegistry {
+public class CommandRegistry {
 
     private Map<String,Command> commands;
 
@@ -59,11 +59,11 @@ class CommandRegistry {
         }
     }
 
-    Command getCommand(String name) {
+    public Command getCommand(String name) {
         return commands.get(name);
     }
 
-    Collection<Command> getRegisteredCommands() {
+    public Collection<Command> getRegisteredCommands() {
         return Collections.unmodifiableCollection(commands.values());
     }
 

@@ -34,15 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.tools;
 
-public interface Command {
+import com.redhat.thermostat.cli.Command;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 
-    void run(CommandContext ctx) throws CommandException;
+/**
+ * Common base class for all daemon and application
+ */
+public abstract class BasicCommand implements Command {
+    
+    private ActionNotifier<ApplicationState> notifier;
+    
+    public BasicCommand() {
+        this.notifier = new ActionNotifier<>(this);
+    }
 
-    String getName();
+    public ActionNotifier<ApplicationState> getNotifier() {
+        return notifier;
+    }
 
-    String getDescription();
-
-    String getUsage();
+    public abstract StartupConfiguration getConfiguration();
 }

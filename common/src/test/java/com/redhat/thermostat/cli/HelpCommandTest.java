@@ -137,9 +137,9 @@ public class HelpCommandTest {
     public void testUsage() {
         HelpCommand cmd = new HelpCommand();
         String expected = "help [COMMAND]\n\n"
-                          + "show help for a given command or help overview\n\n"
-                          + "    With no arguments, print a list of commands with short help messages.\n\n"
-                          + "    Given a command, print help for that command.";
+                          + "show help for a given command or help overview\n\n\t"
+                          + "With no arguments, print a list of commands with short help messages.\n\n\t"
+                          + "Given a command, print help for that command.";
 
         assertEquals(expected, cmd.getUsage());
     }

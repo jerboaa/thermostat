@@ -45,7 +45,7 @@ class TestCommand implements Command {
     private String usage;
 
     static interface Handle {
-        public void run(CommandContext ctx);
+        public void run(CommandContext ctx) throws CommandException;
     }
 
     TestCommand(String name) {
@@ -58,7 +58,7 @@ class TestCommand implements Command {
     }
 
     @Override
-    public void run(CommandContext ctx) {
+    public void run(CommandContext ctx) throws CommandException {
         handle.run(ctx);
     }
 

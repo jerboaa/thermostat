@@ -36,17 +36,44 @@
 
 package com.redhat.thermostat.tools;
 
-import java.util.List;
+import static org.junit.Assert.*;
 
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public interface Application {
-    
-    void parseArguments(List<String> args) throws InvalidConfigurationException;
-    void run();
-    void printHelp();
-    ActionNotifier<ApplicationState> getNotifier();
-    StartupConfiguration getConfiguration();
+public class ThermostatServiceTest {
+
+    private ThermostatService thermostatService;
+
+    @Before
+    public void setUp() {
+        thermostatService = new ThermostatService();
+    }
+
+    @After
+    public void tearDown() {
+        thermostatService = null;
+    }
+
+    @Test
+    public void testName() {
+        String name = thermostatService.getName();
+        assertEquals("service", name);
+    }
+
+    @Test
+    public void testDescription() {
+        String desc = thermostatService.getDescription();
+        assertEquals("starts and stops the thermostat storage and agent", desc);
+    }
+
+    @Test
+    public void testUsage() {
+        String usage = thermostatService.getUsage();
+        assertEquals("service start|stop\n\n"
+                + "starts and stops the thermostat storage and agent" + "\n\n\t"
+                + "With argument 'start', start the storage amd agent\n\t"
+                + "With argument 'stop', stop the storage and agent.", usage);
+    }
 }

@@ -34,50 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools;
+package com.redhat.thermostat.cli;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+public class CommandExceptionTest {
 
-public class BasicApplicationTest {
-
-    private BasicApplication application;
-
-    @Before
-    public void setUp() {
-        application = new BasicApplication() {
-            @Override
-            public void parseArguments(List<String> args)
-                    throws InvalidConfigurationException { }
-
-            @Override
-            public void run() {}
-
-            @Override
-            public StartupConfiguration getConfiguration() {
-                return null;
-            }
-
-            @Override
-            public void printHelp() {}
-        };
-    }
-
-    @After
-    public void tearDown() {
-        application = null;
+    @Test
+    public void testDefaultConstructor() {
+        CommandException ce = new CommandException();
+        verifyMessageAndCause(ce, null, null);
     }
 
     @Test
-    public void testNotfier() {
-        assertNotNull(application.getNotifier());
+    public void testMessageConstructor() {
+        CommandException ce = new CommandException("test");
+        verifyMessageAndCause(ce, "test", null);
+    }
+
+    @Test
+    public void testCauseConstructor() {
+        Exception cause = new Exception("test fluff");
+        CommandException ce = new CommandException(cause);
+        verifyMessageAndCause(ce, "java.lang.Exception: test fluff", cause);
+    }
+
+    @Test
+    public void testCombinedConstructor() {
+        Exception cause = new Exception("test fluff");
+        CommandException ce = new CommandException("test", cause);
+        verifyMessageAndCause(ce, "test", cause);
+    }
+
+    private void verifyMessageAndCause(CommandException ce, String message, Exception cause) {
+        assertEquals(message, ce.getMessage());
+        assertSame(cause, ce.getCause());
     }
 }

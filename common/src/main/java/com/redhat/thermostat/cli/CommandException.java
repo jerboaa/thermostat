@@ -34,23 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools;
+package com.redhat.thermostat.cli;
 
-import com.redhat.thermostat.common.ActionNotifier;
+public class CommandException extends Exception {
 
-/**
- * Common base class for all daemon and application
- */
-public abstract class BasicApplication implements Application {
-    
-    private ActionNotifier<ApplicationState> notifier;
-    
-    public BasicApplication() {
-        this.notifier = new ActionNotifier<>(this);
+    public CommandException() {
+        super();
     }
 
-    @Override
-    public ActionNotifier<ApplicationState> getNotifier() {
-        return notifier;
+    public CommandException(String message) {
+        super(message);
     }
+
+    public CommandException(Throwable cause) {
+        super(cause);
+    }
+
+    public CommandException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

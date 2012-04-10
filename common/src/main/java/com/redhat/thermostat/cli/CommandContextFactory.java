@@ -36,11 +36,11 @@
 
 package com.redhat.thermostat.cli;
 
-class CommandContextFactory {
+public class CommandContextFactory {
 
     private static CommandContextFactory instance = new CommandContextFactory();
 
-    static CommandContextFactory getInstance() {
+    public static CommandContextFactory getInstance() {
         return instance;
     }
 
@@ -50,7 +50,7 @@ class CommandContextFactory {
 
     private CommandRegistry commandRegistry = new CommandRegistry();
 
-    CommandContext createContext(final String[] args) {
+    public CommandContext createContext(final String[] args) {
         return new CommandContextImpl(args, commandRegistry);
     }
 

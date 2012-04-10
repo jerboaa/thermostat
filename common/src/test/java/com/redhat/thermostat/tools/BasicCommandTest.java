@@ -34,15 +34,63 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.tools;
 
-public interface Command {
+import static org.junit.Assert.*;
 
-    void run(CommandContext ctx) throws CommandException;
+import java.util.List;
 
-    String getName();
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    String getDescription();
+import com.redhat.thermostat.cli.CommandContext;
+import com.redhat.thermostat.cli.CommandException;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 
-    String getUsage();
+public class BasicCommandTest {
+
+    private BasicCommand application;
+
+    @Before
+    public void setUp() {
+        application = new BasicCommand() {
+
+            @Override
+            public void run(CommandContext ctx) throws CommandException {
+                // Nothing to do here.
+            }
+
+            @Override
+            public String getName() {
+                return null;
+            }
+
+            @Override
+            public String getDescription() {
+                return null;
+            }
+
+            @Override
+            public String getUsage() {
+                return null;
+            }
+
+            @Override
+            public StartupConfiguration getConfiguration() {
+                return null;
+            }
+        };
+    }
+
+    @After
+    public void tearDown() {
+        application = null;
+    }
+
+    @Test
+    public void testNotfier() {
+        assertNotNull(application.getNotifier());
+    }
 }

@@ -47,6 +47,8 @@ import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.cli.CommandContext;
+import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -57,15 +59,24 @@ import com.redhat.thermostat.common.storage.ConnectionFailedException;
 import com.redhat.thermostat.common.storage.MongoStorage;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.tools.BasicApplication;
+import com.redhat.thermostat.tools.BasicCommand;
 
-public final class AgentApplication extends BasicApplication {
+public final class AgentApplication extends BasicCommand {
+
+    private static final String NAME = "agent";
+
+    // TODO: Use LocaleResources for i18n-ized strings.
+    private static final String DESCRIPTION = "starts and stops the thermostat agent";
+
+    private static final String USAGE = "agent start|stop\n\n"
+                                + DESCRIPTION + "\n\n\t"
+                                + "With argument 'start', start the agent.\n\t"
+                                + "With argument 'stop', stop the agent.";
 
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
     
-    @Override
-    public void parseArguments(List<String> args) throws InvalidConfigurationException {
+    private void parseArguments(List<String> args) throws InvalidConfigurationException {
         configuration = AgentConfigsUtils.createAgentConfigs();
         parser = new AgentOptionParser(configuration, args);
         parser.parse();
@@ -131,20 +142,30 @@ public final class AgentApplication extends BasicApplication {
     }
     
     @Override
-    public void run() {
-         if (!parser.isHelp()) {
-             runAgent();
-         }
-    }
-
-    public static void main(String[] args) throws InvalidConfigurationException {        
-        AgentApplication service = new AgentApplication();
-        service.parseArguments(Arrays.asList(args));
-        service.run();
+    public void run(CommandContext ctx) throws CommandException {
+        try {
+            parseArguments(Arrays.asList(ctx.getArguments()));
+            if (!parser.isHelp()) {
+                runAgent();
+            }
+        } catch (InvalidConfigurationException ex) {
+            throw new CommandException(ex);
+        }
     }
 
     @Override
-    public void printHelp() {
-        // TODO: add help
+    public String getName() {
+        return NAME;
     }
+
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public String getUsage() {
+        return USAGE;
+    }
+
 }

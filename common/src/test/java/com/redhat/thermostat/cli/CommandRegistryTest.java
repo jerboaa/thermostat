@@ -77,12 +77,12 @@ public class CommandRegistryTest {
     }
 
     @Test
-    public void testRegisterCommands() {
+    public void testRegisterCommands() throws CommandException {
         runAndVerifyCommand("test1", cmd1);
         runAndVerifyCommand("test2", cmd2);
     }
 
-    private void runAndVerifyCommand(String name, Command cmd) {
+    private void runAndVerifyCommand(String name, Command cmd) throws CommandException {
         Command actualCmd = registry.getCommand(name);
         TestCommandContextFactory cf = new TestCommandContextFactory();
         CommandContext ctx = cf.createContext(new String[0]);

@@ -43,9 +43,9 @@ public class HelpCommand implements Command {
     private static final String NAME = "help";
     private static final String DESCRIPTION = "show help for a given command or help overview";
     private static final String USAGE = "help [COMMAND]\n\n"
-            + DESCRIPTION + "\n\n"
-            + "    With no arguments, print a list of commands with short help messages.\n\n"
-            + "    Given a command, print help for that command.";
+            + DESCRIPTION + "\n\n\t"
+            + "With no arguments, print a list of commands with short help messages.\n\n\t"
+            + "Given a command, print help for that command.";
 
     @Override
     public void run(CommandContext ctx) {

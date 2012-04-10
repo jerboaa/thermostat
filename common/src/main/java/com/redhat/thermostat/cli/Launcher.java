@@ -36,13 +36,62 @@
 
 package com.redhat.thermostat.cli;
 
-public interface Command {
+import java.util.Arrays;
+import java.util.ServiceLoader;
 
-    void run(CommandContext ctx) throws CommandException;
+public class Launcher {
 
-    String getName();
+    public static void main(String[] args) {
+        new Launcher(args).run();
+    }
 
-    String getDescription();
+    private Launcher(String[] args) {
+        this.args = args;
+    }
 
-    String getUsage();
+    private String[] args;
+
+    private void run() {
+        registerDefaultCommands();
+        if (hasNoArguments()) {
+            runHelpCommand();
+        } else {
+            runCommandFromArguments();
+        }
+    }
+
+    private boolean hasNoArguments() {
+        return args.length == 0;
+    }
+
+    private void runHelpCommand() {
+        runCommand("help", new String[0]);
+    }
+
+    private void runCommandFromArguments() {
+        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length));
+    }
+
+    private void runCommand(String cmdName, String[] cmdArgs) {
+        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
+        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
+        Command cmd = registry.getCommand(cmdName);
+        CommandContext ctx = cmdCtxFactory.createContext(cmdArgs);
+        runCommandWithContext(cmd, ctx);
+    }
+
+    private void runCommandWithContext(Command cmd, CommandContext ctx) {
+        try {
+            cmd.run(ctx);
+        } catch (CommandException e) {
+            ctx.getConsole().getError().println(e.getMessage());
+        }
+    }
+
+    private void registerDefaultCommands() {
+        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
+        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
+        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class);
+        registry.registerCommands(cmds);
+    }
 }

@@ -36,12 +36,10 @@
 
 package com.redhat.thermostat.tools;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import com.redhat.thermostat.agent.AgentApplication;
+import com.redhat.thermostat.cli.CommandContext;
+import com.redhat.thermostat.cli.CommandContextFactory;
+import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -54,39 +52,47 @@ import com.redhat.thermostat.tools.db.DBService;
  * Simple service that allows starting Agent and DB Backend
  * in a single step.
  */
-public class ThermostatService implements Application, ActionListener<ApplicationState> {
+public class ThermostatService extends BasicCommand implements ActionListener<ApplicationState> {
     
-    private Application database;
+    private static final String NAME = "service";
+
+    // TODO: Use LocaleResources for i18n-ized strings.
+    private static final String DESCRIPTION = "starts and stops the thermostat storage and agent";
+
+    private static final String USAGE = "service start|stop\n\n"
+                + DESCRIPTION + "\n\n\t"
+                + "With argument 'start', start the storage amd agent\n\t"
+                + "With argument 'stop', stop the storage and agent.";
+
+    private BasicCommand database;
     private AgentApplication agent;
     
     private ActionNotifier<ApplicationState> notifier;
-    
+
     public ThermostatService() {
         database = new DBService();
         agent = new AgentApplication();
         notifier = new ActionNotifier<>(this);
     }
     
-    @Override
-    public void parseArguments(List<String> args) throws InvalidConfigurationException {
+    private void addListeners() throws InvalidConfigurationException {
         // Currently, all the arguments are for the db. We only configure the
         // agent accordingly to the database settings.
         // so nothing else is done here at this stage
-        database.parseArguments(args);
         database.getNotifier().addActionListener(this);
         agent.getNotifier().addActionListener(this);
     }
 
     @Override
-    public void run() {
-        // just run the database, if the database is successful, let the
-        // listeners start the agent for us.
-        database.run();
-    }
-
-    @Override
-    public void printHelp() {
-        // TODO, no, really, seriously
+    public void run(CommandContext ctx) throws CommandException {
+        try {
+            addListeners();
+            // just run the database, if the database is successful, let the
+            // listeners start the agent for us.
+            database.run(ctx);
+        } catch (InvalidConfigurationException e) {
+            throw new CommandException(e);
+        }
     }
 
     @Override
@@ -98,15 +104,6 @@ public class ThermostatService implements Application, ActionListener<Applicatio
     public StartupConfiguration getConfiguration() {
         throw new NotImplementedException("NYI");
     }
-    
-    public static void main(String[] args) throws IOException, InvalidConfigurationException {
-        ThermostatService service = new ThermostatService();
-        // TODO: other than failing, this should really print the help
-        // from the appropriate application instead, see the printHelp comment
-        // too.
-        service.parseArguments(Arrays.asList(args));
-        service.run();
-    }
 
     @Override
     public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
@@ -116,14 +113,11 @@ public class ThermostatService implements Application, ActionListener<Applicatio
             // we started the database ourselves
             case START:
                 String dbUrl = database.getConfiguration().getDBConnectionString();
-                List<String> args = new ArrayList<>();
-                args.add("--dbUrl");
-                args.add(dbUrl);
+                String[] args = new String[] { "--dbUrl", dbUrl };
                 try {
-                    agent.parseArguments(args);
                     System.err.println("starting agent now...");
-                    agent.run();
-                } catch (InvalidConfigurationException e) {
+                    agent.run(CommandContextFactory.getInstance().createContext(args));
+                } catch (CommandException e) {
                     notifier.fireAction(ApplicationState.FAIL);
                 }
                 break;
@@ -136,5 +130,20 @@ public class ThermostatService implements Application, ActionListener<Applicatio
                 break;
             }
         }
+    }
+
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public String getUsage() {
+        return USAGE;
     }
 }

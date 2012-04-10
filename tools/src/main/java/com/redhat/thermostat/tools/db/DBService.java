@@ -43,21 +43,32 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import com.redhat.thermostat.cli.CommandContext;
+import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.tools.ApplicationException;
 import com.redhat.thermostat.tools.ApplicationState;
-import com.redhat.thermostat.tools.BasicApplication;
+import com.redhat.thermostat.tools.BasicCommand;
 
-public class DBService extends BasicApplication {
+public class DBService extends BasicCommand {
+
+    private static final String NAME = "storage";
+
+    // TODO: Use LocaleResources for i18n-ized strings.
+    private static final String DESCRIPTION = "starts and stops the thermostat storage";
+
+    private static final String USAGE = "storage start|stop\n\n"
+                + DESCRIPTION + "\n\n\t"
+                + "With argument 'start', start the storage.\n\t"
+                + "With argument 'stop', stop the storage.";
 
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
     
     private MongoProcessRunner runner;
     
-    @Override
-    public void parseArguments(List<String> args) throws InvalidConfigurationException {
+    private void parseArguments(List<String> args) throws InvalidConfigurationException {
     
         this.configuration = new DBStartupConfiguration();
         // configs, read everything that is in the configs
@@ -70,6 +81,43 @@ public class DBService extends BasicApplication {
         
         parser = new DBOptionParser(configuration, args);
         parser.parse();
+    }
+    
+    @Override
+    public void run(CommandContext ctx) throws CommandException {
+
+        try {
+            parseArgsAndRun(ctx);
+        } catch (InvalidConfigurationException e) {
+            throw new CommandException(e);
+        }
+    }
+
+    private void parseArgsAndRun(CommandContext ctx)
+            throws InvalidConfigurationException {
+        parseArguments(Arrays.asList(ctx.getArguments()));
+
+        // dry run means we don't do anything at all
+        if (parser.isDryRun()) return;
+        
+        runner = createRunner();
+        
+        try {
+            switch (parser.getAction()) {
+            case START:
+                startService();
+                break;
+            case STOP:
+                stopService();
+                break;
+             default:
+                break;
+            }
+            getNotifier().fireAction(ApplicationState.SUCCESS);
+            
+        } catch (Exception e) {
+            getNotifier().fireAction(ApplicationState.FAIL);
+        }
     }
     
     private void readAndSetProperties(File propertyFile) throws InvalidConfigurationException {
@@ -125,32 +173,6 @@ public class DBService extends BasicApplication {
         getNotifier().fireAction(ApplicationState.STOP);
     }
     
-    @Override
-    public void run() {
-        
-        // dry run means we don't do anything at all
-        if (parser.isDryRun()) return;
-        
-        runner = createRunner();
-        
-        try {
-            switch (parser.getAction()) {
-            case START:
-                startService();
-                break;
-            case STOP:
-                stopService();
-                break;
-             default:
-                break;
-            }
-            getNotifier().fireAction(ApplicationState.SUCCESS);
-            
-        } catch (Exception e) {
-            getNotifier().fireAction(ApplicationState.FAIL);
-        }
-    }
-    
     MongoProcessRunner createRunner() {
         return new MongoProcessRunner(configuration, parser.isQuiet());
     }
@@ -165,18 +187,23 @@ public class DBService extends BasicApplication {
     }
     
     @Override
-    public void printHelp() {
-        parser.displayHelp();
-    }
-    
-    @Override
     public DBStartupConfiguration getConfiguration() {
         return configuration;
     }
-    
-    public static void main(String[] args) throws InvalidConfigurationException {
-        DBService service = new DBService();
-        service.parseArguments(Arrays.asList(args));
-        service.run();
+
+    @Override
+    public String getName() {
+        return NAME;
     }
+
+    @Override
+    public String getDescription() {
+        return DESCRIPTION;
+    }
+
+    @Override
+    public String getUsage() {
+        return USAGE;
+    }
+
 }

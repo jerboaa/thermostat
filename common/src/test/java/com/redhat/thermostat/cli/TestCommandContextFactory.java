@@ -73,7 +73,7 @@ class TestCommandContextFactory extends CommandContextFactory {
     }
 
     @Override
-    CommandContext createContext(final String[] args) {
+    public CommandContext createContext(final String[] args) {
         return new CommandContext() {
 
             @Override

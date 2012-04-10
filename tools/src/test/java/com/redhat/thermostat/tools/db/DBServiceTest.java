@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.tools.db;
 
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -53,6 +53,8 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.cli.CommandContext;
+import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -105,17 +107,15 @@ public class DBServiceTest {
     }
     
     @Test
-    public void testConfig() throws InvalidConfigurationException {
+    public void testConfig() throws CommandException {
         
-        List<String> args = new ArrayList<>();
-        args.add("--quiet");
-        args.add("--start");
-        args.add("--dry-run");
-        
-        DBService service = new DBService();
-        service.parseArguments(args);
+        String[] args = new String[] {"--quiet", "--start", "--dry-run" };
+        CommandContext ctx = mock(CommandContext.class);
+        when(ctx.getArguments()).thenReturn(args);
 
-        service.run();
+        DBService service = new DBService();
+
+        service.run(ctx);
         
         DBStartupConfiguration conf = service.getConfiguration();
         
@@ -136,24 +136,18 @@ public class DBServiceTest {
         // TODO: stop not tested yet, but be sure it's not called from the code
         doThrow(new ApplicationException("mock exception")).when(runner).stopService();
         
-        List<String> args = new ArrayList<>();
-        args.add("--quiet");
-        args.add("--start");
-
         DBService service = new DBService() {
             @Override
             MongoProcessRunner createRunner() {
                 return runner;
             }
         };
-        service.parseArguments(args);
         
         return service;
     }
     
     @Test
-    public void testListeners() throws InvalidConfigurationException,
-            InterruptedException, IOException, ApplicationException
+    public void testListeners() throws InterruptedException, IOException, ApplicationException, InvalidConfigurationException, CommandException
     {
         DBService service = prepareService(true);
         
@@ -183,7 +177,7 @@ public class DBServiceTest {
             }
         });
         
-        service.run();
+        service.run(prepareContext());
         latch.await();
         
         Assert.assertTrue(result[0]);
@@ -191,8 +185,7 @@ public class DBServiceTest {
     }
     
     @Test
-    public void testListenersFail() throws InvalidConfigurationException,
-            InterruptedException, IOException, ApplicationException
+    public void testListenersFail() throws InterruptedException, IOException, ApplicationException, CommandException, InvalidConfigurationException
     {
         DBService service = prepareService(false);
         
@@ -214,9 +207,40 @@ public class DBServiceTest {
             }
         });
         
-        service.run();
+        service.run(prepareContext());
         latch.await();
         
         Assert.assertTrue(result[0]);
+    }
+
+    private CommandContext prepareContext() {
+        String[] args = new String[] { "--quiet", "--start" };
+        CommandContext ctx = mock(CommandContext.class);
+        when(ctx.getArguments()).thenReturn(args);
+        return ctx;
+    }
+
+    @Test
+    public void testName() {
+        DBService dbService = new DBService();
+        String name = dbService.getName();
+        assertEquals("storage", name);
+    }
+
+    @Test
+    public void testDescription() {
+        DBService dbService = new DBService();
+        String desc = dbService.getDescription();
+        assertEquals("starts and stops the thermostat storage", desc);
+    }
+
+    @Test
+    public void testUsage() {
+        DBService dbService = new DBService();
+        String usage = dbService.getUsage();
+        assertEquals("storage start|stop\n\n"
+                + "starts and stops the thermostat storage" + "\n\n\t"
+                + "With argument 'start', start the storage.\n\t"
+                + "With argument 'stop', stop the storage.", usage);
     }
 }
