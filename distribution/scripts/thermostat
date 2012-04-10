@@ -44,7 +44,6 @@ if [ x"$THERMOSTAT_HOME" = x ] ; then
   THERMOSTAT_HOME="@thermostat.home@"
 fi
 export THERMOSTAT_HOME
-
 THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
 JCOMMON_JAR="${THERMOSTAT_LIBS}/jcommon.jar"
@@ -59,7 +58,7 @@ SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
 THERM_DIR=${THERMOSTAT_LIBS}
 
 SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar:${THERM_DIR}/thermostat-tools-@project.version@.jar"
-SERVICE_MAIN="com.redhat.thermostat.tools.db.DBService"
+THERMOSTAT_MAIN="com.redhat.thermostat.tools.Thermostat"
 
-${JAVA} -cp ${SERVICE_CLASSPATH} ${SERVICE_MAIN} "$@"
+${JAVA} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "$@"
 exit $?
