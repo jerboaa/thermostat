@@ -45,6 +45,9 @@ import static org.mockito.Mockito.when;
 import java.beans.PropertyChangeEvent;
 import java.util.Objects;
 
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
+import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
@@ -54,6 +57,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
 
 import com.redhat.thermostat.client.ChangeableText;
@@ -62,8 +66,8 @@ import com.redhat.thermostat.client.SummaryPanelFacade;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.test.GUITest;
 
+@RunWith(CacioFESTRunner.class)
 public class MainWindowTest {
 
     private static class PropertyChangeEventMatcher extends ArgumentMatcher<PropertyChangeEvent> {
