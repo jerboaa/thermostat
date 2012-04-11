@@ -112,6 +112,16 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
             // we are only interested in starting the agent if
             // we started the database ourselves
             case START:
+                
+                // set a shutdown hook if the db was started by us
+                Runtime.getRuntime().addShutdownHook(new Thread() {
+                    @Override
+                    public void run() {
+                        String[] args = new String[] { "storage", "--stop" };
+                        Thermostat.main(args);
+                    }
+                });
+                
                 String dbUrl = database.getConfiguration().getDBConnectionString();
                 String[] args = new String[] { "--dbUrl", dbUrl };
                 try {
