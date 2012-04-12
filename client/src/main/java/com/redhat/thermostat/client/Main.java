@@ -81,7 +81,7 @@ public class Main {
             System.exit(-1);
         }
 
-        ClientPrefs prefs = new ClientPreferences();
+        ClientPreferences prefs = new ClientPreferences();
         StartupConfiguration config = new ConnectionConfiguration(prefs);
         
         StorageProvider connProv = new MongoStorageProvider(config);
