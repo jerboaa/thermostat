@@ -77,6 +77,8 @@ public abstract class Storage {
 
     public abstract void removeAgentInformation();
 
+    public abstract void updateAgentInformation(AgentInformation agentInfo);
+
     /**
      * @return {@code null} if the value is invalid or missing
      */

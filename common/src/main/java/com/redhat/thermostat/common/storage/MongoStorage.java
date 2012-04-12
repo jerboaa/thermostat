@@ -234,11 +234,15 @@ public class MongoStorage extends Storage {
     private DBObject createConfigDBObject(AgentInformation agentInfo) {
         BasicDBObject result = getAgentDBObject();
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_STOP_TIME, agentInfo.getStopTime());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ALIVE, agentInfo.isAlive());
+        
         BasicDBObject backends = new BasicDBObject();
         for (BackendInformation backend : agentInfo.getBackends()) {
             backends.put(backend.getName(), createBackendConfigDBObject(backend));
         }
         result.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS, backends);
+        
         return result;
     }
 
@@ -331,6 +335,17 @@ public class MongoStorage extends Storage {
         /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
         toInsert.putAll((BSONObject) getAgentDBObject());
         configCollection.insert(toInsert, WriteConcern.SAFE);
+    }
+    
+    @Override
+    public void updateAgentInformation(AgentInformation agentInfo) {
+        BasicDBObject queryObject = getAgentDBObject();
+
+        DBObject updated = createConfigDBObject(agentInfo);
+        updated.putAll((BSONObject) queryObject);
+
+        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
+        configCollection.update(queryObject, updated);
     }
 
     @Override

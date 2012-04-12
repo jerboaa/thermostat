@@ -61,6 +61,8 @@ public class Agent {
     private final BackendRegistry backendRegistry;
     private final AgentStartupConfiguration config;
 
+    private AgentInformation agentInfo;
+    
     private Storage storage;
     private Thread configWatcherThread = null;
 
@@ -101,7 +103,8 @@ public class Agent {
     public synchronized void start() throws LaunchException {
         if (configWatcherThread == null) {
             startBackends();
-            storage.addAgentInformation(createAgentInformation());
+            agentInfo = createAgentInformation();
+            storage.addAgentInformation(agentInfo);
             configWatcherThread = new Thread(new ConfigurationWatcher(storage, backendRegistry), "Configuration Watcher");
             configWatcherThread.start();
         } else {
@@ -119,6 +122,7 @@ public class Agent {
             backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
             agentInfo.addBackend(backendInfo);
         }
+        agentInfo.setAlive(true);
         return agentInfo;
     }
 
@@ -133,13 +137,19 @@ public class Agent {
                 }
             }
             configWatcherThread = null;
-            storage.removeAgentInformation();
+
             stopBackends();
             if (config.purge()) {
                 System.out.println("purging database");
                 logger.info("purging database");
+                storage.removeAgentInformation();
                 storage.purge();
+            } else {
+                agentInfo.setStopTime(System.currentTimeMillis());
+                agentInfo.setAlive(false);
+                storage.updateAgentInformation(agentInfo);
             }
+            
         } else {
             logger.warning("Attempt to stop agent which is not active");
         }

@@ -43,6 +43,10 @@ import java.util.List;
 public class AgentInformation {
 
     private long startTime;
+    private long stopTime;
+
+    private boolean alive;
+    
     private List<BackendInformation> backends = new ArrayList<BackendInformation>();
 
     public long getStartTime() {
@@ -53,10 +57,26 @@ public class AgentInformation {
         this.startTime = startTime;
     }
 
+    public void setStopTime(long stopTime) {
+        this.stopTime = stopTime;
+    }
+    
+    public long getStopTime() {
+        return stopTime;
+    }
+    
     public List<BackendInformation> getBackends() {
         return Collections.unmodifiableList(backends);
     }
 
+    public boolean isAlive() {
+        return alive;
+    }
+    
+    public void setAlive(boolean alive) {
+        this.alive = alive;
+    }
+    
     public void addBackend(BackendInformation backend) {
         backends.add(backend);
     }
