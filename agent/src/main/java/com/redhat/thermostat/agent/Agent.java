@@ -135,10 +135,11 @@ public class Agent {
             configWatcherThread = null;
             storage.removeAgentInformation();
             stopBackends();
-            // TODO
-//            if (config.getLocalMode()) {
-//                storage.purge();
-//            }
+            if (config.purge()) {
+                System.out.println("purging database");
+                logger.info("purging database");
+                storage.purge();
+            }
         } else {
             logger.warning("Attempt to stop agent which is not active");
         }

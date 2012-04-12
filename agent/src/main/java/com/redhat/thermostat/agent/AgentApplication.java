@@ -67,6 +67,7 @@ import com.redhat.thermostat.tools.BasicCommand;
 
 public final class AgentApplication extends BasicCommand {
 
+    private CommandContext contex;
     private static final String NAME = "agent";
 
     // TODO: Use LocaleResources for i18n-ized strings.
@@ -155,6 +156,9 @@ public final class AgentApplication extends BasicCommand {
         }
         logger.fine("Agent started.");
 
+        contex.getConsole().getOutput().println("Agent id: " + agent.getId());
+        logger.fine("Agent id: " + agent.getId());
+        
         try {
             System.in.read();
         } catch (IOException e) {
@@ -168,6 +172,7 @@ public final class AgentApplication extends BasicCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         try {
+            contex = ctx;
             parseArguments(Arrays.asList(ctx.getArguments()));
             if (!parser.isHelp()) {
                 runAgent();

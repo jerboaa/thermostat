@@ -37,11 +37,9 @@
 package com.redhat.thermostat.agent.config;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.logging.Level;
 
 import junit.framework.Assert;
@@ -77,13 +75,14 @@ public class AgentOptionParserTest {
         args.add("testURL");
         args.add("--debug");
         
-        AgentStartupConfiguration configs = new AgentStartupConfiguration();
+        AgentStartupConfiguration configs = AgentConfigsUtils.createAgentConfigs();
         AgentOptionParser parser = new AgentOptionParser(configs, args);
         parser.parse();
         
         Assert.assertEquals("testURL", configs.getDBConnectionString());
         Assert.assertEquals(Level.ALL, configs.getLogLevel());
         Assert.assertTrue(configs.isDebugConsole());
+        Assert.assertTrue(configs.purge());
     }
     
     @Test
@@ -94,6 +93,7 @@ public class AgentOptionParserTest {
         args.add("FINE");
         args.add("--dbUrl");
         args.add("testURL2");
+        args.add("--saveOnExit");
         
         AgentStartupConfiguration configs = new AgentStartupConfiguration();
         AgentOptionParser parser = new AgentOptionParser(configs, args);
@@ -102,5 +102,6 @@ public class AgentOptionParserTest {
         Assert.assertEquals("testURL2", configs.getDBConnectionString());
         Assert.assertEquals(Level.FINE, configs.getLogLevel());
         Assert.assertFalse(configs.isDebugConsole());
+        Assert.assertFalse(configs.purge());
     }
 }

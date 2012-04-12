@@ -85,6 +85,7 @@ public class TestUtils {
         Properties props = new Properties();            
 
         props.setProperty(AgentProperties.BACKENDS.name(), "system");
+        props.setProperty(AgentProperties.SAVE_ON_EXIT.name(), "false");
         props.setProperty(AgentProperties.LOG_LEVEL.name(), "WARNING");
 
         props.store(new FileOutputStream(tmpConfigs), "thermostat agent test properties");

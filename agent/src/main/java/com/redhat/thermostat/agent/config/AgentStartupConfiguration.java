@@ -58,6 +58,7 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     
     private Level logLevel;
     private boolean debugConsole;
+    private boolean purge;
     
     private String url;
     
@@ -134,5 +135,13 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     
     public long getStartTime() {
         return startTime;
+    }
+
+    void setPurge(boolean purge) {
+        this.purge = purge;
+    }
+    
+    public boolean purge() {
+        return purge;
     }
 }

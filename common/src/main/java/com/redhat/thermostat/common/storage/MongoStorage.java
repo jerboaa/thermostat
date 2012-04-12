@@ -262,13 +262,14 @@ public class MongoStorage extends Storage {
         return result;
     }
 
+    @Override
     public void purge() {
         BasicDBObject deleteKey = getAgentDBObject();
         for (DBCollection coll : collectionCache.values()) {
             coll.remove(deleteKey);
         }
     }
-
+    
     @Override
     public ConnectionKey createConnectionKey(Category category) {
         // TODO: There is probably some better place to do this, perhaps related to the inner class

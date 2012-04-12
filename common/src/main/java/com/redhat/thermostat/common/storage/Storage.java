@@ -59,10 +59,11 @@ public abstract class Storage {
 
     public abstract void updateChunk(Chunk chunk);
 
-    /* Drop all data related to the currently running agent.
+    /**
+     * Drop all data related to the currently running agent.
      */
     public abstract void purge();
-
+    
     public abstract Cursor findAll(Chunk query);
 
     public abstract Chunk find(Chunk query);

@@ -67,6 +67,7 @@ public class AgentOptionParser implements ThermostatOptionParser {
 
         parser.accepts(Args.DEBUG.option, Args.DEBUG.description);
         parser.accepts(Args.HELP.option, Args.HELP.description);
+        parser.accepts(Args.SAVE_ON_EXIT.option, Args.SAVE_ON_EXIT.description);
         
         OptionSpec<String> logLevel =
                 parser.accepts(Args.LEVEL.option, Args.LEVEL.description).
@@ -80,6 +81,10 @@ public class AgentOptionParser implements ThermostatOptionParser {
             displayHelp();
             isHelp = true;
             return;
+        }
+        
+        if (options.has(Args.SAVE_ON_EXIT.option)) {
+            configuration.setPurge(false);
         }
         
         if (options.has(Args.LEVEL.option)) {
@@ -119,6 +124,7 @@ public class AgentOptionParser implements ThermostatOptionParser {
         
         // TODO: localize
         LEVEL("logLevel", "log level"),
+        SAVE_ON_EXIT("saveOnExit", "save the data on exit"),
         DB("dbUrl", "connect to the given url"),
         DEBUG("debug", "launch with debug console enabled"),
         HELP("help", "print this help and exit");
