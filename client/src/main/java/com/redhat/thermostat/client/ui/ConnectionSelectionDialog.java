@@ -58,8 +58,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.dao.Connection;
-import com.redhat.thermostat.common.dao.Connection.ConnectionType;
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.Connection.ConnectionType;
 
 public class ConnectionSelectionDialog extends JDialog {
 

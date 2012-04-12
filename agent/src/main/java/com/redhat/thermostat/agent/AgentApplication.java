@@ -51,13 +51,18 @@ import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.ThreadPoolTimerFactory;
+import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.dao.Connection;
-import com.redhat.thermostat.common.dao.ConnectionProvider;
-import com.redhat.thermostat.common.dao.MongoConnectionProvider;
-import com.redhat.thermostat.common.storage.ConnectionFailedException;
-import com.redhat.thermostat.common.storage.MongoStorage;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
+import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.tools.BasicCommand;
 
@@ -96,21 +101,43 @@ public final class AgentApplication extends BasicCommand {
         }
         
         LoggingUtils.setGlobalLogLevel(configuration.getLogLevel());
-        Logger logger = LoggingUtils.getLogger(AgentApplication.class);
+        final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
-        ConnectionProvider connProv = new MongoConnectionProvider(configuration);
-        Connection connection = connProv.createConnection();
+        StorageProvider connProv = new MongoStorageProvider(configuration);
+        DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
-        Storage storage = new MongoStorage(connection);
-        try {
-            storage.connect();
-            logger.fine("Storage configured with database URI.");
-        } catch (ConnectionFailedException ex) {
-            logger.log(Level.SEVERE, "Could not initialize storage layer.", ex);
-            System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
-        }
+        Connection connection = daoFactory.getConnection();
+        ConnectionListener connectionListener = new ConnectionListener() {
+            @Override
+            public void changed(ConnectionStatus newStatus) {
+                switch (newStatus) {
+                case DISCONNECTED:
+                    logger.warning("Unexpected disconnect event.");
+                    break;
+                case CONNECTING:
+                    logger.fine("Connecting to storage.");
+                    break;
+                case CONNECTED:
+                    logger.fine("Connected to storage.");
+                    break;
+                case FAILED_TO_CONNECT:
+                    logger.warning("Could not connect to storage.");
+                    System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
+                default:
+                    logger.warning("Unfamiliar ConnectionStatus value");
+                }
+            }
+        };
+
+        connection.addListener(connectionListener);
+        connection.connect();
+        logger.fine("Connecting to storage...");
 
         BackendRegistry backendRegistry = null;
+        Storage storage = daoFactory.getStorage();
         try {
             backendRegistry = new BackendRegistry(configuration, storage);
         } catch (BackendLoadException ble) {

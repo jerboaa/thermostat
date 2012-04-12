@@ -56,13 +56,13 @@ import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.Connection;
-import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
-import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.dao.ConnectionProvider;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoConnectionProvider;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
+import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Main {
@@ -82,7 +82,7 @@ public class Main {
 
         StartupConfiguration config = new ConnectionConfiguration();
         
-        ConnectionProvider connProv = new MongoConnectionProvider(config);
+        StorageProvider connProv = new MongoStorageProvider(config);
         DAOFactory daoFactory = new MongoDAOFactory(connProv);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);

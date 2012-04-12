@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -83,7 +83,7 @@ public abstract class Connection {
     private ConnectionType type;
     private String url;
 
-    private List<ConnectionListener> listeners = new CopyOnWriteArrayList<ConnectionListener>();
+    private List<Connection.ConnectionListener> listeners = new CopyOnWriteArrayList<>();
 
     public void setType(ConnectionType type) {
         this.type = type;
