@@ -51,6 +51,7 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.AgentInformation;
 import com.redhat.thermostat.common.storage.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
@@ -64,6 +65,8 @@ public class AgentTest {
         when(config.getStartTime()).thenReturn(123L);
 
         Storage storage = mock(Storage.class);
+        DAOFactory daos = mock(DAOFactory.class);
+        when(daos.getStorage()).thenReturn(storage);
 
         Backend backend = mock(Backend.class);
         when(backend.getName()).thenReturn("testname");
@@ -77,7 +80,7 @@ public class AgentTest {
         when(backendRegistry.getAll()).thenReturn(backends);
 
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, storage);
+        Agent agent = new Agent(backendRegistry, config, daos);
         agent.start();
 
         // Verify that backend has been activated and storage received the agent information.

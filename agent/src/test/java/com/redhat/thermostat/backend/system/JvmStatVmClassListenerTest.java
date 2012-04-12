@@ -48,42 +48,52 @@ import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.event.VmEvent;
 
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.model.VmClassStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 
 public class JvmStatVmClassListenerTest {
+
+    private static final Integer VM_ID = 123;
+    private static final Long LOADED_CLASSES = 1234L;
 
     @Test
     public void testMonitorUpdatedClassStat() throws Exception {
 
-        SystemBackend backend = mock(SystemBackend.class);
-        int vmId = 123;
-        JvmStatVmClassListener l = new JvmStatVmClassListener(backend, vmId);
+        VmClassStatDAO dao = mock(VmClassStatDAO.class);
+        DAOFactory df = mock(DAOFactory.class);
+        when(df.getVmClassStatsDAO()).thenReturn(dao);
+        JvmStatVmClassListener l = new JvmStatVmClassListener(df, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);
-        when(m.getValue()).thenReturn(new Long(1234));
+        when(m.getValue()).thenReturn(LOADED_CLASSES);
         when(monitoredVm.findByName("java.cls.loadedClasses")).thenReturn(m);
         when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
 
         l.monitorsUpdated(vmEvent);
 
-        ArgumentCaptor<Chunk> chunkArg = ArgumentCaptor.forClass(Chunk.class);
-        verify(backend).store(chunkArg.capture());
-        assertEquals((Long) 1234L, chunkArg.getValue().get(new Key<Long>("loadedClasses", false)));
-        assertEquals((Integer) 123, chunkArg.getValue().get(new Key<Integer>("vm-id", false)));
+        ArgumentCaptor<VmClassStat> arg = ArgumentCaptor.forClass(VmClassStat.class);
+        verify(dao).putVmClassStat(arg.capture());
+        VmClassStat stat = arg.getValue();
+        assertEquals(LOADED_CLASSES, (Long) stat.getLoadedClasses());
+        assertEquals(VM_ID, (Integer) stat.getVmId());
     }
 
     @Test
     public void testMonitorUpdatedClassStatTwice() throws Exception {
 
-        SystemBackend backend = mock(SystemBackend.class);
-        int vmId = 123;
-        JvmStatVmClassListener l = new JvmStatVmClassListener(backend, vmId);
+        VmClassStatDAO dao = mock(VmClassStatDAO.class);
+        DAOFactory df = mock(DAOFactory.class);
+        when(df.getVmClassStatsDAO()).thenReturn(dao);
+        JvmStatVmClassListener l = new JvmStatVmClassListener(df, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);
-        when(m.getValue()).thenReturn(new Long(1234));
+        when(m.getValue()).thenReturn(LOADED_CLASSES);
         when(monitoredVm.findByName("java.cls.loadedClasses")).thenReturn(m);
         when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
 

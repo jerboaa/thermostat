@@ -44,6 +44,7 @@ import com.redhat.thermostat.agent.config.ConfigurationWatcher;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.AgentInformation;
 import com.redhat.thermostat.common.storage.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
@@ -63,15 +64,16 @@ public class Agent {
     private Storage storage;
     private Thread configWatcherThread = null;
 
-    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, Storage storage) {
-        this(backendRegistry, UUID.randomUUID(), config, storage);
+    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daos) {
+        this(backendRegistry, UUID.randomUUID(), config, daos);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, Storage storage) {
+    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, DAOFactory daos) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
-        this.storage = storage;
+        this.storage = daos.getStorage();
+        this.storage.setAgentId(agentId);
     }
 
     private void startBackends() throws LaunchException {

@@ -63,6 +63,11 @@ class HostInfoDAOImpl implements HostInfoDAO {
     }
 
     @Override
+    public void putHostInfo(HostInfo info) {
+        storage.putChunk(converter.toChunk(info));
+    }
+
+    @Override
     public Collection<HostRef> getHosts() {
         Collection<HostRef> hosts = new ArrayList<HostRef>();
         Cursor hostsCursor = storage.findAllFromCategory(hostInfoCategory);

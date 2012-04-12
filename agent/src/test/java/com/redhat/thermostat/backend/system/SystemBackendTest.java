@@ -39,6 +39,7 @@ package com.redhat.thermostat.backend.system;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 
@@ -46,6 +47,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.dao.CpuStatDAO;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -63,9 +65,21 @@ public class SystemBackendTest {
 
     @Before
     public void setUp() {
-        b = new SystemBackend();
         Storage s = mock(Storage.class);
-        b.setStorage(s);
+        CpuStatDAO cDAO = mock(CpuStatDAO.class);
+        HostInfoDAO hDAO = mock(HostInfoDAO.class);
+        MemoryStatDAO mDAO = mock(MemoryStatDAO.class);
+        VmCpuStatDAO vDAO = mock(VmCpuStatDAO.class);
+        NetworkInterfaceInfoDAO nDAO = mock(NetworkInterfaceInfoDAO.class);
+        DAOFactory df = mock(DAOFactory.class);
+        when(df.getStorage()).thenReturn(s);
+        when(df.getCpuStatDAO()).thenReturn(cDAO);
+        when(df.getHostInfoDAO()).thenReturn(hDAO);
+        when(df.getMemoryStatDAO()).thenReturn(mDAO);
+        when(df.getVmCpuStatDAO()).thenReturn(vDAO);
+        when(df.getNetworkInterfaceInfoDAO()).thenReturn(nDAO);
+        b = new SystemBackend();
+        b.setDAOFactory(df);
     }
 
     @Test

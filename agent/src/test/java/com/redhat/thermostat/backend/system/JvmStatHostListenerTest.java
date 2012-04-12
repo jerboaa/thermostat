@@ -48,6 +48,10 @@ import java.util.Set;
 import org.junit.Test;
 import org.mockito.Matchers;
 
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
+
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;
@@ -75,10 +79,14 @@ public class JvmStatHostListenerTest {
         when(host.getMonitoredVm(any(VmIdentifier.class))).thenReturn(vm);
         when(vmEvent.getMonitoredHost()).thenReturn(host);
 
-        JvmStatHostListener l = new JvmStatHostListener();
+        VmClassStatDAO vmClassDAO = mock(VmClassStatDAO.class);
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        DAOFactory df = mock(DAOFactory.class);
+        when(df.getVmClassStatsDAO()).thenReturn(vmClassDAO);
+        when(df.getVmInfoDAO()).thenReturn(vmInfoDAO);
+        JvmStatHostListener l = new JvmStatHostListener(df, true);
         SystemBackend backend = mock(SystemBackend.class);
         when(backend.getObserveNewJvm()).thenReturn(true);
-        l.setBackend(backend);
 
         l.vmStatusChanged(vmEvent);
 

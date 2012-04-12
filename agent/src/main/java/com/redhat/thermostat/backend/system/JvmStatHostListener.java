@@ -56,24 +56,25 @@ import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
-import com.redhat.thermostat.common.dao.VmInfoConverter;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.model.VmInfo;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
-    private SystemBackend backend;
-
-    private Map<Integer, JvmStatVmListener> listenerMap = new HashMap<Integer, JvmStatVmListener>();
+    private boolean attachNew;
+    private final DAOFactory df;
+    private final VmInfoDAO vmInfoDAO;
 
     private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
 
-    public void setBackend(SystemBackend backend) {
-        this.backend = backend;
+    JvmStatHostListener(DAOFactory df, boolean attachNew) {
+        this.df = df;
+        this.vmInfoDAO = df.getVmInfoDAO();
+        this.attachNew = attachNew;
     }
 
     @Override
@@ -129,17 +130,15 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                         extractor.getMainClass(), extractor.getCommandLine(),
                         extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
                         properties, environment, loadedNativeLibraries);
-                backend.store(new VmInfoConverter().toChunk(info));
+                vmInfoDAO.putVmInfo(info);
                 logger.finer("Sent VM_STARTED messsage");
             } catch (MonitorException me) {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
             }
 
-            if (backend.getObserveNewJvm()) {
-                JvmStatVmListener listener = new JvmStatVmListener(backend, vmId);
-                listenerMap.put(vmId, listener);
-                vm.addVmListener(listener);
-                vm.addVmListener(new JvmStatVmClassListener(backend, vmId));
+            if (attachNew) {
+                vm.addVmListener(new JvmStatVmListener(df, vmId));
+                vm.addVmListener(new JvmStatVmClassListener(df, vmId));
             } else {
                 logger.log(Level.FINE, "skipping new vm " + vmId);
             }
@@ -155,20 +154,11 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                 new VmIdentifier(vmId.toString()));
         if (resolvedVmID != null) {
             long stopTime = System.currentTimeMillis();
-            listenerMap.remove(vmId);
             for (JvmStatusListener statusListener : statusListeners) {
                 statusListener.jvmStopped(vmId);
             }
-            backend.update(makeVmInfoUpdateStoppedChunk(vmId, stopTime));
+            vmInfoDAO.putVmStoppedTime(vmId, stopTime);
         }
-    }
-
-    private Chunk makeVmInfoUpdateStoppedChunk(int vmId, long stopTimeStamp) {
-        // FIXME later
-        Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        chunk.put(VmInfoDAO.vmIdKey, vmId);
-        chunk.put(VmInfoDAO.stopTimeKey, stopTimeStamp);
-        return chunk;
     }
 
     @Override

@@ -41,6 +41,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ import java.util.Map;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Category;
@@ -236,5 +238,51 @@ public class VmInfoDAOTest {
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         Long count = dao.getCount();
         assertEquals((Long) 5L, count);
+    }
+
+    @Test
+    public void testPutVmInfo() {
+
+        Storage storage = mock(Storage.class);
+        VmInfo info = new VmInfo(vmId, startTime, stopTime, jVersion, jHome,
+                mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
+                props, env, libs);
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        dao.putVmInfo(info);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).putChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(VmInfoDAO.vmInfoCategory, chunk.getCategory());
+        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
+        assertEquals((Long) startTime, chunk.get(VmInfoDAO.startTimeKey));
+        assertEquals((Long) stopTime, chunk.get(VmInfoDAO.stopTimeKey));
+        assertEquals(jVersion, chunk.get(VmInfoDAO.runtimeVersionKey));
+        assertEquals(jHome, chunk.get(VmInfoDAO.javaHomeKey));
+        assertEquals(mainClass, chunk.get(VmInfoDAO.mainClassKey));
+        assertEquals(commandLine, chunk.get(VmInfoDAO.commandLineKey));
+        assertEquals(vmName, chunk.get(VmInfoDAO.vmNameKey));
+        assertEquals(vmInfo, chunk.get(VmInfoDAO.vmInfoKey));
+        assertEquals(vmVersion, chunk.get(VmInfoDAO.vmVersionKey));
+        assertEquals(vmArgs, chunk.get(VmInfoDAO.vmArgumentsKey));
+        assertEquals(props, chunk.get(VmInfoDAO.propertiesKey));
+        assertEquals(env, chunk.get(VmInfoDAO.environmentKey));
+        assertEquals(libs, chunk.get(VmInfoDAO.librariesKey));
+    }
+
+    @Test
+    public void testPutVmStoppedTime() {
+        Storage storage = mock(Storage.class);
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        dao.putVmStoppedTime(vmId, stopTime);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).updateChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(VmInfoDAO.vmInfoCategory, chunk.getCategory());
+        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
+        assertEquals((Long) stopTime, chunk.get(VmInfoDAO.stopTimeKey));
     }
 }

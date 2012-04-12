@@ -43,9 +43,11 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.redhat.thermostat.common.model.HostInfo;
@@ -56,6 +58,13 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 public class HostInfoDAOTest {
+
+    private static final String HOST_NAME = "a host name";
+    private static final String OS_NAME = "some os";
+    private static final String OS_KERNEL = "some kernel";
+    private static final String CPU_MODEL = "some cpu that runs fast";
+    private static final int CPU_NUM = -1;
+    private static final long MEMORY_TOTAL = 0xCAFEBABEl;
 
     @Test
     public void testCategory() {
@@ -73,12 +82,6 @@ public class HostInfoDAOTest {
 
     @Test
     public void testGetHostInfo() {
-        final String HOST_NAME = "a host name";
-        final String OS_NAME = "some os";
-        final String OS_KERNEL = "some kernel";
-        final String CPU_MODEL = "some cpu that runs fast";
-        final int CPU_NUM = -1;
-        final long MEMORY_TOTAL = 0xCAFEBABEl;
 
         Chunk chunk = new Chunk(HostInfoDAO.hostInfoCategory, false);
         chunk.put(HostInfoDAO.hostNameKey, HOST_NAME);
@@ -163,6 +166,26 @@ public class HostInfoDAOTest {
         when(storage.findAllFromCategory(HostInfoDAO.hostInfoCategory)).thenReturn(cursor);
 
         return storage;
+    }
+
+    @Test
+    public void testPutHostInfo() {
+        Storage storage = mock(Storage.class);
+        HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        HostInfoDAO dao = new HostInfoDAOImpl(storage);
+        dao.putHostInfo(info);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).putChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(HostInfoDAO.hostInfoCategory, chunk.getCategory());
+        assertEquals(HOST_NAME, chunk.get(HostInfoDAO.hostNameKey));
+        assertEquals(OS_NAME, chunk.get(HostInfoDAO.osNameKey));
+        assertEquals(OS_KERNEL, chunk.get(HostInfoDAO.osKernelKey));
+        assertEquals(CPU_MODEL, chunk.get(HostInfoDAO.cpuModelKey));
+        assertEquals((Integer) CPU_NUM, chunk.get(HostInfoDAO.cpuCountKey));
+        assertEquals((Long) MEMORY_TOTAL, chunk.get(HostInfoDAO.hostMemoryTotalKey));
     }
 
     @Test

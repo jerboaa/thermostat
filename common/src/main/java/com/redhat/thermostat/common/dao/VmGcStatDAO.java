@@ -54,4 +54,6 @@ public interface VmGcStatDAO {
             runCountKey, wallTimeKey);
 
     public List<VmGcStat> getLatestVmGcStats(VmRef ref);
+
+    public void putVmGcStat(VmGcStat stat);
 }

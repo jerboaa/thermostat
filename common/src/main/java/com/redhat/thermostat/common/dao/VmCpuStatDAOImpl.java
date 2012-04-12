@@ -64,4 +64,9 @@ class VmCpuStatDAOImpl implements VmCpuStatDAO {
         }
         return getter.getLatest();
     }
+
+    @Override
+    public void putVmCpuStat(VmCpuStat stat) {
+        storage.putChunk(converter.toChunk(stat));
+    }
 }

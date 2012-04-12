@@ -51,4 +51,6 @@ public interface VmClassStatDAO {
 
     public List<VmClassStat> getLatestClassStats(VmRef ref);
 
+    public void putVmClassStat(VmClassStat stat);
+
 }

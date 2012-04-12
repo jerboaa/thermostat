@@ -52,4 +52,6 @@ public interface NetworkInterfaceInfoDAO {
             Key.AGENT_ID, Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
 
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref);
+
+    public void putNetworkInterfaceInfo(NetworkInterfaceInfo info);
 }

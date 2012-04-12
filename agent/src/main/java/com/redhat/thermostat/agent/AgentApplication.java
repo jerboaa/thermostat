@@ -60,7 +60,6 @@ import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -137,16 +136,14 @@ public final class AgentApplication extends BasicCommand {
         logger.fine("Connecting to storage...");
 
         BackendRegistry backendRegistry = null;
-        Storage storage = daoFactory.getStorage();
         try {
-            backendRegistry = new BackendRegistry(configuration, storage);
+            backendRegistry = new BackendRegistry(configuration);
         } catch (BackendLoadException ble) {
             logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", ble);
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        Agent agent = new Agent(backendRegistry, configuration, storage);
-        storage.setAgentId(agent.getId());
+        Agent agent = new Agent(backendRegistry, configuration, daoFactory);
         try {
             logger.fine("Starting agent.");
             agent.start();

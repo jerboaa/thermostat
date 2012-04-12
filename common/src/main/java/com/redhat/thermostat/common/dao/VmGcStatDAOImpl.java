@@ -65,4 +65,9 @@ class VmGcStatDAOImpl implements VmGcStatDAO {
         return getter.getLatest();
     }
 
+    @Override
+    public void putVmGcStat(VmGcStat stat) {
+        storage.putChunk(converter.toChunk(stat));
+    }
+
 }

@@ -57,5 +57,7 @@ public interface HostInfoDAO extends Countable {
 
     HostInfo getHostInfo(HostRef ref);
 
+    void putHostInfo(HostInfo info);
+
     Collection<HostRef> getHosts();
 }

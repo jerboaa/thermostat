@@ -102,4 +102,21 @@ class VmInfoDAOImpl implements VmInfoDAO {
     public long getCount() {
         return storage.getCount(vmInfoCategory);
     }
+
+    @Override
+    public void putVmInfo(VmInfo info) {
+        storage.putChunk(converter.toChunk(info));
+    }
+
+    @Override
+    public void putVmStoppedTime(int vmId, long timestamp) {
+        storage.updateChunk(makeStoppedChunk(vmId, timestamp));
+    }
+
+    private Chunk makeStoppedChunk(int vmId, long stopTimeStamp) {
+        Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, false);
+        chunk.put(VmInfoDAO.vmIdKey, vmId);
+        chunk.put(VmInfoDAO.stopTimeKey, stopTimeStamp);
+        return chunk;
+    }
 }
