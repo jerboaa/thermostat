@@ -307,6 +307,16 @@ public class MainWindow extends JFrame implements MainView {
         });
         editMenu.add(configureAgentMenuItem);
 
+        JMenuItem configureClientMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_CLIENT));
+        configureClientMenuItem.setName("showClientConfig");
+        configureClientMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.SHOW_CLIENT_CONFIG);
+            }
+        });
+        editMenu.add(configureClientMenuItem);
+
         JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);

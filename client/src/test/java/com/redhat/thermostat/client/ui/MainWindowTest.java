@@ -49,6 +49,7 @@ import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
+import org.fest.swing.fixture.JMenuItemFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
 import org.fest.swing.junit.v4_5.runner.GUITestRunner;
 import org.hamcrest.Description;
@@ -147,13 +148,26 @@ public class MainWindowTest {
     @Test
     public void verifyShowMainWindowShowsWindow() {
         GuiActionRunner.execute(new GuiTask() {
-            
+
             @Override
             protected void executeInEDT() throws Throwable {
                 window.showMainWindow();
             }
         });
         frameFixture.requireVisible();
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void verifyThatClientPreferencesMenuItemTriggersEvent() {
+        frameFixture.show();
+        JMenuItemFixture menuItem = frameFixture.menuItem("showClientConfig");
+        menuItem.click();
+        frameFixture.close();
+        frameFixture.requireNotVisible();
+
+        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_CLIENT_CONFIG));
+
     }
 
     @Category(GUITest.class)
@@ -166,5 +180,5 @@ public class MainWindowTest {
         assertEquals("test", window.getHostVmTreeFilter());
     }
 
-    
+
 }

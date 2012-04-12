@@ -34,25 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.config;
 
-import com.redhat.thermostat.common.ActionListener;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import java.util.prefs.Preferences;
 
+import org.junit.Test;
 
-public interface MainView {
+public class ClientPreferencesTest {
 
-    enum Action {
-        HOST_VM_TREE_FILTER,
-        SHOW_CLIENT_CONFIG,
-        SHUTDOWN
+    @Test
+    public void testGetConnectionUrl() {
+
+        Preferences prefs = mock(Preferences.class);
+        when(prefs.get(eq("connection-url"), any(String.class))).thenReturn("mock-value");
+
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        String value = clientPrefs.getConnectionUrl();
+
+        assertEquals("mock-value", value);
+        verify(prefs).get(eq("connection-url"), any(String.class));
     }
 
-    void addActionListener(ActionListener<Action> capture);
+    @Test
+    public void testSetConnectionUrl() {
 
-    void updateTree(String eq, HostsVMsLoader any);
+        Preferences prefs = mock(Preferences.class);
 
-    void showMainWindow();
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        clientPrefs.setConnectionUrl("test");
 
-    String getHostVmTreeFilter();
+        verify(prefs).put(eq("connection-url"), eq("test"));
+    }
+
 
 }

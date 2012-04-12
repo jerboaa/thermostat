@@ -34,25 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.common.ActionListener;
 
-
-public interface MainView {
+public interface ClientConfigurationView {
 
     enum Action {
-        HOST_VM_TREE_FILTER,
-        SHOW_CLIENT_CONFIG,
-        SHUTDOWN
+        CLOSE_CANCEL,
+        CLOSE_ACCEPT,
     }
 
-    void addActionListener(ActionListener<Action> capture);
+    void addListener(ActionListener<Action> listener);
 
-    void updateTree(String eq, HostsVMsLoader any);
+    void removeListener(ActionListener<Action> listener);
 
-    void showMainWindow();
+    void setConnectionUrl(String url);
+    String getConnectionUrl();
 
-    String getHostVmTreeFilter();
+    void showDialog();
+    void hideDialog();
 
 }

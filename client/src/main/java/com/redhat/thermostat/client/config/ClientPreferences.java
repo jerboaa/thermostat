@@ -34,25 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.config;
 
-import com.redhat.thermostat.common.ActionListener;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
+public class ClientPreferences {
 
-public interface MainView {
+    private static final String CONNECTION_URL = "connection-url";
 
-    enum Action {
-        HOST_VM_TREE_FILTER,
-        SHOW_CLIENT_CONFIG,
-        SHUTDOWN
+    private final Preferences prefs;
+
+    public ClientPreferences() {
+        this(Preferences.userRoot().node("thermostat"));
     }
 
-    void addActionListener(ActionListener<Action> capture);
+    ClientPreferences(Preferences prefs) {
+        this.prefs = prefs;
+    }
 
-    void updateTree(String eq, HostsVMsLoader any);
+    public String getConnectionUrl() {
+        return prefs.get(CONNECTION_URL, "mongodb://127.0.0.1:27518");
+    }
 
-    void showMainWindow();
+    public void setConnectionUrl(String url) {
+        prefs.put(CONNECTION_URL, url);
+    }
 
-    String getHostVmTreeFilter();
-
+    public void flush() throws BackingStoreException {
+        prefs.flush();
+    }
 }

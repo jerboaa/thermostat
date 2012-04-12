@@ -47,6 +47,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.client.config.ClientPreferences;
 import com.redhat.thermostat.client.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
@@ -80,7 +81,8 @@ public class Main {
             System.exit(-1);
         }
 
-        StartupConfiguration config = new ConnectionConfiguration();
+        ClientPrefs prefs = new ClientPreferences();
+        StartupConfiguration config = new ConnectionConfiguration(prefs);
         
         StorageProvider connProv = new MongoStorageProvider(config);
         DAOFactory daoFactory = new MongoDAOFactory(connProv);

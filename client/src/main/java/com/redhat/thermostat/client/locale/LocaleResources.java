@@ -57,6 +57,7 @@ public enum LocaleResources {
     MENU_FILE_EXIT,
     MENU_EDIT,
     MENU_EDIT_CONFIGURE_AGENT,
+    MENU_EDIT_CONFIGURE_CLIENT,
     MENU_HELP,
     MENU_HELP_ABOUT,
 
@@ -178,7 +179,12 @@ public enum LocaleResources {
 
     CONFIGURE_AGENT_WINDOW_TITLE,
     CONFIGURE_AGENT_AGENTS_LIST,
-    CONFIGURE_ENABLE_BACKENDS;
+    CONFIGURE_ENABLE_BACKENDS,
+
+    CLIENT_PREFS_WINDOW_TITLE,
+    CLIENT_PREFS_GENERAL,
+    CLIENT_PREFS_STORAGE_URL,
+    ;
 
     static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.client.locale.strings";
