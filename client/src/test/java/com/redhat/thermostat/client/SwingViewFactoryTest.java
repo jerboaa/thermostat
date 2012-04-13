@@ -39,6 +39,8 @@ package com.redhat.thermostat.client;
 import static org.junit.Assert.assertNotNull;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.SwingUtilities;
 
@@ -54,6 +56,7 @@ import com.redhat.thermostat.client.ui.VmCpuView;
 import com.redhat.thermostat.client.ui.VmGcView;
 import com.redhat.thermostat.client.ui.VmMemoryView;
 import com.redhat.thermostat.client.ui.VmOverviewView;
+import com.redhat.thermostat.common.View;
 
 public class SwingViewFactoryTest {
 
@@ -64,20 +67,20 @@ public class SwingViewFactoryTest {
             public void run() {
                 SwingViewFactory factory = new SwingViewFactory();
 
-                Class[] knownViewClasses = new Class[] {
-                    AgentConfigurationView.class,
-                    ClientConfigurationView.class,
-                    HostCpuView.class,
-                    HostMemoryView.class,
-                    HostOverviewView.class,
-                    VmClassStatView.class,
-                    VmCpuView.class,
-                    VmGcView.class,
-                    VmMemoryView.class,
-                    VmOverviewView.class,
-                };
+                List<Class<? extends View>> knownViewClasses = new ArrayList<>();
 
-                for (Class klass: knownViewClasses) {
+                knownViewClasses.add(AgentConfigurationView.class);
+                knownViewClasses.add(ClientConfigurationView.class);
+                knownViewClasses.add(HostCpuView.class);
+                knownViewClasses.add(HostMemoryView.class);
+                knownViewClasses.add(HostOverviewView.class);
+                knownViewClasses.add(VmClassStatView.class);
+                knownViewClasses.add(VmCpuView.class);
+                knownViewClasses.add(VmGcView.class);
+                knownViewClasses.add(VmMemoryView.class);
+                knownViewClasses.add(VmOverviewView.class);
+
+                for (Class<? extends View> klass: knownViewClasses) {
                     assertNotNull(factory.getViewClass(klass));
                     assertNotNull(factory.getView(klass));
                 }

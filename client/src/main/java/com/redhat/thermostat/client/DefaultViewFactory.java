@@ -69,7 +69,11 @@ public class DefaultViewFactory implements ViewFactory {
 
     @Override
     public <T extends View> Class<? extends T> getViewClass(Class<T> viewClass) {
-        return (Class<? extends T>) lookupTable.get(viewClass);
+        // the cast is safe because the only way to insert an entry into the table is through
+        // a method that enforces this constraint
+        @SuppressWarnings("unchecked")
+        Class<? extends T> result = (Class<? extends T>) lookupTable.get(viewClass);
+        return result;
     }
 
     @Override
