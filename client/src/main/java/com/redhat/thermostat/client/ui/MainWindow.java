@@ -85,9 +85,7 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import com.redhat.thermostat.client.AgentConfigurationSource;
 import com.redhat.thermostat.client.ApplicationInfo;
-import com.redhat.thermostat.client.Configuration;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.UiFacadeFactory;
@@ -302,7 +300,7 @@ public class MainWindow extends JFrame implements MainView {
         configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                new Configuration().showAgentConfiguration();
+                fireViewAction(Action.SHOW_AGENT_CONFIG);
             }
         });
         editMenu.add(configureAgentMenuItem);

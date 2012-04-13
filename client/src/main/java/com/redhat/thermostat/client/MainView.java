@@ -43,8 +43,9 @@ public interface MainView {
 
     enum Action {
         HOST_VM_TREE_FILTER,
+        SHOW_AGENT_CONFIG,
         SHOW_CLIENT_CONFIG,
-        SHUTDOWN
+        SHUTDOWN,
     }
 
     void addActionListener(ActionListener<Action> capture);

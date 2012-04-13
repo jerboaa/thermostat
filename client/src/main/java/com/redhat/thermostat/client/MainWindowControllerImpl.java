@@ -40,6 +40,9 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.config.ClientPreferences;
+import com.redhat.thermostat.client.ui.AgentConfigurationController;
+import com.redhat.thermostat.client.ui.AgentConfigurationModel;
+import com.redhat.thermostat.client.ui.AgentConfigurationView;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.common.ActionEvent;
@@ -136,6 +139,9 @@ public class MainWindowControllerImpl implements MainWindowController {
                     String filter = view.getHostVmTreeFilter();
                     setHostVmTreeFilter(filter);
                     break;
+                case SHOW_AGENT_CONFIG:
+                    showAgentConfiguration();
+                    break;
                 case SHOW_CLIENT_CONFIG:
                     showConfigureClientPreferences();
                     break;
@@ -152,6 +158,14 @@ public class MainWindowControllerImpl implements MainWindowController {
     @Override
     public void showMainMainWindow() {
         view.showMainWindow();
+    }
+
+    private void showAgentConfiguration() {
+        AgentConfigurationSource agentPrefs = new AgentConfigurationSource();
+        AgentConfigurationModel model = new AgentConfigurationModel(agentPrefs);
+        AgentConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(AgentConfigurationView.class);
+        AgentConfigurationController controller = new AgentConfigurationController(model, view);
+        controller.showView();
     }
 
     private void showConfigureClientPreferences() {
