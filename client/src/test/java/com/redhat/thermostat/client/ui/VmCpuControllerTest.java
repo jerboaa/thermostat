@@ -57,6 +57,7 @@ import com.redhat.thermostat.common.model.VmCpuStat;
 
 public class VmCpuControllerTest {
 
+    @SuppressWarnings("unchecked") // any(List.class)
     @Test
     public void testChartUpdate() {
 

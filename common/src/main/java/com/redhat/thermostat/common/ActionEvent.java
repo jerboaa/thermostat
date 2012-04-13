@@ -40,6 +40,8 @@ import java.util.EventObject;
 
 public class ActionEvent<T extends Enum<?>> extends EventObject {
 
+    private static final long serialVersionUID = -8648206929150142342L;
+
     public ActionEvent(Object source, T actionId) {
         super(source);
         if (actionId == null) {

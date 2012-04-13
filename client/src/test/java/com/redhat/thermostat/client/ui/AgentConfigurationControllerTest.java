@@ -46,7 +46,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +57,6 @@ import org.mockito.InOrder;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.client.AgentConfigurationSource;
 import com.redhat.thermostat.client.ui.AgentConfigurationView.ConfigurationAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -154,6 +152,7 @@ public class AgentConfigurationControllerTest {
     /**
      * Verify that the accepting the changes signals the controller
      */
+    @SuppressWarnings("unchecked") // All this ActionListener fluff
     @Test
     public void testViewEditedBackends() {
         final ActionListener<ConfigurationAction>[] listeners = (ActionListener<ConfigurationAction>[]) new ActionListener<?>[1];
@@ -195,6 +194,7 @@ public class AgentConfigurationControllerTest {
     /**
      * Verify that controller handles cancel properly
      */
+    @SuppressWarnings("unchecked") // All this ActionListener fluff.
     @Test
     public void testViewCancelEditingBackends() {
         final ActionListener<ConfigurationAction>[] listeners = (ActionListener<ConfigurationAction>[]) new ActionListener<?>[1];

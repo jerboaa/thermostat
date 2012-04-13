@@ -43,10 +43,6 @@ import java.lang.management.ManagementFactory;
 import java.util.Properties;
 import java.util.Random;
 
-import junit.framework.Assert;
-
-import org.junit.BeforeClass;
-
 import com.redhat.thermostat.agent.config.AgentProperties;
 import com.redhat.thermostat.backend.BackendsProperties;
 

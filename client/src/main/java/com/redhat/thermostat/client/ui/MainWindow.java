@@ -86,7 +86,6 @@ import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.Configuration;
-import com.redhat.thermostat.client.AgentConfigurationSource;
 import com.redhat.thermostat.client.ApplicationInfo;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;

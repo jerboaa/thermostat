@@ -59,6 +59,7 @@ public class ClientConfigurationFrameTest {
     private FrameFixture frameFixture;
     private ActionListener<ClientConfigurationView.Action> l;
 
+    @SuppressWarnings("unchecked") // ActionListener
     @Before
     public void setUp() {
         frame = new ClientConfigurationFrame();

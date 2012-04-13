@@ -55,6 +55,8 @@ import com.redhat.thermostat.common.ActionListener;
 
 public class ClientConfigurationFrame extends JFrame implements ClientConfigurationView, java.awt.event.ActionListener {
 
+    private static final long serialVersionUID = 6888957994092403516L;
+
     private final JTextField storageUrl;
     private final JButton btnOk;
     private final JButton btnCancel;

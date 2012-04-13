@@ -70,6 +70,8 @@ import javax.swing.event.ListSelectionListener;
 
 public class AgentConfigurationFrame extends JFrame implements AgentConfigurationView, java.awt.event.ActionListener, ListSelectionListener {
 
+    private static final long serialVersionUID = -6049272471909474886L;
+
     private final CopyOnWriteArrayList<ActionListener<ConfigurationAction>> listeners = new CopyOnWriteArrayList<>();
 
     private final Map<String, JCheckBox> backends = Collections.synchronizedMap(new HashMap<String, JCheckBox>());

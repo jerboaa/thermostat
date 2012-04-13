@@ -117,12 +117,14 @@ class ChunkConverter {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void dbObjectToChunkRecursively(Chunk chunk, DBObject dbObject, Category category, String dbKey, String fullKey) {
         Object value = dbObject.get(dbKey);
         if (value instanceof DBObject) {
             DBObject dbObj = (DBObject) value;
             dbObjectToChunkRecurse(chunk, dbObj, category, fullKey);
         } else {
+            @SuppressWarnings("rawtypes")
             Key key = category.getKey(fullKey);
             if (key != null) {
                 chunk.put(key, value);

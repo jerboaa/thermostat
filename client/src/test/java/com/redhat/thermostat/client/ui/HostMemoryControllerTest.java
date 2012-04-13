@@ -58,6 +58,7 @@ import com.redhat.thermostat.common.model.MemoryStat;
 
 public class HostMemoryControllerTest {
 
+    @SuppressWarnings("unchecked") // any(List.class)
     @Test
     public void testUpdate() {
         HostInfo hostInfo = new HostInfo("someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, 1024);

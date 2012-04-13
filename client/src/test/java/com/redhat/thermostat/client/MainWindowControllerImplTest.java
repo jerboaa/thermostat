@@ -65,7 +65,6 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.storage.Chunk;
 
 public class MainWindowControllerImplTest {
 
@@ -80,6 +79,7 @@ public class MainWindowControllerImplTest {
     private HostInfoDAO mockHostsDAO;
     private VmInfoDAO mockVmsDAO;
 
+    @SuppressWarnings({ "unchecked", "rawtypes" }) // ActionListener fluff
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();

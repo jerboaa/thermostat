@@ -51,9 +51,6 @@ import sun.jvmstat.monitor.event.VmEvent;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Storage;
 
 public class JvmStatVmClassListenerTest {
 

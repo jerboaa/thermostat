@@ -58,6 +58,7 @@ import com.redhat.thermostat.common.model.VmClassStat;
 
 public class VmClassStatControllerTest {
 
+    @SuppressWarnings("unchecked") // any(List.class)
     @Test
     public void testChartUpdate() {
 

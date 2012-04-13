@@ -44,7 +44,6 @@ import java.util.Collection;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.internal.verification.Times;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
