@@ -39,12 +39,15 @@ package com.redhat.thermostat.agent;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -58,27 +61,37 @@ import com.redhat.thermostat.common.storage.Storage;
 
 public class AgentTest {
 
-    @Test
-    public void testStartAgent() throws Exception {
-        // Setup class under test and test data (config, backendRegistry).
-        AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
+    private AgentStartupConfiguration config;
+    private Storage storage;
+    private BackendRegistry backendRegistry;
+    private Backend backend;
+    private DAOFactory daos;
+    
+    @Before
+    public void setUp() {
+        config = mock(AgentStartupConfiguration.class);
         when(config.getStartTime()).thenReturn(123L);
-
-        Storage storage = mock(Storage.class);
-        DAOFactory daos = mock(DAOFactory.class);
+        when(config.purge()).thenReturn(true);
+        
+        storage = mock(Storage.class);
+        daos = mock(DAOFactory.class);
         when(daos.getStorage()).thenReturn(storage);
-
-        Backend backend = mock(Backend.class);
+        
+        backend = mock(Backend.class);
         when(backend.getName()).thenReturn("testname");
         when(backend.getDescription()).thenReturn("testdesc");
         when(backend.getObserveNewJvm()).thenReturn(true);
         when(backend.activate()).thenReturn(true); // TODO: activate() should not return anything and throw exception in error case.
         Collection<Backend> backends = new ArrayList<Backend>();
         backends.add(backend);
-
-        BackendRegistry backendRegistry = mock(BackendRegistry.class);
+        
+        backendRegistry = mock(BackendRegistry.class);
         when(backendRegistry.getAll()).thenReturn(backends);
-
+    }
+    
+    @Test
+    public void testStartAgent() throws Exception {
+        
         // Start agent.
         Agent agent = new Agent(backendRegistry, config, daos);
         agent.start();
@@ -96,5 +109,40 @@ public class AgentTest {
         assertEquals(true, backend0.isObserveNewJvm());
         // TODO: We should probably also test getPIDs() and getConfiguration(), but it's not clear to me at this point
         // what those should really do (and it looks like they're not implemented yet).
+    }
+    
+    @Test
+    public void testStopAgentWithPurging() throws Exception {
+        Agent agent = new Agent(backendRegistry, config, daos);
+        agent.start();
+        
+        // stop agent
+        agent.stop();
+        
+        verify(backend).deactivate();
+
+        ArgumentCaptor<AgentInformation> argument = ArgumentCaptor.forClass(AgentInformation.class);        
+        verify(storage, never()).updateAgentInformation(argument.capture());
+        verify(storage, times(1)).purge();
+    }
+    
+    @Test
+    public void testStopAgent() throws Exception {
+        
+        AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
+        when(config.getStartTime()).thenReturn(123L);
+        when(config.purge()).thenReturn(false);
+        
+        Agent agent = new Agent(backendRegistry, config, daos);
+        agent.start();
+        
+        // stop agent
+        agent.stop();
+        
+        verify(backend).deactivate();
+
+        ArgumentCaptor<AgentInformation> argument = ArgumentCaptor.forClass(AgentInformation.class);        
+        verify(storage).updateAgentInformation(argument.capture());
+        verify(storage, times(0)).purge();
     }
 }
