@@ -61,12 +61,9 @@ public class VmCpuController implements AsyncUiFacade {
     public VmCpuController(VmRef ref) {
         this.ref = ref;
         dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO();
-        view = createView();
+        view = ApplicationContext.getInstance().getViewFactory().getView(VmCpuView.class);
     }
 
-    protected VmCpuView createView() {
-        return new VmCpuPanel();
-    }
 
     @Override
     public void start() {

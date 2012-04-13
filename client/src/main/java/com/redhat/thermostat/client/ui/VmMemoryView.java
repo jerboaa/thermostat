@@ -38,7 +38,9 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Component;
 
-public interface VmMemoryView {
+import com.redhat.thermostat.common.View;
+
+public interface VmMemoryView extends View {
 
     void setMemoryRegionSize(String name, long used, long allocated, long max);
 

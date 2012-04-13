@@ -34,19 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.common;
 
-import java.awt.Component;
-import java.util.List;
+public interface ViewFactory {
 
-import com.redhat.thermostat.common.View;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+    public <T extends View> T getView(Class<T> viewClass);
 
-public interface VmClassStatView extends View {
+    public <T extends View> Class<? extends T> getViewClass(Class<T> viewClass);
 
-    void clearClassCount();
-
-    void addClassCount(List<DiscreteTimeData<Long>> data);
-
-    Component getUiComponent();
+    public <T extends View > void setViewClass(Class<T> viewClass, Class<? extends T> implClass);
 }

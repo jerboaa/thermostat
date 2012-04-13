@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.ui;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -45,9 +46,12 @@ import static org.mockito.Mockito.when;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -57,6 +61,11 @@ import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.MemoryStat;
 
 public class HostMemoryControllerTest {
+
+    @Before
+    public void setUp() {
+        ApplicationContextUtil.resetApplicationContext();
+    }
 
     @SuppressWarnings("unchecked") // any(List.class)
     @Test
@@ -77,14 +86,12 @@ public class HostMemoryControllerTest {
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         HostRef ref = mock(HostRef.class);
-        final HostMemoryView view = mock(HostMemoryView.class);
-        // TODO: Consider to pass the ClassesView or a factory for it to the controller instead.
-        HostMemoryController controller = new HostMemoryController(ref) {
-            @Override
-            protected HostMemoryView createView() {
-                return view;
-            }
-        };
+        HostMemoryView view = mock(HostMemoryView.class);
+        ViewFactory viewFactory = mock(ViewFactory.class);
+        when(viewFactory.getView(eq(HostMemoryView.class))).thenReturn(view);
+        ApplicationContext.getInstance().setViewFactory(viewFactory);
+
+        HostMemoryController controller = new HostMemoryController(ref);
 
         controller.start();
 

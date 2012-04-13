@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -58,6 +59,7 @@ import com.redhat.thermostat.client.ui.HostCpuView;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
@@ -107,14 +109,13 @@ public class HostCpuControllerTest {
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         view = mock(HostCpuView.class);
+        ViewFactory viewFactory = mock(ViewFactory.class);
+        when(viewFactory.getView(eq(HostCpuView.class))).thenReturn(view);
+
+        ApplicationContext.getInstance().setViewFactory(viewFactory);
+
         HostRef host = new HostRef("123", "fluffhost");
-        controller = new HostCpuController(host) {
-            // TODO: Reverse dependency.
-            @Override
-            protected HostCpuView createView() {
-                return view;
-            }
-        };
+        controller = new HostCpuController(host);
 
         timerAction = actionCaptor.getValue();
     }

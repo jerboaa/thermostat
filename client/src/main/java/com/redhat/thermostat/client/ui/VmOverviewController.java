@@ -64,7 +64,7 @@ public class VmOverviewController implements AsyncUiFacade {
 
     public VmOverviewController(VmRef vmRef) {
         this.ref = vmRef;
-        this.view = createView();
+        this.view = ApplicationContext.getInstance().getViewFactory().getView(VmOverviewView.class);
 
         dao = ApplicationContext.getInstance().getDAOFactory().getVmInfoDAO();
 
@@ -108,10 +108,6 @@ public class VmOverviewController implements AsyncUiFacade {
     @Override
     public void stop() {
         timer.cancel();
-    }
-
-    protected VmOverviewView createView() {
-        return new VmOverviewPanel();
     }
 
     public Component getComponent() {

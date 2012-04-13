@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -49,6 +50,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.ui.VmClassStatController;
 import com.redhat.thermostat.client.ui.VmClassStatView;
+import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
@@ -75,15 +77,13 @@ public class VmClassStatControllerTest {
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);
 
-        final VmClassStatView view = mock(VmClassStatView.class);
+        VmClassStatView view = mock(VmClassStatView.class);
+        ViewFactory viewFactory = mock(ViewFactory.class);
+        when(viewFactory.getView(eq(VmClassStatView.class))).thenReturn(view);
 
-        // TODO: Consider to pass the ClassesView or a factory for it to the controller instead.
-        VmClassStatController controller = new VmClassStatController(ref) {
-            @Override
-            protected VmClassStatView createView() {
-                return view;
-            }
-        };
+        ApplicationContext.getInstance().setViewFactory(viewFactory);
+
+        VmClassStatController controller = new VmClassStatController(ref);
 
         controller.start();
 

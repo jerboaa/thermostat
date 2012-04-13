@@ -39,8 +39,9 @@ package com.redhat.thermostat.client.ui;
 import java.util.Map;
 
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.View;
 
-public interface AgentConfigurationView {
+public interface AgentConfigurationView extends View {
 
     enum ConfigurationAction {
         SWITCH_AGENT,

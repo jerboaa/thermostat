@@ -61,7 +61,7 @@ public class VmMemoryController implements AsyncUiFacade {
     public VmMemoryController(VmRef ref) {
         this.ref = ref;
         dao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
-        view = createView();
+        view = ApplicationContext.getInstance().getViewFactory().getView(VmMemoryView.class);
     }
 
     @Override
@@ -86,10 +86,6 @@ public class VmMemoryController implements AsyncUiFacade {
     @Override
     public void stop() {
         timer.cancel();
-    }
-
-    protected VmMemoryView createView() {
-        return new VmMemoryPanel();
     }
 
     public Component getComponent() {

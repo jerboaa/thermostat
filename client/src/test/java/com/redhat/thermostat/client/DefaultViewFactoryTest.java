@@ -34,19 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client;
 
-import java.awt.Component;
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.common.View;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public interface VmClassStatView extends View {
+public class DefaultViewFactoryTest {
 
-    void clearClassCount();
+    public static class MockView implements View {}
 
-    void addClassCount(List<DiscreteTimeData<Long>> data);
+    @Test
+    public void testGetUnknownClasses() {
+        DefaultViewFactory factory = new DefaultViewFactory();
+        assertEquals(null, factory.getView(MockView.class));
+    }
 
-    Component getUiComponent();
+    @Test
+    public void testSetAndGet() {
+        DefaultViewFactory factory = new DefaultViewFactory();
+        factory.setViewClass(MockView.class, MockView.class);
+        assertEquals(MockView.class, factory.getViewClass(MockView.class));
+    }
+
+    @Test
+    public void testInstantiation() {
+        DefaultViewFactory factory = new DefaultViewFactory();
+        factory.setViewClass(MockView.class, MockView.class);
+        MockView view = factory.getView(MockView.class);
+        assertNotNull(view);
+        assertEquals(MockView.class.getName(), view.getClass().getName());
+    }
 }

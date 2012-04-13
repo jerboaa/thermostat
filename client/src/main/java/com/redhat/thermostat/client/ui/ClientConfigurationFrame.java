@@ -151,7 +151,6 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
 
     @Override
     public void actionPerformed(java.awt.event.ActionEvent e) {
-        System.out.println("swing action performed");
         if (e.getSource() == btnOk) {
             fireAction(new ActionEvent<>(this, Action.CLOSE_ACCEPT));
         } else if (e.getSource() == btnCancel) {
@@ -170,7 +169,6 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
     }
 
     private void fireAction(ActionEvent<Action> actionEvent) {
-        System.out.println("thermostat-action fired");
         for (ActionListener<Action> listener: listeners) {
             listener.actionPerformed(actionEvent);
         }

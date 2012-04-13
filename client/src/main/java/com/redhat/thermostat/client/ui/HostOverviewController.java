@@ -87,13 +87,9 @@ public class HostOverviewController implements AsyncUiFacade {
         networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV6_COLUMN));
 
         backgroundUpdateTimer = new Timer();
-        view = createView();
+        view = ApplicationContext.getInstance().getViewFactory().getView(HostOverviewView.class);
 
         view.setNetworkTableColumns(networkTableColumnVector.toArray());
-    }
-
-    public HostOverviewView createView() {
-        return new HostOverviewPanel();
     }
 
     private void doNetworkTableUpdateAsync() {

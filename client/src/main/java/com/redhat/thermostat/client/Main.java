@@ -83,12 +83,14 @@ public class Main {
 
         ClientPreferences prefs = new ClientPreferences();
         StartupConfiguration config = new ConnectionConfiguration(prefs);
-        
+
         StorageProvider connProv = new MongoStorageProvider(config);
         DAOFactory daoFactory = new MongoDAOFactory(connProv);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        SwingViewFactory viewFactory = new SwingViewFactory();
+        ApplicationContext.getInstance().setViewFactory(viewFactory);
     }
 
     private void showGui() {

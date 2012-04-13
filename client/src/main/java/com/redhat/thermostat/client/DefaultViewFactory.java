@@ -34,19 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client;
 
-import java.awt.Component;
-import java.util.List;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.View;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.common.ViewFactory;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public interface VmClassStatView extends View {
+public class DefaultViewFactory implements ViewFactory {
 
-    void clearClassCount();
+    private static final Logger logger = LoggingUtils.getLogger(SwingViewFactory.class);
+    private final Map<Class<?>, Class<?>> lookupTable = Collections.synchronizedMap(new HashMap<Class<?>, Class<?>>());
 
-    void addClassCount(List<DiscreteTimeData<Long>> data);
+    @Override
+    public <T extends View> T getView(Class<T> viewClass) {
+        Class<? extends T> klass = getViewClass(viewClass);
+        if (klass == null) {
+            logger.log(Level.WARNING, "no view class registered for " + viewClass.toString());
+            return null;
+        }
 
-    Component getUiComponent();
+        try {
+            return klass.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            logger.log(Level.WARNING, "error instantiaitng" + klass);
+            return null;
+        }
+    }
+
+    @Override
+    public <T extends View> Class<? extends T> getViewClass(Class<T> viewClass) {
+        return (Class<? extends T>) lookupTable.get(viewClass);
+    }
+
+    @Override
+    public <T extends View> void setViewClass(Class<T> viewClass, Class<? extends T> implClass) {
+        lookupTable.put(viewClass, implClass);
+    }
+
 }

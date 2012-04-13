@@ -38,7 +38,9 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Component;
 
-public interface HostOverviewView {
+import com.redhat.thermostat.common.View;
+
+public interface HostOverviewView extends View {
 
     void setHostName(String newHostName);
 

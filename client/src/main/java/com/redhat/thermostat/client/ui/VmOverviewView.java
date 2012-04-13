@@ -38,7 +38,9 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Component;
 
-public interface VmOverviewView {
+import com.redhat.thermostat.common.View;
+
+public interface VmOverviewView extends View {
 
     void setVmPid(String pid);
 

@@ -37,8 +37,9 @@
 package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.View;
 
-public interface ClientConfigurationView {
+public interface ClientConfigurationView extends View {
 
     enum Action {
         CLOSE_CANCEL,

@@ -34,19 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.common;
 
-import java.awt.Component;
-import java.util.List;
+/**
+ * An object that is meant to be used as a View in an MVC setup.
+ *
+ * All implementations of this interface must have a no-arg public constructor
+ */
+public interface View {
 
-import com.redhat.thermostat.common.View;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
-
-public interface VmClassStatView extends View {
-
-    void clearClassCount();
-
-    void addClassCount(List<DiscreteTimeData<Long>> data);
-
-    Component getUiComponent();
 }

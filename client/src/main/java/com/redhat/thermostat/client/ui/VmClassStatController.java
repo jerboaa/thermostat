@@ -75,11 +75,7 @@ public class VmClassStatController implements AsyncUiFacade {
     public VmClassStatController(VmRef ref) {
         this.ref = ref;
         dao = ApplicationContext.getInstance().getDAOFactory().getVmClassStatsDAO();
-        classesView = createView();
-    }
-
-    protected VmClassStatView createView() {
-        return new VmClassStatPanel();
+        classesView = ApplicationContext.getInstance().getViewFactory().getView(VmClassStatView.class);
     }
 
     @Override

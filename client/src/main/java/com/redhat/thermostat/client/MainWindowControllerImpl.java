@@ -41,7 +41,6 @@ import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.config.ClientPreferences;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
-import com.redhat.thermostat.client.ui.ClientConfigurationFrame;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -157,8 +156,9 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private void showConfigureClientPreferences() {
         ClientPreferences prefs = new ClientPreferences();
-        ClientConfigurationView view = new ClientConfigurationFrame();
+        ClientConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(ClientConfigurationView.class);
         ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
         controller.showDialog();
     }
+
 }

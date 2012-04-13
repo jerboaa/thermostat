@@ -36,30 +36,54 @@
 
 package com.redhat.thermostat.client;
 
+import static org.junit.Assert.assertNotNull;
+
+import java.lang.reflect.InvocationTargetException;
+
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.ui.AgentConfigurationController;
-import com.redhat.thermostat.client.ui.AgentConfigurationModel;
+import org.junit.Test;
+
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.client.ui.ClientConfigurationView;
+import com.redhat.thermostat.client.ui.HostCpuView;
+import com.redhat.thermostat.client.ui.HostMemoryView;
+import com.redhat.thermostat.client.ui.HostOverviewView;
+import com.redhat.thermostat.client.ui.VmClassStatView;
+import com.redhat.thermostat.client.ui.VmCpuView;
+import com.redhat.thermostat.client.ui.VmGcView;
+import com.redhat.thermostat.client.ui.VmMemoryView;
+import com.redhat.thermostat.client.ui.VmOverviewView;
 
-public class Configuration {
+public class SwingViewFactoryTest {
 
-    public void showAgentConfiguration() {
-        SwingUtilities.invokeLater(new Runnable() {
+    @Test
+    public void test() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
             @Override
             public void run() {
-                AgentConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(AgentConfigurationView.class);
-                AgentConfigurationSource agentPrefs = new AgentConfigurationSource();
-                AgentConfigurationModel model = new AgentConfigurationModel(agentPrefs);
-                AgentConfigurationController controller = new AgentConfigurationController(model, view);
-                controller.showView();
+                SwingViewFactory factory = new SwingViewFactory();
+
+                Class[] knownViewClasses = new Class[] {
+                    AgentConfigurationView.class,
+                    ClientConfigurationView.class,
+                    HostCpuView.class,
+                    HostMemoryView.class,
+                    HostOverviewView.class,
+                    VmClassStatView.class,
+                    VmCpuView.class,
+                    VmGcView.class,
+                    VmMemoryView.class,
+                    VmOverviewView.class,
+                };
+
+                for (Class klass: knownViewClasses) {
+                    assertNotNull(factory.getViewClass(klass));
+                    assertNotNull(factory.getView(klass));
+                }
             }
+
         });
-    }
 
-    public static void main(String[] args) {
-        new Configuration().showAgentConfiguration();
     }
-
 }

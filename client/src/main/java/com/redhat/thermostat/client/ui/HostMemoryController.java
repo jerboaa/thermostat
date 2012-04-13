@@ -74,7 +74,7 @@ public class HostMemoryController implements AsyncUiFacade {
         hostInfoDAO = daos.getHostInfoDAO();
         memoryStatDAO = daos.getMemoryStatDAO();
 
-        view = createView();
+        view = ApplicationContext.getInstance().getViewFactory().getView(HostMemoryView.class);
 
         view.addMemoryChart(MemoryType.MEMORY_TOTAL.name(), localize(LocaleResources.HOST_MEMORY_TOTAL));
         view.addMemoryChart(MemoryType.MEMORY_FREE.name(), localize(LocaleResources.HOST_MEMORY_FREE));
@@ -117,10 +117,6 @@ public class HostMemoryController implements AsyncUiFacade {
         return view.getUiComponent();
     }
 
-    protected HostMemoryView createView() {
-        return new HostMemoryPanel();
-    }
-
     private void doMemoryChartUpdate() {
         List<DiscreteTimeData<? extends Number>> memFree = new LinkedList<>();
         List<DiscreteTimeData<? extends Number>> memTotal = new LinkedList<>();
@@ -128,7 +124,7 @@ public class HostMemoryController implements AsyncUiFacade {
         List<DiscreteTimeData<? extends Number>> buf = new LinkedList<>();
         List<DiscreteTimeData<? extends Number>> swapTotal = new LinkedList<>();
         List<DiscreteTimeData<? extends Number>> swapFree = new LinkedList<>();
-        
+
         for (MemoryStat stat : memoryStatDAO.getLatestMemoryStats(ref)) {
             long timeStamp = stat.getTimeStamp();
             memFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getFree()));
