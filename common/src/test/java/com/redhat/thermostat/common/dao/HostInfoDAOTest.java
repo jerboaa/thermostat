@@ -44,13 +44,16 @@ import java.util.Collection;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.internal.verification.Times;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 import com.redhat.thermostat.common.model.HostInfo;
+import com.redhat.thermostat.common.storage.AgentInformation;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
@@ -128,7 +131,8 @@ public class HostInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         when(storage.findAllFromCategory(HostInfoDAO.hostInfoCategory)).thenReturn(cursor);
-
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        
         return storage;
     }
 
@@ -164,7 +168,8 @@ public class HostInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         when(storage.findAllFromCategory(HostInfoDAO.hostInfoCategory)).thenReturn(cursor);
-
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        
         return storage;
     }
 
@@ -195,5 +200,128 @@ public class HostInfoDAOTest {
         HostInfoDAO dao = new HostInfoDAOImpl(storage);
         Long count = dao.getCount();
         assertEquals((Long) 5L, count);
+    }
+    
+    @Test
+    public void getAliveHostSingle() {
+        Storage storage = setupStorageForSingleAliveHost();
+
+        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage);
+        Collection<HostRef> hosts = hostsDAO.getAliveHosts();
+
+        // cursor 3 from the above storage should not be used
+        assertEquals(1, hosts.size());
+        assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
+        verify(storage, times(2)).findAll(any(Chunk.class));
+    }
+    
+    private Storage setupStorageForSingleAliveHost() {
+        
+        // agents
+        
+        Chunk agentConfig1 = new Chunk(AgentInformation.AGENT_INFO_CATEGORY, false);
+        agentConfig1.put(Key.AGENT_ID, "123");
+        agentConfig1.put(AgentInformation.AGENT_ALIVE_KEY, true);
+        
+        Cursor cursor1 = mock(Cursor.class);
+        when(cursor1.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor1.next()).thenReturn(agentConfig1);
+        
+        // hosts
+        
+        Chunk hostConfig1 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig1.put(HostInfoDAO.hostNameKey, "fluffhost1");
+        hostConfig1.put(Key.AGENT_ID, "123");
+        
+        Chunk hostConfig2 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig2.put(HostInfoDAO.hostNameKey, "fluffhost2");
+        hostConfig2.put(Key.AGENT_ID, "456");
+        
+        Cursor cursor2 = mock(Cursor.class);
+        when(cursor2.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor2.next()).thenReturn(hostConfig1);
+
+        Cursor cursor3 = mock(Cursor.class);
+        when(cursor3.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor3.next()).thenReturn(hostConfig2);
+        
+        // storage
+        
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor1).thenReturn(cursor2).thenReturn(cursor3);
+        
+        return storage;
+    }
+    
+    @Test
+    public void getAliveHost3() {
+        Storage storage = setupStorageForSingleAliveHost3();
+
+        HostInfoDAO hostsDAO = new HostInfoDAOImpl(storage);
+        Collection<HostRef> hosts = hostsDAO.getAliveHosts();
+
+        // cursor 3 from the above storage should not be used
+        assertEquals(3, hosts.size());
+        assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
+        assertTrue(hosts.contains(new HostRef("456", "fluffhost2")));
+        assertTrue(hosts.contains(new HostRef("678", "fluffhost3")));
+        verify(storage, times(4)).findAll(any(Chunk.class));
+    }
+    
+    private Storage setupStorageForSingleAliveHost3() {
+        
+        // agents
+        
+        Chunk agentConfig1 = new Chunk(AgentInformation.AGENT_INFO_CATEGORY, false);
+        agentConfig1.put(Key.AGENT_ID, "123");
+        agentConfig1.put(AgentInformation.AGENT_ALIVE_KEY, true);
+        
+        Chunk agentConfig2 = new Chunk(AgentInformation.AGENT_INFO_CATEGORY, false);
+        agentConfig2.put(Key.AGENT_ID, "456");
+        agentConfig2.put(AgentInformation.AGENT_ALIVE_KEY, true);
+        
+        Chunk agentConfig3 = new Chunk(AgentInformation.AGENT_INFO_CATEGORY, false);
+        agentConfig3.put(Key.AGENT_ID, "678");
+        agentConfig3.put(AgentInformation.AGENT_ALIVE_KEY, true);
+        
+        Cursor cursor1 = mock(Cursor.class);
+        when(cursor1.hasNext()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor1.next()).thenReturn(agentConfig1).thenReturn(agentConfig2).thenReturn(agentConfig3);
+        
+        // hosts
+        
+        Chunk hostConfig1 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig1.put(HostInfoDAO.hostNameKey, "fluffhost1");
+        hostConfig1.put(Key.AGENT_ID, "123");
+        
+        Chunk hostConfig2 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig2.put(HostInfoDAO.hostNameKey, "fluffhost2");
+        hostConfig2.put(Key.AGENT_ID, "456");
+        
+        Chunk hostConfig3 = new Chunk(HostInfoDAO.hostInfoCategory, false);
+        hostConfig3.put(HostInfoDAO.hostNameKey, "fluffhost3");
+        hostConfig3.put(Key.AGENT_ID, "678");
+        
+        Cursor cursor2 = mock(Cursor.class);
+        when(cursor2.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor2.next()).thenReturn(hostConfig1);
+
+        Cursor cursor3 = mock(Cursor.class);
+        when(cursor3.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor3.next()).thenReturn(hostConfig2);
+        
+        Cursor cursor4 = mock(Cursor.class);
+        when(cursor4.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor4.next()).thenReturn(hostConfig3);
+        
+        // storage
+        
+        Storage storage = mock(Storage.class);
+        when(storage.findAll(any(Chunk.class))).thenReturn(cursor1).
+                                                thenReturn(cursor2).
+                                                thenReturn(cursor3).
+                                                thenReturn(cursor4);
+        
+        return storage;
     }
 }

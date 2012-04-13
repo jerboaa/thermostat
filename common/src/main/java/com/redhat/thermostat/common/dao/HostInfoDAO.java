@@ -60,4 +60,5 @@ public interface HostInfoDAO extends Countable {
     void putHostInfo(HostInfo info);
 
     Collection<HostRef> getHosts();
+    Collection<HostRef> getAliveHosts();
 }

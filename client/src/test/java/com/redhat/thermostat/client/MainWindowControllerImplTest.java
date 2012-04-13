@@ -65,6 +65,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.storage.Chunk;
 
 public class MainWindowControllerImplTest {
 
@@ -157,8 +158,8 @@ public class MainWindowControllerImplTest {
         expectedHosts.add(new HostRef("123", "fluffhost1"));
         expectedHosts.add(new HostRef("456", "fluffhost2"));
 
-        when(mockHostsDAO.getHosts()).thenReturn(expectedHosts);
-
+        when(mockHostsDAO.getAliveHosts()).thenReturn(expectedHosts);
+        
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);

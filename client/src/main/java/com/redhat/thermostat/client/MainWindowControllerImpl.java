@@ -80,7 +80,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         @Override
         public Collection<HostRef> getHosts() {
-            return hostsDAO.getHosts();
+            return hostsDAO.getAliveHosts();
         }
 
         @Override

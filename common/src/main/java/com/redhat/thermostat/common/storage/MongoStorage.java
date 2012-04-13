@@ -291,7 +291,8 @@ public class MongoStorage extends Storage {
         Category cat = query.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         ChunkConverter converter = new ChunkConverter();
-        DBCursor dbCursor = coll.find(converter.chunkToDBObject(query));
+        DBObject obj = converter.chunkToDBObject(query);
+        DBCursor dbCursor = coll.find(obj);
         return new MongoCursor(dbCursor, query.getCategory());
     }
 
@@ -310,7 +311,7 @@ public class MongoStorage extends Storage {
         DBObject dbResult = coll.findOne(converter.chunkToDBObject(query));
         return dbResult == null ? null : converter.dbObjectToChunk(dbResult, cat);
     }
-
+    
     @Override
     public Cursor findAllFromCategory(Category category) {
         DBCollection coll = getCachedCollection(category.getName());

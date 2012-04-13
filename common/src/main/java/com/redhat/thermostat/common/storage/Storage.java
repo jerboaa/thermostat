@@ -69,7 +69,7 @@ public abstract class Storage {
     public abstract Chunk find(Chunk query);
 
     public abstract Cursor findAllFromCategory(Category category);
-
+    
     public abstract long getCount(Category category);
 
     // TODO these will move to appropriate DAO

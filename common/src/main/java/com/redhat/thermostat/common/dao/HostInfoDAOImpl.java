@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.redhat.thermostat.common.model.HostInfo;
+import com.redhat.thermostat.common.storage.AgentInformation;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
@@ -66,11 +67,16 @@ class HostInfoDAOImpl implements HostInfoDAO {
     public void putHostInfo(HostInfo info) {
         storage.putChunk(converter.toChunk(info));
     }
-
+    
     @Override
     public Collection<HostRef> getHosts() {
+        return getHosts(new Chunk(hostInfoCategory, false));
+    }
+    
+    private Collection<HostRef> getHosts(Chunk filter) {
         Collection<HostRef> hosts = new ArrayList<HostRef>();
-        Cursor hostsCursor = storage.findAllFromCategory(hostInfoCategory);
+        
+        Cursor hostsCursor = storage.findAll(filter);
         while(hostsCursor.hasNext()) {
             Chunk hostChunk = hostsCursor.next();
             String agentId = hostChunk.get(Key.AGENT_ID);
@@ -79,7 +85,26 @@ class HostInfoDAOImpl implements HostInfoDAO {
         }
         return hosts;
     }
-
+    
+    @Override
+    public Collection<HostRef> getAliveHosts() {
+        
+        Collection<HostRef> hosts = new ArrayList<HostRef>();
+        
+        Chunk agents = new Chunk(AgentInformation.AGENT_INFO_CATEGORY, false);
+        agents.put(AgentInformation.AGENT_ALIVE_KEY, true);
+        Cursor agentCursor = storage.findAll(agents);
+        while(agentCursor.hasNext()) {
+            Chunk chunk = agentCursor.next();
+            
+            Chunk filter = new Chunk(hostInfoCategory, false);
+            filter.put(Key.AGENT_ID, chunk.get(Key.AGENT_ID));
+            
+            hosts.addAll(getHosts(filter));
+        }
+        
+        return hosts;
+    }
     @Override
     public long getCount() {
         return storage.getCount(hostInfoCategory);

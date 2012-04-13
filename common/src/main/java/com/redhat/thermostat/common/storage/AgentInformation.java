@@ -42,13 +42,18 @@ import java.util.List;
 
 public class AgentInformation {
 
+    public static final Category AGENT_INFO_CATEGORY =
+            new Category(StorageConstants.CATEGORY_AGENT_CONFIG, Key.AGENT_ID);
+
+    public static final Key<Boolean> AGENT_ALIVE_KEY = new Key<>("alive", false);
+    
     private long startTime;
     private long stopTime;
 
     private boolean alive;
     
     private List<BackendInformation> backends = new ArrayList<BackendInformation>();
-
+    
     public long getStartTime() {
         return startTime;
     }
