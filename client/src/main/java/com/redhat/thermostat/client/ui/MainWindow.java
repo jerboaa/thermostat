@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -314,7 +315,19 @@ public class MainWindow extends JFrame implements MainView {
             }
         });
         editMenu.add(configureClientMenuItem);
-
+        
+        editMenu.addSeparator();
+        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE));
+        historyModeMenuItem.setName("historyModeSwitch");
+        historyModeMenuItem.setSelected(false);
+        historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.SWITCH_HISTORY_MODE);
+            }
+        });
+        
+        editMenu.add(historyModeMenuItem);
         JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);

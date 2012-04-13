@@ -45,6 +45,7 @@ public interface MainView {
         HOST_VM_TREE_FILTER,
         SHOW_AGENT_CONFIG,
         SHOW_CLIENT_CONFIG,
+        SWITCH_HISTORY_MODE,
         SHUTDOWN,
     }
 

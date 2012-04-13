@@ -66,6 +66,8 @@ public class MainWindowControllerImpl implements MainWindowController {
     private final HostInfoDAO hostsDAO;
     private final VmInfoDAO vmsDAO;
 
+    private boolean showHistory;
+    
     public MainWindowControllerImpl(MainView view) {
 
         ApplicationContext ctx = ApplicationContext.getInstance();
@@ -82,7 +84,11 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         @Override
         public Collection<HostRef> getHosts() {
-            return hostsDAO.getAliveHosts();
+            if (showHistory) {
+                return hostsDAO.getHosts();
+            } else {
+                return hostsDAO.getAliveHosts();
+            }
         }
 
         @Override
@@ -145,6 +151,9 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SHOW_CLIENT_CONFIG:
                     showConfigureClientPreferences();
                     break;
+                case SWITCH_HISTORY_MODE:
+                    switchHistoryMode();
+                    break;
                 case SHUTDOWN:
                     stop();
                     break;
@@ -174,5 +183,9 @@ public class MainWindowControllerImpl implements MainWindowController {
         ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
         controller.showDialog();
     }
-
+    
+    private void switchHistoryMode() {
+        showHistory = !showHistory;
+        doUpdateTreeAsync();
+    }
 }

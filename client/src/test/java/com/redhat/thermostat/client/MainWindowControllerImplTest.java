@@ -150,7 +150,7 @@ public class MainWindowControllerImplTest {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
     }
-
+    
     @Test
     public void verifyUpdateHostsVMsLoadsCorrectHosts() {
 
@@ -170,6 +170,35 @@ public class MainWindowControllerImplTest {
         assertEqualCollection(expectedHosts, actualHosts);
     }
 
+    @Test
+    public void verifyHistoryModeUpdateHostsVMCorrectly() {
+
+        Collection<HostRef> liveHost = new ArrayList<>();
+        liveHost.add(new HostRef("123", "fluffhost1"));
+        liveHost.add(new HostRef("456", "fluffhost2"));
+        
+        Collection<HostRef> allHosts = new ArrayList<>();
+        allHosts.addAll(liveHost);
+        allHosts.add(new HostRef("789", "fluffhost3"));
+        
+        when(mockHostsDAO.getAliveHosts()).thenReturn(liveHost);
+        when(mockHostsDAO.getHosts()).thenReturn(allHosts);
+        
+        controller.doUpdateTreeAsync();
+        
+        ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
+        verify(view).updateTree(anyString(), arg.capture());
+        HostsVMsLoader loader = arg.getValue();
+
+        Collection<HostRef> actualHosts = loader.getHosts();
+        assertEqualCollection(liveHost, actualHosts);
+        
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SWITCH_HISTORY_MODE));
+        
+        actualHosts = loader.getHosts();
+        assertEqualCollection(allHosts, actualHosts);
+    }
+    
     @Test
     public void verifyUpdateHostsVMsLoadsCorrectVMs() {
 

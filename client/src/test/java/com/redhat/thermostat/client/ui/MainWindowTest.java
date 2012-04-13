@@ -144,6 +144,18 @@ public class MainWindowTest {
 
     @Category(GUITest.class)
     @Test
+    public void verifyThatHistorySwitchTriggersEvent() {
+        frameFixture.show();
+        JMenuItemFixture menuItem = frameFixture.menuItem("historyModeSwitch");
+        menuItem.click();
+        frameFixture.close();
+        frameFixture.requireNotVisible();
+
+        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SWITCH_HISTORY_MODE));
+    }
+    
+    @Category(GUITest.class)
+    @Test
     public void testGetHostVMTreeFilter() {
         frameFixture.show();
         JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox("hostVMTreeFilter");
