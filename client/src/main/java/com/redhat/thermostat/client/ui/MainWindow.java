@@ -81,15 +81,12 @@ import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import com.redhat.thermostat.client.ApplicationInfo;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
-import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -216,8 +213,6 @@ public class MainWindow extends JFrame implements MainView {
 
     private static final long serialVersionUID = 5608972421496808177L;
 
-    private final UiFacadeFactory facadeFactory;
-
     private JPanel contentArea = null;
 
     private JTextField searchField = null;
@@ -225,28 +220,22 @@ public class MainWindow extends JFrame implements MainView {
 
     private final ShutdownClient shutdownAction;
 
-    private ApplicationInfo appInfo;
-
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
     private final DefaultMutableTreeNode publishedRoot =
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
-    public MainWindow(UiFacadeFactory facadeFactory) {
+    public MainWindow() {
         super();
 
-        appInfo = new ApplicationInfo();
-        setTitle(appInfo.getName());
-
-        this.facadeFactory = facadeFactory;
         shutdownAction = new ShutdownClient();
 
         searchField = new JTextField();
         searchField.setName("hostVMTreeFilter");
-        TreeModel model = publishedTreeModel;
-        agentVmTree = new JTree(model);
-        model.addTreeModelListener(new KeepRootExpandedListener(agentVmTree));
+        agentVmTree = new JTree(publishedTreeModel);
+        agentVmTree.setName("agentVmTree");
+        publishedTreeModel.addTreeModelListener(new KeepRootExpandedListener(agentVmTree));
         agentVmTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
@@ -257,7 +246,7 @@ public class MainWindow extends JFrame implements MainView {
 
         this.setPreferredSize(new Dimension(800, 600));
 
-        agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) model.getRoot()).getPath()));
+        agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) publishedTreeModel.getRoot()).getPath()));
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(shutdownAction);
@@ -298,6 +287,7 @@ public class MainWindow extends JFrame implements MainView {
         mainMenuBar.add(editMenu);
 
         JMenuItem configureAgentMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_AGENT));
+        configureAgentMenuItem.setName("showAgentConfig");
         configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -336,10 +326,7 @@ public class MainWindow extends JFrame implements MainView {
         helpAboutMenu.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                AboutDialog aboutDialog = new AboutDialog(appInfo);
-                aboutDialog.setModal(true);
-                aboutDialog.pack();
-                aboutDialog.setVisible(true);
+                fireViewAction(Action.SHOW_ABOUT_DIALOG);
             }
         });
         helpMenu.add(helpAboutMenu);
@@ -396,20 +383,7 @@ public class MainWindow extends JFrame implements MainView {
             @Override
             public void valueChanged(TreeSelectionEvent e) {
                 if (e.isAddedPath()) {
-                    contentArea.removeAll();
-                    TreePath path = e.getPath();
-                    if (path.getPathCount() == 1) {/* root */
-                        contentArea.add(new SummaryPanel(facadeFactory.getSummaryPanel()));
-                    } else if (path.getPathCount() == 2) { /* agent */
-                        HostRef hostRef = (HostRef) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-                        HostPanel panel = new HostPanel(facadeFactory.getHostPanel(hostRef));
-                        contentArea.add(panel);
-                    } else { /* vm */
-                        VmRef vmRef = (VmRef) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
-                        VmPanel panel = new VmPanel(facadeFactory.getVmPanel(vmRef));
-                        contentArea.add(panel);
-                    }
-                    contentArea.revalidate();
+                    fireViewAction(Action.HOST_VM_SELECTION_CHANGED);
                 }
             }
         });
@@ -565,9 +539,40 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
+    public void setWindowTitle(String title) {
+        setTitle(title);
+    }
+
+    @Override
     public void showMainWindow() {
         pack();
         setVisible(true);
+    }
+
+    @Override
+    public void hideMainWindow() {
+        setVisible(false);
+        dispose();
+    }
+
+    @Override
+    public void setSubView(Component view) {
+        contentArea.removeAll();
+        Component toAdd = view;
+        contentArea.add(toAdd);
+        contentArea.revalidate();
+    }
+
+    /**
+     * Returns null to indicate no Ref is selected
+     */
+    @Override
+    public Ref getSelectedHostOrVm() {
+        TreePath path = agentVmTree.getSelectionPath();
+        if (path.getPathCount() == 1) {
+            return null;
+        }
+        return (Ref) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
     }
 
     @Override

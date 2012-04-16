@@ -40,11 +40,15 @@ import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.config.ClientPreferences;
+import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
 import com.redhat.thermostat.client.ui.AgentConfigurationModel;
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
+import com.redhat.thermostat.client.ui.HostPanel;
+import com.redhat.thermostat.client.ui.SummaryPanel;
+import com.redhat.thermostat.client.ui.VmPanel;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
@@ -52,6 +56,7 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
@@ -66,9 +71,14 @@ public class MainWindowControllerImpl implements MainWindowController {
     private final HostInfoDAO hostsDAO;
     private final VmInfoDAO vmsDAO;
 
+    private ApplicationInfo appInfo;
+
+    private UiFacadeFactory facadeFactory;
+
     private boolean showHistory;
     
-    public MainWindowControllerImpl(MainView view) {
+    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
+        this.facadeFactory = facadeFactory;
 
         ApplicationContext ctx = ApplicationContext.getInstance();
         DAOFactory daoFactory = ctx.getDAOFactory();
@@ -76,6 +86,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmsDAO = daoFactory.getVmInfoDAO();
 
         initView(view);
+        appInfo = new ApplicationInfo();
+        view.setWindowTitle(appInfo.getName());
         initializeTimer();
         start();
     }
@@ -141,6 +153,9 @@ public class MainWindowControllerImpl implements MainWindowController {
             public void actionPerformed(ActionEvent<MainView.Action> evt) {
                 MainView.Action action = evt.getActionId();
                 switch (action) {
+                case HOST_VM_SELECTION_CHANGED:
+                    updateView();
+                    break;
                 case HOST_VM_TREE_FILTER:
                     String filter = view.getHostVmTreeFilter();
                     setHostVmTreeFilter(filter);
@@ -154,11 +169,15 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SWITCH_HISTORY_MODE:
                     switchHistoryMode();
                     break;
+                case SHOW_ABOUT_DIALOG:
+                    showAboutDialog();
+                    break;
                 case SHUTDOWN:
+                    view.hideMainWindow();
                     stop();
                     break;
                 default:
-                    assert false;
+                    throw new IllegalStateException("unhandled action");
                 }
             }
         });
@@ -167,6 +186,13 @@ public class MainWindowControllerImpl implements MainWindowController {
     @Override
     public void showMainMainWindow() {
         view.showMainWindow();
+    }
+
+    private void showAboutDialog() {
+        AboutDialog aboutDialog = new AboutDialog(appInfo);
+        aboutDialog.setModal(true);
+        aboutDialog.pack();
+        aboutDialog.setVisible(true);
     }
 
     private void showAgentConfiguration() {
@@ -188,4 +214,21 @@ public class MainWindowControllerImpl implements MainWindowController {
         showHistory = !showHistory;
         doUpdateTreeAsync();
     }
+
+    private void updateView() {
+        // this is quite an ugly method. there must be a cleaner way to do this
+        Ref ref = view.getSelectedHostOrVm();
+        if (ref == null) {
+            view.setSubView(new SummaryPanel(facadeFactory.getSummaryPanel()));
+        } else if (ref instanceof HostRef) {
+            HostRef hostRef = (HostRef) ref;
+            view.setSubView(new HostPanel(facadeFactory.getHostPanel(hostRef)));
+        } else if (ref instanceof VmRef) {
+            VmRef vmRef = (VmRef) ref;
+            view.setSubView(new VmPanel(facadeFactory.getVmPanel(vmRef)));
+        } else {
+            throw new IllegalArgumentException("unknown type of ref");
+        }
+    }
+
 }

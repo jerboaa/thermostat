@@ -36,16 +36,20 @@
 
 package com.redhat.thermostat.client;
 
-import com.redhat.thermostat.common.ActionListener;
+import java.awt.Component;
 
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.dao.Ref;
 
 public interface MainView {
 
     enum Action {
         HOST_VM_TREE_FILTER,
+        HOST_VM_SELECTION_CHANGED,
         SHOW_AGENT_CONFIG,
         SHOW_CLIENT_CONFIG,
         SWITCH_HISTORY_MODE,
+        SHOW_ABOUT_DIALOG,
         SHUTDOWN,
     }
 
@@ -53,8 +57,16 @@ public interface MainView {
 
     void updateTree(String eq, HostsVMsLoader any);
 
+    void setWindowTitle(String title);
+
     void showMainWindow();
 
+    void hideMainWindow();
+
     String getHostVmTreeFilter();
+
+    Ref getSelectedHostOrVm();
+
+    void setSubView(Component view);
 
 }

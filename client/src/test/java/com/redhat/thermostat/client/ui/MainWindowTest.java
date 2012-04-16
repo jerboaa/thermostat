@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.GuiActionRunner;
@@ -48,6 +47,7 @@ import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JMenuItemFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
+import org.fest.swing.fixture.JTreeFixture;
 import org.fest.swing.junit.v4_5.runner.GUITestRunner;
 import org.junit.After;
 import org.junit.Before;
@@ -55,10 +55,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.ChangeableText;
 import com.redhat.thermostat.client.MainView;
-import com.redhat.thermostat.client.SummaryPanelFacade;
-import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
@@ -73,14 +70,7 @@ public class MainWindowTest {
     @Before
     public void setUp() {
 
-        SummaryPanelFacade summaryPanelFacade = mock(SummaryPanelFacade.class);
-        when(summaryPanelFacade.getTotalMonitoredHosts()).thenReturn(new ChangeableText("totalConnectedAgents"));
-        when(summaryPanelFacade.getTotalMonitoredVms()).thenReturn(new ChangeableText("connectedVms"));
-
-        UiFacadeFactory uiFacadeFactory = mock(UiFacadeFactory.class);
-        when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
-
-        window = new MainWindow(uiFacadeFactory);
+        window = new MainWindow();
         l = mock(ActionListener.class);
         window.addActionListener(l);
 
@@ -93,6 +83,16 @@ public class MainWindowTest {
         frameFixture = null;
         window = null;
         l = null;
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void testHostVmSelectionChangedSupport() {
+        frameFixture.show();
+        JTreeFixture hostVMTree = frameFixture.tree("agentVmTree");
+        hostVMTree.selectRows(0);
+
+        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_SELECTION_CHANGED));
     }
 
     @Category(GUITest.class)
@@ -131,6 +131,25 @@ public class MainWindowTest {
 
     @Category(GUITest.class)
     @Test
+    public void verifyHideMainWindowHidesWindow() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                window.showMainWindow();
+            }
+        });
+        frameFixture.requireVisible();
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                window.hideMainWindow();
+            }
+        });
+        frameFixture.requireNotVisible();
+    }
+
+    @Category(GUITest.class)
+    @Test
     public void verifyThatClientPreferencesMenuItemTriggersEvent() {
         frameFixture.show();
         JMenuItemFixture menuItem = frameFixture.menuItem("showClientConfig");
@@ -139,8 +158,20 @@ public class MainWindowTest {
         frameFixture.requireNotVisible();
 
         verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_CLIENT_CONFIG));
-
     }
+
+    @Category(GUITest.class)
+    @Test
+    public void verifyThatAgentPreferencesMenuItemTriggersEvent() {
+        frameFixture.show();
+        JMenuItemFixture menuItem = frameFixture.menuItem("showAgentConfig");
+        menuItem.click();
+        frameFixture.close();
+        frameFixture.requireNotVisible();
+
+        verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SHOW_AGENT_CONFIG));
+    }
+
 
     @Category(GUITest.class)
     @Test
@@ -164,5 +195,14 @@ public class MainWindowTest {
         assertEquals("test", window.getHostVmTreeFilter());
     }
 
+    @Category(GUITest.class)
+    @Test
+    public void testGetSelectedHostOrVm() {
+        frameFixture.show();
+        JTreeFixture hostVMTree = frameFixture.tree("agentVmTree");
+        hostVMTree.selectRow(0);
+
+        assertEquals(null, window.getSelectedHostOrVm());
+    }
 
 }

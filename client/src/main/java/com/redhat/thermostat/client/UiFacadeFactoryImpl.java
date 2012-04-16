@@ -44,8 +44,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     @Override
     public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow(this);
-        return new MainWindowControllerImpl(mainView);
+        MainView mainView = new MainWindow();
+        return new MainWindowControllerImpl(this, mainView);
     }
 
     @Override
