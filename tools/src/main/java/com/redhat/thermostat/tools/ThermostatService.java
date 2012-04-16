@@ -62,7 +62,7 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
     private static final String USAGE = "service start|stop\n\n"
                 + DESCRIPTION + "\n\n\t"
                 + "With argument 'start', start the storage amd agent\n\t"
-                + "With argument 'stop', stop the storage and agent.";
+                + "With argument 'stop', stop the storage and agent.\n";
 
     private BasicCommand database;
     private AgentApplication agent;

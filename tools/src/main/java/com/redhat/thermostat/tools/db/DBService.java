@@ -61,7 +61,7 @@ public class DBService extends BasicCommand {
     private static final String USAGE = "storage start|stop\n\n"
                 + DESCRIPTION + "\n\n\t"
                 + "With argument 'start', start the storage.\n\t"
-                + "With argument 'stop', stop the storage.";
+                + "With argument 'stop', stop the storage.\n";
 
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;

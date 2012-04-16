@@ -49,7 +49,7 @@ public class HelpCommand implements Command {
     private static final String USAGE = "help [COMMAND]\n\n"
             + DESCRIPTION + "\n\n\t"
             + "With no arguments, print a list of commands with short help messages.\n\n\t"
-            + "Given a command, print help for that command.";
+            + "Given a command, print help for that command.\n";
 
     @Override
     public void run(CommandContext ctx) {

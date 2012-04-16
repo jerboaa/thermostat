@@ -241,6 +241,6 @@ public class DBServiceTest {
         assertEquals("storage start|stop\n\n"
                 + "starts and stops the thermostat storage" + "\n\n\t"
                 + "With argument 'start', start the storage.\n\t"
-                + "With argument 'stop', stop the storage.", usage);
+                + "With argument 'stop', stop the storage.\n", usage);
     }
 }

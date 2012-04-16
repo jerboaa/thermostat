@@ -74,6 +74,6 @@ public class ThermostatServiceTest {
         assertEquals("service start|stop\n\n"
                 + "starts and stops the thermostat storage and agent" + "\n\n\t"
                 + "With argument 'start', start the storage amd agent\n\t"
-                + "With argument 'stop', stop the storage and agent.", usage);
+                + "With argument 'stop', stop the storage and agent.\n", usage);
     }
 }

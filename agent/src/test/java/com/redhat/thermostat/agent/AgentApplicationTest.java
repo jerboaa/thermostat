@@ -76,6 +76,6 @@ public class AgentApplicationTest {
         assertEquals("agent start|stop\n\n"
                 + "starts and stops the thermostat agent" + "\n\n\t"
                 + "With argument 'start', start the agent.\n\t"
-                + "With argument 'stop', stop the agent.", usage);
+                + "With argument 'stop', stop the agent.\n", usage);
     }
 }

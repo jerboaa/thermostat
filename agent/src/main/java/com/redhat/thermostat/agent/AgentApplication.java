@@ -76,7 +76,7 @@ public final class AgentApplication extends BasicCommand {
     private static final String USAGE = "agent start|stop\n\n"
                                 + DESCRIPTION + "\n\n\t"
                                 + "With argument 'start', start the agent.\n\t"
-                                + "With argument 'stop', stop the agent.";
+                                + "With argument 'stop', stop the agent.\n";
 
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
