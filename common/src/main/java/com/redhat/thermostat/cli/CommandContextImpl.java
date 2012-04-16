@@ -40,10 +40,12 @@ class CommandContextImpl implements CommandContext {
 
     private String[] arguments;
     private CommandRegistry commandRegistry;
+    private AppContextSetup appContextSetup;
 
-    CommandContextImpl(String[] args, CommandRegistry cmdReg) {
+    CommandContextImpl(String[] args, CommandRegistry cmdReg, AppContextSetup appContextSetup) {
         arguments = args;
         commandRegistry = cmdReg;
+        this.appContextSetup = appContextSetup;
     }
 
     @Override
@@ -59,6 +61,11 @@ class CommandContextImpl implements CommandContext {
     @Override
     public CommandRegistry getCommandRegistry() {
         return commandRegistry;
+    }
+
+    @Override
+    public AppContextSetup getAppContextSetup() {
+        return appContextSetup;
     }
 
 }

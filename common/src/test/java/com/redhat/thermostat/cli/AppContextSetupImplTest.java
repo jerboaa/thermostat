@@ -37,66 +37,48 @@
 package com.redhat.thermostat.cli;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-import java.util.Collection;
-
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.cli.AppContextSetupImpl;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.dao.MongoConnection;
+import com.redhat.thermostat.common.dao.MongoConnectionProvider;
 
-public class CommandRegistryTest {
-
-    private CommandRegistry registry;
-    private Command cmd1;
-    private Command cmd2;
-
-    @Before
-    public void setUp() {
-        registry = new CommandRegistry();
-        cmd1 = createCommand("test1");
-        cmd2 = createCommand("test2");
-        registry.registerCommands(Arrays.asList(cmd1, cmd2));
-    }
-
-    @After
-    public void tearDown() {
-        cmd2 = null;
-        cmd1 = null;
-        registry = null;
-    }
-
-    private Command createCommand(String name) {
-        Command cmd = mock(Command.class);
-        when(cmd.getName()).thenReturn(name);
-        return cmd;
-    }
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(MongoConnectionProvider.class)
+public class AppContextSetupImplTest {
 
     @Test
-    public void testRegisterCommands() throws CommandException {
-        runAndVerifyCommand("test1", cmd1);
-        runAndVerifyCommand("test2", cmd2);
+    public void testSetup() throws Exception {
+        // TODO: Figure out how to test this class without using PowerMock.
+        final MongoConnection conn = mock(MongoConnection.class);
+        PowerMockito.whenNew(MongoConnection.class).withArguments(Mockito.any(StartupConfiguration.class)).thenAnswer(new Answer<MongoConnection>() {
+
+            @Override
+            public MongoConnection answer(InvocationOnMock invocation)
+                    throws Throwable {
+                StartupConfiguration conf = (StartupConfiguration) invocation.getArguments()[0];
+                assertEquals("mongodb://fluff:27518", conf.getDBConnectionString());
+                return conn;
+            }
+            
+        });
+        AppContextSetupImpl setup = new AppContextSetupImpl();
+
+        setup.setupAppContext("mongodb://fluff:27518");
+
+        assertNotNull(ApplicationContext.getInstance().getDAOFactory());
     }
 
-    private void runAndVerifyCommand(String name, Command cmd) throws CommandException {
-        Command actualCmd = registry.getCommand(name);
-        TestCommandContextFactory cf = new TestCommandContextFactory();
-        CommandContext ctx = cf.createContext(new String[0]);
-        actualCmd.run(ctx);
-        verify(cmd).run(ctx);
-    }
-
-    @Test
-    public void testGetCommands() {
-        Collection<Command> cmds = registry.getRegisteredCommands();
-        assertTrue(cmds.contains(cmd1));
-        assertTrue(cmds.contains(cmd2));
-        assertEquals(2, cmds.size());
-    }
 }

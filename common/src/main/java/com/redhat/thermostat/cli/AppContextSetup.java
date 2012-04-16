@@ -36,35 +36,7 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+public interface AppContextSetup {
 
-public class CommandRegistry {
-
-    private Map<String,Command> commands;
-
-    public CommandRegistry() {
-        commands = new HashMap<>();
-    }
-
-    private void registerCommand(Command cmd) {
-        commands.put(cmd.getName(), cmd);
-    }
-
-    void registerCommands(Iterable<? extends Command> cmds) {
-        for (Command cmd : cmds) {
-            registerCommand(cmd);
-        }
-    }
-
-    public Command getCommand(String name) {
-        return commands.get(name);
-    }
-
-    public Collection<Command> getRegisteredCommands() {
-        return Collections.unmodifiableCollection(commands.values());
-    }
-
+    void setupAppContext(String dbUrl);
 }

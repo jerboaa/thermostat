@@ -44,6 +44,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.test.TestCommandContextFactory;
+
 public class LauncherTest {
 
     private static class TestCmd1 implements TestCommand.Handle {

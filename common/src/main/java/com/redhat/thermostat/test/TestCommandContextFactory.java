@@ -34,24 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-class TestCommandContextFactory extends CommandContextFactory {
+import com.redhat.thermostat.cli.AppContextSetup;
+import com.redhat.thermostat.cli.CommandContext;
+import com.redhat.thermostat.cli.CommandContextFactory;
+import com.redhat.thermostat.cli.CommandRegistry;
+import com.redhat.thermostat.cli.Console;
+
+public class TestCommandContextFactory extends CommandContextFactory {
 
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream err;
     private ByteArrayInputStream in;
 
-    TestCommandContextFactory() {
+    public TestCommandContextFactory() {
         reset();
     }
 
     private CommandRegistry commandRegistry = new CommandRegistry();
+
+    private AppContextSetup appContextSetup = new AppContextSetup() {
+
+        @Override
+        public void setupAppContext(String dbUrl) {
+            // We do nothing for now.
+        }
+    };
 
     private class TestConsole implements Console {
 
@@ -90,16 +104,26 @@ class TestCommandContextFactory extends CommandContextFactory {
             public CommandRegistry getCommandRegistry() {
                 return commandRegistry;
             }
+
+            @Override
+            public AppContextSetup getAppContextSetup() {
+                return TestCommandContextFactory.this.getAppContextSetup();
+            }
             
         };
     }
 
     @Override
-    CommandRegistry getCommandRegistry() {
+    public CommandRegistry getCommandRegistry() {
         return commandRegistry;
     }
 
-    String getOutput() {
+    @Override
+    protected AppContextSetup getAppContextSetup() {
+        return appContextSetup;
+    }
+
+    public String getOutput() {
         return new String(out.toByteArray());
     }
 
@@ -107,11 +131,11 @@ class TestCommandContextFactory extends CommandContextFactory {
         in = new ByteArrayInputStream(input.getBytes());
     }
 
-    Object getError() {
+    public Object getError() {
         return new String(err.toByteArray());
     }
 
-    void reset() {
+    public void reset() {
         out = new ByteArrayOutputStream();
         err = new ByteArrayOutputStream();
         in = new ByteArrayInputStream(new byte[0]);

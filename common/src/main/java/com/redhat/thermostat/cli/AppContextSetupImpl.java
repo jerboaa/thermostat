@@ -36,35 +36,26 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.dao.Connection;
+import com.redhat.thermostat.common.dao.ConnectionProvider;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.MongoConnectionProvider;
+import com.redhat.thermostat.common.dao.MongoDAOFactory;
 
-public class CommandRegistry {
+class AppContextSetupImpl implements AppContextSetup {
 
-    private Map<String,Command> commands;
+    @Override
+    public void setupAppContext(String dbUrl) {
+        StartupConfiguration config = new ConnectionConfiguration(dbUrl);
+        
+        ConnectionProvider connProv = new MongoConnectionProvider(config);
+        DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        Connection connection = daoFactory.getConnection();
+        connection.connect();
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
-    public CommandRegistry() {
-        commands = new HashMap<>();
-    }
-
-    private void registerCommand(Command cmd) {
-        commands.put(cmd.getName(), cmd);
-    }
-
-    void registerCommands(Iterable<? extends Command> cmds) {
-        for (Command cmd : cmds) {
-            registerCommand(cmd);
-        }
-    }
-
-    public Command getCommand(String name) {
-        return commands.get(name);
-    }
-
-    public Collection<Command> getRegisteredCommands() {
-        return Collections.unmodifiableCollection(commands.values());
     }
 
 }

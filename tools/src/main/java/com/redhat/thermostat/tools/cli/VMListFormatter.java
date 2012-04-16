@@ -34,37 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.tools.cli;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
-public class CommandRegistry {
+import com.redhat.thermostat.common.dao.VmRef;
 
-    private Map<String,Command> commands;
+class VMListFormatter {
 
-    public CommandRegistry() {
-        commands = new HashMap<>();
+    // TODO: Localize.
+    private static final String HOST = "HOST";
+
+    private static final String VM_ID = "VM_ID";
+
+    private static final String VM_NAME = "VM_NAME";
+
+    private List<VmRef> vms = new ArrayList<>();
+
+    private int longestHost = HOST.length();
+    private int longestVmId = VM_ID.length();
+
+    void addVM(VmRef vm) {
+        vms.add(vm);
+        longestHost = Math.max(longestHost, vm.getAgent().getHostName().length());
+        longestVmId = Math.max(longestVmId, vm.getIdString().length());
     }
 
-    private void registerCommand(Command cmd) {
-        commands.put(cmd.getName(), cmd);
-    }
-
-    void registerCommands(Iterable<? extends Command> cmds) {
-        for (Command cmd : cmds) {
-            registerCommand(cmd);
+    void format(PrintStream output) {
+        printHeader(output);
+        for (VmRef vm : vms) {
+            printVM(output, vm);
         }
     }
 
-    public Command getCommand(String name) {
-        return commands.get(name);
+    private void printHeader(PrintStream output) {
+        printLine(output, HOST, VM_ID, VM_NAME);
     }
 
-    public Collection<Command> getRegisteredCommands() {
-        return Collections.unmodifiableCollection(commands.values());
+    private void printVM(PrintStream output, VmRef vm) {
+        printLine(output, vm.getAgent().getHostName(), vm.getId().toString(), vm.getName());
+    }
+
+    private void printLine(PrintStream output, String host, String vmId, String vmName) {
+        output.print(host);
+        output.print(fillSpace(longestHost - host.length() + 1));
+        output.print(vmId);
+        output.print(fillSpace(longestVmId - vmId.length() + 1));
+        output.print(vmName);
+        output.print('\n');
+    }
+
+    private String fillSpace(int n) {
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < n; i++) {
+            s.append(' ');
+        }
+        return s.toString();
     }
 
 }

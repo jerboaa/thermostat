@@ -44,4 +44,5 @@ public interface CommandContext {
 
     CommandRegistry getCommandRegistry();
 
+    AppContextSetup getAppContextSetup();
 }

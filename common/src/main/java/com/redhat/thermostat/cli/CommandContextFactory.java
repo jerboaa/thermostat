@@ -44,17 +44,21 @@ public class CommandContextFactory {
         return instance;
     }
 
-    static void setInstance(CommandContextFactory ctxFactory) {
+    public static void setInstance(CommandContextFactory ctxFactory) {
         instance = ctxFactory;
     }
 
     private CommandRegistry commandRegistry = new CommandRegistry();
 
     public CommandContext createContext(final String[] args) {
-        return new CommandContextImpl(args, commandRegistry);
+        return new CommandContextImpl(args, commandRegistry, getAppContextSetup());
     }
 
-    CommandRegistry getCommandRegistry() {
+    protected AppContextSetup getAppContextSetup() {
+        return new AppContextSetupImpl();
+    }
+
+    protected CommandRegistry getCommandRegistry() {
         return commandRegistry;
     }
 

@@ -36,35 +36,19 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 
-public class CommandRegistry {
+class ConnectionConfiguration implements StartupConfiguration {
 
-    private Map<String,Command> commands;
+    private String dbUrl;
 
-    public CommandRegistry() {
-        commands = new HashMap<>();
+    ConnectionConfiguration(String dbUrl) {
+        this.dbUrl = dbUrl;
     }
 
-    private void registerCommand(Command cmd) {
-        commands.put(cmd.getName(), cmd);
-    }
-
-    void registerCommands(Iterable<? extends Command> cmds) {
-        for (Command cmd : cmds) {
-            registerCommand(cmd);
-        }
-    }
-
-    public Command getCommand(String name) {
-        return commands.get(name);
-    }
-
-    public Collection<Command> getRegisteredCommands() {
-        return Collections.unmodifiableCollection(commands.values());
+    @Override
+    public String getDBConnectionString() {
+        return dbUrl;
     }
 
 }
