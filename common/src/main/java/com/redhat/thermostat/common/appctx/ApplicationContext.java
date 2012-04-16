@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.appctx;
 
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.dao.DAOFactory;
 
 public class ApplicationContext {
@@ -46,6 +47,8 @@ public class ApplicationContext {
     private DAOFactory daoFactory;
 
     private TimerFactory timerFactory;
+
+    private ViewFactory viewFactory;
 
     public static ApplicationContext getInstance() {
         return instance;
@@ -74,6 +77,14 @@ public class ApplicationContext {
 
     public TimerFactory getTimerFactory() {
         return timerFactory;
+    }
+
+    public ViewFactory getViewFactory() {
+        return viewFactory;
+    }
+
+    public void setViewFactory(ViewFactory viewFactory) {
+        this.viewFactory = viewFactory;
     }
 
 }

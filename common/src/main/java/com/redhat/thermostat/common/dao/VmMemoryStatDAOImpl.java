@@ -45,9 +45,11 @@ import com.redhat.thermostat.common.storage.Storage;
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private final Storage storage;
+    private final VmMemoryStatConverter converter;
 
     VmMemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
+        converter = new VmMemoryStatConverter();
     }
 
     @Override
@@ -57,9 +59,14 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
         query.put(Key.VM_ID, ref.getId());
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
         if (cursor.hasNext()) {
-            return new VmMemoryStatConverter().fromChunk(cursor.next());
+            return converter.fromChunk(cursor.next());
         }
         return null;
+    }
+
+    @Override
+    public void putVmMemoryStat(VmMemoryStat stat) {
+        storage.putChunk(converter.toChunk(stat));
     }
 
 }

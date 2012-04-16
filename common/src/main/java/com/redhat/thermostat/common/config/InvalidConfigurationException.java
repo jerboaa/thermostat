@@ -39,6 +39,8 @@ package com.redhat.thermostat.common.config;
 
 public class InvalidConfigurationException extends Exception {
 
+    private static final long serialVersionUID = -6555406006758264587L;
+
     public InvalidConfigurationException() {
         super();
     }

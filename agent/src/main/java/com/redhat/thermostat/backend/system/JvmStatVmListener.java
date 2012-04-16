@@ -47,8 +47,9 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.common.dao.VmGcStatConverter;
-import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.VmGcStatDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
@@ -60,10 +61,12 @@ public class JvmStatVmListener implements VmListener {
     private static final Logger logger = LoggingUtils.getLogger(JvmStatVmListener.class);
 
     private final int vmId;
-    private final SystemBackend backend;
+    private final VmGcStatDAO gcDAO;
+    private final VmMemoryStatDAO memDAO;
 
-    public JvmStatVmListener(SystemBackend backend, int vmId) {
-        this.backend = backend;
+    public JvmStatVmListener(DAOFactory df, int vmId) {
+        gcDAO = df.getVmGcStatDAO();
+        memDAO = df.getVmMemoryStatDAO();
         this.vmId = vmId;
     }
 
@@ -97,7 +100,7 @@ public class JvmStatVmListener implements VmListener {
                         extractor.getCollectorName(i),
                         extractor.getCollectorInvocations(i),
                         extractor.getCollectorTime(i));
-                backend.store(new VmGcStatConverter().toChunk(stat));
+                gcDAO.putVmGcStat(stat);
             }
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering gc info for vm " + vmId, e);
@@ -132,7 +135,7 @@ public class JvmStatVmListener implements VmListener {
                     s.used = extractor.getSpaceUsed(generation, space);
                 }
             }
-            backend.store(new VmMemoryStatConverter().toChunk(stat));
+            memDAO.putVmMemoryStat(stat);
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);
         }

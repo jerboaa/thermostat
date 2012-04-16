@@ -39,9 +39,10 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.List;
 
+import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public interface HostMemoryView {
+public interface HostMemoryView extends View {
 
     public interface GraphVisibilityChangeListener {
         public void show(String tag);

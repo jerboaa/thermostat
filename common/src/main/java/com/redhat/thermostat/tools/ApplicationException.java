@@ -38,6 +38,8 @@ package com.redhat.thermostat.tools;
 
 public class ApplicationException extends Exception {
 
+    private static final long serialVersionUID = 5910852125476383826L;
+
     public ApplicationException() {
     }
 

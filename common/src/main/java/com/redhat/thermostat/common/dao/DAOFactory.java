@@ -36,11 +36,14 @@
 
 package com.redhat.thermostat.common.dao;
 
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.Storage;
 
 public interface DAOFactory {
-    /**
-     * TODO: This will be replaced by getStorage() as soon as Storage and Connection have been merged.
-     */
+
+    // TODO this is temporary until DAO is made for those that are still using Storage directly.
+    public Storage getStorage();
+
     public Connection getConnection();
 
     public HostInfoDAO getHostInfoDAO();

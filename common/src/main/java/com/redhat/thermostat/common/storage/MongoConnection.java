@@ -34,9 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
 import java.net.UnknownHostException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.mongodb.DB;
@@ -45,20 +46,16 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.storage.StorageConstants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class MongoConnection extends Connection {
-    private static final Logger logger = LoggingUtils.getLogger(MongoConnection.class);
+class MongoConnection extends Connection {
 
+    private static final Logger logger = LoggingUtils.getLogger(MongoConnection.class);
     private Mongo m = null;
     private DB db = null;
-    
     private StartupConfiguration conf;
-    
-    private MongoConnection() { /* nothing to do */ }
-    
-    public MongoConnection(StartupConfiguration conf) {
+
+    MongoConnection(StartupConfiguration conf) {
         this.conf = conf;
     }
 
@@ -71,6 +68,7 @@ public class MongoConnection extends Connection {
         } catch (MongoException | UnknownHostException |
                  NotImplementedException | IllegalArgumentException e)
         {
+            logger.log(Level.WARNING, "Connection failed.", e);
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             return;
         }
@@ -78,13 +76,22 @@ public class MongoConnection extends Connection {
         connected = true;
     }
 
+    @Override
+    public void disconnect() {
+        connected = false;
+        db = null;
+        if (m != null) {
+            m.close();
+        }
+    }
+
+    public DB getDB() {
+        return db;
+    }
+
     private void createConnection() throws MongoException, UnknownHostException {
         this.m = new Mongo(getMongoURI());
         this.db = m.getDB(StorageConstants.THERMOSTAT_DB_NAME);
-    }
-    
-    private void testConnection() {
-        db.getCollection("agent-config").getCount();
     }
 
     private MongoURI getMongoURI() {
@@ -92,15 +99,7 @@ public class MongoConnection extends Connection {
         return uri;
     }
 
-    public DB getDB() {
-        return db;
-    }
-
-    @Override
-    public void disconnect() {
-        if (m != null) {
-            m.close();
-        }
-        connected = false;
+    private void testConnection() {
+        db.getCollection("agent-config").getCount();
     }
 }

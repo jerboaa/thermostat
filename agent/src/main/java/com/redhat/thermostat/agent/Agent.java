@@ -44,6 +44,7 @@ import com.redhat.thermostat.agent.config.ConfigurationWatcher;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.AgentInformation;
 import com.redhat.thermostat.common.storage.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
@@ -60,18 +61,21 @@ public class Agent {
     private final BackendRegistry backendRegistry;
     private final AgentStartupConfiguration config;
 
+    private AgentInformation agentInfo;
+    
     private Storage storage;
     private Thread configWatcherThread = null;
 
-    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, Storage storage) {
-        this(backendRegistry, UUID.randomUUID(), config, storage);
+    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daos) {
+        this(backendRegistry, UUID.randomUUID(), config, daos);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, Storage storage) {
+    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, DAOFactory daos) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
-        this.storage = storage;
+        this.storage = daos.getStorage();
+        this.storage.setAgentId(agentId);
     }
 
     private void startBackends() throws LaunchException {
@@ -99,7 +103,8 @@ public class Agent {
     public synchronized void start() throws LaunchException {
         if (configWatcherThread == null) {
             startBackends();
-            storage.addAgentInformation(createAgentInformation());
+            agentInfo = createAgentInformation();
+            storage.addAgentInformation(agentInfo);
             configWatcherThread = new Thread(new ConfigurationWatcher(storage, backendRegistry), "Configuration Watcher");
             configWatcherThread.start();
         } else {
@@ -117,6 +122,7 @@ public class Agent {
             backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
             agentInfo.addBackend(backendInfo);
         }
+        agentInfo.setAlive(true);
         return agentInfo;
     }
 
@@ -131,12 +137,19 @@ public class Agent {
                 }
             }
             configWatcherThread = null;
-            storage.removeAgentInformation();
+
             stopBackends();
-            // TODO
-//            if (config.getLocalMode()) {
-//                storage.purge();
-//            }
+            if (config.purge()) {
+                System.out.println("purging database");
+                logger.info("purging database");
+                storage.removeAgentInformation();
+                storage.purge();
+            } else {
+                agentInfo.setStopTime(System.currentTimeMillis());
+                agentInfo.setAlive(false);
+                storage.updateAgentInformation(agentInfo);
+            }
+            
         } else {
             logger.warning("Attempt to stop agent which is not active");
         }

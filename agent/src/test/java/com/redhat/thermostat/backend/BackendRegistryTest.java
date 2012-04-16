@@ -53,13 +53,19 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Storage;
 
 public class BackendRegistryTest {
 
     public static class MockBackend extends Backend {
+        public MockBackend() {
+            super();
+        }
+
         @Override
         protected Collection<Category> getCategories() {
             return Collections.emptyList();
@@ -84,23 +90,32 @@ public class BackendRegistryTest {
         public boolean attachToNewProcessByDefault() {
             return false;
         }
+
+        @Override
+        protected void setDAOFactoryAction() {
+            // TODO Auto-generated method stub
+            
+        }
     }
 
     private List<BackendID> backends;
     private AgentStartupConfiguration config;
     private BackendConfigurationLoader configLoader;
-    private Storage storage;
 
     @Before
     public void setUp() throws InvalidConfigurationException {
         backends = new ArrayList<>();
 
-        storage = mock(Storage.class);
         config = mock(AgentStartupConfiguration.class);
         when(config.getBackends()).thenReturn(backends);
 
         configLoader = mock(BackendConfigurationLoader.class);
         when(configLoader.retrieveBackendConfigs(any(String.class))).thenReturn(new HashMap<String,String>());
+
+        Storage storage = mock(Storage.class);
+        DAOFactory df = mock(DAOFactory.class);
+        when(df.getStorage()).thenReturn(storage);
+        ApplicationContext.getInstance().setDAOFactory(df);
     }
 
     @After
@@ -108,7 +123,6 @@ public class BackendRegistryTest {
         backends = null;
         config = null;
         configLoader = null;
-        storage = null;
     }
 
     @Test
@@ -116,14 +130,14 @@ public class BackendRegistryTest {
         /* setup fake backend */
         backends.add(new BackendID("mock", MockBackend.class.getName()));
 
-        BackendRegistry registry = new BackendRegistry(config, configLoader, storage);
+        BackendRegistry registry = new BackendRegistry(config, configLoader);
         assertEquals(1, registry.getAll().size());
         assertNotNull(registry.getByName("mock"));
     }
 
     @Test
     public void testNoBackendsRegistered() throws InvalidConfigurationException, BackendLoadException {
-        BackendRegistry registry = new BackendRegistry(config, configLoader, storage);
+        BackendRegistry registry = new BackendRegistry(config, configLoader);
         assertEquals(0, registry.getAll().size());
         assertEquals(null, registry.getByName("system"));
         assertEquals(null, registry.getByName("mock"));
@@ -137,7 +151,7 @@ public class BackendRegistryTest {
         backends.add(new BackendID("mock", MockBackend.class.getClass().getName()));
 
         /* load the backends */
-        new BackendRegistry(config, configLoader, storage);
+        new BackendRegistry(config, configLoader);
     }
 
 }

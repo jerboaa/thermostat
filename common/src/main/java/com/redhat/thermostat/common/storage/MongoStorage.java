@@ -50,8 +50,9 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
-import com.redhat.thermostat.common.dao.Connection;
-import com.redhat.thermostat.common.dao.MongoConnection;
+import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
+import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.
@@ -60,66 +61,40 @@ import com.redhat.thermostat.common.dao.MongoConnection;
  */
 public class MongoStorage extends Storage {
 
-    public MongoStorage(Connection connection) {
-        super(connection);
-    }
-
     public static final String KEY_AGENT_ID = "agent-id";
     public static final String SET_MODIFIER = "$set";
 
+    private MongoConnection conn;
     private DB db = null;
     private Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
 
     private UUID agentId = null;
 
-    @Override
-    public void connect() throws ConnectionFailedException {
-        connection.connect();
-        db = ((MongoConnection) connection).getDB();
+    public MongoStorage(StartupConfiguration conf) {
+        conn = new MongoConnection(conf);
+        conn.addListener(new ConnectionListener() {
+            @Override
+            public void changed(ConnectionStatus newStatus) {
+                switch (newStatus) {
+                case DISCONNECTED:
+                    db = null;
+                case CONNECTED:
+                    db = conn.getDB();
+                default:
+                    // ignore other status events
+                }
+            }
+        });
     }
 
-    /**
-     * Connects to an already existing connection. TODO: This is here for compatibility with the Connection class
-     * until they have been merged.
-     *
-     * @param db
-     */
-    public void connect(DB db) {
-        this.db = db;
+    @Override
+    public Connection getConnection() {
+        return conn;
     }
 
     @Override
     public void setAgentId(UUID agentId) {
         this.agentId = agentId;
-    }
-
-    @Override
-    public void addAgentInformation(AgentInformation agentInfo) {
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        DBObject toInsert = createConfigDBObject(agentInfo);
-        /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
-        toInsert.putAll((BSONObject) getAgentDBObject());
-        configCollection.insert(toInsert, WriteConcern.SAFE);
-    }
-
-    @Override
-    public void removeAgentInformation() {
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        BasicDBObject toRemove = getAgentDBObject();
-        configCollection.remove(toRemove, WriteConcern.NORMAL);
-    }
-
-    @Override
-    public String getBackendConfig(String backendName, String configurationKey) {
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        BasicDBObject query = getAgentDBObject();
-        query.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS + "." + backendName, new BasicDBObject("$exists", true));
-        DBObject config = configCollection.findOne(query);
-        Object value = config.get(configurationKey);
-        if (value instanceof String) {
-            return (String) value;
-        }
-        return null;
     }
 
     private BasicDBObject getAgentDBObject() {
@@ -259,11 +234,15 @@ public class MongoStorage extends Storage {
     private DBObject createConfigDBObject(AgentInformation agentInfo) {
         BasicDBObject result = getAgentDBObject();
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_STOP_TIME, agentInfo.getStopTime());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ALIVE, agentInfo.isAlive());
+        
         BasicDBObject backends = new BasicDBObject();
         for (BackendInformation backend : agentInfo.getBackends()) {
             backends.put(backend.getName(), createBackendConfigDBObject(backend));
         }
         result.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS, backends);
+        
         return result;
     }
 
@@ -287,13 +266,14 @@ public class MongoStorage extends Storage {
         return result;
     }
 
+    @Override
     public void purge() {
         BasicDBObject deleteKey = getAgentDBObject();
         for (DBCollection coll : collectionCache.values()) {
             coll.remove(deleteKey);
         }
     }
-
+    
     @Override
     public ConnectionKey createConnectionKey(Category category) {
         // TODO: There is probably some better place to do this, perhaps related to the inner class
@@ -311,7 +291,8 @@ public class MongoStorage extends Storage {
         Category cat = query.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         ChunkConverter converter = new ChunkConverter();
-        DBCursor dbCursor = coll.find(converter.chunkToDBObject(query));
+        DBObject obj = converter.chunkToDBObject(query);
+        DBCursor dbCursor = coll.find(obj);
         return new MongoCursor(dbCursor, query.getCategory());
     }
 
@@ -330,7 +311,7 @@ public class MongoStorage extends Storage {
         DBObject dbResult = coll.findOne(converter.chunkToDBObject(query));
         return dbResult == null ? null : converter.dbObjectToChunk(dbResult, cat);
     }
-
+    
     @Override
     public Cursor findAllFromCategory(Category category) {
         DBCollection coll = getCachedCollection(category.getName());
@@ -345,5 +326,46 @@ public class MongoStorage extends Storage {
             return coll.getCount();
         }
         return 0L;
+    }
+
+    // TODO these methods below belong in some DAO.
+    @Override
+    public void addAgentInformation(AgentInformation agentInfo) {
+        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
+        DBObject toInsert = createConfigDBObject(agentInfo);
+        /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
+        toInsert.putAll((BSONObject) getAgentDBObject());
+        configCollection.insert(toInsert, WriteConcern.SAFE);
+    }
+    
+    @Override
+    public void updateAgentInformation(AgentInformation agentInfo) {
+        BasicDBObject queryObject = getAgentDBObject();
+
+        DBObject updated = createConfigDBObject(agentInfo);
+        updated.putAll((BSONObject) queryObject);
+
+        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
+        configCollection.update(queryObject, updated);
+    }
+
+    @Override
+    public void removeAgentInformation() {
+        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
+        BasicDBObject toRemove = getAgentDBObject();
+        configCollection.remove(toRemove, WriteConcern.NORMAL);
+    }
+
+    @Override
+    public String getBackendConfig(String backendName, String configurationKey) {
+        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
+        BasicDBObject query = getAgentDBObject();
+        query.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS + "." + backendName, new BasicDBObject("$exists", true));
+        DBObject config = configCollection.findOne(query);
+        Object value = config.get(configurationKey);
+        if (value instanceof String) {
+            return (String) value;
+        }
+        return null;
     }
 }

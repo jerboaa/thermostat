@@ -39,9 +39,10 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.List;
 
+import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public interface VmGcView {
+public interface VmGcView extends View {
 
     void addChart(String tag, String title);
 

@@ -51,4 +51,6 @@ public interface VmCpuStatDAO {
 
     public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref);
 
+    public abstract void putVmCpuStat(VmCpuStat stat);
+
 }

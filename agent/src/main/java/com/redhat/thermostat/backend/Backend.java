@@ -42,8 +42,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Storage;
 
 /**
@@ -53,6 +53,7 @@ import com.redhat.thermostat.common.storage.Storage;
 public abstract class Backend {
 
     private boolean initialConfigurationComplete = false;
+    protected DAOFactory df = null;
     private Storage storage = null;
     private boolean observeNewJvm = attachToNewProcessByDefault();
 
@@ -61,7 +62,7 @@ public abstract class Backend {
     private String description;
     
     private BackendID id;
-    
+
     /**
      * 
      * @param configMap a map containing the settings that this backend has been configured with.
@@ -69,7 +70,7 @@ public abstract class Backend {
      */
     protected final void setInitialConfiguration(Map<String, String> configMap) throws BackendLoadException {
         if (initialConfigurationComplete) {
-            throw new BackendLoadException("A backend may only receive intitial configuration once.");
+            throw new BackendLoadException("A backend may only receive initial configuration once.");
         }
         for (Entry<String, String> e : configMap.entrySet()) {
             String key = e.getKey();
@@ -84,12 +85,16 @@ public abstract class Backend {
         initialConfigurationComplete = true;
     }
 
-    public final void setStorage(Storage storage) {
-        this.storage = storage;
+    public final void setDAOFactory(DAOFactory df) {
+        this.df = df;
+        this.storage = df.getStorage();
         for (Category cat : getCategories()) {
             storage.registerCategory(cat);
         }
+        setDAOFactoryAction();
     }
+
+    protected abstract void setDAOFactoryAction();
 
     protected abstract Collection<Category> getCategories();
 
@@ -226,14 +231,6 @@ public abstract class Backend {
      */
     public void setObserveNewJvm(boolean newValue) {
         observeNewJvm = newValue;
-    }
-
-    public void store(Chunk chunk) {
-        storage.putChunk(chunk);
-    }
-
-    public void update(Chunk chunk) {
-        storage.updateChunk(chunk);
     }
 
     void setID(BackendID backendID) {

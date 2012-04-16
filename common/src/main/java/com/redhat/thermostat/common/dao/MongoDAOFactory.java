@@ -36,78 +36,84 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
-import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.storage.MongoStorage;
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.storage.Storage;
 
 public class MongoDAOFactory implements DAOFactory {
 
-    private final Connection connection;
     private final Storage storage;
 
-    public MongoDAOFactory(ConnectionProvider connProv) {
-
-        connection = connProv.createConnection();
-        final MongoStorage mongoStorage = new MongoStorage(connection);
-        storage = mongoStorage;
-        connection.addListener(new ConnectionListener() {
-
-            @Override
-            public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.CONNECTED) {
-                    mongoStorage.connect(((MongoConnection) connection).getDB());
-                }
-            }
-        });
+    public MongoDAOFactory(StorageProvider prov) {
+        storage = prov.createStorage();
     }
 
     @Override
     public Connection getConnection() {
-        return connection;
+        return storage.getConnection();
     }
 
     @Override
     public HostInfoDAO getHostInfoDAO() {
+        ensureStorageConnected();
         return new HostInfoDAOImpl(storage);
     }
 
     @Override
     public CpuStatDAO getCpuStatDAO() {
+        ensureStorageConnected();
         return new CpuStatDAOImpl(storage);
     }
 
     @Override
     public MemoryStatDAO getMemoryStatDAO() {
+        ensureStorageConnected();
         return new MemoryStatDAOImpl(storage);
     }
 
     @Override
     public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO() {
+        ensureStorageConnected();
         return new NetworkInterfaceInfoDAOImpl(storage);
     }
 
     @Override
     public VmInfoDAO getVmInfoDAO() {
+        ensureStorageConnected();
         return new VmInfoDAOImpl(storage);
     }
 
     @Override
     public VmCpuStatDAO getVmCpuStatDAO() {
+        ensureStorageConnected();
         return new VmCpuStatDAOImpl(storage);
     }
 
     public VmMemoryStatDAO getVmMemoryStatDAO() {
+        ensureStorageConnected();
         return new VmMemoryStatDAOImpl(storage);
     }
 
     @Override
     public VmClassStatDAO getVmClassStatsDAO() {
+        ensureStorageConnected();
         return new VmClassStatDAOImpl(storage);
     }
 
     @Override
     public VmGcStatDAO getVmGcStatDAO() {
+        ensureStorageConnected();
         return new VmGcStatDAOImpl(storage);
+    }
+
+    @Override
+    public Storage getStorage() {
+        return storage;
+    }
+
+    private void ensureStorageConnected() {
+        if (!storage.getConnection().isConnected()) {
+            throw new IllegalStateException("Set up connection before accessing DAO");
+        }
     }
 }

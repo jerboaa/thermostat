@@ -45,7 +45,8 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.common.dao.VmClassStatConverter;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.model.VmClassStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -53,11 +54,11 @@ class JvmStatVmClassListener implements VmListener {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatVmClassListener.class);
 
-    private SystemBackend backend;
+    private VmClassStatDAO dao;
     private int vmId;
 
-    JvmStatVmClassListener(SystemBackend backend, int vmId) {
-        this.backend = backend;
+    JvmStatVmClassListener(DAOFactory df, int vmId) {
+        this.dao = df.getVmClassStatsDAO();
         this.vmId = vmId;
     }
 
@@ -79,8 +80,7 @@ class JvmStatVmClassListener implements VmListener {
             long loadedClasses = extractor.getLoadedClasses();
             long timestamp = System.currentTimeMillis();
             VmClassStat stat = new VmClassStat(vmId, timestamp, loadedClasses);
-            VmClassStatConverter dao = new VmClassStatConverter();
-            backend.store(dao.toChunk(stat));
+            dao.putVmClassStat(stat);
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering class info for vm " + vmId, e);
         }

@@ -34,21 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
-public class MongoConnectionProvider implements ConnectionProvider {
+public class MongoStorageProvider implements StorageProvider {
 
     private StartupConfiguration configuration;
 
-    public MongoConnectionProvider(StartupConfiguration configuration) {
+    public MongoStorageProvider(StartupConfiguration configuration) {
         this.configuration = configuration;
     }
 
     @Override
-    public Connection createConnection() {
-        return new MongoConnection(configuration);
+    public Storage createStorage() {
+        return new MongoStorage(configuration);
     }
 
 }

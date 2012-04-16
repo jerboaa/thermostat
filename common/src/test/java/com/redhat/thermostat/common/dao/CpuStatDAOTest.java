@@ -139,6 +139,16 @@ public class CpuStatDAOTest {
         CpuStat stat = new CpuStat(1, 5.0, 15.0, 10.0);
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
         dao.putCpuStat(stat);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).putChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(CpuStatDAO.cpuStatCategory, chunk.getCategory());
+        assertEquals((Long) 1L, chunk.get(Key.TIMESTAMP));
+        assertEquals((Double) 5.0, chunk.get(CpuStatDAO.cpu5LoadKey));
+        assertEquals((Double) 15.0, chunk.get(CpuStatDAO.cpu10LoadKey));
+        assertEquals((Double) 10.0, chunk.get(CpuStatDAO.cpu15LoadKey));
     }
 
     @Test

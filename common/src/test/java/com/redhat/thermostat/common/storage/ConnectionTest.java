@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -43,15 +43,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
-import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 
 public class ConnectionTest {
 
     private Connection connection;
 
-    private ConnectionListener listener1;
-    private ConnectionListener listener2;
+    private Connection.ConnectionListener listener1;
+    private Connection.ConnectionListener listener2;
 
     @Before
     public void setUp() {
@@ -70,8 +70,8 @@ public class ConnectionTest {
                 
             }
         };
-        listener1 = mock(ConnectionListener.class);
-        listener2 = mock(ConnectionListener.class);
+        listener1 = mock(Connection.ConnectionListener.class);
+        listener2 = mock(Connection.ConnectionListener.class);
         connection.addListener(listener1);
         connection.addListener(listener2);
     }

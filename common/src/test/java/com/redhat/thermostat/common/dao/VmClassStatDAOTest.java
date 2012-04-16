@@ -59,6 +59,10 @@ import com.redhat.thermostat.common.storage.Storage;
 
 public class VmClassStatDAOTest {
 
+    private static final Long TIMESTAMP = 1234L;
+    private static final Integer VM_ID = 123;
+    private static final Long LOADED_CLASSES = 12345L;
+
     @Test
     public void testCategory() {
         assertEquals("vm-class-stats", VmClassStatDAO.vmClassStatsCategory.getName());
@@ -74,10 +78,7 @@ public class VmClassStatDAOTest {
     @Test
     public void testGetLatestClassStatsBasic() {
 
-        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        chunk.put(Key.TIMESTAMP, 1234L);
-        chunk.put(Key.VM_ID, 321);
-        chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
+        Chunk chunk = getChunk();
 
         Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
@@ -103,18 +104,15 @@ public class VmClassStatDAOTest {
 
         assertEquals(1, vmClassStats.size());
         VmClassStat stat = vmClassStats.get(0);
-        assertEquals(1234L, stat.getTimeStamp());
-        assertEquals(12345L, stat.getLoadedClasses());
-        assertEquals(321, stat.getVmId());
+        assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
+        assertEquals(LOADED_CLASSES, (Long) stat.getLoadedClasses());
+        assertEquals(VM_ID, (Integer) stat.getVmId());
     }
 
     @Test
     public void testGetLatestClassStatsTwice() {
 
-        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        chunk.put(Key.TIMESTAMP, 1234L);
-        chunk.put(Key.VM_ID, 321);
-        chunk.put(VmClassStatDAO.loadedClassesKey, 12345L);
+        Chunk chunk = getChunk();
 
         Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
@@ -138,5 +136,31 @@ public class VmClassStatDAOTest {
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());
         assertEquals("this.timestamp > 1234", arg.getValue().get(new Key<String>("$where", false)));
+    }
+
+    private Chunk getChunk() {
+        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
+        chunk.put(Key.TIMESTAMP, TIMESTAMP);
+        chunk.put(Key.VM_ID, VM_ID);
+        chunk.put(VmClassStatDAO.loadedClassesKey, LOADED_CLASSES);
+        return chunk;
+    }
+
+    @Test
+    public void testPutVmClassStat() {
+
+        Storage storage = mock(Storage.class);
+        VmClassStat stat = new VmClassStat(VM_ID, TIMESTAMP, LOADED_CLASSES);
+        VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
+        dao.putVmClassStat(stat);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).putChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(VmClassStatDAO.vmClassStatsCategory, chunk.getCategory());
+        assertEquals((Long) TIMESTAMP, chunk.get(Key.TIMESTAMP));
+        assertEquals((Integer) VM_ID, chunk.get(Key.VM_ID));
+        assertEquals((Long) LOADED_CLASSES, chunk.get(VmClassStatDAO.loadedClassesKey));
     }
 }

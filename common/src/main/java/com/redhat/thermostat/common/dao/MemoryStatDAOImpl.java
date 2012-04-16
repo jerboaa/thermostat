@@ -66,6 +66,11 @@ class MemoryStatDAOImpl implements MemoryStatDAO {
     }
 
     @Override
+    public void putMemoryStat(MemoryStat stat) {
+        storage.putChunk(converter.toChunk(stat));
+    }
+
+    @Override
     public long getCount() {
         return storage.getCount(memoryStatCategory);
     }

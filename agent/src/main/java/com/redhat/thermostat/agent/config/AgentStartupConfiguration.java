@@ -38,9 +38,7 @@ package com.redhat.thermostat.agent.config;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -58,6 +56,7 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     
     private Level logLevel;
     private boolean debugConsole;
+    private boolean purge;
     
     private String url;
     
@@ -134,5 +133,13 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     
     public long getStartTime() {
         return startTime;
+    }
+
+    void setPurge(boolean purge) {
+        this.purge = purge;
+    }
+    
+    public boolean purge() {
+        return purge;
     }
 }

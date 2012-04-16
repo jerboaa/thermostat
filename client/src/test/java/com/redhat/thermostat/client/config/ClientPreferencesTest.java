@@ -34,51 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.client.config;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import java.util.prefs.Preferences;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.cli.AppContextSetupImpl;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.MongoConnection;
-import com.redhat.thermostat.common.dao.MongoConnectionProvider;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(MongoConnectionProvider.class)
-public class AppContextSetupImplTest {
+public class ClientPreferencesTest {
 
     @Test
-    public void testSetup() throws Exception {
-        // TODO: Figure out how to test this class without using PowerMock.
-        final MongoConnection conn = mock(MongoConnection.class);
-        PowerMockito.whenNew(MongoConnection.class).withArguments(Mockito.any(StartupConfiguration.class)).thenAnswer(new Answer<MongoConnection>() {
+    public void testGetConnectionUrl() {
 
-            @Override
-            public MongoConnection answer(InvocationOnMock invocation)
-                    throws Throwable {
-                StartupConfiguration conf = (StartupConfiguration) invocation.getArguments()[0];
-                assertEquals("mongodb://fluff:27518", conf.getDBConnectionString());
-                return conn;
-            }
-            
-        });
-        AppContextSetupImpl setup = new AppContextSetupImpl();
+        Preferences prefs = mock(Preferences.class);
+        when(prefs.get(eq("connection-url"), any(String.class))).thenReturn("mock-value");
 
-        setup.setupAppContext("mongodb://fluff:27518");
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        String value = clientPrefs.getConnectionUrl();
 
-        assertNotNull(ApplicationContext.getInstance().getDAOFactory());
+        assertEquals("mock-value", value);
+        verify(prefs).get(eq("connection-url"), any(String.class));
     }
+
+    @Test
+    public void testSetConnectionUrl() {
+
+        Preferences prefs = mock(Preferences.class);
+
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        clientPrefs.setConnectionUrl("test");
+
+        verify(prefs).put(eq("connection-url"), eq("test"));
+    }
+
 
 }

@@ -43,6 +43,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -54,6 +55,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
+import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -223,17 +225,17 @@ public class MainWindow extends JFrame implements MainView {
 
     private final ShutdownClient shutdownAction;
 
-    private ApplicationInfo appInfo; 
+    private ApplicationInfo appInfo;
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
-    private final DefaultMutableTreeNode publishedRoot = 
+    private final DefaultMutableTreeNode publishedRoot =
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
     public MainWindow(UiFacadeFactory facadeFactory) {
         super();
-        
+
         appInfo = new ApplicationInfo();
         setTitle(appInfo.getName());
 
@@ -292,6 +294,40 @@ public class MainWindow extends JFrame implements MainView {
         fileExitMenu.addActionListener(shutdownAction);
         fileMenu.add(fileExitMenu);
 
+        JMenu editMenu = new JMenu(localize(LocaleResources.MENU_EDIT));
+        mainMenuBar.add(editMenu);
+
+        JMenuItem configureAgentMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_AGENT));
+        configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.SHOW_AGENT_CONFIG);
+            }
+        });
+        editMenu.add(configureAgentMenuItem);
+
+        JMenuItem configureClientMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_CLIENT));
+        configureClientMenuItem.setName("showClientConfig");
+        configureClientMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.SHOW_CLIENT_CONFIG);
+            }
+        });
+        editMenu.add(configureClientMenuItem);
+        
+        editMenu.addSeparator();
+        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE));
+        historyModeMenuItem.setName("historyModeSwitch");
+        historyModeMenuItem.setSelected(false);
+        historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.SWITCH_HISTORY_MODE);
+            }
+        });
+        
+        editMenu.add(historyModeMenuItem);
         JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);
@@ -499,6 +535,7 @@ public class MainWindow extends JFrame implements MainView {
         }
     }
 
+    @Override
     public void addActionListener(ActionListener<Action> l) {
         actionNotifier.addActionListener(l);
     }
@@ -511,6 +548,7 @@ public class MainWindow extends JFrame implements MainView {
         actionNotifier.fireAction(action);
     }
 
+    @Override
     public void updateTree(String filter, HostsVMsLoader hostsVMsLoader) {
         BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot, filter, hostsVMsLoader);
         worker.execute();

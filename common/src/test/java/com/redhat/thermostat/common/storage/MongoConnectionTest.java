@@ -34,12 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
-
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+package com.redhat.thermostat.common.storage;
 
 import java.net.UnknownHostException;
 
@@ -57,67 +52,60 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.Connection.ConnectionListener;
-import com.redhat.thermostat.common.dao.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.storage.StorageConstants;
+import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
+import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
+
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @PrepareForTest(MongoConnection.class)
 @RunWith(PowerMockRunner.class)
 public class MongoConnectionTest {
 
-    private MongoConnection connection;
+    private MongoConnection conn;
     private ConnectionListener listener;
 
     @Before
     public void setUp() {
         StartupConfiguration conf = mock(StartupConfiguration.class);
         when(conf.getDBConnectionString()).thenReturn("mongodb://127.0.0.1:27518");
-        connection = new MongoConnection(conf);
+        conn = new MongoConnection(conf);
         listener = mock(ConnectionListener.class);
-        connection.addListener(listener);
+        conn.addListener(listener);
     }
 
     @After
     public void tearDown() {
-        connection = null;
+        conn = null;
     }
 
     @Test
     public void testConnectSuccess() throws Exception {
-
         DBCollection collection = mock(DBCollection.class);
-
         DB db = mock(DB.class);
         when(db.getCollection("agent-config")).thenReturn(collection);
+        Mongo m = mock(Mongo.class);
+        when(m.getDB(StorageConstants.THERMOSTAT_DB_NAME)).thenReturn(db);
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        conn.connect();
 
-        Mongo mongo = mock(Mongo.class);
-        when(mongo.getDB(StorageConstants.THERMOSTAT_DB_NAME)).thenReturn(db);
-
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(mongo);
-
-        
-        connection.connect();
-
-        
         verify(listener).changed(ConnectionStatus.CONNECTED);
     }
 
     @Test
     public void testConnectUnknownHostException() throws Exception {
-
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new UnknownHostException());
-
-        connection.connect();
+        conn.connect();
 
         verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
     }
 
     @Test
     public void testConnectMongoException() throws Exception {
-
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new MongoException("fluff"));
-
-        connection.connect();
+        conn.connect();
 
         verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
     }

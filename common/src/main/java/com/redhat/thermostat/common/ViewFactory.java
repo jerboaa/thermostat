@@ -34,9 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common;
 
-public interface ConnectionProvider {
+public interface ViewFactory {
 
-    Connection createConnection();
+    public <T extends View> T getView(Class<T> viewClass);
+
+    public <T extends View> Class<? extends T> getViewClass(Class<T> viewClass);
+
+    public <T extends View > void setViewClass(Class<T> viewClass, Class<? extends T> implClass);
 }

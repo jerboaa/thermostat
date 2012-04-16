@@ -40,10 +40,14 @@ import com.redhat.thermostat.common.config.StartupConfiguration;
 
 public class ConnectionConfiguration implements StartupConfiguration {
 
+    private final ClientPreferences clientPrefs;
+
+    public ConnectionConfiguration(ClientPreferences clientPrefs) {
+        this.clientPrefs = clientPrefs;
+    }
+
     @Override
     public String getDBConnectionString() {
-        // TODO: this needs to be read from preferences or from the agent
-        // configuration
-        return "mongodb://127.0.0.1:27518";
+        return clientPrefs.getConnectionUrl();
     }
 }

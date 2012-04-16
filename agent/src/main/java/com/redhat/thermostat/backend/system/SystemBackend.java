@@ -57,16 +57,11 @@ import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.common.dao.CpuStatConverter;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
-import com.redhat.thermostat.common.dao.HostInfoConverter;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.MemoryStatConverter;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoConverter;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.dao.VmCpuStatConverter;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -79,6 +74,12 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
+    private CpuStatDAO cpuStats;
+    private HostInfoDAO hostInfos;
+    private MemoryStatDAO memoryStats;
+    private VmCpuStatDAO vmCpuStats;
+    private NetworkInterfaceInfoDAO networkInterfaces;
+
     private final List<Category> categories = new ArrayList<Category>();
 
     private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
@@ -89,13 +90,17 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private HostIdentifier hostId = null;
     private MonitoredHost host = null;
-    private JvmStatHostListener hostListener = new JvmStatHostListener();
+    private JvmStatHostListener hostListener;
 
     private final VmCpuStatBuilder vmCpuBuilder;
+    private final HostInfoBuilder hostInfoBuilder;
+    private final CpuStatBuilder cpuStatBuilder;
+    private final MemoryStatBuilder memoryStatBuilder;
 
     public SystemBackend() {
-        // Set up categories that will later be registered.
+        super();
 
+        // Set up categories that will later be registered.
         categories.add(CpuStatDAO.cpuStatCategory);
         categories.add(HostInfoDAO.hostInfoCategory);
         categories.add(MemoryStatDAO.memoryStatCategory);
@@ -110,6 +115,20 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         vmCpuBuilder = new VmCpuStatBuilder(clock, ticksPerSecond, builder);
+        ProcDataSource source = new ProcDataSource();
+        hostInfoBuilder = new HostInfoBuilder(source);
+        cpuStatBuilder = new CpuStatBuilder(source);
+        memoryStatBuilder = new MemoryStatBuilder(source);
+    }
+
+    @Override
+    protected void setDAOFactoryAction() {
+        cpuStats = df.getCpuStatDAO();
+        hostInfos = df.getHostInfoDAO();
+        memoryStats = df.getMemoryStatDAO();
+        vmCpuStats = df.getVmCpuStatDAO();
+        networkInterfaces = df.getNetworkInterfaceInfoDAO();
+        hostListener = new JvmStatHostListener(df, getObserveNewJvm());
     }
 
     @Override
@@ -117,28 +136,30 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         if (timer != null) {
             return true;
         }
+        if (df == null) {
+            throw new IllegalStateException("Cannot activate backend without DAOFactory.");
+        }
 
         addJvmStatusListener(this);
 
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
         }
-        store(new HostInfoConverter().toChunk(new HostInfoBuilder(new ProcDataSource()).build()));
+        hostInfos.putHostInfo(hostInfoBuilder.build());
 
         timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                ProcDataSource dataSource = new ProcDataSource();
-                store(new CpuStatConverter().toChunk(new CpuStatBuilder(dataSource).build()));
+                cpuStats.putCpuStat(cpuStatBuilder.build());
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
-                    store(new NetworkInterfaceInfoConverter().toChunk(info));
+                    networkInterfaces.putNetworkInterfaceInfo(info);
                 }
-                store(new MemoryStatConverter().toChunk(new MemoryStatBuilder(dataSource).build()));
+                memoryStats.putMemoryStat(memoryStatBuilder.build());
 
                 for (Integer pid : pidsToMonitor) {
                     if (vmCpuBuilder.knowsAbout(pid)) {
-                        store(new VmCpuStatConverter().toChunk(vmCpuBuilder.build(pid)));
+                        vmCpuStats.putVmCpuStat(vmCpuBuilder.build(pid));
                     } else {
                         vmCpuBuilder.learnAbout(pid);
                     }
@@ -149,7 +170,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         try {
             hostId = new HostIdentifier((String) null);
             host = MonitoredHost.getMonitoredHost(hostId);
-            hostListener.setBackend(this);
             host.addHostListener(hostListener);
         } catch (MonitorException me) {
             logger.log(Level.WARNING, "problems with connecting jvmstat to local machine", me);

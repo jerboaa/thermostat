@@ -59,6 +59,17 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 public class MemoryStatDAOTest {
+
+
+    private static long TIMESTAMP = 1;
+    private static long TOTAL = 2;
+    private static long FREE = 3;
+    private static long BUFFERS = 4;
+    private static long CACHED = 5;
+    private static long SWAP_TOTAL = 6;
+    private static long SWAP_FREE = 7;
+    private static long COMMIT_LIMIT = 8;
+
     @Test
     public void testCategory() {
         assertEquals("memory-stats", MemoryStatDAO.memoryStatCategory.getName());
@@ -78,14 +89,6 @@ public class MemoryStatDAOTest {
 
     @Test
     public void testGetLatestMemoryStats() {
-        long TIMESTAMP = 1;
-        long TOTAL = 2;
-        long FREE = 3;
-        long BUFFERS = 4;
-        long CACHED = 5;
-        long SWAP_TOTAL = 6;
-        long SWAP_FREE = 7;
-        long COMMIT_LIMIT = 8;
 
         Chunk chunk = new Chunk(MemoryStatDAO.memoryStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
@@ -129,14 +132,6 @@ public class MemoryStatDAOTest {
 
     @Test
     public void testGetLatestMemoryStatsTwice() {
-        long TIMESTAMP = 1;
-        long TOTAL = 2;
-        long FREE = 3;
-        long BUFFERS = 4;
-        long CACHED = 5;
-        long SWAP_TOTAL = 6;
-        long SWAP_FREE = 7;
-        long COMMIT_LIMIT = 8;
 
         Chunk chunk = new Chunk(MemoryStatDAO.memoryStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
@@ -165,6 +160,28 @@ public class MemoryStatDAOTest {
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());
         assertEquals("this.timestamp > 1", arg.getValue().get(new Key<String>("$where", false)));
+    }
+
+    @Test
+    public void testPutHostInfo() {
+        Storage storage = mock(Storage.class);
+        MemoryStat stat = new MemoryStat(TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
+        MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
+        dao.putMemoryStat(stat);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).putChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(MemoryStatDAO.memoryStatCategory, chunk.getCategory());
+        assertEquals((Long) TIMESTAMP, chunk.get(Key.TIMESTAMP));
+        assertEquals((Long) TOTAL, chunk.get(MemoryStatDAO.memoryTotalKey));
+        assertEquals((Long) FREE, chunk.get(MemoryStatDAO.memoryFreeKey));
+        assertEquals((Long) BUFFERS, chunk.get(MemoryStatDAO.memoryBuffersKey));
+        assertEquals((Long) CACHED, chunk.get(MemoryStatDAO.memoryCachedKey));
+        assertEquals((Long) SWAP_TOTAL, chunk.get(MemoryStatDAO.memorySwapTotalKey));
+        assertEquals((Long) SWAP_FREE, chunk.get(MemoryStatDAO.memorySwapFreeKey));
+        assertEquals((Long) COMMIT_LIMIT, chunk.get(MemoryStatDAO.memoryCommitLimitKey));
     }
 
     @Test

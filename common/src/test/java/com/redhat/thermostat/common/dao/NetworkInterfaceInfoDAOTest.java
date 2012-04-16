@@ -59,6 +59,10 @@ import com.redhat.thermostat.common.storage.Storage;
 
 public class NetworkInterfaceInfoDAOTest {
 
+    private static final String INTERFACE_NAME = "some interface. maybe eth0";
+    private static final String IPV4_ADDR = "256.256.256.256";
+    private static final String IPV6_ADDR = "100:100:100::::1";
+
     @Test
     public void testCategory() {
         Collection<Key<?>> keys;
@@ -75,9 +79,6 @@ public class NetworkInterfaceInfoDAOTest {
 
     @Test
     public void testGetNetworkInterfaces() {
-        final String INTERFACE_NAME = "some interface. maybe eth0";
-        final String IPV4_ADDR = "256.256.256.256";
-        final String IPV6_ADDR = "100:100:100::::1";
 
         Chunk chunk = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, false);
         chunk.put(NetworkInterfaceInfoDAO.ifaceKey, INTERFACE_NAME);
@@ -108,5 +109,24 @@ public class NetworkInterfaceInfoDAOTest {
         assertEquals(INTERFACE_NAME, info.getInterfaceName());
         assertEquals(IPV4_ADDR, info.getIp4Addr());
         assertEquals(IPV6_ADDR, info.getIp6Addr());
+    }
+
+    @Test
+    public void testPutNetworkInterfaceInfo() {
+        Storage storage = mock(Storage.class);
+        NetworkInterfaceInfo info = new NetworkInterfaceInfo(INTERFACE_NAME);
+        info.setIp4Addr(IPV4_ADDR);
+        info.setIp6Addr(IPV6_ADDR);
+        NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
+        dao.putNetworkInterfaceInfo(info);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).putChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(NetworkInterfaceInfoDAO.networkInfoCategory, chunk.getCategory());
+        assertEquals(INTERFACE_NAME, chunk.get(NetworkInterfaceInfoDAO.ifaceKey));
+        assertEquals(IPV4_ADDR, chunk.get(NetworkInterfaceInfoDAO.ip4AddrKey));
+        assertEquals(IPV6_ADDR, chunk.get(NetworkInterfaceInfoDAO.ip6AddrKey));
     }
 }

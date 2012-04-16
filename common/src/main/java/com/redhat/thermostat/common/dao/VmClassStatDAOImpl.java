@@ -64,4 +64,9 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
         }
         return getter.getLatest();
     }
+
+    @Override
+    public void putVmClassStat(VmClassStat stat) {
+        storage.putChunk(converter.toChunk(stat));
+    }
 }

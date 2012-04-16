@@ -60,6 +60,12 @@ import com.redhat.thermostat.common.storage.Storage;
 
 public class VmGcStatDAOTest {
 
+    private static final Integer VM_ID = 123;
+    private static final Long TIMESTAMP = 456L;
+    private static final String COLLECTOR = "collector1";
+    private static final Long RUN_COUNT = 10L;
+    private static final Long WALL_TIME = 9L;
+
     @Test
     public void testCategory() {
         assertEquals("vm-gc-stats", VmGcStatDAO.vmGcStatCategory.getName());
@@ -75,12 +81,6 @@ public class VmGcStatDAOTest {
 
     @Test
     public void testGetLatestVmGcStatsBasic() {
-
-        final Integer VM_ID = 123;
-        final Long TIMESTAMP = 456L;
-        final String COLLECTOR = "collector1";
-        final Long RUN_COUNT = 10L;
-        final Long WALL_TIME = 9L;
 
         Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
@@ -123,12 +123,6 @@ public class VmGcStatDAOTest {
     @Test
     public void testGetLatestVmGcStatsTwice() {
 
-        final Integer VM_ID = 123;
-        final Long TIMESTAMP = 456L;
-        final String COLLECTOR = "collector1";
-        final Long RUN_COUNT = 10L;
-        final Long WALL_TIME = 9L;
-
         Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
         chunk.put(Key.VM_ID, VM_ID);
@@ -157,5 +151,24 @@ public class VmGcStatDAOTest {
         ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
         verify(storage, times(2)).findAll(arg.capture());
         assertEquals("this.timestamp > 456", arg.getValue().get(new Key<String>("$where", false)));
+    }
+
+    @Test
+    public void testPutVmGcStat() {
+        Storage storage = mock(Storage.class);
+        VmGcStat stat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
+        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
+        dao.putVmGcStat(stat);
+
+        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).putChunk(arg.capture());
+        Chunk chunk = arg.getValue();
+
+        assertEquals(VmGcStatDAO.vmGcStatCategory, chunk.getCategory());
+        assertEquals(TIMESTAMP, chunk.get(Key.TIMESTAMP));
+        assertEquals(VM_ID, chunk.get(Key.VM_ID));
+        assertEquals(COLLECTOR, chunk.get(VmGcStatDAO.collectorKey));
+        assertEquals(RUN_COUNT, chunk.get(VmGcStatDAO.runCountKey));
+        assertEquals(WALL_TIME, chunk.get(VmGcStatDAO.wallTimeKey));
     }
 }

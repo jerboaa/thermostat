@@ -36,39 +36,43 @@
 
 package com.redhat.thermostat.common.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.mongodb.DB;
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.StorageProvider;
 
 public class MongoDAOFactoryTest {
 
-    private MongoConnection conn;
-    private ConnectionProvider connProvider;
+    private Storage storage;
+    private Connection connection;
+    private StorageProvider provider;
     private DAOFactory daoFactory;
-    private DB db;
     HostRef hostRef;
     VmRef vmRef;
 
     @Before
     public void setUp() {
-        conn = mock(MongoConnection.class);
-        connProvider = mock(ConnectionProvider.class);
-        when(connProvider.createConnection()).thenReturn(conn);
-        db = mock(DB.class);
-        when(conn.getDB()).thenReturn(db);
+        storage = mock(Storage.class);
+        connection = mock(Connection.class);
+        when(storage.getConnection()).thenReturn(connection);
+        when(connection.isConnected()).thenReturn(true);
+        provider = mock(StorageProvider.class);
+        when(provider.createStorage()).thenReturn(storage);
         hostRef = mock(HostRef.class);
         vmRef = mock(VmRef.class);
-        daoFactory = new MongoDAOFactory(connProvider);
+        daoFactory = new MongoDAOFactory(provider);
     }
 
     @Test
     public void testGetConnection() {
-        assertSame(conn, daoFactory.getConnection());
+        assertSame(storage, daoFactory.getStorage());
     }
 
     @Test

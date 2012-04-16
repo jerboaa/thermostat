@@ -38,8 +38,13 @@ package com.redhat.thermostat.client;
 
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.config.ClientPreferences;
+import com.redhat.thermostat.client.ui.AgentConfigurationController;
+import com.redhat.thermostat.client.ui.AgentConfigurationModel;
+import com.redhat.thermostat.client.ui.AgentConfigurationView;
+import com.redhat.thermostat.client.ui.ClientConfigurationController;
+import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
@@ -49,7 +54,6 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MainWindowControllerImpl implements MainWindowController {
 
@@ -62,6 +66,8 @@ public class MainWindowControllerImpl implements MainWindowController {
     private final HostInfoDAO hostsDAO;
     private final VmInfoDAO vmsDAO;
 
+    private boolean showHistory;
+    
     public MainWindowControllerImpl(MainView view) {
 
         ApplicationContext ctx = ApplicationContext.getInstance();
@@ -78,14 +84,18 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         @Override
         public Collection<HostRef> getHosts() {
-            return hostsDAO.getHosts();
+            if (showHistory) {
+                return hostsDAO.getHosts();
+            } else {
+                return hostsDAO.getAliveHosts();
+            }
         }
 
         @Override
         public Collection<VmRef> getVMs(HostRef host) {
             return vmsDAO.getVMs(host);
         }
-        
+
     }
 
     private void initializeTimer() {
@@ -135,6 +145,15 @@ public class MainWindowControllerImpl implements MainWindowController {
                     String filter = view.getHostVmTreeFilter();
                     setHostVmTreeFilter(filter);
                     break;
+                case SHOW_AGENT_CONFIG:
+                    showAgentConfiguration();
+                    break;
+                case SHOW_CLIENT_CONFIG:
+                    showConfigureClientPreferences();
+                    break;
+                case SWITCH_HISTORY_MODE:
+                    switchHistoryMode();
+                    break;
                 case SHUTDOWN:
                     stop();
                     break;
@@ -142,7 +161,6 @@ public class MainWindowControllerImpl implements MainWindowController {
                     assert false;
                 }
             }
-            
         });
     }
 
@@ -151,4 +169,23 @@ public class MainWindowControllerImpl implements MainWindowController {
         view.showMainWindow();
     }
 
+    private void showAgentConfiguration() {
+        AgentConfigurationSource agentPrefs = new AgentConfigurationSource();
+        AgentConfigurationModel model = new AgentConfigurationModel(agentPrefs);
+        AgentConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(AgentConfigurationView.class);
+        AgentConfigurationController controller = new AgentConfigurationController(model, view);
+        controller.showView();
+    }
+
+    private void showConfigureClientPreferences() {
+        ClientPreferences prefs = new ClientPreferences();
+        ClientConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(ClientConfigurationView.class);
+        ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
+        controller.showDialog();
+    }
+    
+    private void switchHistoryMode() {
+        showHistory = !showHistory;
+        doUpdateTreeAsync();
+    }
 }

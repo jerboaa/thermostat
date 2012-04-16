@@ -75,15 +75,11 @@ public class VmGcController implements AsyncUiFacade {
 
     public VmGcController(VmRef ref) {
         this.ref = ref;
-        this.view = createView();
+        this.view = ApplicationContext.getInstance().getViewFactory().getView(VmGcView.class);
 
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
         gcDao = df.getVmGcStatDAO();
         memDao = df.getVmMemoryStatDAO();
-    }
-
-    protected VmGcView createView() {
-        return new VmGcPanel();
     }
 
     @Override

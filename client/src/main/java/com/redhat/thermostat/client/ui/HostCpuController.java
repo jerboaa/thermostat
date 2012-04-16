@@ -64,7 +64,7 @@ public class HostCpuController implements AsyncUiFacade {
 
     public HostCpuController(HostRef ref) {
         this.ref = ref;
-        view = createView();
+        view = ApplicationContext.getInstance().getViewFactory().getView(HostCpuView.class);
         view.clearCpuLoadData();
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
         hostInfoDAO = daos.getHostInfoDAO();
@@ -72,7 +72,7 @@ public class HostCpuController implements AsyncUiFacade {
 
         backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
-            
+
             @Override
             public void run() {
                 updateView();
@@ -112,10 +112,6 @@ public class HostCpuController implements AsyncUiFacade {
             result.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getLoad5()));
         }
         view.addCpuLoadData(result);
-    }
-
-    protected HostCpuView createView() {
-        return new HostCpuPanel();
     }
 
     public Component getComponent() {

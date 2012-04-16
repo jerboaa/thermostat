@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.storage;
 
-public class ConnectionFailedException extends Exception {
+public interface StorageProvider {
 
+    Storage createStorage();
 }

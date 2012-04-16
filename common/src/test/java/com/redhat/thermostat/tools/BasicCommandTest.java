@@ -36,9 +36,7 @@
 
 package com.redhat.thermostat.tools;
 
-import static org.junit.Assert.*;
-
-import java.util.List;
+import static org.junit.Assert.assertNotNull;
 
 import org.junit.After;
 import org.junit.Before;
@@ -46,7 +44,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandException;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 public class BasicCommandTest {

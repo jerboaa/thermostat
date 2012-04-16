@@ -72,4 +72,8 @@ public interface VmInfoDAO extends Countable {
     public VmInfo getVmInfo(VmRef ref);
 
     Collection<VmRef> getVMs(HostRef host);
+
+    public void putVmInfo(VmInfo info);
+
+    public void putVmStoppedTime(int vmId, long timestamp);
 }

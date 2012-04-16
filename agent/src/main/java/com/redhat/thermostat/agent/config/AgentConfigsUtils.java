@@ -89,6 +89,12 @@ public class AgentConfigsUtils {
             String db = properties.getProperty(AgentProperties.DB_URL.name());
             configuration.setDatabaseURL(db);
         }
+        
+        configuration.setPurge(true);
+        if (properties.containsKey(AgentProperties.SAVE_ON_EXIT.name())) {
+            String purge = (String) properties.get(AgentProperties.SAVE_ON_EXIT.name());
+            configuration.setPurge(!Boolean.parseBoolean(purge));
+        }
     }
     
     public static Level getLogLevel(String logLevel) {

@@ -38,6 +38,8 @@ package com.redhat.thermostat.cli;
 
 public class CommandException extends Exception {
 
+    private static final long serialVersionUID = 3730368617641245016L;
+
     public CommandException() {
         super();
     }

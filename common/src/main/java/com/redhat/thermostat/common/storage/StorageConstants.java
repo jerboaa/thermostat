@@ -48,4 +48,7 @@ public class StorageConstants {
     public static final String KEY_AGENT_CONFIG_BACKEND_ACTIVE = "active";
     public static final String KEY_AGENT_CONFIG_BACKEND_NEW = "new";
     public static final String KEY_AGENT_CONFIG_BACKEND_PIDS = "pids";
+
+    public static final String KEY_AGENT_CONFIG_AGENT_ALIVE = "alive";
+    public static final String KEY_AGENT_CONFIG_AGENT_STOP_TIME = "stop-time";
 }

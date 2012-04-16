@@ -38,11 +38,11 @@ package com.redhat.thermostat.cli;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.Connection;
-import com.redhat.thermostat.common.dao.ConnectionProvider;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoConnectionProvider;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.common.storage.StorageProvider;
 
 class AppContextSetupImpl implements AppContextSetup {
 
@@ -50,7 +50,7 @@ class AppContextSetupImpl implements AppContextSetup {
     public void setupAppContext(String dbUrl) {
         StartupConfiguration config = new ConnectionConfiguration(dbUrl);
         
-        ConnectionProvider connProv = new MongoConnectionProvider(config);
+        StorageProvider connProv = new MongoStorageProvider(config);
         DAOFactory daoFactory = new MongoDAOFactory(connProv);
         Connection connection = daoFactory.getConnection();
         connection.connect();
