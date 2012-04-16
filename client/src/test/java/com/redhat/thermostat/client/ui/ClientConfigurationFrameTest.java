@@ -39,30 +39,46 @@ package com.redhat.thermostat.client.ui;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JButtonFixture;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
+@RunWith(CacioFESTRunner.class)
 public class ClientConfigurationFrameTest {
 
     private ClientConfigurationFrame frame;
     private FrameFixture frameFixture;
     private ActionListener<ClientConfigurationView.Action> l;
 
+    @BeforeClass
+    public static void setUpOnce() {
+        FailOnThreadViolationRepaintManager.install();
+    }
+
     @SuppressWarnings("unchecked") // ActionListener
     @Before
     public void setUp() {
-        frame = new ClientConfigurationFrame();
+        GuiActionRunner.execute(new GuiTask() {
+            
+            @Override
+            protected void executeInEDT() throws Throwable {
+                frame = new ClientConfigurationFrame();
+            }
+        });
         l = mock(ActionListener.class);
         frame.addListener(l);
         frameFixture = new FrameFixture(frame);
@@ -71,6 +87,13 @@ public class ClientConfigurationFrameTest {
 
     @After
     public void tearDown() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                frame.hideDialog();
+            }
+        });
+
         frameFixture.cleanUp();
         frame.removeListener(l);
         frame = null;
@@ -85,13 +108,6 @@ public class ClientConfigurationFrameTest {
         JButtonFixture button = frameFixture.button("ok");
         button.click();
 
-        GuiActionRunner.execute(new GuiTask() {
-            @Override
-            protected void executeInEDT() throws Throwable {
-                frame.hideDialog();
-            }
-        });
-
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT)));
 
 
@@ -104,13 +120,6 @@ public class ClientConfigurationFrameTest {
 
         JButtonFixture button = frameFixture.button("cancel");
         button.click();
-
-        GuiActionRunner.execute(new GuiTask() {
-            @Override
-            protected void executeInEDT() throws Throwable {
-                frame.hideDialog();
-            }
-        });
 
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
 

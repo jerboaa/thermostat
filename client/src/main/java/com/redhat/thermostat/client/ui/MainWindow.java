@@ -49,9 +49,11 @@ import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
@@ -566,13 +568,39 @@ public class MainWindow extends JFrame implements MainView {
 
     @Override
     public void showMainWindow() {
-        pack();
-        setVisible(true);
+        try {
+            new EdtHelper().callAndWait(new Runnable() {
+                
+                @Override
+                public void run() {
+                    pack();
+                    setVisible(true);
+                }
+            });
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Override
     public String getHostVmTreeFilter() {
-        return searchField.getText();
+        try {
+            return new EdtHelper().callAndWait(new Callable<String>() {
+
+                @Override
+                public String call() throws Exception {
+                    return searchField.getText();
+                }
+                
+            });
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
     }
 
 }
