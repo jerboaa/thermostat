@@ -88,12 +88,19 @@ public class MainWindowControllerImplTest {
         when(timerFactory.createTimer()).thenReturn(mainWindowTimer);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
+        SummaryPanelFacade summaryPanelFacade = mock(SummaryPanelFacade.class);
+        when(summaryPanelFacade.getTotalMonitoredHosts()).thenReturn(new ChangeableText("totalConnectedAgents"));
+        when(summaryPanelFacade.getTotalMonitoredVms()).thenReturn(new ChangeableText("connectedVms"));
+
+        UiFacadeFactory uiFacadeFactory = mock(UiFacadeFactory.class);
+        when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
+
         setupDAOs();
 
         view = mock(MainView.class);
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
-        controller = new MainWindowControllerImpl(view);
+        controller = new MainWindowControllerImpl(uiFacadeFactory, view);
         l = grabListener.getValue();
 
     }
@@ -159,7 +166,7 @@ public class MainWindowControllerImplTest {
         expectedHosts.add(new HostRef("456", "fluffhost2"));
 
         when(mockHostsDAO.getAliveHosts()).thenReturn(expectedHosts);
-        
+
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);

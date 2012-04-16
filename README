@@ -18,7 +18,7 @@ BUILDING THERMOSTAT:
 RUNNING THERMOSTAT:
 
 1. To start the agent and the db:
-   bin/thermostat-service --start
+   bin/thermostat service --start
 
 2. To start the client:
    bin/thermostat-client-gui
