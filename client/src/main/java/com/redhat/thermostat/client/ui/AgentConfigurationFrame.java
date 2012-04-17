@@ -68,7 +68,7 @@ import javax.swing.JList;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-public class AgentConfigurationFrame extends JFrame implements AgentConfigurationView, java.awt.event.ActionListener, ListSelectionListener {
+public class AgentConfigurationFrame extends JFrame implements AgentConfigurationView {
 
     private static final long serialVersionUID = -6049272471909474886L;
 
@@ -78,6 +78,10 @@ public class AgentConfigurationFrame extends JFrame implements AgentConfiguratio
 
     private final JPanel availableBackendsPanel;
     private final GridBagConstraints availableBackendsPanelContstraints = new GridBagConstraints();
+
+    private final ConfigurationCompleteListener configurationComplete;
+    private final AgentChangedListener agentChanged;
+    private final WindowClosingListener windowListener;
 
     private final JButton okayButton;
     private final JButton cancelButton;
@@ -89,17 +93,22 @@ public class AgentConfigurationFrame extends JFrame implements AgentConfiguratio
     public AgentConfigurationFrame() {
         assertInEDT();
 
+        configurationComplete = new ConfigurationCompleteListener();
+        agentChanged = new AgentChangedListener();
+        windowListener = new WindowClosingListener();
+
         setTitle(localize(LocaleResources.CONFIGURE_AGENT_WINDOW_TITLE));
+        addWindowListener(windowListener);
 
         JLabel lblEnabledisableBackends = new JLabel(localize(LocaleResources.CONFIGURE_ENABLE_BACKENDS));
 
         availableBackendsPanel = new JPanel();
 
         okayButton = new JButton(localize(LocaleResources.BUTTON_OK));
-        okayButton.addActionListener(this);
+        okayButton.addActionListener(configurationComplete);
 
         cancelButton = new JButton(localize(LocaleResources.BUTTON_CANCEL));
-        cancelButton.addActionListener(this);
+        cancelButton.addActionListener(configurationComplete);
 
         JScrollPane scrollPane = new JScrollPane();
 
@@ -150,18 +159,13 @@ public class AgentConfigurationFrame extends JFrame implements AgentConfiguratio
 
         listModel = new DefaultListModel<String>();
         agentList = new JList<String>(listModel);
-        agentList.addListSelectionListener(this);
+        agentList.setName("agentList");
+        agentList.addListSelectionListener(agentChanged);
         scrollPane.setViewportView(agentList);
 
         availableBackendsPanel.setLayout(new GridBagLayout());
         getContentPane().setLayout(groupLayout);
 
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                fireAction(new ActionEvent<>(AgentConfigurationFrame.this, ConfigurationAction.CLOSE_CANCEL));
-            }
-        });
     }
 
     private void resetConstraints() {
@@ -227,7 +231,6 @@ public class AgentConfigurationFrame extends JFrame implements AgentConfiguratio
                     JCheckBox checkBox = new JCheckBox(backendName);
                     checkBox.setSelected(checked);
                     checkBox.setActionCommand(backendName);
-                    checkBox.addActionListener(AgentConfigurationFrame.this);
                     backends.put(backendName, checkBox);
                     availableBackendsPanel.add(checkBox, availableBackendsPanelContstraints);
                     availableBackendsPanelContstraints.gridy++;
@@ -270,28 +273,6 @@ public class AgentConfigurationFrame extends JFrame implements AgentConfiguratio
         dispose();
     }
 
-    @Override
-    public void actionPerformed(java.awt.event.ActionEvent e) {
-        Object source = e.getSource();
-        if (source == okayButton) {
-            fireAction(new ActionEvent<>(this, ConfigurationAction.CLOSE_ACCEPT));
-        } else if (source == cancelButton) {
-            fireAction(new ActionEvent<>(this, ConfigurationAction.CLOSE_CANCEL));
-        }
-    }
-
-    @Override
-    public void valueChanged(ListSelectionEvent e) {
-        if (e.getSource() == agentList) {
-            if (e.getValueIsAdjusting()) {
-                return;
-            }
-            fireAction(new ActionEvent<>(this, ConfigurationAction.SWITCH_AGENT));
-        } else {
-            throw new IllegalStateException("unknown trigger");
-        }
-    }
-
     private void fireAction(ActionEvent<ConfigurationAction> actionEvent) {
         for (ActionListener<ConfigurationAction> l: listeners) {
             l.actionPerformed(actionEvent);
@@ -304,5 +285,37 @@ public class AgentConfigurationFrame extends JFrame implements AgentConfiguratio
         }
     }
 
+    class ConfigurationCompleteListener implements java.awt.event.ActionListener {
+        @Override
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            Object source = e.getSource();
+            if (source == okayButton) {
+                fireAction(new ActionEvent<>(AgentConfigurationFrame.this, ConfigurationAction.CLOSE_ACCEPT));
+            } else if (source == cancelButton) {
+                fireAction(new ActionEvent<>(AgentConfigurationFrame.this, ConfigurationAction.CLOSE_CANCEL));
+            }
+        }
+    }
+
+    class WindowClosingListener extends WindowAdapter {
+        @Override
+        public void windowClosing(WindowEvent e) {
+            fireAction(new ActionEvent<>(AgentConfigurationFrame.this, ConfigurationAction.CLOSE_CANCEL));
+        }
+    }
+
+    class AgentChangedListener implements ListSelectionListener {
+        @Override
+        public void valueChanged(ListSelectionEvent e) {
+            if (e.getSource() == agentList) {
+                if (e.getValueIsAdjusting()) {
+                    return;
+                }
+                fireAction(new ActionEvent<>(AgentConfigurationFrame.this, ConfigurationAction.SWITCH_AGENT));
+            } else {
+                throw new IllegalStateException("unknown trigger");
+            }
+        }
+    }
 
 }

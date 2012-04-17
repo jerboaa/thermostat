@@ -36,54 +36,49 @@
 
 package com.redhat.thermostat.client.ui;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
-import org.fest.swing.annotation.GUITest;
-import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
-import org.fest.swing.fixture.JButtonFixture;
+import org.fest.swing.fixture.JListFixture;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
 @RunWith(CacioFESTRunner.class)
-public class ClientConfigurationFrameTest {
+public class AgentConfigurationFrameTest {
 
-    private ClientConfigurationFrame frame;
-    private FrameFixture frameFixture;
-    private ActionListener<ClientConfigurationView.Action> l;
+    private AgentConfigurationFrame agentConfigFrame;
+    private FrameFixture fixture;
+    private ActionListener<AgentConfigurationView.ConfigurationAction> l;
 
-    @BeforeClass
-    public static void setUpOnce() {
-        FailOnThreadViolationRepaintManager.install();
-    }
-
-    @SuppressWarnings("unchecked") // ActionListener
     @Before
     public void setUp() {
-        frame = GuiActionRunner.execute(new GuiQuery<ClientConfigurationFrame>() {
+        agentConfigFrame = GuiActionRunner.execute(new GuiQuery<AgentConfigurationFrame>() {
 
             @Override
-            protected ClientConfigurationFrame executeInEDT() throws Throwable {
-                 return new ClientConfigurationFrame();
+            protected AgentConfigurationFrame executeInEDT() throws Throwable {
+                 return new AgentConfigurationFrame();
             }
         });
-        l = mock(ActionListener.class);
-        frame.addListener(l);
-        frameFixture = new FrameFixture(frame);
 
+        @SuppressWarnings("unchecked")
+        ActionListener<AgentConfigurationView.ConfigurationAction> listener = mock(ActionListener.class);
+        l = listener;
+        agentConfigFrame.addActionListener(l);
+
+        fixture = new FrameFixture(agentConfigFrame);
     }
 
     @After
@@ -91,48 +86,57 @@ public class ClientConfigurationFrameTest {
         GuiActionRunner.execute(new GuiTask() {
             @Override
             protected void executeInEDT() throws Throwable {
-                frame.hideDialog();
+                agentConfigFrame.hideDialog();
             }
         });
 
-        frameFixture.cleanUp();
-        frame.removeListener(l);
-        frame = null;
-        l = null;
+        fixture.requireNotVisible();
+        agentConfigFrame.removeActionListener(l);
+
+        fixture.cleanUp();
+        fixture = null;
     }
 
-    @Category(GUITest.class)
     @Test
-    public void testOkayButton() {
-        frameFixture.show();
+    public void testAddingAgentWorks() {
+        fixture.show();
+        JListFixture list = fixture.list("agentList");
+        assertArrayEquals(new String[0], list.contents());
 
-        JButtonFixture button = frameFixture.button("ok");
-        button.click();
+        agentConfigFrame.addAgent("test-agent");
 
-        verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT)));
-
-
+        assertArrayEquals(new String[] {"test-agent"}, list.contents());
     }
 
-    @Category(GUITest.class)
     @Test
-    public void testCancelButton() {
-        frameFixture.show();
+    public void testSelectingAgentWorks() {
+        fixture.show();
+        agentConfigFrame.addAgent("testAgent");
+        JListFixture list = fixture.list("agentList");
 
-        JButtonFixture button = frameFixture.button("cancel");
-        button.click();
+        list.selectItem("testAgent");
 
-        verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
-
+        verify(l).actionPerformed(eq(new ActionEvent<>(agentConfigFrame, AgentConfigurationView.ConfigurationAction.SWITCH_AGENT)));
     }
 
-    @Category(GUITest.class)
     @Test
-    public void testCloseWindow() {
-        frameFixture.show();
+    public void testRemovingAllAgentsWorks() {
+        fixture.show();
+        agentConfigFrame.addAgent("test-agent");
+        JListFixture list = fixture.list("agentList");
 
-        frameFixture.close();
+        agentConfigFrame.clearAllAgents();
 
-        verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
+        assertArrayEquals(new String[0], list.contents());
     }
+
+    @Test
+    public void testWindowClose() {
+        fixture.show();
+
+        fixture.close();
+
+        verify(l).actionPerformed(eq(new ActionEvent<>(agentConfigFrame, AgentConfigurationView.ConfigurationAction.CLOSE_CANCEL)));
+    }
+
 }
