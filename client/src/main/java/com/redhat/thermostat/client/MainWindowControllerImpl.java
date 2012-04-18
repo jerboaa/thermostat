@@ -223,6 +223,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         if (oldController != null) {
             oldController.stop();
+            oldController = null;
         }
 
         if (ref == null) {
