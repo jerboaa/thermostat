@@ -34,16 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.ui.VmClassStatController;
-import com.redhat.thermostat.client.ui.VmCpuController;
-import com.redhat.thermostat.client.ui.VmGcController;
-import com.redhat.thermostat.client.ui.VmMemoryController;
-import com.redhat.thermostat.client.ui.VmOverviewController;
+import static com.redhat.thermostat.client.locale.Translate.localize;
+
+import java.awt.Component;
+
+import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmRef;
 
-public class VmPanelFacadeImpl implements VmPanelFacade {
+public class VmInformationController implements AsyncUiFacade {
+
+    private final VmInformationView view;
 
     private final VmOverviewController overviewController;
     private final VmCpuController cpuController;
@@ -51,12 +55,20 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
     private final VmClassStatController classesController;
     private final VmGcController gcController;
 
-    public VmPanelFacadeImpl(VmRef vmRef) {
+    public VmInformationController(VmRef vmRef) {
         overviewController = new VmOverviewController(vmRef);
         cpuController = new VmCpuController(vmRef);
         memoryController = new VmMemoryController(vmRef);
         gcController = new VmGcController(vmRef);
         classesController = new VmClassStatController(vmRef);
+
+        view = ApplicationContext.getInstance().getViewFactory().getView(VmInformationView.class);
+
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_OVERVIEW), overviewController.getComponent());
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getComponent());
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_MEMORY), memoryController.getComponent());
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_GC), gcController.getComponent());
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_CLASSES), classesController.getComponent());
     }
 
     @Override
@@ -78,29 +90,7 @@ public class VmPanelFacadeImpl implements VmPanelFacade {
         classesController.stop();
     }
 
-    @Override
-    public VmOverviewController getOverviewController() {
-        return overviewController;
+    public Component getComponent() {
+        return view.getUiComponent();
     }
-
-    @Override
-    public VmCpuController getCpuController() {
-        return cpuController;
-    }
-
-    @Override
-    public VmMemoryController getMemoryController() {
-        return memoryController;
-    }
-
-    @Override
-    public VmGcController getGcController() {
-        return gcController;
-    }
-
-    @Override
-    public VmClassStatController getClassesController() {
-        return classesController;
-    }
-
 }

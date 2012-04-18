@@ -36,47 +36,17 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import java.awt.Component;
 
-import java.awt.BorderLayout;
+import com.redhat.thermostat.common.View;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+public interface VmInformationView extends View {
 
-import com.redhat.thermostat.client.VmPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
+    /**
+     * @param view the view. FIXME currently a awt component
+     */
+    void addChildView(String title, Component view);
 
-
-public class VmPanel extends JPanel {
-
-    private static final long serialVersionUID = 2816226547554943368L;
-
-    private final VmPanelFacade facade;
-
-    public VmPanel(final VmPanelFacade facade) {
-        this.facade = facade;
-        createUI();
-
-        addHierarchyListener(new AsyncFacadeManager(facade));
-    }
-
-    public void createUI() {
-        setLayout(new BorderLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-        tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_GC), null, facade.getGcController().getComponent(),
-                          localize(LocaleResources.GARBAGE_COLLECTION), 3);
-        tabPane.insertTab(localize(LocaleResources.VM_INFO_TAB_CLASSES), null, facade.getClassesController().getComponent(), null, 4);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-    }
-
+    Component getUiComponent();
 
 }

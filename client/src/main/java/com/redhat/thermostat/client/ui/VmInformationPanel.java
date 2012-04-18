@@ -34,29 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.ui.VmClassStatController;
-import com.redhat.thermostat.client.ui.VmCpuController;
-import com.redhat.thermostat.client.ui.VmGcController;
-import com.redhat.thermostat.client.ui.VmMemoryController;
-import com.redhat.thermostat.client.ui.VmOverviewController;
+import java.awt.BorderLayout;
+import java.awt.Component;
 
-/**
- * Represents information specific to a JVM running on a host somewhere. This is
- * used to populate the UI for a VM's information.
- */
-public interface VmPanelFacade extends AsyncUiFacade {
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 
-    public VmOverviewController getOverviewController();
+public class VmInformationPanel extends JPanel implements VmInformationView {
 
-    public VmCpuController getCpuController();
+    private final JTabbedPane tabPane = new JTabbedPane();
 
-    public VmMemoryController getMemoryController();
+    private int tabCount = 0;
 
-    public VmClassStatController getClassesController();
+    public VmInformationPanel() {
+        setLayout(new BorderLayout());
+        tabPane.setName("tabPane");
+        add(tabPane);
+    }
 
-    public VmGcController getGcController();
+    @Override
+    public void addChildView(String title, Component view) {
+        Component component = view;
+        tabPane.insertTab(title, null, component, null, tabCount);
+        tabCount++;
+    }
 
+    @Override
+    public Component getUiComponent() {
+        return this;
+    }
 
 }

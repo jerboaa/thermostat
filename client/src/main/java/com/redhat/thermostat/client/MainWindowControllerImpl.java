@@ -48,7 +48,7 @@ import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostPanel;
 import com.redhat.thermostat.client.ui.SummaryPanel;
-import com.redhat.thermostat.client.ui.VmPanel;
+import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
@@ -76,7 +76,9 @@ public class MainWindowControllerImpl implements MainWindowController {
     private UiFacadeFactory facadeFactory;
 
     private boolean showHistory;
-    
+
+    private AsyncUiFacade oldController = null;
+
     public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
         this.facadeFactory = facadeFactory;
 
@@ -209,7 +211,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
         controller.showDialog();
     }
-    
+
     private void switchHistoryMode() {
         showHistory = !showHistory;
         doUpdateTreeAsync();
@@ -218,6 +220,11 @@ public class MainWindowControllerImpl implements MainWindowController {
     private void updateView() {
         // this is quite an ugly method. there must be a cleaner way to do this
         Ref ref = view.getSelectedHostOrVm();
+
+        if (oldController != null) {
+            oldController.stop();
+        }
+
         if (ref == null) {
             view.setSubView(new SummaryPanel(facadeFactory.getSummaryPanel()));
         } else if (ref instanceof HostRef) {
@@ -225,7 +232,10 @@ public class MainWindowControllerImpl implements MainWindowController {
             view.setSubView(new HostPanel(facadeFactory.getHostPanel(hostRef)));
         } else if (ref instanceof VmRef) {
             VmRef vmRef = (VmRef) ref;
-            view.setSubView(new VmPanel(facadeFactory.getVmPanel(vmRef)));
+            VmInformationController vmInformation = facadeFactory.getVmController(vmRef);
+            view.setSubView(vmInformation.getComponent());
+            vmInformation.start();
+            oldController = vmInformation;
         } else {
             throw new IllegalArgumentException("unknown type of ref");
         }
