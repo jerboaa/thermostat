@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.VmClassStat;
 
-public class VmClassStatController implements AsyncUiFacade {
+class VmClassStatController implements AsyncUiFacade {
 
     private class UpdateChartData extends TimerTask {
         @Override

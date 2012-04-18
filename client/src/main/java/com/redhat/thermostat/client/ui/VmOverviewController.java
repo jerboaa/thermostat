@@ -52,7 +52,7 @@ import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 
-public class VmOverviewController implements AsyncUiFacade {
+class VmOverviewController implements AsyncUiFacade {
 
     private final VmRef ref;
     private final VmInfoDAO dao;

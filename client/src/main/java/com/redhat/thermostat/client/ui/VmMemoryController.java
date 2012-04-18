@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 
-public class VmMemoryController implements AsyncUiFacade {
+class VmMemoryController implements AsyncUiFacade {
 
     private final VmRef ref;
     private final VmMemoryView view;
