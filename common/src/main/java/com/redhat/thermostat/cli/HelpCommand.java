@@ -45,10 +45,7 @@ public class HelpCommand implements Command {
     private static final int COMMANDS_COLUMNS_WIDTH = 15;
     private static final String NAME = "help";
     private static final String DESCRIPTION = "show help for a given command or help overview";
-    private static final String USAGE = "help [COMMAND]\n\n"
-            + DESCRIPTION + "\n\n\t"
-            + "With no arguments, print a list of commands with short help messages.\n\n\t"
-            + "Given a command, print help for that command.\n";
+    private static final String USAGE = DESCRIPTION;
 
     @Override
     public void run(CommandContext ctx) {
@@ -87,7 +84,8 @@ public class HelpCommand implements Command {
     private void printCommandUsage(CommandContext ctx, String cmdName) {
         Command cmd = ctx.getCommandRegistry().getCommand(cmdName);
         if (cmd != null) {
-            ctx.getConsole().getOutput().print(cmd.getUsage());
+            CommandLineArgumentsParser cliParser = new CommandLineArgumentsParser();
+            cliParser.printHelp(ctx, cmd);
         } else {
             printCommandSummaries(ctx);
         }

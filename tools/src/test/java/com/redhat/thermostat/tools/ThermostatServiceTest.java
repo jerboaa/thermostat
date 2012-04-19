@@ -78,10 +78,7 @@ public class ThermostatServiceTest {
     @Test
     public void testUsage() {
         String usage = thermostatService.getUsage();
-        assertEquals("service start|stop\n\n"
-                + "starts and stops the thermostat storage and agent" + "\n\n\t"
-                + "With argument 'start', start the storage amd agent\n\t"
-                + "With argument 'stop', stop the storage and agent.\n", usage);
+        assertEquals("starts and stops the thermostat storage and agent", usage);
     }
 
     @Test

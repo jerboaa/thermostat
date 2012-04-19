@@ -182,10 +182,7 @@ public class ListVMsCommandTest {
 
     @Test
     public void testUsage() {
-        String expected = "list-vms --dbUrl URL\n\n"
-                + "lists all currently monitored VMs\n\n\t"
-                + "Options:\n\n"
-                + "--dbUrl URL  the URL of the storage to connect to.\n";
+        String expected = "lists all currently monitored VMs";
 
         assertEquals(expected, cmd.getUsage());
     }

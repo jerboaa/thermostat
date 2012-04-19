@@ -65,10 +65,7 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
     // TODO: Use LocaleResources for i18n-ized strings.
     private static final String DESCRIPTION = "starts and stops the thermostat storage and agent";
 
-    private static final String USAGE = "service start|stop\n\n"
-                + DESCRIPTION + "\n\n\t"
-                + "With argument 'start', start the storage amd agent\n\t"
-                + "With argument 'stop', stop the storage and agent.\n";
+    private static final String USAGE = DESCRIPTION;
 
     private BasicCommand database;
     private AgentApplication agent;

@@ -58,10 +58,7 @@ public class ListVMsCommand implements Command {
     // TODO: Localize.
     private static final String DESCRIPTION = "lists all currently monitored VMs";
 
-    private static final String USAGE = "list-vms --dbUrl URL\n\n"
-                                        + DESCRIPTION + "\n\n\t"
-                                        + "Options:\n\n"
-                                        + "--dbUrl URL  the URL of the storage to connect to.\n";
+    private static final String USAGE = DESCRIPTION;
 
     private static final String DB_URL_ARG = "dbUrl";
 

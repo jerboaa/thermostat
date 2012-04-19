@@ -73,10 +73,7 @@ public final class AgentApplication extends BasicCommand {
     // TODO: Use LocaleResources for i18n-ized strings.
     private static final String DESCRIPTION = "starts and stops the thermostat agent";
 
-    private static final String USAGE = "agent start|stop\n\n"
-                                + DESCRIPTION + "\n\n\t"
-                                + "With argument 'start', start the agent.\n\t"
-                                + "With argument 'stop', stop the agent.\n";
+    private static final String USAGE = DESCRIPTION;
 
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;

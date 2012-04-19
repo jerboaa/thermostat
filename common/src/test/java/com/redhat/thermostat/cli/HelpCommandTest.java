@@ -116,7 +116,7 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
-        assertEquals(usage, actual);
+        assertEquals("usage: test1\ntest usage command 1\n\n", actual);
     }
 
     @Test
@@ -145,10 +145,7 @@ public class HelpCommandTest {
     @Test
     public void testUsage() {
         HelpCommand cmd = new HelpCommand();
-        String expected = "help [COMMAND]\n\n"
-                          + "show help for a given command or help overview\n\n\t"
-                          + "With no arguments, print a list of commands with short help messages.\n\n\t"
-                          + "Given a command, print help for that command.\n";
+        String expected = "show help for a given command or help overview";
 
         assertEquals(expected, cmd.getUsage());
     }

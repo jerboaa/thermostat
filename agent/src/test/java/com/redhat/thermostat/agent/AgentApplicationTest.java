@@ -80,10 +80,7 @@ public class AgentApplicationTest {
     @Test
     public void testUsage() {
         String usage = agent.getUsage();
-        assertEquals("agent start|stop\n\n"
-                + "starts and stops the thermostat agent" + "\n\n\t"
-                + "With argument 'start', start the agent.\n\t"
-                + "With argument 'stop', stop the agent.\n", usage);
+        assertEquals("starts and stops the thermostat agent", usage);
     }
 
     @Test

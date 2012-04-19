@@ -59,10 +59,7 @@ public class DBService extends BasicCommand {
     // TODO: Use LocaleResources for i18n-ized strings.
     private static final String DESCRIPTION = "starts and stops the thermostat storage";
 
-    private static final String USAGE = "storage start|stop\n\n"
-                + DESCRIPTION + "\n\n\t"
-                + "With argument 'start', start the storage.\n\t"
-                + "With argument 'stop', stop the storage.\n";
+    private static final String USAGE = DESCRIPTION;
 
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
