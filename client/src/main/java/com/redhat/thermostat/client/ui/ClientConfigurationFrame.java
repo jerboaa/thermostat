@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.GroupLayout;
@@ -46,16 +48,19 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
-public class ClientConfigurationFrame extends JFrame implements ClientConfigurationView, java.awt.event.ActionListener {
+public class ClientConfigurationFrame extends JFrame implements ClientConfigurationView {
 
     private static final long serialVersionUID = 6888957994092403516L;
+
+    private final ConfigurationCompleteListener configurationCompleteListener;
+    private final WindowClosingListener windowClosingListener;
 
     private final JTextField storageUrl;
     private final JButton btnOk;
@@ -64,13 +69,17 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
     private CopyOnWriteArrayList<ActionListener<Action>> listeners = new CopyOnWriteArrayList<>();
 
     public ClientConfigurationFrame() {
+        configurationCompleteListener = new ConfigurationCompleteListener();
+        windowClosingListener = new WindowClosingListener();
+
         setTitle(localize(LocaleResources.CLIENT_PREFS_WINDOW_TITLE));
+        addWindowListener(windowClosingListener);
 
         btnOk = new JButton(localize(LocaleResources.BUTTON_OK));
-        btnOk.addActionListener(this);
+        btnOk.addActionListener(configurationCompleteListener);
         btnOk.setName("ok");
         btnCancel = new JButton(localize(LocaleResources.BUTTON_CANCEL));
-        btnCancel.addActionListener(this);
+        btnCancel.addActionListener(configurationCompleteListener);
         btnCancel.setName("cancel");
         JLabel lblClientConfiguration = new JLabel(localize(LocaleResources.CLIENT_PREFS_GENERAL));
 
@@ -150,15 +159,6 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
     }
 
     @Override
-    public void actionPerformed(java.awt.event.ActionEvent e) {
-        if (e.getSource() == btnOk) {
-            fireAction(new ActionEvent<>(this, Action.CLOSE_ACCEPT));
-        } else if (e.getSource() == btnCancel) {
-            fireAction(new ActionEvent<>(this, Action.CLOSE_CANCEL));
-        }
-    }
-
-    @Override
     public void addListener(ActionListener<Action> listener) {
         listeners.add(listener);
     }
@@ -177,6 +177,24 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
     private void assertInEDT() {
         if (!SwingUtilities.isEventDispatchThread()) {
             throw new IllegalStateException("must be invoked in the EDT");
+        }
+    }
+
+    class ConfigurationCompleteListener implements java.awt.event.ActionListener {
+        @Override
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            if (e.getSource() == btnOk) {
+                fireAction(new ActionEvent<>(ClientConfigurationFrame.this, Action.CLOSE_ACCEPT));
+            } else if (e.getSource() == btnCancel) {
+                fireAction(new ActionEvent<>(ClientConfigurationFrame.this, Action.CLOSE_CANCEL));
+            }
+        }
+    }
+
+    class WindowClosingListener extends WindowAdapter {
+        @Override
+        public void windowClosing(WindowEvent e) {
+            fireAction(new ActionEvent<>(ClientConfigurationFrame.this, Action.CLOSE_CANCEL));
         }
     }
 }

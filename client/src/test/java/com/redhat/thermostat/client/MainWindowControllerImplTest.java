@@ -45,6 +45,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +54,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.internal.verification.Times;
 
+import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
@@ -72,6 +75,8 @@ public class MainWindowControllerImplTest {
 
     private MainWindowControllerImpl controller;
 
+    private UiFacadeFactory uiFacadeFactory;
+    
     private MainView view;
 
     private Timer mainWindowTimer;
@@ -92,9 +97,9 @@ public class MainWindowControllerImplTest {
         when(summaryPanelFacade.getTotalMonitoredHosts()).thenReturn(new ChangeableText("totalConnectedAgents"));
         when(summaryPanelFacade.getTotalMonitoredVms()).thenReturn(new ChangeableText("connectedVms"));
 
-        UiFacadeFactory uiFacadeFactory = mock(UiFacadeFactory.class);
+        uiFacadeFactory = mock(UiFacadeFactory.class);
         when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
-
+        
         setupDAOs();
 
         view = mock(MainView.class);
@@ -229,5 +234,37 @@ public class MainWindowControllerImplTest {
     private void assertEqualCollection(Collection<?> expected, Collection<?> actual) {
         assertEquals(expected.size(), actual.size());
         assertTrue(expected.containsAll(actual));
+    }
+    
+    @Test
+    public void bug954() {
+
+        // see http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=954
+        
+        VmRef vmRef = mock(VmRef.class);
+        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
+                
+        VmInformationController vmInformationController = mock(VmInformationController.class);
+        when(vmInformationController.getSelectedChildID()).thenReturn(3);
+        when(uiFacadeFactory.getVmController(any(VmRef.class))).thenReturn(vmInformationController);
+        
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+        
+        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
+        verify(vmInformationController).selectChildID(arg.capture());
+        verify(vmInformationController, times(0)).getSelectedChildID();
+        
+        int id = arg.getValue();
+        
+        assertEquals(0, id);
+        
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+        
+        arg = ArgumentCaptor.forClass(Integer.class);
+        verify(vmInformationController, times(1)).getSelectedChildID();
+        verify(vmInformationController, times(2)).selectChildID(arg.capture());
+        id = arg.getValue();
+        
+        assertEquals(3, id);
     }
 }

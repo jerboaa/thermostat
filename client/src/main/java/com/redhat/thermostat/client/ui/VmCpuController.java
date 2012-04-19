@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.VmCpuStat;
 
-public class VmCpuController implements AsyncUiFacade {
+class VmCpuController implements AsyncUiFacade {
 
     private final VmRef ref;
     private final VmCpuStatDAO dao;
@@ -63,7 +63,6 @@ public class VmCpuController implements AsyncUiFacade {
         dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO();
         view = ApplicationContext.getInstance().getViewFactory().getView(VmCpuView.class);
     }
-
 
     @Override
     public void start() {

@@ -42,21 +42,39 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
+
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
+import org.fest.swing.edt.GuiActionRunner;
+import org.fest.swing.edt.GuiTask;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
+@RunWith(CacioFESTRunner.class)
 public class VmClassStatPanelTest {
+
+    @BeforeClass
+    public static void setUpOnce() {
+        FailOnThreadViolationRepaintManager.install();
+    }
 
     @Test
     public void testAddDataTwice() {
-        VmClassStatPanel panel = new VmClassStatPanel();
-        List<DiscreteTimeData<Long>> data = new ArrayList<>();
-        panel.addClassCount(data);
-        int numComponents = panel.getComponentCount();
-        assertTrue(numComponents > 0);
-        panel.addClassCount(data);
-        assertEquals(numComponents, panel.getComponentCount());
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                VmClassStatPanel panel = new VmClassStatPanel();
+                List<DiscreteTimeData<Long>> data = new ArrayList<>();
+                panel.addClassCount(data);
+                int numComponents = panel.getComponentCount();
+                assertTrue(numComponents > 0);
+                panel.addClassCount(data);
+                assertEquals(numComponents, panel.getComponentCount());
+            }
+        });
     }
 
 }

@@ -61,7 +61,7 @@ import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 
-public class VmGcController implements AsyncUiFacade {
+class VmGcController implements AsyncUiFacade {
 
     private final VmRef ref;
     private final VmGcView view;
