@@ -49,4 +49,8 @@ public interface VmInformationView extends View {
 
     Component getUiComponent();
 
+    int getNumChildren();
+    void selectChildID(int id);
+    int getSelectedChildID();
+
 }

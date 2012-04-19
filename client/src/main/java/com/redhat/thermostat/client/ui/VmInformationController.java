@@ -93,4 +93,16 @@ public class VmInformationController implements AsyncUiFacade {
     public Component getComponent() {
         return view.getUiComponent();
     }
+    
+    public int getSelectedChildID() {
+        return view.getSelectedChildID();
+    }
+    
+    public void selectChildID(int id) {
+        view.selectChildID(id);
+    }
+    
+    public int getNumChildren() {
+        return view.getNumChildren();
+    }
 }

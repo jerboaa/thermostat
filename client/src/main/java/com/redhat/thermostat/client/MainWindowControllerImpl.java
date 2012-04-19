@@ -79,6 +79,8 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private AsyncUiFacade oldController = null;
 
+    private VmInformationControllerProvider vmInfoControllerProvider;
+    
     public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
         this.facadeFactory = facadeFactory;
 
@@ -88,6 +90,9 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmsDAO = daoFactory.getVmInfoDAO();
 
         initView(view);
+        
+        vmInfoControllerProvider = new VmInformationControllerProvider();
+        
         appInfo = new ApplicationInfo();
         view.setWindowTitle(appInfo.getName());
         initializeTimer();
@@ -233,12 +238,28 @@ public class MainWindowControllerImpl implements MainWindowController {
             view.setSubView(new HostPanel(facadeFactory.getHostPanel(hostRef)));
         } else if (ref instanceof VmRef) {
             VmRef vmRef = (VmRef) ref;
-            VmInformationController vmInformation = facadeFactory.getVmController(vmRef);
+            VmInformationController vmInformation =
+                    vmInfoControllerProvider.getVmInfoController(vmRef);
             view.setSubView(vmInformation.getComponent());
             vmInformation.start();
             oldController = vmInformation;
         } else {
             throw new IllegalArgumentException("unknown type of ref");
+        }
+    }
+
+    private class VmInformationControllerProvider {
+        private VmInformationController lastSelectedVM;
+
+        VmInformationController getVmInfoController(VmRef vmRef) {
+            int id = 0;
+            if (lastSelectedVM != null) {
+                id = lastSelectedVM.getSelectedChildID();
+            }
+            lastSelectedVM = facadeFactory.getVmController(vmRef);
+            lastSelectedVM.selectChildID(id);
+
+            return lastSelectedVM;
         }
     }
 
