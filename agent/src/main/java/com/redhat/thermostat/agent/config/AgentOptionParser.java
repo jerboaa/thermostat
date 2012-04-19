@@ -36,74 +36,52 @@
 
 package com.redhat.thermostat.agent.config;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.logging.Level;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-import joptsimple.OptionSpec;
-
+import com.redhat.thermostat.cli.ArgumentSpec;
+import com.redhat.thermostat.cli.Arguments;
+import com.redhat.thermostat.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
 
 public class AgentOptionParser implements ThermostatOptionParser {
 
     private AgentStartupConfiguration configuration;
-    private OptionParser parser;
-    private List<String> args;
+    private Arguments args;
     
     private boolean isHelp;
     
-    public AgentOptionParser(AgentStartupConfiguration configuration, List<String> args) {
+    public AgentOptionParser(AgentStartupConfiguration configuration, Arguments args) {
         this.configuration = configuration;
         this.args = args;
-        parser = new OptionParser();
         isHelp = false;
     }
     
     @Override
     public void parse() throws InvalidConfigurationException {
 
-        parser.accepts(Args.DEBUG.option, Args.DEBUG.description);
-        parser.accepts(Args.HELP.option, Args.HELP.description);
-        parser.accepts(Args.SAVE_ON_EXIT.option, Args.SAVE_ON_EXIT.description);
-        
-        OptionSpec<String> logLevel =
-                parser.accepts(Args.LEVEL.option, Args.LEVEL.description).
-                      withRequiredArg();
-        OptionSpec<String> dbUrl =
-                parser.accepts(Args.DB.option, Args.DB.description).
-                      withRequiredArg();
-        
-        OptionSet options = parser.parse(args.toArray(new String[0]));
-        if (options.has(Args.HELP.option)) {
-            displayHelp();
-            isHelp = true;
-            return;
-        }
-        
-        if (options.has(Args.SAVE_ON_EXIT.option)) {
+        if (args.hasArgument(Args.SAVE_ON_EXIT.option)) {
             configuration.setPurge(false);
         }
         
-        if (options.has(Args.LEVEL.option)) {
-            String levelString = logLevel.value(options);
+        if (args.hasArgument(Args.LEVEL.option)) {
+            String levelString = args.getArgument(Args.LEVEL.option);
             Level level = AgentConfigsUtils.getLogLevel(levelString);
             configuration.setLogLevel(level);
         }
 
-        configuration.setDebugConsole(options.has(Args.DEBUG.option));
+        configuration.setDebugConsole(args.hasArgument(Args.DEBUG.option));
         
-        if (options.has(Args.DB.option)) {
-            String url = dbUrl.value(options);
+        if (args.hasArgument(Args.DB.option)) {
+            String url = args.getArgument(Args.DB.option);
             configuration.setDatabaseURL(url);
         } else {
             if (configuration.getDBConnectionString() == null) {
                 System.err.println("database url not specified... must be " +
                                    "either set in config or passed on " +
                                    "the command line");
-                displayHelp();
                 isHelp = true;
             }
         }
@@ -111,13 +89,6 @@ public class AgentOptionParser implements ThermostatOptionParser {
     
     public boolean isHelp() {
         return isHelp;
-    }
-    
-    @Override
-    public void displayHelp() {
-        try {
-            parser.printHelpOn(System.out);
-        } catch (IOException ignore) {}
     }
     
     private static enum Args {
@@ -136,5 +107,13 @@ public class AgentOptionParser implements ThermostatOptionParser {
             this.option = option;
             this.description = description;
         }
+    }
+
+    public static Collection<ArgumentSpec> getAcceptedArguments() {
+        ArgumentSpec level = new SimpleArgumentSpec(Args.LEVEL.option, Args.LEVEL.description, false, true);
+        ArgumentSpec saveOnExit = new SimpleArgumentSpec(Args.SAVE_ON_EXIT.option, Args.SAVE_ON_EXIT.description);
+        ArgumentSpec db = new SimpleArgumentSpec(Args.DB.option, Args.DB.description, true, true);
+        ArgumentSpec debug = new SimpleArgumentSpec(Args.DEBUG.option, Args.DEBUG.description);
+        return Arrays.asList(level, saveOnExit, db, debug);
     }
 }

@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 
 import com.redhat.thermostat.cli.AppContextSetup;
+import com.redhat.thermostat.cli.Arguments;
 import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandContextFactory;
 import com.redhat.thermostat.cli.CommandRegistry;
@@ -67,6 +68,8 @@ public class TestCommandContextFactory extends CommandContextFactory {
         }
     };
 
+    private TestConsole console;
+
     private class TestConsole implements Console {
 
         @Override
@@ -87,7 +90,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
     }
 
     @Override
-    public CommandContext createContext(final String[] args) {
+    public CommandContext createContext(final Arguments args) {
         return new CommandContext() {
 
             @Override
@@ -96,7 +99,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
             }
 
             @Override
-            public String[] getArguments() {
+            public Arguments getArguments() {
                 return args;
             }
 
@@ -139,5 +142,10 @@ public class TestCommandContextFactory extends CommandContextFactory {
         out = new ByteArrayOutputStream();
         err = new ByteArrayOutputStream();
         in = new ByteArrayInputStream(new byte[0]);
+        console = new TestConsole();
+    }
+
+    public Console getConsole() {
+        return console;
     }
 }

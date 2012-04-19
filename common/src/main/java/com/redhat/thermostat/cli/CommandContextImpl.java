@@ -38,23 +38,25 @@ package com.redhat.thermostat.cli;
 
 class CommandContextImpl implements CommandContext {
 
-    private String[] arguments;
+    private Arguments arguments;
     private CommandRegistry commandRegistry;
     private AppContextSetup appContextSetup;
+    private Console console;
 
-    CommandContextImpl(String[] args, CommandRegistry cmdReg, AppContextSetup appContextSetup) {
+    CommandContextImpl(Arguments args, CommandRegistry cmdReg, AppContextSetup appContextSetup, Console console) {
         arguments = args;
         commandRegistry = cmdReg;
         this.appContextSetup = appContextSetup;
+        this.console = console;
     }
 
     @Override
     public Console getConsole() {
-        return new SystemConsole();
+        return console;
     }
 
     @Override
-    public String[] getArguments() {
+    public Arguments getArguments() {
         return arguments;
     }
 

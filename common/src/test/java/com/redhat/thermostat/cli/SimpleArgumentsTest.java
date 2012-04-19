@@ -36,18 +36,36 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public interface Command {
+public class SimpleArgumentsTest {
 
-    void run(CommandContext ctx) throws CommandException;
+    private SimpleArguments args;
 
-    String getName();
+    @Before
+    public void setUp() {
+        args = new SimpleArguments();
+    }
 
-    String getDescription();
+    @After
+    public void tearDown() {
+        args = null;
+    }
 
-    String getUsage();
+    @Test
+    public void testSimpleArgs() {
+        args.addArgument("fluff", "fluffor");
+        assertTrue(args.hasArgument("fluff"));
+        assertEquals("fluffor", args.getArgument("fluff"));
+        assertFalse(args.hasArgument("foo"));
+        assertNull(args.getArgument("bar"));
+    }
 
-    Collection<ArgumentSpec> getAcceptedArguments();
 }

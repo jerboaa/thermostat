@@ -87,7 +87,8 @@ public class CommandRegistryTest {
     private void runAndVerifyCommand(String name, Command cmd) throws CommandException {
         Command actualCmd = registry.getCommand(name);
         TestCommandContextFactory cf = new TestCommandContextFactory();
-        CommandContext ctx = cf.createContext(new String[0]);
+        Arguments args = mock(Arguments.class);
+        CommandContext ctx = cf.createContext(args);
         actualCmd.run(ctx);
         verify(cmd).run(ctx);
     }

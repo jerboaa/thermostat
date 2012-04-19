@@ -36,18 +36,32 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
+import java.util.List;
 
+import org.apache.commons.cli.CommandLine;
 
-public interface Command {
+class CommandLineArguments implements Arguments {
 
-    void run(CommandContext ctx) throws CommandException;
+    private CommandLine cmdLine;
 
-    String getName();
+    public CommandLineArguments(CommandLine commandLine) {
+        cmdLine = commandLine;
+    }
 
-    String getDescription();
+    @SuppressWarnings("unchecked")
+    @Override
+    public List<String> getNonOptionArguments() {
+        return cmdLine.getArgList();
+    }
 
-    String getUsage();
+    @Override
+    public boolean hasArgument(String name) {
+        return cmdLine.hasOption(name);
+    }
 
-    Collection<ArgumentSpec> getAcceptedArguments();
+    @Override
+    public String getArgument(String name) {
+        return cmdLine.getOptionValue(name);
+    }
+
 }

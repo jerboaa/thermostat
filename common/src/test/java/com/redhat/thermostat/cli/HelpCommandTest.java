@@ -37,6 +37,8 @@
 package com.redhat.thermostat.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 
@@ -75,7 +77,8 @@ public class HelpCommandTest {
     public void verifyHelpNoArgPrintsListOfCommandsNoCommands() {
 
         HelpCommand cmd = new HelpCommand();
-        cmd.run(ctxFactory.createContext(new String[0]));
+        Arguments args = mock(Arguments.class);
+        cmd.run(ctxFactory.createContext(args));
         String expected = "list of commands:\n\n";
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
@@ -91,7 +94,8 @@ public class HelpCommandTest {
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2));
 
         HelpCommand cmd = new HelpCommand();
-        cmd.run(ctxFactory.createContext(new String[0]));
+        Arguments args = mock(Arguments.class);
+        cmd.run(ctxFactory.createContext(args));
         String expected = "list of commands:\n\n"
                         + " test1         test command 1\n"
                         + " test2longname test command 2\n";
@@ -107,7 +111,9 @@ public class HelpCommandTest {
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1));
 
         HelpCommand cmd = new HelpCommand();
-        cmd.run(ctxFactory.createContext(new String[] { "test1" }));
+        Arguments args = mock(Arguments.class);
+        when(args.getNonOptionArguments()).thenReturn(Arrays.asList("test1"));
+        cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
         assertEquals(usage, actual);
@@ -121,7 +127,8 @@ public class HelpCommandTest {
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1));
 
         HelpCommand cmd = new HelpCommand();
-        cmd.run(ctxFactory.createContext(new String[] { "test12" }));
+        Arguments args = mock(Arguments.class);
+        cmd.run(ctxFactory.createContext(args));
 
         String expected = "list of commands:\n\n"
                         + " test1         test command 1\n";

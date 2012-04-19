@@ -38,8 +38,6 @@ package com.redhat.thermostat.agent.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 
 import junit.framework.Assert;
@@ -49,6 +47,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.TestUtils;
+import com.redhat.thermostat.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 public class AgentOptionParserTest {
@@ -68,12 +67,10 @@ public class AgentOptionParserTest {
     @Test
     public void testConfigs1() throws IOException, InvalidConfigurationException {
         
-        List<String> args = new ArrayList<>();
-        args.add("--logLevel");
-        args.add("ALL");
-        args.add("--dbUrl");
-        args.add("testURL");
-        args.add("--debug");
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("logLevel", "ALL");
+        args.addArgument("dbUrl", "testURL");
+        args.addArgument("debug", "--debug");
         
         AgentStartupConfiguration configs = AgentConfigsUtils.createAgentConfigs();
         AgentOptionParser parser = new AgentOptionParser(configs, args);
@@ -88,12 +85,10 @@ public class AgentOptionParserTest {
     @Test
     public void testConfigs2() throws IOException, InvalidConfigurationException {
         
-        List<String> args = new ArrayList<>();
-        args.add("--logLevel");
-        args.add("FINE");
-        args.add("--dbUrl");
-        args.add("testURL2");
-        args.add("--saveOnExit");
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("logLevel", "FINE");
+        args.addArgument("dbUrl", "testURL2");
+        args.addArgument("saveOnExit", "--saveOnExit");
         
         AgentStartupConfiguration configs = new AgentStartupConfiguration();
         AgentOptionParser parser = new AgentOptionParser(configs, args);

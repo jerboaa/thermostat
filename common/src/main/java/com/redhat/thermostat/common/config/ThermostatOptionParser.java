@@ -38,5 +38,4 @@ package com.redhat.thermostat.common.config;
 
 public interface ThermostatOptionParser {
     void parse() throws InvalidConfigurationException;
-    void displayHelp();
 }

@@ -40,7 +40,7 @@ public interface CommandContext {
 
     Console getConsole();
 
-    String[] getArguments();
+    Arguments getArguments();
 
     CommandRegistry getCommandRegistry();
 

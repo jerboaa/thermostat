@@ -37,10 +37,17 @@
 package com.redhat.thermostat.agent;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.redhat.thermostat.cli.ArgumentSpec;
+import com.redhat.thermostat.cli.SimpleArgumentSpec;
 
 public class AgentApplicationTest {
 
@@ -77,5 +84,16 @@ public class AgentApplicationTest {
                 + "starts and stops the thermostat agent" + "\n\n\t"
                 + "With argument 'start', start the agent.\n\t"
                 + "With argument 'stop', stop the agent.\n", usage);
+    }
+
+    @Test
+    public void testAcceptedArguments() {
+        Collection<ArgumentSpec> args = agent.getAcceptedArguments();
+        assertNotNull(args);
+        assertEquals(4, args.size());
+        assertTrue(args.contains(new SimpleArgumentSpec("saveOnExit", "save the data on exit")));
+        assertTrue(args.contains(new SimpleArgumentSpec("debug", "launch with debug console enabled")));
+        assertTrue(args.contains(new SimpleArgumentSpec("dbUrl", "connect to the given url", true, true)));
+        assertTrue(args.contains(new SimpleArgumentSpec("logLevel", "log level", false, true)));
     }
 }

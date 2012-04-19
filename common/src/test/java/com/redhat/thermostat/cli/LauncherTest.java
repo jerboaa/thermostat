@@ -52,7 +52,8 @@ public class LauncherTest {
 
         @Override
         public void run(CommandContext ctx) {
-            ctx.getConsole().getOutput().print(ctx.getArguments()[0] + ", " + ctx.getArguments()[1]);
+            Arguments args = ctx.getArguments();
+            ctx.getConsole().getOutput().print(args.getArgument("arg1") + ", " + args.getArgument("arg2"));
         }
 
     }
@@ -60,7 +61,8 @@ public class LauncherTest {
     private static class TestCmd2 implements TestCommand.Handle {
         @Override
         public void run(CommandContext ctx) {
-            ctx.getConsole().getOutput().print(ctx.getArguments()[1] + ": " + ctx.getArguments()[0]);
+            Arguments args = ctx.getArguments();
+            ctx.getConsole().getOutput().print(args.getArgument("arg4") + ": " + args.getArgument("arg3"));
         }
     }
 
@@ -74,8 +76,22 @@ public class LauncherTest {
         CommandContextFactory.setInstance(ctxFactory);
 
         TestCommand cmd1 = new TestCommand("test1", new TestCmd1());
+        SimpleArgumentSpec arg1 = new SimpleArgumentSpec();
+        arg1.setName("arg1");
+        arg1.setUsingAdditionalArgument(true);
+        SimpleArgumentSpec arg2 = new SimpleArgumentSpec();
+        arg2.setName("arg2");
+        arg2.setUsingAdditionalArgument(true);
+        cmd1.addArguments(arg1, arg2);
         cmd1.setDescription("description 1");
         TestCommand cmd2 = new TestCommand("test2", new TestCmd2());
+        SimpleArgumentSpec arg3 = new SimpleArgumentSpec();
+        arg3.setName("arg3");
+        arg3.setUsingAdditionalArgument(true);
+        SimpleArgumentSpec arg4 = new SimpleArgumentSpec();
+        arg4.setName("arg4");
+        arg4.setUsingAdditionalArgument(true);
+        cmd2.addArguments(arg3, arg4);
         cmd2.setDescription("description 2");
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2, new HelpCommand()));
 
@@ -88,11 +104,11 @@ public class LauncherTest {
 
     @Test
     public void testMain() {
-        runAndVerifyCommand(new String[] {"test1", "Hello", "World"}, "Hello, World");
+        runAndVerifyCommand(new String[] {"test1", "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
 
         ctxFactory.reset();
 
-        runAndVerifyCommand(new String[] {"test2", "Hello", "World"}, "World: Hello");
+        runAndVerifyCommand(new String[] {"test2", "--arg3", "Hello", "--arg4", "World"}, "World: Hello");
     }
 
     @Test

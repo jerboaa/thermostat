@@ -36,11 +36,18 @@
 
 package com.redhat.thermostat.tools;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Collection;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.redhat.thermostat.cli.ArgumentSpec;
+import com.redhat.thermostat.cli.SimpleArgumentSpec;
 
 public class ThermostatServiceTest {
 
@@ -75,5 +82,13 @@ public class ThermostatServiceTest {
                 + "starts and stops the thermostat storage and agent" + "\n\n\t"
                 + "With argument 'start', start the storage amd agent\n\t"
                 + "With argument 'stop', stop the storage and agent.\n", usage);
+    }
+
+    @Test
+    public void testArgumentSpecs() {
+        Collection<ArgumentSpec> args = thermostatService.getAcceptedArguments();
+        assertNotNull(args);
+        assertTrue(args.contains(new SimpleArgumentSpec("start", "start the database and agent")));
+        assertTrue(args.contains(new SimpleArgumentSpec("stop", "stop the database and agent")));
     }
 }

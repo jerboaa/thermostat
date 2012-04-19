@@ -37,20 +37,26 @@
 package com.redhat.thermostat.tools.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.cli.AppContextSetup;
+import com.redhat.thermostat.cli.ArgumentSpec;
 import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandContextFactory;
 import com.redhat.thermostat.cli.CommandException;
+import com.redhat.thermostat.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.cli.SimpleArguments;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -113,41 +119,14 @@ public class ListVMsCommandTest {
     @Test
     public void testRunCreatesConnectionFromArgumentURL() throws CommandException {
 
-        CommandContext ctx = cmdCtxFactory.createContext(new String[] { "--dbUrl", "mongo://fluff:12345" });
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("dbUrl", "mongo://fluff:12345");
+        CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
 
         verify(appContextSetup).setupAppContext("mongo://fluff:12345");
 
-    }
-
-    @Test(expected=CommandException.class)
-    public void testUnknownOptionThrowsCommandException() throws CommandException {
-
-        CommandContext ctx = cmdCtxFactory.createContext(new String[] { "--fluff", "mongo://fluff:12345" });
-
-        cmd.run(ctx);
-    }
-
-    @Test(expected=CommandException.class)
-    public void testMissingURLThrowsCommandException() throws CommandException {
-        CommandContext ctx = cmdCtxFactory.createContext(new String[] { "--dbUrl" });
-
-        cmd.run(ctx);
-    }
-
-    @Test(expected=CommandException.class)
-    public void testUnknownOptions() throws CommandException {
-        CommandContext ctx = cmdCtxFactory.createContext(new String[] { "--dbUrl", "fluff", "fluff"});
-
-        cmd.run(ctx);
-    }
-
-    @Test(expected=CommandException.class)
-    public void testUnknownOptions2() throws CommandException {
-        CommandContext ctx = cmdCtxFactory.createContext(new String[] { "--dbUrl"});
-
-        cmd.run(ctx);
     }
 
     @Test
@@ -157,7 +136,9 @@ public class ListVMsCommandTest {
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1));
         when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(new VmRef(host1, 1, "n")));
 
-        CommandContext ctx = cmdCtxFactory.createContext(new String[] { "--dbUrl", "fluff" });
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("--dbUrl", "fluff");
+        CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
 
@@ -176,7 +157,9 @@ public class ListVMsCommandTest {
         when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(new VmRef(host1, 1, "n"), new VmRef(host1, 2, "n1")));
         when(vmsDAO.getVMs(host2)).thenReturn(Arrays.asList(new VmRef(host2, 123456, "longvmname")));
 
-        CommandContext ctx = cmdCtxFactory.createContext(new String[] { "--dbUrl", "fluff" });
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("--dbUrl", "fluff");
+        CommandContext ctx = cmdCtxFactory.createContext(args);
 
         cmd.run(ctx);
 
@@ -205,5 +188,13 @@ public class ListVMsCommandTest {
                 + "--dbUrl URL  the URL of the storage to connect to.\n";
 
         assertEquals(expected, cmd.getUsage());
+    }
+
+    @Test
+    public void testAcceptedArguments() {
+        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
+        assertNotNull(args);
+        assertEquals(1, args.size());
+        assertTrue(args.contains(new SimpleArgumentSpec("dbUrl", "the URL of the storage to connect to", true, true)));
     }
 }

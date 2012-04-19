@@ -39,10 +39,11 @@ package com.redhat.thermostat.tools.db;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.Properties;
 
+import com.redhat.thermostat.cli.ArgumentSpec;
+import com.redhat.thermostat.cli.Arguments;
 import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.config.ConfigUtils;
@@ -68,7 +69,7 @@ public class DBService extends BasicCommand {
     
     private MongoProcessRunner runner;
     
-    private void parseArguments(List<String> args) throws InvalidConfigurationException {
+    private void parseArguments(Arguments args) throws InvalidConfigurationException {
     
         this.configuration = new DBStartupConfiguration();
         // configs, read everything that is in the configs
@@ -95,7 +96,7 @@ public class DBService extends BasicCommand {
 
     private void parseArgsAndRun(CommandContext ctx)
             throws InvalidConfigurationException {
-        parseArguments(Arrays.asList(ctx.getArguments()));
+        parseArguments(ctx.getArguments());
 
         // dry run means we don't do anything at all
         if (parser.isDryRun()) return;
@@ -204,6 +205,11 @@ public class DBService extends BasicCommand {
     @Override
     public String getUsage() {
         return USAGE;
+    }
+
+    @Override
+    public Collection<ArgumentSpec> getAcceptedArguments() {
+        return DBOptionParser.getAcceptedArguments();
     }
 
 }

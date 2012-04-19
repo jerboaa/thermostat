@@ -36,18 +36,10 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
+import java.util.List;
 
-
-public interface Command {
-
-    void run(CommandContext ctx) throws CommandException;
-
-    String getName();
-
-    String getDescription();
-
-    String getUsage();
-
-    Collection<ArgumentSpec> getAcceptedArguments();
+public interface Arguments {
+    List<String> getNonOptionArguments();
+    boolean hasArgument(String name);
+    String getArgument(String name);
 }

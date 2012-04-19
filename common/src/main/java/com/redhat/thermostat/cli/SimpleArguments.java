@@ -36,18 +36,33 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+public class SimpleArguments implements Arguments {
 
-public interface Command {
+    private Map<String,String> arguments = new HashMap<>();
 
-    void run(CommandContext ctx) throws CommandException;
+    @Override
+    public boolean hasArgument(String name) {
+        return arguments.containsKey(name);
+    }
 
-    String getName();
+    @Override
+    public String getArgument(String name) {
+        return arguments.get(name);
+    }
 
-    String getDescription();
+    public void addArgument(String name, String value) {
+        arguments.put(name, value);
+        
+    }
 
-    String getUsage();
+    @Override
+    public List<String> getNonOptionArguments() {
+        return null;
+    }
 
-    Collection<ArgumentSpec> getAcceptedArguments();
 }

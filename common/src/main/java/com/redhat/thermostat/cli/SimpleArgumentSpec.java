@@ -36,37 +36,28 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Objects;
 
-
-class TestCommand implements Command {
+public class SimpleArgumentSpec implements ArgumentSpec {
 
     private String name;
-    private Handle handle;
     private String description;
-    private String usage;
+    private boolean required;
+    private boolean usingAddionalArgument;
 
-    private List<ArgumentSpec> arguments = new LinkedList<ArgumentSpec>();
-
-    static interface Handle {
-        public void run(CommandContext ctx) throws CommandException;
+    public SimpleArgumentSpec() {
+        this(null, null, false, false);
     }
 
-    TestCommand(String name) {
-        this(name, null);
+    public SimpleArgumentSpec(String name, String description) {
+        this(name, description, false, false);
     }
 
-    TestCommand(String name, Handle r) {
+    public SimpleArgumentSpec(String name, String description, boolean required, boolean usingAdditionalArgument) {
         this.name = name;
-        this.handle = r;
-    }
-
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        handle.run(ctx);
+        this.description = description;
+        this.required = required;
+        this.usingAddionalArgument = usingAdditionalArgument;
     }
 
     @Override
@@ -74,30 +65,51 @@ class TestCommand implements Command {
         return name;
     }
 
+    void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public boolean isRequired() {
+        return required;
+    }
+
+    public void setRequired(boolean required) {
+        this.required = required;
+    }
+
+    @Override
+    public boolean isUsingAdditionalArgument() {
+        return usingAddionalArgument;
+    }
+
+    public void setUsingAdditionalArgument(boolean usingAddionalArgument) {
+        this.usingAddionalArgument = usingAddionalArgument;
+    }
+
     @Override
     public String getDescription() {
         return description;
     }
 
-    void setDescription(String desc) {
-        description = desc;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    @Override
-    public String getUsage() {
-        return usage;
+    public boolean equals(Object o) {
+        if (! (o instanceof SimpleArgumentSpec)) {
+            return false;
+        }
+        SimpleArgumentSpec other = (SimpleArgumentSpec) o;
+        return Objects.equals(name, other.name)
+                && Objects.equals(description, other.description)
+                && usingAddionalArgument == other.usingAddionalArgument
+                && required == other.required;
     }
 
-    void setUsage(String usage) {
-        this.usage = usage;
-    }
-
-    @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return arguments;
-    }
-
-    void addArguments(ArgumentSpec... arguments) {
-        this.arguments.addAll(Arrays.asList(arguments));
+    public int hashCode() {
+        return Objects.hashCode(name) ^ Objects.hashCode(description)
+                ^ Boolean.valueOf(usingAddionalArgument).hashCode()
+                ^ Boolean.valueOf(required).hashCode();
     }
 }

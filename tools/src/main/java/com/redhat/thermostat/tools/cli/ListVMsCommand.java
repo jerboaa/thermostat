@@ -36,15 +36,14 @@
 
 package com.redhat.thermostat.tools.cli;
 
+import java.util.Arrays;
 import java.util.Collection;
 
-import joptsimple.OptionException;
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
+import com.redhat.thermostat.cli.ArgumentSpec;
 import com.redhat.thermostat.cli.Command;
 import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandException;
+import com.redhat.thermostat.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -64,11 +63,14 @@ public class ListVMsCommand implements Command {
                                         + "Options:\n\n"
                                         + "--dbUrl URL  the URL of the storage to connect to.\n";
 
+    private static final String DB_URL_ARG = "dbUrl";
+
+    private static final String DB_URL_DESC = "the URL of the storage to connect to";
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
-        OptionSet options = parseArguments(ctx);
-        String dbUrl = getDBURL(options);
+        String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
 
         ctx.getAppContextSetup().setupAppContext(dbUrl);
 
@@ -86,25 +88,6 @@ public class ListVMsCommand implements Command {
         formatter.format(ctx.getConsole().getOutput());
     }
 
-    private OptionSet parseArguments(CommandContext ctx) throws CommandException {
-        OptionParser parser = new OptionParser();
-        parser.accepts("dbUrl").withRequiredArg();
-        try {
-            OptionSet options = parser.parse(ctx.getArguments());
-            if (! options.nonOptionArguments().isEmpty()) {
-                throw new CommandException("Unknown arguments: " + options.nonOptionArguments());
-            }
-            return options;
-        } catch (OptionException ex) {
-            throw new CommandException(ex);
-        }
-    }
-
-    private String getDBURL(OptionSet options) {
-        String dbUrl = (String) options.valueOf("dbUrl");
-        return dbUrl;
-    }
-
     @Override
     public String getName() {
         return NAME;
@@ -118,6 +101,12 @@ public class ListVMsCommand implements Command {
     @Override
     public String getUsage() {
         return USAGE;
+    }
+
+    @Override
+    public Collection<ArgumentSpec> getAcceptedArguments() {
+        ArgumentSpec dbUrl = new SimpleArgumentSpec(DB_URL_ARG, DB_URL_DESC, true, true);
+        return Arrays.asList(dbUrl);
     }
 
 }

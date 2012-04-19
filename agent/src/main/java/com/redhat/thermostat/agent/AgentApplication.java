@@ -37,8 +37,7 @@
 package com.redhat.thermostat.agent;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,6 +46,8 @@ import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.cli.ArgumentSpec;
+import com.redhat.thermostat.cli.Arguments;
 import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.Constants;
@@ -58,16 +59,15 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.StorageProvider;
-import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
+import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.tools.BasicCommand;
 
 public final class AgentApplication extends BasicCommand {
 
-    private CommandContext contex;
     private static final String NAME = "agent";
 
     // TODO: Use LocaleResources for i18n-ized strings.
@@ -81,7 +81,7 @@ public final class AgentApplication extends BasicCommand {
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
     
-    private void parseArguments(List<String> args) throws InvalidConfigurationException {
+    private void parseArguments(Arguments args) throws InvalidConfigurationException {
         configuration = AgentConfigsUtils.createAgentConfigs();
         parser = new AgentOptionParser(configuration, args);
         parser.parse();
@@ -92,7 +92,7 @@ public final class AgentApplication extends BasicCommand {
         return configuration;
     }
     
-    private void runAgent() {
+    private void runAgent(CommandContext ctx) {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
         
@@ -156,7 +156,7 @@ public final class AgentApplication extends BasicCommand {
         }
         logger.fine("Agent started.");
 
-        contex.getConsole().getOutput().println("Agent id: " + agent.getId());
+        ctx.getConsole().getOutput().println("Agent id: " + agent.getId());
         logger.fine("Agent id: " + agent.getId());
         
         try {
@@ -172,10 +172,9 @@ public final class AgentApplication extends BasicCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         try {
-            contex = ctx;
-            parseArguments(Arrays.asList(ctx.getArguments()));
+            parseArguments(ctx.getArguments());
             if (!parser.isHelp()) {
-                runAgent();
+                runAgent(ctx);
             }
         } catch (InvalidConfigurationException ex) {
             throw new CommandException(ex);
@@ -195,6 +194,11 @@ public final class AgentApplication extends BasicCommand {
     @Override
     public String getUsage() {
         return USAGE;
+    }
+
+    @Override
+    public Collection<ArgumentSpec> getAcceptedArguments() {
+        return AgentOptionParser.getAcceptedArguments();
     }
 
 }

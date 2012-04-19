@@ -37,6 +37,8 @@
 package com.redhat.thermostat.tools.db;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -44,6 +46,7 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -53,8 +56,11 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.cli.ArgumentSpec;
 import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandException;
+import com.redhat.thermostat.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.cli.SimpleArguments;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -108,8 +114,10 @@ public class DBServiceTest {
     
     @Test
     public void testConfig() throws CommandException {
-        
-        String[] args = new String[] {"--quiet", "--start", "--dry-run" };
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("quiet", "--quiet");
+        args.addArgument("start", "--start");
+        args.addArgument("dry-run", "--dry-run");
         CommandContext ctx = mock(CommandContext.class);
         when(ctx.getArguments()).thenReturn(args);
 
@@ -214,7 +222,9 @@ public class DBServiceTest {
     }
 
     private CommandContext prepareContext() {
-        String[] args = new String[] { "--quiet", "--start" };
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("quiet", "--quiet");
+        args.addArgument("start", "--start");
         CommandContext ctx = mock(CommandContext.class);
         when(ctx.getArguments()).thenReturn(args);
         return ctx;
@@ -242,5 +252,18 @@ public class DBServiceTest {
                 + "starts and stops the thermostat storage" + "\n\n\t"
                 + "With argument 'start', start the storage.\n\t"
                 + "With argument 'stop', stop the storage.\n", usage);
+    }
+
+    @Test
+    public void testArguments() {
+        DBService dbService = new DBService();
+        Collection<ArgumentSpec> args = dbService.getAcceptedArguments();
+        assertNotNull(args);
+        assertEquals(5, args.size());
+        assertTrue(args.contains(new SimpleArgumentSpec("cluster", "launch the db in cluster mode, if not specified, local mode is the default")));
+        assertTrue(args.contains(new SimpleArgumentSpec("dryRun", "run the service in dry run mode")));
+        assertTrue(args.contains(new SimpleArgumentSpec("start", "start the database")));
+        assertTrue(args.contains(new SimpleArgumentSpec("stop", "stop the database")));
+        assertTrue(args.contains(new SimpleArgumentSpec("quiet", "don't produce any output")));
     }
 }

@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.tools.db;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
 
-import joptsimple.OptionParser;
-import joptsimple.OptionSet;
-
+import com.redhat.thermostat.cli.ArgumentSpec;
+import com.redhat.thermostat.cli.Arguments;
+import com.redhat.thermostat.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
 import com.redhat.thermostat.tools.ApplicationState;
@@ -52,50 +52,33 @@ class DBOptionParser implements ThermostatOptionParser {
     
     private DBStartupConfiguration configuration;
     
-    private List<String> args;
-    private OptionParser parser;
+    private Arguments args;
 
     private DBArgs serviceAction;
     
     private boolean dryRun;
     
-    DBOptionParser(DBStartupConfiguration configuration, List<String> args) {
+    DBOptionParser(DBStartupConfiguration configuration, Arguments args) {
         this.args = args;
         this.configuration = configuration;
-        parser = new OptionParser();
     }
     
     @Override
     public void parse() throws InvalidConfigurationException {
         
-        parser.accepts(DBArgs.START.option, DBArgs.START.description);
-        parser.accepts(DBArgs.STOP.option, DBArgs.STOP.description);
-        
-        parser.accepts(DBArgs.DRY.option, DBArgs.DRY.description);
-        
-        parser.accepts(DBArgs.HELP.option, DBArgs.HELP.description);
-        parser.accepts(DBArgs.QUIET.option, DBArgs.QUIET.description);
-             
-        OptionSet options = parser.parse(args.toArray(new String[0]));
-        if (!options.hasOptions() || options.has(DBArgs.HELP.option)) {
-            displayHelp();
-            return;
-        }
-
-        if (options.has(DBArgs.START.option)) {
+        if (args.hasArgument(DBArgs.START.option)) {
             serviceAction = DBArgs.START;
-        } else if (options.has(DBArgs.STOP.option)) {
+        } else if (args.hasArgument(DBArgs.STOP.option)) {
             serviceAction = DBArgs.STOP;
-            
         } else {
             throw new InvalidConfigurationException("either --start or --stop must be given");
         }
 
-        if (options.has(DBArgs.DRY.option)) {
+        if (args.hasArgument(DBArgs.DRY.option)) {
             dryRun = true;
         }
         
-        if (options.has(DBArgs.QUIET.option)) {
+        if (args.hasArgument(DBArgs.QUIET.option)) {
             quiet = true;
         }
         
@@ -103,7 +86,7 @@ class DBOptionParser implements ThermostatOptionParser {
         String url = configuration.getUrl();
         long port = configuration.getLocalPort();
         configuration.setLocal(true);
-        if (options.has(DBArgs.CLUSTER.option)) {
+        if (args.hasArgument(DBArgs.CLUSTER.option)) {
             port = configuration.getClusterPort();
             configuration.setLocal(false);
         }
@@ -114,27 +97,16 @@ class DBOptionParser implements ThermostatOptionParser {
         return dryRun;
     }
     
-    @Override
-    public void displayHelp() {
-        
-        if (quiet) return;
-        
-        try {
-            System.out.println("Module [DBService]");
-            parser.printHelpOn(System.out);
-        } catch (IOException ignore) {}
-    }
-    
     ApplicationState getAction() {
         return serviceAction.state;
     }
-    
+
     static enum DBArgs {
                         
         CLUSTER("cluster", "launch the db in cluster mode, if not specified, " +
                 "local mode is the default", ApplicationState.NONE),
                 
-        DRY("dry-run", "run the service in dry run mode", ApplicationState.NONE),
+        DRY("dryRun", "run the service in dry run mode", ApplicationState.NONE),
         
         HELP("help", "print this usage help", ApplicationState.HELP),
         
@@ -156,5 +128,14 @@ class DBOptionParser implements ThermostatOptionParser {
 
     boolean isQuiet() {
         return quiet;
+    }
+
+    static Collection<ArgumentSpec> getAcceptedArguments() {
+        ArgumentSpec cluster = new SimpleArgumentSpec(DBArgs.CLUSTER.option, DBArgs.CLUSTER.description);
+        ArgumentSpec dryRun = new SimpleArgumentSpec(DBArgs.DRY.option, DBArgs.DRY.description);
+        ArgumentSpec start = new SimpleArgumentSpec(DBArgs.START.option, DBArgs.START.description);
+        ArgumentSpec stop = new SimpleArgumentSpec(DBArgs.STOP.option, DBArgs.STOP.description);
+        ArgumentSpec quiet = new SimpleArgumentSpec(DBArgs.QUIET.option, DBArgs.QUIET.description);
+        return Arrays.asList(cluster, dryRun, start, stop, quiet);
     }
 }

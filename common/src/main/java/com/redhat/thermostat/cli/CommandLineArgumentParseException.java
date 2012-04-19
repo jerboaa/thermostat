@@ -36,18 +36,23 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.Collection;
+public class CommandLineArgumentParseException extends CommandException {
+
+    public CommandLineArgumentParseException() {
+        super();
+    }
+
+    public CommandLineArgumentParseException(String message) {
+        super(message);
+    }
+
+    public CommandLineArgumentParseException(Throwable cause) {
+        super(cause);
+    }
+
+    public CommandLineArgumentParseException(String message, Throwable cause) {
+        super(message, cause);
+    }
 
 
-public interface Command {
-
-    void run(CommandContext ctx) throws CommandException;
-
-    String getName();
-
-    String getDescription();
-
-    String getUsage();
-
-    Collection<ArgumentSpec> getAcceptedArguments();
 }

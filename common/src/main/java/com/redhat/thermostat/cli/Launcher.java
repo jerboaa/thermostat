@@ -67,19 +67,25 @@ public class Launcher {
 
     private void runCommand(String cmdName, String[] cmdArgs) {
         CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
-        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
-        Command cmd = registry.getCommand(cmdName);
-        CommandContext ctx = cmdCtxFactory.createContext(cmdArgs);
-        runCommandWithContext(cmd, ctx);
-    }
-
-    private void runCommandWithContext(Command cmd, CommandContext ctx) {
         try {
-            cmd.run(ctx);
+            parseArgsAndRunCommand(cmdName, cmdArgs, cmdCtxFactory);
         } catch (CommandException e) {
-            ctx.getConsole().getError().println(e.getMessage());
+            cmdCtxFactory.getConsole().getError().println(e.getMessage());
         }
     }
+
+    private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs, CommandContextFactory cmdCtxFactory)
+            throws CommandLineArgumentParseException, CommandException {
+
+        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
+        Command cmd = registry.getCommand(cmdName);
+        CommandLineArgumentsParser cliArgsParser = new CommandLineArgumentsParser();
+        cliArgsParser.addArguments(cmd.getAcceptedArguments());
+        Arguments args = cliArgsParser.parse(cmdArgs);
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+        cmd.run(ctx);
+    }
+
 
     private void registerDefaultCommands() {
         CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();

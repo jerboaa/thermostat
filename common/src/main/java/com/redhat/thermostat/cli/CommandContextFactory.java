@@ -49,17 +49,21 @@ public class CommandContextFactory {
     }
 
     private CommandRegistry commandRegistry = new CommandRegistry();
+    private Console console = new SystemConsole();
 
-    public CommandContext createContext(final String[] args) {
-        return new CommandContextImpl(args, commandRegistry, getAppContextSetup());
+    public CommandContext createContext(Arguments args) {
+        return new CommandContextImpl(args, commandRegistry, getAppContextSetup(), getConsole());
     }
 
     protected AppContextSetup getAppContextSetup() {
         return new AppContextSetupImpl();
     }
 
-    protected CommandRegistry getCommandRegistry() {
+    public CommandRegistry getCommandRegistry() {
         return commandRegistry;
     }
 
+    public Console getConsole() {
+        return console ;
+    }
 }

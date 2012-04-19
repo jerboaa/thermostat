@@ -37,17 +37,48 @@
 package com.redhat.thermostat.cli;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.GnuParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 
-public interface Command {
+public class CommandLineArgumentsParser {
 
-    void run(CommandContext ctx) throws CommandException;
+    private List<ArgumentSpec> arguments = new LinkedList<>();
 
-    String getName();
+    void addArguments(Collection<ArgumentSpec> args) {
+        arguments.addAll(args);
+    }
 
-    String getDescription();
+    Arguments parse(String[] args) throws CommandLineArgumentParseException {
+        try {
+            Options options = convertToCommonsCLIOptions(arguments);
+            CommandLineParser parser = new GnuParser();
+            CommandLine commandLine;
+            commandLine = parser.parse(options, args);
+            return new CommandLineArguments(commandLine);
+        } catch (ParseException e) {
+            throw new CommandLineArgumentParseException(e);
+        }
+    }
 
-    String getUsage();
+    private Options convertToCommonsCLIOptions(List<ArgumentSpec> args) {
+        Options options = new Options();
+        for (ArgumentSpec spec : args) {
+            options.addOption(convertSpecToOption(spec));
+        }
+        return options;
+    }
 
-    Collection<ArgumentSpec> getAcceptedArguments();
+    private Option convertSpecToOption(ArgumentSpec spec) {
+        Option option = new Option(spec.getName(), spec.getDescription());
+        option.setRequired(spec.isRequired());
+        option.setArgs(spec.isUsingAdditionalArgument() ? 1 : 0);
+        return option;
+    }
 }
