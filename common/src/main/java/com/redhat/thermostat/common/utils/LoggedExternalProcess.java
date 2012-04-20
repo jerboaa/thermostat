@@ -43,6 +43,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.tools.ApplicationException;
+
 public class LoggedExternalProcess extends Thread {
 
     private static final Logger logger = LoggingUtils.getLogger(LoggedExternalProcess.class);
@@ -58,15 +60,20 @@ public class LoggedExternalProcess extends Thread {
         setDaemon(true);
     }
 
-    public int runAndReturnResult() throws IOException, InterruptedException {
+    public int runAndReturnResult() throws IOException, InterruptedException, ApplicationException{
         Process p = runAndReturnProcess();
         return p.waitFor();
     }
 
-    public Process runAndReturnProcess() throws IOException {
+    public Process runAndReturnProcess() throws IOException, ApplicationException {
         ProcessBuilder b = new ProcessBuilder(commands);
         b.redirectErrorStream(true);
-        Process p = b.start();
+        Process p = null;
+        try {
+            p = b.start();
+        } catch (IOException ioe) {
+            throw new ApplicationException("unable to execute " + commands[0], ioe);
+        }
         reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         this.start();
         return p;

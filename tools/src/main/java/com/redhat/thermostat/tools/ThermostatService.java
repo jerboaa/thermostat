@@ -135,6 +135,10 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                     notifier.fireAction(ApplicationState.FAIL);
                 }
                 break;
+            case FAIL:
+                System.err.println("error starting db");
+                notifier.fireAction(ApplicationState.FAIL);
+                break;
             }
         } else if (actionEvent.getSource().equals(agent)) {
             // agent is running
