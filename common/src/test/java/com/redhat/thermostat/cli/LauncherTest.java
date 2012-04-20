@@ -121,9 +121,45 @@ public class LauncherTest {
     }
 
     @Test
+    public void testMainBadCommand1() {
+        String expected = "list of commands:\n\n"
+            + " help          show help for a given command or help overview\n"
+            + " test1         description 1\n"
+            + " test2         description 2\n";
+        runAndVerifyCommand(new String[] {"--help"}, expected);
+    }
+
+    @Test
+    public void testMainBadCommand2() {
+        String expected = "list of commands:\n\n"
+            + " help          show help for a given command or help overview\n"
+            + " test1         description 1\n"
+            + " test2         description 2\n";
+        runAndVerifyCommand(new String[] {"-help"}, expected);
+    }
+
+    @Test
+    public void testMainBadCommand3() {
+        String expected = "list of commands:\n\n"
+            + " help          show help for a given command or help overview\n"
+            + " test1         description 1\n"
+            + " test2         description 2\n";
+        runAndVerifyCommand(new String[] {"foobarbaz"}, expected);
+    }
+
+    @Test
+    public void testMainBadCommand4() {
+        String expected = "list of commands:\n\n"
+            + " help          show help for a given command or help overview\n"
+            + " test1         description 1\n"
+            + " test2         description 2\n";
+        runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected);
+    }
+
+    @Test
     public void testMainExceptionInCommand() {
         TestCommand errorCmd = new TestCommand("error", new TestCommand.Handle() {
-            
+
             @Override
             public void run(CommandContext ctx) throws CommandException {
                 throw new CommandException("test error");

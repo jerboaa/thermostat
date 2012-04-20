@@ -46,7 +46,7 @@ public class Launcher {
     public void run(String[] args) {
         this.args = args;
         registerDefaultCommands();
-        if (hasNoArguments()) {
+        if (hasNoArguments() || unknownCommand()) {
             runHelpCommand();
         } else {
             runCommandFromArguments();
@@ -55,6 +55,13 @@ public class Launcher {
 
     private boolean hasNoArguments() {
         return args.length == 0;
+    }
+
+    private boolean unknownCommand() {
+        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
+        CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
+        Command cmd = registry.getCommand(args[0]);
+        return cmd == null;
     }
 
     private void runHelpCommand() {
