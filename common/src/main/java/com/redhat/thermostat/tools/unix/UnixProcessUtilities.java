@@ -47,6 +47,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.tools.ApplicationException;
 
 public class UnixProcessUtilities {
 
@@ -82,7 +83,7 @@ public class UnixProcessUtilities {
                 result = output[output.length - 1];
             }
             
-        } catch (IOException e) {
+        } catch (IOException | ApplicationException e) {
             logger.log(Level.WARNING, "can't run ps!", e);
         }
         
@@ -95,7 +96,7 @@ public class UnixProcessUtilities {
         return new BufferedReader(isr);
     }
     
-    public Process createAndRunProcess(List<String> args) throws IOException {
+    public Process createAndRunProcess(List<String> args) throws IOException, ApplicationException {
         LoggedExternalProcess process = new LoggedExternalProcess(args);
         return process.runAndReturnProcess();
     }

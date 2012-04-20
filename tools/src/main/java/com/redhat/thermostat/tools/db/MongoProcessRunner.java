@@ -167,7 +167,15 @@ class MongoProcessRunner {
         }
         
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
-        int status = process.runAndReturnResult();
+        int status = -1;
+        try {
+            status = process.runAndReturnResult();
+        } catch (ApplicationException ae) {
+            String message = "can not execute mongo process. is it installed?";
+            display(message);
+            throw ae;
+        }
+
         if (status == 0) {
             pid = getPid();
             if (pid == null) status = -1;

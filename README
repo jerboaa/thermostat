@@ -7,6 +7,7 @@ Maven (it will download all the java dependencies for you)
 MongoDB
 http://www.mongodb.org/
 
+Either a /etc/os-release file or lsb_release
 
 BUILDING THERMOSTAT:
 
