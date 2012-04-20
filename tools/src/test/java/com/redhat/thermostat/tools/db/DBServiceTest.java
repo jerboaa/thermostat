@@ -115,13 +115,18 @@ public class DBServiceTest {
     @Test
     public void testConfig() throws CommandException {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("quiet", "--quiet");
-        args.addArgument("start", "--start");
-        args.addArgument("dry-run", "--dry-run");
+        args.addArgument("quiet", null);
+        args.addArgument("start", null);
+        args.addArgument("dryRun", null);
         CommandContext ctx = mock(CommandContext.class);
         when(ctx.getArguments()).thenReturn(args);
 
-        DBService service = new DBService();
+        DBService service = new DBService() {
+            @Override
+            MongoProcessRunner createRunner() {
+                throw new AssertionError("dry run should never create an actual runner");
+            }
+        };
 
         service.run(ctx);
         
@@ -180,7 +185,7 @@ public class DBServiceTest {
                 case START:
                     result[1] = true;
                     latch.countDown();
-                    break;                    
+                    break;
                 }
             }
         });
