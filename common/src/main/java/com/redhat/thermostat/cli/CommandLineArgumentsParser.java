@@ -65,7 +65,7 @@ public class CommandLineArgumentsParser {
             commandLine = parser.parse(options, args);
             return new CommandLineArguments(commandLine);
         } catch (ParseException e) {
-            throw new CommandLineArgumentParseException(e);
+            throw new CommandLineArgumentParseException(e.getMessage(), e);
         }
     }
 

@@ -86,6 +86,11 @@ public class BasicCommandTest {
             public Collection<ArgumentSpec> getAcceptedArguments() {
                 return null;
             }
+
+            @Override
+            public boolean isStorageRequired() {
+                return false;
+            }
         };
     }
 

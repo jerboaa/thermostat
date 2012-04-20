@@ -36,7 +36,13 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.net.UnknownHostException;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.io.IOException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -54,11 +60,6 @@ import com.mongodb.MongoURI;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
-
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @PrepareForTest(MongoConnection.class)
 @RunWith(PowerMockRunner.class)
@@ -95,18 +96,29 @@ public class MongoConnectionTest {
     }
 
     @Test
-    public void testConnectUnknownHostException() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new UnknownHostException());
-        conn.connect();
-
+    public void testConnectIOException() throws Exception {
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new IOException());
+        boolean exceptionThrown = false;
+        try {
+            conn.connect();
+        } catch (ConnectionException ex) {
+            exceptionThrown = true;
+        }
         verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
+        assertTrue(exceptionThrown);
     }
 
     @Test
     public void testConnectMongoException() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new MongoException("fluff"));
-        conn.connect();
+        boolean exceptionThrown = false;
+        try {
+            conn.connect();
+        } catch (ConnectionException ex) {
+            exceptionThrown = true;
+        }
 
         verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
+        assertTrue(exceptionThrown);
     }
 }

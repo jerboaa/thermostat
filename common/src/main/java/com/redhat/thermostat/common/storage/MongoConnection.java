@@ -36,9 +36,8 @@
 
 package com.redhat.thermostat.common.storage;
 
+import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -46,11 +45,9 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class MongoConnection extends Connection {
 
-    private static final Logger logger = LoggingUtils.getLogger(MongoConnection.class);
     private Mongo m = null;
     private DB db = null;
     private StartupConfiguration conf;
@@ -65,12 +62,11 @@ class MongoConnection extends Connection {
             createConnection();
             /* the mongo java driver does not ensure this connection is actually working */
             testConnection();
-        } catch (MongoException | UnknownHostException |
+        } catch (IOException | MongoException |
                  NotImplementedException | IllegalArgumentException e)
         {
-            logger.log(Level.WARNING, "Connection failed.", e);
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
-            return;
+            throw new ConnectionException(e.getMessage(), e);
         }
         fireChanged(ConnectionStatus.CONNECTED);
         connected = true;

@@ -34,81 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.cli;
+package com.redhat.thermostat.common.storage;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+public class ConnectionException extends RuntimeException {
 
-
-class TestCommand implements Command {
-
-    private String name;
-    private Handle handle;
-    private String description;
-    private String usage;
-    private boolean storageRequired;
-
-    private List<ArgumentSpec> arguments = new LinkedList<ArgumentSpec>();
-
-    static interface Handle {
-        public void run(CommandContext ctx) throws CommandException;
+    public ConnectionException() {
+        super();
     }
 
-    TestCommand(String name) {
-        this(name, null);
+    public ConnectionException(String message) {
+        super(message);
     }
 
-    TestCommand(String name, Handle r) {
-        this.name = name;
-        this.handle = r;
+    public ConnectionException(Throwable cause) {
+        super(cause);
     }
 
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        if (handle != null) {
-            handle.run(ctx);
-        }
+    public ConnectionException(String message, Throwable cause) {
+        super(message, cause);
     }
 
-    @Override
-    public String getName() {
-        return name;
-    }
 
-    @Override
-    public String getDescription() {
-        return description;
-    }
-
-    void setDescription(String desc) {
-        description = desc;
-    }
-
-    @Override
-    public String getUsage() {
-        return usage;
-    }
-
-    void setUsage(String usage) {
-        this.usage = usage;
-    }
-
-    @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return arguments;
-    }
-
-    void addArguments(ArgumentSpec... arguments) {
-        this.arguments.addAll(Arrays.asList(arguments));
-    }
-
-    public boolean isStorageRequired() {
-        return storageRequired;
-    }
-
-    void setStorageRequired(boolean storageRequired) {
-        this.storageRequired = storageRequired;
-    }
 }

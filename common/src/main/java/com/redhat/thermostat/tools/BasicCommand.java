@@ -46,6 +46,7 @@ import com.redhat.thermostat.common.config.StartupConfiguration;
 public abstract class BasicCommand implements Command {
     
     private ActionNotifier<ApplicationState> notifier;
+    private boolean storageRequired;
     
     public BasicCommand() {
         this.notifier = new ActionNotifier<>(this);
@@ -56,4 +57,13 @@ public abstract class BasicCommand implements Command {
     }
 
     public abstract StartupConfiguration getConfiguration();
+
+    @Override
+    public boolean isStorageRequired() {
+        return storageRequired;
+    }
+
+    protected void setStorageRequired(boolean storageRequired) {
+        this.storageRequired = storageRequired;
+    }
 }

@@ -36,10 +36,18 @@
 
 package com.redhat.thermostat.cli;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.ServiceLoader;
 
+import com.redhat.thermostat.common.storage.ConnectionException;
+
 public class Launcher {
+
+    private static final String DB_URL_ARG = "dbUrl";
+
+    private static final String DB_URL_DESC = "the URL of the storage to connect to";
 
     private String[] args;
 
@@ -73,24 +81,67 @@ public class Launcher {
     }
 
     private void runCommand(String cmdName, String[] cmdArgs) {
-        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
         try {
-            parseArgsAndRunCommand(cmdName, cmdArgs, cmdCtxFactory);
+            parseArgsAndRunCommand(cmdName, cmdArgs);
         } catch (CommandException e) {
+            CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
             cmdCtxFactory.getConsole().getError().println(e.getMessage());
         }
     }
 
-    private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs, CommandContextFactory cmdCtxFactory)
-            throws CommandLineArgumentParseException, CommandException {
+    private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs) throws CommandException {
 
+        Command cmd = getCommand(cmdName);
+        Collection<ArgumentSpec> acceptedArguments = getAcceptedCommandArguments(cmd);
+        Arguments args = parseCommandArguments(cmdArgs, acceptedArguments);
+        CommandContext ctx = setupCommandContext(cmd, args);
+        cmd.run(ctx);
+    }
+
+    private Command getCommand(String cmdName) {
+
+        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
         CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
         Command cmd = registry.getCommand(cmdName);
+        return cmd;
+    }
+
+    private Collection<ArgumentSpec> getAcceptedCommandArguments(Command cmd) {
+
+        Collection<ArgumentSpec> acceptedArguments = cmd.getAcceptedArguments();
+        if (cmd.isStorageRequired()) {
+            acceptedArguments = new ArrayList<>(acceptedArguments);
+            acceptedArguments.add(createDbUrlArgumentSpec());
+        }
+        return acceptedArguments;
+    }
+
+    private ArgumentSpec createDbUrlArgumentSpec() {
+        return new SimpleArgumentSpec(DB_URL_ARG, DB_URL_DESC, true, true);
+    }
+
+    private Arguments parseCommandArguments(String[] cmdArgs, Collection<ArgumentSpec> acceptedArguments)
+            throws CommandLineArgumentParseException {
+
         CommandLineArgumentsParser cliArgsParser = new CommandLineArgumentsParser();
-        cliArgsParser.addArguments(cmd.getAcceptedArguments());
+        cliArgsParser.addArguments(acceptedArguments);
         Arguments args = cliArgsParser.parse(cmdArgs);
+        return args;
+    }
+
+    private CommandContext setupCommandContext(Command cmd, Arguments args) throws CommandException {
+
+        CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
         CommandContext ctx = cmdCtxFactory.createContext(args);
-        cmd.run(ctx);
+        if (cmd.isStorageRequired()) {
+            String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
+            try {
+                ctx.getAppContextSetup().setupAppContext(dbUrl);
+            } catch (ConnectionException ex) {
+                throw new CommandException("Could not connect to: " + dbUrl, ex);
+            }
+        }
+        return ctx;
     }
 
 

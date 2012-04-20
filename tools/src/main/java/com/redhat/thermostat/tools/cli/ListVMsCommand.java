@@ -38,6 +38,7 @@ package com.redhat.thermostat.tools.cli;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 
 import com.redhat.thermostat.cli.ArgumentSpec;
 import com.redhat.thermostat.cli.Command;
@@ -60,16 +61,8 @@ public class ListVMsCommand implements Command {
 
     private static final String USAGE = DESCRIPTION;
 
-    private static final String DB_URL_ARG = "dbUrl";
-
-    private static final String DB_URL_DESC = "the URL of the storage to connect to";
-
     @Override
     public void run(CommandContext ctx) throws CommandException {
-
-        String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
-
-        ctx.getAppContextSetup().setupAppContext(dbUrl);
 
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
         HostInfoDAO hostsDAO = daoFactory.getHostInfoDAO();
@@ -102,8 +95,12 @@ public class ListVMsCommand implements Command {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec dbUrl = new SimpleArgumentSpec(DB_URL_ARG, DB_URL_DESC, true, true);
-        return Arrays.asList(dbUrl);
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isStorageRequired() {
+        return true;
     }
 
 }

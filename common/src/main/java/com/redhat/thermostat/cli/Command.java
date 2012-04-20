@@ -50,4 +50,6 @@ public interface Command {
     String getUsage();
 
     Collection<ArgumentSpec> getAcceptedArguments();
+
+    boolean isStorageRequired();
 }

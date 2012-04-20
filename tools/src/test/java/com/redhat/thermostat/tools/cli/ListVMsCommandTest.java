@@ -117,19 +117,6 @@ public class ListVMsCommandTest {
     }
 
     @Test
-    public void testRunCreatesConnectionFromArgumentURL() throws CommandException {
-
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument("dbUrl", "mongo://fluff:12345");
-        CommandContext ctx = cmdCtxFactory.createContext(args);
-
-        cmd.run(ctx);
-
-        verify(appContextSetup).setupAppContext("mongo://fluff:12345");
-
-    }
-
-    @Test
     public void verifyOutputFormatOneLine() throws CommandException {
 
         HostRef host1 = new HostRef("123", "h1");
@@ -191,7 +178,6 @@ public class ListVMsCommandTest {
     public void testAcceptedArguments() {
         Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
         assertNotNull(args);
-        assertEquals(1, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("dbUrl", "the URL of the storage to connect to", true, true)));
+        assertTrue(args.isEmpty());
     }
 }

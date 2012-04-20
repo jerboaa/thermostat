@@ -37,6 +37,8 @@
 package com.redhat.thermostat.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
 
@@ -67,12 +69,13 @@ public class LauncherTest {
     }
 
     private TestCommandContextFactory  ctxFactory;
+    private AppContextSetup appContextSetup;
 
     @Before
     public void setUp() {
 
         CLITestEnvironment.setUp();
-        ctxFactory = new TestCommandContextFactory();
+        setupCommandContextFactory();
         CommandContextFactory.setInstance(ctxFactory);
 
         TestCommand cmd1 = new TestCommand("test1", new TestCmd1());
@@ -93,9 +96,26 @@ public class LauncherTest {
         arg4.setUsingAdditionalArgument(true);
         cmd2.addArguments(arg3, arg4);
         cmd2.setDescription("description 2");
-        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2, new HelpCommand()));
+
+        TestCommand cmd3 = new TestCommand("test3");
+        cmd3.setStorageRequired(true);
+        cmd3.setDescription("description 3");
+
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1, cmd2, cmd3, new HelpCommand()));
 
     }
+
+    private void setupCommandContextFactory() {
+        appContextSetup = mock(AppContextSetup.class);
+        ctxFactory = new TestCommandContextFactory() {
+            @Override
+            protected AppContextSetup getAppContextSetup() {
+                return appContextSetup;
+            }
+        };
+        CommandContextFactory.setInstance(ctxFactory);
+    }
+
 
     @After
     public void tearDown() {
@@ -116,7 +136,8 @@ public class LauncherTest {
         String expected = "list of commands:\n\n"
                         + " help          show help for a given command or help overview\n"
                         + " test1         description 1\n"
-                        + " test2         description 2\n";
+                        + " test2         description 2\n"
+                        + " test3         description 3\n";
         runAndVerifyCommand(new String[0], expected);
     }
 
@@ -125,7 +146,8 @@ public class LauncherTest {
         String expected = "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
-            + " test2         description 2\n";
+            + " test2         description 2\n"
+            + " test3         description 3\n";
         runAndVerifyCommand(new String[] {"--help"}, expected);
     }
 
@@ -134,7 +156,8 @@ public class LauncherTest {
         String expected = "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
-            + " test2         description 2\n";
+            + " test2         description 2\n"
+            + " test3         description 3\n";
         runAndVerifyCommand(new String[] {"-help"}, expected);
     }
 
@@ -143,7 +166,8 @@ public class LauncherTest {
         String expected = "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
-            + " test2         description 2\n";
+            + " test2         description 2\n"
+            + " test3         description 3\n";
         runAndVerifyCommand(new String[] {"foobarbaz"}, expected);
     }
 
@@ -152,7 +176,8 @@ public class LauncherTest {
         String expected = "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
-            + " test2         description 2\n";
+            + " test2         description 2\n"
+            + " test3         description 3\n";
         runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected);
     }
 
@@ -175,5 +200,17 @@ public class LauncherTest {
     private void runAndVerifyCommand(String[] args, String expected) {
         new Launcher().run(args);
         assertEquals(expected, ctxFactory.getOutput());
+    }
+
+    @Test
+    public void verifyStorageCommandSetsUpDAOFactory() {
+        new Launcher().run(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345" });
+        verify(appContextSetup).setupAppContext("mongo://fluff:12345");
+    }
+
+    @Test
+    public void verifyStorageCommandRequiresDbUrl() {
+        new Launcher().run(new String[] { "test3" });
+        assertEquals("Missing required option: dbUrl\n", ctxFactory.getError());
     }
 }

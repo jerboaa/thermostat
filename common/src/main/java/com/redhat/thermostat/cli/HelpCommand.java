@@ -111,4 +111,9 @@ public class HelpCommand implements Command {
         return Collections.emptyList();
     }
 
+    @Override
+    public boolean isStorageRequired() {
+        return false;
+    }
+
 }
