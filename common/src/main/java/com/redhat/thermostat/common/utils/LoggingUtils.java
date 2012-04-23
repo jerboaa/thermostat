@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -43,6 +46,8 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.LogFormatter;
+import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 /**
  * A few helper functions to facilitate using loggers
@@ -104,6 +109,31 @@ public final class LoggingUtils {
         // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
         handler.setLevel(Level.ALL);
         root.addHandler(handler);
+    }
+
+    public static void loadGlobalLoggingConfig() throws InvalidConfigurationException {
+        File thermostatEtcDir = new File(ConfigUtils.getThermostatHome(), "etc");
+        File loggingPropertiesFile = new File(thermostatEtcDir, "logging.properties");
+        if (loggingPropertiesFile.isFile()) {
+            readLoggingProperties(loggingPropertiesFile);
+        }
+    }
+
+    public static void loadUserLoggingConfig() throws InvalidConfigurationException {
+        File thermostatUserDir = new File(ConfigUtils.getThermostatUserHome());
+        File loggingPropertiesFile = new File(thermostatUserDir, "logging.properties");
+        if (loggingPropertiesFile.isFile()) {
+            readLoggingProperties(loggingPropertiesFile);
+        }
+    }
+
+    private static void readLoggingProperties(File loggingPropertiesFile)
+            throws InvalidConfigurationException {
+        try (FileInputStream fis = new FileInputStream(loggingPropertiesFile)){
+            LogManager.getLogManager().readConfiguration(fis);
+        } catch (SecurityException | IOException e) {
+            throw new InvalidConfigurationException("Could not read logging.properties", e);
+        }
     }
 
 }

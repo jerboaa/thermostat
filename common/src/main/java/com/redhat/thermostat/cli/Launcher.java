@@ -41,7 +41,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.ServiceLoader;
 
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Launcher {
 
@@ -52,12 +54,26 @@ public class Launcher {
     private String[] args;
 
     public void run(String[] args) {
+        initLogging();
         this.args = args;
         registerDefaultCommands();
         if (hasNoArguments() || unknownCommand()) {
             runHelpCommand();
         } else {
             runCommandFromArguments();
+        }
+    }
+
+    private void initLogging() {
+        try {
+            LoggingUtils.loadGlobalLoggingConfig();
+        } catch (InvalidConfigurationException e) {
+            System.err.println("WARNING: Could not read global Thermostat logging configuration.");
+        }
+        try {
+            LoggingUtils.loadUserLoggingConfig();
+        } catch (InvalidConfigurationException e) {
+            // We intentionally ignore this.
         }
     }
 

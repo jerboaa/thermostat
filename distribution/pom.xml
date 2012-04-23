@@ -116,6 +116,14 @@
                     <include>system/backend.properties</include>
                   </includes>
                 </resource>
+                <resource>
+                  <directory>config</directory>
+                  <targetPath>etc</targetPath>
+                  <filtering>true</filtering>
+                  <includes>
+                    <include>logging.properties</include>
+                  </includes>
+                </resource>
               </resources>
             </configuration>
           </execution>
@@ -143,6 +151,7 @@
             <phase>prepare-package</phase>
             <configuration>
               <target>
+                <mkdir dir="${project.build.directory}/etc" />
                 <mkdir dir="${project.build.directory}/storage" />
                 <mkdir dir="${project.build.directory}/storage/db" />
                 <mkdir dir="${project.build.directory}/storage/logs" />

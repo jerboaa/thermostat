@@ -40,6 +40,8 @@ import java.io.File;
 
 public class ConfigUtils {
 
+    private static final String THERMOSTAT_USER_DIR = ".thermostat";
+
     public static String getThermostatHome() throws InvalidConfigurationException {
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
@@ -53,7 +55,12 @@ public class ConfigUtils {
         }
         return home;
     }
-    
+
+    public static String getThermostatUserHome() {
+        String home = System.getProperty("user.home");
+        return home + File.separator + THERMOSTAT_USER_DIR;
+    }
+
     public static File getBackendsBaseDirectory() throws InvalidConfigurationException {
         String loc = getThermostatHome() + File.separatorChar + "backends";
         File file = new File(loc);
