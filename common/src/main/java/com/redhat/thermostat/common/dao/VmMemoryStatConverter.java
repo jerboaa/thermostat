@@ -115,7 +115,7 @@ public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
         newGen.collector = chunk.get(VmMemoryStatDAO.edenCollectorKey);
 
         space = new Space();
-        space.name = chunk.get(VmMemoryStatDAO.edenGenKey);
+        space.name = VmMemoryStatDAO.edenKey.getName();
         space.capacity = chunk.get(VmMemoryStatDAO.edenCapacityKey);
         space.maxCapacity = chunk.get(VmMemoryStatDAO.edenMaxCapacityKey);
         space.used = chunk.get(VmMemoryStatDAO.edenUsedKey);
@@ -124,7 +124,7 @@ public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
         newGen.maxCapacity += space.maxCapacity;
 
         space = new Space();
-        space.name = chunk.get(VmMemoryStatDAO.s0GenKey);
+        space.name = VmMemoryStatDAO.s0Key.getName();
         space.capacity = chunk.get(VmMemoryStatDAO.s0CapacityKey);
         space.maxCapacity = chunk.get(VmMemoryStatDAO.s0MaxCapacityKey);
         space.used = chunk.get(VmMemoryStatDAO.s0UsedKey);
@@ -133,7 +133,7 @@ public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
         newGen.maxCapacity += space.maxCapacity;
 
         space = new Space();
-        space.name = chunk.get(VmMemoryStatDAO.s1GenKey);
+        space.name = VmMemoryStatDAO.s1Key.getName();
         space.capacity = chunk.get(VmMemoryStatDAO.s1CapacityKey);
         space.maxCapacity = chunk.get(VmMemoryStatDAO.s1MaxCapacityKey);
         space.used = chunk.get(VmMemoryStatDAO.s1UsedKey);
@@ -150,7 +150,7 @@ public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
         oldGen.collector = chunk.get(VmMemoryStatDAO.oldCollectorKey);
 
         space = new Space();
-        space.name = chunk.get(VmMemoryStatDAO.oldGenKey);
+        space.name = VmMemoryStatDAO.oldKey.getName();
         space.capacity = chunk.get(VmMemoryStatDAO.oldCapacityKey);
         space.maxCapacity = chunk.get(VmMemoryStatDAO.oldMaxCapacityKey);
         space.used = chunk.get(VmMemoryStatDAO.oldUsedKey);
@@ -167,7 +167,7 @@ public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
         permGen.collector = chunk.get(VmMemoryStatDAO.permCollectorKey);
 
         space = new Space();
-        space.name = chunk.get(VmMemoryStatDAO.permGenKey);
+        space.name = VmMemoryStatDAO.permKey.getName();
         space.capacity = chunk.get(VmMemoryStatDAO.permCapacityKey);
         space.maxCapacity = chunk.get(VmMemoryStatDAO.permMaxCapacityKey);
         space.used = chunk.get(VmMemoryStatDAO.permUsedKey);

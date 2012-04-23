@@ -122,6 +122,26 @@ public class VmMemoryStatConverterTest {
         final long TIMESTAMP = 1234l;
         final int VM_ID = 4567;
 
+        final long EDEN_USED = 1;
+        final long EDEN_CAPACITY = 2;
+        final long EDEN_MAX_CAPACITY = 3;
+        
+        final long S0_USED = 4;
+        final long S0_CAPACITY = 5;
+        final long S0_MAX_CAPACITY = 6;
+        
+        final long S1_USED = 7;
+        final long S1_CAPACITY = 8;
+        final long S1_MAX_CAPACITY = 9;
+        
+        final long OLD_USED = 10;
+        final long OLD_CAPACITY = 11;
+        final long OLD_MAX_CAPACITY = 12;
+        
+        final long PERM_USED = 13;
+        final long PERM_CAPACITY = 14;
+        final long PERM_MAX_CAPACITY = 15;
+        
         Chunk chunk = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
 
         chunk.put(Key.TIMESTAMP, TIMESTAMP);
@@ -129,33 +149,33 @@ public class VmMemoryStatConverterTest {
 
         chunk.put(VmMemoryStatDAO.edenGenKey, "new");
         chunk.put(VmMemoryStatDAO.edenCollectorKey, "new-collector");
-        chunk.put(VmMemoryStatDAO.edenUsedKey, 1l);
-        chunk.put(VmMemoryStatDAO.edenCapacityKey, 2l);
-        chunk.put(VmMemoryStatDAO.edenMaxCapacityKey, 3l);
+        chunk.put(VmMemoryStatDAO.edenUsedKey, EDEN_USED);
+        chunk.put(VmMemoryStatDAO.edenCapacityKey, EDEN_CAPACITY);
+        chunk.put(VmMemoryStatDAO.edenMaxCapacityKey, EDEN_MAX_CAPACITY);
 
         chunk.put(VmMemoryStatDAO.s0GenKey, "new");
         chunk.put(VmMemoryStatDAO.s0CollectorKey, "new-collector");
-        chunk.put(VmMemoryStatDAO.s0UsedKey, 4l);
-        chunk.put(VmMemoryStatDAO.s0CapacityKey, 5l);
-        chunk.put(VmMemoryStatDAO.s0MaxCapacityKey, 6l);
+        chunk.put(VmMemoryStatDAO.s0UsedKey, S0_USED);
+        chunk.put(VmMemoryStatDAO.s0CapacityKey, S0_CAPACITY);
+        chunk.put(VmMemoryStatDAO.s0MaxCapacityKey, S0_MAX_CAPACITY);
 
         chunk.put(VmMemoryStatDAO.s1GenKey, "new");
         chunk.put(VmMemoryStatDAO.s1CollectorKey, "new-collector");
-        chunk.put(VmMemoryStatDAO.s1UsedKey, 7l);
-        chunk.put(VmMemoryStatDAO.s1CapacityKey, 8l);
-        chunk.put(VmMemoryStatDAO.s1MaxCapacityKey, 9l);
+        chunk.put(VmMemoryStatDAO.s1UsedKey, S1_USED);
+        chunk.put(VmMemoryStatDAO.s1CapacityKey, S1_CAPACITY);
+        chunk.put(VmMemoryStatDAO.s1MaxCapacityKey, S1_MAX_CAPACITY);
 
         chunk.put(VmMemoryStatDAO.oldGenKey, "old");
         chunk.put(VmMemoryStatDAO.oldCollectorKey, "old-collector");
-        chunk.put(VmMemoryStatDAO.oldUsedKey, 10l);
-        chunk.put(VmMemoryStatDAO.oldCapacityKey, 11l);
-        chunk.put(VmMemoryStatDAO.oldMaxCapacityKey, 12l);
+        chunk.put(VmMemoryStatDAO.oldUsedKey, OLD_USED);
+        chunk.put(VmMemoryStatDAO.oldCapacityKey, OLD_CAPACITY);
+        chunk.put(VmMemoryStatDAO.oldMaxCapacityKey, OLD_MAX_CAPACITY);
 
         chunk.put(VmMemoryStatDAO.permGenKey, "perm");
         chunk.put(VmMemoryStatDAO.permCollectorKey, "perm-collector");
-        chunk.put(VmMemoryStatDAO.permUsedKey, 13l);
-        chunk.put(VmMemoryStatDAO.permCapacityKey, 14l);
-        chunk.put(VmMemoryStatDAO.permMaxCapacityKey, 15l);
+        chunk.put(VmMemoryStatDAO.permUsedKey, PERM_USED);
+        chunk.put(VmMemoryStatDAO.permCapacityKey, PERM_CAPACITY);
+        chunk.put(VmMemoryStatDAO.permMaxCapacityKey, PERM_MAX_CAPACITY);
 
         VmMemoryStat stat = new VmMemoryStatConverter().fromChunk(chunk);
 
@@ -165,13 +185,49 @@ public class VmMemoryStatConverterTest {
 
         assertEquals(3, stat.getGenerations().size());
 
-        assertEquals(3, stat.getGeneration("new").spaces.size());
-        assertEquals("new-collector", stat.getGeneration("new").collector);
+        Generation newGen = stat.getGeneration("new");
+        assertNotNull(newGen);
+        assertEquals(3, newGen.spaces.size());
+        assertEquals("new-collector", newGen.collector);
+        
+        Space eden = newGen.getSpace("eden");
+        assertNotNull(eden);
+        assertEquals(EDEN_USED, eden.used);
+        assertEquals(EDEN_CAPACITY, eden.capacity);
+        assertEquals(EDEN_MAX_CAPACITY, eden.maxCapacity);
+        
+        Space s0 = newGen.getSpace("s0");
+        assertNotNull(s0);
+        assertEquals(S0_USED, s0.used);
+        assertEquals(S0_CAPACITY, s0.capacity);
+        assertEquals(S0_MAX_CAPACITY, s0.maxCapacity);
+        
+        Space s1 = newGen.getSpace("s1");
+        assertNotNull(s1);
+        assertEquals(S1_USED, s1.used);
+        assertEquals(S1_CAPACITY, s1.capacity);
+        assertEquals(S1_MAX_CAPACITY, s1.maxCapacity);
+        
+        Generation oldGen = stat.getGeneration("old");
+        assertNotNull(oldGen);
+        assertEquals(1, oldGen.spaces.size());
+        assertEquals("old-collector", oldGen.collector);
 
-        assertEquals(1, stat.getGeneration("old").spaces.size());
-        assertEquals("old-collector", stat.getGeneration("old").collector);
-
-        assertEquals(1, stat.getGeneration("perm").spaces.size());
-        assertEquals("perm-collector", stat.getGeneration("perm").collector);
+        Space old = oldGen.getSpace("old");
+        assertNotNull(old);
+        assertEquals(OLD_USED, old.used);
+        assertEquals(OLD_CAPACITY, old.capacity);
+        assertEquals(OLD_MAX_CAPACITY, old.maxCapacity);
+        
+        Generation permGen = stat.getGeneration("perm");
+        assertNotNull(permGen);
+        assertEquals(1, permGen.spaces.size());
+        assertEquals("perm-collector", permGen.collector);
+        
+        Space permSpace = permGen.getSpace("perm");
+        assertNotNull(permSpace);
+        assertEquals(PERM_USED, permSpace.used);
+        assertEquals(PERM_CAPACITY, permSpace.capacity);
+        assertEquals(PERM_MAX_CAPACITY, permSpace.maxCapacity);
     }
 }
