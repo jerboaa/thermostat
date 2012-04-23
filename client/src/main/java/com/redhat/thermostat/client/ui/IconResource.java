@@ -58,6 +58,8 @@ public class IconResource {
     public static final IconResource NETWORK_SERVER = new IconResource(ICON_PREFIX + "48x48/places/network-server.png");
     public static final IconResource NETWORK_GROUP = new IconResource(ICON_PREFIX + "48x48/places/network-workgroup.png");
 
+    public static final IconResource ARROW_RIGHT = new IconResource(ICON_PREFIX + "48x48/actions/go-next.png");
+
     public static final IconResource SEARCH = new IconResource(ICON_PREFIX + "16x16/actions/search.png");
 
     private final String path;

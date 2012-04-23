@@ -36,13 +36,17 @@
 
 package com.redhat.thermostat.client.ui;
 
+import static com.redhat.thermostat.client.locale.Translate.localize;
+
 import java.awt.Component;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -52,21 +56,19 @@ import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 
 class VmMemoryController implements AsyncUiFacade {
 
-    private final VmRef ref;
     private final VmMemoryView view;
     private final VmMemoryStatDAO dao;
 
-    private final Timer timer = new Timer();
+    private final Timer timer;
 
-    public VmMemoryController(VmRef ref) {
-        this.ref = ref;
+    private final List<String> spacesInView =  new ArrayList<>();
+
+    public VmMemoryController(final VmRef ref) {
         dao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
+        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         view = ApplicationContext.getInstance().getViewFactory().getView(VmMemoryView.class);
-    }
 
-    @Override
-    public void start() {
-        timer.scheduleAtFixedRate(new TimerTask() {
+        timer.setAction(new Runnable() {
             @Override
             public void run() {
                 VmMemoryStat info = dao.getLatestMemoryStat(ref);
@@ -74,18 +76,37 @@ class VmMemoryController implements AsyncUiFacade {
                 for (Generation generation: generations) {
                     List<Space> spaces = generation.spaces;
                     for (Space space: spaces) {
-                        view.setMemoryRegionSize(space.name, space.used, space.capacity, space.maxCapacity);
+
+                        if (!spacesInView.contains(space.name)) {
+                            view.addRegion(space.name);
+                            spacesInView.add(space.name);
+                        }
+
+                        int percentageUsed = (int) (100.0 * space.used/space.capacity);
+                        String currentlyUsed = localize(LocaleResources.VM_MEMORY_SPACE_USED, String.valueOf(space.used));
+                        String currentlyUnused = localize(LocaleResources.VM_MEMORY_SPACE_FREE, String.valueOf(space.capacity - space.used));
+                        String allocatable = localize(LocaleResources.VM_MEMORY_SPACE_ADDITIONAL, String.valueOf(space.maxCapacity-space.capacity));
+                        String name = space.name; // FIXME
+                        view.updateRegionSize(name, percentageUsed, currentlyUsed, currentlyUnused, allocatable);
+
                     }
                 }
-
             }
+        });
+        timer.setInitialDelay(0);
+        timer.setDelay(10);
+        timer.setTimeUnit(TimeUnit.MILLISECONDS);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+    }
 
-        }, 0, TimeUnit.SECONDS.toMillis(5));
+    @Override
+    public void start() {
+        timer.start();
     }
 
     @Override
     public void stop() {
-        timer.cancel();
+        timer.stop();
     }
 
     public Component getComponent() {

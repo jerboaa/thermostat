@@ -42,7 +42,11 @@ import com.redhat.thermostat.common.View;
 
 public interface VmMemoryView extends View {
 
-    void setMemoryRegionSize(String name, long used, long allocated, long max);
+    void addRegion(String humanReadableName);
+
+    void removeAllRegions();
+
+    void updateRegionSize(String name, int percentageUsed, String currentlyUsed, String currentlyAvailable, String allocatable);
 
     Component getUiComponent();
 
