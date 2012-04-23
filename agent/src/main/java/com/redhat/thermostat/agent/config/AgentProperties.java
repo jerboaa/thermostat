@@ -40,7 +40,6 @@ public enum AgentProperties {
 
     // backend list, comma separated
     BACKENDS,
-    LOG_LEVEL,
     DEBUG_CONSOLE,
     DB_URL,
     SAVE_ON_EXIT

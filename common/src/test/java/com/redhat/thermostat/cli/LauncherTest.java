@@ -41,6 +41,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -139,6 +141,13 @@ public class LauncherTest {
                         + " test2         description 2\n"
                         + " test3         description 3\n";
         runAndVerifyCommand(new String[0], expected);
+    }
+
+    @Test
+    public void verifySetLogLevel() {
+        runAndVerifyCommand(new String[] {"test1", "--logLevel", "WARNING", "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
+        Logger globalLogger = Logger.getLogger("com.redhat.thermostat");
+        assertEquals(Level.WARNING, globalLogger.getLevel());
     }
 
     @Test

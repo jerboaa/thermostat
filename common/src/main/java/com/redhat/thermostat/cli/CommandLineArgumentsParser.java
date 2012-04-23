@@ -69,6 +69,7 @@ public class CommandLineArgumentsParser {
         }
     }
 
+
     private Options convertToCommonsCLIOptions(Collection<ArgumentSpec> args) {
         Options options = new Options();
         for (ArgumentSpec spec : args) {
@@ -88,7 +89,9 @@ public class CommandLineArgumentsParser {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.setOptPrefix("--");
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
-        Options options = convertToCommonsCLIOptions(cmd.getAcceptedArguments());
+        CommonCommandOptions commonOpts = new CommonCommandOptions();
+        Collection<ArgumentSpec> acceptedOptions = commonOpts.getAcceptedOptionsFor(cmd);
+        Options options = convertToCommonsCLIOptions(acceptedOptions);
         helpFormatter.printHelp(pw, 80, cmd.getName(), cmd.getUsage(), options, 2, 4, null, true);
         pw.flush();
     }

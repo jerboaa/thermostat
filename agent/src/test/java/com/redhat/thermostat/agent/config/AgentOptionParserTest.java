@@ -38,7 +38,6 @@ package com.redhat.thermostat.agent.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.logging.Level;
 
 import junit.framework.Assert;
 
@@ -68,7 +67,6 @@ public class AgentOptionParserTest {
     public void testConfigs1() throws IOException, InvalidConfigurationException {
         
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("logLevel", "ALL");
         args.addArgument("dbUrl", "testURL");
         args.addArgument("debug", "--debug");
         
@@ -77,7 +75,6 @@ public class AgentOptionParserTest {
         parser.parse();
         
         Assert.assertEquals("testURL", configs.getDBConnectionString());
-        Assert.assertEquals(Level.ALL, configs.getLogLevel());
         Assert.assertTrue(configs.isDebugConsole());
         Assert.assertTrue(configs.purge());
     }
@@ -86,7 +83,6 @@ public class AgentOptionParserTest {
     public void testConfigs2() throws IOException, InvalidConfigurationException {
         
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("logLevel", "FINE");
         args.addArgument("dbUrl", "testURL2");
         args.addArgument("saveOnExit", "--saveOnExit");
         
@@ -95,7 +91,6 @@ public class AgentOptionParserTest {
         parser.parse();
         
         Assert.assertEquals("testURL2", configs.getDBConnectionString());
-        Assert.assertEquals(Level.FINE, configs.getLogLevel());
         Assert.assertFalse(configs.isDebugConsole());
         Assert.assertFalse(configs.purge());
     }

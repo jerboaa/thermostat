@@ -42,7 +42,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
 
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
@@ -54,7 +53,6 @@ public class AgentStartupConfiguration implements StartupConfiguration {
 
     private List<BackendID> backends;
     
-    private Level logLevel;
     private boolean debugConsole;
     private boolean purge;
     
@@ -71,14 +69,6 @@ public class AgentStartupConfiguration implements StartupConfiguration {
         return url;
     }
 
-    public Level getLogLevel() {
-        return this.logLevel;
-    }
-
-    void setLogLevel(Level level) {
-        this.logLevel = level;
-    }
-    
     void parseBackends(String[] backendsList) throws InvalidConfigurationException {
         backends.clear();
         

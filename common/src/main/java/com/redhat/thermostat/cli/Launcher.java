@@ -36,20 +36,16 @@
 
 package com.redhat.thermostat.cli;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.ServiceLoader;
+import java.util.logging.Level;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Launcher {
-
-    private static final String DB_URL_ARG = "dbUrl";
-
-    private static final String DB_URL_DESC = "the URL of the storage to connect to";
 
     private String[] args;
 
@@ -108,10 +104,28 @@ public class Launcher {
     private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs) throws CommandException {
 
         Command cmd = getCommand(cmdName);
-        Collection<ArgumentSpec> acceptedArguments = getAcceptedCommandArguments(cmd);
-        Arguments args = parseCommandArguments(cmdArgs, acceptedArguments);
+        CommonCommandOptions commonOpts = new CommonCommandOptions();
+        Collection<ArgumentSpec> acceptedOptions = commonOpts.getAcceptedOptionsFor(cmd);
+        Arguments args = parseCommandArguments(cmdArgs, acceptedOptions);
+        setupLogLevel(args);
         CommandContext ctx = setupCommandContext(cmd, args);
         cmd.run(ctx);
+    }
+
+    private void setupLogLevel(Arguments args) {
+        if (args.hasArgument(CommonCommandOptions.LOG_LEVEL_ARG)) {
+            String levelOption = args.getArgument(CommonCommandOptions.LOG_LEVEL_ARG);
+            setLogLevel(levelOption);
+        }
+    }
+
+    private void setLogLevel(String levelOption) {
+        try {
+            Level level = Level.parse(levelOption);
+            LoggingUtils.setGlobalLogLevel(level);
+        } catch (IllegalArgumentException ex) {
+            // Ignore this, use default loglevel.
+        }
     }
 
     private Command getCommand(String cmdName) {
@@ -120,20 +134,6 @@ public class Launcher {
         CommandRegistry registry = cmdCtxFactory.getCommandRegistry();
         Command cmd = registry.getCommand(cmdName);
         return cmd;
-    }
-
-    private Collection<ArgumentSpec> getAcceptedCommandArguments(Command cmd) {
-
-        Collection<ArgumentSpec> acceptedArguments = cmd.getAcceptedArguments();
-        if (cmd.isStorageRequired()) {
-            acceptedArguments = new ArrayList<>(acceptedArguments);
-            acceptedArguments.add(createDbUrlArgumentSpec());
-        }
-        return acceptedArguments;
-    }
-
-    private ArgumentSpec createDbUrlArgumentSpec() {
-        return new SimpleArgumentSpec(DB_URL_ARG, DB_URL_DESC, true, true);
     }
 
     private Arguments parseCommandArguments(String[] cmdArgs, Collection<ArgumentSpec> acceptedArguments)
@@ -150,7 +150,7 @@ public class Launcher {
         CommandContextFactory cmdCtxFactory = CommandContextFactory.getInstance();
         CommandContext ctx = cmdCtxFactory.createContext(args);
         if (cmd.isStorageRequired()) {
-            String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
+            String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);
             try {
                 ctx.getAppContextSetup().setupAppContext(dbUrl);
             } catch (ConnectionException ex) {

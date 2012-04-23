@@ -34,33 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.config;
+package com.redhat.thermostat.cli;
 
-import java.io.IOException;
-import java.util.List;
+import static org.junit.Assert.*;
 
-import org.junit.Assert;
-import org.junit.Before;
+import java.util.Collection;
+
 import org.junit.Test;
 
-import com.redhat.thermostat.TestUtils;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
+public class CommonCommandOptionsTest {
 
-public class AgentConfigsUtilsTest {
-    
-    @Before
-    public void setUp() throws IOException, InvalidConfigurationException {
-        TestUtils.setupAgentConfigs();
-    }
-    
     @Test
-    public void test() throws InvalidConfigurationException {
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
-        List<BackendID> backends = config.getBackends();
-        
-        // the test property only define the system backend so far
-        Assert.assertEquals(1, backends.size());
-        Assert.assertEquals("system", backends.get(0).getSimpleName());
+    public void verifyStorageCommandAddsDbUrlOption() {
+        TestCommand cmd = new TestCommand("test1");
+        cmd.setStorageRequired(true);
+
+        CommonCommandOptions commonOpts = new CommonCommandOptions();
+        Collection<ArgumentSpec> cmdOpts = commonOpts.getAcceptedOptionsFor(cmd);
+
+        assertTrue(cmdOpts.contains(new SimpleArgumentSpec("dbUrl", "the URL of the storage to connect to", true, true)));
+    }
+
+    @Test
+    public void verifyLogLevelOption() {
+        TestCommand cmd = new TestCommand("test1");
+
+        CommonCommandOptions commonOpts = new CommonCommandOptions();
+        Collection<ArgumentSpec> cmdOpts = commonOpts.getAcceptedOptionsFor(cmd);
+
+        assertTrue(cmdOpts.contains(new SimpleArgumentSpec("logLevel", "log level", false, true)));
     }
 }

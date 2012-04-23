@@ -38,7 +38,6 @@ package com.redhat.thermostat.agent.config;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.logging.Level;
 
 import com.redhat.thermostat.cli.ArgumentSpec;
 import com.redhat.thermostat.cli.Arguments;
@@ -65,12 +64,6 @@ public class AgentOptionParser implements ThermostatOptionParser {
         if (args.hasArgument(Args.SAVE_ON_EXIT.option)) {
             configuration.setPurge(false);
         }
-        
-        if (args.hasArgument(Args.LEVEL.option)) {
-            String levelString = args.getArgument(Args.LEVEL.option);
-            Level level = AgentConfigsUtils.getLogLevel(levelString);
-            configuration.setLogLevel(level);
-        }
 
         configuration.setDebugConsole(args.hasArgument(Args.DEBUG.option));
         
@@ -94,7 +87,6 @@ public class AgentOptionParser implements ThermostatOptionParser {
     private static enum Args {
         
         // TODO: localize
-        LEVEL("logLevel", "log level"),
         SAVE_ON_EXIT("saveOnExit", "save the data on exit"),
         DB("dbUrl", "connect to the given url"),
         DEBUG("debug", "launch with debug console enabled"),
@@ -110,10 +102,9 @@ public class AgentOptionParser implements ThermostatOptionParser {
     }
 
     public static Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec level = new SimpleArgumentSpec(Args.LEVEL.option, Args.LEVEL.description, false, true);
         ArgumentSpec saveOnExit = new SimpleArgumentSpec(Args.SAVE_ON_EXIT.option, Args.SAVE_ON_EXIT.description);
         ArgumentSpec db = new SimpleArgumentSpec(Args.DB.option, Args.DB.description, true, true);
         ArgumentSpec debug = new SimpleArgumentSpec(Args.DEBUG.option, Args.DEBUG.description);
-        return Arrays.asList(level, saveOnExit, db, debug);
+        return Arrays.asList(saveOnExit, db, debug);
     }
 }

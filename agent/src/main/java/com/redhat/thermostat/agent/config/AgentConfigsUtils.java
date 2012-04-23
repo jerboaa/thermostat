@@ -40,7 +40,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Level;
 
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -52,8 +51,6 @@ public class AgentConfigsUtils {
         AgentStartupConfiguration config = new AgentStartupConfiguration();
         
         File propertyFile = ConfigUtils.getAgentConfigurationFile();
-        
-        config.setLogLevel(Level.FINE);
         readAndSetProperties(propertyFile, config);
         
         return config;
@@ -79,12 +76,6 @@ public class AgentConfigsUtils {
             throw new InvalidConfigurationException(AgentProperties.BACKENDS + " property missing");
         }
         
-        if (properties.containsKey(AgentProperties.LOG_LEVEL.name())) {
-            String logLevel = properties.getProperty(AgentProperties.LOG_LEVEL.name());
-            Level level = getLogLevel(logLevel);
-            configuration.setLogLevel(level);
-        }
-        
         if (properties.containsKey(AgentProperties.DB_URL.name())) {
             String db = properties.getProperty(AgentProperties.DB_URL.name());
             configuration.setDatabaseURL(db);
@@ -97,46 +88,4 @@ public class AgentConfigsUtils {
         }
     }
     
-    public static Level getLogLevel(String logLevel) {
-        
-        Level level = Level.FINE;
-        switch (logLevel.toUpperCase()) {
-        case "SEVERE":
-            level = Level.SEVERE;
-            break;
-            
-        case "INFO":
-            level = Level.INFO;
-            break;
-            
-        case "CONFIG":
-            level = Level.CONFIG;
-            break;
-            
-        case "FINE":
-            level = Level.FINE;
-            break;
-        
-        case "FINER":
-            level = Level.FINER;
-            break;
-        
-        case "FINEST":
-            level = Level.FINEST;
-            break;
-        
-        case "WARNING":
-            level = Level.WARNING;
-            break;
-        
-        case "ALL":
-            level = Level.ALL;
-            break;
-        
-        default:
-            break;
-        }
-        
-        return level;
-    }
 }

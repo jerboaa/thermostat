@@ -116,7 +116,24 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
-        assertEquals("usage: test1\ntest usage command 1\n\n", actual);
+        assertEquals("usage: test1 [-logLevel <arg>]\ntest usage command 1\n  --logLevel <arg>    log level\n", actual);
+    }
+
+    @Test
+    public void verifyHelpKnownStorageCmdPrintsCommandUsageWithDbUrl() {
+        TestCommand cmd1 = new TestCommand("test1");
+        String usage = "test usage command 1";
+        cmd1.setUsage(usage);
+        cmd1.setStorageRequired(true);
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd1));
+
+        HelpCommand cmd = new HelpCommand();
+        Arguments args = mock(Arguments.class);
+        when(args.getNonOptionArguments()).thenReturn(Arrays.asList("test1"));
+        cmd.run(ctxFactory.createContext(args));
+
+        String actual = ctxFactory.getOutput();
+        assertEquals("usage: test1 -dbUrl <arg> [-logLevel <arg>]\ntest usage command 1\n  --dbUrl <arg>       the URL of the storage to connect to\n  --logLevel <arg>    log level\n", actual);
     }
 
     @Test

@@ -96,8 +96,6 @@ public final class AgentApplication extends BasicCommand {
         if (configuration.isDebugConsole()) {
             LoggingUtils.useDevelConsole();
         }
-        
-        LoggingUtils.setGlobalLogLevel(configuration.getLogLevel());
         final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
         StorageProvider connProv = new MongoStorageProvider(configuration);

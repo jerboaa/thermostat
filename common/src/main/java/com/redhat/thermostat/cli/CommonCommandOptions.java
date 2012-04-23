@@ -34,33 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.config;
+package com.redhat.thermostat.cli;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+class CommonCommandOptions {
 
-import com.redhat.thermostat.TestUtils;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
+    static final String DB_URL_ARG = "dbUrl";
+    private static final String DB_URL_DESC = "the URL of the storage to connect to";
 
-public class AgentConfigsUtilsTest {
-    
-    @Before
-    public void setUp() throws IOException, InvalidConfigurationException {
-        TestUtils.setupAgentConfigs();
+    static final String LOG_LEVEL_ARG = "logLevel";
+    private static final String LOG_LEVEL_DESC = "log level";
+
+    Collection<ArgumentSpec> getAcceptedOptionsFor(Command cmd) {
+
+        Collection<ArgumentSpec> acceptedArguments = cmd.getAcceptedArguments();
+        acceptedArguments = new ArrayList<>(acceptedArguments);
+        addDbUrlOptionForStorageCommand(cmd, acceptedArguments);
+        addLogLevelOption(acceptedArguments);
+        return acceptedArguments;
     }
-    
-    @Test
-    public void test() throws InvalidConfigurationException {
-        AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
-        List<BackendID> backends = config.getBackends();
-        
-        // the test property only define the system backend so far
-        Assert.assertEquals(1, backends.size());
-        Assert.assertEquals("system", backends.get(0).getSimpleName());
+
+    private void addDbUrlOptionForStorageCommand(Command cmd, Collection<ArgumentSpec> acceptedArguments) {
+        if (cmd.isStorageRequired()) {
+            acceptedArguments.add(new SimpleArgumentSpec(DB_URL_ARG, DB_URL_DESC, true, true));
+        }
     }
+
+    private void addLogLevelOption(Collection<ArgumentSpec> acceptedArguments) {
+        acceptedArguments.add(new SimpleArgumentSpec(LOG_LEVEL_ARG, LOG_LEVEL_DESC, false, true));
+    }
+
 }
