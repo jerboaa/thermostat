@@ -39,12 +39,23 @@ package com.redhat.thermostat.common;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class ThreadPoolTimerFactory implements TimerFactory {
 
     public ThreadPoolTimerFactory(int poolSize) {
-        timerThreadPool = Executors.newScheduledThreadPool(poolSize);
+        this(poolSize, Thread.currentThread().getThreadGroup());
+    }
+
+    ThreadPoolTimerFactory(int poolSize, final ThreadGroup group) {
+        timerThreadPool = Executors.newScheduledThreadPool(poolSize, new ThreadFactory() {
+            
+            @Override
+            public Thread newThread(Runnable r) {
+                return new Thread(group, r);
+            }
+        });
     }
 
     private class ThreadPoolTimer implements Timer {
@@ -124,6 +135,11 @@ public class ThreadPoolTimerFactory implements TimerFactory {
     @Override
     public Timer createTimer() {
         return new ThreadPoolTimer();
+    }
+
+    @Override
+    public void shutdown() {
+        timerThreadPool.shutdown();
     }
 
 }

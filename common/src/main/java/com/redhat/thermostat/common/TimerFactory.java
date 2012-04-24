@@ -39,4 +39,6 @@ package com.redhat.thermostat.common;
 public interface TimerFactory {
 
     Timer createTimer();
+
+    void shutdown();
 }
