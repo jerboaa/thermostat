@@ -34,20 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.test;
 
-import java.awt.Component;
+public @interface Bug {
 
-import com.redhat.thermostat.common.View;
-
-public interface VmMemoryView extends View {
-
-    void addRegion(String humanReadableName);
-
-    void removeAllRegions();
-
-    void updateRegionSize(String name, int percentageUsed, String currentlyUsed, String currentlyAvailable, String allocatable);
-
-    Component getUiComponent();
-
+    String id();
+    String url();
+    String summary();
 }

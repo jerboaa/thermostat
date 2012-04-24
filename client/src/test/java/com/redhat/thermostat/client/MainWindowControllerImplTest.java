@@ -68,6 +68,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.test.Bug;
 
 public class MainWindowControllerImplTest {
 
@@ -237,10 +238,11 @@ public class MainWindowControllerImplTest {
     }
     
     @Test
-    public void bug954() {
+    @Bug(id="954",
+         summary="Thermostat GUI client should remember my last panel selected",
+         url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=954")
+    public void verifyOpenSameHostVMTab() {
 
-        // see http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=954
-        
         VmRef vmRef = mock(VmRef.class);
         when(view.getSelectedHostOrVm()).thenReturn(vmRef);
                 

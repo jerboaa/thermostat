@@ -182,6 +182,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SHUTDOWN:
                     view.hideMainWindow();
                     stop();
+                    ApplicationContext.getInstance().getTimerFactory().shutdown();
                     break;
                 default:
                     throw new IllegalStateException("unhandled action");

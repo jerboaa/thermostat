@@ -37,18 +37,17 @@
 package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.category.DefaultCategoryDataset;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.BoxLayout;
+import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 
@@ -56,58 +55,77 @@ public class VmMemoryPanel extends JPanel implements VmMemoryView {
 
     private static final long serialVersionUID = -2882890932814218436L;
 
-    private final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+    private final Map<String, MemorySpacePanel> regions = new HashMap<>();
+
+    private final JPanel currentRegionSizePanel;
 
     public VmMemoryPanel() {
-        initializePanel();
+        JLabel lblMem = new JLabel(localize(LocaleResources.VM_MEMORY_SPACE_TITLE));
+
+        currentRegionSizePanel = new JPanel();
+
+        GroupLayout groupLayout = new GroupLayout(this);
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.TRAILING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addComponent(currentRegionSizePanel, GroupLayout.DEFAULT_SIZE, 630, Short.MAX_VALUE)
+                            .addContainerGap())
+                        .addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+                            .addComponent(lblMem)
+                            .addGap(491))))
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(lblMem)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(currentRegionSizePanel, GroupLayout.DEFAULT_SIZE, 483, Short.MAX_VALUE)
+                    .addContainerGap())
+        );
+        currentRegionSizePanel.setLayout(new BoxLayout(currentRegionSizePanel, BoxLayout.PAGE_AXIS));
+        setLayout(groupLayout);
+
     }
 
     @Override
-    public void setMemoryRegionSize(String name, long used, long allocated, long max) {
-        dataset.addValue(used, localize(LocaleResources.VM_CURRENT_MEMORY_CHART_USED), name);
-        dataset.addValue(allocated - used,
-                localize(LocaleResources.VM_CURRENT_MEMORY_CHART_CAPACITY), name);
-        dataset.addValue(max - allocated,
-                localize(LocaleResources.VM_CURRENT_MEMORY_CHART_MAX_CAPACITY), name);
+    public void addRegion(final String humanReadableName) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                MemorySpacePanel regionInfo = new MemorySpacePanel(humanReadableName);
+                regions.put(humanReadableName, regionInfo);
+                currentRegionSizePanel.add(regionInfo);
+                currentRegionSizePanel.revalidate();
+            }
+        });
     }
 
-    private void initializePanel() {
-        JPanel panel = this;
-        panel.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1;
-        c.weighty = 1;
-        panel.add(createCurrentMemoryDisplay(), c);
-        c.gridy++;
-        panel.add(createMemoryHistoryPanel(), c);
+
+    @Override
+    public void removeAllRegions() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                regions.clear();
+                currentRegionSizePanel.removeAll();
+                currentRegionSizePanel.revalidate();
+            }
+        });
     }
 
-    private Component createCurrentMemoryDisplay() {
+    @Override
+    public void updateRegionSize(final String name, final int percentageUsed, final String currentlyUsed, final String currentlyAvailable, final String allocatable) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                regions.get(name).updateRegionData(percentageUsed, currentlyUsed, currentlyAvailable, allocatable);
+            }
+        });
 
-        JFreeChart chart = ChartFactory.createStackedBarChart(
-                null,
-                localize(LocaleResources.VM_CURRENT_MEMORY_CHART_SPACE),
-                localize(LocaleResources.VM_CURRENT_MEMORY_CHART_SIZE),
-                dataset,
-                PlotOrientation.HORIZONTAL, true, false, false);
-
-        ChartPanel chartPanel = new ChartPanel(chart);
-        // make this chart non-interactive
-        chartPanel.setDisplayToolTips(true);
-        chartPanel.setDoubleBuffered(true);
-        chartPanel.setMouseZoomable(false);
-        chartPanel.setPopupMenu(null);
-
-        return chartPanel;
-    }
-
-    private Component createMemoryHistoryPanel() {
-        JPanel historyPanel = new JPanel();
-        // TODO implement this
-        return historyPanel;
     }
 
     @Override

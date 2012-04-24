@@ -42,30 +42,35 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface VmMemoryStatDAO {
 
+    static final Key<String> edenKey = new Key<>("eden", false);
     static final Key<String> edenGenKey = new Key<>("eden.gen", false);
     static final Key<String> edenCollectorKey = new Key<>("eden.collector", false);
     static final Key<Long> edenCapacityKey = new Key<>("eden.capacity", false);
     static final Key<Long> edenMaxCapacityKey = new Key<>("eden.max-capacity", false);
     static final Key<Long> edenUsedKey = new Key<>("eden.used", false);
 
+    static final Key<String> s0Key = new Key<>("s0", false);
     static final Key<String> s0GenKey = new Key<>("s0.gen", false);
     static final Key<String> s0CollectorKey = new Key<>("s0.collector", false);
     static final Key<Long> s0CapacityKey = new Key<>("s0.capacity", false);
     static final Key<Long> s0MaxCapacityKey = new Key<>("s0.max-capacity", false);
     static final Key<Long> s0UsedKey = new Key<>("s0.used", false);
 
+    static final Key<String> s1Key = new Key<>("s1", false);
     static final Key<String> s1GenKey = new Key<>("s1.gen", false);
     static final Key<String> s1CollectorKey = new Key<>("s1.collector", false);
     static final Key<Long> s1CapacityKey = new Key<>("s1.capacity", false);
     static final Key<Long> s1MaxCapacityKey = new Key<>("s1.max-capacity", false);
     static final Key<Long> s1UsedKey = new Key<>("s1.used", false);
 
+    static final Key<String> oldKey = new Key<>("old", false);
     static final Key<String> oldGenKey = new Key<>("old.gen", false);
     static final Key<String> oldCollectorKey = new Key<>("old.collector", false);
     static final Key<Long> oldCapacityKey = new Key<>("old.capacity", false);
     static final Key<Long> oldMaxCapacityKey = new Key<>("old.max-capacity", false);
     static final Key<Long> oldUsedKey = new Key<>("old.used", false);
 
+    static final Key<String> permKey = new Key<>("perm", false);
     static final Key<String> permGenKey = new Key<>("perm.gen", false);
     static final Key<String> permCollectorKey = new Key<>("perm.collector", false);
     static final Key<Long> permCapacityKey = new Key<>("perm.capacity", false);

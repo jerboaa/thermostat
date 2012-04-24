@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -51,6 +53,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.test.Bug;
 
 public class ThreadPoolTimerFactoryTest {
 
@@ -58,15 +61,24 @@ public class ThreadPoolTimerFactoryTest {
 
     private Timer timer;
 
+    private ThreadGroup threadGroup;
+
+    private TimerFactory timerFactory;
+
     @Before
     public void setUp() {
-        ThreadPoolTimerFactory timerFactory = new ThreadPoolTimerFactory(1);
+        threadGroup = new ThreadGroup("test");
+        timerFactory = new ThreadPoolTimerFactory(1, threadGroup);
         timer = timerFactory.createTimer();
     }
 
     @After
     public void tearDown() {
+        
         timer = null;
+        timerFactory.shutdown();
+        timerFactory = null;
+        threadGroup = null;
     }
 
     @Test
@@ -186,5 +198,25 @@ public class ThreadPoolTimerFactoryTest {
         timer.stop();
         Thread.sleep(DELAY);
         verify(action, times(2)).run();
+    }
+
+    @Bug(id="957",
+         summary="Thermostat GUI doesn't exit when closed, needs killing",
+         url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=957")
+    @Test
+    public void verifyShutdownKillsThreads() throws InterruptedException {
+
+        Runnable action = mock(Runnable.class);
+        timer.setAction(action);
+        timer.setInitialDelay(DELAY / 2);
+        timer.start();
+
+        assertTrue(threadGroup.activeCount() > 0);
+
+        timerFactory.shutdown();
+
+        Thread.sleep(DELAY);
+
+        assertEquals(0, threadGroup.activeCount());
     }
 }
