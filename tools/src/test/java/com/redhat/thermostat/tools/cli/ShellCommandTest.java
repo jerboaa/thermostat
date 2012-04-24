@@ -1,0 +1,140 @@
+/*
+ * Copyright 2012 Red Hat, Inc.
+ *
+ * This file is part of Thermostat.
+ *
+ * Thermostat is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2, or (at your
+ * option) any later version.
+ *
+ * Thermostat is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Thermostat; see the file COPYING.  If not see
+ * <http://www.gnu.org/licenses/>.
+ *
+ * Linking this code with other modules is making a combined work
+ * based on this code.  Thus, the terms and conditions of the GNU
+ * General Public License cover the whole combination.
+ *
+ * As a special exception, the copyright holders of this code give
+ * you permission to link this code with independent modules to
+ * produce an executable, regardless of the license terms of these
+ * independent modules, and to copy and distribute the resulting
+ * executable under terms of your choice, provided that you also
+ * meet, for each linked independent module, the terms and conditions
+ * of the license of that module.  An independent module is a module
+ * which is not derived from or based on this code.  If you modify
+ * this code, you may extend this exception to your version of the
+ * library, but you are not obligated to do so.  If you do not wish
+ * to do so, delete this exception statement from your version.
+ */
+
+package com.redhat.thermostat.tools.cli;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
+import java.io.IOException;
+import java.util.Collections;
+
+import jline.TerminalFactory;
+import jline.TerminalFactory.Flavor;
+import jline.TerminalFactory.Type;
+import jline.UnixTerminal;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.cli.Arguments;
+import com.redhat.thermostat.cli.CommandContext;
+import com.redhat.thermostat.cli.CommandException;
+import com.redhat.thermostat.cli.SimpleArguments;
+import com.redhat.thermostat.test.TestCommandContextFactory;
+
+public class ShellCommandTest {
+
+    private ShellCommand cmd;
+
+    @Before
+    public void setUp() {
+        cmd = new ShellCommand();
+    }
+
+    @After
+    public void tearDown() {
+        cmd = null;
+        TerminalFactory.registerFlavor(Flavor.UNIX, UnixTerminal.class);
+        TerminalFactory.reset();
+    }
+
+    @Test
+    public void testBasic() throws CommandException {
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ctxFactory.setInput("help\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        assertEquals("Thermostat > help\nThermostat > exit\n", ctxFactory.getOutput());
+    }
+
+    @Test
+    public void testDoNothingWithoutInput() throws CommandException {
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ctxFactory.setInput("\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        assertEquals("Thermostat > \nThermostat > exit\n", ctxFactory.getOutput());
+    }
+
+    @Test(expected=CommandException.class)
+    public void testIOException() throws CommandException {
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ctxFactory.setInputThrowsException(new IOException());
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+    }
+
+    @Test(expected=CommandException.class)
+    public void testTerminalRestoreException() throws CommandException {
+        TerminalFactory.configure(Type.UNIX);
+        TerminalFactory.registerFlavor(Flavor.UNIX, TestTerminal.class);
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ctxFactory.setInputThrowsException(new IOException());
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+    }
+
+    @Test
+    public void testName() {
+        assertEquals("shell", cmd.getName());
+    }
+
+    @Test
+    public void testDescription() {
+        assertEquals("launches the Thermostat interactive shell", cmd.getDescription());
+    }
+
+    @Test
+    public void testUsage() {
+        assertEquals("launches the Thermostat interactive shell", cmd.getUsage());
+    }
+
+    @Test
+    public void testAcceptedArguments() {
+        assertEquals(Collections.EMPTY_LIST, cmd.getAcceptedArguments());
+    }
+
+    @Test
+    public void testStorageRequired() {
+        assertFalse(cmd.isStorageRequired());
+    }
+}

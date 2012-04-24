@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.test;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
@@ -52,7 +52,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
 
     private ByteArrayOutputStream out;
     private ByteArrayOutputStream err;
-    private ByteArrayInputStream in;
+    private ExceptionThrowingInputStream in;
 
     public TestCommandContextFactory() {
         reset();
@@ -130,8 +130,8 @@ public class TestCommandContextFactory extends CommandContextFactory {
         return new String(out.toByteArray());
     }
 
-    void setInput(String input) {
-        in = new ByteArrayInputStream(input.getBytes());
+    public void setInput(String input) {
+        in.setInput(input);
     }
 
     public Object getError() {
@@ -141,11 +141,15 @@ public class TestCommandContextFactory extends CommandContextFactory {
     public void reset() {
         out = new ByteArrayOutputStream();
         err = new ByteArrayOutputStream();
-        in = new ByteArrayInputStream(new byte[0]);
+        in = new ExceptionThrowingInputStream();
         console = new TestConsole();
     }
 
     public Console getConsole() {
         return console;
+    }
+
+    public void setInputThrowsException(IOException ex) {
+        in.setException(ex);
     }
 }
