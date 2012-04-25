@@ -49,6 +49,7 @@ import static org.mockito.Mockito.times;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -60,6 +61,7 @@ import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
@@ -155,6 +157,9 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verifyTimerGetsStartedOnConstruction() {
+        verify(mainWindowTimer).setDelay(3);
+        verify(mainWindowTimer).setTimeUnit(TimeUnit.SECONDS);
+        verify(mainWindowTimer).setSchedulingType(SchedulingType.FIXED_RATE);
         verify(mainWindowTimer).start();
     }
 

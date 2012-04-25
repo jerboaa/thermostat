@@ -52,6 +52,7 @@ import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -127,8 +128,9 @@ public class MainWindowControllerImpl implements MainWindowController {
             }
         });
         backgroundUpdater.setInitialDelay(0);
-        backgroundUpdater.setDelay(10);
+        backgroundUpdater.setDelay(3);
         backgroundUpdater.setTimeUnit(TimeUnit.SECONDS);
+        backgroundUpdater.setSchedulingType(SchedulingType.FIXED_RATE);
     }
 
     @Override
