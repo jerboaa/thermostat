@@ -68,7 +68,7 @@ public class ProcessStatusInfoBuilder {
             logger.log(Level.WARNING, "unable to read stat info for " + pid);
         }
 
-        return new ProcessStatusInfo(-1, -1, -1);
+        return null;
     }
 
     private ProcessStatusInfo build(Reader r) throws IOException {

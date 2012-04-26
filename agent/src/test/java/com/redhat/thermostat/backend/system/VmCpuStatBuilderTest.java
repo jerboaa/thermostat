@@ -76,6 +76,28 @@ public class VmCpuStatBuilderTest {
     }
 
     @Test
+    public void testBuildNullOnInsufficentInformation() {
+        int PID = 0;
+        int cpuCount = 0;
+        long ticksPerSecond = 0;
+        final long CLOCK1 = 10000;
+        final long CLOCK2 = 20000;
+        final ProcessStatusInfo initialInfo = new ProcessStatusInfo(PID, 1, 2);
+        final ProcessStatusInfo laterInfo = null;
+
+        Clock clock = mock(Clock.class);
+        when(clock.getMonotonicTimeNanos()).thenReturn((long) (CLOCK1 * 1E6)).thenReturn((long) (CLOCK2 * 1E6));
+
+        ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
+        when(statusBuilder.build(any(Integer.class))).thenReturn(initialInfo).thenReturn(laterInfo).thenReturn(null);
+
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
+
+        builder.learnAbout(PID);
+        assertEquals(null, builder.build(PID));
+    }
+
+    @Test
     public void testSaneBuild() {
         final int PID = 0;
 

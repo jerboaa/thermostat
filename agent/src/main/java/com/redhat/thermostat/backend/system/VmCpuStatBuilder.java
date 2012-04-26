@@ -67,12 +67,9 @@ public class VmCpuStatBuilder {
     }
 
     /**
-     * To build the stat, this method needs to be called repeatedly. The first
-     * time (in the entire run time) it is called, the result will most be
-     * useless. The second (and later calls) should produce usable results.
-     *
-     * @param pid
-     * @return
+     * @param pid the process id
+     * @return an object representing the cpu usage of the process, or null if
+     * the information can not be found.
      */
     public synchronized VmCpuStat build(Integer pid) {
         if (!lastProcessTicks.containsKey(pid) || !lastProcessTickTime.containsKey(pid)) {
@@ -80,6 +77,9 @@ public class VmCpuStatBuilder {
         }
 
         ProcessStatusInfo info = statusBuilder.build(pid);
+        if (info == null) {
+            return null;
+        }
         long miliTime = clock.getRealTimeMillis();
         long time = clock.getMonotonicTimeNanos();
         long programTicks = (info.getKernelTime() + info.getUserTime());
@@ -113,6 +113,9 @@ public class VmCpuStatBuilder {
     public synchronized void learnAbout(int pid) {
         long time = clock.getMonotonicTimeNanos();
         ProcessStatusInfo info = statusBuilder.build(pid);
+        if (info == null) {
+            logger.log(Level.WARNING, "can not learn about pid " + pid + " : statusBuilder returned null");
+        }
 
         lastProcessTickTime.put(pid, time);
         lastProcessTicks.put(pid, info.getUserTime()+ info.getKernelTime());

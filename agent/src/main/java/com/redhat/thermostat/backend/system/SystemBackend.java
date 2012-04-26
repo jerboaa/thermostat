@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -161,7 +162,10 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
                 for (Integer pid : pidsToMonitor) {
                     if (vmCpuBuilder.knowsAbout(pid)) {
-                        vmCpuStats.putVmCpuStat(vmCpuBuilder.build(pid));
+                        VmCpuStat dataBuilt = vmCpuBuilder.build(pid);
+                        if (dataBuilt != null) {
+                            vmCpuStats.putVmCpuStat(dataBuilt);
+                        }
                     } else {
                         vmCpuBuilder.learnAbout(pid);
                     }
