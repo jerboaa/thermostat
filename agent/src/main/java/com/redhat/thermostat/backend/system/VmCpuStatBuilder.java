@@ -38,11 +38,16 @@ package com.redhat.thermostat.backend.system;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.model.VmCpuStat;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class VmCpuStatBuilder {
+
+    private static final Logger logger = LoggingUtils.getLogger(VmCpuStatBuilder.class);
 
     // pid -> ticks
     private final Map<Integer, Long> lastProcessTicks = new HashMap<Integer, Long>();
@@ -50,11 +55,13 @@ public class VmCpuStatBuilder {
     private final Map<Integer, Long> lastProcessTickTime = new HashMap<Integer, Long>();
 
     private final Clock clock;
+    private final int cpuCount;
     private final long ticksPerSecond;
     private final ProcessStatusInfoBuilder statusBuilder;
 
-    public VmCpuStatBuilder(Clock clock, long ticksPerSecond, ProcessStatusInfoBuilder statusBuilder) {
+    public VmCpuStatBuilder(Clock clock, int cpuCount, long ticksPerSecond, ProcessStatusInfoBuilder statusBuilder) {
         this.clock = clock;
+        this.cpuCount = cpuCount;
         this.ticksPerSecond = ticksPerSecond;
         this.statusBuilder = statusBuilder;
     }
@@ -81,7 +88,17 @@ public class VmCpuStatBuilder {
         double timeDelta = (time - lastProcessTickTime.get(pid)) * 1E-9;
         long programTicksDelta = programTicks - lastProcessTicks.get(pid);
         // 100 as in 100 percent.
-        cpuLoad = programTicksDelta * (100.0 / timeDelta / ticksPerSecond);
+        cpuLoad = programTicksDelta * (100.0 / timeDelta / ticksPerSecond / cpuCount);
+
+        if (cpuLoad < 0.0 || cpuLoad > 100.0) {
+            logger.log(Level.WARNING, "cpu load for " + pid + " is outside [0,100]: " + cpuLoad);
+            logger.log(Level.WARNING, "  (" + pid + ") programTicks: " + programTicks);
+            logger.log(Level.WARNING, "  (" + pid + ") programTicksDelta: " + programTicksDelta);
+            logger.log(Level.WARNING, "  (" + pid + ") time: " + time);
+            logger.log(Level.WARNING, "  (" + pid + ") timeDelta: " + timeDelta);
+            logger.log(Level.WARNING, "  (" + pid + ") ticksPerSecond: " + ticksPerSecond);
+            logger.log(Level.WARNING, "  (" + pid + ") cpuCount: " + cpuCount);
+        }
 
         lastProcessTicks.put(pid, programTicks);
         lastProcessTickTime.put(pid, time);

@@ -54,8 +54,9 @@ public class VmCpuStatBuilderTest {
     public void testBuilderKnowsNothing() {
         Clock clock = mock(Clock.class);
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
+        int cpuCount = 0;
         long ticksPerSecond = 0;
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, ticksPerSecond, statusBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
 
         assertFalse(builder.knowsAbout(0));
         assertFalse(builder.knowsAbout(1));
@@ -67,15 +68,19 @@ public class VmCpuStatBuilderTest {
     @Test(expected = IllegalArgumentException.class)
     public void testBuilderThrowsOnBuildOfUnknownPid() {
         Clock clock = mock(Clock.class);
+        int cpuCount = 0;
         long ticksPerSecond = 0;
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, ticksPerSecond, statusBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, statusBuilder);
         builder.build(0);
     }
 
     @Test
     public void testSaneBuild() {
         final int PID = 0;
+
+        final int CPU_COUNT = 3;
+
         final long USER_INITIAL_TICKS = 1;
         final long KERNEL_INITIAL_TICKS = 1;
 
@@ -91,7 +96,8 @@ public class VmCpuStatBuilderTest {
                 100.0
                 * ((USER_LATER_TICKS + KERNEL_LATER_TICKS) - (USER_INITIAL_TICKS + KERNEL_INITIAL_TICKS))
                 / TICKS_PER_SECOND
-                / ((CLOCK2 - CLOCK1) * 1E-3 /* millis to seconds */);
+                / ((CLOCK2 - CLOCK1) * 1E-3 /* millis to seconds */)
+                / CPU_COUNT;
 
         final ProcessStatusInfo initialInfo = new ProcessStatusInfo(PID, USER_INITIAL_TICKS, KERNEL_INITIAL_TICKS);
         final ProcessStatusInfo laterInfo = new ProcessStatusInfo(PID, USER_LATER_TICKS, KERNEL_LATER_TICKS);
@@ -103,7 +109,7 @@ public class VmCpuStatBuilderTest {
         ProcessStatusInfoBuilder statusBuilder = mock(ProcessStatusInfoBuilder.class);
         when(statusBuilder.build(any(Integer.class))).thenReturn(initialInfo).thenReturn(laterInfo).thenReturn(null);
 
-        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, TICKS_PER_SECOND, statusBuilder);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, CPU_COUNT, TICKS_PER_SECOND, statusBuilder);
 
         builder.learnAbout(PID);
         VmCpuStat stat = builder.build(PID);

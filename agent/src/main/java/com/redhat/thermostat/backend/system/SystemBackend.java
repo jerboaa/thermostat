@@ -114,11 +114,13 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         Clock clock = new SystemClock();
         ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
-        vmCpuBuilder = new VmCpuStatBuilder(clock, ticksPerSecond, builder);
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
         cpuStatBuilder = new CpuStatBuilder(source);
         memoryStatBuilder = new MemoryStatBuilder(source);
+
+        int cpuCount = hostInfoBuilder.getCpuInfo().count;
+        vmCpuBuilder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, builder);
     }
 
     @Override

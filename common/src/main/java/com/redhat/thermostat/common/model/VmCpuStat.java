@@ -58,7 +58,8 @@ public class VmCpuStat implements TimeStampedPojo {
     }
 
     /**
-     * The cpu load in percent (as in 100.0 for 100%)
+     * The cpu load in percent (as in 100.0 for 100%). This value should be
+     * normalized to be in the range [0, 100]
      */
     public double getCpuLoad() {
         return cpuLoad;
