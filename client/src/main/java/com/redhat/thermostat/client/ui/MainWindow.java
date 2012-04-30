@@ -44,6 +44,8 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -252,6 +254,20 @@ public class MainWindow extends JFrame implements MainView {
 
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(shutdownAction);
+
+        addComponentListener(new ComponentAdapter() {
+
+            @Override
+            public void componentShown(ComponentEvent e) {
+                fireViewAction(Action.VISIBLE);
+            }
+
+            @Override
+            public void componentHidden(ComponentEvent e) {
+                fireViewAction(Action.HIDDEN);
+            }
+        });
+
     }
 
     private void setupMenus() {
@@ -307,7 +323,7 @@ public class MainWindow extends JFrame implements MainView {
             }
         });
         editMenu.add(configureClientMenuItem);
-        
+
         editMenu.addSeparator();
         JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE));
         historyModeMenuItem.setName("historyModeSwitch");
@@ -318,7 +334,7 @@ public class MainWindow extends JFrame implements MainView {
                 fireViewAction(Action.SWITCH_HISTORY_MODE);
             }
         });
-        
+
         editMenu.add(historyModeMenuItem);
         JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
@@ -549,7 +565,7 @@ public class MainWindow extends JFrame implements MainView {
     public void showMainWindow() {
         try {
             new EdtHelper().callAndWait(new Runnable() {
-                
+
                 @Override
                 public void run() {
                     pack();
@@ -598,7 +614,7 @@ public class MainWindow extends JFrame implements MainView {
                 public String call() throws Exception {
                     return searchField.getText();
                 }
-                
+
             });
         } catch (InvocationTargetException e) {
             throw new RuntimeException(e);

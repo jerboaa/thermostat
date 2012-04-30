@@ -49,10 +49,14 @@ import com.redhat.thermostat.client.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 
 public class VmOverviewPanel extends JPanel implements VmOverviewView {
 
     private static final long serialVersionUID = 3280274963512229970L;
+
+    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
     private final ChangeableText pid = new ChangeableText("");
     private final ChangeableText startTimeStamp = new ChangeableText("");
@@ -66,6 +70,27 @@ public class VmOverviewPanel extends JPanel implements VmOverviewView {
 
     public VmOverviewPanel() {
         initializePanel();
+        addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                notifier.fireAction(Action.VISIBLE);
+            }
+
+            @Override
+            public void componentHidden(Component component) {
+                notifier.fireAction(Action.HIDDEN);
+            }
+        });
+    }
+
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
     }
 
     @Override

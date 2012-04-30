@@ -40,12 +40,11 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.Component;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmRef;
 
-public class VmInformationController implements AsyncUiFacade {
+public class VmInformationController {
 
     private final VmInformationView view;
 
@@ -69,39 +68,21 @@ public class VmInformationController implements AsyncUiFacade {
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_MEMORY), memoryController.getComponent());
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_GC), gcController.getComponent());
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_CLASSES), classesController.getComponent());
-    }
 
-    @Override
-    public void start() {
-        overviewController.start();
-        cpuController.start();
-        memoryController.start();
-        gcController.start();
-        classesController.start();
-
-    }
-
-    @Override
-    public void stop() {
-        overviewController.stop();
-        cpuController.stop();
-        memoryController.stop();
-        gcController.stop();
-        classesController.stop();
     }
 
     public Component getComponent() {
         return view.getUiComponent();
     }
-    
+
     public int getSelectedChildID() {
         return view.getSelectedChildID();
     }
-    
+
     public void selectChildID(int id) {
         view.selectChildID(id);
     }
-    
+
     public int getNumChildren() {
         return view.getNumChildren();
     }

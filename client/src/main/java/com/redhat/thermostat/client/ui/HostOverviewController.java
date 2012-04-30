@@ -41,8 +41,6 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -51,8 +49,13 @@ import java.util.logging.Logger;
 
 import javax.swing.SwingWorker;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.HostOverviewView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -62,7 +65,7 @@ import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class HostOverviewController implements AsyncUiFacade {
+public class HostOverviewController {
 
     private static final Logger logger = LoggingUtils.getLogger(HostOverviewController.class);
 
@@ -74,7 +77,7 @@ public class HostOverviewController implements AsyncUiFacade {
 
     private final HostOverviewView view;
 
-    public HostOverviewController(HostRef ref) {
+    public HostOverviewController(final HostRef ref) {
         this.ref = ref;
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
         hostInfoDAO = df.getHostInfoDAO();
@@ -86,10 +89,45 @@ public class HostOverviewController implements AsyncUiFacade {
         networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV4_COLUMN));
         networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV6_COLUMN));
 
-        backgroundUpdateTimer = new Timer();
+        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        backgroundUpdateTimer.setAction(new Runnable() {
+            @Override
+            public void run() {
+                HostInfo hostInfo = hostInfoDAO.getHostInfo(ref);
+                view.setHostName(hostInfo.getHostname());
+                view.setOsName(hostInfo.getOsName());
+                view.setOsKernel(hostInfo.getOsKernel());
+                view.setCpuModel(hostInfo.getCpuModel());
+                view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
+                view.setTotalMemory(String.valueOf(hostInfo.getTotalMemory()));
+
+                doNetworkTableUpdateAsync();
+            }
+        });
+        backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
+        backgroundUpdateTimer.setTimeUnit(TimeUnit.SECONDS);
+        backgroundUpdateTimer.setInitialDelay(0);
+        backgroundUpdateTimer.setDelay(5);
+
         view = ApplicationContext.getInstance().getViewFactory().getView(HostOverviewView.class);
 
         view.setNetworkTableColumns(networkTableColumnVector.toArray());
+
+        view.addActionListener(new ActionListener<Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stop();
+                        break;
+                    case VISIBLE:
+                        start();
+                        break;
+                    default:
+                        throw new NotImplementedException("unhandled: " + actionEvent.getActionId());
+                }
+            }
+        });
     }
 
     private void doNetworkTableUpdateAsync() {
@@ -128,28 +166,12 @@ public class HostOverviewController implements AsyncUiFacade {
         }
     }
 
-    @Override
-    public void start() {
-        backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                HostInfo hostInfo = hostInfoDAO.getHostInfo(ref);
-                view.setHostName(hostInfo.getHostname());
-                view.setOsName(hostInfo.getOsName());
-                view.setOsKernel(hostInfo.getOsKernel());
-                view.setCpuModel(hostInfo.getCpuModel());
-                view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
-                view.setTotalMemory(String.valueOf(hostInfo.getTotalMemory()));
-
-                doNetworkTableUpdateAsync();
-            }
-        }, 0, TimeUnit.SECONDS.toMillis(5));
-
+    private void start() {
+        backgroundUpdateTimer.start();
     }
 
-    @Override
-    public void stop() {
-        backgroundUpdateTimer.cancel();
+    private void stop() {
+        backgroundUpdateTimer.stop();
     }
 
     public Component getComponent() {

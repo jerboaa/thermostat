@@ -44,6 +44,8 @@ import com.redhat.thermostat.common.dao.Ref;
 public interface MainView {
 
     enum Action {
+        VISIBLE,
+        HIDDEN,
         HOST_VM_TREE_FILTER,
         HOST_VM_SELECTION_CHANGED,
         SHOW_AGENT_CONFIG,

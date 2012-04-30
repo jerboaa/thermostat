@@ -41,18 +41,21 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 import java.awt.Component;
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.VmOverviewView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 
-class VmOverviewController implements AsyncUiFacade {
+class VmOverviewController {
 
     private final VmRef ref;
     private final VmInfoDAO dao;
@@ -67,14 +70,27 @@ class VmOverviewController implements AsyncUiFacade {
         this.view = ApplicationContext.getInstance().getViewFactory().getView(VmOverviewView.class);
 
         dao = ApplicationContext.getInstance().getDAOFactory().getVmInfoDAO();
+        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
         vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
-        timer = new Timer();
-    }
 
-    @Override
-    public void start() {
-        timer.scheduleAtFixedRate(new TimerTask() {
+        view.addActionListener(new ActionListener<VmOverviewView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch(actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stop();
+                        break;
+                    case VISIBLE:
+                        start();
+                        break;
+                    default:
+                        throw new NotImplementedException("unknown event: " + actionEvent.getActionId());
+                }
+            }
+        });
+
+        timer.setAction(new Runnable() {
 
             @Override
             public void run() {
@@ -100,14 +116,19 @@ class VmOverviewController implements AsyncUiFacade {
                         actualVmName, actualVmVersion));
                 view.setVmArguments(info.getVmArguments());
             }
-
-        }, 0, TimeUnit.SECONDS.toMillis(5));
-
+        });
+        timer.setInitialDelay(0);
+        timer.setDelay(5);
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
     }
 
-    @Override
-    public void stop() {
-        timer.cancel();
+    private void start() {
+        timer.start();
+    }
+
+    private void stop() {
+        timer.stop();
     }
 
     public Component getComponent() {

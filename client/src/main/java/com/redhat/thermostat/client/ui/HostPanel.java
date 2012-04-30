@@ -61,7 +61,6 @@ public class HostPanel extends JPanel {
         this.facade = facade;
 
         init();
-        addHierarchyListener(new AsyncFacadeManager(facade));
     }
 
     private void init() {

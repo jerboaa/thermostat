@@ -43,8 +43,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.VmMemoryView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -54,7 +57,7 @@ import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 
-class VmMemoryController implements AsyncUiFacade {
+class VmMemoryController {
 
     private final VmMemoryView view;
     private final VmMemoryStatDAO dao;
@@ -94,18 +97,34 @@ class VmMemoryController implements AsyncUiFacade {
             }
         });
         timer.setInitialDelay(0);
-        timer.setDelay(10);
-        timer.setTimeUnit(TimeUnit.MILLISECONDS);
+        timer.setDelay(1);
+        timer.setTimeUnit(TimeUnit.SECONDS);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
+
+        view.addActionListener(new ActionListener<VmMemoryView.Action>() {
+
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch(actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stop();
+                        break;
+                    case VISIBLE:
+                        start();
+                        break;
+                    default:
+                        throw new NotImplementedException("unknown event: " + actionEvent.getActionId());
+                }
+            }
+        });
+
     }
 
-    @Override
-    public void start() {
+    private void start() {
         timer.start();
     }
 
-    @Override
-    public void stop() {
+    private void stop() {
         timer.stop();
     }
 

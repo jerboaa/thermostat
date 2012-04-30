@@ -53,6 +53,8 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class VmClassStatPanel extends JPanel implements VmClassStatView {
@@ -60,6 +62,8 @@ public class VmClassStatPanel extends JPanel implements VmClassStatView {
     private static final long serialVersionUID = 1067532168697544774L;
 
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
+
+    private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
 
     public VmClassStatPanel() {
         // any name works
@@ -80,6 +84,28 @@ public class VmClassStatPanel extends JPanel implements VmClassStatView {
         Component chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
         add(chartPanel, BorderLayout.CENTER);
+
+        addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                notifier.fireAction(Action.VISIBLE);
+            }
+
+            @Override
+            public void componentHidden(Component component) {
+                notifier.fireAction(Action.HIDDEN);
+            }
+        });
+    }
+
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
     }
 
     @Override

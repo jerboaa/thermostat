@@ -44,13 +44,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.VmGcView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
@@ -61,7 +64,7 @@ import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 
-class VmGcController implements AsyncUiFacade {
+class VmGcController {
 
     private final VmRef ref;
     private final VmGcView view;
@@ -71,35 +74,51 @@ class VmGcController implements AsyncUiFacade {
 
     private final Set<String> addedCollectors = new TreeSet<String>();
 
-    private final Timer timer = new Timer();
+    private final Timer timer;
 
     public VmGcController(VmRef ref) {
         this.ref = ref;
         this.view = ApplicationContext.getInstance().getViewFactory().getView(VmGcView.class);
+        this.timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
         gcDao = df.getVmGcStatDAO();
         memDao = df.getVmMemoryStatDAO();
-    }
 
-    @Override
-    public void start() {
-        timer.scheduleAtFixedRate(new TimerTask() {
+        view.addActionListener(new ActionListener<VmGcView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stop();
+                        break;
+                    case VISIBLE:
+                        start();
+                        break;
+                    default:
+                        throw new NotImplementedException("unkonwn action: " + actionEvent.getActionId());
+                }
+            }
+        });
+
+        timer.setAction(new Runnable() {
             @Override
             public void run() {
                 doUpdateCollectorData();
             }
-
-        }, 0, TimeUnit.SECONDS.toMillis(5));
+        });
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+        timer.setInitialDelay(0);
+        timer.setDelay(5);
+        timer.setTimeUnit(TimeUnit.SECONDS);
     }
 
-    @Override
-    public void stop() {
-        for (String name: addedCollectors) {
-            view.removeChart(name);
-        }
-        addedCollectors.clear();
-        timer.cancel();
+    private void start() {
+        timer.start();
+    }
+
+    private void stop() {
+         timer.stop();
     }
 
     // FIXME

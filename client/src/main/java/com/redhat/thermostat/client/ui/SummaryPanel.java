@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.ui;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,7 +60,7 @@ public class SummaryPanel extends JPanel {
 
     private final SummaryPanelFacade facade;
 
-    public SummaryPanel(SummaryPanelFacade facade) {
+    public SummaryPanel(final SummaryPanelFacade facade) {
         this.facade = facade;
 
         setLayout(new BorderLayout());
@@ -84,7 +85,17 @@ public class SummaryPanel extends JPanel {
         issuesPanel.setBorder(Components.smallBorder());
         add(issuesPanel, BorderLayout.PAGE_END);
 
-        addHierarchyListener(new AsyncFacadeManager(facade));
+        addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                facade.start();
+            }
+
+            @Override
+            public void componentHidden(Component component) {
+                facade.stop();
+            }
+        });
     }
 
     public JPanel createIssuesPanel() {

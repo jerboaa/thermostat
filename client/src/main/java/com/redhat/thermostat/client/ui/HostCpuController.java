@@ -41,7 +41,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.ui.HostCpuView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -53,7 +56,7 @@ import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.HostInfo;
 
-public class HostCpuController implements AsyncUiFacade {
+public class HostCpuController {
 
     private final HostCpuView view;
     private final Timer backgroundUpdateTimer;
@@ -83,6 +86,23 @@ public class HostCpuController implements AsyncUiFacade {
         backgroundUpdateTimer.setDelay(5);
         backgroundUpdateTimer.setTimeUnit(TimeUnit.SECONDS);
         backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
+
+        view.addActionListener(new ActionListener<HostCpuView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case VISIBLE:
+                        start();
+                        break;
+                    case HIDDEN:
+                        stop();
+                        break;
+                    default:
+                        throw new NotImplementedException("unhandled action: " + actionEvent.getActionId());
+                }
+            }
+        });
+
     }
 
     // TODO: Consider doing this in a background thread (move to view and use SwingWorker or such).
@@ -95,13 +115,11 @@ public class HostCpuController implements AsyncUiFacade {
         doCpuChartUpdate();
     }
 
-    @Override
-    public void start() {
+    private void start() {
         backgroundUpdateTimer.start();
     }
 
-    @Override
-    public void stop() {
+    private void stop() {
         backgroundUpdateTimer.stop();
     }
 

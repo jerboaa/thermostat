@@ -57,11 +57,15 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class VmGcPanel extends JPanel implements VmGcView {
 
     private static final long serialVersionUID = -4924051863887499866L;
+
+    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
     private final Map<String, TimeSeriesCollection> dataset = new HashMap<>();
     private final Map<String, JPanel> subPanels = new HashMap<>();
@@ -77,6 +81,28 @@ public class VmGcPanel extends JPanel implements VmGcView {
         gcPanelConstraints.fill = GridBagConstraints.BOTH;
         gcPanelConstraints.weightx = 1;
         gcPanelConstraints.weighty = 1;
+
+        addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                notifier.fireAction(Action.VISIBLE);
+            }
+
+            @Override
+            public void componentHidden(Component component) {
+                notifier.fireAction(Action.HIDDEN);
+            }
+        });
+    }
+
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
     }
 
     @Override

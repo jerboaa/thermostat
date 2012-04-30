@@ -54,20 +54,6 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     }
 
     @Override
-    public void start() {
-        overviewController.start();
-        cpuController.start();
-        memoryController.start();
-    }
-
-    @Override
-    public void stop() {
-        overviewController.stop();
-        cpuController.stop();
-        memoryController.stop();
-    }
-
-    @Override
     public HostOverviewController getOverviewController() {
         return overviewController;
     }

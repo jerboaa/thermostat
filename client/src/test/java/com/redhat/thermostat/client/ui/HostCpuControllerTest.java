@@ -56,8 +56,10 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.client.ui.HostCpuView;
+import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -78,6 +80,7 @@ public class HostCpuControllerTest {
 
     private Timer timer;
 
+    private ActionListener<HostCpuView.Action> viewListener;
     private Runnable timerAction;
 
     @Before
@@ -108,7 +111,10 @@ public class HostCpuControllerTest {
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
+        // Set up View
         view = mock(HostCpuView.class);
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         ViewFactory viewFactory = mock(ViewFactory.class);
         when(viewFactory.getView(eq(HostCpuView.class))).thenReturn(view);
 
@@ -118,6 +124,7 @@ public class HostCpuControllerTest {
         controller = new HostCpuController(host);
 
         timerAction = actionCaptor.getValue();
+        viewListener = viewArgumentCaptor.getValue();
     }
 
     @After
@@ -131,7 +138,7 @@ public class HostCpuControllerTest {
 
     @Test
     public void testTimer() {
-        controller.start();
+        viewListener.actionPerformed(new ActionEvent<>(view, HostCpuView.Action.VISIBLE));
 
         verify(timer).setAction(isNotNull(Runnable.class));
         verify(timer).setDelay(5);
@@ -140,7 +147,7 @@ public class HostCpuControllerTest {
         verify(timer).setSchedulingType(SchedulingType.FIXED_RATE);
         verify(timer).start();
 
-        controller.stop();
+        viewListener.actionPerformed(new ActionEvent<>(view, HostCpuView.Action.HIDDEN));
 
         verify(timer).stop();
     }

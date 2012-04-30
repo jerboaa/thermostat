@@ -51,10 +51,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
+import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -78,6 +79,7 @@ public class VmMemoryControllerTest {
     private Generation gen;
     private VmMemoryController controller;
     private VmMemoryView view;
+    private ActionListener<VmMemoryView.Action> viewListener;
     private Runnable timerAction;
 
 
@@ -119,6 +121,9 @@ public class VmMemoryControllerTest {
 
         // Setup view
         view = mock(VmMemoryView.class);
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
+
         ViewFactory viewFactory = mock(ViewFactory.class);
         when(viewFactory.getView(eq(VmMemoryView.class))).thenReturn(view);
         ApplicationContext.getInstance().setViewFactory(viewFactory);
@@ -128,6 +133,7 @@ public class VmMemoryControllerTest {
 
         controller = new VmMemoryController(ref);
         timerAction = actionCaptor.getValue();
+        viewListener = viewArgumentCaptor.getValue();
 
     }
 
@@ -139,12 +145,12 @@ public class VmMemoryControllerTest {
     @Test
     public void testTimer() {
 
-        controller.start();
+        viewListener.actionPerformed(new ActionEvent<>(view, VmMemoryView.Action.VISIBLE));
 
         verify(timer).start();
         verify(timer).setSchedulingType(SchedulingType.FIXED_RATE);
 
-        controller.stop();
+        viewListener.actionPerformed(new ActionEvent<>(view, VmMemoryView.Action.HIDDEN));
 
         verify(timer).stop();
     }

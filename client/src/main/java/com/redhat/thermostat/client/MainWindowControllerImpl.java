@@ -78,10 +78,8 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private boolean showHistory;
 
-    private AsyncUiFacade oldController = null;
-
     private VmInformationControllerProvider vmInfoControllerProvider;
-    
+
     public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
         this.facadeFactory = facadeFactory;
 
@@ -91,13 +89,12 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmsDAO = daoFactory.getVmInfoDAO();
 
         initView(view);
-        
+
         vmInfoControllerProvider = new VmInformationControllerProvider();
-        
+
         appInfo = new ApplicationInfo();
         view.setWindowTitle(appInfo.getName());
         initializeTimer();
-        start();
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {
@@ -133,13 +130,11 @@ public class MainWindowControllerImpl implements MainWindowController {
         backgroundUpdater.setSchedulingType(SchedulingType.FIXED_RATE);
     }
 
-    @Override
-    public void start() {
+    private void startBackgroundUpdates() {
         backgroundUpdater.start();
     }
 
-    @Override
-    public void stop() {
+    public void stopBackgroundUpdates() {
         backgroundUpdater.stop();
     }
 
@@ -162,6 +157,12 @@ public class MainWindowControllerImpl implements MainWindowController {
             public void actionPerformed(ActionEvent<MainView.Action> evt) {
                 MainView.Action action = evt.getActionId();
                 switch (action) {
+                case VISIBLE:
+                    startBackgroundUpdates();
+                    break;
+                case HIDDEN:
+                    stopBackgroundUpdates();
+                    break;
                 case HOST_VM_SELECTION_CHANGED:
                     updateView();
                     break;
@@ -183,7 +184,6 @@ public class MainWindowControllerImpl implements MainWindowController {
                     break;
                 case SHUTDOWN:
                     view.hideMainWindow();
-                    stop();
                     ApplicationContext.getInstance().getTimerFactory().shutdown();
                     break;
                 default:
@@ -229,11 +229,6 @@ public class MainWindowControllerImpl implements MainWindowController {
         // this is quite an ugly method. there must be a cleaner way to do this
         Ref ref = view.getSelectedHostOrVm();
 
-        if (oldController != null) {
-            oldController.stop();
-            oldController = null;
-        }
-
         if (ref == null) {
             view.setSubView(new SummaryPanel(facadeFactory.getSummaryPanel()));
         } else if (ref instanceof HostRef) {
@@ -244,8 +239,6 @@ public class MainWindowControllerImpl implements MainWindowController {
             VmInformationController vmInformation =
                     vmInfoControllerProvider.getVmInfoController(vmRef);
             view.setSubView(vmInformation.getComponent());
-            vmInformation.start();
-            oldController = vmInformation;
         } else {
             throw new IllegalArgumentException("unknown type of ref");
         }

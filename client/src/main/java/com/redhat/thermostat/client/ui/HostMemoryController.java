@@ -41,13 +41,16 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 import java.awt.Component;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.HostMemoryView.Action;
 import com.redhat.thermostat.client.ui.HostMemoryView.GraphVisibilityChangeListener;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -57,7 +60,7 @@ import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.model.MemoryType;
 
-public class HostMemoryController implements AsyncUiFacade {
+public class HostMemoryController {
 
     private final HostMemoryView view;
 
@@ -68,7 +71,7 @@ public class HostMemoryController implements AsyncUiFacade {
     private final Timer backgroundUpdateTimer;
     private final GraphVisibilityChangeListener listener = new ShowHideGraph();
 
-    public HostMemoryController(HostRef ref) {
+    public HostMemoryController(final HostRef ref) {
         this.ref = ref;
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
         hostInfoDAO = daos.getHostInfoDAO();
@@ -84,30 +87,46 @@ public class HostMemoryController implements AsyncUiFacade {
         view.addMemoryChart(MemoryType.BUFFERS.name(), localize(LocaleResources.HOST_BUFFERS));
 
         view.addGraphVisibilityListener(listener);
+        view.addActionListener(new ActionListener<HostMemoryView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stopBackgroundUpdates();
+                        break;
+                    case VISIBLE:
+                        startBackgroundUpdates();
+                        break;
+                    default:
+                        throw new NotImplementedException("action event not handled: " + actionEvent.getActionId());
+                }
+            }
+        });
 
-        backgroundUpdateTimer = new Timer();
-    }
-
-    @Override
-    public void start() {
-        for (MemoryType type : MemoryType.values()) {
-            view.showMemoryChart(type.name());
-        }
-
-        backgroundUpdateTimer.scheduleAtFixedRate(new TimerTask() {
+        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        backgroundUpdateTimer.setAction(new Runnable() {
             @Override
             public void run() {
                 view.setTotalMemory(String.valueOf(hostInfoDAO.getHostInfo(ref).getTotalMemory()));
                 doMemoryChartUpdate();
             }
-
-        }, 0, TimeUnit.SECONDS.toMillis(5));
-
+        });
+        backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
+        backgroundUpdateTimer.setTimeUnit(TimeUnit.SECONDS);
+        backgroundUpdateTimer.setInitialDelay(0);
+        backgroundUpdateTimer.setDelay(5);
     }
 
-    @Override
-    public void stop() {
-        backgroundUpdateTimer.cancel();
+    private void startBackgroundUpdates() {
+        for (MemoryType type : MemoryType.values()) {
+            view.showMemoryChart(type.name());
+        }
+
+        backgroundUpdateTimer.start();
+    }
+
+    private void stopBackgroundUpdates() {
+        backgroundUpdateTimer.stop();
         for (MemoryType type : MemoryType.values()) {
             view.hideMemoryChart(type.name());
         }

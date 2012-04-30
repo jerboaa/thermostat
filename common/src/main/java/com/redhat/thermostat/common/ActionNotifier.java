@@ -58,8 +58,8 @@ public class ActionNotifier<T extends Enum<?>> {
         listeners.remove(listener);
     }
 
-    public void fireAction(T testId1) {
-        ActionEvent<T> action = new ActionEvent<>(source, testId1);
+    public void fireAction(T actionId) {
+        ActionEvent<T> action = new ActionEvent<>(source, actionId);
         for (ActionListener<T> listener : listeners) {
             listener.actionPerformed(action);
         }

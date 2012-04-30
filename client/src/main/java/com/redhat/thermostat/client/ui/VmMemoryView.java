@@ -38,9 +38,19 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Component;
 
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.View;
 
 public interface VmMemoryView extends View {
+
+    enum Action {
+        VISIBLE,
+        HIDDEN,
+    }
+
+    void addActionListener(ActionListener<Action> listener);
+
+    void removeActionListener(ActionListener<Action> listener);
 
     void addRegion(String humanReadableName);
 

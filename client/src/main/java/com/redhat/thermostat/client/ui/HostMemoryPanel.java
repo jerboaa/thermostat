@@ -41,8 +41,6 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -63,11 +61,17 @@ import com.redhat.thermostat.client.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionListener {
+public class HostMemoryPanel extends JPanel implements HostMemoryView {
 
     private static final long serialVersionUID = -6971357935957876582L;
+
+    private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
+
+    private final MemoryCheckboxListener memoryCheckboxListener = new MemoryCheckboxListener();
 
     private final ChangeableText totalMemory = new ChangeableText("");
 
@@ -79,6 +83,17 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionLis
 
     public HostMemoryPanel() {
         initializePanel();
+
+        addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                notifier.fireAction(Action.VISIBLE);
+            }
+            @Override
+            public void componentHidden(Component component) {
+                notifier.fireAction(Action.HIDDEN);
+            }
+        });
     }
 
     @Override
@@ -102,7 +117,7 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionLis
                 JCheckBox newCheckBox = new JCheckBox(humanReadableName);
                 newCheckBox.setActionCommand(tag);
                 newCheckBox.setSelected(true);
-                newCheckBox.addActionListener(HostMemoryPanel.this);
+                newCheckBox.addActionListener(memoryCheckboxListener);
                 checkBoxes.put(tag, newCheckBox);
                 memoryCheckBoxPanel.add(newCheckBox);
             }
@@ -181,6 +196,16 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionLis
         listeners.remove(listener);
     }
 
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
+    }
+
     private void initializePanel() {
         setLayout(new BorderLayout());
 
@@ -222,11 +247,6 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionLis
         return chart;
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        JCheckBox source = (JCheckBox) e.getSource();
-        fireShowHideHandlers(source.isSelected(), source.getActionCommand());
-    }
 
     private void fireShowHideHandlers(boolean show, String tag) {
         for (GraphVisibilityChangeListener listener: listeners) {
@@ -238,4 +258,12 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView, ActionLis
         }
     }
 
+    private class MemoryCheckboxListener implements java.awt.event.ActionListener {
+        @Override
+        public void actionPerformed(java.awt.event.ActionEvent e) {
+            JCheckBox source = (JCheckBox) e.getSource();
+            fireShowHideHandlers(source.isSelected(), source.getActionCommand());
+        }
+
+    }
 }

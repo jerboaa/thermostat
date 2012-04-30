@@ -39,10 +39,20 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.List;
 
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public interface HostCpuView extends View {
+
+    enum Action {
+        VISIBLE,
+        HIDDEN,
+    }
+
+    void addActionListener(ActionListener<Action> listener);
+
+    void removeActionListener(ActionListener<Action> listener);
 
     void setCpuCount(String count);
 

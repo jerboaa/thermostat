@@ -39,41 +39,65 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.ui.VmCpuView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.VmCpuStat;
 
-class VmCpuController implements AsyncUiFacade {
+class VmCpuController {
 
     private final VmRef ref;
     private final VmCpuStatDAO dao;
     private final VmCpuView view;
 
-    private final Timer timer = new Timer();
+    private final Timer timer;
 
     public VmCpuController(VmRef ref) {
         this.ref = ref;
         dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO();
-        view = ApplicationContext.getInstance().getViewFactory().getView(VmCpuView.class);
-    }
+        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
-    @Override
-    public void start() {
-        timer.scheduleAtFixedRate(new TimerTask() {
+        timer.setAction(new Runnable() {
             @Override
             public void run() {
                 doUpdateVmCpuCharts();
             }
+        });
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setDelay(5);
+        timer.setInitialDelay(0);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
 
-        }, 0, TimeUnit.SECONDS.toMillis(5));
+        view = ApplicationContext.getInstance().getViewFactory().getView(VmCpuView.class);
 
+        view.addActionListener(new ActionListener<VmCpuView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stop();
+                        break;
+                    case VISIBLE:
+                        start();
+                        break;
+                    default:
+                        throw new NotImplementedException("unknown event : " + actionEvent.getActionId());
+                }
+            }
+        });
+    }
+
+    private void start() {
+        timer.start();
     }
 
     private void doUpdateVmCpuCharts() {
@@ -88,9 +112,8 @@ class VmCpuController implements AsyncUiFacade {
         view.addData(toDisplay);
     }
 
-    @Override
-    public void stop() {
-        timer.cancel();
+    private void stop() {
+        timer.stop();
     }
 
     public Component getComponent() {

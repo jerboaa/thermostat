@@ -79,7 +79,7 @@ public class MainWindowControllerImplTest {
     private MainWindowControllerImpl controller;
 
     private UiFacadeFactory uiFacadeFactory;
-    
+
     private MainView view;
 
     private Timer mainWindowTimer;
@@ -102,7 +102,7 @@ public class MainWindowControllerImplTest {
 
         uiFacadeFactory = mock(UiFacadeFactory.class);
         when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
-        
+
         setupDAOs();
 
         view = mock(MainView.class);
@@ -136,9 +136,9 @@ public class MainWindowControllerImplTest {
     }
 
     @Test
-    public void verifyThatShutdownEventStopsController() {
+    public void verifyThatHiddenEventStopsController() {
 
-        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SHUTDOWN));
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HIDDEN));
 
         verify(mainWindowTimer).stop();
 
@@ -156,7 +156,9 @@ public class MainWindowControllerImplTest {
     }
 
     @Test
-    public void verifyTimerGetsStartedOnConstruction() {
+    public void verifyTimerGetsStartedOnBecomingVisible() {
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.VISIBLE));
+
         verify(mainWindowTimer).setDelay(3);
         verify(mainWindowTimer).setTimeUnit(TimeUnit.SECONDS);
         verify(mainWindowTimer).setSchedulingType(SchedulingType.FIXED_RATE);
@@ -168,7 +170,7 @@ public class MainWindowControllerImplTest {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
     }
-    
+
     @Test
     public void verifyUpdateHostsVMsLoadsCorrectHosts() {
 
@@ -194,29 +196,29 @@ public class MainWindowControllerImplTest {
         Collection<HostRef> liveHost = new ArrayList<>();
         liveHost.add(new HostRef("123", "fluffhost1"));
         liveHost.add(new HostRef("456", "fluffhost2"));
-        
+
         Collection<HostRef> allHosts = new ArrayList<>();
         allHosts.addAll(liveHost);
         allHosts.add(new HostRef("789", "fluffhost3"));
-        
+
         when(mockHostsDAO.getAliveHosts()).thenReturn(liveHost);
         when(mockHostsDAO.getHosts()).thenReturn(allHosts);
-        
+
         controller.doUpdateTreeAsync();
-        
+
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
         verify(view).updateTree(anyString(), arg.capture());
         HostsVMsLoader loader = arg.getValue();
 
         Collection<HostRef> actualHosts = loader.getHosts();
         assertEqualCollection(liveHost, actualHosts);
-        
+
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SWITCH_HISTORY_MODE));
-        
+
         actualHosts = loader.getHosts();
         assertEqualCollection(allHosts, actualHosts);
     }
-    
+
     @Test
     public void verifyUpdateHostsVMsLoadsCorrectVMs() {
 
@@ -241,7 +243,7 @@ public class MainWindowControllerImplTest {
         assertEquals(expected.size(), actual.size());
         assertTrue(expected.containsAll(actual));
     }
-    
+
     @Test
     @Bug(id="954",
          summary="Thermostat GUI client should remember my last panel selected",
@@ -250,28 +252,28 @@ public class MainWindowControllerImplTest {
 
         VmRef vmRef = mock(VmRef.class);
         when(view.getSelectedHostOrVm()).thenReturn(vmRef);
-                
+
         VmInformationController vmInformationController = mock(VmInformationController.class);
         when(vmInformationController.getSelectedChildID()).thenReturn(3);
         when(uiFacadeFactory.getVmController(any(VmRef.class))).thenReturn(vmInformationController);
-        
+
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-        
+
         ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
         verify(vmInformationController).selectChildID(arg.capture());
         verify(vmInformationController, times(0)).getSelectedChildID();
-        
+
         int id = arg.getValue();
-        
+
         assertEquals(0, id);
-        
+
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-        
+
         arg = ArgumentCaptor.forClass(Integer.class);
         verify(vmInformationController, times(1)).getSelectedChildID();
         verify(vmInformationController, times(2)).selectChildID(arg.capture());
         id = arg.getValue();
-        
+
         assertEquals(3, id);
     }
 }

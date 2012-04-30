@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,7 +48,12 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
@@ -83,7 +88,17 @@ public class VmCpuControllerTest {
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);
 
+        Timer timer = mock(Timer.class);
+        ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(timerActionCaptor.capture());
+
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+
         final VmCpuView view = mock(VmCpuView.class);
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         ViewFactory viewFactory = mock(ViewFactory.class);
         when(viewFactory.getView(eq(VmCpuView.class))).thenReturn(view);
 
@@ -91,16 +106,19 @@ public class VmCpuControllerTest {
 
         VmCpuController controller = new VmCpuController(ref);
 
-        controller.start();
+        ActionListener<VmCpuView.Action> l = viewArgumentCaptor.getValue();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            // Get out of here ASAP.
-            return;
-        }
+        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.VISIBLE));
 
-        verify(view, atLeast(1)).addData(any(List.class));
+        verify(timer).start();
+
+        timerActionCaptor.getValue().run();
+
+        l.actionPerformed(new ActionEvent<>(viewFactory, VmCpuView.Action.HIDDEN));
+
+        verify(timer).stop();
+
+        verify(view).addData(any(List.class));
         // We don't verify atMost() since we might increase the update rate in the future.
     }
 }

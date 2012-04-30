@@ -39,20 +39,23 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.AsyncUiFacade;
+import com.redhat.thermostat.client.ui.VmClassStatView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.VmClassStat;
 
-class VmClassStatController implements AsyncUiFacade {
+class VmClassStatController {
 
-    private class UpdateChartData extends TimerTask {
+    private class UpdateChartData implements Runnable {
         @Override
         public void run() {
             List<VmClassStat> latestClassStats = dao.getLatestClassStats(ref);
@@ -65,32 +68,47 @@ class VmClassStatController implements AsyncUiFacade {
 
     }
 
-    private VmClassStatView classesView;
-    private VmRef ref;
-    private VmClassStatDAO dao;
-
-    // TODO: Use application wide ScheduledExecutorService thread pool.
-    private Timer timer;
+    private final VmClassStatView classesView;
+    private final VmRef ref;
+    private final VmClassStatDAO dao;
+    private final Timer timer;
 
     public VmClassStatController(VmRef ref) {
         this.ref = ref;
         dao = ApplicationContext.getInstance().getDAOFactory().getVmClassStatsDAO();
+        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+
+        timer.setAction(new UpdateChartData());
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setDelay(5);
+        timer.setInitialDelay(0);
+
         classesView = ApplicationContext.getInstance().getViewFactory().getView(VmClassStatView.class);
+
+        classesView.addActionListener(new ActionListener<VmClassStatView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch(actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stop();
+                        break;
+                    case VISIBLE:
+                        start();
+                        break;
+                    default:
+                        throw new NotImplementedException("unknown action: " + actionEvent.getActionId());
+                }
+            }
+        });
     }
 
-    @Override
-    public void start() {
-        if (timer == null) {
-            timer = new Timer();
-        }
-        TimerTask updateTimerTask = new UpdateChartData();
-        timer.scheduleAtFixedRate(updateTimerTask, 0, TimeUnit.SECONDS.toMillis(5));
+    private void start() {
+        timer.start();
     }
 
-    @Override
-    public void stop() {
-        timer.cancel();
-        timer = null;
+    private void stop() {
+        timer.stop();
     }
 
     public Component getComponent() {

@@ -50,10 +50,14 @@ import javax.swing.BoxLayout;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 
 public class VmMemoryPanel extends JPanel implements VmMemoryView {
 
     private static final long serialVersionUID = -2882890932814218436L;
+
+    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
     private final Map<String, MemorySpacePanel> regions = new HashMap<>();
 
@@ -89,6 +93,28 @@ public class VmMemoryPanel extends JPanel implements VmMemoryView {
         currentRegionSizePanel.setLayout(new BoxLayout(currentRegionSizePanel, BoxLayout.PAGE_AXIS));
         setLayout(groupLayout);
 
+
+        addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                notifier.fireAction(Action.VISIBLE);
+            }
+
+            @Override
+            public void componentHidden(Component component) {
+                notifier.fireAction(Action.HIDDEN);
+            }
+        });
+    }
+
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
     }
 
     @Override

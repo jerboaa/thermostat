@@ -70,12 +70,12 @@ public class VmInformationPanel extends JPanel implements VmInformationView {
     public int getSelectedChildID() {
         return tabPane.getSelectedIndex();
     }
-    
+
     @Override
     public void selectChildID(int id) {
         tabPane.setSelectedIndex(id);
     }
-    
+
     @Override
     public int getNumChildren() {
         return tabPane.getComponentCount();

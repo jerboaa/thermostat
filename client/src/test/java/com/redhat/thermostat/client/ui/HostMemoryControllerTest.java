@@ -38,8 +38,9 @@ package com.redhat.thermostat.client.ui;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -48,7 +49,12 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
@@ -85,24 +91,39 @@ public class HostMemoryControllerTest {
         when(daoFactory.getMemoryStatDAO()).thenReturn(memoryStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
+        Timer timer = mock(Timer.class);
+        ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(timerActionCaptor.capture());
+
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+
         HostRef ref = mock(HostRef.class);
+
         HostMemoryView view = mock(HostMemoryView.class);
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
+
         ViewFactory viewFactory = mock(ViewFactory.class);
         when(viewFactory.getView(eq(HostMemoryView.class))).thenReturn(view);
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
         HostMemoryController controller = new HostMemoryController(ref);
 
-        controller.start();
+        ActionListener<HostMemoryView.Action> l = viewArgumentCaptor.getValue();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            // Get out of here ASAP.
-            return;
-        }
+        l.actionPerformed(new ActionEvent<>(view, HostMemoryView.Action.VISIBLE));
 
-        verify(view, atLeast(1)).setTotalMemory(any(String.class));
-        verify(view, atLeast(6)).addMemoryData(any(String.class), any(List.class));
+        verify(timer).start();
+        timerActionCaptor.getValue().run();
+
+        verify(view, times(1)).setTotalMemory(any(String.class));
+        verify(view, times(6)).addMemoryData(any(String.class), any(List.class));
+
+        l.actionPerformed(new ActionEvent<>(view, HostMemoryView.Action.HIDDEN));
+
+        verify(timer).stop();
+
     }
 }

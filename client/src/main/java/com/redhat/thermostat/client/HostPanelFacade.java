@@ -40,7 +40,7 @@ import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.client.ui.HostOverviewController;
 
-public interface HostPanelFacade extends AsyncUiFacade {
+public interface HostPanelFacade  {
 
     public HostOverviewController getOverviewController();
 

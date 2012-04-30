@@ -57,11 +57,15 @@ import com.redhat.thermostat.client.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class HostCpuPanel extends JPanel implements HostCpuView {
 
     private static final long serialVersionUID = -1840585935194027332L;
+
+    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
     private final ChangeableText cpuModel = new ChangeableText("");
     private final ChangeableText cpuCount = new ChangeableText("");
@@ -72,6 +76,27 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
     public HostCpuPanel() {
         datasetCollection.addSeries(dataset);
         initializePanel();
+
+        addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                notifier.fireAction(Action.VISIBLE);
+            }
+            @Override
+            public void componentHidden(Component component) {
+                notifier.fireAction(Action.HIDDEN);
+            }
+        });
+    }
+
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+       notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
     }
 
     @Override

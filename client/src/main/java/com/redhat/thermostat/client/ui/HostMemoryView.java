@@ -39,10 +39,16 @@ package com.redhat.thermostat.client.ui;
 import java.awt.Component;
 import java.util.List;
 
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public interface HostMemoryView extends View {
+
+    enum Action {
+        VISIBLE,
+        HIDDEN,
+    }
 
     public interface GraphVisibilityChangeListener {
         public void show(String tag);
@@ -63,6 +69,10 @@ public interface HostMemoryView extends View {
     void addMemoryData(String tag, List<DiscreteTimeData<? extends Number>> data);
 
     void clearMemoryData(String tag);
+
+    void addActionListener(ActionListener<Action> listener);
+
+    void removeActionListener(ActionListener<Action> listener);
 
     void addGraphVisibilityListener(GraphVisibilityChangeListener listener);
 

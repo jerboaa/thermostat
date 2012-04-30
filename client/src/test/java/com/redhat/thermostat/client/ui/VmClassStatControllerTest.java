@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,9 +47,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.ui.VmClassStatController;
 import com.redhat.thermostat.client.ui.VmClassStatView;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -77,7 +82,17 @@ public class VmClassStatControllerTest {
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);
 
+        Timer timer = mock(Timer.class);
+        ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(timerActionCaptor.capture());
+
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+
         VmClassStatView view = mock(VmClassStatView.class);
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         ViewFactory viewFactory = mock(ViewFactory.class);
         when(viewFactory.getView(eq(VmClassStatView.class))).thenReturn(view);
 
@@ -85,17 +100,17 @@ public class VmClassStatControllerTest {
 
         VmClassStatController controller = new VmClassStatController(ref);
 
-        controller.start();
+        ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            // Get out of here ASAP.
-            return;
-        }
+        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.VISIBLE));
 
-        verify(view, atLeast(1)).addClassCount(any(List.class));
-        // We don't verify atMost() since we might increase the update rate in the future.
+        verify(timer).start();
+        timerActionCaptor.getValue().run();
+        verify(view).addClassCount(any(List.class));
+
+        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.HIDDEN));
+
+        verify(timer).stop();
     }
 
 }

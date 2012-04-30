@@ -37,7 +37,7 @@
 package com.redhat.thermostat.client;
 
 
-public interface MainWindowController extends AsyncUiFacade {
+public interface MainWindowController {
 
     public void setHostVmTreeFilter(String filter);
 
