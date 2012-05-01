@@ -86,9 +86,9 @@ class VmMemoryController {
                         }
 
                         int percentageUsed = (int) (100.0 * space.used/space.capacity);
-                        String currentlyUsed = localize(LocaleResources.VM_MEMORY_SPACE_USED, String.valueOf(space.used));
-                        String currentlyUnused = localize(LocaleResources.VM_MEMORY_SPACE_FREE, String.valueOf(space.capacity - space.used));
-                        String allocatable = localize(LocaleResources.VM_MEMORY_SPACE_ADDITIONAL, String.valueOf(space.maxCapacity-space.capacity));
+                        String currentlyUsed = localize(LocaleResources.VM_MEMORY_SPACE_USED, DisplayableValues.bytes(space.used));
+                        String currentlyUnused = localize(LocaleResources.VM_MEMORY_SPACE_FREE, DisplayableValues.bytes(space.capacity - space.used));
+                        String allocatable = localize(LocaleResources.VM_MEMORY_SPACE_ADDITIONAL, DisplayableValues.bytes(space.maxCapacity - space.capacity));
                         String name = space.name; // FIXME
                         view.updateRegionSize(name, percentageUsed, currentlyUsed, currentlyUnused, allocatable);
 
