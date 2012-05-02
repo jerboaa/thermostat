@@ -58,7 +58,7 @@ class CommonCommandOptions {
 
     private void addDbUrlOptionForStorageCommand(Command cmd, Collection<ArgumentSpec> acceptedArguments) {
         if (cmd.isStorageRequired()) {
-            acceptedArguments.add(new SimpleArgumentSpec(DB_URL_ARG, DB_URL_DESC, true, true));
+            acceptedArguments.add(new SimpleArgumentSpec(DB_URL_ARG, DB_URL_DESC, false, true));
         }
     }
 

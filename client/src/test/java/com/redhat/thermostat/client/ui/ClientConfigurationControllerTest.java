@@ -45,8 +45,8 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.config.ClientPreferences;
 import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.config.ClientPreferences;
 
 public class ClientConfigurationControllerTest {
 

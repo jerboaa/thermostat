@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.config;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 public class ConnectionConfiguration implements StartupConfiguration {

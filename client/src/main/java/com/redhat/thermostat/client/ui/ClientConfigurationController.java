@@ -40,10 +40,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
 
-import com.redhat.thermostat.client.config.ClientPreferences;
 import com.redhat.thermostat.client.ui.ClientConfigurationView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ClientConfigurationController implements ActionListener<Action> {

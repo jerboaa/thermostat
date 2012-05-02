@@ -39,6 +39,7 @@ package com.redhat.thermostat.cli;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -48,6 +49,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class LauncherTest {
@@ -217,9 +219,12 @@ public class LauncherTest {
         verify(appContextSetup).setupAppContext("mongo://fluff:12345");
     }
 
-    @Test
-    public void verifyStorageCommandRequiresDbUrl() {
-        new Launcher().run(new String[] { "test3" });
-        assertEquals("Missing required option: --dbUrl\n", ctxFactory.getError());
+    public void verifyPrefsAreUsed() {
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        when(prefs.getConnectionUrl()).thenReturn("mongo://fluff:12345");
+        Launcher l = new Launcher();
+        l.setPreferences(prefs);
+        l.run(new String[] { "test3" });
+        verify(appContextSetup).setupAppContext("mongo://fluff:12345");
     }
 }
