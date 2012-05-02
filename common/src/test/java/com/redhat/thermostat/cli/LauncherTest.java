@@ -220,6 +220,6 @@ public class LauncherTest {
     @Test
     public void verifyStorageCommandRequiresDbUrl() {
         new Launcher().run(new String[] { "test3" });
-        assertEquals("Missing required option: dbUrl\n", ctxFactory.getError());
+        assertEquals("Missing required option: --dbUrl\n", ctxFactory.getError());
     }
 }

@@ -38,6 +38,7 @@ package com.redhat.thermostat.cli;
 
 import java.io.PrintWriter;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -45,6 +46,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -64,11 +66,33 @@ public class CommandLineArgumentsParser {
             CommandLine commandLine;
             commandLine = parser.parse(options, args);
             return new CommandLineArguments(commandLine);
+        } catch (MissingOptionException mae) {
+            String msg = createMissingOptionsMessage(mae);
+            throw new CommandLineArgumentParseException(msg.toString(), mae);
         } catch (ParseException e) {
             throw new CommandLineArgumentParseException(e.getMessage(), e);
         }
     }
 
+    private String createMissingOptionsMessage(MissingOptionException mae) {
+        @SuppressWarnings("unchecked")
+        List<String> missingOptions = mae.getMissingOptions();
+        StringBuilder msg = new StringBuilder();
+        if (missingOptions.size() == 1) {
+            msg.append("Missing required option: ");
+        } else {
+            msg.append("Missing required options: ");
+        }
+        for (Iterator<String> i = missingOptions.iterator(); i.hasNext();) {
+            String missingOption = i.next();
+            msg.append("--");
+            msg.append(missingOption);
+            if (i.hasNext()) {
+                msg.append(", ");
+            }
+        }
+        return msg.toString();
+    }
 
     private Options convertToCommonsCLIOptions(Collection<ArgumentSpec> args) {
         Options options = new Options();

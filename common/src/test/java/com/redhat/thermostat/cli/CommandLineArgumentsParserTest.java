@@ -38,6 +38,7 @@ package com.redhat.thermostat.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -94,9 +95,31 @@ public class CommandLineArgumentsParserTest {
         parser.parse(new String[] { "--test1", "--no-match" });
     }
 
-    @Test(expected=CommandLineArgumentParseException.class)
+    @Test
     public void testMissingRequiredArgument() throws CommandLineArgumentParseException {
-        parser.parse(new String[] { "--test2" });
+        try {
+          parser.parse(new String[] { "--test2" });
+          fail();
+        } catch (CommandLineArgumentParseException ex) {
+            String msg = ex.getMessage();
+            assertEquals("Missing required option: --test1", msg);
+        }
+    }
+
+    @Test
+    public void testMissingRequiredArguments() throws CommandLineArgumentParseException {
+        ArgumentSpec arg4 = mock(ArgumentSpec.class);
+        when(arg4.getName()).thenReturn("test4");
+        when(arg4.isRequired()).thenReturn(true);
+        parser.addArguments(Arrays.asList(arg4));
+
+        try {
+          parser.parse(new String[] { "--test2" });
+          fail();
+        } catch (CommandLineArgumentParseException ex) {
+            String msg = ex.getMessage();
+            assertEquals("Missing required options: --test1, --test4", msg);
+        }
     }
 
     @Test
