@@ -38,9 +38,26 @@ package com.redhat.thermostat.client.ui;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Locale;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class DisplayableValuesTest {
+
+    private static Locale defaultLocale;
+
+    @BeforeClass
+    public static void setUp() {
+        defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Test
     public void testBytes() {
