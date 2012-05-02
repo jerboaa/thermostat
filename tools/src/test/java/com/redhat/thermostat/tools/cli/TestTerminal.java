@@ -46,6 +46,7 @@ public class TestTerminal extends UnixTerminal {
 
     @Override
     public void restore() throws Exception {
+        super.restore();
         throw new Exception();
     }
 

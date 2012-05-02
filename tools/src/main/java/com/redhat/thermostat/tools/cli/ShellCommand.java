@@ -76,7 +76,6 @@ public class ShellCommand implements Command {
         try {
             term.restore();
         } catch (Exception e) {
-            System.err.println("restore kaputted");
             throw new CommandException(e);
         }
     }
