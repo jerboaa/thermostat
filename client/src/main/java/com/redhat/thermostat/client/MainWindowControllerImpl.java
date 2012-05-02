@@ -95,6 +95,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         appInfo = new ApplicationInfo();
         view.setWindowTitle(appInfo.getName());
         initializeTimer();
+
+        updateView();
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {

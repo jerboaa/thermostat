@@ -599,7 +599,7 @@ public class MainWindow extends JFrame implements MainView {
     @Override
     public Ref getSelectedHostOrVm() {
         TreePath path = agentVmTree.getSelectionPath();
-        if (path.getPathCount() == 1) {
+        if (path == null || path.getPathCount() == 1) {
             return null;
         }
         return (Ref) ((DefaultMutableTreeNode) path.getLastPathComponent()).getUserObject();
