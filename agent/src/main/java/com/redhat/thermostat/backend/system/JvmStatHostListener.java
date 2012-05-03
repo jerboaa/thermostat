@@ -69,6 +69,8 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private final DAOFactory df;
     private final VmInfoDAO vmInfoDAO;
 
+    private Map<Integer, MonitoredVm> monitoredVms  = new HashMap<>();
+
     private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
 
     JvmStatHostListener(DAOFactory df, boolean attachNew) {
@@ -145,6 +147,8 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
             for (JvmStatusListener statusListener : statusListeners) {
                 statusListener.jvmStarted(vmId);
             }
+
+            monitoredVms.put(vmId, vm);
         }
     }
 
@@ -158,6 +162,8 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                 statusListener.jvmStopped(vmId);
             }
             vmInfoDAO.putVmStoppedTime(vmId, stopTime);
+
+            monitoredVms.remove(vmId).detach();
         }
     }
 
