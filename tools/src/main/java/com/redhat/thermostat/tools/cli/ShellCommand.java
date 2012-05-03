@@ -37,6 +37,7 @@
 package com.redhat.thermostat.tools.cli;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -81,7 +82,7 @@ public class ShellCommand implements Command {
     }
 
     private void shellMainLoop(CommandContext ctx, Terminal term) throws IOException {
-        ConsoleReader reader = new ConsoleReader("fluff", ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
+        ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), new OutputStreamWriter(ctx.getConsole().getOutput()), term);
         while (handleConsoleInput(reader));
     }
 
