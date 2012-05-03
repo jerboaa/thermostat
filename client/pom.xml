@@ -72,8 +72,7 @@
       <artifactId>cacio-tta</artifactId>
       <scope>test</scope>
     </dependency>
-
-  	<dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common</artifactId>
       <version>${project.version}</version>
@@ -83,25 +82,5 @@
       <artifactId>jfreechart</artifactId>
     </dependency>
   </dependencies>
-
-  <!--  TODO: This is only temporary until Cacio has been released and hit Maven central. -->
-  <repositories>
-    <repository>
-      <releases>
-        <enabled>false</enabled>
-        <updatePolicy>always</updatePolicy>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-        <updatePolicy>never</updatePolicy>
-        <checksumPolicy>fail</checksumPolicy>
-      </snapshots>
-      <id>sonatype-snapshots</id>
-      <name>Sonatype Snapshots</name>
-      <url>http://oss.sonatype.org/content/repositories/snapshots/</url>
-      <layout>default</layout>
-    </repository>
-  </repositories>
 
 </project>
