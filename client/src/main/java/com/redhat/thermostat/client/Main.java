@@ -47,7 +47,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.config.ClientPreferences;
 import com.redhat.thermostat.client.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
@@ -56,6 +55,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;

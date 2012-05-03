@@ -39,7 +39,6 @@ package com.redhat.thermostat.client;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.config.ClientPreferences;
 import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
 import com.redhat.thermostat.client.ui.AgentConfigurationModel;
@@ -54,6 +53,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -95,6 +95,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         appInfo = new ApplicationInfo();
         view.setWindowTitle(appInfo.getName());
         initializeTimer();
+
+        updateView();
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {

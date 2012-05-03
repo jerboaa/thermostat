@@ -47,6 +47,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
 
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
@@ -169,6 +170,11 @@ public class MainWindowControllerImplTest {
     public void verifyShowMainWindowActuallyCallsView() {
         controller.showMainMainWindow();
         verify(view).showMainWindow();
+    }
+
+    @Test
+    public void verifySubViewIsSetByDefault() {
+        verify(view).setSubView(any(Component.class));
     }
 
     @Test

@@ -41,11 +41,14 @@ import java.util.Collection;
 import java.util.ServiceLoader;
 import java.util.logging.Level;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Launcher {
+
+    private ClientPreferences prefs = new ClientPreferences();
 
     private String[] args;
 
@@ -58,6 +61,10 @@ public class Launcher {
         } else {
             runCommandFromArguments();
         }
+    }
+
+    void setPreferences(ClientPreferences prefs) {
+        this.prefs = prefs;
     }
 
     private void initLogging() {
@@ -151,6 +158,9 @@ public class Launcher {
         CommandContext ctx = cmdCtxFactory.createContext(args);
         if (cmd.isStorageRequired()) {
             String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);
+            if (dbUrl == null) {
+                dbUrl = prefs.getConnectionUrl();
+            }
             try {
                 ctx.getAppContextSetup().setupAppContext(dbUrl);
             } catch (ConnectionException ex) {
