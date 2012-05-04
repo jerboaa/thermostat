@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
+import java.awt.Color;
 import java.awt.Font;
 
 import javax.swing.UIManager;
@@ -45,12 +46,31 @@ public class UIResources {
 
     private static final UIResources resource = new UIResources();
     
-    private static final ColorUIResource hyperLinkColor =
-            new ColorUIResource(UIManager.getColor("Button.darkShadow"));
-    private static final ColorUIResource hyperLinkActiveColor =
-            new ColorUIResource(UIManager.getColor("Button.focus"));
+    private static final ColorUIResource hyperLinkColor;
+    private static final ColorUIResource hyperLinkActiveColor;
 
-    private static final Font standard = UIManager.getFont("Label.font");
+    private static final Font standard;
+    
+    static {
+        Color color = UIManager.getColor("Button.darkShadow");
+        if (color == null) {
+            color = Color.BLUE;
+        }
+        hyperLinkColor = new ColorUIResource(color);
+        
+        color = UIManager.getColor("Button.focus");
+        if (color == null) {
+            color = Color.BLUE;
+        }
+        hyperLinkActiveColor = new ColorUIResource(color);
+        
+        Font font = UIManager.getFont("Label.font");
+        if (font == null) {
+            font = Font.decode(Font.DIALOG);
+        }
+        standard = font;
+    }
+    
     private static final Font header = standard.deriveFont(Font.BOLD);
     
     // TODO: check when size is too small
