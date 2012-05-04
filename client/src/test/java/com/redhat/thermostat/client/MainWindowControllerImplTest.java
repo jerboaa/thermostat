@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -48,12 +49,17 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.times;
 
 import java.awt.Component;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.SwingUtilities;
+
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.internal.verification.Times;
@@ -87,6 +93,12 @@ public class MainWindowControllerImplTest {
 
     private HostInfoDAO mockHostsDAO;
     private VmInfoDAO mockVmsDAO;
+
+    @BeforeClass
+    public static void setUpOnce() {
+        // TODO remove when controller uses mocked objects rather than real swing objects
+        FailOnThreadViolationRepaintManager.install();
+    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" }) // ActionListener fluff
     @Before
@@ -173,8 +185,13 @@ public class MainWindowControllerImplTest {
     }
 
     @Test
-    public void verifySubViewIsSetByDefault() {
-        verify(view).setSubView(any(Component.class));
+    public void verifySubViewIsSetByDefault() throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            @Override
+            public void run() {
+                verify(view).setSubView(isA(Component.class));
+            }
+        });
     }
 
     @Test
