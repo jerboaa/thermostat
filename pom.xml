@@ -41,7 +41,7 @@
 
   <groupId>com.redhat.thermostat</groupId>
   <artifactId>thermostat</artifactId>
-  <version>0.2</version>
+  <version>0.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Thermostat</name>
