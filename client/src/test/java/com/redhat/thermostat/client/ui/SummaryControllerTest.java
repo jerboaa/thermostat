@@ -34,76 +34,118 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 
-public class SummaryPanelFacadeImplTest {
+public class SummaryControllerTest {
 
     private Timer timer;
+    private Runnable timerAction;
+    private SummaryView view;
+    private ActionListener<SummaryView.Action> viewListener;
 
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
+        ApplicationContext ctx = ApplicationContext.getInstance();
+
+        // Setup timer
         timer = mock(Timer.class);
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext ctx = ApplicationContext.getInstance();
+        ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        doNothing().when(timer).setAction(actionCaptor.capture());
         ctx.setTimerFactory(timerFactory);
 
+        // setup dao
         HostInfoDAO hDAO = mock(HostInfoDAO.class);
+        when(hDAO.getCount()).thenReturn(99l);
         VmInfoDAO vDAO = mock(VmInfoDAO.class);
+        when(vDAO.getCount()).thenReturn(42l);
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
         when(daoFactory.getHostInfoDAO()).thenReturn(hDAO);
         when(daoFactory.getVmInfoDAO()).thenReturn(vDAO);
 
         ctx.setDAOFactory(daoFactory);
+
+        // Setup view
+        view = mock(SummaryView.class);
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
+
+        ViewFactory viewFactory = mock(ViewFactory.class);
+        when(viewFactory.getView(eq(SummaryView.class))).thenReturn(view);
+        ApplicationContext.getInstance().setViewFactory(viewFactory);
+
+        SummaryController summaryCtrl = new SummaryController();
+
+        timerAction = actionCaptor.getValue();
+        viewListener = viewArgumentCaptor.getValue();
     }
 
     @After
     public void tearDown() {
         timer = null;
+        timerAction = null;
+        view = null;
+        viewListener = null;
         ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test
-    public void testTimer() {
-
-        SummaryPanelFacadeImpl summaryPanelCtrl = new SummaryPanelFacadeImpl();
-        summaryPanelCtrl.start();
-
+    public void verifyTimerAction() {
         verify(timer).setAction(isNotNull(Runnable.class));
         verify(timer).setDelay(10);
         verify(timer).setTimeUnit(TimeUnit.SECONDS);
         verify(timer).setInitialDelay(0);
         verify(timer).setSchedulingType(SchedulingType.FIXED_RATE);
+    }
+
+    @Test
+    public void testTimer() {
+        viewListener.actionPerformed(new ActionEvent<SummaryView.Action>(view, SummaryView.Action.VISIBLE));
+
         verify(timer).start();
 
-        summaryPanelCtrl.stop();
+        timerAction.run();
+        verify(view).setTotalHosts(eq("99"));
+        verify(view).setTotalVms(eq("42"));
+
+        viewListener.actionPerformed(new ActionEvent<SummaryView.Action>(view, SummaryView.Action.HIDDEN));
 
         verify(timer).stop();
-
-        // TODO: Also test for the actual action, as soon as the MVC refactoring is done.
     }
 
 }

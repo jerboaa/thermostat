@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -54,22 +53,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.SwingUtilities;
-
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.internal.verification.Times;
 
+import com.redhat.thermostat.client.ui.SummaryController;
+import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -104,23 +103,32 @@ public class MainWindowControllerImplTest {
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
+
+        // Setup timers
         mainWindowTimer = mock(Timer.class);
+        Timer otherTimer = mock(Timer.class); // FIXME needed for SummaryView; remove later
         TimerFactory timerFactory = mock(TimerFactory.class);
-        when(timerFactory.createTimer()).thenReturn(mainWindowTimer);
+        when(timerFactory.createTimer()).thenReturn(mainWindowTimer).thenReturn(otherTimer);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
-        SummaryPanelFacade summaryPanelFacade = mock(SummaryPanelFacade.class);
-        when(summaryPanelFacade.getTotalMonitoredHosts()).thenReturn(new ChangeableText("totalConnectedAgents"));
-        when(summaryPanelFacade.getTotalMonitoredVms()).thenReturn(new ChangeableText("connectedVms"));
+        SummaryController summaryController = mock(SummaryController.class);
 
         uiFacadeFactory = mock(UiFacadeFactory.class);
-        when(uiFacadeFactory.getSummaryPanel()).thenReturn(summaryPanelFacade);
+        when(uiFacadeFactory.getSummary()).thenReturn(summaryController);
 
         setupDAOs();
 
+        // Setup View
         view = mock(MainView.class);
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
+
+        // TODO remove this asap. the main window has a hard dependency on summary controller/view
+        ViewFactory viewFactory = mock(ViewFactory.class);
+        SummaryView summaryView = mock(SummaryView.class);
+        when(viewFactory.getView(SummaryView.class)).thenReturn(summaryView);
+        ApplicationContext.getInstance().setViewFactory(viewFactory);
+
         controller = new MainWindowControllerImpl(uiFacadeFactory, view);
         l = grabListener.getValue();
 
@@ -128,7 +136,6 @@ public class MainWindowControllerImplTest {
 
     private void setupDAOs() {
         mockHostsDAO = mock(HostInfoDAO.class);
-
         mockVmsDAO = mock(VmInfoDAO.class);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
@@ -186,12 +193,7 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verifySubViewIsSetByDefault() throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                verify(view).setSubView(isA(Component.class));
-            }
-        });
+        verify(view).setSubView(any(Component.class));
     }
 
     @Test

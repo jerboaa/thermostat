@@ -34,20 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import java.util.List;
+import java.awt.Component;
 
-public interface SummaryPanelFacade {
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.View;
 
-    public ChangeableText getTotalMonitoredVms();
+public interface SummaryView extends View {
 
-    public ChangeableText getTotalMonitoredHosts();
+    enum Action {
+        VISIBLE,
+        HIDDEN,
+    }
 
-    public List<String> getIssues();
+    void addActionListener(ActionListener<Action> listener);
 
-    void start();
+    void removeActionListener(ActionListener<Action> listener);
 
-    void stop();
+    void setTotalHosts(String count);
+
+    void setTotalVms(String count);
+
+    Component getUiComponent();
 
 }

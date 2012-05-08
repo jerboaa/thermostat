@@ -72,6 +72,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
+import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.ToolTipManager;
 import javax.swing.event.DocumentEvent;
@@ -586,11 +587,16 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
-    public void setSubView(Component view) {
-        contentArea.removeAll();
-        Component toAdd = view;
-        contentArea.add(toAdd);
-        contentArea.revalidate();
+    public void setSubView(final Component view) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                contentArea.removeAll();
+                Component toAdd = view;
+                contentArea.add(toAdd);
+                contentArea.revalidate();
+            }
+        });
     }
 
     /**

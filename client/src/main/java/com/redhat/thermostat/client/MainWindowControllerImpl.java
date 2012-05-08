@@ -39,8 +39,6 @@ package com.redhat.thermostat.client;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.SwingUtilities;
-
 import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
 import com.redhat.thermostat.client.ui.AgentConfigurationModel;
@@ -48,7 +46,7 @@ import com.redhat.thermostat.client.ui.AgentConfigurationView;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostPanel;
-import com.redhat.thermostat.client.ui.SummaryPanel;
+import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -234,13 +232,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         Ref ref = view.getSelectedHostOrVm();
 
         if (ref == null) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    view.setSubView(new SummaryPanel(facadeFactory.getSummaryPanel()));
-
-                }
-            });
+            SummaryController controller = new SummaryController();
+            view.setSubView(controller.getComponent());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
             view.setSubView(new HostPanel(facadeFactory.getHostPanel(hostRef)));

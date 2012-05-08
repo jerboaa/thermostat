@@ -42,8 +42,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.SwingUtilities;
-
 import org.junit.Test;
 
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
@@ -62,31 +60,25 @@ public class SwingViewFactoryTest {
 
     @Test
     public void test() throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            @Override
-            public void run() {
-                SwingViewFactory factory = new SwingViewFactory();
+        SwingViewFactory factory = new SwingViewFactory();
 
-                List<Class<? extends View>> knownViewClasses = new ArrayList<>();
+        List<Class<? extends View>> knownViewClasses = new ArrayList<>();
 
-                knownViewClasses.add(AgentConfigurationView.class);
-                knownViewClasses.add(ClientConfigurationView.class);
-                knownViewClasses.add(HostCpuView.class);
-                knownViewClasses.add(HostMemoryView.class);
-                knownViewClasses.add(HostOverviewView.class);
-                knownViewClasses.add(VmClassStatView.class);
-                knownViewClasses.add(VmCpuView.class);
-                knownViewClasses.add(VmGcView.class);
-                knownViewClasses.add(VmMemoryView.class);
-                knownViewClasses.add(VmOverviewView.class);
+        knownViewClasses.add(AgentConfigurationView.class);
+        knownViewClasses.add(ClientConfigurationView.class);
+        knownViewClasses.add(HostCpuView.class);
+        knownViewClasses.add(HostMemoryView.class);
+        knownViewClasses.add(HostOverviewView.class);
+        knownViewClasses.add(VmClassStatView.class);
+        knownViewClasses.add(VmCpuView.class);
+        knownViewClasses.add(VmGcView.class);
+        knownViewClasses.add(VmMemoryView.class);
+        knownViewClasses.add(VmOverviewView.class);
 
-                for (Class<? extends View> klass: knownViewClasses) {
-                    assertNotNull(factory.getViewClass(klass));
-                    assertNotNull(factory.getView(klass));
-                }
-            }
-
-        });
+        for (Class<? extends View> klass: knownViewClasses) {
+            assertNotNull(factory.getViewClass(klass));
+            assertNotNull(factory.getView(klass));
+        }
 
     }
 }

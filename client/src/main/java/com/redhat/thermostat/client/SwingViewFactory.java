@@ -36,17 +36,24 @@
 
 package com.redhat.thermostat.client;
 
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.Callable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.ui.AgentConfigurationFrame;
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
 import com.redhat.thermostat.client.ui.ClientConfigurationFrame;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
+import com.redhat.thermostat.client.ui.EdtHelper;
 import com.redhat.thermostat.client.ui.HostCpuPanel;
 import com.redhat.thermostat.client.ui.HostCpuView;
 import com.redhat.thermostat.client.ui.HostMemoryPanel;
 import com.redhat.thermostat.client.ui.HostMemoryView;
 import com.redhat.thermostat.client.ui.HostOverviewPanel;
 import com.redhat.thermostat.client.ui.HostOverviewView;
+import com.redhat.thermostat.client.ui.SummaryPanel;
+import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmClassStatPanel;
 import com.redhat.thermostat.client.ui.VmClassStatView;
 import com.redhat.thermostat.client.ui.VmCpuPanel;
@@ -59,13 +66,19 @@ import com.redhat.thermostat.client.ui.VmMemoryPanel;
 import com.redhat.thermostat.client.ui.VmMemoryView;
 import com.redhat.thermostat.client.ui.VmOverviewPanel;
 import com.redhat.thermostat.client.ui.VmOverviewView;
+import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.ViewFactory;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class SwingViewFactory extends DefaultViewFactory implements ViewFactory {
+
+    private static final Logger logger = LoggingUtils.getLogger(SwingViewFactory.class);
 
     public SwingViewFactory() {
         setViewClass(AgentConfigurationView.class, AgentConfigurationFrame.class);
         setViewClass(ClientConfigurationView.class, ClientConfigurationFrame.class);
+
+        setViewClass(SummaryView.class, SummaryPanel.class);
 
         setViewClass(VmInformationView.class, VmInformationPanel.class);
 
@@ -78,6 +91,25 @@ public class SwingViewFactory extends DefaultViewFactory implements ViewFactory 
         setViewClass(VmGcView.class, VmGcPanel.class);
         setViewClass(VmMemoryView.class, VmMemoryPanel.class);
         setViewClass(VmOverviewView.class, VmOverviewPanel.class);
+    }
+
+    @Override
+    public <T extends View> T getView(final Class<T> viewClass) {
+        try {
+            return new EdtHelper().callAndWait(new Callable<T>() {
+                @Override
+                public T call() throws Exception {
+                    return createViewOnEdt(viewClass);
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            logger.log(Level.WARNING, "error trying to create swing component on the EDT", e);
+        }
+        return null;
+    }
+
+    private <T extends View> T createViewOnEdt(Class<T> viewClass) {
+        return super.getView(viewClass);
     }
 
 }

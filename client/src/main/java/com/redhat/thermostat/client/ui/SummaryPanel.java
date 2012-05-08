@@ -38,77 +38,148 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListModel;
+import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.SummaryPanelFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.SimpleTable.Section;
-import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
 
-public class SummaryPanel extends JPanel {
+public class SummaryPanel extends JPanel implements SummaryView {
 
     private static final long serialVersionUID = -5953027789947771737L;
 
-    private final SummaryPanelFacade facade;
+    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
-    public SummaryPanel(final SummaryPanelFacade facade) {
-        this.facade = facade;
+    private final JLabel totalMonitoredHosts;
+    private final JLabel totalMonitoredVms;
 
-        setLayout(new BorderLayout());
+    private final List<String> issuesList;
 
-        List<Section> sections = new ArrayList<Section>();
-        TableEntry entry;
+    public SummaryPanel() {
 
-        Section summarySection = new Section(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
-        sections.add(summarySection);
+        JLabel lblHomepanel = new JLabel(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
 
-        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES), this.facade.getTotalMonitoredHosts());
-        summarySection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS), this.facade.getTotalMonitoredVms());
-        summarySection.add(entry);
+        JLabel lblTotalHosts = new JLabel(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
 
-        SimpleTable simpleTable = new SimpleTable();
-        JPanel summaryPanel = simpleTable.createTable(sections);
-        summaryPanel.setBorder(Components.smallBorder());
-        add(summaryPanel, BorderLayout.CENTER);
+        totalMonitoredHosts = new JLabel("${TOTAL_MONITORED_HOSTS}");
 
-        JPanel issuesPanel = createIssuesPanel();
-        issuesPanel.setBorder(Components.smallBorder());
-        add(issuesPanel, BorderLayout.PAGE_END);
+        JLabel lblTotal = new JLabel(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS));
+
+        totalMonitoredVms = new JLabel("${TOTAL_MONITORED_VMS}");
+
+        JLabel lblIssues = new JLabel(localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
+
+        JScrollPane scrollPane = new JScrollPane();
+
+        GroupLayout groupLayout = new GroupLayout(this);
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+                        .addComponent(lblHomepanel, Alignment.LEADING)
+                        .addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
+                            .addGap(12)
+                            .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+                                .addComponent(lblTotal)
+                                .addComponent(lblTotalHosts))
+                            .addPreferredGap(ComponentPlacement.RELATED, 36, Short.MAX_VALUE)
+                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+                                .addComponent(totalMonitoredVms, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(totalMonitoredHosts, GroupLayout.DEFAULT_SIZE, 232, Short.MAX_VALUE)))
+                        .addComponent(lblIssues, Alignment.LEADING)
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addGap(12)
+                            .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 459, Short.MAX_VALUE)))
+                    .addContainerGap())
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(lblHomepanel)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(lblTotalHosts)
+                        .addComponent(totalMonitoredHosts))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(lblTotal)
+                        .addComponent(totalMonitoredVms))
+                    .addGap(18)
+                    .addComponent(lblIssues)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE)
+                    .addContainerGap())
+        );
+
+        issuesList = new ArrayList<>();
+        ListModel<Object> issuesListmodel = new IssuesListModel(issuesList);
+        JList<Object> issuesList = new JList<>(issuesListmodel);
+        scrollPane.setViewportView(issuesList);
+        setLayout(groupLayout);
+
+
 
         addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
-                facade.start();
+                notifier.fireAction(Action.VISIBLE);
             }
 
             @Override
             public void componentHidden(Component component) {
-                facade.stop();
+                notifier.fireAction(Action.HIDDEN);
             }
         });
     }
 
-    public JPanel createIssuesPanel() {
-        JPanel result = new JPanel(new BorderLayout());
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
 
-        result.add(Components.header(localize(LocaleResources.HOME_PANEL_SECTION_ISSUES)), BorderLayout.PAGE_START);
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
+    }
 
-        ListModel<Object> model = new IssuesListModel(new ArrayList<>());
+    @Override
+    public void setTotalHosts(final String count) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                totalMonitoredHosts.setText(count);
+            }
+        });
+    }
 
-        JList<Object> issuesList = new JList<>(model);
-        result.add(new JScrollPane(issuesList), BorderLayout.CENTER);
+    @Override
+    public void setTotalVms(final String count) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                totalMonitoredVms.setText(count);
+            }
+        });
+    }
 
-        return result;
+    @Override
+    public Component getUiComponent() {
+        return this;
     }
 
     private static class IssuesListModel extends AbstractListModel<Object> {
@@ -140,5 +211,4 @@ public class SummaryPanel extends JPanel {
             return delegate.get(index);
         }
     }
-
 }

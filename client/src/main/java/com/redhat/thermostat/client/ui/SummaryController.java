@@ -34,12 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.Component;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.ui.SummaryView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -47,33 +49,47 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 
-public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
+
+public class SummaryController {
 
     private final HostInfoDAO hostsDAO;
     private final VmInfoDAO vmsDAO;
 
-    private final ChangeableText totalHostsText;
-    private final ChangeableText totalVmsText;
+    private final SummaryView view;
 
     private final Timer backgroundUpdateTimer;
 
-    public SummaryPanelFacadeImpl() {
-        
+    public SummaryController() {
         ApplicationContext ctx = ApplicationContext.getInstance();
+
+        this.view = ctx.getViewFactory().getView(SummaryView.class);
+
+        view.addActionListener(new ActionListener<SummaryView.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                    case HIDDEN:
+                        stop();
+                        break;
+                    case VISIBLE:
+                        start();
+                        break;
+                    default:
+                        break;
+                }
+            }
+        });
+
         DAOFactory daoFactory = ctx.getDAOFactory();
         hostsDAO = daoFactory.getHostInfoDAO();
         vmsDAO = daoFactory.getVmInfoDAO();
 
-        this.totalVmsText = new ChangeableText("");
-        this.totalHostsText = new ChangeableText("");
-
         backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
-            
             @Override
             public void run() {
-                totalVmsText.setText(String.valueOf(vmsDAO.getCount()));
-                totalHostsText.setText(String.valueOf(hostsDAO.getCount()));
+                view.setTotalVms(String.valueOf(vmsDAO.getCount()));
+                view.setTotalHosts(String.valueOf(hostsDAO.getCount()));
             }
         });
         backgroundUpdateTimer.setInitialDelay(0);
@@ -82,29 +98,17 @@ public class SummaryPanelFacadeImpl implements SummaryPanelFacade {
         backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
     }
 
-    @Override
-    public void start() {
+    private void start() {
         backgroundUpdateTimer.start();
     }
 
-    @Override
-    public void stop() {
+    private void stop() {
         backgroundUpdateTimer.stop();
     }
 
-    @Override
-    public ChangeableText getTotalMonitoredVms() {
-        return totalVmsText;
-    }
 
-    @Override
-    public ChangeableText getTotalMonitoredHosts() {
-        return totalHostsText;
-    }
-
-    @Override
-    public List<String> getIssues() {
-        return new ArrayList<String>();
+    public Component getComponent() {
+        return view.getUiComponent();
     }
 
 }
