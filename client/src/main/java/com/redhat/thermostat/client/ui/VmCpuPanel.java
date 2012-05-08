@@ -108,6 +108,8 @@ public class VmCpuPanel extends JPanel implements VmCpuView {
                 data,
                 false, false, false);
 
+        chart.getXYPlot().getRangeAxis().setLowerBound(0.0);
+
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
         setLayout(new GridBagLayout());
