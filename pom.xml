@@ -49,7 +49,8 @@
   <url>http://icedtea.classpath.org/thermostat/</url>
 
   <properties>
-    <thermostat.releasedate>2012-XX-XX</thermostat.releasedate>
+    <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
+    <thermostat.releasedate>${maven.build.timestamp}</thermostat.releasedate>
     <thermostat.email>thermostat@icedtea.classpath.org</thermostat.email>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <thermostat.build.directory>target</thermostat.build.directory>
@@ -207,4 +208,12 @@
     
     </dependencies>
   </dependencyManagement>
+
+  <scm>
+    <connection>scm:hg:http://icedtea.classpath.org/hg/thermostat</connection>
+    <developerConnection>scm:hg:ssh://icedtea.classpath.org/hg/thermostat</developerConnection>
+    <tag>tip</tag>
+    <url>http://icedtea.classpath.org/hg/thermostat</url>
+  </scm>
+
 </project>
