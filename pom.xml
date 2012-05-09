@@ -68,6 +68,8 @@
     <mongo-driver.version>2.7.3</mongo-driver.version>
     <commons-cli.version>1.2</commons-cli.version>
 
+    <felix.version>4.0.2</felix.version>
+
   </properties>
 
   <modules>
@@ -203,6 +205,12 @@
         <groupId>com.sun</groupId>
         <artifactId>tools</artifactId>
         <version>${jdktools.version}</version>
+      </dependency>
+    
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.framework</artifactId>
+        <version>${felix.version}</version>
       </dependency>
     
     </dependencies>

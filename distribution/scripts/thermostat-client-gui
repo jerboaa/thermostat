@@ -51,15 +51,16 @@ JCOMMON_JAR="${THERMOSTAT_LIBS}/jcommon.jar"
 JFREECHART_JAR="${THERMOSTAT_LIBS}/jfreechart/jfreechart.jar"
 MONGO_JAR="${THERMOSTAT_LIBS}/mongo.jar"
 BSON_JAR="${THERMOSTAT_LIBS}/bson.jar"
+OSGI_JAR="${THERMOSTAT_LIBS}/org.apache.felix.framework-4.0.2.jar"
 TOOLS_JAR="@java.home@/../lib/tools.jar"
 
 THERM_DIR="${THERMOSTAT_LIBS}"
 
-#CLIENT_CLASSPATH="${JCOMMON_JAR}:${JFREECHART_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}"
+#CLIENT_CLASSPATH="${JCOMMON_JAR}:${JFREECHART_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${OSGI_JAR}"
 CLIENT_CLASSPATH="${THERM_DIR}/*"
 CLIENT_CLASSPATH="${CLIENT_CLASSPATH}:${THERM_DIR}/thermostat-client-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar"
 
-CLIENT_MAIN="com.redhat.thermostat.client.Main"
+CLIENT_MAIN="com.redhat.thermostat.client.osgi.Thermostat"
 
 ${JAVA} -cp ${CLIENT_CLASSPATH} ${CLIENT_MAIN} ${CLIENT_ARGS} "$@"
 exit $?
