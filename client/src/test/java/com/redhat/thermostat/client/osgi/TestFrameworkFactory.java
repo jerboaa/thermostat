@@ -36,28 +36,31 @@
 
 package com.redhat.thermostat.client.osgi;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import java.util.Map;
 
-import com.redhat.thermostat.client.Main;
+import org.osgi.framework.launch.Framework;
+import org.osgi.framework.launch.FrameworkFactory;
 
-class ThermostatActivator implements BundleActivator {
+public class TestFrameworkFactory implements FrameworkFactory {
 
-    private ThermostatActivator() {
-        // Nothing to do here.
+    private static Framework framework;
+    private static Map<String, String> config;
+
+    public static void setFramework(Framework framework) {
+        TestFrameworkFactory.framework = framework;
     }
 
-    static ThermostatActivator newInstance() {
-        return new ThermostatActivator();
+    public static Map<String,String> getConfig() {
+        return config;
     }
 
+    // NOTE: For some unknown reason, this doesn't compile when declared
+    // as newFramework(Map<String,String> config). At least not in Maven.
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Override
-    public void start(BundleContext context) throws Exception {
-        Main.main(new String[0]);
+    public Framework newFramework(Map config) {
+        TestFrameworkFactory.config = config;
+        return framework;
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        /* nothing to do here */
-    }
 }

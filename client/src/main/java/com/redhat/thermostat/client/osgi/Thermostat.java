@@ -82,7 +82,7 @@ public class Thermostat {
         throws Exception
     {
         BundleContext bundleContext = framework.getBundleContext();
-        BundleActivator hostActivator = new ThermostatActivator();
+        BundleActivator hostActivator = ThermostatActivator.newInstance();
         hostActivator.start(bundleContext);
         for (String location : bundleLocations) {
             Bundle addition = bundleContext.installBundle(location);
