@@ -36,31 +36,17 @@
 
 package com.redhat.thermostat.client.osgi;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
-
-import com.redhat.thermostat.client.Main;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.DAOFactory;
 
-class ThermostatActivator implements BundleActivator {
 
-    private ThermostatActivator() {
-        // Nothing to do here.
-    }
-
-    static ThermostatActivator newInstance() {
-        return new ThermostatActivator();
-    }
+class ApplicationServiceProvider implements ApplicationService {
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(ApplicationService.class, new ApplicationServiceProvider(), null);
-        Main.main(new String[0]);
+    public DAOFactory getDAOFactory() {
+        // TODO: Eventually we will no longer need a singleton for ApplicationContext!
+        return ApplicationContext.getInstance().getDAOFactory();
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        /* nothing to do here */
-    }
 }

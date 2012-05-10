@@ -90,7 +90,7 @@ public class Thermostat {
         }
     }
     
-    private void start() throws Exception {
+    private void start(String[] args) throws Exception {
         setUp();
         
         ServiceLoader<FrameworkFactory> loader =
@@ -99,6 +99,7 @@ public class Thermostat {
         Map<String, String> bundleConfigurations = initPublicAPIforBundles();
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE,
                                  thermostatBundleHome.getAbsolutePath());
+        bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.redhat.thermostat.client.osgi.service, com.redhat.thermostat.common.dao");
         
         Iterator<FrameworkFactory> factories = loader.iterator();
         if (factories.hasNext()) {
@@ -108,7 +109,7 @@ public class Thermostat {
             framework.init();
             framework.start();
             
-            installAndStartBundles(framework, new String[0]);
+            installAndStartBundles(framework, args);
             
         } else {
             throw new InternalError("Can't find factories for ServiceLoader!");
@@ -120,6 +121,6 @@ public class Thermostat {
      * @throws Exception 
      */
     public static void main(String[] args) throws Exception {
-        new Thermostat().start();
+        new Thermostat().start(args);
     }    
 }

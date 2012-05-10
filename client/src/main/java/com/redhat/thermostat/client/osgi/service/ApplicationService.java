@@ -34,33 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi;
+package com.redhat.thermostat.client.osgi.service;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import com.redhat.thermostat.common.dao.DAOFactory;
 
+public interface ApplicationService {
 
-import com.redhat.thermostat.client.Main;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-
-class ThermostatActivator implements BundleActivator {
-
-    private ThermostatActivator() {
-        // Nothing to do here.
-    }
-
-    static ThermostatActivator newInstance() {
-        return new ThermostatActivator();
-    }
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(ApplicationService.class, new ApplicationServiceProvider(), null);
-        Main.main(new String[0]);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        /* nothing to do here */
-    }
+    DAOFactory getDAOFactory();
 }
