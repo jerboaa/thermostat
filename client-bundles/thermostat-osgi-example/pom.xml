@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>thermostat-client-bundles</artifactId>
+    <groupId>com.redhat.thermostat</groupId>
+    <version>0.3-SNAPSHOT</version>
+  </parent>
+  <artifactId>thermostat-osgi-example</artifactId>
+  <packaging>bundle</packaging>
+  <name>Thermostat Example Client bundle</name>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>1.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Private-Package>com.redhat.thermostat.client.osgi.example</Private-Package>
+            <Bundle-Activator>com.redhat.thermostat.client.osgi.example.Activator</Bundle-Activator>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Import-Package>com.redhat.thermostat.client.osgi.service, com.redhat.thermostat.common.dao, org.osgi.framework</Import-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>osgi_R4_core</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
+</project>
