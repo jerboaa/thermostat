@@ -34,38 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.ui.HostCpuController;
-import com.redhat.thermostat.client.ui.HostMemoryController;
-import com.redhat.thermostat.client.ui.HostOverviewController;
+import static com.redhat.thermostat.client.locale.Translate.localize;
+
+import java.awt.Component;
+
+import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostRef;
 
-public class HostPanelFacadeImpl implements HostPanelFacade {
+public class HostInformationController {
 
     private final HostOverviewController overviewController;
     private final HostCpuController cpuController;
     private final HostMemoryController memoryController;
 
-    public HostPanelFacadeImpl(HostRef ref) {
+    private final HostInformationView view;
+
+    public HostInformationController(HostRef ref) {
         overviewController = new HostOverviewController(ref);
         cpuController = new HostCpuController(ref);
         memoryController = new HostMemoryController(ref);
+
+        view = ApplicationContext.getInstance().getViewFactory().getView(HostInformationView.class);
+
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getComponent());
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getComponent());
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getComponent());
+
     }
 
-    @Override
     public HostOverviewController getOverviewController() {
         return overviewController;
     }
 
-    @Override
     public HostCpuController getCpuController() {
         return cpuController;
     }
 
-    @Override
     public HostMemoryController getMemoryController() {
         return memoryController;
+    }
+
+    public Component getComponent() {
+        return view.getUiComponent();
     }
 
 }

@@ -34,39 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.ui.HostInformationController;
-import com.redhat.thermostat.client.ui.MainWindow;
-import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.VmInformationController;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import java.awt.BorderLayout;
+import java.awt.Component;
 
-public class UiFacadeFactoryImpl implements UiFacadeFactory {
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
-    @Override
-    public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView);
+public class HostInformationPanel extends JPanel implements HostInformationView {
+
+    private static final long serialVersionUID = 4835316442841009133L;
+
+    private final JTabbedPane tabPane;
+
+    private int viewCount = 0;
+
+    public HostInformationPanel() {
+        setLayout(new BorderLayout());
+        tabPane = new JTabbedPane();
+        this.add(tabPane);
     }
 
     @Override
-    public SummaryController getSummary() {
-        return new SummaryController();
+    public void addChildView(final String title, final Component view) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                tabPane.insertTab(title, null, view, null, viewCount);
+                viewCount++;
+            }
 
+        });
     }
 
     @Override
-    public HostInformationController getHostController(HostRef ref) {
-        return new HostInformationController(ref);
-
+    public void removeChildView(final String title) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < viewCount; i++) {
+                    if (tabPane.getTitleAt(i).equals(title)) {
+                        tabPane.remove(i);
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     @Override
-    public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(ref);
-
+    public Component getUiComponent() {
+        return this;
     }
 
 }

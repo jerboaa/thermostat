@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client;
 
+import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -47,7 +48,7 @@ public interface UiFacadeFactory {
 
     public SummaryController getSummary();
 
-    public HostPanelFacade getHostPanel(HostRef ref);
+    public HostInformationController getHostController(HostRef ref);
 
     public VmInformationController getVmController(VmRef ref);
 

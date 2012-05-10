@@ -36,47 +36,16 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import java.awt.Component;
 
-import java.awt.BorderLayout;
+import com.redhat.thermostat.common.View;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+public interface HostInformationView extends View {
 
-import com.redhat.thermostat.client.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
+    void addChildView(String title, Component view);
 
-public class HostPanel extends JPanel {
+    void removeChildView(String title);
 
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
-
-    private static final long serialVersionUID = 4835316442841009133L;
-
-    private final HostPanelFacade facade;
-
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
-
-        init();
-    }
-
-    private void init() {
-        setLayout(new BorderLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
-    }
+    Component getUiComponent();
 
 }
