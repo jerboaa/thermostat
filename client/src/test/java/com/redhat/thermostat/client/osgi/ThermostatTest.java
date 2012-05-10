@@ -68,6 +68,8 @@ public class ThermostatTest {
 
     private Framework mockFramework;
 
+    private BundleContext mockContext;
+
     @Before
     public void setUp() throws IOException {
 
@@ -75,7 +77,11 @@ public class ThermostatTest {
         tempDir.toFile().deleteOnExit();
         System.setProperty("THERMOSTAT_HOME", tempDir.toString());
 
+	mockContext = mock(BundleContext.class);
+
         mockFramework = mock(Framework.class);
+	when(mockFramework.getBundleContext()).thenReturn(mockContext);
+
         TestFrameworkFactory.setFramework(mockFramework);
 
         PowerMockito.mockStatic(Main.class);
@@ -128,11 +134,9 @@ public class ThermostatTest {
     @Test
     public void testThermostatActivator() throws Exception {
         ThermostatActivator activator = mock(ThermostatActivator.class);
-        BundleContext context = mock(BundleContext.class);
-        when(mockFramework.getBundleContext()).thenReturn(context);
         PowerMockito.mockStatic(ThermostatActivator.class);
         when(ThermostatActivator.newInstance()).thenReturn(activator);
         Thermostat.main(new String[0]);
-        verify(activator).start(context);
+        verify(activator).start(mockContext);
     }
 }
