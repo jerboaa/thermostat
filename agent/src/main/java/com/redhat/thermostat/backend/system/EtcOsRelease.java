@@ -80,11 +80,11 @@ public class EtcOsRelease implements DistributionInformationSource {
         String version = DistributionInformation.UNKNOWN_VERSION;
         String line = null;
         while ((line = reader.readLine()) != null) {
-            if (line.startsWith("NAME=")) {
-                name = readShellVariable("NAME", line);
+            if (line.matches("^NAME *=.*")) {
+                name = readShellVariable(line);
             }
-            if (line.startsWith("VERSION=")) {
-                version = readShellVariable("VERSION", line);
+            if (line.matches("^VERSION *=.*")) {
+                version = readShellVariable(line);
             }
         }
         return new DistributionInformation(name, version);
@@ -94,11 +94,13 @@ public class EtcOsRelease implements DistributionInformationSource {
      *
      * @return the value of the shell variable
      */
-    private String readShellVariable(String variableName, String line) {
+    private String readShellVariable(String line) {
         // TODO we should try to handle shell quotes better
-        String result = line.substring((variableName + "=").length());
+        String result = line.substring(line.indexOf("=")+1);
+        result = result.trim();
         if (result.startsWith("\"") && result.endsWith("\"")) {
             result = result.substring(1, result.length()-1);
+            result = result.trim();
         }
         return result;
     }
