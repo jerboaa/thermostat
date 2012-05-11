@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,7 +77,19 @@ public class ThermostatTest {
         tempDir = Files.createTempDirectory("test");
         tempDir.toFile().deleteOnExit();
         System.setProperty("THERMOSTAT_HOME", tempDir.toString());
-
+        
+        File tempEtc = new File(tempDir.toFile(), "etc");
+        tempEtc.mkdirs();
+        tempEtc.deleteOnExit();
+        
+        File tempProps = new File(tempEtc, "osgi-export.properties");
+        tempProps.createNewFile();
+        tempProps.deleteOnExit();
+        
+        File tempLibs = new File(tempDir.toFile(), "libs");
+        tempLibs.mkdirs();
+        tempLibs.deleteOnExit();
+        
 	mockContext = mock(BundleContext.class);
 
         mockFramework = mock(Framework.class);
@@ -88,32 +101,12 @@ public class ThermostatTest {
     }
 
     @Test
-    public void testCreateOSGIDir() throws Exception {
-        Path osgiDir = tempDir.resolve("osgi");
-        assertFalse(osgiDir.toFile().exists());
-        Thermostat.main(new String[0]);
-        assertTrue(osgiDir.toFile().exists());
-    }
-
-    @Test
     public void testOSGIDirExists() throws Exception {
         Path osgiDir = tempDir.resolve("osgi");
         osgiDir.toFile().mkdirs();
         assertTrue(osgiDir.toFile().exists());
         Thermostat.main(new String[0]);
         assertTrue(osgiDir.toFile().exists());
-    }
-
-    @Test(expected=InternalError.class)
-    public void testCreateOSGIDirNotPossible() throws Exception {
-        try {
-            Path osgiDir = tempDir.resolve("osgi");
-            assertFalse(osgiDir.toFile().exists());
-            tempDir.toFile().setWritable(false);
-            Thermostat.main(new String[0]);
-        } finally {
-            tempDir.toFile().setWritable(true);
-        }
     }
 
     @Test

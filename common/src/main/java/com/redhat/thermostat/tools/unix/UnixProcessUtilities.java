@@ -47,9 +47,11 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.UNIXSignal;
 import com.redhat.thermostat.tools.ApplicationException;
 
-public class UnixProcessUtilities {
+public class UnixProcessUtilities implements UNIXProcessHandler {
 
     private static final Logger logger = LoggingUtils.getLogger(UnixProcessUtilities.class);
     
@@ -60,10 +62,12 @@ public class UnixProcessUtilities {
     
     UnixProcessUtilities() {}
     
-    /**
-     * Returns the process name of the process with the given pid, or null
-     * if no process is running with the given pid.
-     */
+    @Override
+    public void sendSignal(String pid, UNIXSignal signal) {
+        System.err.println("yeah!");
+    }
+    
+    @Override
     public String getProcessName(String pid) {
         
         String result = null;
