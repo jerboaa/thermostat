@@ -3,11 +3,11 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <artifactId>thermostat-client-bundles</artifactId>
+    <artifactId>thermostat-client</artifactId>
     <groupId>com.redhat.thermostat</groupId>
     <version>0.3-SNAPSHOT</version>
   </parent>
-  <artifactId>thermostat-osgi-example</artifactId>
+  <artifactId>thermostat-client-example</artifactId>
   <packaging>bundle</packaging>
   <name>Thermostat Example Client bundle</name>
   <build>
@@ -21,7 +21,7 @@
           <instructions>
             <Private-Package>com.redhat.thermostat.client.osgi.example</Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.osgi.example.Activator</Bundle-Activator>
-            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Vendor>Red Hat</Bundle-Vendor>
             <Import-Package>com.redhat.thermostat.client.osgi.service, com.redhat.thermostat.common.dao, org.osgi.framework</Import-Package>
           </instructions>
         </configuration>
@@ -30,13 +30,23 @@
   </build>
   <dependencies>
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>osgi_R4_core</artifactId>
       <version>1.0</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client</artifactId>
+      <artifactId>thermostat-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-core</artifactId>
       <version>${project.version}</version>
     </dependency>
   </dependencies>

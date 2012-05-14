@@ -50,18 +50,10 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.client.Main;
-
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Main.class, ThermostatActivator.class})
 public class ThermostatTest {
 
     private Path tempDir;
@@ -83,8 +75,6 @@ public class ThermostatTest {
 	when(mockFramework.getBundleContext()).thenReturn(mockContext);
 
         TestFrameworkFactory.setFramework(mockFramework);
-
-        PowerMockito.mockStatic(Main.class);
     }
 
     @Test
@@ -129,14 +119,5 @@ public class ThermostatTest {
         Thermostat.main(new String[0]);
         verify(mockFramework).init();
         verify(mockFramework).start();
-    }
-
-    @Test
-    public void testThermostatActivator() throws Exception {
-        ThermostatActivator activator = mock(ThermostatActivator.class);
-        PowerMockito.mockStatic(ThermostatActivator.class);
-        when(ThermostatActivator.newInstance()).thenReturn(activator);
-        Thermostat.main(new String[0]);
-        verify(activator).start(mockContext);
     }
 }

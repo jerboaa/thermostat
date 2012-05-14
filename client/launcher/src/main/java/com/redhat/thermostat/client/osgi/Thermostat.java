@@ -43,7 +43,6 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
@@ -82,8 +81,6 @@ public class Thermostat {
         throws Exception
     {
         BundleContext bundleContext = framework.getBundleContext();
-        BundleActivator hostActivator = ThermostatActivator.newInstance();
-        hostActivator.start(bundleContext);
         for (String location : bundleLocations) {
             Bundle addition = bundleContext.installBundle(location);
             addition.start();
