@@ -73,6 +73,15 @@
       <artifactId>org.apache.felix.framework</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.jfree</groupId>
+      <artifactId>jfreechart</artifactId>
+    </dependency>
   </dependencies>
 
 </project>

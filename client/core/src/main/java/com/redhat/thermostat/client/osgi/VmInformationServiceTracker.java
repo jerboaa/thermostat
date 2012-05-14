@@ -34,53 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.osgi;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
+import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.ui.MainWindow;
-import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.VmInformationController;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 
-public class UiFacadeFactoryImpl implements UiFacadeFactory {
+class VmInformationServiceTracker implements ServiceListener {
 
-    private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
+    private UiFacadeFactory uiFacadeFactory;
 
-    @Override
-    public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView);
+    private BundleContext context;
+
+    VmInformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+        this.context = context;
+        this.uiFacadeFactory = uiFacadeFactory;
     }
 
     @Override
-    public SummaryController getSummary() {
-        return new SummaryController();
-
-    }
-
-    @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return new HostPanelFacadeImpl(ref);
-
-    }
-
-    @Override
-    public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, ref);
-
-    }
-
-    @Override
-    public Collection<VmInformationService> getVmInformationServices() {
-        return vmInformationServices;
-    }
-
-    @Override
-    public void addVmInformationService(VmInformationService vmInfoService) {
-        vmInformationServices.add(vmInfoService);
+    public void serviceChanged(ServiceEvent event) {
+        ServiceReference reference = event.getServiceReference();
+        VmInformationService service = (VmInformationService) context.getService(reference);
+        uiFacadeFactory.addVmInformationService(service);
     }
 }

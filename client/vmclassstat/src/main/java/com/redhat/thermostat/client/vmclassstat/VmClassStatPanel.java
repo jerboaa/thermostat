@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.vmclassstat;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
@@ -53,6 +53,10 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.ComponentVisibleListener;
+import com.redhat.thermostat.client.ui.Components;
+import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
+import com.redhat.thermostat.client.ui.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;

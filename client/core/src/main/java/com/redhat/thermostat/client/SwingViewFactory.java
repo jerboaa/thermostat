@@ -54,8 +54,6 @@ import com.redhat.thermostat.client.ui.HostOverviewPanel;
 import com.redhat.thermostat.client.ui.HostOverviewView;
 import com.redhat.thermostat.client.ui.SummaryPanel;
 import com.redhat.thermostat.client.ui.SummaryView;
-import com.redhat.thermostat.client.ui.VmClassStatPanel;
-import com.redhat.thermostat.client.ui.VmClassStatView;
 import com.redhat.thermostat.client.ui.VmCpuPanel;
 import com.redhat.thermostat.client.ui.VmCpuView;
 import com.redhat.thermostat.client.ui.VmGcPanel;
@@ -86,7 +84,6 @@ public class SwingViewFactory extends DefaultViewFactory implements ViewFactory 
         setViewClass(HostMemoryView.class, HostMemoryPanel.class);
         setViewClass(HostOverviewView.class, HostOverviewPanel.class);
 
-        setViewClass(VmClassStatView.class, VmClassStatPanel.class);
         setViewClass(VmCpuView.class, VmCpuPanel.class);
         setViewClass(VmGcView.class, VmGcPanel.class);
         setViewClass(VmMemoryView.class, VmMemoryPanel.class);

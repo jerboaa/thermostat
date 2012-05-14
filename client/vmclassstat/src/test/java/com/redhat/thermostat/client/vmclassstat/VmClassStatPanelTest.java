@@ -34,53 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.vmclassstat;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.ui.MainWindow;
-import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.VmInformationController;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
-public class UiFacadeFactoryImpl implements UiFacadeFactory {
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
+import org.fest.swing.edt.GuiActionRunner;
+import org.fest.swing.edt.GuiTask;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-    private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-    @Override
-    public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView);
+@RunWith(CacioFESTRunner.class)
+public class VmClassStatPanelTest {
+
+    @BeforeClass
+    public static void setUpOnce() {
+        FailOnThreadViolationRepaintManager.install();
     }
 
-    @Override
-    public SummaryController getSummary() {
-        return new SummaryController();
-
+    @Test
+    public void testAddDataTwice() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                VmClassStatPanel panel = new VmClassStatPanel();
+                List<DiscreteTimeData<Long>> data = new ArrayList<>();
+                panel.addClassCount(data);
+                int numComponents = panel.getComponentCount();
+                assertTrue(numComponents > 0);
+                panel.addClassCount(data);
+                assertEquals(numComponents, panel.getComponentCount());
+            }
+        });
     }
 
-    @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return new HostPanelFacadeImpl(ref);
-
-    }
-
-    @Override
-    public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, ref);
-
-    }
-
-    @Override
-    public Collection<VmInformationService> getVmInformationServices() {
-        return vmInformationServices;
-    }
-
-    @Override
-    public void addVmInformationService(VmInformationService vmInfoService) {
-        vmInformationServices.add(vmInfoService);
-    }
 }

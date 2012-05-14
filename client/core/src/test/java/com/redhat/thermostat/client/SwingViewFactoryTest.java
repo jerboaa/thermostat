@@ -49,7 +49,6 @@ import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostCpuView;
 import com.redhat.thermostat.client.ui.HostMemoryView;
 import com.redhat.thermostat.client.ui.HostOverviewView;
-import com.redhat.thermostat.client.ui.VmClassStatView;
 import com.redhat.thermostat.client.ui.VmCpuView;
 import com.redhat.thermostat.client.ui.VmGcView;
 import com.redhat.thermostat.client.ui.VmMemoryView;
@@ -69,7 +68,6 @@ public class SwingViewFactoryTest {
         knownViewClasses.add(HostCpuView.class);
         knownViewClasses.add(HostMemoryView.class);
         knownViewClasses.add(HostOverviewView.class);
-        knownViewClasses.add(VmClassStatView.class);
         knownViewClasses.add(VmCpuView.class);
         knownViewClasses.add(VmGcView.class);
         knownViewClasses.add(VmMemoryView.class);

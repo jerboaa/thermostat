@@ -39,8 +39,12 @@ package com.redhat.thermostat.client.ui;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.Component;
+import java.util.Collection;
 
+import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmRef;
 
@@ -51,15 +55,13 @@ public class VmInformationController {
     private final VmOverviewController overviewController;
     private final VmCpuController cpuController;
     private final VmMemoryController memoryController;
-    private final VmClassStatController classesController;
     private final VmGcController gcController;
 
-    public VmInformationController(VmRef vmRef) {
+    public VmInformationController(UiFacadeFactory uiFacadeFactory, VmRef vmRef) {
         overviewController = new VmOverviewController(vmRef);
         cpuController = new VmCpuController(vmRef);
         memoryController = new VmMemoryController(vmRef);
         gcController = new VmGcController(vmRef);
-        classesController = new VmClassStatController(vmRef);
 
         view = ApplicationContext.getInstance().getViewFactory().getView(VmInformationView.class);
 
@@ -67,8 +69,14 @@ public class VmInformationController {
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getComponent());
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_MEMORY), memoryController.getComponent());
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_GC), gcController.getComponent());
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_CLASSES), classesController.getComponent());
 
+        Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();
+        for (VmInformationService vmInfoService : vmInfoServices) {
+            VmInformationServiceController ctrl = vmInfoService.getInformationServiceController(vmRef);
+            String name = ctrl.getLocalizedName();
+            Component viewComp = ctrl.getComponent();
+            view.addChildView(name, viewComp);
+        }
     }
 
     public Component getComponent() {

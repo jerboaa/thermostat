@@ -34,53 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.osgi.service;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.ui.MainWindow;
-import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.VmInformationController;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 
-public class UiFacadeFactoryImpl implements UiFacadeFactory {
+public interface VmInformationService {
 
-    private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
-
-    @Override
-    public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView);
-    }
-
-    @Override
-    public SummaryController getSummary() {
-        return new SummaryController();
-
-    }
-
-    @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return new HostPanelFacadeImpl(ref);
-
-    }
-
-    @Override
-    public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, ref);
-
-    }
-
-    @Override
-    public Collection<VmInformationService> getVmInformationServices() {
-        return vmInformationServices;
-    }
-
-    @Override
-    public void addVmInformationService(VmInformationService vmInfoService) {
-        vmInformationServices.add(vmInfoService);
-    }
+    VmInformationServiceController getInformationServiceController(VmRef ref);
 }

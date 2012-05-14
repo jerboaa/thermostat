@@ -34,53 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.vmclassstat;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.ui.MainWindow;
-import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.VmInformationController;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 
-public class UiFacadeFactoryImpl implements UiFacadeFactory {
-
-    private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
+public class Activator implements BundleActivator {
 
     @Override
-    public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView);
+    public void start(BundleContext context) throws Exception {
+        ApplicationContext.getInstance().getViewFactory().setViewClass(VmClassStatView.class, VmClassStatPanel.class);
+        context.registerService(VmInformationService.class.getName(), new VmClassStatService(), null);
     }
 
     @Override
-    public SummaryController getSummary() {
-        return new SummaryController();
+    public void stop(BundleContext context) throws Exception {
+        // TODO Auto-generated method stub
 
     }
 
-    @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return new HostPanelFacadeImpl(ref);
-
-    }
-
-    @Override
-    public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, ref);
-
-    }
-
-    @Override
-    public Collection<VmInformationService> getVmInformationServices() {
-        return vmInformationServices;
-    }
-
-    @Override
-    public void addVmInformationService(VmInformationService vmInfoService) {
-        vmInformationServices.add(vmInfoService);
-    }
 }

@@ -92,11 +92,6 @@
       <artifactId>jfreechart</artifactId>
     </dependency>
     
-<!--     <dependency> -->
-<!--       <groupId>org.osgi</groupId> -->
-<!--       <artifactId>osgi_R4_core</artifactId> -->
-<!--       <version>1.0</version> -->
-<!--     </dependency> -->
     <dependency>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.framework</artifactId>
@@ -113,13 +108,10 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Embed-Dependency>*;scope=compile|runtime;artifactId=!org.apache.felix.framework|osgi_R4_core</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>
-            <Import-Package>!android.dalvik,!com.apple.*,!dalvik.system,!javax.mail.*,!javax.servlet.*,!junit.*,!org.testng.*,*</Import-Package>
-            <Private-Package>com.redhat.thermostat.*</Private-Package>
+            <Private-Package>com.redhat.thermostat.client.*</Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.osgi.ThermostatActivator</Bundle-Activator>
-            <Bundle-Vendor>Red Hat</Bundle-Vendor>
-            <Export-Package>com.redhat.thermostat.client.osgi.service</Export-Package>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Export-Package>com.redhat.thermostat.client.osgi.service,com.redhat.thermostat.client.ui,com.redhat.thermostat.client.locale</Export-Package>
           </instructions>
         </configuration>
       </plugin>

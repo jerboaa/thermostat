@@ -73,7 +73,8 @@ public class Main {
     private ClientArgs arguments;
     private UiFacadeFactory uiFacadeFactory;
 
-    private Main(String[] args) {
+    private Main(UiFacadeFactory uiFacadeFactory, String[] args) {
+        this.uiFacadeFactory = uiFacadeFactory;
         try {
             this.arguments = new ClientArgs(args);
         } catch (IllegalArgumentException ex) {
@@ -124,8 +125,6 @@ public class Main {
         connection.connect();
         connection.removeListener(connectionListener);
 
-        uiFacadeFactory = new UiFacadeFactoryImpl();
-
         MainWindowController mainController = uiFacadeFactory.getMainWindow();
         mainController.showMainMainWindow();
 
@@ -157,10 +156,10 @@ public class Main {
 
     }
 
-    public static void main(String[] args) {
+    public static void main(UiFacadeFactory uiFacadeFactory, String[] args) {
         LoggingUtils.setGlobalLogLevel(Level.ALL);
 
-        final Main main = new Main(args);
+        final Main main = new Main(uiFacadeFactory, args);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

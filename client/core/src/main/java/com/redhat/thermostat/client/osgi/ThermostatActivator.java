@@ -39,28 +39,27 @@ package com.redhat.thermostat.client.osgi;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-
 import com.redhat.thermostat.client.Main;
+import com.redhat.thermostat.client.UiFacadeFactory;
+import com.redhat.thermostat.client.UiFacadeFactoryImpl;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 
-class ThermostatActivator implements BundleActivator {
+public class ThermostatActivator implements BundleActivator {
 
-    private ThermostatActivator() {
-        // Nothing to do here.
-    }
-
-    static ThermostatActivator newInstance() {
-        return new ThermostatActivator();
-    }
+    private VmInformationServiceTracker vmInfoServiceTracker;
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(ApplicationService.class, new ApplicationServiceProvider(), null);
-        Main.main(new String[0]);
+    public void start(final BundleContext context) throws Exception {
+        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
+        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
+        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
+        context.addServiceListener(vmInfoServiceTracker);
+        
+        Main.main(uiFacadeFactory, new String[0]);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        /* nothing to do here */
+        context.removeServiceListener(vmInfoServiceTracker);
     }
 }

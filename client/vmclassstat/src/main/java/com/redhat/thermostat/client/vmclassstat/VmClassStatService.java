@@ -34,47 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.vmclassstat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
+import com.redhat.thermostat.common.dao.VmRef;
 
-import java.util.ArrayList;
-import java.util.List;
+class VmClassStatService implements VmInformationService {
 
-import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
-
-import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
-import org.fest.swing.edt.GuiActionRunner;
-import org.fest.swing.edt.GuiTask;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import com.redhat.thermostat.common.model.DiscreteTimeData;
-
-@RunWith(CacioFESTRunner.class)
-public class VmClassStatPanelTest {
-
-    @BeforeClass
-    public static void setUpOnce() {
-        FailOnThreadViolationRepaintManager.install();
-    }
-
-    @Test
-    public void testAddDataTwice() {
-        GuiActionRunner.execute(new GuiTask() {
-            @Override
-            protected void executeInEDT() throws Throwable {
-                VmClassStatPanel panel = new VmClassStatPanel();
-                List<DiscreteTimeData<Long>> data = new ArrayList<>();
-                panel.addClassCount(data);
-                int numComponents = panel.getComponentCount();
-                assertTrue(numComponents > 0);
-                panel.addClassCount(data);
-                assertEquals(numComponents, panel.getComponentCount());
-            }
-        });
+    @Override
+    public VmInformationServiceController getInformationServiceController(VmRef ref) {
+        return new VmClassStatController(ref);
     }
 
 }

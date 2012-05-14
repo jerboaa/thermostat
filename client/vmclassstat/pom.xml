@@ -7,9 +7,9 @@
     <groupId>com.redhat.thermostat</groupId>
     <version>0.3-SNAPSHOT</version>
   </parent>
-  <artifactId>thermostat-client-example</artifactId>
+  <artifactId>thermostat-client-vmclassstat</artifactId>
   <packaging>bundle</packaging>
-  <name>Thermostat Example Client bundle</name>
+  <name>Thermostat Client VmClassStat plugin</name>
   <build>
     <plugins>
       <plugin>
@@ -19,9 +19,9 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package>com.redhat.thermostat.client.osgi.example</Private-Package>
-            <Bundle-Activator>com.redhat.thermostat.client.osgi.example.Activator</Bundle-Activator>
-            <Bundle-Vendor>Red Hat</Bundle-Vendor>
+            <Private-Package>com.redhat.thermostat.client.vmclassstat</Private-Package>
+            <Bundle-Activator>com.redhat.thermostat.client.vmclassstat.Activator</Bundle-Activator>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
           </instructions>
         </configuration>
       </plugin>
@@ -31,6 +31,21 @@
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.easytesting</groupId>
+      <artifactId>fest-swing</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.java.openjdk.cacio</groupId>
+      <artifactId>cacio-tta</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

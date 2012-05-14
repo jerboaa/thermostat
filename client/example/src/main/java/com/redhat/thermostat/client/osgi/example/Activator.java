@@ -49,12 +49,15 @@ import com.redhat.thermostat.common.dao.HostRef;
 public class Activator implements BundleActivator {
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceReference ref = context.getServiceReference("com.redhat.thermostat.client.osgi.service.ApplicationService");
-        ApplicationService appService = (ApplicationService) context.getService(ref);
-        final DAOFactory daoFactory = appService.getDAOFactory();
+    public void start(final BundleContext context) throws Exception {
         Thread thread = new Thread() {
             public void run() {
+                ServiceReference ref = null;
+                while (ref == null) {
+                    ref = context.getServiceReference(ApplicationService.class.getName());
+                }
+                ApplicationService appService = (ApplicationService) context.getService(ref);
+                final DAOFactory daoFactory = appService.getDAOFactory();
                 // TODO: Instead of actively waiting for the DAOFActory to establish a connection,
                 // we should have a DAOService that will only be activate when the DB connection
                 // comes up, and have this bundle wait for it by means of a ServiceTracker.
@@ -81,8 +84,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // TODO Auto-generated method stub
-        
+        // Nothing to do here.
     }
 
 }

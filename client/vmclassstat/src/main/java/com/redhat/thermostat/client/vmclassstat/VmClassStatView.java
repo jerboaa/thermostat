@@ -34,53 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.vmclassstat;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import java.awt.Component;
+import java.util.List;
 
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.ui.MainWindow;
-import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.VmInformationController;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public class UiFacadeFactoryImpl implements UiFacadeFactory {
+public interface VmClassStatView extends View {
 
-    private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
-
-    @Override
-    public MainWindowController getMainWindow() {
-        MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView);
+    enum Action {
+        VISIBLE,
+        HIDDEN,
     }
 
-    @Override
-    public SummaryController getSummary() {
-        return new SummaryController();
+    void addActionListener(ActionListener<Action> listener);
 
-    }
+    void removeActionListener(ActionListener<Action> listener);
 
-    @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return new HostPanelFacadeImpl(ref);
 
-    }
+    void clearClassCount();
 
-    @Override
-    public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, ref);
+    void addClassCount(List<DiscreteTimeData<Long>> data);
 
-    }
-
-    @Override
-    public Collection<VmInformationService> getVmInformationServices() {
-        return vmInformationServices;
-    }
-
-    @Override
-    public void addVmInformationService(VmInformationService vmInfoService) {
-        vmInformationServices.add(vmInfoService);
-    }
+    Component getUiComponent();
 }
