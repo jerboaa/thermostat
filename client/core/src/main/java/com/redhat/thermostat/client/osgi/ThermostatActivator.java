@@ -43,6 +43,7 @@ import com.redhat.thermostat.client.Main;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.UiFacadeFactoryImpl;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
 
 public class ThermostatActivator implements BundleActivator {
 
@@ -50,16 +51,16 @@ public class ThermostatActivator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
         UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
         vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        context.addServiceListener(vmInfoServiceTracker);
+        vmInfoServiceTracker.open();
         
         Main.main(uiFacadeFactory, new String[0]);
+        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        context.removeServiceListener(vmInfoServiceTracker);
+        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
     }
 }

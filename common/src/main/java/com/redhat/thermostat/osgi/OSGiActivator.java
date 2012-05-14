@@ -34,36 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.vmclassstat;
+package com.redhat.thermostat.osgi;
+
+import java.util.Hashtable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.tools.unix.UnixProcessUtilities;
 
-public class Activator implements BundleActivator {
+public class OSGiActivator implements BundleActivator {
 
+    private static final Logger logger = LoggingUtils.getLogger(OSGiActivator.class);
+    
     @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(VmClassStatView.class, VmClassStatPanel.class);
-                context.registerService(VmInformationService.class.getName(), new VmClassStatService(), null);
-                return super.addingService(reference);
-            }
-        };
-        tracker.open();
+    public void start(BundleContext context) throws Exception {        
+        logger.log(Level.INFO, "activating thermostat-common bundles");
+        
+        Hashtable<String, String> props = new Hashtable<String, String>();
+        props.put(UNIXProcessHandler.ID, UNIXProcessHandler.ID);
+        
+        context.registerService(UNIXProcessHandler.class.getName(), UnixProcessUtilities.getInstance(), props);
     }
-
+    
     @Override
     public void stop(BundleContext context) throws Exception {
         // TODO Auto-generated method stub
-
+        
     }
-
 }

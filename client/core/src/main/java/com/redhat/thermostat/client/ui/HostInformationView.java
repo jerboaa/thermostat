@@ -34,36 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.vmclassstat;
+package com.redhat.thermostat.client.ui;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+import java.awt.Component;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.View;
 
-public class Activator implements BundleActivator {
+public interface HostInformationView extends View {
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(VmClassStatView.class, VmClassStatPanel.class);
-                context.registerService(VmInformationService.class.getName(), new VmClassStatService(), null);
-                return super.addingService(reference);
-            }
-        };
-        tracker.open();
-    }
+    void addChildView(String title, Component view);
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // TODO Auto-generated method stub
+    void removeChildView(String title);
 
-    }
+    Component getUiComponent();
 
 }

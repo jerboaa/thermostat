@@ -34,35 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+package com.redhat.thermostat.osgi;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.List;
+import java.util.Properties;
+
+import junit.framework.Assert;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.launch.Framework;
 
-public class ThermostatTest {
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+
+public class OSGiRegistryTest {
 
     private Path tempDir;
-
-    private Framework mockFramework;
-
-    private BundleContext mockContext;
-
+    private File someJars1;
+    private File someJars2;
+    
     @Before
     public void setUp() throws IOException {
 
@@ -82,35 +76,35 @@ public class ThermostatTest {
         tempLibs.mkdirs();
         tempLibs.deleteOnExit();
         
-	mockContext = mock(BundleContext.class);
+        someJars1 = new File(tempLibs, "thermostat-osgi-fluff1.jar");
+        someJars1.createNewFile();
+        someJars1.deleteOnExit();
+        
+        someJars2 = new File(tempLibs, "thermostat-osgi-fluff2.jar");
+        someJars2.createNewFile();
+        someJars2.deleteOnExit();
+        
+        File tmpConfigs = new File(tempEtc, "osgi-export.properties");     
+        tmpConfigs.deleteOnExit();
+        
+        Properties props = new Properties();            
 
-        mockFramework = mock(Framework.class);
-	when(mockFramework.getBundleContext()).thenReturn(mockContext);
+        props.setProperty("this.is.a.fluff.package", "0.0.0");
+        props.setProperty("this.is.even.more.a.fluff.package", "0.0.1");
 
-        TestFrameworkFactory.setFramework(mockFramework);
+        props.store(new FileOutputStream(tmpConfigs), "thermostat osgi public api test properties");
     }
-
+    
     @Test
-    public void testOSGIDirExists() throws Exception {
-        Path osgiDir = tempDir.resolve("osgi");
-        osgiDir.toFile().mkdirs();
-        assertTrue(osgiDir.toFile().exists());
-        Thermostat.main(new String[0]);
-        assertTrue(osgiDir.toFile().exists());
-    }
-
-    @Test
-    public void testFrameworkConfig() throws Exception {
-        Thermostat.main(new String[0]);
-        Map<String,String> config = TestFrameworkFactory.getConfig();
-        Path osgiDir = tempDir.resolve("osgi");
-        assertEquals(osgiDir.toString(), config.get(Constants.FRAMEWORK_STORAGE));
-    }
-
-    @Test
-    public void testFrameworkInitAndStart() throws Exception {
-        Thermostat.main(new String[0]);
-        verify(mockFramework).init();
-        verify(mockFramework).start();
+    public void testBundles() throws InvalidConfigurationException, IOException {
+        
+        List<String> bundles = OSGiRegistry.getSystemBundles();
+        Assert.assertEquals(2, bundles.size());
+        Assert.assertTrue(bundles.contains("file:" + someJars1.getAbsolutePath()));
+        Assert.assertTrue(bundles.contains("file:" + someJars2.getAbsolutePath()));
+        
+        String publicApi = OSGiRegistry.getOSGiPublicPackages();
+        Assert.assertTrue(publicApi.contains("this.is.a.fluff.package; version=0.0.0"));
+        Assert.assertTrue(publicApi.contains("this.is.even.more.a.fluff.package; version=0.0.1"));
     }
 }

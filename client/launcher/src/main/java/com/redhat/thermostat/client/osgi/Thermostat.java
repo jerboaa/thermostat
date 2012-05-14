@@ -37,19 +37,23 @@
 package com.redhat.thermostat.client.osgi;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.osgi.OSGiRegistry;
 
 public class Thermostat {
 
@@ -57,43 +61,41 @@ public class Thermostat {
     private Thermostat() { /* nothing to do */ }
     
     private void setUp() throws InvalidConfigurationException {
-        
         String thermostatHome = ConfigUtils.getThermostatHome();
         thermostatBundleHome = new File(thermostatHome, "osgi");
-        // check if the file exist before creating a new one
-        if (!thermostatBundleHome.exists()) {
-            if (!thermostatBundleHome.mkdirs()) {
-                throw new InternalError("cannot create bundle directory");
-            }
-        }
     }
     
-    private Map<String, String> initPublicAPIforBundles() {
-        
-        // here we should register all the packages that should be exported
-        
-        Map<String, String> bundleConfigurations = new HashMap<String, String>();
-        return bundleConfigurations;
-    }
-    
-    private void installAndStartBundles(Framework framework,
-                                        String ... bundleLocations)
+    private List<Bundle> installBundles(Framework framework,
+                                        List<String>bundleLocations)
         throws Exception
     {
+        List<Bundle> bundles = new ArrayList<>();
         BundleContext bundleContext = framework.getBundleContext();
         for (String location : bundleLocations) {
-            Bundle addition = bundleContext.installBundle(location);
-            addition.start();
+            Bundle bundle = bundleContext.installBundle(location);
+            bundles.add(bundle);
+        }
+        return bundles;
+    }
+
+    private void startBundles(List<Bundle> bundles) throws BundleException {
+        for (Bundle bundle : bundles) {
+            bundle.start();
         }
     }
-    
+
     private void start(String[] args) throws Exception {
         setUp();
         
         ServiceLoader<FrameworkFactory> loader =
                 ServiceLoader.load(FrameworkFactory.class);
         
-        Map<String, String> bundleConfigurations = initPublicAPIforBundles();
+        Map<String, String> bundleConfigurations = new HashMap<String, String>();
+        
+        String publicPackages = OSGiRegistry.getOSGiPublicPackages();
+        publicPackages = publicPackages + ", com.redhat.thermostat.client.osgi.service, com.redhat.thermostat.common.dao";
+        bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, publicPackages);
+        
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE,
                                  thermostatBundleHome.getAbsolutePath());
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.mongodb," +
@@ -120,9 +122,11 @@ public class Thermostat {
             // we just want the first found
             Framework framework = factories.next().newFramework(bundleConfigurations);
             framework.init();
-            framework.start();
             
-            installAndStartBundles(framework, args);
+            List<String> bundles = OSGiRegistry.getSystemBundles();
+            List<Bundle> bundleList = installBundles(framework, bundles);
+            framework.start();
+            startBundles(bundleList);
             
         } else {
             throw new InternalError("Can't find factories for ServiceLoader!");

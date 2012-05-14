@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VmInformationController;
@@ -63,8 +64,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
-    public HostPanelFacade getHostPanel(HostRef ref) {
-        return new HostPanelFacadeImpl(ref);
+    public HostInformationController getHostController(HostRef ref) {
+        return new HostInformationController(ref);
 
     }
 

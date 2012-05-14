@@ -38,27 +38,28 @@ package com.redhat.thermostat.client.osgi;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 
-class VmInformationServiceTracker implements ServiceListener {
+class VmInformationServiceTracker extends ServiceTracker {
 
     private UiFacadeFactory uiFacadeFactory;
 
     private BundleContext context;
 
     VmInformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+        super(context, VmInformationService.class, null);
         this.context = context;
         this.uiFacadeFactory = uiFacadeFactory;
     }
 
     @Override
-    public void serviceChanged(ServiceEvent event) {
-        ServiceReference reference = event.getServiceReference();
+    public Object addingService(ServiceReference reference) {
         VmInformationService service = (VmInformationService) context.getService(reference);
         uiFacadeFactory.addVmInformationService(service);
+        return service;
     }
 }

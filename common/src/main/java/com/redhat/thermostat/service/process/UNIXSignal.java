@@ -34,36 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.vmclassstat;
+package com.redhat.thermostat.service.process;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+public enum UNIXSignal {
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-
-public class Activator implements BundleActivator {
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(VmClassStatView.class, VmClassStatPanel.class);
-                context.registerService(VmInformationService.class.getName(), new VmClassStatService(), null);
-                return super.addingService(reference);
-            }
-        };
-        tracker.open();
+    KILL;
+    
+    public String signalName() {
+        return name().toLowerCase();
     }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // TODO Auto-generated method stub
-
-    }
-
 }

@@ -34,36 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.vmclassstat;
+package com.redhat.thermostat.client.ui;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import java.awt.Component;
+
+import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.HostRef;
 
-public class Activator implements BundleActivator {
+public class HostInformationController {
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(VmClassStatView.class, VmClassStatPanel.class);
-                context.registerService(VmInformationService.class.getName(), new VmClassStatService(), null);
-                return super.addingService(reference);
-            }
-        };
-        tracker.open();
+    private final HostOverviewController overviewController;
+    private final HostCpuController cpuController;
+    private final HostMemoryController memoryController;
+
+    private final HostInformationView view;
+
+    public HostInformationController(HostRef ref) {
+        overviewController = new HostOverviewController(ref);
+        cpuController = new HostCpuController(ref);
+        memoryController = new HostMemoryController(ref);
+
+        view = ApplicationContext.getInstance().getViewFactory().getView(HostInformationView.class);
+
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getComponent());
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getComponent());
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getComponent());
+
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        // TODO Auto-generated method stub
+    public HostOverviewController getOverviewController() {
+        return overviewController;
+    }
 
+    public HostCpuController getCpuController() {
+        return cpuController;
+    }
+
+    public HostMemoryController getMemoryController() {
+        return memoryController;
+    }
+
+    public Component getComponent() {
+        return view.getUiComponent();
     }
 
 }

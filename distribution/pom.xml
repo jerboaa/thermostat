@@ -121,6 +121,7 @@
                   <filtering>true</filtering>
                   <includes>
                     <include>logging.properties</include>
+                    <include>osgi-export.properties</include>
                   </includes>
                 </resource>
               </resources>

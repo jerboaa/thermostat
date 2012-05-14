@@ -45,7 +45,7 @@ import com.redhat.thermostat.client.ui.AgentConfigurationModel;
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
-import com.redhat.thermostat.client.ui.HostPanel;
+import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
@@ -236,7 +236,8 @@ public class MainWindowControllerImpl implements MainWindowController {
             view.setSubView(controller.getComponent());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
-            view.setSubView(new HostPanel(facadeFactory.getHostPanel(hostRef)));
+            HostInformationController hostController = facadeFactory.getHostController(hostRef);
+            view.setSubView(hostController.getComponent());
         } else if (ref instanceof VmRef) {
             VmRef vmRef = (VmRef) ref;
             VmInformationController vmInformation =

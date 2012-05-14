@@ -44,6 +44,8 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.test.Bug;
+
 public class EtcOsReleaseTest {
 
     @Test
@@ -59,6 +61,24 @@ public class EtcOsReleaseTest {
         BufferedReader reader = new BufferedReader(new StringReader("VERSION=\"Version\"\n"));
         DistributionInformation info = new EtcOsRelease().getFromOsRelease(reader);
         assertEquals("Version", info.getVersion());
+    }
+
+    @Bug(id="981",
+        summary="DistributionInformationTest fails on OpenSUSE Linux 12.1",
+        url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=981")
+    @Test
+    public void testFormattedOutput() throws IOException {
+        String output =
+            "NAME=openSUSE\n" +
+            "VERSION = 12.1 (Asparagus)\n" +
+            "VERSION_ID=\"12.1\"\n" +
+            "PRETTY_NAME=\"openSUSE 12.1 (Asparagus) (x86_64)\"\n" +
+            "ID=opensuse";
+        BufferedReader reader = new BufferedReader(new StringReader(output));
+        DistributionInformation info = new EtcOsRelease().getFromOsRelease(reader);
+
+        assertEquals("openSUSE", info.getName());
+        assertEquals("12.1 (Asparagus)", info.getVersion());
     }
 
 }

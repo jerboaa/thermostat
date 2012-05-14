@@ -34,36 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.vmclassstat;
+package com.redhat.thermostat.client.ui;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+import java.awt.BorderLayout;
+import java.awt.Component;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.SwingUtilities;
 
-public class Activator implements BundleActivator {
+public class HostInformationPanel extends JPanel implements HostInformationView {
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(VmClassStatView.class, VmClassStatPanel.class);
-                context.registerService(VmInformationService.class.getName(), new VmClassStatService(), null);
-                return super.addingService(reference);
-            }
-        };
-        tracker.open();
+    private static final long serialVersionUID = 4835316442841009133L;
+
+    private final JTabbedPane tabPane;
+
+    private int viewCount = 0;
+
+    public HostInformationPanel() {
+        setLayout(new BorderLayout());
+        tabPane = new JTabbedPane();
+        this.add(tabPane);
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        // TODO Auto-generated method stub
+    public void addChildView(final String title, final Component view) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                tabPane.insertTab(title, null, view, null, viewCount);
+                viewCount++;
+            }
 
+        });
+    }
+
+    @Override
+    public void removeChildView(final String title) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < viewCount; i++) {
+                    if (tabPane.getTitleAt(i).equals(title)) {
+                        tabPane.remove(i);
+                        return;
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
+    public Component getUiComponent() {
+        return this;
     }
 
 }
