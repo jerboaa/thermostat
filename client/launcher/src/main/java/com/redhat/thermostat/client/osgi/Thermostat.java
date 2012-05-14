@@ -93,29 +93,12 @@ public class Thermostat {
         Map<String, String> bundleConfigurations = new HashMap<String, String>();
         
         String publicPackages = OSGiRegistry.getOSGiPublicPackages();
-        publicPackages = publicPackages + ", com.redhat.thermostat.client.osgi.service, com.redhat.thermostat.common.dao";
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, publicPackages);
-        
+        bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, OSGiRegistry.getOSGiPublicPackages());
+ 
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE,
                                  thermostatBundleHome.getAbsolutePath());
-        bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, "com.mongodb," +
-                                                                           "org.apache.commons.cli; version=1.2.0," +
-                                                                           "org.bson," +
-                                                                           "org.jfree.chart," +
-                                                                           "org.jfree.chart.axis," +
-                                                                           "org.jfree.chart.labels," +
-                                                                           "org.jfree.chart.plot," +
-                                                                           "org.jfree.chart.renderer.xy," +
-                                                                           "org.jfree.data.time," +
-                                                                           "org.jfree.data.xy," +
-                                                                           "com.redhat.thermostat.common.dao," +
-                                                                           "com.redhat.thermostat.common.storage," +
-                                                                           "com.redhat.thermostat.common," +
-                                                                           "com.redhat.thermostat.common.appctx," +
-                                                                           "com.redhat.thermostat.common.model," +
-                                                                           "com.redhat.thermostat.common.config," +
-                                                                           "com.redhat.thermostat.common.utils");
-        
+       
         Iterator<FrameworkFactory> factories = loader.iterator();
         if (factories.hasNext()) {
             

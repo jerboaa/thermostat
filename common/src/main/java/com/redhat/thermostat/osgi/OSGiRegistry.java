@@ -71,7 +71,11 @@ public class OSGiRegistry {
                 publicPackages.append(",\n");
             }
             firstPackage = false;
-            publicPackages.append(bundle).append("; version=").append(bundles.get(bundle));
+            publicPackages.append(bundle);
+            String bundleVersion = (String) bundles.get(bundle);
+            if (!bundleVersion.isEmpty()) {
+                publicPackages.append("; version=").append(bundleVersion);
+            }
         }
                 
         return publicPackages.toString();
@@ -83,7 +87,6 @@ public class OSGiRegistry {
         Path thermostatHome = new File(home, "libs").toPath();
         OSGiBundlesVisitor visitor = new OSGiBundlesVisitor();
         Files.walkFileTree(thermostatHome, visitor);
-        System.err.println("loading JARs: " + visitor.jars);
         return visitor.jars;
     }
     

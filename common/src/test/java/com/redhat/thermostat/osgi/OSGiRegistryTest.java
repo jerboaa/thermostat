@@ -91,6 +91,8 @@ public class OSGiRegistryTest {
 
         props.setProperty("this.is.a.fluff.package", "0.0.0");
         props.setProperty("this.is.even.more.a.fluff.package", "0.0.1");
+        props.setProperty("this.is.even.more.a.fluff.withoutVersion", "");
+        props.setProperty("this.is.even.more.a.fluff.package.2", "0.0.1");
 
         props.store(new FileOutputStream(tmpConfigs), "thermostat osgi public api test properties");
     }
