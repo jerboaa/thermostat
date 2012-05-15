@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.osgi;
+package com.redhat.thermostat.service.process;
 
 import java.util.Hashtable;
 import java.util.logging.Level;
@@ -43,17 +43,15 @@ import java.util.logging.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import com.redhat.thermostat.tools.unix.UnixProcessUtilities;
+import com.redhat.thermostat.service.process.impl.UnixProcessUtilities;
 
-public class OSGiActivator implements BundleActivator {
+public class Activator implements BundleActivator {
 
-    private static final Logger logger = LoggingUtils.getLogger(OSGiActivator.class);
+    private static final Logger logger = Logger.getLogger(Activator.class.getSimpleName());
     
     @Override
     public void start(BundleContext context) throws Exception {        
-        logger.log(Level.INFO, "activating thermostat-common bundles");
+        logger.log(Level.INFO, "activating thermostat-process bundles");
         
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put(UNIXProcessHandler.ID, UNIXProcessHandler.ID);
@@ -63,7 +61,6 @@ public class OSGiActivator implements BundleActivator {
     
     @Override
     public void stop(BundleContext context) throws Exception {
-        // TODO Auto-generated method stub
-        
+        /* nothing to do here */
     }
 }

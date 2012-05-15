@@ -34,8 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.unix;
-
+package com.redhat.thermostat.service.process.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,10 +47,15 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.service.process.UNIXSignal;
+
 public class UnixProcessUtilitiesTest {
 
     private BufferedReader reader;
     private BufferedReader emptyReader;
+    
+    private List<String> processArguments = new ArrayList<>();
+    private UnixProcessUtilities process;
     
     @Before
     public void setUp() {
@@ -59,13 +63,9 @@ public class UnixProcessUtilitiesTest {
         String data = "123 fluff";
         reader = new BufferedReader(new StringReader(data));
         emptyReader = new BufferedReader(new StringReader(""));
-    }
-    
-    @Test
-    public void getProcessName() {
-
-        final List<String> processArguments = new ArrayList<>();
-        UnixProcessUtilities process = new UnixProcessUtilities() {
+        
+        processArguments.clear();
+        process = new UnixProcessUtilities() {
             @Override
             public Process createAndRunProcess(List<String> args)
                     throws IOException {
@@ -77,7 +77,23 @@ public class UnixProcessUtilitiesTest {
                 return reader;
             };
         };
+    }
+    
+    @Test
+    public void sendSignalTest() {
         
+        process.sendSignal("12345", UNIXSignal.KILL);
+        
+        Assert.assertTrue(processArguments.contains("kill"));
+        Assert.assertTrue(processArguments.contains("-s kill"));
+    
+        // we want exactly the last argument to be the pid
+        Assert.assertEquals("12345", processArguments.get(processArguments.size() - 1));
+    }
+    
+    @Test
+    public void getProcessName() {
+
         String result = process.getProcessName("12345");
         Assert.assertEquals("fluff", result);
         Assert.assertTrue(processArguments.contains("12345"));
@@ -90,7 +106,7 @@ public class UnixProcessUtilitiesTest {
     @Test
     public void getProcessNameNoOutput() {
 
-        final List<String> processArguments = new ArrayList<>();
+        // redefine, since we need an empty reader
         UnixProcessUtilities process = new UnixProcessUtilities() {
             @Override
             public Process createAndRunProcess(List<String> args)

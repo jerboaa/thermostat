@@ -204,5 +204,11 @@
     	<artifactId>thermostat-client-launcher</artifactId>
     	<version>${project.version}</version>
     </dependency>
+    <dependency>
+    	<groupId>com.redhat.thermostat</groupId>
+    	<artifactId>thermostat-process-handler</artifactId>
+    	<version>${project.version}</version>
+    	<type>bundle</type>
+    </dependency>
   </dependencies>
 </project>

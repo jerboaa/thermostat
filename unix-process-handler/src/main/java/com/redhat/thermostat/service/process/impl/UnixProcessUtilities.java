@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.unix;
+package com.redhat.thermostat.service.process.impl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,14 +46,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.service.process.UNIXSignal;
 import com.redhat.thermostat.tools.ApplicationException;
 
 public class UnixProcessUtilities implements UNIXProcessHandler {
 
-    private static final Logger logger = LoggingUtils.getLogger(UnixProcessUtilities.class);
+    private static final Logger logger = Logger.getLogger(UnixProcessUtilities.class.getSimpleName());
     
     private static final UnixProcessUtilities instance = new UnixProcessUtilities();
     public static UnixProcessUtilities getInstance() {
@@ -64,7 +63,17 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
     
     @Override
     public void sendSignal(String pid, UNIXSignal signal) {
-        System.err.println("yeah!");
+        List<String> commandLine = new ArrayList<>();
+        commandLine.add("kill");
+        
+        commandLine.add("-s " + signal.signalName());
+        commandLine.add(pid);
+        
+        try {
+            createAndRunProcess(commandLine);
+        } catch (IOException | ApplicationException e) {
+            logger.log(Level.WARNING, "can't run kill!", e);
+        }
     }
     
     @Override

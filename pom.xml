@@ -78,6 +78,7 @@
     <module>client</module>
     <module>distribution</module>
     <module>tools</module>
+    <module>unix-process-handler</module>
   </modules>
 
   <build>

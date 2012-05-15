@@ -46,7 +46,7 @@
   </parent>
   
   <artifactId>thermostat-common</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>jar</packaging>
 
   <name>Thermostat Common</name>
   <url>${project.parent.url}</url>
@@ -58,25 +58,6 @@
         <filtering>true</filtering>
       </resource>
     </resources>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Embed-Dependency>*;scope=compile|runtime;artifactId=!org.apache.felix.framework|osgi_R4_core</Embed-Dependency>
-            <Embed-Transitive>true</Embed-Transitive>
-            <Import-Package>org.osgi.framework,!android.dalvik,!com.apple.*,!dalvik.system,!javax.mail.*,!javax.servlet.*,!junit.*,!org.testng.*,*</Import-Package>
-            <Private-Package>com.redhat.thermostat.*</Private-Package>
-            <Bundle-Activator>com.redhat.thermostat.osgi.OSGiActivator</Bundle-Activator>
-            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Export-Package>com.redhat.thermostat.service.process</Export-Package>
-            </instructions>
-          </configuration>
-       </plugin>
-    </plugins>
   </build>
 
   <dependencies>
@@ -114,6 +95,7 @@
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.framework</artifactId>
     </dependency>
+
     
   </dependencies>
   
