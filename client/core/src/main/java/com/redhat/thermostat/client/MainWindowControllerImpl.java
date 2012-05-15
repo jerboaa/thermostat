@@ -37,8 +37,15 @@
 package com.redhat.thermostat.client;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.MainView.Action;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
 import com.redhat.thermostat.client.ui.AgentConfigurationModel;
@@ -60,9 +67,12 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MainWindowControllerImpl implements MainWindowController {
 
+    private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
+    
     private Timer backgroundUpdater;
 
     private MainView view;
@@ -80,6 +90,8 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private VmInformationControllerProvider vmInfoControllerProvider;
 
+    private Map<String, VMContextAction> vmContextActions;
+    
     public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
         this.facadeFactory = facadeFactory;
 
@@ -96,6 +108,14 @@ public class MainWindowControllerImpl implements MainWindowController {
         view.setWindowTitle(appInfo.getName());
         initializeTimer();
 
+        logger.log(Level.INFO, "registering VMContextActions actions to view");
+        vmContextActions = new HashMap<>();
+        for (VMContextAction action : facadeFactory.getVMContextActions()) {
+            String id = action.getClass().getName();
+            vmContextActions.put(id, action);
+            view.registerVMContextAction(action.getName(), action.getDescription(), id);
+        }
+        
         updateView();
     }
 
@@ -184,6 +204,9 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SHOW_ABOUT_DIALOG:
                     showAboutDialog();
                     break;
+                case VM_CONTEXT_ACTION:
+                    handleVMHooks(evt);
+                    break;
                 case SHUTDOWN:
                     view.hideMainWindow();
                     ApplicationContext.getInstance().getTimerFactory().shutdown();
@@ -195,6 +218,19 @@ public class MainWindowControllerImpl implements MainWindowController {
         });
     }
 
+    private void handleVMHooks(ActionEvent<MainView.Action> event) {
+        Object payload = event.getPayload();
+        if (payload instanceof String) { 
+            try {
+                VMContextAction action = vmContextActions.get(payload);
+                // TODO
+                action.execute((VmRef) view.getSelectedHostOrVm());
+            } catch (Throwable error) {
+                logger.log(Level.SEVERE, "");
+            }
+        }
+    }
+    
     @Override
     public void showMainMainWindow() {
         view.showMainWindow();

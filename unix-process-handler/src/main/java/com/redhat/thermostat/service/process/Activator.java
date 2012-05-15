@@ -43,7 +43,6 @@ import java.util.logging.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.service.process.impl.UnixProcessUtilities;
 
 public class Activator implements BundleActivator {
 

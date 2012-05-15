@@ -92,10 +92,7 @@ public class Thermostat {
         
         Map<String, String> bundleConfigurations = new HashMap<String, String>();
         
-        String publicPackages = OSGiRegistry.getOSGiPublicPackages();
-        bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, publicPackages);
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, OSGiRegistry.getOSGiPublicPackages());
- 
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE,
                                  thermostatBundleHome.getAbsolutePath());
        

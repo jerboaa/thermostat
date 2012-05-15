@@ -65,4 +65,11 @@ public class ActionNotifier<T extends Enum<?>> {
         }
     }
 
+    public void fireAction(T actionId, Object payload) {
+        ActionEvent<T> action = new ActionEvent<>(source, actionId);
+        action.setPayload(payload);
+        for (ActionListener<T> listener : listeners) {
+            listener.actionPerformed(action);
+        }
+    }
 }

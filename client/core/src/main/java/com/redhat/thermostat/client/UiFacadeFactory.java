@@ -38,6 +38,7 @@ package com.redhat.thermostat.client;
 
 import java.util.Collection;
 
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.SummaryController;
@@ -59,4 +60,6 @@ public interface UiFacadeFactory {
 
     void addVmInformationService(VmInformationService vmInfoService);
 
+    Collection<VMContextAction> getVMContextActions();
+    void addVMContextAction(VMContextAction service);
 }

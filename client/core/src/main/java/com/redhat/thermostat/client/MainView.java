@@ -53,6 +53,7 @@ public interface MainView {
         SWITCH_HISTORY_MODE,
         SHOW_ABOUT_DIALOG,
         SHUTDOWN,
+        VM_CONTEXT_ACTION,
     }
 
     void addActionListener(ActionListener<Action> capture);
@@ -71,4 +72,5 @@ public interface MainView {
 
     void setSubView(Component view);
 
+    void registerVMContextAction(String name, String description, String id);
 }

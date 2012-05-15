@@ -49,6 +49,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
         ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {

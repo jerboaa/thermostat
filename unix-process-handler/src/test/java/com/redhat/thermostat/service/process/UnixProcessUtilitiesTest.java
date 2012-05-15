@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.process.impl;
+package com.redhat.thermostat.service.process;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -48,6 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.service.process.UNIXSignal;
+import com.redhat.thermostat.service.process.UnixProcessUtilities;
 
 public class UnixProcessUtilitiesTest {
 

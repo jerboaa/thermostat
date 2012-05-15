@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import java.awt.Component;
+import com.redhat.thermostat.common.dao.VmRef;
 
-public interface SwingUIService {
-    void addVmInformationView(Component c);
+public interface VMContextAction extends ContextAction {
+
+    void execute(VmRef referece);
 }

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.service.process.impl;
+package com.redhat.thermostat.service.process;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -46,16 +46,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import com.redhat.thermostat.service.process.UNIXSignal;
 import com.redhat.thermostat.tools.ApplicationException;
 
 public class UnixProcessUtilities implements UNIXProcessHandler {
 
     private static final Logger logger = Logger.getLogger(UnixProcessUtilities.class.getSimpleName());
     
-    private static final UnixProcessUtilities instance = new UnixProcessUtilities();
-    public static UnixProcessUtilities getInstance() {
+    private static final UNIXProcessHandler instance = new UnixProcessUtilities();
+    public static UNIXProcessHandler getInstance() {
         return instance;
     }
     

@@ -34,42 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi;
+package com.redhat.thermostat.client.killvm;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.Main;
-import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.UiFacadeFactoryImpl;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 
-public class ThermostatActivator implements BundleActivator {
+public class Activator implements BundleActivator {
 
-    private VmInformationServiceTracker vmInfoServiceTracker;
-    private VMContextActionServiceTracker contextActionTracker;
-    
     @Override
-    public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
-        
-        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        vmInfoServiceTracker.open();
-        
-        contextActionTracker =
-                new VMContextActionServiceTracker(context, uiFacadeFactory);
-        contextActionTracker.open();
-        
-        Main.main(uiFacadeFactory, new String[0]);
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
-        context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
+    public void start(BundleContext context) throws Exception {
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        ServiceTracker tracker = new ServiceTracker(context, ContextAction.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                context.registerService(VMContextAction.class.getName(), new KillVMAction(), null);
+                return super.addingService(reference);
+            }
+        };
+        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
-        contextActionTracker.close();
+        /* nothing to do here */
     }
 }

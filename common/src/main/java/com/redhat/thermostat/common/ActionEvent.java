@@ -42,6 +42,8 @@ public class ActionEvent<T extends Enum<?>> extends EventObject {
 
     private static final long serialVersionUID = -8648206929150142342L;
 
+    private Object payload;
+    
     public ActionEvent(Object source, T actionId) {
         super(source);
         if (actionId == null) {
@@ -56,6 +58,14 @@ public class ActionEvent<T extends Enum<?>> extends EventObject {
         return actionId;
     }
 
+    public Object getPayload() {
+        return payload;
+    }
+    
+    public void setPayload(Object payload) {
+        this.payload = payload;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -34,42 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi;
+package com.redhat.thermostat.client.killvm;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.common.dao.VmRef;
 
-import com.redhat.thermostat.client.Main;
-import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.UiFacadeFactoryImpl;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
+/**
+ * Implements the {@link VMContextAction} entry point to provide a kill switch
+ * for the currently selected Virtual Machine. 
+ */
+public class KillVMAction implements VMContextAction {
 
-public class ThermostatActivator implements BundleActivator {
-
-    private VmInformationServiceTracker vmInfoServiceTracker;
-    private VMContextActionServiceTracker contextActionTracker;
-    
     @Override
-    public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
-        
-        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        vmInfoServiceTracker.open();
-        
-        contextActionTracker =
-                new VMContextActionServiceTracker(context, uiFacadeFactory);
-        contextActionTracker.open();
-        
-        Main.main(uiFacadeFactory, new String[0]);
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
-        context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
+    public String getName() {
+        return "cast a spell";
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
-        contextActionTracker.close();
+    public String getDescription() {
+        return "it's a kind of magic";
+    }
+
+    @Override
+    public void execute(VmRef reference) {
+        System.err.println("sim sala bin! " + reference.getIdString());
     }
 }

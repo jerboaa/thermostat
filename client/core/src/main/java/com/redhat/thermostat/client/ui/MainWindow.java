@@ -48,6 +48,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.PrintStream;
@@ -55,6 +57,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
@@ -93,6 +96,7 @@ import javax.swing.tree.TreeSelectionModel;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -227,6 +231,8 @@ public class MainWindow extends JFrame implements MainView {
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
+    private JPopupMenu vmContextMenu;
+    
     private final DefaultMutableTreeNode publishedRoot =
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
@@ -406,7 +412,8 @@ public class MainWindow extends JFrame implements MainView {
                 }
             }
         });
-
+        setupContextActions(agentVmTree);
+        
         JScrollPane treeScrollPane = new JScrollPane(agentVmTree);
 
         navigationPanel.add(treeScrollPane);
@@ -422,6 +429,37 @@ public class MainWindow extends JFrame implements MainView {
         add(splitPane);
     }
 
+    private void setupContextActions(JTree agentVmTree2) {
+        vmContextMenu = new JPopupMenu();
+        agentVmTree2.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    Ref ref = getSelectedHostOrVm();
+                    if (ref instanceof VmRef) {
+                        vmContextMenu.show((Component)e.getSource(), e.getX(), e.getY());
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
+    public void registerVMContextAction(String name, String description, String id) {
+        
+        JMenuItem contextAction = new JMenuItem();
+        contextAction.setText(name);
+        contextAction.setToolTipText(description);
+        vmContextMenu.add(contextAction);
+        
+        contextAction.setActionCommand(id);
+        contextAction.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                fireViewAction(Action.VM_CONTEXT_ACTION, e.getActionCommand());
+            }
+        });
+    }
+    
     private JPanel createDetailsPanel() {
         JPanel result = new JPanel(new BorderLayout());
         result.add(contentArea, BorderLayout.CENTER);
@@ -540,7 +578,11 @@ public class MainWindow extends JFrame implements MainView {
     private void fireViewAction(Action action) {
         actionNotifier.fireAction(action);
     }
-
+    
+    private void fireViewAction(Action action, String payload) {
+        actionNotifier.fireAction(action, payload);
+    }
+    
     @Override
     public void updateTree(String filter, HostsVMsLoader hostsVMsLoader) {
         BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot, filter, hostsVMsLoader);
@@ -629,5 +671,4 @@ public class MainWindow extends JFrame implements MainView {
             return null;
         }
     }
-
 }

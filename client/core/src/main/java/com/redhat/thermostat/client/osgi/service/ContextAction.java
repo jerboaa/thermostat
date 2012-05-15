@@ -34,42 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi;
+package com.redhat.thermostat.client.osgi.service;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.client.Main;
-import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.UiFacadeFactoryImpl;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-
-public class ThermostatActivator implements BundleActivator {
-
-    private VmInformationServiceTracker vmInfoServiceTracker;
-    private VMContextActionServiceTracker contextActionTracker;
+/**
+ * Marker service for context menu actions.
+ * <br /><br />
+ * 
+ * Each specific subclass defines the selected entry points for the context
+ * menues.
+ * <br /><br />
+ * 
+ * Context actions are executed once the user select the appropriate UI elements
+ * in the main framework view and trigger the registered action.
+ * <br /><br />
+ * 
+ * An empty {@link ContextAction} is instantiated within the framework at
+ * startup, so services implementing specific actions interfaces should track
+ * for a {@link ContextAction} service to be active in the framework before
+ * adding themselves.
+ * <br /><br />
+ * 
+ * <strong>Exported entry point</strong>: com.redhat.thermostat.client.osgi.service.ContextAction
+ */
+public interface ContextAction {
     
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
-        
-        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        vmInfoServiceTracker.open();
-        
-        contextActionTracker =
-                new VMContextActionServiceTracker(context, uiFacadeFactory);
-        contextActionTracker.open();
-        
-        Main.main(uiFacadeFactory, new String[0]);
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
-        context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
-        contextActionTracker.close();
-    }
+    String getName();
+    String getDescription();
 }

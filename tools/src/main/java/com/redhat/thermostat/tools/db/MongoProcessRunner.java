@@ -51,7 +51,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-import com.redhat.thermostat.service.process.impl.UnixProcessUtilities;
+import com.redhat.thermostat.service.process.UnixProcessUtilities;
 import com.redhat.thermostat.tools.ApplicationException;
 
 class MongoProcessRunner {

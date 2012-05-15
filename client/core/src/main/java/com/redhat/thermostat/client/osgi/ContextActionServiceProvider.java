@@ -36,40 +36,17 @@
 
 package com.redhat.thermostat.client.osgi;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.client.Main;
-import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.UiFacadeFactoryImpl;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
 
-public class ThermostatActivator implements BundleActivator {
-
-    private VmInformationServiceTracker vmInfoServiceTracker;
-    private VMContextActionServiceTracker contextActionTracker;
-    
+class ContextActionServiceProvider implements ContextAction {
+  
     @Override
-    public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
-        
-        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        vmInfoServiceTracker.open();
-        
-        contextActionTracker =
-                new VMContextActionServiceTracker(context, uiFacadeFactory);
-        contextActionTracker.open();
-        
-        Main.main(uiFacadeFactory, new String[0]);
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
-        context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
+    public String getName() {
+        return "system context";
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
-        contextActionTracker.close();
+    public String getDescription() {
+        return "system context";
     }
 }

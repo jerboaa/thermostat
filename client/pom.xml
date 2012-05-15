@@ -63,6 +63,7 @@
     <module>launcher</module>
     <module>vmclassstat</module>
     <module>example</module>
+    <module>killvm</module>
   </modules>
 
 </project>

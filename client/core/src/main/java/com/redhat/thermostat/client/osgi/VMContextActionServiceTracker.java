@@ -36,40 +36,32 @@
 
 package com.redhat.thermostat.client.osgi;
 
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.Main;
 import com.redhat.thermostat.client.UiFacadeFactory;
-import com.redhat.thermostat.client.UiFacadeFactoryImpl;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 
-public class ThermostatActivator implements BundleActivator {
+@SuppressWarnings("rawtypes")
+class VMContextActionServiceTracker extends ServiceTracker {
 
-    private VmInformationServiceTracker vmInfoServiceTracker;
-    private VMContextActionServiceTracker contextActionTracker;
-    
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
-        
-        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        vmInfoServiceTracker.open();
-        
-        contextActionTracker =
-                new VMContextActionServiceTracker(context, uiFacadeFactory);
-        contextActionTracker.open();
-        
-        Main.main(uiFacadeFactory, new String[0]);
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
-        context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
+    private UiFacadeFactory uiFacadeFactory;
+
+    private BundleContext context;
+
+    @SuppressWarnings("unchecked")
+    VMContextActionServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+        super(context, VMContextAction.class, null);
+        this.context = context;
+        this.uiFacadeFactory = uiFacadeFactory;
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
-        contextActionTracker.close();
+    public Object addingService(ServiceReference reference) {
+        @SuppressWarnings("unchecked")
+        VMContextAction service = (VMContextAction) context.getService(reference);
+        uiFacadeFactory.addVMContextAction(service);        
+        return service;
     }
 }
