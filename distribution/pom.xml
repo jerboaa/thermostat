@@ -199,5 +199,10 @@
     	<artifactId>thermostat-tools</artifactId>
     	<version>${project.version}</version>
     </dependency>
+    <dependency>
+    	<groupId>com.redhat.thermostat</groupId>
+    	<artifactId>thermostat-client-launcher</artifactId>
+    	<version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>
