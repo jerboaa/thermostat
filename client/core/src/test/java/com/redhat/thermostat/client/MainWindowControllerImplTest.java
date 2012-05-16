@@ -60,6 +60,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmInformationController;
@@ -93,6 +94,9 @@ public class MainWindowControllerImplTest {
     private HostInfoDAO mockHostsDAO;
     private VmInfoDAO mockVmsDAO;
 
+    private VMContextAction action1;
+    private VMContextAction action2;
+    
     @BeforeClass
     public static void setUpOnce() {
         // TODO remove when controller uses mocked objects rather than real swing objects
@@ -115,7 +119,6 @@ public class MainWindowControllerImplTest {
 
         uiFacadeFactory = mock(UiFacadeFactory.class);
         when(uiFacadeFactory.getSummary()).thenReturn(summaryController);
-
         setupDAOs();
 
         // Setup View
@@ -129,11 +132,29 @@ public class MainWindowControllerImplTest {
         when(viewFactory.getView(SummaryView.class)).thenReturn(summaryView);
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
+        setUpVMContextActions();
+        
         controller = new MainWindowControllerImpl(uiFacadeFactory, view);
         l = grabListener.getValue();
 
     }
 
+    private void setUpVMContextActions() {
+        action1 = mock(VMContextAction.class);
+        when(action1.getName()).thenReturn("action1");
+        when(action1.getDescription()).thenReturn("action1desc");
+        
+        action2 = mock(VMContextAction.class);
+        when(action2.getName()).thenReturn("action2");
+        when(action2.getDescription()).thenReturn("action2desc");
+        
+        Collection<VMContextAction> actions = new ArrayList<>();
+        actions.add(action1);
+        actions.add(action2);
+        
+        when(uiFacadeFactory.getVMContextActions()).thenReturn(actions);
+    }
+    
     private void setupDAOs() {
         mockHostsDAO = mock(HostInfoDAO.class);
         mockVmsDAO = mock(VmInfoDAO.class);
@@ -300,5 +321,26 @@ public class MainWindowControllerImplTest {
         id = arg.getValue();
 
         assertEquals(3, id);
+    }
+    
+    @Test
+    public void verityVMActionsAreRegistered() {
+
+        verify(view).registerVMContextAction(action1);
+        verify(view).registerVMContextAction(action2);
+    }
+    
+    @Test
+    public void verityVMActionsAreExecuted() {
+
+        VmRef vmRef = mock(VmRef.class);
+        when(view.getSelectedHostOrVm()).thenReturn(vmRef);
+
+        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.VM_CONTEXT_ACTION);
+        event.setPayload(action1);
+        l.actionPerformed(event);
+        
+        verify(action1, times(1)).execute(any(VmRef.class));
+        verify(action2, times(0)).execute(any(VmRef.class));
     }
 }

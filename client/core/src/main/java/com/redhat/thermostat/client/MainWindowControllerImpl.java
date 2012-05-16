@@ -89,8 +89,6 @@ public class MainWindowControllerImpl implements MainWindowController {
     private boolean showHistory;
 
     private VmInformationControllerProvider vmInfoControllerProvider;
-
-    private Map<String, VMContextAction> vmContextActions;
     
     public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
         this.facadeFactory = facadeFactory;
@@ -109,11 +107,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         initializeTimer();
 
         logger.log(Level.INFO, "registering VMContextActions actions to view");
-        vmContextActions = new HashMap<>();
         for (VMContextAction action : facadeFactory.getVMContextActions()) {
-            String id = action.getClass().getName();
-            vmContextActions.put(id, action);
-            view.registerVMContextAction(action.getName(), action.getDescription(), id);
+            view.registerVMContextAction(action);
         }
         
         updateView();
@@ -220,10 +215,9 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private void handleVMHooks(ActionEvent<MainView.Action> event) {
         Object payload = event.getPayload();
-        if (payload instanceof String) { 
+        if (payload instanceof VMContextAction) { 
             try {
-                VMContextAction action = vmContextActions.get(payload);
-                // TODO
+                VMContextAction action = (VMContextAction) payload;
                 action.execute((VmRef) view.getSelectedHostOrVm());
             } catch (Throwable error) {
                 logger.log(Level.SEVERE, "");
