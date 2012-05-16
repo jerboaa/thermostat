@@ -45,6 +45,8 @@ import com.redhat.thermostat.common.dao.VmRef;
 class VMListFormatter {
 
     // TODO: Localize.
+    private static final String HOST_ID = "HOST_ID";
+
     private static final String HOST = "HOST";
 
     private static final String VM_ID = "VM_ID";
@@ -53,11 +55,13 @@ class VMListFormatter {
 
     private List<VmRef> vms = new ArrayList<>();
 
+    private int longestHostId = HOST_ID.length();
     private int longestHost = HOST.length();
     private int longestVmId = VM_ID.length();
 
     void addVM(VmRef vm) {
         vms.add(vm);
+        longestHostId = Math.max(longestHostId, vm.getAgent().getAgentId().length());
         longestHost = Math.max(longestHost, vm.getAgent().getHostName().length());
         longestVmId = Math.max(longestVmId, vm.getIdString().length());
     }
@@ -70,14 +74,16 @@ class VMListFormatter {
     }
 
     private void printHeader(PrintStream output) {
-        printLine(output, HOST, VM_ID, VM_NAME);
+        printLine(output, HOST_ID, HOST, VM_ID, VM_NAME);
     }
 
     private void printVM(PrintStream output, VmRef vm) {
-        printLine(output, vm.getAgent().getHostName(), vm.getId().toString(), vm.getName());
+        printLine(output, vm.getAgent().getAgentId(), vm.getAgent().getHostName(), vm.getId().toString(), vm.getName());
     }
 
-    private void printLine(PrintStream output, String host, String vmId, String vmName) {
+    private void printLine(PrintStream output, String hostId, String host, String vmId, String vmName) {
+        output.print(hostId);
+        output.print(fillSpace(longestHostId - hostId.length() + 1));
         output.print(host);
         output.print(fillSpace(longestHost - host.length() + 1));
         output.print(vmId);

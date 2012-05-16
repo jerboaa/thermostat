@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -175,6 +175,28 @@ public class VmInfoDAOTest {
         assertEquals(vmArgs, info.getVmArguments());
 
         // FIXME test environment, properties and loaded native libraries later
+    }
+
+    @Test
+    public void testGetVmInfoUnknownVM() {
+
+        Storage storage = mock(Storage.class);
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn("system");
+
+        VmRef vmRef = mock(VmRef.class);
+        when(vmRef.getAgent()).thenReturn(hostRef);
+        when(vmRef.getId()).thenReturn(321);
+
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+        try {
+            dao.getVmInfo(vmRef);
+            fail();
+        } catch (DAOException ex) {
+            assertEquals("Unknown VM: host:system;vm:321", ex.getMessage());
+        }
+
     }
 
     private Storage setupStorageForSingleVM() {

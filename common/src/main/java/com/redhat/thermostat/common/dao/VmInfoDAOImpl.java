@@ -62,6 +62,9 @@ class VmInfoDAOImpl implements VmInfoDAO {
         query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
         query.put(vmIdKey, ref.getId());
         Chunk result = storage.find(query);
+        if (result == null) {
+            throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
+        }
         return converter.fromChunk(result);
     }
 

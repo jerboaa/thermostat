@@ -39,47 +39,47 @@ package com.redhat.thermostat.tools.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.cli.AppContextSetup;
 import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.CommandContext;
 import com.redhat.thermostat.cli.CommandContextFactory;
 import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.cli.SimpleArguments;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.dao.DAOException;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
-public class ListVMsCommandTest {
+public class VMInfoCommandTest {
 
-    private ListVMsCommand cmd;
+    private VMInfoCommand cmd;
+    private VmInfoDAO vmsDAO;
     private AppContextSetup appContextSetup;
     private TestCommandContextFactory cmdCtxFactory;
-    private HostInfoDAO hostsDAO;
-    private VmInfoDAO vmsDAO;
 
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
         setupCommandContextFactory();
 
-        cmd = new ListVMsCommand();
+        cmd = new VMInfoCommand();
 
         setupDAOs();
 
@@ -97,79 +97,76 @@ public class ListVMsCommandTest {
     }
 
     private void setupDAOs() {
-        hostsDAO = mock(HostInfoDAO.class);
         vmsDAO = mock(VmInfoDAO.class);
+        HostRef host = new HostRef("123", "dummy");
+        VmRef vm = new VmRef(host, 234, "dummy");
+        Calendar start = Calendar.getInstance();
+        start.set(2012, 5, 7, 15, 32, 0);
+        Calendar end = Calendar.getInstance();
+        end.set(2013, 10, 1, 1, 22, 0);
+        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new ArrayList<String>());
+        when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
+        when(vmsDAO.getVmInfo(new VmRef(host, 9876, "dummy"))).thenThrow(new DAOException("Unknown VM ID: 9876"));
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostsDAO);
         when(daoFactory.getVmInfoDAO()).thenReturn(vmsDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }
 
-    @After
-    public void tearDown() {
-        vmsDAO = null;
-        hostsDAO = null;
-        cmdCtxFactory = null;
-        cmd = null;
-        appContextSetup = null;
-        CommandContextFactory.setInstance(new CommandContextFactory());
-        ApplicationContextUtil.resetApplicationContext();
+
+    @Test
+    public void testVmInfo() throws CommandException {
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "Process ID:      234\n" +
+                          "Start time:      Thu Jun 07 15:32:00 CEST 2012\n" +
+                          "Stop time:       Fri Nov 01 01:22:00 CET 2013\n" +
+                          "Main class:      mainClass\n" +
+                          "Command line:    commandLine\n" +
+                          "Java version:    vmVersion\n" +
+                          "Virtual machine: vmName\n" +
+                          "VM arguments:    vmArguments\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
     }
 
     @Test
-    public void verifyOutputFormatOneLine() throws CommandException {
-
-        HostRef host1 = new HostRef("123", "h1");
-        when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1));
-        when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(new VmRef(host1, 1, "n")));
-
+    public void testVmInfoUnknownVM() throws CommandException {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("--dbUrl", "fluff");
-        CommandContext ctx = cmdCtxFactory.createContext(args);
-
-        cmd.run(ctx);
-
-        String output = cmdCtxFactory.getOutput();
-        assertEquals("HOST_ID HOST VM_ID VM_NAME\n" +
-                     "123     h1   1     n\n", output);
+        args.addArgument("vmId", "9876");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "Unknown VM ID: 9876\n";
+        assertEquals("", cmdCtxFactory.getOutput());
+        assertEquals(expected, cmdCtxFactory.getError());
     }
 
     @Test
-    public void verifyOutputFormatMultiLines() throws CommandException {
-
-        HostRef host1 = new HostRef("123", "h1");
-        HostRef host2 = new HostRef("456", "longhostname");
-        when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1, host2));
-
-        when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(new VmRef(host1, 1, "n"), new VmRef(host1, 2, "n1")));
-        when(vmsDAO.getVMs(host2)).thenReturn(Arrays.asList(new VmRef(host2, 123456, "longvmname")));
-
+    public void testVmInfoNonNumericalVMID() throws CommandException {
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("--dbUrl", "fluff");
-        CommandContext ctx = cmdCtxFactory.createContext(args);
-
-        cmd.run(ctx);
-
-        String output = cmdCtxFactory.getOutput();
-        assertEquals("HOST_ID HOST         VM_ID  VM_NAME\n" +
-                     "123     h1           1      n\n" +
-                     "123     h1           2      n1\n" +
-                     "456     longhostname 123456 longvmname\n", output);
+        args.addArgument("vmId", "fluff");
+        args.addArgument("hostId", "123");
+        try {
+            cmd.run(cmdCtxFactory.createContext(args));
+        } catch (CommandException ex) {
+            String expected = "Invalid VM ID: fluff";
+            assertEquals(expected, ex.getMessage());
+        }
     }
 
     @Test
     public void testName() {
-        assertEquals("list-vms", cmd.getName());
+        assertEquals("vm-info", cmd.getName());
     }
 
     @Test
     public void testDescription() {
-        assertEquals("lists all currently monitored VMs", cmd.getDescription());
+        assertEquals("shows basic information about a VM", cmd.getDescription());
     }
 
     @Test
     public void testUsage() {
-        String expected = "lists all currently monitored VMs";
+        String expected = "shows basic information about a VM";
 
         assertEquals(expected, cmd.getUsage());
     }
@@ -178,6 +175,9 @@ public class ListVMsCommandTest {
     public void testAcceptedArguments() {
         Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
         assertNotNull(args);
-        assertTrue(args.isEmpty());
+        assertEquals(2, args.size());
+        assertTrue(args.contains(new SimpleArgumentSpec("vmId", "the ID of the VM to monitor", true, true)));
+        assertTrue(args.contains(new SimpleArgumentSpec("hostId", "the ID of the host to monitor", true, true)));
     }
+
 }
