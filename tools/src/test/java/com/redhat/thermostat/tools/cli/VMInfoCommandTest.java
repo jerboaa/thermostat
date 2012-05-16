@@ -39,7 +39,6 @@ package com.redhat.thermostat.tools.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,8 +46,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.TimeZone;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.cli.AppContextSetup;
@@ -68,6 +70,19 @@ import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class VMInfoCommandTest {
+
+    private static TimeZone defaultTimezone;
+
+    @BeforeClass
+    public static void setUpClass() {
+        defaultTimezone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    }
+
+    @AfterClass
+    public static void tearDownClass() {
+        TimeZone.setDefault(defaultTimezone);
+    }
 
     private VMInfoCommand cmd;
     private VmInfoDAO vmsDAO;
@@ -120,8 +135,8 @@ public class VMInfoCommandTest {
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "Process ID:      234\n" +
-                          "Start time:      Thu Jun 07 15:32:00 CEST 2012\n" +
-                          "Stop time:       Fri Nov 01 01:22:00 CET 2013\n" +
+                          "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
+                          "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
                           "Main class:      mainClass\n" +
                           "Command line:    commandLine\n" +
                           "Java version:    vmVersion\n" +
@@ -180,4 +195,8 @@ public class VMInfoCommandTest {
         assertTrue(args.contains(new SimpleArgumentSpec("hostId", "the ID of the host to monitor", true, true)));
     }
 
+    @Test
+    public void testStorageRequired() {
+        assertTrue(cmd.isStorageRequired());
+    }
 }
