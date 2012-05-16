@@ -38,6 +38,7 @@ package com.redhat.thermostat.client;
 
 import java.awt.Component;
 
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.dao.Ref;
 
@@ -72,5 +73,5 @@ public interface MainView {
 
     void setSubView(Component view);
 
-    void registerVMContextAction(String name, String description, String id);
+    void registerVMContextAction(VMContextAction action);
 }

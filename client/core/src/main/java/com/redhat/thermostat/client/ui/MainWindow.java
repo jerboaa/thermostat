@@ -444,18 +444,17 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
-    public void registerVMContextAction(String name, String description, String id) {
+    public void registerVMContextAction(final VMContextAction action) {
         
         JMenuItem contextAction = new JMenuItem();
-        contextAction.setText(name);
-        contextAction.setToolTipText(description);
+        contextAction.setText(action.getName());
+        contextAction.setToolTipText(action.getDescription());
         vmContextMenu.add(contextAction);
         
-        contextAction.setActionCommand(id);
         contextAction.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                fireViewAction(Action.VM_CONTEXT_ACTION, e.getActionCommand());
+                fireViewAction(Action.VM_CONTEXT_ACTION, action);
             }
         });
     }
@@ -579,7 +578,7 @@ public class MainWindow extends JFrame implements MainView {
         actionNotifier.fireAction(action);
     }
     
-    private void fireViewAction(Action action, String payload) {
+    private void fireViewAction(Action action, VMContextAction payload) {
         actionNotifier.fireAction(action, payload);
     }
     
