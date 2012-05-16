@@ -68,7 +68,13 @@
     <mongo-driver.version>2.7.3</mongo-driver.version>
     <commons-cli.version>1.2</commons-cli.version>
 
-    <felix.version>4.0.2</felix.version>
+    <!--
+         felix 4.0 is compliant with osgi 4.3
+         for osgi clients, 4.3 is backwards compatible with 4.2
+    -->
+    <osgi.core.version>4.2.0</osgi.core.version>
+    <osgi.compendium.version>4.2.0</osgi.compendium.version>
+    <felix.framework.version>4.0.2</felix.framework.version>
 
   </properties>
 
@@ -209,9 +215,19 @@
       </dependency>
     
       <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.core</artifactId>
+        <version>${osgi.core.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.compendium</artifactId>
+        <version>${osgi.compendium.version}</version>
+      </dependency>
+      <dependency>
         <groupId>org.apache.felix</groupId>
         <artifactId>org.apache.felix.framework</artifactId>
-        <version>${felix.version}</version>
+        <version>${felix.framework.version}</version>
       </dependency>
     
     </dependencies>

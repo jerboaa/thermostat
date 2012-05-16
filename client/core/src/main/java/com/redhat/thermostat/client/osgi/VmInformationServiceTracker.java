@@ -51,7 +51,7 @@ class VmInformationServiceTracker extends ServiceTracker {
     private BundleContext context;
 
     VmInformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
-        super(context, VmInformationService.class, null);
+        super(context, VmInformationService.class.getName(), null);
         this.context = context;
         this.uiFacadeFactory = uiFacadeFactory;
     }

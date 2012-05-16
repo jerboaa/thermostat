@@ -35,8 +35,8 @@
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>
-      <artifactId>osgi_R4_core</artifactId>
-      <version>1.0</version>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>

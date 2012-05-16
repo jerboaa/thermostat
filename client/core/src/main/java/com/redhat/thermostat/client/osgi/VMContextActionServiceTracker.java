@@ -52,7 +52,7 @@ class VMContextActionServiceTracker extends ServiceTracker {
 
     @SuppressWarnings("unchecked")
     VMContextActionServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
-        super(context, VMContextAction.class, null);
+        super(context, VMContextAction.class.getName(), null);
         this.context = context;
         this.uiFacadeFactory = uiFacadeFactory;
     }
