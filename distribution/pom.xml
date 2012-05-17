@@ -206,7 +206,7 @@
     </dependency>
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-process-handler</artifactId>
+    	<artifactId>thermostat-osgi-process-handler</artifactId>
     	<version>${project.version}</version>
     	<type>bundle</type>
     </dependency>

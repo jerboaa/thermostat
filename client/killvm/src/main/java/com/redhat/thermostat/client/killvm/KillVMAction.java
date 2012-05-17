@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.killvm;
 
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.service.process.UNIXSignal;
 
 /**
  * Implements the {@link VMContextAction} entry point to provide a kill switch
@@ -45,18 +47,24 @@ import com.redhat.thermostat.common.dao.VmRef;
  */
 public class KillVMAction implements VMContextAction {
 
+    UNIXProcessHandler unixService;
+    
+    public KillVMAction(UNIXProcessHandler unixService) {
+        this.unixService = unixService;
+    }
+    
     @Override
     public String getName() {
-        return "cast a spell";
+        return "Kill Application";
     }
 
     @Override
     public String getDescription() {
-        return "it's a kind of magic";
+        return "Kill the selected VM Process";
     }
 
     @Override
     public void execute(VmRef reference) {
-        System.err.println("sim sala bin! " + reference.getIdString());
+        unixService.sendSignal(reference.getIdString(), UNIXSignal.KILL);
     }
 }

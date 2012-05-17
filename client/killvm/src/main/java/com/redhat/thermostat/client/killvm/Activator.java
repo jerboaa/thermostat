@@ -36,28 +36,74 @@
 
 package com.redhat.thermostat.client.killvm;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.service.process.UNIXProcessHandler;
 
 public class Activator implements BundleActivator {
 
+    private static final Logger logger = Logger.getLogger(Activator.class.getSimpleName());
+    
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
 
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        ServiceTracker tracker = new ServiceTracker(context, ContextAction.class.getName(), null) {
+        // FIXME: there should be a better way than this
+        // also, we need to be prepared that the unix service may disappear...
+        ServiceListener listener = new ServiceListener() {
+            
+            private UNIXProcessHandler unixService;
+            private boolean[] loaded = new boolean[2];
+            
             @Override
-            public Object addingService(ServiceReference reference) {
-                context.registerService(VMContextAction.class.getName(), new KillVMAction(), null);
-                return super.addingService(reference);
+            public void serviceChanged(ServiceEvent event) {
+                
+                ServiceReference reference = event.getServiceReference();
+                Object service = context.getService(reference);
+                switch (event.getType()) {
+                case ServiceEvent.REGISTERED:
+                    if (service instanceof ContextAction) {
+                        loaded[0] = true;
+                    } else if (service instanceof UNIXProcessHandler) {
+                        loaded[1] = true;
+                        unixService = (UNIXProcessHandler) service;
+                    }
+                    break;
+
+                default:
+                    break;
+                }
+                
+                if (loaded[0] && loaded[1]) {
+                    context.registerService(VMContextAction.class.getName(),
+                                            new KillVMAction(unixService), null);
+                }
             }
         };
-        tracker.open();
+        
+        try {
+            String filter = "(|(objectClass=" + ContextAction.class.getName() + 
+                            ")(objectClass=" + UNIXProcessHandler.class.getName() + "))";
+                    
+            context.addServiceListener(listener, filter);
+            ServiceReference[] services = context.getServiceReferences(null, null);
+            if (services != null) {
+                for(int i = 0; i < services.length; i++) {
+                    listener.serviceChanged(new ServiceEvent(ServiceEvent.REGISTERED, services[i]));
+                }
+            }
+            
+        } catch (Exception e) {
+           logger.log(Level.WARNING, "Failed to set up listener for http", e);
+        }
     }
 
     @Override

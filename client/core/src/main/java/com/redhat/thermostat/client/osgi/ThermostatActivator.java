@@ -44,7 +44,6 @@ import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.UiFacadeFactoryImpl;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
 
 public class ThermostatActivator implements BundleActivator {
 

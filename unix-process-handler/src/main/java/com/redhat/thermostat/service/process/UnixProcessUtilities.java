@@ -61,15 +61,14 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
     
     @Override
     public void sendSignal(String pid, UNIXSignal signal) {
-        List<String> commandLine = new ArrayList<>();
-        commandLine.add("kill");
-        
-        commandLine.add("-s " + signal.signalName());
-        commandLine.add(pid);
-        
+        exec("kill -s " + signal.signalName() + " " + pid);
+    }
+    
+    void exec(String command) {
+        Runtime rt = Runtime.getRuntime();
         try {
-            createAndRunProcess(commandLine);
-        } catch (IOException | ApplicationException e) {
+            rt.exec(command);
+        } catch (IOException e) {
             logger.log(Level.WARNING, "can't run kill!", e);
         }
     }

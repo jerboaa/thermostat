@@ -68,5 +68,11 @@
       <artifactId>thermostat-client-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+    	<groupId>com.redhat.thermostat</groupId>
+    	<artifactId>thermostat-osgi-process-handler</artifactId>
+    	<version>${project.version}</version>
+    	<type>bundle</type>
+    </dependency>
   </dependencies>
 </project>

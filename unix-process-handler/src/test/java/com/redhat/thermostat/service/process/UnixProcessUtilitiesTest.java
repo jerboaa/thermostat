@@ -74,6 +74,11 @@ public class UnixProcessUtilitiesTest {
                 return null;
             }
             
+            @Override
+            void exec(String command) {
+                processArguments.add(command);
+            }
+            
             public java.io.BufferedReader getProcessOutput(Process process) {
                 return reader;
             };
@@ -85,11 +90,8 @@ public class UnixProcessUtilitiesTest {
         
         process.sendSignal("12345", UNIXSignal.KILL);
         
-        Assert.assertTrue(processArguments.contains("kill"));
-        Assert.assertTrue(processArguments.contains("-s kill"));
-    
-        // we want exactly the last argument to be the pid
-        Assert.assertEquals("12345", processArguments.get(processArguments.size() - 1));
+        Assert.assertTrue(processArguments.contains("kill -s kill 12345"));
+        Assert.assertEquals(1, processArguments.size());
     }
     
     @Test

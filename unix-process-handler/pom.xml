@@ -8,7 +8,7 @@
     <version>0.3-SNAPSHOT</version>
   </parent>
   
-  <artifactId>thermostat-process-handler</artifactId>
+  <artifactId>thermostat-osgi-process-handler</artifactId>
   <packaging>bundle</packaging>
   <name>Thermostat Process handler plugin</name>
   
@@ -21,8 +21,9 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Private-Package>com.redhat.thermostat.service.activator</Private-Package>
             <Export-Package>com.redhat.thermostat.service.process</Export-Package>
-            <Bundle-Activator>com.redhat.thermostat.service.process.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.service.activator.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
           </instructions>
         </configuration>
@@ -42,7 +43,12 @@
       <artifactId>org.osgi.core</artifactId>
       <scope>provided</scope>
     </dependency>
-
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-common</artifactId>
