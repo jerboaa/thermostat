@@ -2,10 +2,14 @@ Thank you for downloading Thermostat.
 
 REQUIREMENTS:
 
+OpenJDK7
+Thermostat requires at least Java 7 to build and run. Thermostat has been tested
+with OpenJDK7. Other VMs or versons may or may not work.
+
 Maven (it will download all the java dependencies for you)
 
-MongoDB
-http://www.mongodb.org/
+MongoDB server
+Thermostat requires mongodb (http://www.mongodb.org/) server >= 2.0.0
 
 Either a /etc/os-release file or lsb_release
 
@@ -21,5 +25,8 @@ RUNNING THERMOSTAT:
 1. To start the agent and the db:
    bin/thermostat service --start
 
-2. To start the client:
+2. To start the gui client:
    bin/thermostat-client-gui
+
+3. To start the cli client:
+   bin/thermostat [--help]
