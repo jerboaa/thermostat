@@ -152,6 +152,7 @@ public final class AgentApplication extends BasicCommand {
         logger.fine("Agent started.");
 
         ctx.getConsole().getOutput().println("Agent id: " + agent.getId());
+        ctx.getConsole().getOutput().println("agent started.");
         logger.fine("Agent id: " + agent.getId());
         
         try {
