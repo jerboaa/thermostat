@@ -46,7 +46,7 @@
   </parent>
   
   <artifactId>thermostat-common</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>Thermostat Common</name>
   <url>${project.parent.url}</url>
@@ -58,6 +58,35 @@
         <filtering>true</filtering>
       </resource>
     </resources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>1.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Export-Package>
+              com.redhat.thermostat.cli,
+              com.redhat.thermostat.common,
+              com.redhat.thermostat.common.appctx,
+              com.redhat.thermostat.common.config,
+              com.redhat.thermostat.common.dao,
+              com.redhat.thermostat.common.model,
+              com.redhat.thermostat.common.storage,
+              com.redhat.thermostat.common.utils,
+            </Export-Package>
+            <Private-Package>
+              com.redhat.thermostat.test,
+              com.redhat.thermostat.tools,
+            </Private-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+
   </build>
 
   <dependencies>

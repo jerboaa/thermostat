@@ -50,9 +50,10 @@
     </dependency>
     
     <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-common</artifactId>
-    	<version>${project.version}</version>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common</artifactId>
+      <version>${project.version}</version>
+      <type>bundle</type>
     </dependency>
   </dependencies>
   

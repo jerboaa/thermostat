@@ -46,7 +46,7 @@
   </parent>
 
   <artifactId>thermostat-agent</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>Thermostat Agent</name>
 
@@ -65,6 +65,7 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common</artifactId>
       <version>${project.version}</version>
+      <type>bundle</type>
     </dependency>
     <dependency>
       <groupId>com.sun</groupId>
@@ -73,5 +74,31 @@
       <systemPath>${java.home}/../lib/tools.jar</systemPath>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>1.4.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Export-Package>
+              com.redhat.thermostat.agent,
+              com.redhat.thermostat.backend,
+            </Export-Package>
+            <Private-Package>
+              com.redhat.thermostat,
+              com.redhat.thermostat.agent.config,
+              com.redhat.thermostat.backend.sample,
+              com.redhat.thermostat.backend.system,
+            </Private-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>

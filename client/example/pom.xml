@@ -21,7 +21,7 @@
           <instructions>
             <Private-Package>com.redhat.thermostat.client.osgi.example</Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.osgi.example.Activator</Bundle-Activator>
-            <Bundle-Vendor>Red Hat</Bundle-Vendor>
+            <Bundle-Vendor>Red Hat, Inc</Bundle-Vendor>
           </instructions>
         </configuration>
       </plugin>
@@ -42,11 +42,13 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common</artifactId>
       <version>${project.version}</version>
+      <type>bundle</type>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-core</artifactId>
       <version>${project.version}</version>
+      <type>bundle</type>
     </dependency>
   </dependencies>
 </project>

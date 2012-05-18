@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.osgi;
+package com.redhat.thermostat.launcher;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,19 +51,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import com.redhat.thermostat.common.config.ConfigUtils;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-
 public class OSGiRegistry {
 
-    public static String getOSGiPublicPackages() throws InvalidConfigurationException, FileNotFoundException, IOException {
-        String home = ConfigUtils.getThermostatHome();
+    public static String getOSGiPublicPackages() throws ConfigurationException, FileNotFoundException, IOException {
+        Configuration config = new Configuration();
+        String home = config.getThermostatHome();
         File thermostatEtc = new File(home, "etc");
         File osgiBundleDefinitions = new File(thermostatEtc, "osgi-export.properties");
-        
+
         Properties bundles = new Properties();
         bundles.load(new FileInputStream(osgiBundleDefinitions));
-        
+
         StringBuilder publicPackages = new StringBuilder();
         boolean firstPackage = true;
         for (Object bundle : bundles.keySet()) {
@@ -77,28 +75,30 @@ public class OSGiRegistry {
                 publicPackages.append("; version=").append(bundleVersion);
             }
         }
-                
+
         return publicPackages.toString();
     }
 
-    public static List<String> getSystemBundles() throws InvalidConfigurationException, IOException {
-        
-        String home = ConfigUtils.getThermostatHome();
+    public static List<String> getSystemBundles() throws ConfigurationException, IOException {
+        Configuration config = new Configuration();
+        String home = config.getThermostatHome();
         Path thermostatHome = new File(home, "libs").toPath();
         OSGiBundlesVisitor visitor = new OSGiBundlesVisitor();
         Files.walkFileTree(thermostatHome, visitor);
         return visitor.jars;
     }
-    
+
     private static class OSGiBundlesVisitor extends SimpleFileVisitor<Path> {
-        
-        private List<String> jars = new ArrayList<>(); 
+
+        private List<String> jars = new ArrayList<>();
         private PathMatcher matcher =
-                FileSystems.getDefault().getPathMatcher("glob:{thermostat-osgi,thermostat-common,thermostat-client}*.jar");
-        
+                FileSystems.getDefault().getPathMatcher("glob:thermostat-*.jar");
+        private PathMatcher launcher =
+                FileSystems.getDefault().getPathMatcher("glob:thermostat-launcher*jar");
+
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-            if (file.getFileName() != null && matcher.matches(file.getFileName())) {
+            if (file.getFileName() != null && matcher.matches(file.getFileName()) && ! launcher.matches(file.getFileName())) {
                 jars.add("file:" + file.toAbsolutePath().toString());
             }
             return FileVisitResult.CONTINUE;

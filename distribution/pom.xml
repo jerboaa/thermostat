@@ -46,7 +46,7 @@
   </parent>
 
   <artifactId>thermostat-distribution</artifactId>
-  <packaging>pom</packaging>
+  <packaging>jar</packaging>
 
   <name>Thermostat Distribution</name>
 
@@ -68,6 +68,7 @@
             </goals>
             <configuration>
               <excludeTransitive>false</excludeTransitive>
+              <excludeGroupIds>junit,org.hamcrest</excludeGroupIds>
               <outputDirectory>${project.build.directory}/libs</outputDirectory>
             </configuration>
           </execution>
@@ -175,6 +176,16 @@
   </build>
   <dependencies>
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-launcher</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-core</artifactId>
       <version>${project.version}</version>
@@ -202,11 +213,6 @@
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-tools</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-client-launcher</artifactId>
     	<version>${project.version}</version>
     </dependency>
     <dependency>

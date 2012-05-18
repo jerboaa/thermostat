@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi;
+package com.redhat.thermostat.launcher;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -51,20 +51,20 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
-import com.redhat.thermostat.common.config.ConfigUtils;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.osgi.OSGiRegistry;
 
 public class Thermostat {
 
-    private File thermostatBundleHome;    
+    private File thermostatBundleHome;
+    private boolean printOSGiDebugInfo = false;
+
     private Thermostat() { /* nothing to do */ }
-    
-    private void setUp() throws InvalidConfigurationException {
-        String thermostatHome = ConfigUtils.getThermostatHome();
+
+    private void setUp() throws ConfigurationException {
+        Configuration config = new Configuration();
+        String thermostatHome = config.getThermostatHome();
         thermostatBundleHome = new File(thermostatHome, "osgi");
     }
-    
+
     private List<Bundle> installBundles(Framework framework,
                                         List<String>bundleLocations)
         throws Exception
@@ -72,7 +72,14 @@ public class Thermostat {
         List<Bundle> bundles = new ArrayList<>();
         BundleContext bundleContext = framework.getBundleContext();
         for (String location : bundleLocations) {
+            if (printOSGiDebugInfo) {
+                System.out.print("installing bundle: \"" + location + "\"");
+            }
             Bundle bundle = bundleContext.installBundle(location);
+            if (printOSGiDebugInfo) {
+                System.out.println(" as id " + bundle.getBundleId());
+            }
+
             bundles.add(bundle);
         }
         return bundles;
@@ -80,44 +87,58 @@ public class Thermostat {
 
     private void startBundles(List<Bundle> bundles) throws BundleException {
         for (Bundle bundle : bundles) {
+            if (printOSGiDebugInfo) {
+                System.out.println("starting bundle: \"" + bundle.getBundleId() + "\"");
+            }
             bundle.start();
         }
     }
 
     private void start(String[] args) throws Exception {
         setUp();
-        
+
         ServiceLoader<FrameworkFactory> loader =
                 ServiceLoader.load(FrameworkFactory.class);
-        
+
         Map<String, String> bundleConfigurations = new HashMap<String, String>();
-        
-        bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, OSGiRegistry.getOSGiPublicPackages());
+        String extraPackages = OSGiRegistry.getOSGiPublicPackages();
+        bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, extraPackages);
         bundleConfigurations.put(Constants.FRAMEWORK_STORAGE,
                                  thermostatBundleHome.getAbsolutePath());
-       
+
         Iterator<FrameworkFactory> factories = loader.iterator();
         if (factories.hasNext()) {
-            
+
             // we just want the first found
             Framework framework = factories.next().newFramework(bundleConfigurations);
             framework.init();
-            
+
             List<String> bundles = OSGiRegistry.getSystemBundles();
             List<Bundle> bundleList = installBundles(framework, bundles);
             framework.start();
             startBundles(bundleList);
-            
+
         } else {
             throw new InternalError("Can't find factories for ServiceLoader!");
         }
     }
-    
+
+    private void setPrintOSGiDebugInfo(boolean newValue) {
+        printOSGiDebugInfo = newValue;
+    }
+
     /**
      * @param args
-     * @throws Exception 
+     * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        new Thermostat().start(args);
-    }    
+
+        Thermostat t = new Thermostat();
+        if (args.length >= 1 && args[0].equals("--print-osgi-info")) {
+            t.setPrintOSGiDebugInfo(true);
+        }
+        t.start(args);
+    }
+
+
 }

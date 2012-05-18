@@ -60,7 +60,6 @@
 
   <modules>
     <module>core</module>
-    <module>launcher</module>
     <module>vmclassstat</module>
     <module>example</module>
     <module>killvm</module>

@@ -41,14 +41,14 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat-client</artifactId>
+    <artifactId>thermostat</artifactId>
     <version>0.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-client-launcher</artifactId>
+  <artifactId>thermostat-launcher</artifactId>
   <packaging>jar</packaging>
 
-  <name>Thermostat Client Launcher</name>
+  <name>Thermostat Launcher</name>
 
   <dependencies>
     <dependency>
@@ -63,25 +63,10 @@
     </dependency>
 
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
       <groupId>org.apache.felix</groupId>
       <artifactId>org.apache.felix.framework</artifactId>
     </dependency>
     
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.jfree</groupId>
-      <artifactId>jfreechart</artifactId>
-    </dependency>
   </dependencies>
 
 </project>

@@ -57,11 +57,16 @@ TOOLS_JAR="@java.home@/../lib/tools.jar"
 THERM_DIR="${THERMOSTAT_LIBS}"
 
 #CLIENT_CLASSPATH="${JCOMMON_JAR}:${JFREECHART_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${OSGI_JAR}"
-CLIENT_CLASSPATH="${THERM_DIR}/*"
-CLIENT_CLASSPATH="${CLIENT_CLASSPATH}:${THERM_DIR}/thermostat-client-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar"
+#CLIENT_CLASSPATH="${THERM_DIR}/*"
+#CLIENT_CLASSPATH="${CLIENT_CLASSPATH}:${THERM_DIR}/thermostat-client-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar"
+DEPS=( $(cd ${THERM_DIR} ; find -iname '*jar' | grep -v 'thermostat-.*jar' ) )
+for dep in "${DEPS[@]}"; do
+  DEP_CLASSPATH="${DEP_CLASSPATH}:${THERM_DIR}${dep:1}"
+done
+DEP_CLASSPATH=${DEP_CLASSPATH:1}
+CLIENT_CLASSPATH="${THERM_DIR}/thermostat-launcher-@project.version@.jar:${DEP_CLASSPATH}"
 
-CLIENT_MAIN="com.redhat.thermostat.client.osgi.Thermostat"
+CLIENT_MAIN="com.redhat.thermostat.launcher.Thermostat"
 
 ${JAVA} -cp ${CLIENT_CLASSPATH} ${CLIENT_MAIN} ${CLIENT_ARGS} "$@"
 exit $?
-
