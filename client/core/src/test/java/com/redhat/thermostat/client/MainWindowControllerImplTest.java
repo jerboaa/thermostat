@@ -43,9 +43,9 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
 import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
@@ -59,6 +59,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.SummaryController;
@@ -343,4 +346,16 @@ public class MainWindowControllerImplTest {
         verify(action1, times(1)).execute(any(VmRef.class));
         verify(action2, times(0)).execute(any(VmRef.class));
     }
+
+   @Test
+   public void testOSGiFrameworkShutdown() throws BundleException {
+       Bundle systemBundle = mock(Bundle.class);
+       BundleContext ctx = mock(BundleContext.class);
+       when(ctx.getBundle(0)).thenReturn(systemBundle);
+       when(uiFacadeFactory.getBundleContext()).thenReturn(ctx);
+
+       l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SHUTDOWN));
+
+       verify(systemBundle).stop();
+   }
 }

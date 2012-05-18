@@ -39,6 +39,8 @@ package com.redhat.thermostat.client;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.osgi.framework.BundleContext;
+
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.ui.HostInformationController;
@@ -50,9 +52,15 @@ import com.redhat.thermostat.common.dao.VmRef;
 
 public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
+    private BundleContext context;
+
     private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
     private Collection<VMContextAction> contextAction = new ArrayList<>();
     
+    public UiFacadeFactoryImpl(BundleContext context) {
+        this.context = context;
+    }
+
     @Override
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow();
@@ -95,5 +103,10 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public void addVMContextAction(VMContextAction service) {
         contextAction.add(service);
+    }
+
+    @Override
+    public BundleContext getBundleContext() {
+        return context;
     }
 }

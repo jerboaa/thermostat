@@ -41,6 +41,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.osgi.framework.BundleException;
+
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
@@ -199,14 +201,28 @@ public class MainWindowControllerImpl implements MainWindowController {
                     handleVMHooks(evt);
                     break;
                 case SHUTDOWN:
-                    view.hideMainWindow();
-                    ApplicationContext.getInstance().getTimerFactory().shutdown();
+                    shutdownApplication();
                     break;
                 default:
                     throw new IllegalStateException("unhandled action");
                 }
             }
+
         });
+    }
+
+    private void shutdownApplication() {
+        view.hideMainWindow();
+        ApplicationContext.getInstance().getTimerFactory().shutdown();
+        shutdownOSGiFramework();
+    }
+
+    private void shutdownOSGiFramework() {
+        try {
+            facadeFactory.getBundleContext().getBundle(0).stop();
+        } catch (BundleException e) {
+            logger.log(Level.SEVERE, "Unexpected error during OSGi framework shutdown", e);
+        }
     }
 
     private void handleVMHooks(ActionEvent<MainView.Action> event) {

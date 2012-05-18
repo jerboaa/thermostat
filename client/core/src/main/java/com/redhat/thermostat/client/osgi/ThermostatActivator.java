@@ -52,7 +52,7 @@ public class ThermostatActivator implements BundleActivator {
     
     @Override
     public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
+        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
         
         vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
         vmInfoServiceTracker.open();
