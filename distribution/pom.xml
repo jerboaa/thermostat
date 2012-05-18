@@ -87,6 +87,11 @@
               <outputDirectory>${project.build.directory}</outputDirectory>
               <resources>
                 <resource>
+                  <directory>desktop</directory>
+                  <targetPath></targetPath>
+                  <filtering>true</filtering>
+                </resource>
+                <resource>
                   <directory>scripts</directory>
                   <targetPath>bin</targetPath>
                   <filtering>true</filtering>
