@@ -147,6 +147,7 @@ public class VmGcPanel extends JPanel implements VmGcView {
                 subPanels.put(tag, subPanel);
                 add(subPanel, gcPanelConstraints);
                 gcPanelConstraints.gridy++;
+                revalidate();
             }
         });
     }
@@ -159,7 +160,7 @@ public class VmGcPanel extends JPanel implements VmGcView {
                 dataset.remove(tag);
                 JPanel subPanel = subPanels.remove(tag);
                 remove(subPanel);
-                invalidate();
+                revalidate();
                 gcPanelConstraints.gridy--;
             }
         });
