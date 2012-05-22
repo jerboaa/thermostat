@@ -43,7 +43,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.TestUtils;
+import com.redhat.thermostat.agent.TestUtils;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 

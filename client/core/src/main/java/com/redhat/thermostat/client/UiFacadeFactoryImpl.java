@@ -38,6 +38,7 @@ package com.redhat.thermostat.client;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 
 import org.osgi.framework.BundleContext;
 
@@ -52,15 +53,11 @@ import com.redhat.thermostat.common.dao.VmRef;
 
 public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
-    private BundleContext context;
+    private CountDownLatch shutdown = new CountDownLatch(1);
 
     private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
     private Collection<VMContextAction> contextAction = new ArrayList<>();
     
-    public UiFacadeFactoryImpl(BundleContext context) {
-        this.context = context;
-    }
-
     @Override
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow();
@@ -106,7 +103,13 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
-    public BundleContext getBundleContext() {
-        return context;
+    public void shutdown() {
+        shutdown.countDown();
     }
+
+    @Override
+    public void awaitShutdown() throws InterruptedException {
+        shutdown.await();
+    }
+
 }

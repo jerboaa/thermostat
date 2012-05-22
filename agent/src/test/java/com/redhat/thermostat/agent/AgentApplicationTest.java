@@ -46,8 +46,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 
 public class AgentApplicationTest {
 

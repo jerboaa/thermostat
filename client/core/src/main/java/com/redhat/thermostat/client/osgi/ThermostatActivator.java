@@ -36,14 +36,16 @@
 
 package com.redhat.thermostat.client.osgi;
 
+import java.util.Arrays;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.client.GUIClientCommand;
 import com.redhat.thermostat.client.Main;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.UiFacadeFactoryImpl;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.ContextAction;
+import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
 public class ThermostatActivator implements BundleActivator {
 
@@ -52,7 +54,7 @@ public class ThermostatActivator implements BundleActivator {
     
     @Override
     public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
+        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
         
         vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
         vmInfoServiceTracker.open();
@@ -60,10 +62,10 @@ public class ThermostatActivator implements BundleActivator {
         contextActionTracker =
                 new VMContextActionServiceTracker(context, uiFacadeFactory);
         contextActionTracker.open();
-        
-        Main.main(uiFacadeFactory, new String[0]);
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
-        context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
+
+        CommandRegistryImpl cmdReg = new CommandRegistryImpl(context);
+        Main main = new Main(uiFacadeFactory, new String[0]);
+        cmdReg.registerCommands(Arrays.asList(new GUIClientCommand(main)));
     }
 
     @Override

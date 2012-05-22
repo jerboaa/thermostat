@@ -38,8 +38,6 @@ package com.redhat.thermostat.client;
 
 import java.util.Collection;
 
-import org.osgi.framework.BundleContext;
-
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.ui.HostInformationController;
@@ -65,5 +63,7 @@ public interface UiFacadeFactory {
     Collection<VMContextAction> getVMContextActions();
     void addVMContextAction(VMContextAction service);
 
-    BundleContext getBundleContext();
+    public void shutdown();
+
+    public void awaitShutdown() throws InterruptedException;
 }

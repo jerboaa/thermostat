@@ -218,11 +218,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void shutdownOSGiFramework() {
-        try {
-            facadeFactory.getBundleContext().getBundle(0).stop();
-        } catch (BundleException e) {
-            logger.log(Level.SEVERE, "Unexpected error during OSGi framework shutdown", e);
-        }
+        facadeFactory.shutdown();
     }
 
     private void handleVMHooks(ActionEvent<MainView.Action> event) {

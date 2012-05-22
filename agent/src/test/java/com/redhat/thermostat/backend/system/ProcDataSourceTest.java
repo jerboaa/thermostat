@@ -43,7 +43,7 @@ import java.io.Reader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.TestUtils;
+import com.redhat.thermostat.agent.TestUtils;
 
 public class ProcDataSourceTest {
 

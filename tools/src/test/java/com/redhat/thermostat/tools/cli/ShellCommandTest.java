@@ -38,6 +38,9 @@ package com.redhat.thermostat.tools.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -50,11 +53,14 @@ import jline.UnixTerminal;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.cli.Arguments;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandException;
-import com.redhat.thermostat.cli.SimpleArguments;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Launcher;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class ShellCommandTest {
@@ -75,12 +81,17 @@ public class ShellCommandTest {
 
     @Test
     public void testBasic() throws CommandException {
-        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ServiceReference ref = mock(ServiceReference.class);
+        BundleContext bundleContext = mock(BundleContext.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
         ctxFactory.setInput("help\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals("Thermostat > help\nThermostat > exit\n", ctxFactory.getOutput());
+        verify(launcher).run(new String[]{"help"});
     }
 
     @Test

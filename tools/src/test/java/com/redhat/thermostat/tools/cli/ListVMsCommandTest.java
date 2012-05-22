@@ -50,15 +50,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.cli.AppContextSetup;
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandContextFactory;
-import com.redhat.thermostat.cli.CommandException;
-import com.redhat.thermostat.cli.SimpleArgumentSpec;
-import com.redhat.thermostat.cli.SimpleArguments;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.cli.AppContextSetup;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandContextFactory;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -93,7 +93,6 @@ public class ListVMsCommandTest {
                 return appContextSetup;
             }
         };
-        CommandContextFactory.setInstance(cmdCtxFactory);
     }
 
     private void setupDAOs() {
@@ -112,7 +111,6 @@ public class ListVMsCommandTest {
         cmdCtxFactory = null;
         cmd = null;
         appContextSetup = null;
-        CommandContextFactory.setInstance(new CommandContextFactory());
         ApplicationContextUtil.resetApplicationContext();
     }
 

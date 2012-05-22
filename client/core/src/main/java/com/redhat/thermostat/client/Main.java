@@ -38,6 +38,7 @@ package com.redhat.thermostat.client;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
+import java.awt.EventQueue;
 import java.awt.Window;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,7 +46,6 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
-import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
@@ -60,10 +60,10 @@ import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.StorageProvider;
-import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
+import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Main {
@@ -73,7 +73,7 @@ public class Main {
     private ClientArgs arguments;
     private UiFacadeFactory uiFacadeFactory;
 
-    private Main(UiFacadeFactory uiFacadeFactory, String[] args) {
+    public Main(UiFacadeFactory uiFacadeFactory, String[] args) {
         this.uiFacadeFactory = uiFacadeFactory;
         try {
             this.arguments = new ClientArgs(args);
@@ -92,6 +92,22 @@ public class Main {
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
         SwingViewFactory viewFactory = new SwingViewFactory();
         ApplicationContext.getInstance().setViewFactory(viewFactory);
+    }
+
+    void run() {
+        EventQueue.invokeLater(new Runnable() {
+
+            @Override
+            public void run() {
+                showGui();
+            }
+            
+        });
+        try {
+            uiFacadeFactory.awaitShutdown();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     private void showGui() {
@@ -154,18 +170,6 @@ public class Main {
             layoutDebugger.start();
         }
 
-    }
-
-    public static void main(UiFacadeFactory uiFacadeFactory, String[] args) {
-        LoggingUtils.setGlobalLogLevel(Level.ALL);
-
-        final Main main = new Main(uiFacadeFactory, args);
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                main.showGui();
-            }
-        });
     }
 
 }

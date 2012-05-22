@@ -61,7 +61,6 @@
   <modules>
     <module>core</module>
     <module>vmclassstat</module>
-    <module>example</module>
     <module>killvm</module>
   </modules>
 

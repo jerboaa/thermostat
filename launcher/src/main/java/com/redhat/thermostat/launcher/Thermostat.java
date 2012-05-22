@@ -37,6 +37,8 @@
 package com.redhat.thermostat.launcher;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -48,12 +50,17 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
 
 public class Thermostat {
 
+    /**
+     * 
+     */
+    private static final String LAUNCHER_CLASSNAME = "com.redhat.thermostat.common.cli.Launcher";
     private File thermostatBundleHome;
     private boolean printOSGiDebugInfo = false;
 
@@ -112,14 +119,31 @@ public class Thermostat {
             // we just want the first found
             Framework framework = factories.next().newFramework(bundleConfigurations);
             framework.init();
-
             List<String> bundles = OSGiRegistry.getSystemBundles();
             List<Bundle> bundleList = installBundles(framework, bundles);
             framework.start();
             startBundles(bundleList);
 
+            launch(args, framework);
         } else {
             throw new InternalError("Can't find factories for ServiceLoader!");
+        }
+    }
+
+    // This is our ticket into OSGi land. Unfortunately, we need the reflection to overcome
+    // classpath impendance mismatch.
+    private void launch(String[] args, Framework framework)
+            throws NoSuchMethodException, IllegalAccessException,
+            InvocationTargetException {
+
+        BundleContext ctx = framework.getBundleContext();
+        ServiceReference launcherRef = ctx.getServiceReference(LAUNCHER_CLASSNAME);
+        if (launcherRef != null) {
+            Object launcherImpl = ctx.getService(launcherRef);
+            Method m = launcherImpl.getClass().getMethod("run", String[].class);
+            m.invoke(launcherImpl, (Object) args);
+        } else {
+            System.err.println("Severe: Could not locate launcher");
         }
     }
 

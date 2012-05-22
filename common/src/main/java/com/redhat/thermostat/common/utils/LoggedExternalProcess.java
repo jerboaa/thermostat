@@ -43,7 +43,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.tools.ApplicationException;
+import com.redhat.thermostat.common.tools.ApplicationException;
 
 public class LoggedExternalProcess extends Thread {
 

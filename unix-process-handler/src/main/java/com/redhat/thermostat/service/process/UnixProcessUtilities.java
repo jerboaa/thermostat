@@ -45,8 +45,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
-import com.redhat.thermostat.tools.ApplicationException;
 
 public class UnixProcessUtilities implements UNIXProcessHandler {
 

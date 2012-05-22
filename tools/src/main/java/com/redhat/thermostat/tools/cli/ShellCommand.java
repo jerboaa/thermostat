@@ -45,11 +45,14 @@ import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
 
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.Command;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandException;
-import com.redhat.thermostat.cli.Launcher;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Launcher;
 
 public class ShellCommand implements Command {
 
@@ -61,8 +64,11 @@ public class ShellCommand implements Command {
 
     private static final String PROMPT = "Thermostat > ";
 
+    private CommandContext context;
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        context = ctx;
         Terminal term = TerminalFactory.create();
         try {
             shellMainLoop(ctx, term);
@@ -81,12 +87,12 @@ public class ShellCommand implements Command {
         }
     }
 
-    private void shellMainLoop(CommandContext ctx, Terminal term) throws IOException {
+    private void shellMainLoop(CommandContext ctx, Terminal term) throws IOException, CommandException {
         ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), new OutputStreamWriter(ctx.getConsole().getOutput()), term);
         while (handleConsoleInput(reader));
     }
 
-    private boolean handleConsoleInput(ConsoleReader reader) throws IOException {
+    private boolean handleConsoleInput(ConsoleReader reader) throws IOException, CommandException {
         String line = reader.readLine(PROMPT).trim();
         if (line.equals("")) {
             return true;
@@ -98,10 +104,16 @@ public class ShellCommand implements Command {
         }
     }
 
-    private void launchCommand(String line) {
+    private void launchCommand(String line) throws CommandException {
         String[] parsed = line.split(" ");
-        Launcher launcher = new Launcher();
-        launcher.run(parsed);
+        BundleContext bCtx = context.getCommandContextFactory().getBundleContext();
+        ServiceReference launcherRef = bCtx.getServiceReference(Launcher.class.getName());
+        if (launcherRef != null) {
+            Launcher launcher = (Launcher) bCtx.getService(launcherRef);
+            launcher.run(parsed);
+        } else {
+            throw new CommandException("Severe: Could not locate launcher");
+        }
     }
 
     @Override

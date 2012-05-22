@@ -41,12 +41,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.Command;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandException;
-import com.redhat.thermostat.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.dao.DAOException;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;

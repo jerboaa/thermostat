@@ -39,19 +39,25 @@ package com.redhat.thermostat.tools;
 import java.util.Arrays;
 import java.util.Collection;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.agent.AgentApplication;
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandContextFactory;
-import com.redhat.thermostat.cli.CommandException;
-import com.redhat.thermostat.cli.SimpleArgumentSpec;
-import com.redhat.thermostat.cli.SimpleArguments;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandContextImpl;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Launcher;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.tools.db.DBService;
 
 /**
@@ -72,6 +78,8 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
     
     private ActionNotifier<ApplicationState> notifier;
 
+    private CommandContext context;
+
     public ThermostatService() {
         database = new DBService();
         agent = new AgentApplication();
@@ -88,6 +96,7 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        context = ctx;
         try {
             addListeners();
             // just run the database, if the database is successful, let the
@@ -121,7 +130,10 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                     @Override
                     public void run() {
                         String[] args = new String[] { "storage", "--stop" };
-                        Thermostat.main(args);
+                        BundleContext bCtx = context.getCommandContextFactory().getBundleContext();
+                        ServiceReference launcherRef = bCtx.getServiceReference(Launcher.class.getName());
+                        Launcher launcher = (Launcher) bCtx.getService(launcherRef);
+                        launcher.run(args);
                     }
                 });
                 
@@ -130,7 +142,7 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                 args.addArgument("dbUrl", dbUrl);
                 try {
                     System.err.println("starting agent now...");
-                    agent.run(CommandContextFactory.getInstance().createContext(args));
+                    agent.run(new CommandContextImpl(args, context.getCommandContextFactory()));
                 } catch (CommandException e) {
                     notifier.fireAction(ApplicationState.FAIL);
                 }

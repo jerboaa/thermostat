@@ -56,16 +56,16 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandException;
-import com.redhat.thermostat.cli.SimpleArgumentSpec;
-import com.redhat.thermostat.cli.SimpleArguments;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.tools.ApplicationException;
-import com.redhat.thermostat.tools.ApplicationState;
+import com.redhat.thermostat.common.tools.ApplicationException;
+import com.redhat.thermostat.common.tools.ApplicationState;
 
 public class DBServiceTest {
     

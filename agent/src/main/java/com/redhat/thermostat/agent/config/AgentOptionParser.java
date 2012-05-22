@@ -39,9 +39,9 @@ package com.redhat.thermostat.agent.config;
 import java.util.Arrays;
 import java.util.Collection;
 
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.Arguments;
-import com.redhat.thermostat.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
 

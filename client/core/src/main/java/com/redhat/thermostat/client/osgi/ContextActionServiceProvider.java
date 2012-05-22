@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.osgi;
 
 import com.redhat.thermostat.client.osgi.service.ContextAction;
 
-class ContextActionServiceProvider implements ContextAction {
+public class ContextActionServiceProvider implements ContextAction {
   
     @Override
     public String getName() {

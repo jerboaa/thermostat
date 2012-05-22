@@ -45,8 +45,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.TestUtils;
-import com.redhat.thermostat.cli.SimpleArguments;
+import com.redhat.thermostat.agent.TestUtils;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 public class AgentOptionParserTest {

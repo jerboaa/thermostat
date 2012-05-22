@@ -41,12 +41,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-import com.redhat.thermostat.cli.AppContextSetup;
-import com.redhat.thermostat.cli.Arguments;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandContextFactory;
-import com.redhat.thermostat.cli.CommandRegistry;
-import com.redhat.thermostat.cli.Console;
+import org.osgi.framework.BundleContext;
+
+import com.redhat.thermostat.common.cli.AppContextSetup;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandContextFactory;
+import com.redhat.thermostat.common.cli.CommandRegistry;
+import com.redhat.thermostat.common.cli.Console;
 
 public class TestCommandContextFactory extends CommandContextFactory {
 
@@ -55,10 +57,15 @@ public class TestCommandContextFactory extends CommandContextFactory {
     private ExceptionThrowingInputStream in;
 
     public TestCommandContextFactory() {
+        this(null);
+    }
+
+    public TestCommandContextFactory(BundleContext bCtx) {
+        super(bCtx);
         reset();
     }
 
-    private CommandRegistry commandRegistry = new CommandRegistry();
+    private CommandRegistry commandRegistry = new TestCommandRegistry();
 
     private AppContextSetup appContextSetup = new AppContextSetup() {
 
@@ -111,6 +118,11 @@ public class TestCommandContextFactory extends CommandContextFactory {
             @Override
             public AppContextSetup getAppContextSetup() {
                 return TestCommandContextFactory.this.getAppContextSetup();
+            }
+
+            @Override
+            public CommandContextFactory getCommandContextFactory() {
+                return TestCommandContextFactory.this;
             }
             
         };

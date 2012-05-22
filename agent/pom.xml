@@ -68,6 +68,10 @@
       <type>bundle</type>
     </dependency>
     <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.sun</groupId>
       <artifactId>tools</artifactId>
       <scope>system</scope>
@@ -85,6 +89,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Activator>com.redhat.thermostat.agent.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.agent,
               com.redhat.thermostat.backend,

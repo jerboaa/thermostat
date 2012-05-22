@@ -42,15 +42,15 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Properties;
 
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.Arguments;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandException;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.tools.ApplicationException;
-import com.redhat.thermostat.tools.ApplicationState;
-import com.redhat.thermostat.tools.BasicCommand;
+import com.redhat.thermostat.common.tools.ApplicationException;
+import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.tools.BasicCommand;
 
 public class DBService extends BasicCommand {
 

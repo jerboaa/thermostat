@@ -92,6 +92,10 @@
       <version>${project.version}</version>
       <type>bundle</type>
     </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+    </dependency>
   </dependencies>
 
   <build>
@@ -104,11 +108,13 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Activator>com.redhat.thermostat.tools.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.tools,
               com.redhat.thermostat.tools.cli,
               com.redhat.thermostat.tools.db,
             </Export-Package>
+            <Private-Package>META_INF.services</Private-Package>
           </instructions>
         </configuration>
       </plugin>

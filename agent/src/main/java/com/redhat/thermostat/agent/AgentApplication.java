@@ -46,15 +46,15 @@ import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
-import com.redhat.thermostat.cli.ArgumentSpec;
-import com.redhat.thermostat.cli.Arguments;
-import com.redhat.thermostat.cli.CommandContext;
-import com.redhat.thermostat.cli.CommandException;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
@@ -63,8 +63,8 @@ import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.tools.BasicCommand;
 
 public final class AgentApplication extends BasicCommand {
 

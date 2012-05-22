@@ -349,13 +349,9 @@ public class MainWindowControllerImplTest {
 
    @Test
    public void testOSGiFrameworkShutdown() throws BundleException {
-       Bundle systemBundle = mock(Bundle.class);
-       BundleContext ctx = mock(BundleContext.class);
-       when(ctx.getBundle(0)).thenReturn(systemBundle);
-       when(uiFacadeFactory.getBundleContext()).thenReturn(ctx);
 
        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SHUTDOWN));
 
-       verify(systemBundle).stop();
+       verify(uiFacadeFactory).shutdown();
    }
 }

@@ -41,7 +41,7 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 
 
-class ApplicationServiceProvider implements ApplicationService {
+public class ApplicationServiceProvider implements ApplicationService {
 
     @Override
     public DAOFactory getDAOFactory() {

@@ -68,8 +68,10 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Activator>com.redhat.thermostat.common.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.cli,
+              com.redhat.thermostat.common.cli,
+              com.redhat.thermostat.common.tools,
               com.redhat.thermostat.common,
               com.redhat.thermostat.common.appctx,
               com.redhat.thermostat.common.config,
