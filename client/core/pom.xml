@@ -51,6 +51,14 @@
   <name>Thermostat Client Core</name>
 
   <dependencies>
+  
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-laf</artifactId>
+      <version>${project.version}</version>
+      <type>bundle</type>
+    </dependency>
+    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

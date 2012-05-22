@@ -219,8 +219,13 @@
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-client-killvm</artifactId>
-    	<version>0.3-SNAPSHOT</version>
+    	<version>${project.version}</version>
     	<type>bundle</type>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-laf</artifactId>
+        <version>${project.version}</version>
     </dependency>
   </dependencies>
 </project>

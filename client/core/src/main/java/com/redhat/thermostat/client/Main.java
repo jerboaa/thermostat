@@ -46,7 +46,10 @@ import java.util.logging.Logger;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
+import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
@@ -99,6 +102,13 @@ public class Main {
 
             @Override
             public void run() {
+                
+                try {
+                    UIManager.setLookAndFeel(new DolphinLookAndFeel());
+                } catch (UnsupportedLookAndFeelException e) {
+                    logger.log(Level.WARNING, "cannot use DolphinLookAndFeel");
+                }
+                
                 showGui();
             }
             
@@ -111,6 +121,7 @@ public class Main {
     }
 
     private void showGui() {
+        
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
         Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();

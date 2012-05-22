@@ -257,7 +257,10 @@ public class MainWindow extends JFrame implements MainView {
         this.setPreferredSize(new Dimension(800, 600));
 
         agentVmTree.setSelectionPath(new TreePath(((DefaultMutableTreeNode) publishedTreeModel.getRoot()).getPath()));
-
+        
+        //agentVmTree.setLargeModel(true);
+        agentVmTree.setRowHeight(25);
+        
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(shutdownAction);
 
@@ -524,7 +527,7 @@ public class MainWindow extends JFrame implements MainView {
             setToolTipText(createToolTipText(((DefaultMutableTreeNode) value).getUserObject()));
             return super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
         }
-
+        
         private String createToolTipText(Object value) {
             if (value instanceof HostRef) {
                 HostRef hostRef = (HostRef) value;
