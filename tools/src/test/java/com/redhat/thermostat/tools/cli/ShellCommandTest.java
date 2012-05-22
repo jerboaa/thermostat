@@ -84,6 +84,17 @@ public class ShellCommandTest {
     }
 
     @Test
+    public void testEofExits() throws CommandException {
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ctxFactory.setInput("\u0004"); // EOF
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        assertEquals("Thermostat > ", ctxFactory.getOutput());
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
     public void testDoNothingWithoutInput() throws CommandException {
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
         ctxFactory.setInput("\nexit\n");
