@@ -60,10 +60,12 @@ public class GUIClientCommand implements Command {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        clientMain.run();
         BundleContext context = ctx.getCommandContextFactory().getBundleContext();
         context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
         context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
+        
+        // this blocks, everything else needs to be done before
+        clientMain.run();
     }
 
     @Override

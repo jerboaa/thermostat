@@ -113,6 +113,7 @@ public class Main {
             }
             
         });
+        
         try {
             uiFacadeFactory.awaitShutdown();
         } catch (InterruptedException e) {
