@@ -45,12 +45,13 @@
   <packaging>pom</packaging>
 
   <name>Thermostat</name>
-  <url>http://icedtea.classpath.org/thermostat/</url>
+  <url>${thermostat.url}</url>
 
   <properties>
     <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
     <thermostat.releasedate>${maven.build.timestamp}</thermostat.releasedate>
     <thermostat.email>thermostat@icedtea.classpath.org</thermostat.email>
+    <thermostat.url>http://icedtea.classpath.org/thermostat/</thermostat.url>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <thermostat.build.directory>target</thermostat.build.directory>
     <thermostat.java.version>1.7</thermostat.java.version>

@@ -146,7 +146,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
         in.setInput(input);
     }
 
-    public Object getError() {
+    public String getError() {
         return new String(err.toByteArray());
     }
 

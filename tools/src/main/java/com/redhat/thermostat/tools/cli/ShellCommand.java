@@ -93,7 +93,11 @@ public class ShellCommand implements Command {
     }
 
     private boolean handleConsoleInput(ConsoleReader reader) throws IOException, CommandException {
-        String line = reader.readLine(PROMPT).trim();
+        String line = reader.readLine(PROMPT);
+        if (line == null) {
+            return false;
+        }
+        line = line.trim();
         if (line.equals("")) {
             return true;
         } else if (line.equals("exit")) {
