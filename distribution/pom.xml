@@ -68,7 +68,7 @@
             </goals>
             <configuration>
               <excludeTransitive>false</excludeTransitive>
-              <excludeGroupIds>junit,org.hamcrest</excludeGroupIds>
+              <excludeGroupIds>org.osgi,junit,org.hamcrest</excludeGroupIds>
               <outputDirectory>${project.build.directory}/libs</outputDirectory>
             </configuration>
           </execution>
