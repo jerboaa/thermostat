@@ -49,6 +49,8 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class LauncherImpl implements Launcher {
 
+    private static final String UNKNOWN_COMMAND_MESSAGE = "unknown command '%s'\n";
+
     private ClientPreferences prefs = new ClientPreferences();
 
     private String[] args;
@@ -66,7 +68,10 @@ public class LauncherImpl implements Launcher {
         try {
             initLogging();
             this.args = args;
-            if (hasNoArguments() || unknownCommand()) {
+            if (hasNoArguments()) {
+                runHelpCommand();
+            } else if (unknownCommand()) {
+                cmdCtxFactory.getConsole().getOutput().print(String.format(UNKNOWN_COMMAND_MESSAGE, args[0]));
                 runHelpCommand();
             } else {
                 runCommandFromArguments();

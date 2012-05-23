@@ -36,7 +36,14 @@
 
 package com.redhat.thermostat.common.cli;
 
+/**
+ * Launcher is the main entry point for the command line "thermostat" program.
+ */
 public interface Launcher {
 
+    /**
+     * Invoked when thermostat starts
+     * @param command line arguments to the program
+     */
     void run(String[] args);
 }

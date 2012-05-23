@@ -158,7 +158,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand1() {
-        String expected = "list of commands:\n\n"
+        String expected = "unknown command '--help'\n"
+            + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -168,7 +169,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand2() {
-        String expected = "list of commands:\n\n"
+        String expected = "unknown command '-help'\n"
+            + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -178,7 +180,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand3() {
-        String expected = "list of commands:\n\n"
+        String expected = "unknown command 'foobarbaz'\n"
+            + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -188,7 +191,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand4() {
-        String expected = "list of commands:\n\n"
+        String expected = "unknown command 'foo'\n"
+            + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
