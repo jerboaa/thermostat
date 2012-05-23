@@ -40,10 +40,13 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.Component;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
@@ -59,7 +62,7 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.common.model.IntervalTimeData;
 import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
@@ -72,9 +75,18 @@ class VmGcController {
     private final VmGcStatDAO gcDao;
     private final VmMemoryStatDAO memDao;
 
-    private final Set<String> addedCollectors = new TreeSet<String>();
+    private final Set<String> addedCollectors = new TreeSet<>();
+    // the last value seen for each collector
+    private final Map<String, VmGcStat> lastValueSeen = new TreeMap<>();
 
     private final Timer timer;
+
+    private final Comparator<VmGcStat> vmGcStatComparator = new Comparator<VmGcStat>() {
+        @Override
+        public int compare(VmGcStat o1, VmGcStat o2) {
+            return Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
+        }
+    };
 
     public VmGcController(VmRef ref) {
         this.ref = ref;
@@ -104,7 +116,12 @@ class VmGcController {
         timer.setAction(new Runnable() {
             @Override
             public void run() {
-                doUpdateCollectorData();
+                try {
+                    doUpdateCollectorData();
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    throw t;
+                }
             }
         });
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
@@ -128,21 +145,38 @@ class VmGcController {
     }
 
     private void doUpdateCollectorData() {
-        Map<String, List<DiscreteTimeData<? extends Number>>> dataToAdd = new HashMap<>();
-        for (VmGcStat stat : gcDao.getLatestVmGcStats(ref)) {
-            double walltime = 1.0E-6 * stat.getWallTime();
+        Map<String, List<IntervalTimeData<Double>>> dataToAdd = new HashMap<>();
+        List<VmGcStat> sortedList = gcDao.getLatestVmGcStats(ref);
+        Collections.sort(sortedList, vmGcStatComparator);
+
+        for (VmGcStat stat : sortedList) {
             String collector = stat.getCollectorName();
-            List<DiscreteTimeData<? extends Number>> data = dataToAdd.get(collector);
+            List<IntervalTimeData<Double>> data = dataToAdd.get(collector);
             if (data == null) {
-                data = new ArrayList<DiscreteTimeData<? extends Number>>();
+                data = new ArrayList<>();
                 dataToAdd.put(collector, data);
             }
-            data.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), walltime));
+            if (lastValueSeen.containsKey(collector)) {
+                if (stat.getTimeStamp() <= lastValueSeen.get(collector).getTimeStamp()) {
+                    System.out.println("new gc collector value is older than previous value");
+                }
+                VmGcStat last = lastValueSeen.get(collector);
+                long diffInMicro = (stat.getWallTime() - last.getWallTime());
+                double diffInMillis = diffInMicro / 1000.0;
+                // TODO there is not much point in adding data when diff is 0,
+                // but we need to make the chart scroll automatically based on
+                // the current time when we do that
+                //  if (diff != 0) {
+                data.add(new IntervalTimeData<>(last.getTimeStamp(), stat.getTimeStamp(), diffInMillis));
+                // }
+            }
+            lastValueSeen.put(collector, stat);
+
         }
-        for (Map.Entry<String, List<DiscreteTimeData<? extends Number>>> entry : dataToAdd.entrySet()) {
+        for (Map.Entry<String, List<IntervalTimeData<Double>>> entry : dataToAdd.entrySet()) {
             String name = entry.getKey();
             if (!addedCollectors.contains(name)) {
-                view.addChart(name, chartName(name, getCollectorGeneration(name)));
+                view.addChart(name, chartName(name, getCollectorGeneration(name)), "ms");
                 addedCollectors.add(name);
             }
             view.addData(entry.getKey(), entry.getValue());
@@ -161,7 +195,7 @@ class VmGcController {
     }
 
     /**
-     * @return
+     * @return the {@link Component} representing the actual view of this controller
      */
     public Component getComponent() {
         return view.getUiComponent();

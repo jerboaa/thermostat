@@ -34,34 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.common.model;
 
-import java.awt.Component;
-import java.util.List;
+public class IntervalTimeData<T> {
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
-import com.redhat.thermostat.common.model.IntervalTimeData;
+    private long start;
+    private long end;
+    private T data;
 
-public interface VmGcView extends View {
-
-    enum Action {
-        VISIBLE,
-        HIDDEN,
+    public IntervalTimeData(long start, long end, T data) {
+        this.start = start;
+        this.end = end;
+        this.data = data;
     }
 
-    void addActionListener(ActionListener<Action> listener);
+    public long getStartTimeInMillis() {
+        return start;
+    }
 
-    void removeActionListener(ActionListener<Action> listener);
+    public long getEndTimeInMillis() {
+        return end;
+    }
 
-    void addChart(String tag, String title, String valueUnit);
-
-    void removeChart(String tag);
-
-    void addData(String tag, List<IntervalTimeData<Double>> data);
-
-    void clearData(String tag);
-
-    Component getUiComponent();
+    public T getData() {
+        return data;
+    }
 
 }

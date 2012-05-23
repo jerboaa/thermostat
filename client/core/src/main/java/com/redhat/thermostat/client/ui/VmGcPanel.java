@@ -52,14 +52,18 @@ import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.time.FixedMillisecond;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
+import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.xy.StandardXYBarPainter;
+import org.jfree.chart.renderer.xy.XYBarRenderer;
+import org.jfree.data.RangeType;
+import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.common.model.IntervalTimeData;
 
 public class VmGcPanel extends JPanel implements VmGcView {
 
@@ -67,7 +71,7 @@ public class VmGcPanel extends JPanel implements VmGcView {
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
-    private final Map<String, TimeSeriesCollection> dataset = new HashMap<>();
+    private final Map<String, SampledDataset> dataset = new HashMap<>();
     private final Map<String, JPanel> subPanels = new HashMap<>();
 
     private final GridBagConstraints gcPanelConstraints;
@@ -114,21 +118,32 @@ public class VmGcPanel extends JPanel implements VmGcView {
         setLayout(new GridBagLayout());
     }
 
-    private JPanel createCollectorDetailsPanel(TimeSeriesCollection timeSeriesCollection, String title) {
+    private JPanel createCollectorDetailsPanel(IntervalXYDataset timeSeriesCollection, String title, String units) {
         JPanel detailsPanel = new JPanel();
         detailsPanel.setBorder(Components.smallBorder());
         detailsPanel.setLayout(new BorderLayout());
 
         detailsPanel.add(Components.header(title), BorderLayout.NORTH);
 
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                null,
-                localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL),
-                localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL),
-                timeSeriesCollection,
-                false, false, false);
+        JFreeChart chart = ChartFactory.createHistogram(
+            null,
+            localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL),
+            localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units),
+            timeSeriesCollection,
+            PlotOrientation.VERTICAL,
+            false,
+            false,
+            false);
 
+        ((XYBarRenderer)(chart.getXYPlot().getRenderer())).setBarPainter(new StandardXYBarPainter());
+        chart.getXYPlot().setDomainAxis(new DateAxis());
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+
+        NumberAxis axis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+
+        axis.setRangeType(RangeType.POSITIVE);
+        axis.setAutoRange(true);
+        axis.setAutoRangeMinimumSize(1);
 
         detailsPanel.add(chartPanel, BorderLayout.CENTER);
 
@@ -136,14 +151,13 @@ public class VmGcPanel extends JPanel implements VmGcView {
     }
 
     @Override
-    public void addChart(final String tag, final String title) {
+    public void addChart(final String tag, final String title, final String units) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries timeSeries = new TimeSeries(tag);
-                TimeSeriesCollection timeSeriesCollection = new TimeSeriesCollection(timeSeries);
-                dataset.put(tag, timeSeriesCollection);
-                JPanel subPanel = createCollectorDetailsPanel(timeSeriesCollection, title);
+                SampledDataset newData = new SampledDataset();
+                dataset.put(tag, newData);
+                JPanel subPanel = createCollectorDetailsPanel(newData, title, units);
                 subPanels.put(tag, subPanel);
                 add(subPanel, gcPanelConstraints);
                 gcPanelConstraints.gridy++;
@@ -167,14 +181,14 @@ public class VmGcPanel extends JPanel implements VmGcView {
     }
 
     @Override
-    public void addData(final String tag, List<DiscreteTimeData<? extends Number>> data) {
-        final List<DiscreteTimeData<? extends Number>> copy = new ArrayList<>(data);
+    public void addData(final String tag, List<IntervalTimeData<Double>> data) {
+        final List<IntervalTimeData<Double>> copy = new ArrayList<>(data);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = dataset.get(tag).getSeries(tag);
-                for (DiscreteTimeData<? extends Number> timeData: copy) {
-                    series.add(new FixedMillisecond(timeData.getTimeInMillis()), timeData.getData(), false);
+                SampledDataset series = dataset.get(tag);
+                for (IntervalTimeData<Double> timeData: copy) {
+                    series.add(timeData.getStartTimeInMillis(), timeData.getEndTimeInMillis(), timeData.getData());
                 }
                 series.fireSeriesChanged();
             }
@@ -186,7 +200,7 @@ public class VmGcPanel extends JPanel implements VmGcView {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                TimeSeries series = dataset.get(tag).getSeries(tag);
+                SampledDataset series = dataset.get(tag);
                 series.clear();
             }
         });
