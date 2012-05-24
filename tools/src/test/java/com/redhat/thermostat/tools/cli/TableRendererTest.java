@@ -36,46 +36,51 @@
 
 package com.redhat.thermostat.tools.cli;
 
-import java.io.PrintStream;
+import static org.junit.Assert.assertEquals;
 
-import com.redhat.thermostat.common.dao.VmRef;
+import java.io.ByteArrayOutputStream;
 
-class VMListFormatter {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    // TODO: Localize.
-    private static final String HOST_ID = "HOST_ID";
-
-    private static final String HOST = "HOST";
-
-    private static final String VM_ID = "VM_ID";
-
-    private static final String VM_NAME = "VM_NAME";
+public class TableRendererTest {
 
     private TableRenderer tableRenderer;
+    private ByteArrayOutputStream out;
 
-    VMListFormatter() {
-        tableRenderer = new TableRenderer(4);
-        printHeader();
+    @Before
+    public void setUp() {
+        tableRenderer = new TableRenderer(3);
+        out = new ByteArrayOutputStream();
     }
 
-    void addVM(VmRef vm) {
-        printVM(vm);
+    @After
+    public void tearDown() {
+        out = null;
+        tableRenderer = null;
     }
 
-    void format(PrintStream output) {
-        tableRenderer.render(output);
+    @Test
+    public void testSingleLine() {
+        tableRenderer.printLine("hello", "fluff", "world");
+        tableRenderer.render(out);
+        assertEquals("hello fluff world\n", new String(out.toByteArray()));
     }
 
-    private void printHeader() {
-        printLine(HOST_ID, HOST, VM_ID, VM_NAME);
+    @Test
+    public void testMultiLine() {
+        tableRenderer.printLine("hello", "fluff", "world");
+        tableRenderer.printLine("looooooong", "f1", "foobar");
+        tableRenderer.printLine("f2", "shoooooooooooort", "poo");
+        tableRenderer.render(out);
+        assertEquals("hello      fluff            world\n" +
+                     "looooooong f1               foobar\n" +
+                     "f2         shoooooooooooort poo\n", new String(out.toByteArray()));
     }
 
-    private void printVM(VmRef vm) {
-        printLine(vm.getAgent().getAgentId(), vm.getAgent().getHostName(), vm.getId().toString(), vm.getName());
+    @Test(expected=IllegalArgumentException.class)
+    public void testInvalidLine() {
+        tableRenderer.printLine("hello", "fluff", "world", "boom");
     }
-
-    private void printLine(String hostId, String host, String vmId, String vmName) {
-        tableRenderer.printLine(hostId, host, vmId, vmName);
-    }
-
 }

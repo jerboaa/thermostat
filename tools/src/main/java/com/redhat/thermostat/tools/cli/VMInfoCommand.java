@@ -86,16 +86,21 @@ public class VMInfoCommand implements Command {
     }
 
     private void getAndPrintVMInfo(CommandContext ctx, VmInfoDAO vmsDAO, VmRef vm) {
+
         VmInfo vmInfo = vmsDAO.getVmInfo(vm);
+
+        TableRenderer table = new TableRenderer(2);
+        table.printLine("Process ID:", String.valueOf(vmInfo.getVmPid()));
+        table.printLine("Start time:", new Date(vmInfo.getStartTimeStamp()).toString());
+        table.printLine("Stop time:", new Date(vmInfo.getStopTimeStamp()).toString());
+        table.printLine("Main class:", vmInfo.getMainClass());
+        table.printLine("Command line:", vmInfo.getJavaCommandLine());
+        table.printLine("Java version:", vmInfo.getJavaVersion());
+        table.printLine("Virtual machine:", vmInfo.getVmName());
+        table.printLine("VM arguments:", vmInfo.getVmArguments());
+
         PrintStream out = ctx.getConsole().getOutput();
-        out.println("Process ID:      " + vmInfo.getVmPid());
-        out.println("Start time:      " + new Date(vmInfo.getStartTimeStamp()));
-        out.println("Stop time:       " + new Date(vmInfo.getStopTimeStamp()));
-        out.println("Main class:      " + vmInfo.getMainClass());
-        out.println("Command line:    " + vmInfo.getJavaCommandLine());
-        out.println("Java version:    " + vmInfo.getJavaVersion());
-        out.println("Virtual machine: " + vmInfo.getVmName());
-        out.println("VM arguments:    " + vmInfo.getVmArguments());
+        table.render(out);
     }
 
     @Override

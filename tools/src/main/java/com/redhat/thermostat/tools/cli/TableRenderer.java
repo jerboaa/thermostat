@@ -36,46 +36,66 @@
 
 package com.redhat.thermostat.tools.cli;
 
+import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.redhat.thermostat.common.dao.VmRef;
+class TableRenderer {
 
-class VMListFormatter {
+    private List<String[]> lines;
+    private int[] maxColumnWidths;
 
-    // TODO: Localize.
-    private static final String HOST_ID = "HOST_ID";
+    private int numColumns;
 
-    private static final String HOST = "HOST";
-
-    private static final String VM_ID = "VM_ID";
-
-    private static final String VM_NAME = "VM_NAME";
-
-    private TableRenderer tableRenderer;
-
-    VMListFormatter() {
-        tableRenderer = new TableRenderer(4);
-        printHeader();
+    TableRenderer(int numColumns) {
+        this.numColumns = numColumns;
+        lines = new ArrayList<>();
+        maxColumnWidths = new int[numColumns];
     }
 
-    void addVM(VmRef vm) {
-        printVM(vm);
+    void printLine(String... line) {
+        if (line.length != numColumns) {
+            throw new IllegalArgumentException("Invalid number of columns: " + line.length + ", expected: " + numColumns);
+        }
+        lines.add(line);
+        for (int i = 0; i < numColumns; i++) {
+            maxColumnWidths[i] = Math.max(maxColumnWidths[i], line[i].length());
+        }
     }
 
-    void format(PrintStream output) {
-        tableRenderer.render(output);
+    void render(OutputStream os) {
+        PrintStream out = new PrintStream(os);
+        render(out);
     }
 
-    private void printHeader() {
-        printLine(HOST_ID, HOST, VM_ID, VM_NAME);
+    void render(PrintStream out) {
+        for (String[] line : lines) {
+            renderLine(out, line);
+        }
     }
 
-    private void printVM(VmRef vm) {
-        printLine(vm.getAgent().getAgentId(), vm.getAgent().getHostName(), vm.getId().toString(), vm.getName());
+    private void renderLine(PrintStream out, String[] line) {
+        for (int i = 0; i < numColumns; i++) {
+            out.print(line[i]);
+            padOrNewline(out, line, i);
+            
+        }
     }
 
-    private void printLine(String hostId, String host, String vmId, String vmName) {
-        tableRenderer.printLine(hostId, host, vmId, vmName);
+    private void padOrNewline(PrintStream out, String[] line, int i) {
+        if (i < numColumns - 1) {
+            int pad = maxColumnWidths[i] - line[i].length() + 1;
+            fillSpaces(out, pad);
+        } else {
+            out.println();
+        }
+    }
+
+    private void fillSpaces(PrintStream out, int pad) {
+        for (int i = 0; i < pad; i++) {
+            out.print(" ");
+        }
     }
 
 }
