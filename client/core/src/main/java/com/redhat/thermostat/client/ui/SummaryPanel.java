@@ -56,6 +56,7 @@ import com.redhat.thermostat.common.ActionNotifier;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.text.JTextComponent;
 
 public class SummaryPanel extends JPanel implements SummaryView {
 
@@ -63,47 +64,49 @@ public class SummaryPanel extends JPanel implements SummaryView {
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
-    private final JLabel totalMonitoredHosts;
-    private final JLabel totalMonitoredVms;
+    private final JTextComponent totalMonitoredHosts;
+    private final JTextComponent totalMonitoredVms;
 
     private final List<String> issuesList;
 
     public SummaryPanel() {
 
-        JLabel lblHomepanel = new JLabel(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
+        JLabel lblHomepanel = Components.header(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
 
         JLabel lblTotalHosts = new JLabel(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
 
-        totalMonitoredHosts = new JLabel("${TOTAL_MONITORED_HOSTS}");
+        totalMonitoredHosts = new ValueField("${TOTAL_MONITORED_HOSTS}");
 
         JLabel lblTotal = new JLabel(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS));
 
-        totalMonitoredVms = new JLabel("${TOTAL_MONITORED_VMS}");
+        totalMonitoredVms = new ValueField("${TOTAL_MONITORED_VMS}");
 
-        JLabel lblIssues = new JLabel(localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
+        JLabel lblIssues = Components.header(localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
 
         JScrollPane scrollPane = new JScrollPane();
 
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-                        .addComponent(lblHomepanel, Alignment.LEADING)
-                        .addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
-                            .addGap(12)
-                            .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-                                .addComponent(lblTotal)
-                                .addComponent(lblTotalHosts))
-                            .addPreferredGap(ComponentPlacement.RELATED, 36, Short.MAX_VALUE)
-                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-                                .addComponent(totalMonitoredVms, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(totalMonitoredHosts, GroupLayout.DEFAULT_SIZE, 232, Short.MAX_VALUE)))
-                        .addComponent(lblIssues, Alignment.LEADING)
+            groupLayout.createParallelGroup(Alignment.TRAILING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                         .addGroup(groupLayout.createSequentialGroup()
-                            .addGap(12)
-                            .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 459, Short.MAX_VALUE)))
+                            .addContainerGap()
+                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                                .addComponent(lblHomepanel)
+                                .addGroup(groupLayout.createSequentialGroup()
+                                    .addGap(12)
+                                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+                                        .addComponent(lblTotal)
+                                        .addComponent(lblTotalHosts))
+                                    .addGap(18)
+                                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                                        .addComponent(totalMonitoredVms, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(totalMonitoredHosts, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                                .addComponent(lblIssues)))
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addGap(24)
+                            .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addContainerGap())
         );
         groupLayout.setVerticalGroup(
@@ -114,25 +117,24 @@ public class SummaryPanel extends JPanel implements SummaryView {
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(lblTotalHosts)
-                        .addComponent(totalMonitoredHosts))
+                        .addComponent(totalMonitoredHosts, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE))
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(lblTotal)
-                        .addComponent(totalMonitoredVms))
+                        .addComponent(totalMonitoredVms, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                     .addGap(18)
                     .addComponent(lblIssues)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 180, Short.MAX_VALUE)
+                    .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addContainerGap())
         );
 
         issuesList = new ArrayList<>();
-        ListModel<Object> issuesListmodel = new IssuesListModel(issuesList);
-        JList<Object> issuesList = new JList<>(issuesListmodel);
+        ListModel<Object> issuesListModel = new IssuesListModel(issuesList);
+        JList<Object> issuesList = new JList<>();
+        issuesList.setModel(issuesListModel);
         scrollPane.setViewportView(issuesList);
         setLayout(groupLayout);
-
-
 
         addHierarchyListener(new ComponentVisibleListener() {
             @Override

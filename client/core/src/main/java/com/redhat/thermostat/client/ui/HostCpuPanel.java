@@ -39,13 +39,16 @@ package com.redhat.thermostat.client.ui;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.JLabel;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -53,10 +56,7 @@ import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.SimpleTable.Section;
-import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
@@ -67,8 +67,8 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
-    private final ChangeableText cpuModel = new ChangeableText("");
-    private final ChangeableText cpuCount = new ChangeableText("");
+    private final JTextComponent cpuModel = new ValueField("${CPU_MODEL}");
+    private final JTextComponent cpuCount = new ValueField("${CPU_COUNT}");
 
     private final TimeSeriesCollection datasetCollection = new TimeSeriesCollection();
     private final TimeSeries dataset = new TimeSeries("host-cpu");
@@ -100,13 +100,23 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
     }
 
     @Override
-    public void setCpuCount(String count) {
-        cpuCount.setText(count);
+    public void setCpuCount(final String count) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                cpuCount.setText(count);
+            }
+        });
     }
 
     @Override
-    public void setCpuModel(String model) {
-        cpuModel.setText(model);
+    public void setCpuModel(final String model) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                cpuModel.setText(model);
+            }
+        });
     }
 
     @Override
@@ -139,28 +149,12 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
     }
 
     private void initializePanel() {
-        setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.anchor = GridBagConstraints.FIRST_LINE_START;
-        c.fill = GridBagConstraints.NONE;
-        c.gridx = 0;
-        c.gridy = 0;
 
-        List<Section> allSections = new ArrayList<Section>();
+        JLabel summaryLabel = Components.header(localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
 
-        Section cpuBasics = new Section(localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
-        allSections.add(cpuBasics);
+        JLabel cpuModelLabel = Components.label(localize(LocaleResources.HOST_INFO_CPU_MODEL));
 
-        TableEntry entry;
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_MODEL), cpuModel);
-        cpuBasics.add(entry);
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_COUNT), cpuCount);
-        cpuBasics.add(entry);
-
-        final SimpleTable simpleTable = new SimpleTable();
-        JPanel table = simpleTable.createTable(allSections);
-        table.setBorder(Components.smallBorder());
-        add(table, c);
+        JLabel cpuCountLabel = Components.label(localize(LocaleResources.HOST_INFO_CPU_COUNT));
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
@@ -171,12 +165,44 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        c.gridy++;
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1;
-        c.weighty = 1;
-
-        add(chartPanel, c);
+        GroupLayout groupLayout = new GroupLayout(this);
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.TRAILING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+                        .addComponent(chartPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 947, Short.MAX_VALUE)
+                        .addComponent(summaryLabel, Alignment.LEADING)
+                        .addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
+                            .addGap(12)
+                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                                .addGroup(groupLayout.createSequentialGroup()
+                                    .addPreferredGap(ComponentPlacement.RELATED)
+                                    .addComponent(cpuCountLabel)
+                                    .addGap(18)
+                                    .addComponent(cpuCount, GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE))
+                                .addGroup(groupLayout.createSequentialGroup()
+                                    .addComponent(cpuModelLabel)
+                                    .addGap(18)
+                                    .addComponent(cpuModel, GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE)))))
+                    .addContainerGap())
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(summaryLabel)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(cpuModelLabel)
+                        .addComponent(cpuModel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addGap(10)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(cpuCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cpuCountLabel))
+                    .addGap(18)
+                    .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE))
+        );
+        setLayout(groupLayout);
     }
-
 }

@@ -36,25 +36,22 @@
 
 package com.redhat.thermostat.client.ui;
 
-import javax.swing.BorderFactory;
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
-import javax.swing.border.Border;
+import javax.swing.JEditorPane;
+import javax.swing.UIManager;
 
-public class Components {
-    public static JLabel header(String text) {
-        JLabel label = new JLabel(HtmlTextBuilder.boldHtml(text));
-        label.setHorizontalAlignment(SwingConstants.LEADING);
-        return label;
+/**
+ * A custom swing component meant for showing values. Use it like you would use
+ * any other JTextComponent.
+ */
+public class ValueField extends JEditorPane {
+
+    public ValueField(String text) {
+        setText(text);
+        setBorder(null);
+        setBackground(UIManager.getColor("Label.background"));
+        setForeground(UIManager.getColor("Label.foreground"));
+        setFont(UIManager.getFont("Label.font"));
+        setEditable(false);
     }
 
-    public static JLabel label(String string) {
-        JLabel label = new JLabel(string);
-        label.setHorizontalAlignment(SwingConstants.TRAILING);
-        return label;
-    }
-
-    public static Border smallBorder() {
-        return BorderFactory.createEmptyBorder(5, 5, 5, 5);
-    }
 }

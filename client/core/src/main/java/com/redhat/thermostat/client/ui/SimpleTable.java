@@ -49,15 +49,19 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.Box;
+import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.ChangeableText;
 
 public class SimpleTable implements ChangeableText.TextListener {
 
-    Map<ChangeableText, Set<JLabel>> updateMap = new HashMap<ChangeableText, Set<JLabel>>();
+    Map<ChangeableText, Set<JComponent>> updateMap = new HashMap<ChangeableText, Set<JComponent>>();
 
     public static class Section {
         private final String sectionName;
@@ -192,11 +196,11 @@ public class SimpleTable implements ChangeableText.TextListener {
                 for (Value value : tableEntry.getValues()) {
                     if (value.getComponent() == null) {
                         ChangeableText text = value.getChangeableText();
-                        JLabel valueLabel = Components.value(text.getText());
+                        JComponent valueLabel = new ValueField(text.getText());
                         if (updateMap.containsKey(text)) {
                             updateMap.get(text).add(valueLabel);
                         } else {
-                            Set<JLabel> set = new HashSet<JLabel>();
+                            Set<JComponent> set = new HashSet<JComponent>();
                             set.add(valueLabel);
                             updateMap.put(text, set);
                         }
@@ -238,10 +242,22 @@ public class SimpleTable implements ChangeableText.TextListener {
 
 
     private void updateAllValues() {
-        for (Entry<ChangeableText, Set<JLabel>> entry: updateMap.entrySet()) {
-            for (JLabel label: entry.getValue()) {
-                label.setText(entry.getKey().getText());
+        for (Entry<ChangeableText, Set<JComponent>> entry: updateMap.entrySet()) {
+            for (JComponent label: entry.getValue()) {
+                setText(label, entry.getKey().getText());
             }
+        }
+    }
+
+    private static void setText(JComponent target, String text) {
+        if (target instanceof JLabel) {
+            ((JLabel)target).setText(text);
+        } else if (target instanceof JTextField) {
+            ((JTextField)target).setText(text);
+        } else if (target instanceof JTextArea) {
+            ((JTextArea)target).setText(text);
+        } else if (target instanceof JEditorPane) {
+            ((JEditorPane)target).setText(text);
         }
     }
 
@@ -251,8 +267,8 @@ public class SimpleTable implements ChangeableText.TextListener {
             @Override
             public void run() {
                 String newValue = text.getText();
-                for (JLabel label: updateMap.get(text)) {
-                    label.setText(newValue);
+                for (JComponent label: updateMap.get(text)) {
+                    setText(label, newValue);
                 }
             }
         });

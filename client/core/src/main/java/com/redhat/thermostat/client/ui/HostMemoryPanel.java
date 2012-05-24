@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
@@ -47,9 +46,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JCheckBox;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -57,13 +61,11 @@ import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.SimpleTable.Section;
-import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
+
 
 public class HostMemoryPanel extends JPanel implements HostMemoryView {
 
@@ -73,7 +75,7 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
 
     private final MemoryCheckboxListener memoryCheckboxListener = new MemoryCheckboxListener();
 
-    private final ChangeableText totalMemory = new ChangeableText("");
+    private final JTextComponent totalMemory = new ValueField("${TOTAL_MEMORY}");
 
     private final JPanel memoryCheckBoxPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));
     private final CopyOnWriteArrayList<GraphVisibilityChangeListener> listeners = new CopyOnWriteArrayList<>();
@@ -97,8 +99,13 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
     }
 
     @Override
-    public void setTotalMemory(String newValue) {
-        totalMemory.setText(newValue);
+    public void setTotalMemory(final String newValue) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                totalMemory.setText(newValue);
+            }
+        });
     }
 
     @Override
@@ -207,29 +214,47 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
     }
 
     private void initializePanel() {
-        setLayout(new BorderLayout());
-
-        List<Section> allSections = new ArrayList<Section>();
-
-        Section memoryBasics = new Section(localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
-        allSections.add(memoryBasics);
-
-        TableEntry entry;
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL), totalMemory);
-        memoryBasics.add(entry);
-
-        SimpleTable simpleTable = new SimpleTable();
-        JPanel table = simpleTable.createTable(allSections);
-        table.setBorder(Components.smallBorder());
-        add(table, BorderLayout.PAGE_START);
 
         JFreeChart chart = createMemoryChart();
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        add(chartPanel, BorderLayout.CENTER);
+        JLabel lblMemory = Components.header(localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
 
-        add(memoryCheckBoxPanel, BorderLayout.PAGE_END);
+        JLabel totalMemoryLabel = Components.label(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+
+        GroupLayout groupLayout = new GroupLayout(this);
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 883, Short.MAX_VALUE)
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addGap(12)
+                            .addComponent(totalMemoryLabel)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(totalMemory, GroupLayout.DEFAULT_SIZE, 751, Short.MAX_VALUE))
+                        .addComponent(lblMemory)
+                        .addComponent(memoryCheckBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addContainerGap())
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(lblMemory)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
+                        .addComponent(totalMemory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(totalMemoryLabel))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(memoryCheckBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap())
+        );
+        setLayout(groupLayout);
     }
 
     private JFreeChart createMemoryChart() {
