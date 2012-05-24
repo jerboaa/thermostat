@@ -51,9 +51,6 @@ public enum LocaleResources {
     BUTTON_OK,
 
     MENU_FILE,
-    MENU_FILE_CONNECT,
-    MENU_FILE_IMPORT,
-    MENU_FILE_EXPORT,
     MENU_FILE_EXIT,
     MENU_EDIT,
     MENU_EDIT_CONFIGURE_AGENT,

@@ -286,25 +286,6 @@ public class MainWindow extends JFrame implements MainView {
         fileMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(fileMenu);
 
-        JMenuItem fileConnectMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_CONNECT));
-        fileConnectMenu.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                // TODO present a connection dialog
-            }
-        });
-        fileMenu.add(fileConnectMenu);
-
-        fileMenu.add(new Separator());
-
-        JMenuItem fileImportMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_IMPORT));
-        fileMenu.add(fileImportMenu);
-
-        JMenuItem fileExportMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_EXPORT));
-        fileMenu.add(fileExportMenu);
-
-        fileMenu.add(new Separator());
-
         JMenuItem fileExitMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_EXIT));
         fileExitMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
         fileExitMenu.addActionListener(shutdownAction);
