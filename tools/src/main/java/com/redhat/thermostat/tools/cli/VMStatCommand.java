@@ -37,69 +37,60 @@
 package com.redhat.thermostat.tools.cli;
 
 import java.io.PrintStream;
+import java.text.DecimalFormat;
 import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.dao.DAOException;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.model.VmCpuStat;
 
-public class VMInfoCommand implements Command {
+public class VMStatCommand implements Command {
 
-    private static final String NAME = "vm-info";
-    private static final String DESCRIPTION = "shows basic information about a VM";
+    private static final String CMD_NAME = "vm-stat";
+    private static final String CMD_DESCRIPTION = "show various statistics about a VM";
+
+    private static final String CPU_PERCENT = "%CPU";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-        VmInfoDAO vmsDAO = daoFactory.getVmInfoDAO();
+        VmCpuStatDAO vmCpuStatDAO = daoFactory.getVmCpuStatDAO();
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
         VmRef vm = hostVMArgs.getVM();
-        try {
-            getAndPrintVMInfo(ctx, vmsDAO, vm);
-        } catch (DAOException ex) {
-            ctx.getConsole().getError().println(ex.getMessage());
-        }
+        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm);
+        printStats(ctx.getConsole().getOutput(), cpuStats);
     }
 
-    private void getAndPrintVMInfo(CommandContext ctx, VmInfoDAO vmsDAO, VmRef vm) {
-
-        VmInfo vmInfo = vmsDAO.getVmInfo(vm);
-
-        TableRenderer table = new TableRenderer(2);
-        table.printLine("Process ID:", String.valueOf(vmInfo.getVmPid()));
-        table.printLine("Start time:", new Date(vmInfo.getStartTimeStamp()).toString());
-        table.printLine("Stop time:", new Date(vmInfo.getStopTimeStamp()).toString());
-        table.printLine("Main class:", vmInfo.getMainClass());
-        table.printLine("Command line:", vmInfo.getJavaCommandLine());
-        table.printLine("Java version:", vmInfo.getJavaVersion());
-        table.printLine("Virtual machine:", vmInfo.getVmName());
-        table.printLine("VM arguments:", vmInfo.getVmArguments());
-
-        PrintStream out = ctx.getConsole().getOutput();
+    private void printStats(PrintStream out, List<VmCpuStat> cpuStats) {
+        TableRenderer table = new TableRenderer(1);
+        table.printLine(CPU_PERCENT);
+        for (VmCpuStat cpuStat : cpuStats) {
+            DecimalFormat format = new DecimalFormat("#0.0");
+            table.printLine(format.format(cpuStat.getCpuLoad()));
+        }
         table.render(out);
     }
 
     @Override
     public String getName() {
-        return NAME;
+        return CMD_NAME;
     }
 
     @Override
     public String getDescription() {
-        return DESCRIPTION;
+        return CMD_DESCRIPTION;
     }
 
     @Override
     public String getUsage() {
-        return DESCRIPTION;
+        return CMD_DESCRIPTION;
     }
 
     @Override
