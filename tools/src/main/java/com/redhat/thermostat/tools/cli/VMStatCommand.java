@@ -103,4 +103,9 @@ public class VMStatCommand implements Command {
         return true;
     }
 
+    @Override
+    public void disable() {
+        /* NO-OP */
+    }
+
 }
