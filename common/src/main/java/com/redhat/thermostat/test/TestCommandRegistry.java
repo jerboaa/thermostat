@@ -66,7 +66,7 @@ class TestCommandRegistry extends BaseCommandRegistry {
         public void unregister() {
             // Nothing to do for now.
         }
-        
+
     }
 
     private Map<String, Command> commands = new HashMap<>();
@@ -82,5 +82,10 @@ class TestCommandRegistry extends BaseCommandRegistry {
     protected ServiceRegistration registerCommand(Command cmd) {
         commands.put(cmd.getName(), cmd);
         return new TestServiceRegistration();
+    }
+
+    @Override
+    public void unregisterCommands() {
+        commands.clear();
     }
 }

@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.cli;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -53,6 +54,8 @@ public class CommandRegistryImpl extends BaseCommandRegistry {
 
     private BundleContext context;
 
+    private List<ServiceRegistration> ourRegistrations = new ArrayList<ServiceRegistration>();
+
     public CommandRegistryImpl(BundleContext ctx) {
         context = ctx;
     }
@@ -60,12 +63,27 @@ public class CommandRegistryImpl extends BaseCommandRegistry {
     protected ServiceRegistration registerCommand(Command cmd) {
         Hashtable<String, String> props = new Hashtable<>();
         props.put(Command.NAME, cmd.getName());
-        return context.registerService(Command.class.getName(), cmd, props);
+        ServiceRegistration registration = context.registerService(Command.class.getName(), cmd, props);
+        ourRegistrations.add(registration);
+        return registration;
+    }
+
+    @Override
+    public void unregisterCommands() {
+        Iterator<ServiceRegistration> iter = ourRegistrations.iterator();
+        while (iter.hasNext()) {
+            ServiceRegistration registration = iter.next();
+            Object serviceObject =  context.getService(registration.getReference());
+            Command cmd = (Command) serviceObject;
+            cmd.disable();
+            registration.unregister();
+            iter.remove();
+        }
     }
 
     @Override
     public Command getCommand(String name) {
-        ServiceReference[] refs = getCommandServiceRefs("(&(objectclass=*)(COMMAND_NAME=" + name + "))");
+        ServiceReference[] refs = getCommandServiceRefs("(&(objectclass=*)(" + Command.NAME + "=" + name + "))");
         if (refs == null || refs.length == 0) {
             return null;
         } else if (refs.length > 1) {

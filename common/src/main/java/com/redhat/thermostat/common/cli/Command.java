@@ -38,19 +38,50 @@ package com.redhat.thermostat.common.cli;
 
 import java.util.Collection;
 
-
+/**
+ * Represents a command on the command line.
+ * <p>
+ * To register a custom command, have a class implement this interface and
+ * register it as an OSGi service with the {@link #NAME} set to the value of
+ * {@link #getName()}.
+ */
 public interface Command {
 
-    String NAME = "COMMAND_NAME";
+    static final String NAME = "COMMAND_NAME";
 
+    /**
+     * Execute the command
+     */
     void run(CommandContext ctx) throws CommandException;
 
+    /**
+     * Called when the command is being removed from the system. The command
+     * should cancel any long-term action it has taken, such as any background
+     * tasks or threads it has spawned.
+     */
+    void disable();
+
+    /**
+     * Returns a name for this command. This will be used by the user to select
+     * this command.
+     */
     String getName();
 
+    /**
+     * A short description for the command indicating what it does.
+     */
     String getDescription();
 
+    /**
+     * How the user should invoke this command
+     */
     String getUsage();
 
+    /**
+     * Returns a collection of arguments that the command is prepared to handle.
+     * If the user provides unknown or malformed arguments, this command will
+     * not be invoked.
+     */
     Collection<ArgumentSpec> getAcceptedArguments();
 
     boolean isStorageRequired();

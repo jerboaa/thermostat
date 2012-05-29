@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -55,6 +56,7 @@ import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 public class CommandRegistryImplTest {
 
@@ -88,6 +90,51 @@ public class CommandRegistryImplTest {
         props2.put(Command.NAME, "test2");
         verify(bundleContext).registerService(Command.class.getName(), cmd1, props1);
         verify(bundleContext).registerService(Command.class.getName(), cmd2, props2);
+
+        verifyNoMoreInteractions(bundleContext);
+
+    }
+
+    @Test
+    public void testUnregisterCommand() {
+        Command cmd1 = mock(Command.class);
+        when(cmd1.getName()).thenReturn("test1");
+        Command cmd2 = mock(Command.class);
+        when(cmd2.getName()).thenReturn("test2");
+
+        ServiceReference cmd1Reference = mock(ServiceReference.class);
+        ServiceReference cmd2Reference = mock(ServiceReference.class);
+
+        ServiceRegistration cmd1Reg = mock(ServiceRegistration.class);
+        when(cmd1Reg.getReference()).thenReturn(cmd1Reference);
+        ServiceRegistration cmd2Reg = mock(ServiceRegistration.class);
+        when(cmd2Reg.getReference()).thenReturn(cmd2Reference);
+
+        Hashtable<String,String> props1 = new Hashtable<>();
+        props1.put(Command.NAME, cmd1.getName());
+        Hashtable<String,String> props2 = new Hashtable<>();
+        props2.put(Command.NAME, cmd2.getName());
+
+        when(bundleContext.registerService(Command.class.getName(), cmd1, props1)).thenReturn(cmd1Reg);
+        when(bundleContext.registerService(Command.class.getName(), cmd2, props2)).thenReturn(cmd2Reg);
+
+        commandRegistry.registerCommands(Arrays.asList(cmd1, cmd2));
+
+        verify(bundleContext).registerService(Command.class.getName(), cmd1, props1);
+        verify(bundleContext).registerService(Command.class.getName(), cmd2, props2);
+
+        when(bundleContext.getService(eq(cmd1Reference))).thenReturn(cmd1);
+        when(bundleContext.getService(eq(cmd2Reference))).thenReturn(cmd2);
+
+        commandRegistry.unregisterCommands();
+
+        verify(bundleContext).getService(cmd1Reference);
+        verify(cmd1).disable();
+        verify(cmd1Reg).unregister();
+        verify(bundleContext).getService(cmd2Reference);
+        verify(cmd2).disable();
+        verify(cmd2Reg).unregister();
+
         verifyNoMoreInteractions(bundleContext);
     }
 

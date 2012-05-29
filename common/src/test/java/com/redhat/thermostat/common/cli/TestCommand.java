@@ -54,6 +54,7 @@ class TestCommand implements Command {
 
     static interface Handle {
         public void run(CommandContext ctx) throws CommandException;
+        public void stop();
     }
 
     TestCommand(String name) {
@@ -69,6 +70,13 @@ class TestCommand implements Command {
     public void run(CommandContext ctx) throws CommandException {
         if (handle != null) {
             handle.run(ctx);
+        }
+    }
+
+    @Override
+    public void disable() {
+        if (handle != null) {
+            handle.stop();
         }
     }
 

@@ -44,6 +44,8 @@ public interface CommandRegistry {
 
     public abstract Collection<ServiceRegistration> registerCommands(Iterable<? extends Command> cmds);
 
+    public abstract void unregisterCommands();
+
     public abstract Command getCommand(String name);
 
     public abstract Collection<Command> getRegisteredCommands();

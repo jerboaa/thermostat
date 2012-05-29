@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common;
 
-import java.util.Collection;
 import java.util.ServiceLoader;
 
 import org.osgi.framework.BundleActivator;
@@ -52,14 +51,14 @@ import com.redhat.thermostat.common.cli.LauncherImpl;
 
 public class Activator implements BundleActivator {
 
-    private Collection<ServiceRegistration> cmdRegs;
     private ServiceRegistration launcherReg;
+    private CommandRegistry reg;
 
     @Override
     public void start(BundleContext context) throws Exception {
-        CommandRegistry reg = new CommandRegistryImpl(context);
+        reg = new CommandRegistryImpl(context);
         ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
-        cmdRegs = reg.registerCommands(cmds);
+        reg.registerCommands(cmds);
 
         CommandContextFactory cmdCtxFactory = new CommandContextFactory(context);
         Launcher launcher = new LauncherImpl(cmdCtxFactory);
@@ -69,9 +68,7 @@ public class Activator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         launcherReg.unregister();
-        for (ServiceRegistration cmdReg : cmdRegs) {
-            cmdReg.unregister();
-        }
+        reg.unregisterCommands();
     }
 
 }

@@ -37,30 +37,26 @@
 package com.redhat.thermostat.agent;
 
 import java.util.Arrays;
-import java.util.Collection;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
 public class Activator implements BundleActivator {
 
-    private Collection<ServiceRegistration> agentCmd;
+    private CommandRegistry reg;
 
     @Override
     public void start(BundleContext context) throws Exception {
-        CommandRegistry reg = new CommandRegistryImpl(context);
-        agentCmd = reg.registerCommands(Arrays.asList(new AgentApplication()));
+        reg = new CommandRegistryImpl(context);
+        reg.registerCommands(Arrays.asList(new AgentApplication()));
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        for (ServiceRegistration reg : agentCmd) {
-            reg.unregister();
-        }
+        reg.unregisterCommands();
     }
 
 }

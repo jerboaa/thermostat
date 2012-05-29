@@ -38,6 +38,8 @@ package com.redhat.thermostat.tools;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -79,6 +81,8 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
     private ActionNotifier<ApplicationState> notifier;
 
     private CommandContext context;
+
+    private List<Runnable> tasksOnStop = new CopyOnWriteArrayList<>();
 
     public ThermostatService() {
         database = new DBService();
@@ -125,8 +129,8 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
             // we started the database ourselves
             case START:
                 
-                // set a shutdown hook if the db was started by us
-                Runtime.getRuntime().addShutdownHook(new Thread() {
+                // set a bundle-stop hook if the db was started by us
+                tasksOnStop.add(new Runnable() {
                     @Override
                     public void run() {
                         String[] args = new String[] { "storage", "--stop" };
@@ -147,6 +151,7 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                     notifier.fireAction(ApplicationState.FAIL);
                 }
                 break;
+
             case FAIL:
                 System.err.println("error starting db");
                 notifier.fireAction(ApplicationState.FAIL);
@@ -159,6 +164,13 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                 notifier.fireAction(ApplicationState.SUCCESS);
                 break;
             }
+        }
+    }
+
+    @Override
+    public void disable() {
+        for (Runnable task: tasksOnStop) {
+            task.run();
         }
     }
 
@@ -183,4 +195,6 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
         ArgumentSpec stop = new SimpleArgumentSpec("stop", "stop the database and agent");
         return Arrays.asList(start, stop);
     }
+
+
 }

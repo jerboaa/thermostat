@@ -47,12 +47,16 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Dictionary;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.cli.Command;
@@ -63,17 +67,31 @@ public class ActivatorTest {
 
     @Test
     public void testRegisterServices() throws Exception {
-        final Collection<ServiceRegistration> regs = new ArrayList<>();
+        final Map<ServiceRegistration, Object> regs = new HashMap<>();
         BundleContext bCtx = mock(BundleContext.class);
         when(bCtx.registerService(anyString(), any(), any(Dictionary.class))).then(new Answer<ServiceRegistration>() {
 
             @Override
             public ServiceRegistration answer(InvocationOnMock invocation) throws Throwable {
                 ServiceRegistration reg = mock(ServiceRegistration.class);
-                regs.add(reg);
+                when(reg.getReference()).thenReturn(mock(ServiceReference.class));
+                regs.put(reg, invocation.getArguments()[1]);
                 return reg;
             }
         });
+        when(bCtx.getService(isA(ServiceReference.class))).then(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                ServiceReference ref = (ServiceReference) invocation.getArguments()[0];
+                for (Entry<ServiceRegistration,Object> registration: regs.entrySet()) {
+                    if (registration.getKey().getReference().equals(ref)) {
+                        return registration.getValue();
+                    }
+                }
+                return null;
+            }
+        });
+
         Activator activator = new Activator();
 
         activator.start(bCtx);
@@ -86,7 +104,7 @@ public class ActivatorTest {
 
         activator.stop(bCtx);
 
-        for (ServiceRegistration reg : regs) {
+        for (ServiceRegistration reg : regs.keySet()) {
             verify(reg).unregister();
         }
     }

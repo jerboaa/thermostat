@@ -64,6 +64,9 @@ public class LauncherTest {
             ctx.getConsole().getOutput().print(args.getArgument("arg1") + ", " + args.getArgument("arg2"));
         }
 
+        @Override
+        public void stop() { /* N0-OP */ }
+
     }
 
     private static class TestCmd2 implements TestCommand.Handle {
@@ -71,6 +74,11 @@ public class LauncherTest {
         public void run(CommandContext ctx) {
             Arguments args = ctx.getArguments();
             ctx.getConsole().getOutput().print(args.getArgument("arg4") + ": " + args.getArgument("arg3"));
+        }
+
+        @Override
+        public void stop() {
+            /* NO-OP */
         }
     }
 
@@ -208,6 +216,9 @@ public class LauncherTest {
             public void run(CommandContext ctx) throws CommandException {
                 throw new CommandException("test error");
             }
+
+            @Override
+            public void stop() { /* NO-OP */ }
         });
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 

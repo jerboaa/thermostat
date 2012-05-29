@@ -69,6 +69,11 @@ public class GUIClientCommand implements Command {
     }
 
     @Override
+    public void disable() {
+        // TODO clientMain.shutdown();
+    }
+
+    @Override
     public String getName() {
         return "gui";
     }

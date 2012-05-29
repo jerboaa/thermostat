@@ -45,25 +45,28 @@ import com.redhat.thermostat.client.GUIClientCommand;
 import com.redhat.thermostat.client.Main;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.UiFacadeFactoryImpl;
+import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
 public class ThermostatActivator implements BundleActivator {
 
     private VmInformationServiceTracker vmInfoServiceTracker;
     private VMContextActionServiceTracker contextActionTracker;
-    
+
+    private CommandRegistry cmdReg;
+
     @Override
     public void start(final BundleContext context) throws Exception {
         UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl();
-        
+
         vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
         vmInfoServiceTracker.open();
-        
+
         contextActionTracker =
                 new VMContextActionServiceTracker(context, uiFacadeFactory);
         contextActionTracker.open();
 
-        CommandRegistryImpl cmdReg = new CommandRegistryImpl(context);
+        cmdReg = new CommandRegistryImpl(context);
         Main main = new Main(uiFacadeFactory, new String[0]);
         cmdReg.registerCommands(Arrays.asList(new GUIClientCommand(main)));
     }
@@ -72,5 +75,6 @@ public class ThermostatActivator implements BundleActivator {
     public void stop(BundleContext context) throws Exception {
         vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
         contextActionTracker.close();
+        cmdReg.unregisterCommands();
     }
 }
