@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.List;
+
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
@@ -91,6 +93,8 @@ public interface VmMemoryStatDAO {
             permMaxCapacityKey, permUsedKey);
 
     public VmMemoryStat getLatestMemoryStat(VmRef ref);
+
+    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef vm);
 
     public void putVmMemoryStat(VmMemoryStat stat);
 

@@ -56,6 +56,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.common.utils.DisplayableValues;
 
 class VmMemoryController {
 

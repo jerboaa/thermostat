@@ -63,8 +63,12 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmCpuStat;
+import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class VmStatCommandTest {
@@ -86,6 +90,7 @@ public class VmStatCommandTest {
     private VmCpuStatDAO vmCpuStatDAO;
     private AppContextSetup appContextSetup;
     private TestCommandContextFactory cmdCtxFactory;
+    private VmMemoryStatDAO vmMemoryStatDAO;
 
     @Before
     public void setUp() {
@@ -123,23 +128,90 @@ public class VmStatCommandTest {
         int vmId = 234;
         HostRef host = new HostRef("123", "dummy");
         VmRef vm = new VmRef(host, 234, "dummy");
-        VmCpuStat cpustat1 = new VmCpuStat(123, vmId, 50.123454);
-        VmCpuStat cpustat2 = new VmCpuStat(123, vmId, 65);
-        VmCpuStat cpustat3 = new VmCpuStat(123, vmId, 70);
-        List<VmCpuStat> cpuStats = Arrays.asList(cpustat1, cpustat2, cpustat3);
+        VmCpuStat cpustat1 = new VmCpuStat(2, vmId, 65);
+        VmCpuStat cpustat2 = new VmCpuStat(3, vmId, 70);
+        List<VmCpuStat> cpuStats = Arrays.asList(cpustat1, cpustat2);
         when(vmCpuStatDAO.getLatestVmCpuStats(vm)).thenReturn(cpuStats);
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getVmCpuStatDAO()).thenReturn(vmCpuStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
+
+        VmMemoryStat.Space space1_1_1 = newSpace("space1", 123456, 12345, 1, 0);
+        VmMemoryStat.Space space1_1_2 = newSpace("space2", 123456, 12345, 1, 0);
+        List<VmMemoryStat.Space> spaces1_1 = Arrays.asList(space1_1_1, space1_1_2);
+        VmMemoryStat.Generation gen1_1 = newGeneration("gen1", "col1", 123456, 12345, spaces1_1);
+
+        VmMemoryStat.Space space1_2_1 = newSpace("space3", 123456, 12345, 1, 0);
+        VmMemoryStat.Space space1_2_2 = newSpace("space4", 123456, 12345, 1, 0);
+        List<VmMemoryStat.Space> spaces1_2 = Arrays.asList(space1_2_1, space1_2_2);
+        VmMemoryStat.Generation gen1_2 = newGeneration("gen2", "col1", 123456, 12345, spaces1_2);
+
+        List<VmMemoryStat.Generation> gens1 = Arrays.asList(gen1_1, gen1_2);
+
+        VmMemoryStat memStat1 = new VmMemoryStat(1, vmId, gens1);
+
+        VmMemoryStat.Space space2_1_1 = newSpace("space1", 123456, 12345, 2, 0);
+        VmMemoryStat.Space space2_1_2 = newSpace("space2", 123456, 12345, 2, 0);
+        List<VmMemoryStat.Space> spaces2_1 = Arrays.asList(space2_1_1, space2_1_2);
+        VmMemoryStat.Generation gen2_1 = newGeneration("gen1", "col1", 123456, 12345, spaces2_1);
+
+        VmMemoryStat.Space space2_2_1 = newSpace("space3", 123456, 12345, 3, 0);
+        VmMemoryStat.Space space2_2_2 = newSpace("space4", 123456, 12345, 4, 0);
+        List<VmMemoryStat.Space> spaces2_2 = Arrays.asList(space2_2_1, space2_2_2);
+        VmMemoryStat.Generation gen2_2 = newGeneration("gen2", "col1", 123456, 12345, spaces2_2);
+
+        List<VmMemoryStat.Generation> gens2 = Arrays.asList(gen2_1, gen2_2);
+
+        VmMemoryStat memStat2 = new VmMemoryStat(2, vmId, gens2);
+
+        VmMemoryStat.Space space3_1_1 = newSpace("space1", 123456, 12345, 4, 0);
+        VmMemoryStat.Space space3_1_2 = newSpace("space2", 123456, 12345, 5, 0);
+        List<VmMemoryStat.Space> spaces3_1 = Arrays.asList(space3_1_1, space3_1_2);
+        VmMemoryStat.Generation gen3_1 = newGeneration("gen1", "col1", 123456, 12345, spaces3_1);
+
+        VmMemoryStat.Space space3_2_1 = newSpace("space3", 123456, 12345, 6, 0);
+        VmMemoryStat.Space space3_2_2 = newSpace("space4", 123456, 12345, 7, 0);
+        List<VmMemoryStat.Space> spaces3_2 = Arrays.asList(space3_2_1, space3_2_2);
+        VmMemoryStat.Generation gen3_2 = newGeneration("gen2", "col1", 123456, 12345, spaces3_2);
+
+        List<VmMemoryStat.Generation> gens3 = Arrays.asList(gen3_1, gen3_2);
+
+        VmMemoryStat memStat3 = new VmMemoryStat(3, vmId, gens3);
+
+        vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
+        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm)).thenReturn(Arrays.asList(memStat1, memStat2, memStat3));
+        when(daoFactory.getVmMemoryStatDAO()).thenReturn(vmMemoryStatDAO);
+    }
+
+    private Space newSpace(String name, long maxCapacity, long capacity, long used, int index) {
+        VmMemoryStat.Space space = new VmMemoryStat.Space();
+        space.name = name;
+        space.maxCapacity = maxCapacity;
+        space.capacity = capacity;
+        space.used = used;
+        space.index = index;
+        return space;
+    }
+
+    private Generation newGeneration(String name, String collector, long maxCapacity, long capacity, List<Space> spaces) {
+        VmMemoryStat.Generation gen = new VmMemoryStat.Generation();
+        gen.name = name;
+        gen.collector = collector;
+        gen.maxCapacity = capacity;
+        gen.spaces = spaces;
+        return gen;
     }
 
     @Test
-    public void testBasicCPU() throws CommandException {
+    public void testBasicCPUMemory() throws CommandException {
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", "234");
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "%CPU\n50.1\n65.0\n70.0\n";
+        String expected = "TIME       %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
+                          "1:00:00 AM      1 B        1 B        1 B        1 B\n" +
+                          "1:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
+                          "1:00:00 AM 70.0 4 B        5 B        6 B        7 B\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
 
     }

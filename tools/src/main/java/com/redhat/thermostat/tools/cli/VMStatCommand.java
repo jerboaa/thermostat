@@ -37,8 +37,12 @@
 package com.redhat.thermostat.tools.cli;
 
 import java.io.PrintStream;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -48,8 +52,12 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator;
 import com.redhat.thermostat.common.model.VmCpuStat;
+import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.utils.DisplayableValues;
 
 public class VMStatCommand implements Command {
 
@@ -57,25 +65,118 @@ public class VMStatCommand implements Command {
     private static final String CMD_DESCRIPTION = "show various statistics about a VM";
 
     private static final String CPU_PERCENT = "%CPU";
+    private static final String MEM_PREFIX = "MEM.";
+    private static final String TIME = "TIME";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
         VmCpuStatDAO vmCpuStatDAO = daoFactory.getVmCpuStatDAO();
+        VmMemoryStatDAO vmMemoryStatDAO = daoFactory.getVmMemoryStatDAO();
+
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
         VmRef vm = hostVMArgs.getVM();
         List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm);
-        printStats(ctx.getConsole().getOutput(), cpuStats);
+        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm);
+        printStats(ctx.getConsole().getOutput(), cpuStats, memStats);
     }
 
-    private void printStats(PrintStream out, List<VmCpuStat> cpuStats) {
-        TableRenderer table = new TableRenderer(1);
-        table.printLine(CPU_PERCENT);
-        for (VmCpuStat cpuStat : cpuStats) {
-            DecimalFormat format = new DecimalFormat("#0.0");
-            table.printLine(format.format(cpuStat.getCpuLoad()));
+    private void printStats(PrintStream out, List<VmCpuStat> cpuStats, List<VmMemoryStat> memStats) {
+        TimeStampedPojoCorrelator correlator = correlate(cpuStats, memStats);
+        int numSpaces = getNumSpaces(memStats);
+        int numColumns = numSpaces + 2;
+        TableRenderer table = new TableRenderer(numColumns);
+        printHeaders(memStats, numSpaces, numColumns, table);
+        Iterator<TimeStampedPojoCorrelator.Correlation> i = correlator.iterator();
+        while (i.hasNext()) {
+            printStats(numSpaces, table, i);
         }
         table.render(out);
+    }
+
+    private void printStats(int numSpaces, TableRenderer table, Iterator<TimeStampedPojoCorrelator.Correlation> i) {
+
+        TimeStampedPojoCorrelator.Correlation correlation = i.next();
+
+        VmCpuStat cpuStat = (VmCpuStat) correlation.get(0);
+        DecimalFormat format = new DecimalFormat("#0.0");
+        String cpuLoad = cpuStat != null ? format.format(cpuStat.getCpuLoad()) : "";
+
+        DateFormat dateFormat = DateFormat.getTimeInstance();
+        String time = dateFormat.format(new Date(correlation.getTimeStamp()));
+
+        String[] memoryUsage = getMemoryUsage((VmMemoryStat) correlation.get(1), numSpaces);
+
+        String[] line = new String[numSpaces + 2];
+        System.arraycopy(memoryUsage, 0, line, 2, numSpaces);
+        line[0] = time;
+        line[1] = cpuLoad;
+        table.printLine(line);
+    }
+
+    private void printHeaders(List<VmMemoryStat> memStats, int numSpaces, int numColumns, TableRenderer table) {
+        String[] spacesNames = getSpacesNames(memStats, numSpaces);
+        String[] headers = new String[numColumns];
+        headers[0] = TIME;
+        headers[1] = CPU_PERCENT;
+        System.arraycopy(spacesNames, 0, headers, 2, numSpaces);
+        table.printLine(headers);
+    }
+
+    private String[] getMemoryUsage(VmMemoryStat vmMemoryStat, int numSpaces) {
+        String[] memoryUsage = new String[numSpaces];
+        if (vmMemoryStat == null) {
+            Arrays.fill(memoryUsage, "");
+            return memoryUsage;
+        }
+        int i = 0;
+        for (VmMemoryStat.Generation gen : vmMemoryStat.getGenerations()) {
+            for (VmMemoryStat.Space space : gen.spaces) {
+                String[] displayableSize = DisplayableValues.bytes(space.used);
+                memoryUsage[i] = displayableSize[0] + " " + displayableSize[1];
+                i++;
+            }
+        }
+        return memoryUsage;
+    }
+
+    private String[] getSpacesNames(List<VmMemoryStat> memStats, int numSpaces) {
+        if (numSpaces < 1) {
+            return new String[0];
+        }
+        String[] spacesNames = new String[numSpaces];
+        VmMemoryStat stat = memStats.get(0);
+        int i = 0;
+        for (VmMemoryStat.Generation gen : stat.getGenerations()) {
+            for (VmMemoryStat.Space space : gen.spaces) {
+                spacesNames[i] = MEM_PREFIX + space.name;
+                i++;
+            }
+        }
+        return spacesNames;
+    }
+
+    private int getNumSpaces(List<VmMemoryStat> memStats) {
+        if (memStats.size() < 1) {
+            return 0;
+        }
+        VmMemoryStat stat = memStats.get(0);
+        int numSpaces = 0;
+        for (VmMemoryStat.Generation gen : stat.getGenerations()) {
+            numSpaces += gen.spaces.size();
+        }
+        return numSpaces;
+    }
+
+    private TimeStampedPojoCorrelator correlate(List<VmCpuStat> cpuStats, List<VmMemoryStat> memStats) {
+        TimeStampedPojoCorrelator correlator = new TimeStampedPojoCorrelator(2);
+        for(VmCpuStat cpuStat : cpuStats) {
+            correlator.add(0, cpuStat);
+        }
+        for (VmMemoryStat memStat : memStats) {
+            correlator.add(1, memStat);
+        }
+        return correlator;
     }
 
     @Override
