@@ -33,60 +33,23 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-
-package com.redhat.thermostat.client.killvm;
-
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VMFilter;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmInfo;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import com.redhat.thermostat.service.process.UNIXSignal;
+package com.redhat.thermostat.client.osgi.service;
 
 /**
- * Implements the {@link VMContextAction} entry point to provide a kill switch
- * for the currently selected Virtual Machine. 
+ * Allows plugins to register menu items.
+ * <p>
+ * To register a menu item for for the menu "File" in thermostat client window,
+ * register a service that implements this class with the property
+ * "parentMenu" set to "File".
  */
-public class KillVMAction implements VMContextAction {
+public interface MenuAction {
 
-    private final UNIXProcessHandler unixService;
-    private final DAOFactory dao;
+    /** The string displayed as the menu item name */
+    String getName();
 
-    public KillVMAction(UNIXProcessHandler unixService, DAOFactory dao) {
-        this.unixService = unixService;
-        this.dao = dao;
-    }
+    /** A generic description of the menu item */
+    String getDescription();
 
-    @Override
-    public String getName() {
-        return "Kill Application";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Kill the selected VM Process";
-    }
-
-    @Override
-    public void execute(VmRef reference) {
-        unixService.sendSignal(reference.getIdString(), UNIXSignal.KILL);
-    }
-
-    @Override
-    public VMFilter getFilter() {
-        return new LocalAndAliveFilter();
-    }
-
-    private class LocalAndAliveFilter implements VMFilter {
-
-        @Override
-        public boolean matches(VmRef vm) {
-            // TODO implement local checking too
-            VmInfo vmInfo = dao.getVmInfoDAO().getVmInfo(vm);
-            boolean dead = vmInfo.getStartTimeStamp() < vmInfo.getStopTimeStamp();
-            return !dead;
-        }
-
-    }
+    /** Invoked when the user selects this menu item */
+    void execute();
 }

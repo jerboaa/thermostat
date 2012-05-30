@@ -92,6 +92,9 @@ public class HelpCommand implements Command {
     }
 
     @Override
+    public void disable() { /* NO-OP */ }
+
+    @Override
     public String getName() {
         return NAME;
     }

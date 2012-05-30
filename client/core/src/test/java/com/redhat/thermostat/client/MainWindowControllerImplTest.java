@@ -37,19 +37,23 @@
 package com.redhat.thermostat.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.awt.Component;
+import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 
@@ -59,11 +63,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
+import com.redhat.thermostat.client.MenuRegistry.MenuListener;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.VMFilter;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmInformationController;
@@ -80,6 +85,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.test.Bug;
 
 public class MainWindowControllerImplTest {
@@ -99,7 +105,9 @@ public class MainWindowControllerImplTest {
 
     private VMContextAction action1;
     private VMContextAction action2;
-    
+
+    private MenuListener menuListener;
+
     @BeforeClass
     public static void setUpOnce() {
         // TODO remove when controller uses mocked objects rather than real swing objects
@@ -129,6 +137,10 @@ public class MainWindowControllerImplTest {
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
 
+        MenuRegistry registry = mock(MenuRegistry.class);
+        ArgumentCaptor<MenuListener> menuListenerCaptor = ArgumentCaptor.forClass(MenuListener.class);
+        doNothing().when(registry).addMenuListener(menuListenerCaptor.capture());
+
         // TODO remove this asap. the main window has a hard dependency on summary controller/view
         ViewFactory viewFactory = mock(ViewFactory.class);
         SummaryView summaryView = mock(SummaryView.class);
@@ -136,20 +148,29 @@ public class MainWindowControllerImplTest {
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
         setUpVMContextActions();
-        
-        controller = new MainWindowControllerImpl(uiFacadeFactory, view);
+
+        controller = new MainWindowControllerImpl(uiFacadeFactory, view, registry);
         l = grabListener.getValue();
+        menuListener = menuListenerCaptor.getValue();
 
     }
 
     private void setUpVMContextActions() {
         action1 = mock(VMContextAction.class);
+        VMFilter action1Filter = mock(VMFilter.class);
+        when(action1Filter.matches(isA(VmRef.class))).thenReturn(true);
+
         when(action1.getName()).thenReturn("action1");
         when(action1.getDescription()).thenReturn("action1desc");
+        when(action1.getFilter()).thenReturn(action1Filter);
         
         action2 = mock(VMContextAction.class);
+        VMFilter action2Filter = mock(VMFilter.class);
+        when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
+
         when(action2.getName()).thenReturn("action2");
         when(action2.getDescription()).thenReturn("action2desc");
+        when(action2.getFilter()).thenReturn(action2Filter);
         
         Collection<VMContextAction> actions = new ArrayList<>();
         actions.add(action1);
@@ -325,12 +346,22 @@ public class MainWindowControllerImplTest {
 
         assertEquals(3, id);
     }
-    
-    @Test
-    public void verityVMActionsAreRegistered() {
 
-        verify(view).registerVMContextAction(action1);
-        verify(view).registerVMContextAction(action2);
+    @Test
+    public void verityVMActionsAreShown() {
+        VmInfo vmInfo = new VmInfo(0, 1, 2, null, null, null, null, null, null, null, null, null, null, null);
+        when(mockVmsDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
+
+        VmRef ref = mock(VmRef.class);
+        when(view.getSelectedHostOrVm()).thenReturn(ref);
+
+        MouseEvent uiEvent = mock(MouseEvent.class);
+        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_VM_CONTEXT_MENU);
+        viewEvent.setPayload(uiEvent);
+
+        l.actionPerformed(viewEvent);
+
+        verify(view).showVMContextActions(Arrays.asList(action1), uiEvent);
     }
     
     @Test
@@ -345,6 +376,19 @@ public class MainWindowControllerImplTest {
         
         verify(action1, times(1)).execute(any(VmRef.class));
         verify(action2, times(0)).execute(any(VmRef.class));
+    }
+
+    @Test
+    public void verifyMenuItems() {
+        assertNotNull(menuListener);
+        MenuAction action = mock(MenuAction.class);
+        when(action.getName()).thenReturn("Test1");
+
+        menuListener.added("File", action);
+        verify(view).addMenu("File", action);
+
+        menuListener.removed("File", action);
+        verify(view).removeMenu("File", action);
     }
 
    @Test

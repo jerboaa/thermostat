@@ -36,13 +36,16 @@
 
 package com.redhat.thermostat.client;
 
+import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.osgi.framework.BundleException;
-
+import com.redhat.thermostat.client.MainView.Action;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
@@ -65,6 +68,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MainWindowControllerImpl implements MainWindowController {
@@ -83,13 +87,27 @@ public class MainWindowControllerImpl implements MainWindowController {
     private ApplicationInfo appInfo;
 
     private UiFacadeFactory facadeFactory;
+    private MenuRegistry menuRegistry;
+    private MenuRegistry.MenuListener menuListener = new MenuRegistry.MenuListener() {
+
+        @Override
+        public void removed(String parentMenuName, MenuAction action) {
+            view.removeMenu(parentMenuName, action);
+        }
+
+        @Override
+        public void added(String parentMenuName, MenuAction action) {
+            view.addMenu(parentMenuName, action);
+        }
+    };
 
     private boolean showHistory;
 
     private VmInformationControllerProvider vmInfoControllerProvider;
-    
-    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
+
+    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, MenuRegistry menuRegistry) {
         this.facadeFactory = facadeFactory;
+        this.menuRegistry = menuRegistry;
 
         ApplicationContext ctx = ApplicationContext.getInstance();
         DAOFactory daoFactory = ctx.getDAOFactory();
@@ -104,12 +122,10 @@ public class MainWindowControllerImpl implements MainWindowController {
         view.setWindowTitle(appInfo.getName());
         initializeTimer();
 
-        logger.log(Level.INFO, "registering VMContextActions actions to view");
-        for (VMContextAction action : facadeFactory.getVMContextActions()) {
-            view.registerVMContextAction(action);
-        }
-        
         updateView();
+
+        menuRegistry.start();
+        menuRegistry.addMenuListener(menuListener);
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {
@@ -197,6 +213,9 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SHOW_ABOUT_DIALOG:
                     showAboutDialog();
                     break;
+                case SHOW_VM_CONTEXT_MENU:
+                    showContextMenu(evt);
+                    break;
                 case VM_CONTEXT_ACTION:
                     handleVMHooks(evt);
                     break;
@@ -212,6 +231,10 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void shutdownApplication() {
+        menuRegistry.removeMenuListener(menuListener);
+        menuListener = null;
+        menuRegistry.stop();
+
         view.hideMainWindow();
         ApplicationContext.getInstance().getTimerFactory().shutdown();
         shutdownOSGiFramework();
@@ -219,6 +242,21 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private void shutdownOSGiFramework() {
         facadeFactory.shutdown();
+    }
+
+    private void showContextMenu(ActionEvent<Action> evt) {
+        List<VMContextAction> toShow = new ArrayList<>();
+        VmRef vm = (VmRef) view.getSelectedHostOrVm();
+
+        logger.log(Level.INFO, "registering applicable VMContextActions actions to show");
+
+        for (VMContextAction action : facadeFactory.getVMContextActions()) {
+            if (action.getFilter().matches(vm)) {
+                toShow.add(action);
+            }
+        }
+
+        view.showVMContextActions(toShow, (MouseEvent)evt.getPayload());
     }
 
     private void handleVMHooks(ActionEvent<MainView.Action> event) {

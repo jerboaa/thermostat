@@ -183,7 +183,12 @@ public class DBService extends BasicCommand {
             throw new InvalidConfigurationException("database directories do not exist...");
         }
     }
-    
+
+    @Override
+    public void disable() {
+        /* NO-OP */
+    }
+
     @Override
     public DBStartupConfiguration getConfiguration() {
         return configuration;

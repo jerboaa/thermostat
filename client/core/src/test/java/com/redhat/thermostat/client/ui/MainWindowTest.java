@@ -37,15 +37,23 @@
 package com.redhat.thermostat.client.ui;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import javax.swing.AbstractAction;
+
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
+import org.fest.swing.exception.ComponentLookupException;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JMenuItemFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
@@ -58,6 +66,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.MainView;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
@@ -191,7 +200,38 @@ public class MainWindowTest {
 
         verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.SWITCH_HISTORY_MODE));
     }
-    
+
+    @Category(GUITest.class)
+    @Test
+    public void addRemoveMenu() {
+        final String MENU_NAME = "Test";
+        MenuAction action = mock(MenuAction.class);
+        when(action.getName()).thenReturn(MENU_NAME);
+
+        JMenuItemFixture menuItem;
+
+        frameFixture.show();
+
+        window.addMenu("File", action);
+
+        menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+        assertNotNull(menuItem);
+        menuItem.click();
+
+        verify(action).execute();
+
+        window.removeMenu("File", action);
+
+        try {
+            menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+            // should not reach here
+            assertTrue(false);
+        } catch (ComponentLookupException cle) {
+            // expected
+        }
+
+    }
+
     @Category(GUITest.class)
     @Test
     public void testGetHostVMTreeFilter() {

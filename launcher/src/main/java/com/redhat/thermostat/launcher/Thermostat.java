@@ -40,6 +40,7 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,13 +55,15 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 
-
 public class Thermostat {
 
     /**
-     * 
+     * the name of the launcher class
      */
     private static final String LAUNCHER_CLASSNAME = "com.redhat.thermostat.common.cli.Launcher";
+
+    private static final String DEBUG_PREFIX = "OSGi Launcher: ";
+
     private File thermostatBundleHome;
     private boolean printOSGiDebugInfo = false;
 
@@ -80,7 +83,7 @@ public class Thermostat {
         BundleContext bundleContext = framework.getBundleContext();
         for (String location : bundleLocations) {
             if (printOSGiDebugInfo) {
-                System.out.print("installing bundle: \"" + location + "\"");
+                System.out.print(DEBUG_PREFIX + "installing bundle: \"" + location + "\"");
             }
             Bundle bundle = bundleContext.installBundle(location);
             if (printOSGiDebugInfo) {
@@ -95,7 +98,7 @@ public class Thermostat {
     private void startBundles(List<Bundle> bundles) throws BundleException {
         for (Bundle bundle : bundles) {
             if (printOSGiDebugInfo) {
-                System.out.println("starting bundle: \"" + bundle.getBundleId() + "\"");
+                System.out.println(DEBUG_PREFIX + "starting bundle: \"" + bundle.getBundleId() + "\"");
             }
             bundle.start();
         }
@@ -117,11 +120,27 @@ public class Thermostat {
         if (factories.hasNext()) {
 
             // we just want the first found
-            Framework framework = factories.next().newFramework(bundleConfigurations);
+            final Framework framework = factories.next().newFramework(bundleConfigurations);
             framework.init();
             List<String> bundles = OSGiRegistry.getSystemBundles();
             List<Bundle> bundleList = installBundles(framework, bundles);
             framework.start();
+
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        framework.stop();
+                        framework.waitForStop(0);
+                        if (printOSGiDebugInfo) {
+                            System.out.println(DEBUG_PREFIX + "OSGi framework has shut down");
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Error stopping framework:" + e);
+                    }
+                }
+            });
+
             startBundles(bundleList);
 
             launch(args, framework);
@@ -141,6 +160,9 @@ public class Thermostat {
         if (launcherRef != null) {
             Object launcherImpl = ctx.getService(launcherRef);
             Method m = launcherImpl.getClass().getMethod("run", String[].class);
+            if (printOSGiDebugInfo) {
+                System.out.println(DEBUG_PREFIX + "invoking " + launcherImpl.getClass().getName() + "." + m.getName());
+            }
             m.invoke(launcherImpl, (Object) args);
         } else {
             System.err.println("Severe: Could not locate launcher");
@@ -158,10 +180,17 @@ public class Thermostat {
     public static void main(String[] args) throws Exception {
 
         Thermostat t = new Thermostat();
-        if (args.length >= 1 && args[0].equals("--print-osgi-info")) {
-            t.setPrintOSGiDebugInfo(true);
+        List<String> toProcess = new ArrayList<>(Arrays.asList(args));
+        Iterator<String> iter = toProcess.iterator();
+        while (iter.hasNext()) {
+            String arg = iter.next();
+            if (("--print-osgi-info").equals(arg)) {
+                t.setPrintOSGiDebugInfo(true);
+                iter.remove();
+            }
         }
-        t.start(args);
+
+        t.start(toProcess.toArray(new String[0]));
     }
 
 

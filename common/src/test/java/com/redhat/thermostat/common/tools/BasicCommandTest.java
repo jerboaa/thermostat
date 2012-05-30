@@ -64,6 +64,11 @@ public class BasicCommandTest {
             }
 
             @Override
+            public void disable() {
+                // Move along
+            }
+
+            @Override
             public String getName() {
                 return null;
             }

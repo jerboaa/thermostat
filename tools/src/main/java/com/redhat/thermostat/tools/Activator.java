@@ -47,17 +47,18 @@ import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
 public class Activator implements BundleActivator {
 
+    private CommandRegistry reg;
+
     @Override
     public void start(BundleContext context) throws Exception {
-        CommandRegistry reg = new CommandRegistryImpl(context);
+        reg = new CommandRegistryImpl(context);
         ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
         reg.registerCommands(cmds);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // TODO Auto-generated method stub
-
+        reg.unregisterCommands();
     }
 
 }

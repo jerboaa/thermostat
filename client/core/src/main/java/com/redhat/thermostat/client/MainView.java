@@ -37,7 +37,10 @@
 package com.redhat.thermostat.client;
 
 import java.awt.Component;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.dao.Ref;
@@ -54,6 +57,7 @@ public interface MainView {
         SWITCH_HISTORY_MODE,
         SHOW_ABOUT_DIALOG,
         SHUTDOWN,
+        SHOW_VM_CONTEXT_MENU,
         VM_CONTEXT_ACTION,
     }
 
@@ -73,5 +77,9 @@ public interface MainView {
 
     void setSubView(Component view);
 
-    void registerVMContextAction(VMContextAction action);
+    void addMenu(String parentMenuName, MenuAction action);
+
+    void removeMenu(String parentMenuName, MenuAction action);
+
+    void showVMContextActions(List<VMContextAction> actions, MouseEvent e);
 }
