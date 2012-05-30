@@ -399,7 +399,7 @@ public class MainWindow extends JFrame implements MainView {
                 }
             }
         });
-        setupContextActions(agentVmTree);
+        registerContextActionListener(agentVmTree);
         
         JScrollPane treeScrollPane = new JScrollPane(agentVmTree);
 
@@ -416,14 +416,14 @@ public class MainWindow extends JFrame implements MainView {
         add(splitPane);
     }
 
-    private void setupContextActions(JTree agentVmTree2) {
+    private void registerContextActionListener(JTree agentVmTree2) {
         vmContextMenu = new JPopupMenu();
         agentVmTree2.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     Ref ref = getSelectedHostOrVm();
                     if (ref instanceof VmRef) {
-                        vmContextMenu.show((Component)e.getSource(), e.getX(), e.getY());
+                        fireViewAction(Action.SHOW_VM_CONTEXT_MENU, e);
                     }
                 }
             }
@@ -431,18 +431,30 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
-    public void registerVMContextAction(final VMContextAction action) {
-        
-        JMenuItem contextAction = new JMenuItem();
-        contextAction.setText(action.getName());
-        contextAction.setToolTipText(action.getDescription());
-        vmContextMenu.add(contextAction);
-        
-        contextAction.addActionListener(new java.awt.event.ActionListener() {
+    public void showVMContextActions(final List<VMContextAction> actions, final MouseEvent e) {
+        SwingUtilities.invokeLater(new Runnable() {
+
             @Override
-            public void actionPerformed(ActionEvent e) {
-                fireViewAction(Action.VM_CONTEXT_ACTION, action);
+            public void run() {
+                vmContextMenu.removeAll();
+
+                for (final VMContextAction action: actions) {
+                    JMenuItem contextAction = new JMenuItem();
+                    contextAction.setText(action.getName());
+                    contextAction.setToolTipText(action.getDescription());
+
+                    contextAction.addActionListener(new java.awt.event.ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            fireViewAction(Action.VM_CONTEXT_ACTION, action);
+                        }
+                    });
+                    vmContextMenu.add(contextAction);
+                }
+
+                vmContextMenu.show((Component)e.getSource(), e.getX(), e.getY());
             }
+
         });
     }
     
@@ -565,7 +577,7 @@ public class MainWindow extends JFrame implements MainView {
         actionNotifier.fireAction(action);
     }
     
-    private void fireViewAction(Action action, VMContextAction payload) {
+    private void fireViewAction(Action action, Object payload) {
         actionNotifier.fireAction(action, payload);
     }
     

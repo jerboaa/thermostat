@@ -45,6 +45,7 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
@@ -61,7 +62,8 @@ public class Activator implements BundleActivator {
         ServiceListener listener = new ServiceListener() {
             
             private UNIXProcessHandler unixService;
-            private boolean[] loaded = new boolean[2];
+            private ApplicationService appService;
+            private boolean[] loaded = new boolean[3];
             
             @Override
             public void serviceChanged(ServiceEvent event) {
@@ -75,6 +77,9 @@ public class Activator implements BundleActivator {
                     } else if (service instanceof UNIXProcessHandler) {
                         loaded[1] = true;
                         unixService = (UNIXProcessHandler) service;
+                    } else if (service instanceof ApplicationService) {
+                        loaded[2] = true;
+                        appService = (ApplicationService) service;
                     }
                     break;
 
@@ -82,16 +87,17 @@ public class Activator implements BundleActivator {
                     break;
                 }
                 
-                if (loaded[0] && loaded[1]) {
+                if (loaded[0] && loaded[1] && loaded[2]) {
                     context.registerService(VMContextAction.class.getName(),
-                                            new KillVMAction(unixService), null);
+                                            new KillVMAction(unixService, appService.getDAOFactory()), null);
                 }
             }
         };
         
         try {
-            String filter = "(|(objectClass=" + ContextAction.class.getName() + 
-                            ")(objectClass=" + UNIXProcessHandler.class.getName() + "))";
+            String filter = "(|(objectClass=" + ContextAction.class.getName() + ")" +
+                            "  (objectClass=" + UNIXProcessHandler.class.getName() + ")" +
+                            "  (objectClass=" + ApplicationService.class.getName() + "))";
                     
             context.addServiceListener(listener, filter);
             ServiceReference[] services = context.getServiceReferences(null, null);
