@@ -41,8 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.osgi.framework.BundleException;
-
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
@@ -83,13 +82,27 @@ public class MainWindowControllerImpl implements MainWindowController {
     private ApplicationInfo appInfo;
 
     private UiFacadeFactory facadeFactory;
+    private MenuRegistry menuRegistry;
+    private MenuRegistry.MenuListener menuListener = new MenuRegistry.MenuListener() {
+
+        @Override
+        public void removed(String parentMenuName, MenuAction action) {
+            view.removeMenu(parentMenuName, action);
+        }
+
+        @Override
+        public void added(String parentMenuName, MenuAction action) {
+            view.addMenu(parentMenuName, action);
+        }
+    };
 
     private boolean showHistory;
 
     private VmInformationControllerProvider vmInfoControllerProvider;
-    
-    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view) {
+
+    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, MenuRegistry menuRegistry) {
         this.facadeFactory = facadeFactory;
+        this.menuRegistry = menuRegistry;
 
         ApplicationContext ctx = ApplicationContext.getInstance();
         DAOFactory daoFactory = ctx.getDAOFactory();
@@ -110,6 +123,9 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
         
         updateView();
+
+        menuRegistry.start();
+        menuRegistry.addMenuListener(menuListener);
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {
@@ -212,6 +228,10 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void shutdownApplication() {
+        menuRegistry.removeMenuListener(menuListener);
+        menuListener = null;
+        menuRegistry.stop();
+
         view.hideMainWindow();
         ApplicationContext.getInstance().getTimerFactory().shutdown();
         shutdownOSGiFramework();

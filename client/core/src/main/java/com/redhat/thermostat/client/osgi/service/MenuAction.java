@@ -33,50 +33,23 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.client.osgi.service;
 
-package com.redhat.thermostat.client;
+/**
+ * Allows plugins to register menu items.
+ * <p>
+ * To register a menu item for for the menu "File" in thermostat client window,
+ * register a service that implements this class with the property
+ * "parentMenu" set to "File".
+ */
+public interface MenuAction {
 
-import java.awt.Component;
+    /** The string displayed as the menu item name */
+    String getName();
 
-import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.dao.Ref;
+    /** A generic description of the menu item */
+    String getDescription();
 
-public interface MainView {
-
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-        HOST_VM_TREE_FILTER,
-        HOST_VM_SELECTION_CHANGED,
-        SHOW_AGENT_CONFIG,
-        SHOW_CLIENT_CONFIG,
-        SWITCH_HISTORY_MODE,
-        SHOW_ABOUT_DIALOG,
-        SHUTDOWN,
-        VM_CONTEXT_ACTION,
-    }
-
-    void addActionListener(ActionListener<Action> capture);
-
-    void updateTree(String eq, HostsVMsLoader any);
-
-    void setWindowTitle(String title);
-
-    void showMainWindow();
-
-    void hideMainWindow();
-
-    String getHostVmTreeFilter();
-
-    Ref getSelectedHostOrVm();
-
-    void setSubView(Component view);
-
-    void addMenu(String parentMenuName, MenuAction action);
-
-    void removeMenu(String parentMenuName, MenuAction action);
-
-    void registerVMContextAction(VMContextAction action);
+    /** Invoked when the user selects this menu item */
+    void execute();
 }

@@ -74,6 +74,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
+import javax.swing.MenuElement;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.ToolTipManager;
@@ -95,6 +96,7 @@ import javax.swing.tree.TreeSelectionModel;
 import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -221,6 +223,7 @@ public class MainWindow extends JFrame implements MainView {
 
     private static final long serialVersionUID = 5608972421496808177L;
 
+    private final JMenuBar mainMenuBar;
     private JPanel contentArea = null;
 
     private JTextField searchField = null;
@@ -251,6 +254,8 @@ public class MainWindow extends JFrame implements MainView {
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
         contentArea = new JPanel(new BorderLayout());
 
+        mainMenuBar = new JMenuBar();
+
         setupMenus();
         setupPanels();
 
@@ -280,7 +285,6 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     private void setupMenus() {
-        JMenuBar mainMenuBar = new JMenuBar();
 
         JMenu fileMenu = new JMenu(localize(LocaleResources.MENU_FILE));
         fileMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
@@ -621,6 +625,92 @@ public class MainWindow extends JFrame implements MainView {
                 contentArea.revalidate();
             }
         });
+    }
+
+    @Override
+    public void addMenu(final String parentMenuName, final MenuAction action) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JMenu parent = null;
+                int mainMenuCount = mainMenuBar.getMenuCount();
+                for (int i = 0; i < mainMenuCount; i++) {
+                    if (mainMenuBar.getMenu(i).getText().equals(parentMenuName)) {
+                        parent = mainMenuBar.getMenu(i);
+                        break;
+                    }
+                }
+                if (parent == null) {
+                    parent = new JMenu(parentMenuName);
+                    mainMenuBar.add(parent);
+                }
+
+                JMenuItem menu = new JMenuItem(action.getName());
+                menu.addActionListener(new java.awt.event.ActionListener() {
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        action.execute();
+                    }
+                });
+                parent.add(menu);
+
+                mainMenuBar.revalidate();
+            }
+        });
+    }
+
+    @Override
+    public void removeMenu(final String parentMenuName, final  MenuAction action) {
+        final String actionName = action.getName();
+        try {
+            new EdtHelper().callAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    MenuElement parent = null;
+                    int mainMenuCount = mainMenuBar.getMenuCount();
+                    for (int i = 0; i < mainMenuCount; i++) {
+                        if (mainMenuBar.getMenu(i).getText().equals(parentMenuName)) {
+                            parent = mainMenuBar.getMenu(i);
+                            break;
+                        }
+                    }
+                    if (parent == null) {
+                        throw new IllegalArgumentException("parent menu not found");
+                    }
+
+                    boolean removed = false;
+                    MenuElement[] menus = parent.getSubElements();
+                    if (menus.length == 1 && (menus[0] instanceof JPopupMenu)) {
+                        parent = menus[0];
+                        menus = parent.getSubElements();
+                    }
+
+                    for (MenuElement menu: menus) {
+                        if (menu instanceof JMenuItem && ((JMenuItem)menu).getText().equals(actionName)) {
+                            if (parent instanceof JPopupMenu) {
+                                ((JPopupMenu)parent).remove((JMenuItem)menu);
+                                removed = true;
+                            }
+                        }
+                    }
+
+                    if (!removed) {
+                        throw new IllegalArgumentException("child menu not found");
+                    }
+
+                    mainMenuBar.revalidate();
+                }
+            });
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(ie);
+        } catch (InvocationTargetException roe) {
+            Throwable cause = roe.getCause();
+            if (cause instanceof IllegalArgumentException) {
+                throw (IllegalArgumentException) cause;
+            }
+            throw new RuntimeException(cause);
+        }
     }
 
     /**

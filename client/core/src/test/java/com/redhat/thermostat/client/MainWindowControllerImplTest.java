@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -63,6 +64,8 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
+import com.redhat.thermostat.client.MenuRegistry.MenuListener;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.SummaryView;
@@ -99,7 +102,9 @@ public class MainWindowControllerImplTest {
 
     private VMContextAction action1;
     private VMContextAction action2;
-    
+
+    private MenuListener menuListener;
+
     @BeforeClass
     public static void setUpOnce() {
         // TODO remove when controller uses mocked objects rather than real swing objects
@@ -129,6 +134,10 @@ public class MainWindowControllerImplTest {
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
 
+        MenuRegistry registry = mock(MenuRegistry.class);
+        ArgumentCaptor<MenuListener> menuListenerCaptor = ArgumentCaptor.forClass(MenuListener.class);
+        doNothing().when(registry).addMenuListener(menuListenerCaptor.capture());
+
         // TODO remove this asap. the main window has a hard dependency on summary controller/view
         ViewFactory viewFactory = mock(ViewFactory.class);
         SummaryView summaryView = mock(SummaryView.class);
@@ -136,9 +145,10 @@ public class MainWindowControllerImplTest {
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
         setUpVMContextActions();
-        
-        controller = new MainWindowControllerImpl(uiFacadeFactory, view);
+
+        controller = new MainWindowControllerImpl(uiFacadeFactory, view, registry);
         l = grabListener.getValue();
+        menuListener = menuListenerCaptor.getValue();
 
     }
 
@@ -345,6 +355,19 @@ public class MainWindowControllerImplTest {
         
         verify(action1, times(1)).execute(any(VmRef.class));
         verify(action2, times(0)).execute(any(VmRef.class));
+    }
+
+    @Test
+    public void verifyMenuItems() {
+        assertNotNull(menuListener);
+        MenuAction action = mock(MenuAction.class);
+        when(action.getName()).thenReturn("Test1");
+
+        menuListener.added("File", action);
+        verify(view).addMenu("File", action);
+
+        menuListener.removed("File", action);
+        verify(view).removeMenu("File", action);
     }
 
    @Test
