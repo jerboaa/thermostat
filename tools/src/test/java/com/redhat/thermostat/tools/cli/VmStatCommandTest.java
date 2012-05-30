@@ -46,6 +46,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -74,15 +75,19 @@ import com.redhat.thermostat.test.TestCommandContextFactory;
 public class VmStatCommandTest {
 
     private static Locale defaultLocale;
+    private static TimeZone defaultTimeZone;
 
     @BeforeClass
     public static void setUpClass() {
         defaultLocale = Locale.getDefault();
         Locale.setDefault(Locale.US);
+        defaultTimeZone = TimeZone.getDefault();
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     }
 
     @AfterClass
     public static void tearDownClass() {
+        TimeZone.setDefault(defaultTimeZone);
         Locale.setDefault(defaultLocale);
     }
 
@@ -208,10 +213,10 @@ public class VmStatCommandTest {
         args.addArgument("vmId", "234");
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "TIME       %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
-                          "1:00:00 AM      1 B        1 B        1 B        1 B\n" +
-                          "1:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
-                          "1:00:00 AM 70.0 4 B        5 B        6 B        7 B\n";
+        String expected = "TIME        %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
+                          "12:00:00 AM      1 B        1 B        1 B        1 B\n" +
+                          "12:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
+                          "12:00:00 AM 70.0 4 B        5 B        6 B        7 B\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
 
     }
