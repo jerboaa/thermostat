@@ -38,6 +38,7 @@ package com.redhat.swing.laf.dolphin.themes;
 
 import java.awt.Color;
 
+import javax.swing.UIDefaults;
 import javax.swing.border.AbstractBorder;
 import javax.swing.plaf.ColorUIResource;
 
@@ -46,6 +47,8 @@ import com.redhat.swing.laf.dolphin.text.DolphinTextAreaBorder;
 import com.redhat.swing.laf.dolphin.text.DolphinTextBorder;
 
 public class DolphinDefaultTheme extends DolphinTheme {
+    
+    private static final ColorUIResource WHITE = new ColorUIResource(Color.WHITE);
     
     private static final ColorUIResource WINDOW_BACKGROUND = new ColorUIResource(0xEDEDED);
     private static final ColorUIResource BUTTON_GRADIENT_TOP = new ColorUIResource(0xf1f3f1);
@@ -69,10 +72,15 @@ public class DolphinDefaultTheme extends DolphinTheme {
     private static final ColorUIResource TITLED_BORDER_BORDER_COLOR = new ColorUIResource(0xa8aca8);
     
     private static final ColorUIResource SELECTION_COLOR = new ColorUIResource(0x4A90D9);
-    private static final ColorUIResource SELECTION_FOREGROUND = new ColorUIResource(Color.WHITE);
+    private static final ColorUIResource SELECTION_FOREGROUND = WHITE;
     
     private static final ColorUIResource TREE_HEADER_COLOR = new ColorUIResource(0x1A58AD);
     
+    private static final ColorUIResource TAB_TOP_GRADIENT_COLOR = new ColorUIResource(0xF9F9F9);
+
+    private static final ColorUIResource TAB_UNSELECTED_TOP_GRADIENT_COLOR = new ColorUIResource(0xe6e6e6);
+    private static final ColorUIResource TAB_UNSELECTED_BOTTOM_GRADIENT_COLOR = new ColorUIResource(0xcbcbcb);
+
     @Override
     public ColorUIResource getwindowBackgroundColor() {
         return WINDOW_BACKGROUND;
@@ -223,15 +231,54 @@ public class DolphinDefaultTheme extends DolphinTheme {
         return new DolphinTextAreaBorder();
     }
     
-//    @Override
-//    public void addCustomEntriesToTable(UIDefaults table) {
-//        super.addCustomEntriesToTable(table);
-//        
-//        Object[] uiDefaults = {
+    @Override
+    public ColorUIResource getTabAreaBackground() {
+        return WHITE;
+    }
+    
+    @Override
+    public ColorUIResource getTabAreaForeground() {
+        return TEXT_DEFAULT_COLOR;
+    }
+    
+    @Override
+    public ColorUIResource getTabBottomGradient() {
+        return WHITE;
+    }
+    
+    @Override
+    public ColorUIResource getTabTopGradient() {
+        return TAB_TOP_GRADIENT_COLOR;
+    }
+    
+    @Override
+    public ColorUIResource getUnselectedTabBottomGradient() {
+        return TAB_UNSELECTED_BOTTOM_GRADIENT_COLOR;
+    }
+    
+    @Override
+    public ColorUIResource getUnselectedTabTopGradient() {
+        return TAB_UNSELECTED_TOP_GRADIENT_COLOR;
+    }
+    
+    @Override
+    public void addCustomEntriesToTable(UIDefaults table) {
+        super.addCustomEntriesToTable(table);
+        
+        Object[] uiDefaults = {
 //            "MenuBarUI",    "com.ladybug.swing.plaf.icedlook.menu.IcedLookMenuBarUI",
-//        };
-//        
-//        table.putDefaults(uiDefaults);        
-//    }
+               "TabbedPane.contentAreaColor", getTabAreaBackground(),
+               "TabbedPane.contentAreaColor", getTabAreaBackground(),
+               "TabbedPane.tabAreaBackground", getTabAreaBackground(),
+               "TabbedPane.selectHighlight", getSelectionColor(),
+               "TabbedPane.selected", getSelectionColor(),
+               "TabbedPane.focus", getSelectionColor(),
+               "TabbedPane.light", getTabAreaBackground(),
+               "TabbedPane.background", getTabAreaBackground(),
+               "TabbedPane.foreground", getTabAreaForeground(),
+        };
+        
+        table.putDefaults(uiDefaults);        
+    }
 
 }

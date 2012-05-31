@@ -86,5 +86,12 @@ public abstract class DolphinTheme extends OceanTheme {
     
     public abstract ColorUIResource getMenuBackgroundColor();
     public abstract ColorUIResource getMenuForegroundColor();
+    public abstract ColorUIResource getTabAreaBackground();
+    public abstract ColorUIResource getTabAreaForeground();
+
+    public abstract ColorUIResource getTabTopGradient();
+    public abstract ColorUIResource getTabBottomGradient();
     
+    public abstract ColorUIResource getUnselectedTabTopGradient();
+    public abstract ColorUIResource getUnselectedTabBottomGradient();
 }

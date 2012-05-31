@@ -61,8 +61,9 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
             "swing.boldMetal", Boolean.FALSE,
             
             "ButtonUI", "com.redhat.swing.laf.dolphin.button.DolphinButtonUI",
-            "TreeUI",   "com.redhat.swing.laf.dolphin.tree.DolphinTreeUI",
-            "TextFieldUI",  "com.redhat.swing.laf.dolphin.text.DolphinTextFieldUI",
+            "TreeUI", "com.redhat.swing.laf.dolphin.tree.DolphinTreeUI",
+            "TextFieldUI", "com.redhat.swing.laf.dolphin.text.DolphinTextFieldUI",
+            "TabbedPaneUI", "com.redhat.swing.laf.dolphin.tab.DolphinTabbedPaneUI",
         };
         
         table.putDefaults(uiDefaults);
