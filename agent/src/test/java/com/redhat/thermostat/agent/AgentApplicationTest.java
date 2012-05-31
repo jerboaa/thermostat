@@ -88,8 +88,8 @@ public class AgentApplicationTest {
         Collection<ArgumentSpec> args = agent.getAcceptedArguments();
         assertNotNull(args);
         assertEquals(3, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("saveOnExit", "save the data on exit")));
+        assertTrue(args.contains(new SimpleArgumentSpec("saveOnExit", "s", "save the data on exit", false, false)));
         assertTrue(args.contains(new SimpleArgumentSpec("debug", "launch with debug console enabled")));
-        assertTrue(args.contains(new SimpleArgumentSpec("dbUrl", "connect to the given url", true, true)));
+        assertTrue(args.contains(new SimpleArgumentSpec("dbUrl", "d", "connect to the given url", true, true)));
     }
 }

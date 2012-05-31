@@ -131,11 +131,11 @@ class DBOptionParser implements ThermostatOptionParser {
     }
 
     static Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec cluster = new SimpleArgumentSpec(DBArgs.CLUSTER.option, DBArgs.CLUSTER.description);
-        ArgumentSpec dryRun = new SimpleArgumentSpec(DBArgs.DRY.option, DBArgs.DRY.description);
+        ArgumentSpec cluster = new SimpleArgumentSpec(DBArgs.CLUSTER.option, "c", DBArgs.CLUSTER.description, false, false);
+        ArgumentSpec dryRun = new SimpleArgumentSpec(DBArgs.DRY.option, "d", DBArgs.DRY.description, false, false);
         ArgumentSpec start = new SimpleArgumentSpec(DBArgs.START.option, DBArgs.START.description);
         ArgumentSpec stop = new SimpleArgumentSpec(DBArgs.STOP.option, DBArgs.STOP.description);
-        ArgumentSpec quiet = new SimpleArgumentSpec(DBArgs.QUIET.option, DBArgs.QUIET.description);
+        ArgumentSpec quiet = new SimpleArgumentSpec(DBArgs.QUIET.option, "q", DBArgs.QUIET.description, false, false);
         return Arrays.asList(cluster, dryRun, start, stop, quiet);
     }
 }

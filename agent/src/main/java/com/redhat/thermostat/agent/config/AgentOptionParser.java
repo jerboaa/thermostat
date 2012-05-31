@@ -102,8 +102,8 @@ public class AgentOptionParser implements ThermostatOptionParser {
     }
 
     public static Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec saveOnExit = new SimpleArgumentSpec(Args.SAVE_ON_EXIT.option, Args.SAVE_ON_EXIT.description);
-        ArgumentSpec db = new SimpleArgumentSpec(Args.DB.option, Args.DB.description, true, true);
+        ArgumentSpec saveOnExit = new SimpleArgumentSpec(Args.SAVE_ON_EXIT.option, "s", Args.SAVE_ON_EXIT.description, false, false);
+        ArgumentSpec db = new SimpleArgumentSpec(Args.DB.option, "d",  Args.DB.description, true, true);
         ArgumentSpec debug = new SimpleArgumentSpec(Args.DEBUG.option, Args.DEBUG.description);
         return Arrays.asList(saveOnExit, db, debug);
     }

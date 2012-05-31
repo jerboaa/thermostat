@@ -52,7 +52,7 @@ public class CommonCommandOptionsTest {
         CommonCommandOptions commonOpts = new CommonCommandOptions();
         Collection<ArgumentSpec> cmdOpts = commonOpts.getAcceptedOptionsFor(cmd);
 
-        assertTrue(cmdOpts.contains(new SimpleArgumentSpec("dbUrl", "the URL of the storage to connect to", false, true)));
+        assertTrue(cmdOpts.contains(new SimpleArgumentSpec("dbUrl", "d", "the URL of the storage to connect to", false, true)));
     }
 
     @Test

@@ -262,10 +262,10 @@ public class DBServiceTest {
         Collection<ArgumentSpec> args = dbService.getAcceptedArguments();
         assertNotNull(args);
         assertEquals(5, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("cluster", "launch the db in cluster mode, if not specified, local mode is the default")));
-        assertTrue(args.contains(new SimpleArgumentSpec("dryRun", "run the service in dry run mode")));
+        assertTrue(args.contains(new SimpleArgumentSpec("cluster", "c", "launch the db in cluster mode, if not specified, local mode is the default", false, false)));
+        assertTrue(args.contains(new SimpleArgumentSpec("dryRun", "d", "run the service in dry run mode", false, false)));
         assertTrue(args.contains(new SimpleArgumentSpec("start", "start the database")));
         assertTrue(args.contains(new SimpleArgumentSpec("stop", "stop the database")));
-        assertTrue(args.contains(new SimpleArgumentSpec("quiet", "don't produce any output")));
+        assertTrue(args.contains(new SimpleArgumentSpec("quiet", "q", "don't produce any output", false, false)));
     }
 }
