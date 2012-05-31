@@ -82,6 +82,14 @@ public abstract class DolphinTheme extends OceanTheme {
         System.setProperty("dolphin.tree.nofill", String.valueOf(value));
     }
 
+    public boolean getTabPaneKeepBackgroundColor() {
+        return Boolean.getBoolean("dolphin.tab.keepbg");
+    }
+    
+    public void setTabPaneKeepBackgroundColor(boolean value) {
+        System.setProperty("dolphin.tab.keepbg", String.valueOf(value));
+    }
+    
     public abstract ColorUIResource getwindowBackgroundColor();
     
     public abstract ColorUIResource getMenuBackgroundColor();

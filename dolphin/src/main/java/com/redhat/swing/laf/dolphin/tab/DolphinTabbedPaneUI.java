@@ -45,6 +45,7 @@ import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 
 import javax.swing.JComponent;
+import javax.swing.JTabbedPane;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.metal.MetalTabbedPaneUI;
 
@@ -53,6 +54,11 @@ import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
 public class DolphinTabbedPaneUI extends MetalTabbedPaneUI {
 
+    private static final boolean keepBG;
+    static {
+        keepBG = DolphinThemeUtils.getCurrentTheme().getTabPaneKeepBackgroundColor();
+    }
+    
     private static final int MAGIC_NUMBER = 3;
     
     public static ComponentUI createUI(JComponent tabPane) {
@@ -73,6 +79,25 @@ public class DolphinTabbedPaneUI extends MetalTabbedPaneUI {
         tab.closePath();
         
         return tab;
+    }
+    
+    private boolean bgSet;
+    @Override
+    public void paint(Graphics g, JComponent c) {
+       if (!keepBG && !bgSet) {
+           if (c instanceof JTabbedPane) {
+               // well, who else...
+               JTabbedPane tabPane = (JTabbedPane) c;
+               
+               DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
+               
+               for (int i = 0; i < tabPane.getComponentCount(); i++) {
+                   tabPane.getComponent(i).setBackground(theme.getTabAreaBackground());
+               }
+               bgSet = true;
+           }
+       }
+       super.paint(g, c);
     }
     
     @Override
