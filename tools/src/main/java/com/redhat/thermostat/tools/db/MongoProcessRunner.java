@@ -130,13 +130,12 @@ class MongoProcessRunner {
         
         String pid = getPid();
         if (pid != null) {
-            String message = "cannot start server " + configuration.getDBPath() +
-                             ", found pid file from previous run";
-            
+            String message = null;
             if (!checkExistingProcess()) {
-                message += ", but no matching process running, please, cleanup";
+                message = "A stale pid file (" + configuration.getPidFile() + ") is present " +
+                    "but there is no matching mongod process. Please remove the file if it has been shut down";
             } else {
-                message += ", an instance is running with pid: " + pid;
+                message = "An instance of the storage is already running with pid " + pid;
             }
             
             display(message);

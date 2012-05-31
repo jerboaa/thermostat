@@ -107,7 +107,13 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
     }
     
     public Process createAndRunProcess(List<String> args) throws IOException, ApplicationException {
-        LoggedExternalProcess process = new LoggedExternalProcess(args);
-        return process.runAndReturnProcess();
+        ProcessBuilder builder = new ProcessBuilder(args);
+        Process process = null;
+        try {
+            process = builder.start();
+        } catch (IOException e) {
+            throw new ApplicationException("unable to start " + args.get(0), e);
+        }
+        return process;
     }
 }
