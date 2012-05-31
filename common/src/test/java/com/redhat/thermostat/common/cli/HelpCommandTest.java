@@ -114,7 +114,7 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
-        assertEquals("usage: test1 [-logLevel <arg>]\ntest usage command 1\n  --logLevel <arg>    log level\n", actual);
+        assertEquals("usage: test1 [--logLevel <arg>]\ntest usage command 1\n     --logLevel <arg>    log level\n", actual);
     }
 
     @Test
@@ -131,7 +131,7 @@ public class HelpCommandTest {
         cmd.run(ctxFactory.createContext(args));
 
         String actual = ctxFactory.getOutput();
-        assertEquals("usage: test1 [-dbUrl <arg>] [-logLevel <arg>]\ntest usage command 1\n  --dbUrl <arg>       the URL of the storage to connect to\n  --logLevel <arg>    log level\n", actual);
+        assertEquals("usage: test1 [--dbUrl <arg>] [--logLevel <arg>]\ntest usage command 1\n     --dbUrl <arg>       the URL of the storage to connect to\n     --logLevel <arg>    log level\n", actual);
     }
 
     @Test

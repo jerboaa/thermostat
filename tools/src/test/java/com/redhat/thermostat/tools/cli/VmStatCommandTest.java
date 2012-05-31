@@ -317,7 +317,7 @@ public class VmStatCommandTest {
         assertEquals(3, args.size());
         assertTrue(args.contains(new SimpleArgumentSpec("vmId", "the ID of the VM to monitor", true, true)));
         assertTrue(args.contains(new SimpleArgumentSpec("hostId", "the ID of the host to monitor", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("continuous", "print data continuously", false, false)));
+        assertTrue(args.contains(new SimpleArgumentSpec("continuous", "c", "print data continuously", false, false)));
     }
 
     @Test

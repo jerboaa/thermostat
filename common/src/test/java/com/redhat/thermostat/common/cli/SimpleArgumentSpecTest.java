@@ -94,6 +94,14 @@ public class SimpleArgumentSpecTest {
     }
 
     @Test
+    public void testShortOption() {
+        spec.setShortOption("test1");
+        assertEquals("test1", spec.getShortOption());
+        spec.setShortOption("test2");
+        assertEquals("test2", spec.getShortOption());
+    }
+
+    @Test
     public void testEquals() {
         prepareSpecForEqualsTest(spec);
         prepareSpecForEqualsTest(other);
@@ -142,6 +150,16 @@ public class SimpleArgumentSpecTest {
     }
 
     @Test
+    public void testEqualsUnequalShortOption() {
+        prepareSpecForEqualsTest(spec);
+        prepareSpecForEqualsTest(other);
+
+        other.setShortOption("fluff");
+
+        assertFalse(spec.equals(other));
+    }
+
+    @Test
     public void testEqualsNull() {
         prepareSpecForEqualsTest(spec);
 
@@ -161,5 +179,6 @@ public class SimpleArgumentSpecTest {
         spec.setDescription("description");
         spec.setUsingAdditionalArgument(true);
         spec.setRequired(true);
+        spec.setShortOption("shortOption");
     }
 }

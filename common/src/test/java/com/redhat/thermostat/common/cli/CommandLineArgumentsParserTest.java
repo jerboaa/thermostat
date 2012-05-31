@@ -60,6 +60,7 @@ public class CommandLineArgumentsParserTest {
 
         ArgumentSpec arg1 = mock(ArgumentSpec.class);
         when(arg1.getName()).thenReturn("test1");
+        when(arg1.getShortOption()).thenReturn("t");
         when(arg1.isRequired()).thenReturn(true);
 
         ArgumentSpec arg2 = mock(ArgumentSpec.class);
@@ -90,6 +91,17 @@ public class CommandLineArgumentsParserTest {
         assertEquals(null, args.getArgument("test2"));
     }
 
+    @Test
+    public void testShortArgs() throws CommandLineArgumentParseException {
+        Arguments args = parser.parse(new String[] { "-t", "--test2" });
+
+        assertTrue(args.hasArgument("test1"));
+        assertTrue(args.hasArgument("t"));
+        assertEquals(null, args.getArgument("test1"));
+        assertTrue(args.hasArgument("test2"));
+        assertEquals(null, args.getArgument("test2"));
+    }
+
     @Test(expected=CommandLineArgumentParseException.class)
     public void testNoMatchingArgs() throws CommandLineArgumentParseException {
         parser.parse(new String[] { "--test1", "--no-match" });
@@ -102,7 +114,7 @@ public class CommandLineArgumentsParserTest {
           fail();
         } catch (CommandLineArgumentParseException ex) {
             String msg = ex.getMessage();
-            assertEquals("Missing required option: --test1", msg);
+            assertEquals("Missing required option: -t", msg);
         }
     }
 
@@ -118,7 +130,7 @@ public class CommandLineArgumentsParserTest {
           fail();
         } catch (CommandLineArgumentParseException ex) {
             String msg = ex.getMessage();
-            assertEquals("Missing required options: --test1, --test4", msg);
+            assertEquals("Missing required options: -t, --test4", msg);
         }
     }
 

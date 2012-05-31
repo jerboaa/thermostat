@@ -38,7 +38,17 @@ package com.redhat.thermostat.common.cli;
 
 public interface ArgumentSpec {
 
+    /**
+     * Return the name of the argument. This is used as the long option,
+     * e.g. a name of 'dbUrl' results in an option --dbUrl.
+     */
     String getName();
+
+    /**
+     * Returns the short option version of the argument, e.g. 'd' results
+     * in an option -d.
+     */
+    String getShortOption();
 
     boolean isRequired();
 
