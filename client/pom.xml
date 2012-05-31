@@ -62,6 +62,7 @@
     <module>core</module>
     <module>vmclassstat</module>
     <module>killvm</module>
+    <module>memory-stats-panel</module>
   </modules>
 
 </project>

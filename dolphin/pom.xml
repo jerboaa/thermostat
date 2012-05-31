@@ -40,7 +40,8 @@
               com.redhat.swing.laf.dolphin.button,
               com.redhat.swing.laf.dolphin.text,
               com.redhat.swing.laf.dolphin.themes,
-              com.redhat.swing.laf.dolphin.tree
+              com.redhat.swing.laf.dolphin.tree,
+              com.redhat.swing.laf.dolphin.tab
             </Export-Package>
             <Private-Package>
               com.redhat.swing.laf.dolphin.showcase,

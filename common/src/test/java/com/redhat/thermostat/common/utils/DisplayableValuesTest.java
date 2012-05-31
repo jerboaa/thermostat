@@ -44,6 +44,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
+
 public class DisplayableValuesTest {
 
     private static Locale defaultLocale;
@@ -84,5 +86,21 @@ public class DisplayableValuesTest {
         assertEquals(2, output.length);
         assertEquals(number, output[0]);
         assertEquals(units, output[1]);
+    }
+    
+    @Test
+    public void testScales() {
+        
+        double value = Scale.convertTo(Scale.KiB, 1024);
+        assertEquals(1, value, 0);
+        
+        value = Scale.convertTo(Scale.KiB, 2048);
+        assertEquals(2, value, 0);
+        
+        value = Scale.convertTo(Scale.KiB, 524_288);
+        assertEquals(512, value, 0);
+        
+        value = Scale.convertTo(Scale.MiB, 524_288_000);
+        assertEquals(500, value, 0);
     }
 }

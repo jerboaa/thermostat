@@ -54,20 +54,17 @@ public class VmInformationController {
 
     private final VmOverviewController overviewController;
     private final VmCpuController cpuController;
-    private final VmMemoryController memoryController;
     private final VmGcController gcController;
 
     public VmInformationController(UiFacadeFactory uiFacadeFactory, VmRef vmRef) {
         overviewController = new VmOverviewController(vmRef);
         cpuController = new VmCpuController(vmRef);
-        memoryController = new VmMemoryController(vmRef);
         gcController = new VmGcController(vmRef);
 
         view = ApplicationContext.getInstance().getViewFactory().getView(VmInformationView.class);
 
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_OVERVIEW), overviewController.getComponent());
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getComponent());
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_MEMORY), memoryController.getComponent());
         view.addChildView(localize(LocaleResources.VM_INFO_TAB_GC), gcController.getComponent());
 
         Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();

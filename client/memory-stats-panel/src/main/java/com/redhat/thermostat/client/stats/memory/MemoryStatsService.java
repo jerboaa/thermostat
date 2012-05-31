@@ -34,47 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.stats.memory;
 
-import static org.junit.Assert.assertNotNull;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
+import com.redhat.thermostat.common.dao.VmRef;
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+class MemoryStatsService implements VmInformationService {
 
-import org.junit.Test;
-
-import com.redhat.thermostat.client.ui.AgentConfigurationView;
-import com.redhat.thermostat.client.ui.ClientConfigurationView;
-import com.redhat.thermostat.client.ui.HostCpuView;
-import com.redhat.thermostat.client.ui.HostMemoryView;
-import com.redhat.thermostat.client.ui.HostOverviewView;
-import com.redhat.thermostat.client.ui.VmCpuView;
-import com.redhat.thermostat.client.ui.VmGcView;
-import com.redhat.thermostat.client.ui.VmOverviewView;
-import com.redhat.thermostat.common.View;
-
-public class SwingViewFactoryTest {
-
-    @Test
-    public void test() throws InvocationTargetException, InterruptedException {
-        SwingViewFactory factory = new SwingViewFactory();
-
-        List<Class<? extends View>> knownViewClasses = new ArrayList<>();
-
-        knownViewClasses.add(AgentConfigurationView.class);
-        knownViewClasses.add(ClientConfigurationView.class);
-        knownViewClasses.add(HostCpuView.class);
-        knownViewClasses.add(HostMemoryView.class);
-        knownViewClasses.add(HostOverviewView.class);
-        knownViewClasses.add(VmCpuView.class);
-        knownViewClasses.add(VmGcView.class);
-        knownViewClasses.add(VmOverviewView.class);
-
-        for (Class<? extends View> klass: knownViewClasses) {
-            assertNotNull(factory.getViewClass(klass));
-            assertNotNull(factory.getView(klass));
-        }
-
+    @Override
+    public VmInformationServiceController getInformationServiceController(VmRef ref) {
+        return new MemoryStatsController(ref);
     }
 }

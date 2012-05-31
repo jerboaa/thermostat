@@ -273,7 +273,7 @@ public class DolphinDefaultTheme extends DolphinTheme {
                "TabbedPane.selectHighlight", getSelectionColor(),
                "TabbedPane.selected", getSelectionColor(),
                "TabbedPane.focus", getSelectionColor(),
-               "TabbedPane.light", getTabAreaBackground(),
+               //"TabbedPane.light", getTabAreaBackground(),
                "TabbedPane.background", getTabAreaBackground(),
                "TabbedPane.foreground", getTabAreaForeground(),
         };

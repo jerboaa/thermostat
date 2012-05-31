@@ -34,30 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.stats.memory;
 
-import java.awt.Component;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+class MemoryGraphPanel extends JPanel {
 
-public interface VmMemoryView extends View {
-
-    enum Action {
-        VISIBLE,
-        HIDDEN,
+    private MemoryMeter meter;
+    
+    /**
+     * Create the panel.
+     */
+    public MemoryGraphPanel() {
+        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+       
+        meter = new MemoryMeter();
+        
+        add(meter);
     }
-
-    void addActionListener(ActionListener<Action> listener);
-
-    void removeActionListener(ActionListener<Action> listener);
-
-    void addRegion(String humanReadableName);
-
-    void removeAllRegions();
-
-    void updateRegionSize(String name, int percentageUsed, String currentlyUsed, String currentlyAvailable, String allocatable);
-
-    Component getUiComponent();
-
+    
+    public void setMemoryGraphProperties(Payload region) {
+                
+        meter.getPrimaryModel().setMinimum(0);
+        meter.getPrimaryModel().setMaximum(region.getMaxUsed());
+        meter.getPrimaryModel().setValue(region.getUsed());
+        
+        meter.getSecondaryModel().setMinimum(0);
+        meter.getSecondaryModel().setMaximum(region.getMaxCapacity());
+        meter.getSecondaryModel().setValue(region.getCapacity());
+        
+        meter.setToolTipText(region.getTooltip());
+        
+        meter.setPrimaryScaleUnit(region.getUsedUnit().toString());
+        meter.setSecondayScaleUnit(region.getCapacityUnit().toString());
+        
+        meter.setStats(region.getModel());
+        
+        repaint();
+    }
 }

@@ -49,6 +49,8 @@ public class UIResources {
     private static final ColorUIResource hyperLinkColor;
     private static final ColorUIResource hyperLinkActiveColor;
 
+    private static final ColorUIResource selectionColor;
+    
     private static final Font standard;
     
     static {
@@ -57,12 +59,13 @@ public class UIResources {
             color = Color.BLUE;
         }
         hyperLinkColor = new ColorUIResource(color);
-        
+
         color = UIManager.getColor("Button.focus");
         if (color == null) {
             color = Color.BLUE;
         }
         hyperLinkActiveColor = new ColorUIResource(color);
+        selectionColor = hyperLinkActiveColor;
         
         Font font = UIManager.getFont("Label.font");
         if (font == null) {
@@ -90,6 +93,10 @@ public class UIResources {
     
     public ColorUIResource hyperlinkActiveColor() {
         return hyperLinkActiveColor;
+    }
+    
+    public ColorUIResource getSelectionColor() {
+        return selectionColor;
     }
     
     // font resources

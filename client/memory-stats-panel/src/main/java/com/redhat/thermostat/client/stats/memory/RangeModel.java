@@ -34,47 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.stats.memory;
 
-import static org.junit.Assert.assertNotNull;
+public class RangeModel {
 
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
+    private int minNormalized;
+    private double min;
+    
+    private int maxNormalized;
+    private double max;
+ 
+    private double value;
+ 
+    public double getMinimum() {
+        return min;
+    }
 
-import org.junit.Test;
+    public void setMinimum(double newMinimum) {
+        this.min = newMinimum;
+    }
 
-import com.redhat.thermostat.client.ui.AgentConfigurationView;
-import com.redhat.thermostat.client.ui.ClientConfigurationView;
-import com.redhat.thermostat.client.ui.HostCpuView;
-import com.redhat.thermostat.client.ui.HostMemoryView;
-import com.redhat.thermostat.client.ui.HostOverviewView;
-import com.redhat.thermostat.client.ui.VmCpuView;
-import com.redhat.thermostat.client.ui.VmGcView;
-import com.redhat.thermostat.client.ui.VmOverviewView;
-import com.redhat.thermostat.common.View;
+    public double getMaximum() {
+        return max;
+    }
 
-public class SwingViewFactoryTest {
+    public void setMaximum(double newMaximum) {
+        this.max = newMaximum;
+    }
 
-    @Test
-    public void test() throws InvocationTargetException, InterruptedException {
-        SwingViewFactory factory = new SwingViewFactory();
+    public void setMaxNormalized(int maxNormalized) {
+        this.maxNormalized = maxNormalized;
+    }
+    
+    public void setMinNormalized(int minNormalized) {
+        this.minNormalized = minNormalized;
+    }
+    
+    public double getValue() {
+        return value;
+    }
 
-        List<Class<? extends View>> knownViewClasses = new ArrayList<>();
-
-        knownViewClasses.add(AgentConfigurationView.class);
-        knownViewClasses.add(ClientConfigurationView.class);
-        knownViewClasses.add(HostCpuView.class);
-        knownViewClasses.add(HostMemoryView.class);
-        knownViewClasses.add(HostOverviewView.class);
-        knownViewClasses.add(VmCpuView.class);
-        knownViewClasses.add(VmGcView.class);
-        knownViewClasses.add(VmOverviewView.class);
-
-        for (Class<? extends View> klass: knownViewClasses) {
-            assertNotNull(factory.getViewClass(klass));
-            assertNotNull(factory.getView(klass));
-        }
-
+    public void setValue(double newValue) {
+        this.value = newValue;
+    }
+    
+    int getMaxNormalized() {
+        return maxNormalized;
+    }
+    
+    int getMinNormalized() {
+        return minNormalized;
+    }
+    
+    public int getValueNormalized() {
+        double normalized = ((value - min) * (maxNormalized - minNormalized)/(max - min)) + minNormalized;
+        return (int) Math.round(normalized);
     }
 }

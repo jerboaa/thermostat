@@ -42,7 +42,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-public class TimeStampedPojoCorrelator {
+public class TimeStampedPojoCorrelator implements Iterable<TimeStampedPojoCorrelator.Correlation> {
 
     public static class Correlation {
 
