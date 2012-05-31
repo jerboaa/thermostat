@@ -44,9 +44,10 @@ public class SimpleArgumentSpec implements ArgumentSpec {
     private String description;
     private boolean required;
     private boolean usingAddionalArgument;
+    private String shortOption;
 
     public SimpleArgumentSpec() {
-        this(null, null, false, false);
+        this(null, null);
     }
 
     public SimpleArgumentSpec(String name, String description) {
@@ -54,7 +55,12 @@ public class SimpleArgumentSpec implements ArgumentSpec {
     }
 
     public SimpleArgumentSpec(String name, String description, boolean required, boolean usingAdditionalArgument) {
+        this(name, null, description, required, usingAdditionalArgument);
+    }
+
+    public SimpleArgumentSpec(String name, String shortOption, String description, boolean required, boolean usingAdditionalArgument) {
         this.name = name;
+        this.shortOption = shortOption;
         this.description = description;
         this.required = required;
         this.usingAddionalArgument = usingAdditionalArgument;
@@ -67,6 +73,15 @@ public class SimpleArgumentSpec implements ArgumentSpec {
 
     void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String getShortOption() {
+        return shortOption;
+    }
+
+    void setShortOption(String shortOption) {
+        this.shortOption = shortOption;
     }
 
     @Override
@@ -104,12 +119,12 @@ public class SimpleArgumentSpec implements ArgumentSpec {
         return Objects.equals(name, other.name)
                 && Objects.equals(description, other.description)
                 && usingAddionalArgument == other.usingAddionalArgument
-                && required == other.required;
+                && required == other.required
+                && Objects.equals(shortOption, other.shortOption);
     }
 
     public int hashCode() {
-        return Objects.hashCode(name) ^ Objects.hashCode(description)
-                ^ Boolean.valueOf(usingAddionalArgument).hashCode()
-                ^ Boolean.valueOf(required).hashCode();
+        return Objects.hash(name, description, shortOption, usingAddionalArgument, required);
     }
+
 }

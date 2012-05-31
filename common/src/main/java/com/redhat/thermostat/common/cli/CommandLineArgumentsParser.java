@@ -85,7 +85,11 @@ public class CommandLineArgumentsParser {
         }
         for (Iterator<String> i = missingOptions.iterator(); i.hasNext();) {
             String missingOption = i.next();
-            msg.append("--");
+            if (missingOption.length() > 1) {
+                msg.append("--");
+            } else {
+                msg.append("-");
+            }
             msg.append(missingOption);
             if (i.hasNext()) {
                 msg.append(", ");
@@ -103,15 +107,15 @@ public class CommandLineArgumentsParser {
     }
 
     private Option convertSpecToOption(ArgumentSpec spec) {
-        Option option = new Option(spec.getName(), spec.getDescription());
+        String shortOpt = spec.getShortOption();
+        String longOpt = spec.getName();
+        Option option = new Option(shortOpt, longOpt, spec.isUsingAdditionalArgument(), spec.getDescription());
         option.setRequired(spec.isRequired());
-        option.setArgs(spec.isUsingAdditionalArgument() ? 1 : 0);
         return option;
     }
 
     void printHelp(CommandContext ctx, Command cmd) {
         HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.setOptPrefix("--");
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
         CommonCommandOptions commonOpts = new CommonCommandOptions();
         Collection<ArgumentSpec> acceptedOptions = commonOpts.getAcceptedOptionsFor(cmd);

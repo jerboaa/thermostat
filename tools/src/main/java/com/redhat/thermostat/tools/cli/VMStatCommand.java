@@ -135,7 +135,7 @@ public class VMStatCommand implements Command {
     public Collection<ArgumentSpec> getAcceptedArguments() {
         List<ArgumentSpec> acceptedArgs = new ArrayList<>(); 
         acceptedArgs.addAll(HostVMArguments.getArgumentSpecs());
-        acceptedArgs.add(new SimpleArgumentSpec("continuous", "print data continuously", false, false));
+        acceptedArgs.add(new SimpleArgumentSpec("continuous", "c", "print data continuously", false, false));
         return acceptedArgs;
     }
 
