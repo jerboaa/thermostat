@@ -45,6 +45,7 @@ class TableRenderer {
 
     private List<String[]> lines;
     private int[] maxColumnWidths;
+    private int lastPrintedLine = -1;
 
     private int numColumns;
 
@@ -70,8 +71,10 @@ class TableRenderer {
     }
 
     void render(PrintStream out) {
-        for (String[] line : lines) {
+        for (int i = lastPrintedLine + 1; i < lines.size(); i++) {
+            String[] line = lines.get(i);
             renderLine(out, line);
+            lastPrintedLine = i;
         }
     }
 

@@ -76,12 +76,9 @@ public class TimeStampedPojoCorrelator {
 
     private class Correlator implements Iterator<Correlation> {
 
-        private TimeStampedPojo[] current;
-        private Correlation last;
         private List<Iterator<TimeStampedPojo>> seriesIterators;
 
         private Correlator() {
-            current = new TimeStampedPojo[numSeries];
             seriesIterators = new ArrayList<>();
             int index = 0;
             for (List<TimeStampedPojo> series : seriesList) {
@@ -137,12 +134,16 @@ public class TimeStampedPojoCorrelator {
 
     private List<List<TimeStampedPojo>> seriesList;
 
+    private TimeStampedPojo[] current;
+    private Correlation last;
+
     public TimeStampedPojoCorrelator(int numSeries) {
         this.numSeries = numSeries;
         seriesList = new ArrayList<>();
         for (int i = 0; i < numSeries; i++) {
             seriesList.add(new ArrayList<TimeStampedPojo>());
         }
+        current = new TimeStampedPojo[numSeries];
     }
 
     public void add(int seriesIndex, TimeStampedPojo timeStampedPojo) {
@@ -156,6 +157,12 @@ public class TimeStampedPojoCorrelator {
 
     public Iterator<Correlation> iterator() {
         return new Correlator();
+    }
+
+    public void clear() {
+        for (List<TimeStampedPojo> series : seriesList) {
+            series.clear();
+        }
     }
 
 }

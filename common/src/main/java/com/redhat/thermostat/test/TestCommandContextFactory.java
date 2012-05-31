@@ -39,6 +39,7 @@ package com.redhat.thermostat.test;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PipedOutputStream;
 import java.io.PrintStream;
 
 import org.osgi.framework.BundleContext;
@@ -76,6 +77,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
     };
 
     private TestConsole console;
+    private PipedOutputStream inOut;
 
     private class TestConsole implements Console {
 
@@ -143,7 +145,13 @@ public class TestCommandContextFactory extends CommandContextFactory {
     }
 
     public void setInput(String input) {
-        in.setInput(input);
+        try {
+            inOut.write(input.getBytes());
+            inOut.flush();
+        } catch (IOException e) {
+            RuntimeException ex = new RuntimeException(e);
+            throw ex;
+        }
     }
 
     public String getError() {
@@ -153,7 +161,13 @@ public class TestCommandContextFactory extends CommandContextFactory {
     public void reset() {
         out = new ByteArrayOutputStream();
         err = new ByteArrayOutputStream();
-        in = new ExceptionThrowingInputStream();
+        inOut = new PipedOutputStream();
+        try {
+            in = new ExceptionThrowingInputStream(inOut);
+        } catch (IOException e) {
+            RuntimeException ex = new RuntimeException(e);
+            throw ex;
+        }
         console = new TestConsole();
     }
 

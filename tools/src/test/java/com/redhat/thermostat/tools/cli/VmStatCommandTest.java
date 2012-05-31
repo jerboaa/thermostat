@@ -37,6 +37,7 @@
 package com.redhat.thermostat.tools.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -44,9 +45,11 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -54,6 +57,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.AppContextSetup;
@@ -71,6 +75,7 @@ import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.test.TestTimerFactory;
 
 public class VmStatCommandTest {
 
@@ -96,10 +101,13 @@ public class VmStatCommandTest {
     private AppContextSetup appContextSetup;
     private TestCommandContextFactory cmdCtxFactory;
     private VmMemoryStatDAO vmMemoryStatDAO;
+    private TestTimerFactory timerFactory;
 
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
+        timerFactory = new TestTimerFactory();
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
         setupCommandContextFactory();
 
         cmd = new VMStatCommand();
@@ -115,6 +123,7 @@ public class VmStatCommandTest {
         appContextSetup = null;
         cmdCtxFactory = null;
         cmd = null;
+        timerFactory = null;
         ApplicationContextUtil.resetApplicationContext();
     }
 
@@ -136,7 +145,8 @@ public class VmStatCommandTest {
         VmCpuStat cpustat1 = new VmCpuStat(2, vmId, 65);
         VmCpuStat cpustat2 = new VmCpuStat(3, vmId, 70);
         List<VmCpuStat> cpuStats = Arrays.asList(cpustat1, cpustat2);
-        when(vmCpuStatDAO.getLatestVmCpuStats(vm)).thenReturn(cpuStats);
+        List<VmCpuStat> cpuStats2 = Collections.emptyList();
+        when(vmCpuStatDAO.getLatestVmCpuStats(vm)).thenReturn(cpuStats).thenReturn(cpuStats2);
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getVmCpuStatDAO()).thenReturn(vmCpuStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
@@ -183,8 +193,23 @@ public class VmStatCommandTest {
 
         VmMemoryStat memStat3 = new VmMemoryStat(3, vmId, gens3);
 
+        VmMemoryStat.Space space4_1_1 = newSpace("space1", 123456, 12345, 8, 0);
+        VmMemoryStat.Space space4_1_2 = newSpace("space2", 123456, 12345, 9, 0);
+        List<VmMemoryStat.Space> spaces4_1 = Arrays.asList(space4_1_1, space4_1_2);
+        VmMemoryStat.Generation gen4_1 = newGeneration("gen4", "col1", 123456, 12345, spaces4_1);
+
+        VmMemoryStat.Space space4_2_1 = newSpace("space3", 123456, 12345, 10, 0);
+        VmMemoryStat.Space space4_2_2 = newSpace("space4", 123456, 12345, 11, 0);
+        List<VmMemoryStat.Space> spaces4_2 = Arrays.asList(space4_2_1, space4_2_2);
+        VmMemoryStat.Generation gen4_2 = newGeneration("gen4", "col1", 123456, 12345, spaces4_2);
+
+        List<VmMemoryStat.Generation> gens4 = Arrays.asList(gen4_1, gen4_2);
+
+        VmMemoryStat memStat4 = new VmMemoryStat(4, vmId, gens4);
+
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
-        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm)).thenReturn(Arrays.asList(memStat1, memStat2, memStat3));
+        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm)).thenReturn(Arrays.asList(memStat1, memStat2, memStat3)).thenReturn(Arrays.asList(memStat4));
+
         when(daoFactory.getVmMemoryStatDAO()).thenReturn(vmMemoryStatDAO);
     }
 
@@ -222,6 +247,55 @@ public class VmStatCommandTest {
     }
 
     @Test
+    public void testContinuousMode() throws CommandException {
+        
+        Thread t = new Thread() {
+            public void run() {
+                SimpleArguments args = new SimpleArguments();
+                args.addArgument("vmId", "234");
+                args.addArgument("hostId", "123");
+                args.addArgument("continuous", "true");
+                try {
+                    cmd.run(cmdCtxFactory.createContext(args));
+                } catch (CommandException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        };
+        t.start();
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            return;
+        }
+        assertTrue(timerFactory.isActive());
+        String expected = "TIME        %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
+                          "12:00:00 AM      1 B        1 B        1 B        1 B\n" +
+                          "12:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
+                          "12:00:00 AM 70.0 4 B        5 B        6 B        7 B\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+        assertEquals(1, timerFactory.getDelay());
+        assertEquals(1, timerFactory.getInitialDelay());
+        assertEquals(TimeUnit.SECONDS, timerFactory.getTimeUnit());
+        assertEquals(Timer.SchedulingType.FIXED_RATE, timerFactory.getSchedulingType());
+                timerFactory.getAction().run();
+        expected = "TIME        %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
+                   "12:00:00 AM      1 B        1 B        1 B        1 B\n" +
+                   "12:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
+                   "12:00:00 AM 70.0 4 B        5 B        6 B        7 B\n" +
+                   "12:00:00 AM 70.0 8 B        9 B        10 B       11 B\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+        cmdCtxFactory.setInput(" ");
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            return;
+        }
+        assertFalse(timerFactory.isActive());
+    }
+
+    @Test
     public void testName() {
         assertEquals("vm-stat", cmd.getName());
     }
@@ -240,9 +314,10 @@ public class VmStatCommandTest {
     public void testAcceptedArguments() {
         Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
         assertNotNull(args);
-        assertEquals(2, args.size());
+        assertEquals(3, args.size());
         assertTrue(args.contains(new SimpleArgumentSpec("vmId", "the ID of the VM to monitor", true, true)));
         assertTrue(args.contains(new SimpleArgumentSpec("hostId", "the ID of the host to monitor", true, true)));
+        assertTrue(args.contains(new SimpleArgumentSpec("continuous", "print data continuously", false, false)));
     }
 
     @Test

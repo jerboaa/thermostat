@@ -36,147 +36,84 @@
 
 package com.redhat.thermostat.tools.cli;
 
-import java.io.PrintStream;
-import java.text.DateFormat;
-import java.text.DecimalFormat;
-import java.util.Arrays;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator;
-import com.redhat.thermostat.common.model.VmCpuStat;
-import com.redhat.thermostat.common.model.VmMemoryStat;
-import com.redhat.thermostat.common.utils.DisplayableValues;
 
 public class VMStatCommand implements Command {
+
+    private static final Logger log = Logger.getLogger(VMStatCommand.class.getName());
 
     private static final String CMD_NAME = "vm-stat";
     private static final String CMD_DESCRIPTION = "show various statistics about a VM";
 
-    private static final String CPU_PERCENT = "%CPU";
-    private static final String MEM_PREFIX = "MEM.";
-    private static final String TIME = "TIME";
-
     @Override
-    public void run(CommandContext ctx) throws CommandException {
+    public void run(final CommandContext ctx) throws CommandException {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
         VmCpuStatDAO vmCpuStatDAO = daoFactory.getVmCpuStatDAO();
         VmMemoryStatDAO vmMemoryStatDAO = daoFactory.getVmMemoryStatDAO();
 
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
         VmRef vm = hostVMArgs.getVM();
-        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm);
-        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm);
-        printStats(ctx.getConsole().getOutput(), cpuStats, memStats);
-    }
-
-    private void printStats(PrintStream out, List<VmCpuStat> cpuStats, List<VmMemoryStat> memStats) {
-        TimeStampedPojoCorrelator correlator = correlate(cpuStats, memStats);
-        int numSpaces = getNumSpaces(memStats);
-        int numColumns = numSpaces + 2;
-        TableRenderer table = new TableRenderer(numColumns);
-        printHeaders(memStats, numSpaces, numColumns, table);
-        Iterator<TimeStampedPojoCorrelator.Correlation> i = correlator.iterator();
-        while (i.hasNext()) {
-            printStats(numSpaces, table, i);
+        final VMStatPrinter statPrinter = new VMStatPrinter(vm, vmCpuStatDAO, vmMemoryStatDAO, ctx.getConsole().getOutput());
+        statPrinter.printStats();
+        boolean continuous = ctx.getArguments().hasArgument("continuous");
+        if (continuous) {
+            startContinuousStats(ctx, statPrinter);
         }
-        table.render(out);
     }
 
-    private void printStats(int numSpaces, TableRenderer table, Iterator<TimeStampedPojoCorrelator.Correlation> i) {
+    private void startContinuousStats(final CommandContext ctx, final VMStatPrinter statPrinter) {
 
-        TimeStampedPojoCorrelator.Correlation correlation = i.next();
+        final CountDownLatch latch = new CountDownLatch(1);
+        Timer timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        timer.setDelay(1);
+        timer.setInitialDelay(1);
+        timer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setAction(new Runnable() {
 
-        VmCpuStat cpuStat = (VmCpuStat) correlation.get(0);
-        DecimalFormat format = new DecimalFormat("#0.0");
-        String cpuLoad = cpuStat != null ? format.format(cpuStat.getCpuLoad()) : "";
-
-        DateFormat dateFormat = DateFormat.getTimeInstance();
-        String time = dateFormat.format(new Date(correlation.getTimeStamp()));
-
-        String[] memoryUsage = getMemoryUsage((VmMemoryStat) correlation.get(1), numSpaces);
-
-        String[] line = new String[numSpaces + 2];
-        System.arraycopy(memoryUsage, 0, line, 2, numSpaces);
-        line[0] = time;
-        line[1] = cpuLoad;
-        table.printLine(line);
-    }
-
-    private void printHeaders(List<VmMemoryStat> memStats, int numSpaces, int numColumns, TableRenderer table) {
-        String[] spacesNames = getSpacesNames(memStats, numSpaces);
-        String[] headers = new String[numColumns];
-        headers[0] = TIME;
-        headers[1] = CPU_PERCENT;
-        System.arraycopy(spacesNames, 0, headers, 2, numSpaces);
-        table.printLine(headers);
-    }
-
-    private String[] getMemoryUsage(VmMemoryStat vmMemoryStat, int numSpaces) {
-        String[] memoryUsage = new String[numSpaces];
-        if (vmMemoryStat == null) {
-            Arrays.fill(memoryUsage, "");
-            return memoryUsage;
-        }
-        int i = 0;
-        for (VmMemoryStat.Generation gen : vmMemoryStat.getGenerations()) {
-            for (VmMemoryStat.Space space : gen.spaces) {
-                String[] displayableSize = DisplayableValues.bytes(space.used);
-                memoryUsage[i] = displayableSize[0] + " " + displayableSize[1];
-                i++;
+            @Override
+            public void run() {
+                statPrinter.printUpdatedStats();
             }
-        }
-        return memoryUsage;
-    }
-
-    private String[] getSpacesNames(List<VmMemoryStat> memStats, int numSpaces) {
-        if (numSpaces < 1) {
-            return new String[0];
-        }
-        String[] spacesNames = new String[numSpaces];
-        VmMemoryStat stat = memStats.get(0);
-        int i = 0;
-        for (VmMemoryStat.Generation gen : stat.getGenerations()) {
-            for (VmMemoryStat.Space space : gen.spaces) {
-                spacesNames[i] = MEM_PREFIX + space.name;
-                i++;
+        });
+        timer.start();
+        Thread t = new Thread() {
+            public void run() {
+                try {
+                    ctx.getConsole().getInput().read();
+                } catch (IOException e) {
+                    log.log(Level.WARNING, "Unexpected IOException while waiting for user input", e);
+                } finally {
+                    latch.countDown();
+                }
             }
+        };
+        t.start();
+        try {
+            latch.await();
+            timer.stop();
+        } catch (InterruptedException e) {
+            // Return immediately.
         }
-        return spacesNames;
-    }
-
-    private int getNumSpaces(List<VmMemoryStat> memStats) {
-        if (memStats.size() < 1) {
-            return 0;
-        }
-        VmMemoryStat stat = memStats.get(0);
-        int numSpaces = 0;
-        for (VmMemoryStat.Generation gen : stat.getGenerations()) {
-            numSpaces += gen.spaces.size();
-        }
-        return numSpaces;
-    }
-
-    private TimeStampedPojoCorrelator correlate(List<VmCpuStat> cpuStats, List<VmMemoryStat> memStats) {
-        TimeStampedPojoCorrelator correlator = new TimeStampedPojoCorrelator(2);
-        for(VmCpuStat cpuStat : cpuStats) {
-            correlator.add(0, cpuStat);
-        }
-        for (VmMemoryStat memStat : memStats) {
-            correlator.add(1, memStat);
-        }
-        return correlator;
     }
 
     @Override
@@ -196,7 +133,10 @@ public class VMStatCommand implements Command {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs();
+        List<ArgumentSpec> acceptedArgs = new ArrayList<>(); 
+        acceptedArgs.addAll(HostVMArguments.getArgumentSpecs());
+        acceptedArgs.add(new SimpleArgumentSpec("continuous", "print data continuously", false, false));
+        return acceptedArgs;
     }
 
     @Override

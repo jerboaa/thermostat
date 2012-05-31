@@ -79,6 +79,23 @@ public class TableRendererTest {
                      "f2         shoooooooooooort poo\n", new String(out.toByteArray()));
     }
 
+    @Test
+    public void testMultiLineContinuous() {
+        tableRenderer.printLine("hello", "fluff", "world");
+        tableRenderer.printLine("looooooong", "f1", "foobar");
+        tableRenderer.printLine("f2", "shoooooooooooort", "poo");
+        tableRenderer.render(out);
+        assertEquals("hello      fluff            world\n" +
+                     "looooooong f1               foobar\n" +
+                     "f2         shoooooooooooort poo\n", new String(out.toByteArray()));
+        tableRenderer.printLine("f3", "foobar", "poo");
+        tableRenderer.render(out);
+        assertEquals("hello      fluff            world\n" +
+                     "looooooong f1               foobar\n" +
+                     "f2         shoooooooooooort poo\n" +
+                     "f3         foobar           poo\n", new String(out.toByteArray()));
+    }
+
     @Test(expected=IllegalArgumentException.class)
     public void testInvalidLine() {
         tableRenderer.printLine("hello", "fluff", "world", "boom");

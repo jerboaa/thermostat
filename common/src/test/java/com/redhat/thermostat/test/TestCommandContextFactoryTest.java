@@ -36,32 +36,51 @@
 
 package com.redhat.thermostat.test;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 
-class ExceptionThrowingInputStream extends PipedInputStream {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    private IOException exception;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 
-    ExceptionThrowingInputStream(PipedOutputStream out) throws IOException {
-        super(out);
+public class TestCommandContextFactoryTest {
+
+    private TestCommandContextFactory cmdCtxFactory;
+    private CommandContext ctx;
+
+    @Before
+    public void setUp() {
+        cmdCtxFactory = new TestCommandContextFactory();
+        ctx = cmdCtxFactory.createContext(new SimpleArguments());
     }
 
-    @Override
-    public int read() throws IOException {
-        throwExceptionIfNecessary();
-        return super.read();
+    @After
+    public void tearDown() {
+        ctx = null;
+        cmdCtxFactory = null;
     }
 
-    private void throwExceptionIfNecessary() throws IOException {
-        if (exception != null) {
-            throw exception;
-        }
+    @Test
+    public void testInput() throws IOException {
+        cmdCtxFactory.setInput("test");
+        byte[] readBytes = new byte[5];
+        int numRead = ctx.getConsole().getInput().read(readBytes);
+        assertEquals(4, numRead);
+        assertEquals("test", new String(readBytes, 0, numRead));
     }
 
-    public void setException(IOException ex) {
-        exception = ex;
+    @Test
+    public void testReset() throws IOException {
+        cmdCtxFactory.setInput("test");
+        cmdCtxFactory.reset();
+        cmdCtxFactory.setInput("foo");
+        byte[] readBytes = new byte[5];
+        int numRead = ctx.getConsole().getInput().read(readBytes);
+        assertEquals(3, numRead);
+        assertEquals("foo", new String(readBytes, 0, numRead));
     }
-
 }

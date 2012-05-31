@@ -42,6 +42,7 @@ import java.util.logging.Level;
 
 import org.osgi.framework.BundleException;
 
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
@@ -85,6 +86,7 @@ public class LauncherImpl implements Launcher {
     private void shutdownIfLastLaunch() throws InternalError {
         if (usageCount == 0) {
             try {
+                ApplicationContext.getInstance().getTimerFactory().shutdown();
                 cmdCtxFactory.getBundleContext().getBundle(0).stop();
             } catch (BundleException e) {
                 throw (InternalError) new InternalError().initCause(e);

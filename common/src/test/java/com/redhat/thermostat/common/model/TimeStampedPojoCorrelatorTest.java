@@ -188,6 +188,107 @@ public class TimeStampedPojoCorrelatorTest {
         assertFalse(i.hasNext());
     }
 
+    @Test
+    public void test3SeriesContinuous() {
+        TimeStampedPojoCorrelator correlator = new TimeStampedPojoCorrelator(3);
+        correlator.add(0, new TestTimeStampedPojo(9));
+        correlator.add(0, new TestTimeStampedPojo(1));
+        correlator.add(0, new TestTimeStampedPojo(4));
+        correlator.add(1, new TestTimeStampedPojo(8));
+        correlator.add(1, new TestTimeStampedPojo(2));
+        correlator.add(1, new TestTimeStampedPojo(5));
+        correlator.add(2, new TestTimeStampedPojo(7));
+        correlator.add(2, new TestTimeStampedPojo(3));
+        correlator.add(2, new TestTimeStampedPojo(6));
+
+        Iterator<Correlation> i = correlator.iterator();
+        assertNextCorrelation(i, 1, 1l, null, null);
+        assertNextCorrelation(i, 2, 1l, 2l, null);
+        assertNextCorrelation(i, 3, 1l, 2l, 3l);
+        assertNextCorrelation(i, 4, 4l, 2l, 3l);
+        assertNextCorrelation(i, 5, 4l, 5l, 3l);
+        assertNextCorrelation(i, 6, 4l, 5l, 6l);
+        assertNextCorrelation(i, 7, 4l, 5l, 7l);
+        assertNextCorrelation(i, 8, 4l, 8l, 7l);
+        assertNextCorrelation(i, 9, 9l, 8l, 7l);
+        assertFalse(i.hasNext());
+
+        correlator.clear();
+        correlator.add(0, new TestTimeStampedPojo(10));
+        correlator.add(1, new TestTimeStampedPojo(11));
+        correlator.add(2, new TestTimeStampedPojo(12));
+
+        Iterator<Correlation> i2 = correlator.iterator();
+        assertNextCorrelation(i2, 10, 10l, 8l, 7l);
+        assertNextCorrelation(i2, 11, 10l, 11l, 7l);
+        assertNextCorrelation(i2, 12, 10l, 11l, 12l);
+        assertFalse(i2.hasNext());
+    }
+
+    @Test
+    public void test3SeriesContinuousNoData() {
+        TimeStampedPojoCorrelator correlator = new TimeStampedPojoCorrelator(3);
+        correlator.add(0, new TestTimeStampedPojo(9));
+        correlator.add(0, new TestTimeStampedPojo(1));
+        correlator.add(0, new TestTimeStampedPojo(4));
+        correlator.add(1, new TestTimeStampedPojo(8));
+        correlator.add(1, new TestTimeStampedPojo(2));
+        correlator.add(1, new TestTimeStampedPojo(5));
+        correlator.add(2, new TestTimeStampedPojo(7));
+        correlator.add(2, new TestTimeStampedPojo(3));
+        correlator.add(2, new TestTimeStampedPojo(6));
+
+        Iterator<Correlation> i = correlator.iterator();
+        assertNextCorrelation(i, 1, 1l, null, null);
+        assertNextCorrelation(i, 2, 1l, 2l, null);
+        assertNextCorrelation(i, 3, 1l, 2l, 3l);
+        assertNextCorrelation(i, 4, 4l, 2l, 3l);
+        assertNextCorrelation(i, 5, 4l, 5l, 3l);
+        assertNextCorrelation(i, 6, 4l, 5l, 6l);
+        assertNextCorrelation(i, 7, 4l, 5l, 7l);
+        assertNextCorrelation(i, 8, 4l, 8l, 7l);
+        assertNextCorrelation(i, 9, 9l, 8l, 7l);
+        assertFalse(i.hasNext());
+
+        correlator.clear();
+
+        Iterator<Correlation> i2 = correlator.iterator();
+        assertFalse(i2.hasNext());
+    }
+
+    @Test
+    public void test3SeriesContinuousOnlySingleSeries() {
+        TimeStampedPojoCorrelator correlator = new TimeStampedPojoCorrelator(3);
+        correlator.add(0, new TestTimeStampedPojo(9));
+        correlator.add(0, new TestTimeStampedPojo(1));
+        correlator.add(0, new TestTimeStampedPojo(4));
+        correlator.add(1, new TestTimeStampedPojo(8));
+        correlator.add(1, new TestTimeStampedPojo(2));
+        correlator.add(1, new TestTimeStampedPojo(5));
+        correlator.add(2, new TestTimeStampedPojo(7));
+        correlator.add(2, new TestTimeStampedPojo(3));
+        correlator.add(2, new TestTimeStampedPojo(6));
+
+        Iterator<Correlation> i = correlator.iterator();
+        assertNextCorrelation(i, 1, 1l, null, null);
+        assertNextCorrelation(i, 2, 1l, 2l, null);
+        assertNextCorrelation(i, 3, 1l, 2l, 3l);
+        assertNextCorrelation(i, 4, 4l, 2l, 3l);
+        assertNextCorrelation(i, 5, 4l, 5l, 3l);
+        assertNextCorrelation(i, 6, 4l, 5l, 6l);
+        assertNextCorrelation(i, 7, 4l, 5l, 7l);
+        assertNextCorrelation(i, 8, 4l, 8l, 7l);
+        assertNextCorrelation(i, 9, 9l, 8l, 7l);
+        assertFalse(i.hasNext());
+
+        correlator.clear();
+        correlator.add(0, new TestTimeStampedPojo(10));
+
+        Iterator<Correlation> i2 = correlator.iterator();
+        assertNextCorrelation(i2, 10, 10l, 8l, 7l);
+        assertFalse(i2.hasNext());
+    }
+
     private void assertNextCorrelation(Iterator<Correlation> iter, long timestamp, Long... timestamps) {
         assertTrue(iter.hasNext());
         Correlation correlation = iter.next();

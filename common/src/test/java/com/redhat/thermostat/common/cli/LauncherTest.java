@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,8 +52,11 @@ import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.test.TestTimerFactory;
 
 public class LauncherTest {
 
@@ -85,10 +89,14 @@ public class LauncherTest {
     private TestCommandContextFactory  ctxFactory;
     private AppContextSetup appContextSetup;
     private BundleContext bundleContext;
+    private TestTimerFactory timerFactory;
 
     @Before
     public void setUp() {
 
+        ApplicationContextUtil.resetApplicationContext();
+        timerFactory = new TestTimerFactory();
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
         setupCommandContextFactory();
 
         TestCommand cmd1 = new TestCommand("test1", new TestCmd1());
@@ -136,6 +144,7 @@ public class LauncherTest {
     public void tearDown() {
         appContextSetup = null;
         ctxFactory = null;
+        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test
@@ -230,6 +239,7 @@ public class LauncherTest {
     private void runAndVerifyCommand(String[] args, String expected) {
         new LauncherImpl(ctxFactory).run(args);
         assertEquals(expected, ctxFactory.getOutput());
+        assertTrue(timerFactory.isShutdown());
     }
 
     @Test
