@@ -70,7 +70,8 @@ public class KillVMAction implements VMContextAction {
 
     @Override
     public void execute(VmRef reference) {
-        unixService.sendSignal(reference.getIdString(), UNIXSignal.KILL);
+        // TODO this should be executed on the agent-side
+        unixService.sendSignal(reference.getIdString(), UNIXSignal.TERM);
     }
 
     @Override

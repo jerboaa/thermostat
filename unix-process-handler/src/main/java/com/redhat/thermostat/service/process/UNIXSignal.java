@@ -38,8 +38,9 @@ package com.redhat.thermostat.service.process;
 
 public enum UNIXSignal {
 
+    TERM,
     KILL;
-    
+
     public String signalName() {
         return name().toLowerCase();
     }
