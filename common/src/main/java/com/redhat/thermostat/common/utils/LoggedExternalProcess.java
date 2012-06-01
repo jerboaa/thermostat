@@ -44,7 +44,12 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.tools.ApplicationException;
+import com.redhat.thermostat.common.tools.ProcessStartException;
 
+/**
+ * Runs a process and logs it's output. The process's output and error streams
+ * will be unreadable.
+ */
 public class LoggedExternalProcess extends Thread {
 
     private static final Logger logger = LoggingUtils.getLogger(LoggedExternalProcess.class);
@@ -72,7 +77,7 @@ public class LoggedExternalProcess extends Thread {
         try {
             p = b.start();
         } catch (IOException ioe) {
-            throw new ApplicationException("unable to execute " + commands[0], ioe);
+            throw new ProcessStartException(commands[0], ioe);
         }
         reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
         this.start();

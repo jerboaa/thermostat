@@ -33,28 +33,21 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.tools.db;
 
-package com.redhat.thermostat.common.tools;
+import com.redhat.thermostat.common.tools.ApplicationException;
 
-public class ApplicationException extends Exception {
+public class StorageAlreadyRunningException extends ApplicationException {
 
-    private static final long serialVersionUID = 5910852125476383826L;
+    private final int storagePid;
 
-    public ApplicationException(String message) {
+    public StorageAlreadyRunningException(int pid, String message) {
         super(message);
+        storagePid = pid;
     }
 
-    public ApplicationException(Throwable cause) {
-        super(cause);
-    }
-
-    public ApplicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ApplicationException(String message, Throwable cause,
-            boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    public int getStoragePid() {
+        return storagePid;
     }
 
 }

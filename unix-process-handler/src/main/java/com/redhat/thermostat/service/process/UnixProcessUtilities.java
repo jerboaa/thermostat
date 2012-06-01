@@ -46,7 +46,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.common.utils.LoggedExternalProcess;
+import com.redhat.thermostat.common.tools.ProcessStartException;
 
 public class UnixProcessUtilities implements UNIXProcessHandler {
 
@@ -112,7 +112,7 @@ public class UnixProcessUtilities implements UNIXProcessHandler {
         try {
             process = builder.start();
         } catch (IOException e) {
-            throw new ApplicationException("unable to start " + args.get(0), e);
+            throw new ProcessStartException(args.get(0), e);
         }
         return process;
     }

@@ -112,7 +112,7 @@ class MongoProcessRunner {
                     ", exit status: " + status +
                     ". Please check that your configuration is valid";
             display(message);
-            throw new ApplicationException(message);
+            throw new StorageStopException(configuration.getDBPath(), status, message);
         }
     }
     
@@ -131,15 +131,18 @@ class MongoProcessRunner {
         String pid = getPid();
         if (pid != null) {
             String message = null;
+            ApplicationException ex = null;
             if (!checkExistingProcess()) {
                 message = "A stale pid file (" + configuration.getPidFile() + ") is present " +
                     "but there is no matching mongod process. Please remove the file if it has been shut down";
+                ex = new StalePidFileException(configuration.getPidFile());
             } else {
                 message = "An instance of the storage is already running with pid " + pid;
+                ex = new StorageAlreadyRunningException(Integer.valueOf(pid), message);
             }
             
             display(message);
-            throw new ApplicationException(message);
+            throw ex;
         }
         
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
@@ -191,7 +194,7 @@ class MongoProcessRunner {
                              ", exit status: " + status +
                              ". Please check that your configuration is valid";
             display(message);
-            throw new ApplicationException(message);
+            throw new StorageStartException(configuration.getDBPath(), status, message);
         }
     }
  

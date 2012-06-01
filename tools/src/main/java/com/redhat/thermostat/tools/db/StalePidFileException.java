@@ -33,28 +33,23 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.tools.db;
 
-package com.redhat.thermostat.common.tools;
+import java.io.File;
 
-public class ApplicationException extends Exception {
+import com.redhat.thermostat.common.tools.ApplicationException;
 
-    private static final long serialVersionUID = 5910852125476383826L;
+public class StalePidFileException extends ApplicationException {
 
-    public ApplicationException(String message) {
-        super(message);
+    private final File pidFile;
+
+    public StalePidFileException(File pidFile) {
+        super("stale pid file: " + pidFile);
+        this.pidFile = pidFile;
     }
 
-    public ApplicationException(Throwable cause) {
-        super(cause);
-    }
-
-    public ApplicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ApplicationException(String message, Throwable cause,
-            boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+    public File getPidFile() {
+        return pidFile;
     }
 
 }

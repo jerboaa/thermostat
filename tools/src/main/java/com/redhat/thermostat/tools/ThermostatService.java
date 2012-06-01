@@ -58,9 +58,11 @@ import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.tools.db.DBService;
+import com.redhat.thermostat.tools.db.StorageAlreadyRunningException;
 
 /**
  * Simple service that allows starting Agent and DB Backend
@@ -154,6 +156,15 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
 
             case FAIL:
                 System.err.println("error starting db");
+                Object payload = actionEvent.getPayload();
+                if (payload instanceof ApplicationException) {
+                    ApplicationException exception = (ApplicationException) payload;
+                    if (exception instanceof StorageAlreadyRunningException) {
+                        System.err.println("Storage is already running. " +
+                            "Please use the \"agent --start\" command to start the agent");
+                    }
+                }
+
                 notifier.fireAction(ApplicationState.FAIL);
                 break;
             }
