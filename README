@@ -17,16 +17,27 @@ BUILDING THERMOSTAT:
 
 1. Run "mvn clean package". All tests should pass and the build should succeed.
    Requires a graphical environment for the ui tests.
+   
+   You can skip the tests phase by running:
+   
+   mvn clean package -Dmaven.test.skip=true
+
+   If maven is too chatty, you can try to pass the -q option too:
+   
+   mvn -q clean package -Dmaven.test.skip=true
+   
 2. The resultant Thermostat system can now be found under the directory
    distribution/target.
 
 RUNNING THERMOSTAT:
 
+0. cd into distribution/target directory just created
+
 1. To start the agent and the db:
    bin/thermostat service --start
 
 2. To start the gui client:
-   bin/thermostat-client-gui
+   bin/thermostat gui
 
 3. To start the cli client:
    bin/thermostat [--help]
