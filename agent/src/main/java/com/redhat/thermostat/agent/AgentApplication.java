@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.agent;
 
-import java.io.IOException;
 import java.util.Collection;
+import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -66,6 +66,10 @@ import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
+
+@SuppressWarnings("restriction")
 public final class AgentApplication extends BasicCommand {
 
     private static final String NAME = "agent";
@@ -139,7 +143,7 @@ public final class AgentApplication extends BasicCommand {
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        Agent agent = new Agent(backendRegistry, configuration, daoFactory);
+        final Agent agent = new Agent(backendRegistry, configuration, daoFactory);
         try {
             logger.fine("Starting agent.");
             agent.start();
@@ -154,15 +158,21 @@ public final class AgentApplication extends BasicCommand {
         ctx.getConsole().getOutput().println("Agent id: " + agent.getId());
         ctx.getConsole().getOutput().println("agent started.");
         logger.fine("Agent id: " + agent.getId());
-        
-        try {
-            System.in.read();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
-        agent.stop();
-        logger.fine("Agent stopped.");       
+        final CountDownLatch shutdownLatch = new CountDownLatch(1);
+        Signal.handle(new Signal("INT"), new SignalHandler() {
+            public void handle(sun.misc.Signal sig) {
+                agent.stop();
+                logger.fine("Agent stopped.");       
+                shutdownLatch.countDown();
+            }
+        });
+        try {
+            shutdownLatch.await();
+            logger.fine("terimating agent cmd");
+        } catch (InterruptedException e) {
+            return;
+        }
     }
     
     @Override

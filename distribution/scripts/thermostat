@@ -57,7 +57,7 @@ SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
 
 THERM_DIR=${THERMOSTAT_LIBS}
 
-SERVICE_CLASSPATH="${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar:${THERM_DIR}/thermostat-tools-@project.version@.jar"
+SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar:${THERM_DIR}/thermostat-tools-@project.version@.jar"
 THERMOSTAT_MAIN="com.redhat.thermostat.launcher.Thermostat"
 
 ${JAVA} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "$@"
