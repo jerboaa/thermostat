@@ -114,7 +114,7 @@ public class DBService extends BasicCommand {
             getNotifier().fireAction(ApplicationState.SUCCESS);
             
         } catch (Exception e) {
-            getNotifier().fireAction(ApplicationState.FAIL);
+            getNotifier().fireAction(ApplicationState.FAIL, e);
         }
     }
     

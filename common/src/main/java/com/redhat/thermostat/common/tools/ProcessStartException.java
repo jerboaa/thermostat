@@ -33,28 +33,22 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-
 package com.redhat.thermostat.common.tools;
 
-public class ApplicationException extends Exception {
+public class ProcessStartException extends ApplicationException {
 
-    private static final long serialVersionUID = 5910852125476383826L;
+    private String commandName;
 
-    public ApplicationException(String message) {
-        super(message);
+    /**
+     * @param commandName the name of the program that failed to execute
+     * @param cause the original exception
+     */
+    public ProcessStartException(String commandName, Throwable cause) {
+        super("unable to execute " + commandName, cause);
+        this.commandName = commandName;
     }
 
-    public ApplicationException(Throwable cause) {
-        super(cause);
+    public String getCommandName() {
+        return commandName;
     }
-
-    public ApplicationException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public ApplicationException(String message, Throwable cause,
-            boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
 }
