@@ -48,6 +48,10 @@ import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.TickUnits;
+import org.jfree.data.RangeType;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -84,6 +88,20 @@ public class VmClassStatPanel extends JPanel implements VmClassStatView {
                 localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
                 dataset,
                 false, false, false);
+
+        TickUnits tickUnits = new TickUnits();
+        tickUnits.add(new NumberTickUnit(1));
+        tickUnits.add(new NumberTickUnit(10));
+        tickUnits.add(new NumberTickUnit(100));
+        tickUnits.add(new NumberTickUnit(1000));
+        tickUnits.add(new NumberTickUnit(10000));
+        tickUnits.add(new NumberTickUnit(100000));
+        tickUnits.add(new NumberTickUnit(1000000));
+
+        NumberAxis axis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        axis.setStandardTickUnits(tickUnits);
+        axis.setRangeType(RangeType.POSITIVE);
+        axis.setAutoRangeMinimumSize(10);
 
         Component chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
