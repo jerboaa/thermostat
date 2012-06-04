@@ -95,6 +95,28 @@ public class ShellCommandTest {
     }
 
     @Test
+    public void testQuitAlsoExits() throws CommandException {
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ctxFactory.setInput("quit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        assertEquals("Thermostat > quit\n", ctxFactory.getOutput());
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
+    public void testQAlsoExits() throws CommandException {
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
+        ctxFactory.setInput("q\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+        assertEquals("Thermostat > q\n", ctxFactory.getOutput());
+        assertEquals("", ctxFactory.getError());
+    }
+
+    @Test
     public void testEofExits() throws CommandException {
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory();
         ctxFactory.setInput("\u0004"); // EOF

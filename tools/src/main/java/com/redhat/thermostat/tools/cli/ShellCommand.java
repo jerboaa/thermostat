@@ -38,6 +38,7 @@ package com.redhat.thermostat.tools.cli;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -55,6 +56,8 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Launcher;
 
 public class ShellCommand implements Command {
+
+    private static final String[] exitKeywords = { "exit", "quit", "q" };
 
     private static final String NAME = "shell";
 
@@ -100,7 +103,7 @@ public class ShellCommand implements Command {
         line = line.trim();
         if (line.equals("")) {
             return true;
-        } else if (line.equals("exit")) {
+        } else if (Arrays.asList(exitKeywords).contains(line)) {
             return false;
         } else {
             launchCommand(line);
