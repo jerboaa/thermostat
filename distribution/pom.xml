@@ -164,6 +164,7 @@
                 <mkdir dir="${project.build.directory}/storage/run" />
                 <mkdir dir="${project.build.directory}/agent/logs" />
                 <mkdir dir="${project.build.directory}/agent/run" />
+                <mkdir dir="${project.build.directory}/client" />
               </target>
             </configuration>
             <goals>

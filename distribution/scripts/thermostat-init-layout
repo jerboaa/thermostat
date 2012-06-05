@@ -48,6 +48,7 @@ else
     THERMOSTAT_BIN="${THERMOSTAT_HOME}/bin"
     THERMOSTAT_AGENT_LOG="${THERMOSTAT_HOME}/agent/logs"
     THERMOSTAT_AGENT_RUN="${THERMOSTAT_HOME}/agent/run"
+    THEMROSTAT_CLIENT="${THERMOSTAT_HOME}/client"
     THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
     echo "creating $THERMOSTAT_STORAGE"
@@ -70,7 +71,10 @@ else
     
     echo "creating $THERMOSTAT_AGENT_RUN"
     mkdir -p $THERMOSTAT_AGENT_RUN
-    
+
+    echo "creating $THERMOSTAT_CLIENT"
+    mkdir -p "$THERMOSTAT_CLIENT"
+
     echo "creating $THERMOSTAT_LIBS"
     mkdir -p $THERMOSTAT_LIBS
 fi

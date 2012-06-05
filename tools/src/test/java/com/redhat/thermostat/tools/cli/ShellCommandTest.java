@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -49,6 +50,7 @@ import jline.TerminalFactory;
 import jline.TerminalFactory.Flavor;
 import jline.TerminalFactory.Type;
 import jline.UnixTerminal;
+import jline.console.history.PersistentHistory;
 
 import org.junit.After;
 import org.junit.Before;
@@ -62,6 +64,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Launcher;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.tools.cli.ShellCommand.HistoryProvider;
 
 public class ShellCommandTest {
 
@@ -135,6 +138,62 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
         assertEquals("Thermostat > \nThermostat > exit\n", ctxFactory.getOutput());
+    }
+
+    @Test
+    public void testHistoryIsQueried() throws CommandException {
+        PersistentHistory history = mock(PersistentHistory.class);
+        when(history.previous()).thenReturn(true);
+        when(history.current()).thenReturn("old-history-value");
+
+        HistoryProvider provider = mock(HistoryProvider.class);
+        when(provider.get()).thenReturn(history);
+
+        ServiceReference ref = mock(ServiceReference.class);
+        BundleContext bundleContext = mock(BundleContext.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        cmd = new ShellCommand(provider);
+        // "\u001b[A" is the escape code for up-arrow. use xxd -p to generate
+        ctxFactory.setInput("\u001b[A\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        assertEquals("Thermostat > old-history-value\nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals("", ctxFactory.getError());
+
+        verify(launcher).run(new String[] {"old-history-value"});
+    }
+
+    @Test
+    public void testHistoryIsUpdated() throws CommandException, IOException {
+        PersistentHistory mockHistory = mock(PersistentHistory.class);
+        HistoryProvider provider = mock(HistoryProvider.class);
+        when(provider.get()).thenReturn(mockHistory);
+
+        ServiceReference ref = mock(ServiceReference.class);
+        BundleContext bundleContext = mock(BundleContext.class);
+        when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
+        Launcher launcher = mock(Launcher.class);
+        when(bundleContext.getService(ref)).thenReturn(launcher);
+        TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
+
+        cmd = new ShellCommand(provider);
+        ctxFactory.setInput("add-to-history\nexit\n");
+        Arguments args = new SimpleArguments();
+        CommandContext ctx = ctxFactory.createContext(args);
+        cmd.run(ctx);
+
+        verify(launcher).run(new String[] {"add-to-history"});
+        verify(mockHistory).add("add-to-history");
+        verify(mockHistory).flush();
+
+        assertEquals("Thermostat > add-to-history\nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals("", ctxFactory.getError());
     }
 
     @Test(expected=CommandException.class)

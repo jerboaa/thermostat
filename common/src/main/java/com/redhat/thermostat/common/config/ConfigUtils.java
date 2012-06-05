@@ -109,4 +109,14 @@ public class ConfigUtils {
         File agent = new File(getThermostatHome(), "agent");
         return new File(agent, "agent.properties");
     }
+
+    public static File getClientConfigurationDirectory() throws InvalidConfigurationException {
+        File client = new File(getThermostatHome(), "client");
+        return client;
+    }
+
+    public static File getHistoryFile() throws InvalidConfigurationException {
+        File history = new File(getClientConfigurationDirectory(), "cli-history");
+        return history;
+    }
 }

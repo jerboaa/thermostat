@@ -61,6 +61,8 @@ public class ConfigUtilsTest {
         Assert.assertEquals(path + "agent" + s + "agent.properties",
                             ConfigUtils.getAgentConfigurationFile().getCanonicalPath());
         Assert.assertEquals(path + "backends", ConfigUtils.getBackendsBaseDirectory().getCanonicalPath());
+        Assert.assertEquals(path + "client", ConfigUtils.getClientConfigurationDirectory().getCanonicalPath());
+        Assert.assertEquals(path + "client" + s + "cli-history", ConfigUtils.getHistoryFile().getCanonicalPath());
         Assert.assertEquals(path + "storage", ConfigUtils.getStorageBaseDirectory().getCanonicalPath());
         Assert.assertEquals(path + "storage" + s + "db.properties",
                             ConfigUtils.getStorageConfigurationFile().getCanonicalPath());

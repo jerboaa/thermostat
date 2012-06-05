@@ -41,10 +41,15 @@ import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jline.Terminal;
 import jline.TerminalFactory;
 import jline.console.ConsoleReader;
+import jline.console.history.FileHistory;
+import jline.console.history.History;
+import jline.console.history.PersistentHistory;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -54,8 +59,13 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Launcher;
+import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ShellCommand implements Command {
+
+    private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
 
     private static final String[] exitKeywords = { "exit", "quit", "q" };
 
@@ -68,17 +78,47 @@ public class ShellCommand implements Command {
     private static final String PROMPT = "Thermostat > ";
 
     private CommandContext context;
+    private HistoryProvider historyProvider;
+
+    static class HistoryProvider {
+        public PersistentHistory get() {
+            PersistentHistory history = null;
+            try {
+                history = new FileHistory(ConfigUtils.getHistoryFile());
+            } catch (InvalidConfigurationException | IOException e) {
+                /* no history available */
+            }
+            return history;
+        }
+    }
+
+    public ShellCommand() {
+        this(new HistoryProvider());
+    }
+
+    ShellCommand(HistoryProvider provider) {
+        this.historyProvider = provider;
+    }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
         context = ctx;
         Terminal term = TerminalFactory.create();
+        PersistentHistory history = historyProvider.get();
+
         try {
-            shellMainLoop(ctx, term);
+            shellMainLoop(ctx, history, term);
         } catch (IOException ex) {
             throw new CommandException(ex);
         } finally {
             closeTerminal(term);
+            if (history != null) {
+                try {
+                    history.flush();
+                } catch (IOException e) {
+                    logger.log(Level.WARNING, "Unable to save history", e);
+                }
+            }
         }
     }
 
@@ -90,9 +130,12 @@ public class ShellCommand implements Command {
         }
     }
 
-    private void shellMainLoop(CommandContext ctx, Terminal term) throws IOException, CommandException {
+    private void shellMainLoop(CommandContext ctx, History history, Terminal term) throws IOException, CommandException {
         ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), new OutputStreamWriter(ctx.getConsole().getOutput()), term);
-        while (handleConsoleInput(reader));
+        if (history != null) {
+            reader.setHistory(history);
+        }
+        while (handleConsoleInput(reader)) { /* no-op; the loop conditional performs the action */ }
     }
 
     private boolean handleConsoleInput(ConsoleReader reader) throws IOException, CommandException {
