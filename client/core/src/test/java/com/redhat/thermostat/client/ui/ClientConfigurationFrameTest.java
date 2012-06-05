@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.ui;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import junit.framework.Assert;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
@@ -134,5 +135,18 @@ public class ClientConfigurationFrameTest {
         frameFixture.close();
 
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
+    }
+    
+    @Category(GUITest.class)
+    @Test
+    public void testButtonsSameSize() {
+        frameFixture.show();
+        
+        JButtonFixture cancel = frameFixture.button("cancel");
+        JButtonFixture ok = frameFixture.button("ok");
+        
+        Assert.assertEquals(cancel.target.getSize(), ok.target.getSize());
+        
+        frameFixture.close();
     }
 }

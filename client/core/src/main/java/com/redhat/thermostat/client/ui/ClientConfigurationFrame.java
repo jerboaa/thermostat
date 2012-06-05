@@ -78,9 +78,11 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
         btnOk = new JButton(localize(LocaleResources.BUTTON_OK));
         btnOk.addActionListener(configurationCompleteListener);
         btnOk.setName("ok");
+        
         btnCancel = new JButton(localize(LocaleResources.BUTTON_CANCEL));
         btnCancel.addActionListener(configurationCompleteListener);
         btnCancel.setName("cancel");
+
         JLabel lblClientConfiguration = new JLabel(localize(LocaleResources.CLIENT_PREFS_GENERAL));
 
         JLabel lblStorageUrl = new JLabel(localize(LocaleResources.CLIENT_PREFS_STORAGE_URL));
@@ -88,37 +90,36 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
         storageUrl = new JTextField();
         storageUrl.setColumns(10);
         storageUrl.setName("connectionUrl");
-
+        
         GroupLayout groupLayout = new GroupLayout(getContentPane());
         groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
-                    .addContainerGap(251, Short.MAX_VALUE)
-                    .addComponent(btnCancel)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(btnOk)
-                    .addContainerGap())
+            groupLayout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                         .addGroup(groupLayout.createSequentialGroup()
+                            .addGap(248)
+                            .addComponent(btnCancel, GroupLayout.PREFERRED_SIZE, 85, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addComponent(btnOk, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE))
+                        .addGroup(groupLayout.createSequentialGroup()
                             .addGap(12)
                             .addComponent(lblStorageUrl)
                             .addPreferredGap(ComponentPlacement.UNRELATED)
-                            .addComponent(storageUrl, GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE))
+                            .addComponent(storageUrl, GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE))
                         .addComponent(lblClientConfiguration))
                     .addContainerGap())
         );
         groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(Alignment.TRAILING, groupLayout.createSequentialGroup()
+            groupLayout.createParallelGroup(Alignment.TRAILING)
+                .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
                     .addComponent(lblClientConfiguration)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(lblStorageUrl)
                         .addComponent(storageUrl, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
-                    .addPreferredGap(ComponentPlacement.RELATED, 185, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.RELATED, 184, Short.MAX_VALUE)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(btnOk)
                         .addComponent(btnCancel))
@@ -179,7 +180,7 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
             throw new IllegalStateException("must be invoked in the EDT");
         }
     }
-
+  
     class ConfigurationCompleteListener implements java.awt.event.ActionListener {
         @Override
         public void actionPerformed(java.awt.event.ActionEvent e) {
