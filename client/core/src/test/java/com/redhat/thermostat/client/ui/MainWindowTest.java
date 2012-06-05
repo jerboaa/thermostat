@@ -45,7 +45,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
+
 import javax.swing.AbstractAction;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JRadioButtonMenuItem;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
@@ -66,6 +70,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.MainView;
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -207,6 +212,7 @@ public class MainWindowTest {
         final String MENU_NAME = "Test";
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
+        when(action.getType()).thenReturn(MenuAction.TYPE.STANDARD);
 
         JMenuItemFixture menuItem;
 
@@ -229,16 +235,55 @@ public class MainWindowTest {
         } catch (ComponentLookupException cle) {
             // expected
         }
-
     }
+    
+    @Category(GUITest.class)
+    @Test
+    public void addRadioMenu() {
+        final String MENU_NAME = "Test";
+        MenuAction action = mock(MenuAction.class);
+        when(action.getName()).thenReturn(MENU_NAME);
+        when(action.getType()).thenReturn(MenuAction.TYPE.RADIO);
 
+        JMenuItemFixture menuItem;
+
+        frameFixture.show();
+
+        window.addMenu("File", action);
+
+        menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+        assertNotNull(menuItem);
+
+        assertTrue(menuItem.target instanceof JRadioButtonMenuItem);
+    }
+    
+    @Category(GUITest.class)
+    @Test
+    public void addCheckBoxMenu() {
+        final String MENU_NAME = "Test";
+        MenuAction action = mock(MenuAction.class);
+        when(action.getName()).thenReturn(MENU_NAME);
+        when(action.getType()).thenReturn(MenuAction.TYPE.CHECK);
+
+        JMenuItemFixture menuItem;
+
+        frameFixture.show();
+
+        window.addMenu("File", action);
+
+        menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+        assertNotNull(menuItem);
+
+        assertTrue(menuItem.target instanceof JCheckBoxMenuItem);
+    }
+    
     @Category(GUITest.class)
     @Test
     public void testGetHostVMTreeFilter() {
         frameFixture.show();
         JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox("hostVMTreeFilter");
         hostVMTreeFilterField.enterText("test");
-        String actual = window.getHostVmTreeFilter();
+        String actual = window.getHostVmTreeFilterText();
         assertEquals("test", actual);
     }
 

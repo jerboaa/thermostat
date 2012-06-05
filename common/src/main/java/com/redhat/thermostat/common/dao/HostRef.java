@@ -87,7 +87,12 @@ public class HostRef implements Ref {
     }
 
     @Override
-    public boolean matches(String filter) {
-        return getHostName().contains(filter) || getAgentId().contains(filter);
+    public String getStringID() {
+        return getAgentId();
+    }
+    
+    @Override
+    public String getName() {
+        return getHostName();
     }
 }

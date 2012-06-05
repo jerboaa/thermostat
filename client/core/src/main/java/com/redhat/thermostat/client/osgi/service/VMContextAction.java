@@ -45,5 +45,5 @@ public interface VMContextAction extends ContextAction {
 
     void execute(VmRef referece);
 
-    VMFilter getFilter();
+    Filter getFilter();
 }

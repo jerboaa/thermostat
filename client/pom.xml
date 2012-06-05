@@ -63,6 +63,7 @@
     <module>vmclassstat</module>
     <module>killvm</module>
     <module>memory-stats-panel</module>
+    <module>living-vm-filter</module>
   </modules>
 
 </project>

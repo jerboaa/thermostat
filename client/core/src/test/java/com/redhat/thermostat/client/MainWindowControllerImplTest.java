@@ -37,13 +37,11 @@
 package com.redhat.thermostat.client;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -55,6 +53,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -63,12 +62,12 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
-import com.redhat.thermostat.client.MenuRegistry.MenuListener;
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VMFilter;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmInformationController;
@@ -106,8 +105,6 @@ public class MainWindowControllerImplTest {
     private VMContextAction action1;
     private VMContextAction action2;
 
-    private MenuListener menuListener;
-
     @BeforeClass
     public static void setUpOnce() {
         // TODO remove when controller uses mocked objects rather than real swing objects
@@ -116,7 +113,7 @@ public class MainWindowControllerImplTest {
 
     @SuppressWarnings({ "unchecked", "rawtypes" }) // ActionListener fluff
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         ApplicationContextUtil.resetApplicationContext();
 
         // Setup timers
@@ -137,9 +134,7 @@ public class MainWindowControllerImplTest {
         ArgumentCaptor<ActionListener> grabListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(grabListener.capture());
 
-        MenuRegistry registry = mock(MenuRegistry.class);
-        ArgumentCaptor<MenuListener> menuListenerCaptor = ArgumentCaptor.forClass(MenuListener.class);
-        doNothing().when(registry).addMenuListener(menuListenerCaptor.capture());
+        BundleContext registry = mock(BundleContext.class);
 
         // TODO remove this asap. the main window has a hard dependency on summary controller/view
         ViewFactory viewFactory = mock(ViewFactory.class);
@@ -151,13 +146,11 @@ public class MainWindowControllerImplTest {
 
         controller = new MainWindowControllerImpl(uiFacadeFactory, view, registry);
         l = grabListener.getValue();
-        menuListener = menuListenerCaptor.getValue();
-
     }
 
     private void setUpVMContextActions() {
         action1 = mock(VMContextAction.class);
-        VMFilter action1Filter = mock(VMFilter.class);
+        Filter action1Filter = mock(Filter.class);
         when(action1Filter.matches(isA(VmRef.class))).thenReturn(true);
 
         when(action1.getName()).thenReturn("action1");
@@ -165,7 +158,7 @@ public class MainWindowControllerImplTest {
         when(action1.getFilter()).thenReturn(action1Filter);
         
         action2 = mock(VMContextAction.class);
-        VMFilter action2Filter = mock(VMFilter.class);
+        Filter action2Filter = mock(Filter.class);
         when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
 
         when(action2.getName()).thenReturn("action2");
@@ -212,12 +205,11 @@ public class MainWindowControllerImplTest {
     @Test
     public void verifyThatHostsVmsFilterChangeUpdatesTree() {
 
-        when(view.getHostVmTreeFilter()).thenReturn("test");
+        when(view.getHostVmTreeFilterText()).thenReturn("test");
 
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_TREE_FILTER));
 
-        verify(view).updateTree(eq("test"), any(HostsVMsLoader.class));
-
+        verify(view).updateTree(any(List.class), any(HostsVMsLoader.class));
     }
 
     @Test
@@ -253,13 +245,13 @@ public class MainWindowControllerImplTest {
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(anyString(), arg.capture());
+        verify(view).updateTree(any(List.class), arg.capture());
         HostsVMsLoader loader = arg.getValue();
 
         Collection<HostRef> actualHosts = loader.getHosts();
         assertEqualCollection(expectedHosts, actualHosts);
     }
-
+    
     @Test
     public void verifyHistoryModeUpdateHostsVMCorrectly() {
 
@@ -277,7 +269,7 @@ public class MainWindowControllerImplTest {
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(anyString(), arg.capture());
+        verify(view).updateTree(any(List.class), arg.capture());
         HostsVMsLoader loader = arg.getValue();
 
         Collection<HostRef> actualHosts = loader.getHosts();
@@ -302,13 +294,31 @@ public class MainWindowControllerImplTest {
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(anyString(), arg.capture());
+        verify(view).updateTree(any(List.class), arg.capture());
         HostsVMsLoader loader = arg.getValue();
 
         Collection<VmRef> actualVMs = loader.getVMs(host);
         assertEqualCollection(expectedVMs, actualVMs);
     }
 
+    @Test
+    public void verifyUpdateHostsVMsLoadsCorrectVMWithFilter() {
+
+        VmRef ref1 = mock(VmRef.class);
+        when(ref1.getStringID()).thenReturn("test1");
+        when(ref1.getName()).thenReturn("test1");
+        
+        VmRef ref2 = mock(VmRef.class);
+        when(ref2.getStringID()).thenReturn("test2");
+        when(ref2.getName()).thenReturn("test2");
+        
+        controller.setHostVmTreeFilter("test1");
+                
+        Filter filter = controller.getTreeFilter();
+        assertTrue(filter.matches(ref1));
+        assertFalse(filter.matches(ref2));
+    }
+    
     private void assertEqualCollection(Collection<?> expected, Collection<?> actual) {
         assertEquals(expected.size(), actual.size());
         assertTrue(expected.containsAll(actual));
@@ -380,7 +390,9 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verifyMenuItems() {
-        assertNotNull(menuListener);
+        
+        MenuRegistry.MenuListener menuListener = controller.getMenuListener();
+
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn("Test1");
 

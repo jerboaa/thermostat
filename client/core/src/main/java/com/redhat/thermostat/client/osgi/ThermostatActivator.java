@@ -43,7 +43,6 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.GUIClientCommand;
 import com.redhat.thermostat.client.Main;
-import com.redhat.thermostat.client.MenuRegistry;
 import com.redhat.thermostat.client.UiFacadeFactory;
 import com.redhat.thermostat.client.UiFacadeFactoryImpl;
 import com.redhat.thermostat.common.cli.CommandRegistry;
@@ -58,8 +57,7 @@ public class ThermostatActivator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        MenuRegistry menuRegistry = new MenuRegistry(context);
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(menuRegistry);
+        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
 
         vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
         vmInfoServiceTracker.open();

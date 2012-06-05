@@ -34,72 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.filter.vm;
 
-public class VmRef implements Ref {
+import java.util.Hashtable;
 
-    private final HostRef hostRef;
-    private final Integer uid;
-    private final String uidString;
-    private final String name;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-    public VmRef(HostRef hostRef, Integer id, String name) {
-        this.hostRef = hostRef;
-        this.uid = id;
-        this.uidString = id.toString();
-        this.name = name;
-    }
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.client.osgi.service.Filter;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 
+public class VMFilterActivator implements BundleActivator {
+    
     @Override
-    public String toString() {
-        return name;
+    public void start(BundleContext context) throws Exception {
+        
+        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Hashtable<String, String> props = new Hashtable<>();
+                props.put(MenuAction.PARENT_MENU, LivingVMFilterMenuAction.PARENT_MENU);
+                
+                ApplicationService service = (ApplicationService) context.getService(reference);
+                LivingVMFilter filter = new LivingVMFilter(service.getDAOFactory());
+                LivingVMFilterMenuAction menu = new LivingVMFilterMenuAction(filter);
+                
+                context.registerService(Filter.class.getName(), filter, null);
+                context.registerService(MenuAction.class.getName(), menu, props);
+                return super.addingService(reference);
+            }
+        };
+        tracker.open();
     }
-
-    public HostRef getAgent() {
-        return hostRef;
-    }
-
-    public Integer getId() {
-        return uid;
-    }
-
-    public String getIdString() {
-        return uidString;
-    }
-
-    public String getName() {
-        return name;
-    }
-
+    
     @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        VmRef other = (VmRef) obj;
-        if (equals(this.hostRef, other.hostRef) && equals(this.uid, other.uid) && equals(this.name, other.name)) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean equals(Object obj1, Object obj2) {
-        return (obj1 == null && obj2 == null) || (obj1 != null && obj1.equals(obj2));
-    }
-
-    @Override
-    public int hashCode() {
-        return uid.hashCode();
-    }
-
-    @Override
-    public String getStringID() {
-        return getIdString();
+    public void stop(BundleContext context) throws Exception {
+        
     }
 }

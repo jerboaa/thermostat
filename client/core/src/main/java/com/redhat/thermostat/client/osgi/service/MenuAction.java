@@ -42,14 +42,17 @@ package com.redhat.thermostat.client.osgi.service;
  * register a service that implements this class with the property
  * "parentMenu" set to "File".
  */
-public interface MenuAction {
+public interface MenuAction extends ContextAction {
 
-    /** The string displayed as the menu item name */
-    String getName();
-
-    /** A generic description of the menu item */
-    String getDescription();
-
+    public static enum TYPE {
+        CHECK,
+        RADIO,
+        STANDARD
+    };
+    
+    public static final String PARENT_MENU = "parentMenu";
+    
     /** Invoked when the user selects this menu item */
     void execute();
+    TYPE getType();
 }

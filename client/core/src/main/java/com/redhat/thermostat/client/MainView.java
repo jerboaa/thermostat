@@ -42,6 +42,7 @@ import java.util.List;
 
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.dao.Ref;
 
@@ -63,15 +64,14 @@ public interface MainView {
 
     void addActionListener(ActionListener<Action> capture);
 
-    void updateTree(String eq, HostsVMsLoader any);
-
+    void updateTree(List<Filter> filter, HostsVMsLoader any);
+    String getHostVmTreeFilterText();
+    
     void setWindowTitle(String title);
 
     void showMainWindow();
 
     void hideMainWindow();
-
-    String getHostVmTreeFilter();
 
     Ref getSelectedHostOrVm();
 

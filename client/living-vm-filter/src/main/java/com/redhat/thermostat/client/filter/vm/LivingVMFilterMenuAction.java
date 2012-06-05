@@ -34,11 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
+package com.redhat.thermostat.client.filter.vm;
 
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
 
-public interface VMFilter {
+class LivingVMFilterMenuAction implements MenuAction {
 
-    boolean matches(VmRef vm);
+    public static final String PARENT_MENU = "Edit";
+
+    private LivingVMFilter filter;
+    
+    public LivingVMFilterMenuAction(LivingVMFilter filter) {
+        this.filter = filter;
+    }
+    
+    @Override
+    public String getName() {
+        return "Show Non Living VM";
+    }
+
+    @Override
+    public String getDescription() {
+        return "Shows non living VM in the vm list";
+    }
+
+    @Override
+    public void execute() {
+        filter.filterActive = !filter.filterActive;
+    }
+
+    @Override
+    public TYPE getType() {
+        return TYPE.CHECK;
+    }
 }

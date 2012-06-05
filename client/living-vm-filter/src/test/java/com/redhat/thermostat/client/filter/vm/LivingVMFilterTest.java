@@ -34,72 +34,62 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.filter.vm;
 
-public class VmRef implements Ref {
+import static org.junit.Assert.*;
 
-    private final HostRef hostRef;
-    private final Integer uid;
-    private final String uidString;
-    private final String name;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    public VmRef(HostRef hostRef, Integer id, String name) {
-        this.hostRef = hostRef;
-        this.uid = id;
-        this.uidString = id.toString();
-        this.name = name;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
+
+public class LivingVMFilterTest {
+
+    private DAOFactory dao;
+    private VmRef vmRef1;
+    private VmRef vmRef2;
+    
+    private VmInfo vmInfo1;
+    private VmInfo vmInfo2;
+    
+    @Before
+    public void setUp() {
+        dao = mock(DAOFactory.class);
+        
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+        when(dao.getVmInfoDAO()).thenReturn(vmInfoDao);
+        
+        vmRef1 = mock(VmRef.class);
+        vmRef2 = mock(VmRef.class);
+        
+        vmInfo1 = mock(VmInfo.class);
+        vmInfo2 = mock(VmInfo.class);
+        
+        when(vmInfoDao.getVmInfo(vmRef1)).thenReturn(vmInfo1);
+        when(vmInfoDao.getVmInfo(vmRef2)).thenReturn(vmInfo2);
+        
+        when(vmInfo1.isAlive()).thenReturn(true);
+        when(vmInfo2.isAlive()).thenReturn(false);
+    }
+    
+    @Test
+    public void testFilter() {
+        LivingVMFilter filter = new LivingVMFilter(dao);
+        LivingVMFilterMenuAction action = new LivingVMFilterMenuAction(filter);
+        
+        assertTrue(filter.matches(vmRef1));
+        assertFalse(filter.matches(vmRef2));
+        
+        action.execute();
+        
+        assertTrue(filter.matches(vmRef1));
+        assertTrue(filter.matches(vmRef2));
     }
 
-    @Override
-    public String toString() {
-        return name;
-    }
-
-    public HostRef getAgent() {
-        return hostRef;
-    }
-
-    public Integer getId() {
-        return uid;
-    }
-
-    public String getIdString() {
-        return uidString;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        VmRef other = (VmRef) obj;
-        if (equals(this.hostRef, other.hostRef) && equals(this.uid, other.uid) && equals(this.name, other.name)) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean equals(Object obj1, Object obj2) {
-        return (obj1 == null && obj2 == null) || (obj1 != null && obj1.equals(obj2));
-    }
-
-    @Override
-    public int hashCode() {
-        return uid.hashCode();
-    }
-
-    @Override
-    public String getStringID() {
-        return getIdString();
-    }
 }

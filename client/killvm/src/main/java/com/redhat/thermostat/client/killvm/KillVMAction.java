@@ -37,8 +37,9 @@
 package com.redhat.thermostat.client.killvm;
 
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VMFilter;
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
@@ -75,18 +76,22 @@ public class KillVMAction implements VMContextAction {
     }
 
     @Override
-    public VMFilter getFilter() {
+    public Filter getFilter() {
         return new LocalAndAliveFilter();
     }
 
-    private class LocalAndAliveFilter implements VMFilter {
+    private class LocalAndAliveFilter implements Filter {
 
         @Override
-        public boolean matches(VmRef vm) {
-            // TODO implement local checking too
-            VmInfo vmInfo = dao.getVmInfoDAO().getVmInfo(vm);
-            boolean dead = vmInfo.getStartTimeStamp() < vmInfo.getStopTimeStamp();
-            return !dead;
+        public boolean matches(Ref ref) {
+            if (ref instanceof VmRef) {
+                VmRef vm = (VmRef) ref;
+                
+                // TODO implement local checking too
+                VmInfo vmInfo = dao.getVmInfoDAO().getVmInfo(vm);
+                return vmInfo.isAlive();
+            }
+            return false;
         }
 
     }

@@ -34,72 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.filter.vm;
 
-public class VmRef implements Ref {
+import com.redhat.thermostat.client.osgi.service.Filter;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 
-    private final HostRef hostRef;
-    private final Integer uid;
-    private final String uidString;
-    private final String name;
+public class LivingVMFilter implements Filter {
 
-    public VmRef(HostRef hostRef, Integer id, String name) {
-        this.hostRef = hostRef;
-        this.uid = id;
-        this.uidString = id.toString();
-        this.name = name;
+    volatile boolean filterActive = true;
+    
+    private DAOFactory dao;
+    
+    public LivingVMFilter(DAOFactory dao) {
+        this.dao = dao;
     }
-
+    
     @Override
-    public String toString() {
-        return name;
-    }
-
-    public HostRef getAgent() {
-        return hostRef;
-    }
-
-    public Integer getId() {
-        return uid;
-    }
-
-    public String getIdString() {
-        return uidString;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
+    public boolean matches(Ref ref) {
+        if (!filterActive)
             return true;
+        
+        if (ref instanceof VmRef) {
+            VmRef vm = (VmRef) ref;
+            
+            VmInfoDAO info = dao.getVmInfoDAO();
+            VmInfo vmInfo = info.getVmInfo(vm);
+            return vmInfo.isAlive();
         }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        VmRef other = (VmRef) obj;
-        if (equals(this.hostRef, other.hostRef) && equals(this.uid, other.uid) && equals(this.name, other.name)) {
-            return true;
-        }
+        
         return false;
-    }
-
-    private static boolean equals(Object obj1, Object obj2) {
-        return (obj1 == null && obj2 == null) || (obj1 != null && obj1.equals(obj2));
-    }
-
-    @Override
-    public int hashCode() {
-        return uid.hashCode();
-    }
-
-    @Override
-    public String getStringID() {
-        return getIdString();
     }
 }

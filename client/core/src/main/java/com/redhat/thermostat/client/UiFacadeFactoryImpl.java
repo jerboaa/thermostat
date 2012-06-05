@@ -40,6 +40,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 
+import org.osgi.framework.BundleContext;
+
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.ui.HostInformationController;
@@ -56,16 +58,16 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
     private Collection<VMContextAction> contextAction = new ArrayList<>();
 
-    private MenuRegistry menuRegistry;
+    private BundleContext context;
 
-    public UiFacadeFactoryImpl(MenuRegistry registry) {
-        menuRegistry = registry;
+    public UiFacadeFactoryImpl(BundleContext context) {
+        this.context = context;
     }
 
     @Override
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView, menuRegistry);
+        return new MainWindowControllerImpl(this, mainView, context);
     }
 
     @Override

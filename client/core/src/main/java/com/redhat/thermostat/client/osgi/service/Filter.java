@@ -34,72 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.osgi.service;
 
-public class VmRef implements Ref {
+import com.redhat.thermostat.common.dao.Ref;
 
-    private final HostRef hostRef;
-    private final Integer uid;
-    private final String uidString;
-    private final String name;
+public interface Filter {
 
-    public VmRef(HostRef hostRef, Integer id, String name) {
-        this.hostRef = hostRef;
-        this.uid = id;
-        this.uidString = id.toString();
-        this.name = name;
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-
-    public HostRef getAgent() {
-        return hostRef;
-    }
-
-    public Integer getId() {
-        return uid;
-    }
-
-    public String getIdString() {
-        return uidString;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (obj == null) {
-            return false;
-        }
-        if (obj == this) {
-            return true;
-        }
-        if (obj.getClass() != this.getClass()) {
-            return false;
-        }
-        VmRef other = (VmRef) obj;
-        if (equals(this.hostRef, other.hostRef) && equals(this.uid, other.uid) && equals(this.name, other.name)) {
-            return true;
-        }
-        return false;
-    }
-
-    private static boolean equals(Object obj1, Object obj2) {
-        return (obj1 == null && obj2 == null) || (obj1 != null && obj1.equals(obj2));
-    }
-
-    @Override
-    public int hashCode() {
-        return uid.hashCode();
-    }
-
-    @Override
-    public String getStringID() {
-        return getIdString();
-    }
+    boolean matches(Ref ref);
 }

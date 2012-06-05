@@ -61,7 +61,7 @@ class VMContextActionServiceTracker extends ServiceTracker {
     public Object addingService(ServiceReference reference) {
         @SuppressWarnings("unchecked")
         VMContextAction service = (VMContextAction) context.getService(reference);
-        uiFacadeFactory.addVMContextAction(service);        
+        uiFacadeFactory.addVMContextAction(service);
         return service;
     }
 }

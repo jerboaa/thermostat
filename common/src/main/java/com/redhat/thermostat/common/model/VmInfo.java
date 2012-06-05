@@ -130,6 +130,10 @@ public class VmInfo implements Pojo {
         return vmVersion;
     }
 
+    public boolean isAlive() {
+        return getStartTimeStamp() > getStopTimeStamp();
+    }
+    
     public Map<String, String> getProperties() {
         return properties;
     }

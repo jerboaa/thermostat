@@ -201,6 +201,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-osgi-living-vm-filter</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent</artifactId>
       <version>${project.version}</version>

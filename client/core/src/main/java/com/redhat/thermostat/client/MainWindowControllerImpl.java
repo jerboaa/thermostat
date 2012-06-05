@@ -40,11 +40,16 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+
 import com.redhat.thermostat.client.MainView.Action;
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.AboutDialog;
@@ -68,13 +73,13 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class MainWindowControllerImpl implements MainWindowController {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
     
+    private List<Filter> filters;
     private Timer backgroundUpdater;
 
     private MainView view;
@@ -101,13 +106,30 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     };
 
+    private VMTreeFilterRegistry filterRegistry;
+    
+    private TreeViewFilter treeFilter;
+    
     private boolean showHistory;
 
     private VmInformationControllerProvider vmInfoControllerProvider;
 
-    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, MenuRegistry menuRegistry) {
+    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view,
+                                    BundleContext context)
+    {
+        try {
+            filterRegistry = new VMTreeFilterRegistry(context);
+            menuRegistry = new MenuRegistry(context);
+            
+        } catch (InvalidSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+
+        this.filters = new CopyOnWriteArrayList<>();
+        treeFilter = new TreeViewFilter();
+        filters.add(treeFilter);
+        
         this.facadeFactory = facadeFactory;
-        this.menuRegistry = menuRegistry;
 
         ApplicationContext ctx = ApplicationContext.getInstance();
         DAOFactory daoFactory = ctx.getDAOFactory();
@@ -124,8 +146,35 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         updateView();
 
-        menuRegistry.start();
         menuRegistry.addMenuListener(menuListener);
+        menuRegistry.start();
+        
+        filterRegistry.addActionListener(new ActionListener<VMTreeFilterRegistry.Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<com.redhat.thermostat.client.VMTreeFilterRegistry.Action>
+                                        actionEvent)
+            {
+                Filter filter = (Filter) actionEvent.getPayload();
+                
+                switch (actionEvent.getActionId()) {
+                case FILTER_ADDED:
+                    filters.add(filter);
+                    doUpdateTreeAsync();
+                    break;
+                
+                case FILTER_REMOVED:
+                    filters.remove(filter);
+                    doUpdateTreeAsync();
+                    break;
+                    
+                default:
+                    logger.log(Level.WARNING, "received unknown event from VMTreeFilterRegistry: " +
+                                               actionEvent.getActionId());
+                    break;
+                }
+            }
+        });
+        filterRegistry.start();
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {
@@ -146,6 +195,20 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     }
 
+    /**
+     * This method is for testing purpouse only
+     */
+    Filter getTreeFilter() {
+        return treeFilter;
+    }
+    
+    /**
+     * This method is for testing purpouse only
+     */
+    MenuRegistry.MenuListener getMenuListener() {
+        return menuListener;
+    }
+    
     private void initializeTimer() {
         ApplicationContext ctx = ApplicationContext.getInstance();
         backgroundUpdater = ctx.getTimerFactory().createTimer();
@@ -169,6 +232,22 @@ public class MainWindowControllerImpl implements MainWindowController {
         backgroundUpdater.stop();
     }
 
+    private class TreeViewFilter implements Filter {
+        @Override
+        public boolean matches(Ref ref) {
+            if (filter == null || filter.isEmpty()) {
+                return true;
+                
+            } else {
+                return matches(ref, filter);                
+            }
+        }
+      
+        public boolean matches(Ref ref, String filter) {
+          return ref.getName().contains(filter) || ref.getStringID().contains(filter);
+        }
+    }
+    
     @Override
     public void setHostVmTreeFilter(String filter) {
         this.filter = filter;
@@ -177,7 +256,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     public void doUpdateTreeAsync() {
         HostsVMsLoader loader = new HostsVMsLoaderImpl();
-        view.updateTree(filter, loader);
+        view.updateTree(filters, loader);
     }
 
     private void initView(MainView mainView) {
@@ -198,7 +277,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                     updateView();
                     break;
                 case HOST_VM_TREE_FILTER:
-                    String filter = view.getHostVmTreeFilter();
+                    String filter = view.getHostVmTreeFilterText();
                     setHostVmTreeFilter(filter);
                     break;
                 case SHOW_AGENT_CONFIG:

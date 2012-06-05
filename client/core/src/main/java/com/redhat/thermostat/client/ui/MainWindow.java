@@ -69,6 +69,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
@@ -98,6 +99,7 @@ import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -114,11 +116,13 @@ public class MainWindow extends JFrame implements MainView {
 
         private final DefaultTreeModel treeModel;
         private DefaultMutableTreeNode treeRoot;
-        private String filterText;
+        private List<Filter> filters;
         private HostsVMsLoader hostsVMsLoader;
 
-        public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root, String filterText, HostsVMsLoader hostsVMsLoader) {
-            this.filterText = filterText;
+        public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root,
+                                         List<Filter> filters, HostsVMsLoader hostsVMsLoader)
+        {
+            this.filters = filters;
             this.treeModel = model;
             this.treeRoot = root;
             this.hostsVMsLoader = hostsVMsLoader;
@@ -128,22 +132,30 @@ public class MainWindow extends JFrame implements MainView {
         protected DefaultMutableTreeNode doInBackground() throws Exception {
             DefaultMutableTreeNode root = new DefaultMutableTreeNode();
             Collection<HostRef> hostsInRemoteModel = hostsVMsLoader.getHosts();
-            buildSubTree(root, hostsInRemoteModel, filterText);
+            buildSubTree(root, hostsInRemoteModel);
             return root;
         }
 
-        private boolean buildSubTree(DefaultMutableTreeNode parent, Collection<? extends Ref> objectsInRemoteModel, String filter) {
+        private boolean buildSubTree(DefaultMutableTreeNode parent, Collection<? extends Ref> objectsInRemoteModel) {
             boolean subTreeMatches = false;
             for (Ref inRemoteModel : objectsInRemoteModel) {
                 DefaultMutableTreeNode inTreeNode = new DefaultMutableTreeNode(inRemoteModel);
 
                 boolean shouldInsert = false;
-                if (filter == null || inRemoteModel.matches(filter)) {
+                if (filters == null) {
                     shouldInsert = true;
+                } else {
+                    shouldInsert = true;
+                    for (Filter filter : filters) {
+                        if (!filter.matches(inRemoteModel)) {
+                            shouldInsert = false;
+                            break;
+                        }
+                    }
                 }
 
                 Collection<? extends Ref> children = getChildren(inRemoteModel);
-                boolean subtreeResult = buildSubTree(inTreeNode, children, filter);
+                boolean subtreeResult = buildSubTree(inTreeNode, children);
                 if (subtreeResult) {
                     shouldInsert = true;
                 }
@@ -582,8 +594,8 @@ public class MainWindow extends JFrame implements MainView {
     }
     
     @Override
-    public void updateTree(String filter, HostsVMsLoader hostsVMsLoader) {
-        BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot, filter, hostsVMsLoader);
+    public void updateTree(List<Filter> filters, HostsVMsLoader hostsVMsLoader) {
+        BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot, filters, hostsVMsLoader);
         worker.execute();
     }
 
@@ -638,7 +650,7 @@ public class MainWindow extends JFrame implements MainView {
             }
         });
     }
-
+    
     @Override
     public void addMenu(final String parentMenuName, final MenuAction action) {
         SwingUtilities.invokeLater(new Runnable() {
@@ -657,7 +669,22 @@ public class MainWindow extends JFrame implements MainView {
                     mainMenuBar.add(parent);
                 }
 
-                JMenuItem menu = new JMenuItem(action.getName());
+                JMenuItem menu = null;
+                switch (action.getType()) {
+                case RADIO:
+                    menu = new JRadioButtonMenuItem();                    
+                    break;
+                case CHECK:
+                    menu = new JCheckBoxMenuItem();
+                    break;
+                    
+                case STANDARD:
+                default:
+                    menu = new JMenuItem();
+                    break;
+                }
+                
+                menu.setText(action.getName());
                 menu.addActionListener(new java.awt.event.ActionListener() {
                     @Override
                     public void actionPerformed(ActionEvent e) {
@@ -724,7 +751,7 @@ public class MainWindow extends JFrame implements MainView {
             throw new RuntimeException(cause);
         }
     }
-
+    
     /**
      * Returns null to indicate no Ref is selected
      */
@@ -738,7 +765,7 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
-    public String getHostVmTreeFilter() {
+    public String getHostVmTreeFilterText() {
         try {
             return new EdtHelper().callAndWait(new Callable<String>() {
 

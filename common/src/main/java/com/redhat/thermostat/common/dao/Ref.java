@@ -38,6 +38,6 @@ package com.redhat.thermostat.common.dao;
 
 public interface Ref {
 
-    public boolean matches(String filter);
-
+    String getStringID();
+    String getName();
 }
