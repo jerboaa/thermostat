@@ -58,6 +58,7 @@ import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.test.Bug;
 
 @RunWith(CacioFESTRunner.class)
 public class ClientConfigurationFrameTest {
@@ -137,6 +138,9 @@ public class ClientConfigurationFrameTest {
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
     }
     
+    @Bug(id="1030",
+         summary="Buttons in client preferences dialog should have the same size",
+         url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1030")
     @Category(GUITest.class)
     @Test
     public void testButtonsSameSize() {
