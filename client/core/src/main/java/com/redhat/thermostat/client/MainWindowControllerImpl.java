@@ -149,20 +149,20 @@ public class MainWindowControllerImpl implements MainWindowController {
         menuRegistry.addMenuListener(menuListener);
         menuRegistry.start();
         
-        filterRegistry.addActionListener(new ActionListener<VMTreeFilterRegistry.Action>() {
+        filterRegistry.addActionListener(new ActionListener<ThermostatExtensionRegistry.Action>() {
             @Override
-            public void actionPerformed(ActionEvent<com.redhat.thermostat.client.VMTreeFilterRegistry.Action>
+            public void actionPerformed(ActionEvent<com.redhat.thermostat.client.ThermostatExtensionRegistry.Action>
                                         actionEvent)
             {
                 Filter filter = (Filter) actionEvent.getPayload();
                 
                 switch (actionEvent.getActionId()) {
-                case FILTER_ADDED:
+                case SERVICE_ADDED:
                     filters.add(filter);
                     doUpdateTreeAsync();
                     break;
                 
-                case FILTER_REMOVED:
+                case SERVICE_REMOVED:
                     filters.remove(filter);
                     doUpdateTreeAsync();
                     break;

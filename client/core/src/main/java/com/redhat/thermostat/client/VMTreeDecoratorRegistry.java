@@ -36,17 +36,6 @@
 
 package com.redhat.thermostat.client;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
+public class VMTreeDecoratorRegistry {
 
-import com.redhat.thermostat.client.osgi.service.Filter;
-
-class VMTreeFilterRegistry extends ThermostatExtensionRegistry<Filter> {
-    
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + Filter.class.getName() + "))";
-    
-    public VMTreeFilterRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, Filter.class);
-    }    
 }
