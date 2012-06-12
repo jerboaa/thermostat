@@ -54,5 +54,6 @@ public interface Decorator {
     }
     
     String getLabel(String originalLabel);
-    IconResource getIconResource();
+    IconDescriptor getIconDescriptor();
+    Quadrant getQuadrant();
 }

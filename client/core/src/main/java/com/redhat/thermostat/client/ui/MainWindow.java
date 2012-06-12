@@ -42,6 +42,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
@@ -52,15 +53,21 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -567,14 +574,61 @@ public class MainWindow extends JFrame implements MainView {
             return component;
         }
         
+        // TODO: we can cache more, for example the full icon, not just the decoration
+        private Map<Decorator, ImageIcon> decoratorsCache = new HashMap<>();
         private void setAnnotation(DecoratedDefaultMutableTreeNode treeNode, Object value, Component component) {
 
             List<ReferenceDecorator> decorators = treeNode.getDecorators();
             for (ReferenceDecorator decorator : decorators) {
-                String newText = decorator.getDecorator().getLabel(getText());
+                Decorator dec = decorator.getDecorator();
+                String newText = dec.getLabel(getText());
                 setText(newText);
                 setLabelFor(component);
+                
+                ImageIcon icon = decoratorsCache.get(dec);
+                if (icon == null) {
+                    //System.err.println("cache miss: " + dec);
+                    IconDescriptor iconDescriptor = dec.getIconDescriptor();
+                    if (iconDescriptor != null) {
+                        ByteBuffer data = iconDescriptor.getData();
+                        icon = new ImageIcon(data.array());
+                        decoratorsCache.put(dec, icon);
+                    }
+                }
+                
+                if (icon == null) {
+                    return;
+                }
+                
+                Icon currentIcon = getIcon();
+                switch (dec.getQuadrant()) {
+                case BOTTOM_LEFT:
+                    int y = currentIcon.getIconHeight() - icon.getIconHeight();
+                    paintCustomIcon(currentIcon, icon, y);
+                    break;
+                    
+                case TOP_LEFT:
+                    paintCustomIcon(currentIcon, icon, 0);
+                    break;
+                    
+                case MAIN:
+                default:
+                    setIcon(icon);
+                    break;
+                }
             }
+        }
+        
+        private void paintCustomIcon(Icon currentIcon, ImageIcon icon, int y) {
+            BufferedImage image = new BufferedImage(currentIcon.getIconWidth(),
+                                                    currentIcon.getIconHeight(),
+                                                    BufferedImage.TYPE_INT_ARGB);
+            Graphics2D graphics = (Graphics2D) image.getGraphics();
+            
+            currentIcon.paintIcon(null, graphics, 0, 0);
+            graphics.drawImage(icon.getImage(), 0, y, null);
+            
+            setIcon(new ImageIcon(image));
         }
         
         private String createToolTipText(Object value) {

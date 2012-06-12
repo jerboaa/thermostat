@@ -11,6 +11,16 @@
   <packaging>bundle</packaging>
   <name>Thermostat Client Living VM Filter VM Lister</name>
   <build>
+  
+  
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+  
+  
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>

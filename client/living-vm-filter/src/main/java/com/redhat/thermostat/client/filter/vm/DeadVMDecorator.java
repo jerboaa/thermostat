@@ -36,10 +36,12 @@
 
 package com.redhat.thermostat.client.filter.vm;
 
+import java.io.IOException;
+
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.client.ui.IconResource;
+import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -50,13 +52,23 @@ public class DeadVMDecorator implements ReferenceDecorator {
     
     private class VMDecorator implements Decorator {
         @Override
-        public IconResource getIconResource() {
-            return null;
+        public IconDescriptor getIconDescriptor() {
+            try {
+                return IconDescriptor.createFromClassloader(getClass().getClassLoader(), "deadvm.png");
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
         }
         
         @Override
         public String getLabel(String originalLabel) {
             return "[not running] " + originalLabel;
+        }
+        
+        @Override
+        public Quadrant getQuadrant() {
+            return Quadrant.BOTTOM_LEFT;
         }
     }
 

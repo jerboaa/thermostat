@@ -50,6 +50,8 @@ public class IconResource {
     // is missing.
     public static final IconResource MISSING_ICON = null;
 
+    public static final IconResource JAVA_APPLICATION = new IconResource("duke.png");
+    
     public static final IconResource ERROR = new IconResource(ICON_PREFIX + "48x48/status/dialog-error.png");
     public static final IconResource QUESTION = new IconResource(ICON_PREFIX + "48x48/status/dialog-question.png");
     public static final IconResource WARNING = new IconResource(ICON_PREFIX + "48x48/status/dialog-warning.png");

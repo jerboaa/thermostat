@@ -34,56 +34,72 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm;
+package com.redhat.thermostat.client.ui;
 
 import java.io.IOException;
+import java.io.InputStream;
 
-import com.redhat.thermostat.client.osgi.service.Filter;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
-import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.client.ui.IconDescriptor;
-import com.redhat.thermostat.client.ui.IconResource;
-import com.redhat.thermostat.common.dao.DAOFactory;
+import java.nio.ByteBuffer;
 
-public class VMDecorator implements ReferenceDecorator {
+/**
+ * Class that encapsulates an images raw data.
+ * 
+ * <br /><br />
+ * 
+ * An {@link IconDescriptor} is an image resource that needs to be processed
+ * by higher level classes that can read, modify and display the image data.
+ * 
+ * <br /><br />
+ * 
+ * Since constructing an {@link IconDescriptor} can be very expensive, is highly
+ * recommended to cache the result when possible.
+ */
+public class IconDescriptor {
+
+    private ByteBuffer data;
+    private int hash;
     
-    private class LivingVMDecorator implements Decorator {
-        @Override
-        public IconDescriptor getIconDescriptor() {
-            try {
-                return IconDescriptor.createFromClassloader(IconDescriptor.class.getClassLoader(), IconResource.JAVA_APPLICATION.getPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-        
-        @Override
-        public String getLabel(String originalLabel) {
-            return originalLabel;
-        }
-        
-        @Override
-        public Quadrant getQuadrant() {
-            return Quadrant.MAIN;
-        }
+    public IconDescriptor(ByteBuffer data) {
+        this.data = data;
+        hash = data.hashCode();
     }
 
-    private LivingVMFilter decoratorFilter;
-    private LivingVMDecorator decorator;
-    
-    public VMDecorator(final DAOFactory dao) {
-        decorator = new LivingVMDecorator();
-        decoratorFilter = new LivingVMFilter(dao);
+    public ByteBuffer getData() {
+        return data;
     }
     
     @Override
-    public Decorator getDecorator() {
-        return decorator;
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + hash;
+        return result;
     }
-    
+
     @Override
-    public Filter getFilter() {
-        return decoratorFilter;
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        IconDescriptor other = (IconDescriptor) obj;
+        if (hash != other.hash)
+            return false;
+        return true;
+    }
+
+    public static IconDescriptor createFromClassloader(ClassLoader classloader,
+                                                       String resource) throws IOException
+    {
+        InputStream stream = classloader.getResourceAsStream(resource);
+        if (stream == null) throw new IOException("no resource found");
+        
+        byte[] bytes = new byte[stream.available()];
+        stream.read(bytes, 0, bytes.length);
+        
+        ByteBuffer data = ByteBuffer.wrap(bytes);
+        return new IconDescriptor(data);
     }
 }

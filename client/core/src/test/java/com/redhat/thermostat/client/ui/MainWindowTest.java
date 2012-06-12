@@ -131,7 +131,7 @@ public class MainWindowTest {
 
     @Category(GUITest.class)
     @Test
-    public void testHostVmDecoratorsAdded() {
+    public void testHostVmDecoratorsAdded() throws InterruptedException {
         
         List<ReferenceDecorator> decorators = new ArrayList<>();
         ReferenceDecorator refDecorator = mock(ReferenceDecorator.class);
@@ -156,6 +156,8 @@ public class MainWindowTest {
         
         window.updateTree(null, decorators, hostsVMsLoader);
 
+        Thread.sleep(50);
+        
         frameFixture.show();
         frameFixture.requireVisible();
         
