@@ -36,13 +36,7 @@
 
 package com.redhat.swing.laf.dolphin.showcase.tree;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-
 import javax.swing.JTree;
-import javax.swing.tree.DefaultTreeCellRenderer;
-import javax.swing.tree.TreeCellRenderer;
 
 class JTreeView {
     
