@@ -41,6 +41,7 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.ActionListener;
@@ -64,7 +65,7 @@ public interface MainView {
 
     void addActionListener(ActionListener<Action> capture);
 
-    void updateTree(List<Filter> filter, HostsVMsLoader any);
+    void updateTree(List<Filter> filter, List<ReferenceDecorator> decorators, HostsVMsLoader any);
     String getHostVmTreeFilterText();
     
     void setWindowTitle(String title);

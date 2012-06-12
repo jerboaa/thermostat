@@ -34,19 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+/**
+ * A {@link Decorator} allows plugins to install special visual clues on
+ * selected components.
+ * 
+ * <br /><br />
+ * 
+ * A {@link Decorator} itself is not an entry point.
+ */
+public interface Decorator {
 
-class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<ReferenceDecorator> {
-
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + ReferenceDecorator.class.getName() + "))";
-    
-    public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, ReferenceDecorator.class);
+    public static enum Quadrant {
+        TOP_LEFT,
+        BOTTOM_LEFT,
+        MAIN
     }
+    
+    String getLabel(String originalLabel);
+    IconResource getIconResource();
 }

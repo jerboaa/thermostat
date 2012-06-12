@@ -34,19 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.ui;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.tree.DefaultMutableTreeNode;
 
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.common.dao.Ref;
 
-class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<ReferenceDecorator> {
-
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + ReferenceDecorator.class.getName() + "))";
+class DecoratedDefaultMutableTreeNode  extends DefaultMutableTreeNode {
     
-    public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, ReferenceDecorator.class);
+    private List<ReferenceDecorator> decorators;
+    
+    DecoratedDefaultMutableTreeNode(Ref ref) {
+        super(ref);
+        decorators = new ArrayList<>();
+    }
+    
+    public void addDecorator(ReferenceDecorator decorator) {
+        decorators.add(decorator);
+    }
+    
+    public void setDecorators(List<ReferenceDecorator> decorators) {
+        this.decorators = decorators;
+    }
+    
+    public List<ReferenceDecorator> getDecorators() {
+        return decorators;
     }
 }

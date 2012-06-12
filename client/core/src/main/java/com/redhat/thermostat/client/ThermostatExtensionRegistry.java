@@ -54,11 +54,11 @@ public class ThermostatExtensionRegistry<E> {
     
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
     
-    private ServiceTracker filterTracker;
+    private ServiceTracker tracker;
     
     public ThermostatExtensionRegistry(BundleContext context, String filter, final Class<E> classType) throws InvalidSyntaxException {
                 
-        filterTracker = new ServiceTracker(context, FrameworkUtil.createFilter(filter), null) {
+        tracker = new ServiceTracker(context, FrameworkUtil.createFilter(filter), null) {
             
             @Override
             public Object addingService(ServiceReference reference) {
@@ -82,11 +82,11 @@ public class ThermostatExtensionRegistry<E> {
     }
     
     public void start() {
-        filterTracker.open();
+        tracker.open();
     }
 
     public void stop() {
-        filterTracker.close();
+        tracker.close();
     }
     
     public void addActionListener(ActionListener<Action> l) {

@@ -39,15 +39,18 @@ package com.redhat.thermostat.client.ui;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-import javax.swing.AbstractAction;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 
@@ -69,11 +72,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.Ref;
 
 @RunWith(CacioFESTRunner.class)
 public class MainWindowTest {
@@ -122,6 +129,40 @@ public class MainWindowTest {
         verify(l).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_SELECTION_CHANGED));
     }
 
+    @Category(GUITest.class)
+    @Test
+    public void testHostVmDecoratorsAdded() {
+        
+        List<ReferenceDecorator> decorators = new ArrayList<>();
+        ReferenceDecorator refDecorator = mock(ReferenceDecorator.class);
+        final Decorator decorator = mock(Decorator.class);
+        when(decorator.getLabel(anyString())).thenReturn("fluff");
+        
+        when(refDecorator.getDecorator()).thenReturn(decorator);
+        
+        Filter filter = mock(Filter.class);
+        when(filter.matches(any(Ref.class))).thenReturn(false).thenReturn(true);
+
+        when(refDecorator.getFilter()).thenReturn(filter);
+        
+        decorators.add(refDecorator);
+        
+        HostsVMsLoader hostsVMsLoader = mock(HostsVMsLoader.class);
+        Collection<HostRef> expectedHosts = new ArrayList<>();
+        expectedHosts.add(new HostRef("123", "fluffhost1"));
+        expectedHosts.add(new HostRef("456", "fluffhost2"));
+        
+        when(hostsVMsLoader.getHosts()).thenReturn(expectedHosts);
+        
+        window.updateTree(null, decorators, hostsVMsLoader);
+
+        frameFixture.show();
+        frameFixture.requireVisible();
+        
+        verify(decorator, times(0)).getLabel("fluffhost1");
+        verify(decorator, atLeastOnce()).getLabel("fluffhost2");
+    }
+    
     @Category(GUITest.class)
     @Test
     public void testHostVMTreeFilterPropertySupport() {

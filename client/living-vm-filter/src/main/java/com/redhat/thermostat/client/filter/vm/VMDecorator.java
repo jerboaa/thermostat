@@ -34,19 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.filter.vm;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
-
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.IconResource;
+import com.redhat.thermostat.common.dao.DAOFactory;
 
-class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<ReferenceDecorator> {
-
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + ReferenceDecorator.class.getName() + "))";
+public class VMDecorator implements ReferenceDecorator {
     
-    public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, ReferenceDecorator.class);
+    private class LivingVMDecorator implements Decorator {
+        @Override
+        public IconResource getIconResource() {
+            return null;
+        }
+        
+        @Override
+        public String getLabel(String originalLabel) {
+            return originalLabel;
+        }
+    }
+
+    private LivingVMFilter decoratorFilter;
+    private LivingVMDecorator decorator;
+    
+    public VMDecorator(final DAOFactory dao) {
+        decorator = new LivingVMDecorator();
+        decoratorFilter = new LivingVMFilter(dao);
+    }
+    
+    @Override
+    public Decorator getDecorator() {
+        return decorator;
+    }
+    
+    @Override
+    public Filter getFilter() {
+        return decoratorFilter;
     }
 }

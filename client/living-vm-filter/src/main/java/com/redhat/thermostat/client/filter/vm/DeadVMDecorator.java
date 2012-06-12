@@ -36,51 +36,58 @@
 
 package com.redhat.thermostat.client.filter.vm;
 
-import java.util.Hashtable;
-
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
-
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.Filter;
-import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.IconResource;
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 
-public class VMFilterActivator implements BundleActivator {
+public class DeadVMDecorator implements ReferenceDecorator {
     
-    @Override
-    public void start(BundleContext context) throws Exception {
+    private class VMDecorator implements Decorator {
+        @Override
+        public IconResource getIconResource() {
+            return null;
+        }
         
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
+        @Override
+        public String getLabel(String originalLabel) {
+            return "[not running] " + originalLabel;
+        }
+    }
+
+    private Filter decoratorFilter;
+    private VMDecorator decorator;
+    
+    public DeadVMDecorator(final DAOFactory dao) {
+        decorator = new VMDecorator();
+        decoratorFilter = new Filter() {            
             @Override
-            public Object addingService(ServiceReference reference) {
-                Hashtable<String, String> props = new Hashtable<>();
-                props.put(MenuAction.PARENT_MENU, LivingVMFilterMenuAction.PARENT_MENU);
-                
-                ApplicationService service = (ApplicationService) context.getService(reference);
-                
-                LivingVMFilter filter = new LivingVMFilter(service.getDAOFactory());
-                VMDecorator decorator = new VMDecorator(service.getDAOFactory());
-                DeadVMDecorator deadDecorator = new DeadVMDecorator(service.getDAOFactory());
-                
-                LivingVMFilterMenuAction menu = new LivingVMFilterMenuAction(filter);
-                
-                context.registerService(ReferenceDecorator.class.getName(), deadDecorator, null);
-                context.registerService(ReferenceDecorator.class.getName(), decorator, null);
-                
-                context.registerService(Filter.class.getName(), filter, null);
-                context.registerService(MenuAction.class.getName(), menu, props);
-                
-                return super.addingService(reference);
+            public boolean matches(Ref ref) {
+                if (ref instanceof VmRef) {
+                    VmRef vm = (VmRef) ref;
+                    
+                    VmInfoDAO info = dao.getVmInfoDAO();
+                    VmInfo vmInfo = info.getVmInfo(vm);
+                    
+                    return !vmInfo.isAlive();
+                }
+                return false;
             }
         };
-        tracker.open();
     }
     
     @Override
-    public void stop(BundleContext context) throws Exception {
-        
+    public Decorator getDecorator() {
+        return decorator;
+    }
+    
+    @Override
+    public Filter getFilter() {
+        return decoratorFilter;
     }
 }

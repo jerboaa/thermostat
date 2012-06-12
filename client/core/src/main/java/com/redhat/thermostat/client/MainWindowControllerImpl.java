@@ -51,6 +51,7 @@ import org.osgi.framework.InvalidSyntaxException;
 import com.redhat.thermostat.client.MainView.Action;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.AboutDialog;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
@@ -79,7 +80,9 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
     
-    private List<Filter> filters;
+    private List<Filter> vmTreefilters;
+    private List<ReferenceDecorator> vmTreeDecorators;
+    
     private Timer backgroundUpdater;
 
     private MainView view;
@@ -106,28 +109,85 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     };
 
-    private VMTreeFilterRegistry filterRegistry;
+    // FIXME: sort out the code duplication in the registry listeners
     
     private TreeViewFilter treeFilter;
+    private VMTreeFilterRegistry filterRegistry;
+    private ActionListener<ThermostatExtensionRegistry.Action> filterListener =
+            new ActionListener<ThermostatExtensionRegistry.Action>()
+    {
+        @Override
+        public void actionPerformed(ActionEvent<com.redhat.thermostat.client.ThermostatExtensionRegistry.Action>
+                                    actionEvent)
+        {
+            Filter filter = (Filter) actionEvent.getPayload();
+            
+            switch (actionEvent.getActionId()) {
+            case SERVICE_ADDED:
+                vmTreefilters.add(filter);
+                doUpdateTreeAsync();
+                break;
+            
+            case SERVICE_REMOVED:
+                vmTreefilters.remove(filter);
+                doUpdateTreeAsync();
+                break;
+                
+            default:
+                logger.log(Level.WARNING, "received unknown event from VMTreeFilterRegistry: " +
+                                           actionEvent.getActionId());
+                break;
+            }
+        }
+    };
+    
+    private VMTreeDecoratorRegistry decoratorRegistry;
+    private ActionListener<ThermostatExtensionRegistry.Action> decoratorListener =
+            new ActionListener<ThermostatExtensionRegistry.Action> ()
+    {
+        public void actionPerformed(com.redhat.thermostat.common.ActionEvent<ThermostatExtensionRegistry.Action>
+                                    actionEvent)
+        {
+            ReferenceDecorator decorator = (ReferenceDecorator) actionEvent.getPayload();
+            switch (actionEvent.getActionId()) {
+            case SERVICE_ADDED:
+                vmTreeDecorators.add(decorator);
+                doUpdateTreeAsync();
+                break;
+            
+            case SERVICE_REMOVED:
+                vmTreeDecorators.remove(decorator);
+                doUpdateTreeAsync();
+                break;
+                
+            default:
+                logger.log(Level.WARNING, "received unknown event from ReferenceDecorator: " +
+                                           actionEvent.getActionId());
+                break;
+            }
+        };
+    };
     
     private boolean showHistory;
 
     private VmInformationControllerProvider vmInfoControllerProvider;
 
-    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view,
-                                    BundleContext context)
+    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory)
     {
         try {
-            filterRegistry = new VMTreeFilterRegistry(context);
-            menuRegistry = new MenuRegistry(context);
+            filterRegistry = registryFactory.createVMTreeFilterRegistry();
+            decoratorRegistry = registryFactory.createVMTreeDecoratorRegistry();
+            menuRegistry = registryFactory.createMenuRegistry();
             
         } catch (InvalidSyntaxException e) {
             throw new RuntimeException(e);
         }
 
-        this.filters = new CopyOnWriteArrayList<>();
+        vmTreeDecorators = new CopyOnWriteArrayList<>();
+        
+        vmTreefilters = new CopyOnWriteArrayList<>();
         treeFilter = new TreeViewFilter();
-        filters.add(treeFilter);
+        vmTreefilters.add(treeFilter);
         
         this.facadeFactory = facadeFactory;
 
@@ -149,32 +209,11 @@ public class MainWindowControllerImpl implements MainWindowController {
         menuRegistry.addMenuListener(menuListener);
         menuRegistry.start();
         
-        filterRegistry.addActionListener(new ActionListener<ThermostatExtensionRegistry.Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<com.redhat.thermostat.client.ThermostatExtensionRegistry.Action>
-                                        actionEvent)
-            {
-                Filter filter = (Filter) actionEvent.getPayload();
-                
-                switch (actionEvent.getActionId()) {
-                case SERVICE_ADDED:
-                    filters.add(filter);
-                    doUpdateTreeAsync();
-                    break;
-                
-                case SERVICE_REMOVED:
-                    filters.remove(filter);
-                    doUpdateTreeAsync();
-                    break;
-                    
-                default:
-                    logger.log(Level.WARNING, "received unknown event from VMTreeFilterRegistry: " +
-                                               actionEvent.getActionId());
-                    break;
-                }
-            }
-        });
+        filterRegistry.addActionListener(filterListener);
         filterRegistry.start();
+        
+        decoratorRegistry.addActionListener(decoratorListener);
+        decoratorRegistry.start();
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {
@@ -200,6 +239,13 @@ public class MainWindowControllerImpl implements MainWindowController {
      */
     Filter getTreeFilter() {
         return treeFilter;
+    }
+    
+    /**
+     * This method is for testing purpouse only
+     */ 
+    List<ReferenceDecorator> getVmTreeDecorators() {
+        return vmTreeDecorators;
     }
     
     /**
@@ -256,7 +302,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     public void doUpdateTreeAsync() {
         HostsVMsLoader loader = new HostsVMsLoaderImpl();
-        view.updateTree(filters, loader);
+        view.updateTree(vmTreefilters, vmTreeDecorators, loader);
     }
 
     private void initView(MainView mainView) {

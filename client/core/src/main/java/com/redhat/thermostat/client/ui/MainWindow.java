@@ -98,6 +98,7 @@ import com.redhat.thermostat.client.HostsVMsLoader;
 import com.redhat.thermostat.client.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.ActionListener;
@@ -116,21 +117,27 @@ public class MainWindow extends JFrame implements MainView {
 
         private final DefaultTreeModel treeModel;
         private DefaultMutableTreeNode treeRoot;
+        
         private List<Filter> filters;
+        private List<ReferenceDecorator> decorators;
+        
         private HostsVMsLoader hostsVMsLoader;
 
         public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root,
-                                         List<Filter> filters, HostsVMsLoader hostsVMsLoader)
+                                         List<Filter> filters, List<ReferenceDecorator> decorators,
+                                         HostsVMsLoader hostsVMsLoader)
         {
             this.filters = filters;
             this.treeModel = model;
             this.treeRoot = root;
             this.hostsVMsLoader = hostsVMsLoader;
+            this.decorators = decorators;
         }
 
         @Override
         protected DefaultMutableTreeNode doInBackground() throws Exception {
             DefaultMutableTreeNode root = new DefaultMutableTreeNode();
+            
             Collection<HostRef> hostsInRemoteModel = hostsVMsLoader.getHosts();
             buildSubTree(root, hostsInRemoteModel);
             return root;
@@ -139,7 +146,8 @@ public class MainWindow extends JFrame implements MainView {
         private boolean buildSubTree(DefaultMutableTreeNode parent, Collection<? extends Ref> objectsInRemoteModel) {
             boolean subTreeMatches = false;
             for (Ref inRemoteModel : objectsInRemoteModel) {
-                DefaultMutableTreeNode inTreeNode = new DefaultMutableTreeNode(inRemoteModel);
+                DecoratedDefaultMutableTreeNode inTreeNode =
+                        new DecoratedDefaultMutableTreeNode(inRemoteModel);
 
                 boolean shouldInsert = false;
                 if (filters == null) {
@@ -153,7 +161,7 @@ public class MainWindow extends JFrame implements MainView {
                         }
                     }
                 }
-
+                
                 Collection<? extends Ref> children = getChildren(inRemoteModel);
                 boolean subtreeResult = buildSubTree(inTreeNode, children);
                 if (subtreeResult) {
@@ -161,6 +169,13 @@ public class MainWindow extends JFrame implements MainView {
                 }
 
                 if (shouldInsert) {
+                    for (ReferenceDecorator decorator : decorators) {
+                        Filter filter = decorator.getFilter();
+                        if (filter != null && filter.matches(inRemoteModel)) {
+                            inTreeNode.addDecorator(decorator);
+                        }
+                    }
+                    
                     parent.add(inTreeNode);
                     subTreeMatches = true;
                 }
@@ -192,9 +207,11 @@ public class MainWindow extends JFrame implements MainView {
         }
 
         private void syncTree(DefaultMutableTreeNode sourceRoot, DefaultTreeModel targetModel, DefaultMutableTreeNode targetNode) {
+            
             @SuppressWarnings("unchecked") // We know what we put into these trees.
             List<DefaultMutableTreeNode> sourceChildren = Collections.list(sourceRoot.children());
             @SuppressWarnings("unchecked")
+
             List<DefaultMutableTreeNode> targetChildren = Collections.list(targetNode.children());
             for (DefaultMutableTreeNode sourceChild : sourceChildren) {
                 Ref sourceRef = (Ref) sourceChild.getUserObject();
@@ -208,7 +225,11 @@ public class MainWindow extends JFrame implements MainView {
                 }
 
                 if (targetChild == null) {
-                    targetChild = new DefaultMutableTreeNode(sourceRef);
+                    targetChild = new DecoratedDefaultMutableTreeNode(sourceRef);
+                    if (sourceChild instanceof DecoratedDefaultMutableTreeNode) {
+                        DecoratedDefaultMutableTreeNode source = (DecoratedDefaultMutableTreeNode) sourceChild;
+                        ((DecoratedDefaultMutableTreeNode) targetChild).setDecorators(source.getDecorators());
+                    }
                     targetModel.insertNodeInto(targetChild, targetNode, targetNode.getChildCount());
                 }
 
@@ -533,8 +554,27 @@ public class MainWindow extends JFrame implements MainView {
 
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
-            setToolTipText(createToolTipText(((DefaultMutableTreeNode) value).getUserObject()));
-            return super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+            
+            Object node = ((DefaultMutableTreeNode) value).getUserObject();
+            setToolTipText(createToolTipText(node));
+            
+            Component component = super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+            if (value instanceof DecoratedDefaultMutableTreeNode) {
+                DecoratedDefaultMutableTreeNode treeNode = (DecoratedDefaultMutableTreeNode) value;
+                setAnnotation(treeNode, node, component);
+            }
+
+            return component;
+        }
+        
+        private void setAnnotation(DecoratedDefaultMutableTreeNode treeNode, Object value, Component component) {
+
+            List<ReferenceDecorator> decorators = treeNode.getDecorators();
+            for (ReferenceDecorator decorator : decorators) {
+                String newText = decorator.getDecorator().getLabel(getText());
+                setText(newText);
+                setLabelFor(component);
+            }
         }
         
         private String createToolTipText(Object value) {
@@ -562,20 +602,6 @@ public class MainWindow extends JFrame implements MainView {
         }
     }
 
-    private static class Separator extends JPopupMenu.Separator {
-
-        private static final long serialVersionUID = 3061771592573345826L;
-
-        @Override
-        public Dimension getPreferredSize() {
-            Dimension result = super.getPreferredSize();
-            if (result.height < 1) {
-                result.height = 5;
-            }
-            return result;
-        }
-    }
-
     @Override
     public void addActionListener(ActionListener<Action> l) {
         actionNotifier.addActionListener(l);
@@ -594,8 +620,10 @@ public class MainWindow extends JFrame implements MainView {
     }
     
     @Override
-    public void updateTree(List<Filter> filters, HostsVMsLoader hostsVMsLoader) {
-        BackgroundTreeModelWorker worker = new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot, filters, hostsVMsLoader);
+    public void updateTree(List<Filter> filters, List<ReferenceDecorator> decorators, HostsVMsLoader hostsVMsLoader) {
+        BackgroundTreeModelWorker worker =
+                new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot,
+                                              filters, decorators, hostsVMsLoader);
         worker.execute();
     }
 

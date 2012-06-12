@@ -67,7 +67,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow();
-        return new MainWindowControllerImpl(this, mainView, context);
+        RegistryFactory registryFactory = new RegistryFactory(context);
+        return new MainWindowControllerImpl(this, mainView, registryFactory);
     }
 
     @Override

@@ -34,19 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client;
+package com.redhat.thermostat.client.osgi.service;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
+import com.redhat.thermostat.client.ui.Decorator;
 
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+/**
+ * This interface allows plugins to install a custom {@link Decorator} into
+ * the Reference List view.
+ * 
+ * <br /><br />
+ * 
+ * Active {@link ReferenceDecorator}s are first queried against their filters
+ * and then installed into the view if the filter passes. 
+ */
+public interface ReferenceDecorator {
 
-class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<ReferenceDecorator> {
-
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + ReferenceDecorator.class.getName() + "))";
-    
-    public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, ReferenceDecorator.class);
-    }
+    Decorator getDecorator();
+    Filter getFilter();
 }
