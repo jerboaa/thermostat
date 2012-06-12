@@ -103,10 +103,15 @@ public class Main {
             @Override
             public void run() {
                 
-                try {
-                    UIManager.setLookAndFeel(new DolphinLookAndFeel());
-                } catch (UnsupportedLookAndFeelException e) {
-                    logger.log(Level.WARNING, "cannot use DolphinLookAndFeel");
+                // check if the user has other preferences...
+                // not that there is any reason!
+                String laf = System.getProperty("swing.defaultlaf");
+                if (laf == null) {
+                    try {
+                        UIManager.setLookAndFeel(new DolphinLookAndFeel());
+                    } catch (UnsupportedLookAndFeelException e) {
+                        logger.log(Level.WARNING, "cannot use DolphinLookAndFeel");
+                    }
                 }
                 
                 showGui();
