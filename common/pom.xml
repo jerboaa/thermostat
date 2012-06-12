@@ -44,45 +44,11 @@
     <artifactId>thermostat</artifactId>
     <version>0.3-SNAPSHOT</version>
   </parent>
-  
+
   <artifactId>thermostat-common</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>pom</packaging>
 
   <name>Thermostat Common</name>
-  <url>${project.parent.url}</url>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.common.Activator</Bundle-Activator>
-            <Export-Package>
-              com.redhat.thermostat.common.cli,
-              com.redhat.thermostat.common.tools,
-              com.redhat.thermostat.common,
-              com.redhat.thermostat.common.appctx,
-              com.redhat.thermostat.common.config,
-              com.redhat.thermostat.common.dao,
-              com.redhat.thermostat.common.model,
-              com.redhat.thermostat.common.storage,
-              com.redhat.thermostat.common.utils,
-            </Export-Package>
-            <Private-Package>
-              com.redhat.thermostat.test,
-              com.redhat.thermostat.tools,
-            </Private-Package>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-
-  </build>
 
   <dependencies>
     <dependency>
@@ -90,40 +56,11 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-api-mockito</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.powermock</groupId>
-      <artifactId>powermock-module-junit4</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.mongodb</groupId>
-      <artifactId>mongo-java-driver</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>commons-cli</groupId>
-      <artifactId>commons-cli</artifactId>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
   </dependencies>
-  
-  <properties>
-  	<argLine>-XX:-UseSplitVerifier</argLine>
-  </properties>
+
+  <modules>
+    <module>core</module>
+    <module>command</module>
+  </modules>
+
 </project>
