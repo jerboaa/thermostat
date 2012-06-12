@@ -34,59 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.client.internal.AgentConfigurationSource;
+import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.ViewFactory;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-/**
- * This model sits between the current view and the remote model, and allows
- * us to make changes and later throw them away.
- */
-public class AgentConfigurationModel {
+public class DefaultViewFactory implements ViewFactory {
 
-    private final AgentConfigurationSource remoteConfiguration;
+    private static final Logger logger = LoggingUtils.getLogger(SwingViewFactory.class);
+    private final Map<Class<?>, Class<?>> lookupTable = Collections.synchronizedMap(new HashMap<Class<?>, Class<?>>());
 
-    private final List<String> knownAgents;
-    private Map<String, Map<String, Boolean>> enabledBackends;
+    @Override
+    public <T extends View> T getView(Class<T> viewClass) {
+        Class<? extends T> klass = getViewClass(viewClass);
+        if (klass == null) {
+            logger.log(Level.WARNING, "no view class registered for " + viewClass.toString());
+            return null;
+        }
 
-    public AgentConfigurationModel(AgentConfigurationSource configSource) {
-        this.remoteConfiguration = configSource;
-
-        knownAgents = new ArrayList<>(remoteConfiguration.getKnownAgents());
-        enabledBackends = new HashMap<>();
-        for (String agent: knownAgents) {
-            enabledBackends.put(agent, new HashMap<String, Boolean>(remoteConfiguration.getAgentBackends(agent)));
+        try {
+            return klass.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            logger.log(Level.WARNING, "error instantiaitng" + klass);
+            return null;
         }
     }
 
-    public Collection<String> getAgents() {
-        return Collections.unmodifiableList(knownAgents);
+    @Override
+    public <T extends View> Class<? extends T> getViewClass(Class<T> viewClass) {
+        // the cast is safe because the only way to insert an entry into the table is through
+        // a method that enforces this constraint
+        @SuppressWarnings("unchecked")
+        Class<? extends T> result = (Class<? extends T>) lookupTable.get(viewClass);
+        return result;
     }
 
-    public Collection<String> getBackends(String agentName) {
-        return Collections.unmodifiableSet(enabledBackends.get(agentName).keySet());
-    }
-
-    public void setBackendEnabled(String agentName, String backendName, boolean enabled) {
-        enabledBackends.get(agentName).put(backendName, enabled);
-    }
-
-    public boolean getAgentBackendEnabled(String agentName, String backendName) {
-        return enabledBackends.get(agentName).get(backendName);
-    }
-
-    public void saveConfiguration() {
-        for (Entry<String, Map<String, Boolean>> entry: enabledBackends.entrySet()) {
-            remoteConfiguration.updateAgentConfig(entry.getKey(), entry.getValue());
-        }
+    @Override
+    public <T extends View> void setViewClass(Class<T> viewClass, Class<? extends T> implClass) {
+        lookupTable.put(viewClass, implClass);
     }
 
 }

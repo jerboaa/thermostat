@@ -34,49 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
-import java.awt.BorderLayout;
+import org.junit.Test;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+import com.redhat.thermostat.client.internal.DefaultViewFactory;
+import com.redhat.thermostat.common.View;
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
+public class DefaultViewFactoryTest {
 
-public class HostPanel extends JPanel {
+    public static class MockView implements View {}
 
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
-
-    private static final long serialVersionUID = 4835316442841009133L;
-
-    private final HostPanelFacade facade;
-
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
-
-        init();
+    @Test
+    public void testGetUnknownClasses() {
+        DefaultViewFactory factory = new DefaultViewFactory();
+        assertEquals(null, factory.getView(MockView.class));
     }
 
-    private void init() {
-        setLayout(new BorderLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
+    @Test
+    public void testSetAndGet() {
+        DefaultViewFactory factory = new DefaultViewFactory();
+        factory.setViewClass(MockView.class, MockView.class);
+        assertEquals(MockView.class, factory.getViewClass(MockView.class));
     }
 
+    @Test
+    public void testInstantiation() {
+        DefaultViewFactory factory = new DefaultViewFactory();
+        factory.setViewClass(MockView.class, MockView.class);
+        MockView view = factory.getView(MockView.class);
+        assertNotNull(view);
+        assertEquals(MockView.class.getName(), view.getClass().getName());
+    }
 }

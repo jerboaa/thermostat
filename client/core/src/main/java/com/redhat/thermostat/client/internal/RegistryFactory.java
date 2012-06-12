@@ -34,49 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
 
-import java.awt.BorderLayout;
+class RegistryFactory {
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
-
-public class HostPanel extends JPanel {
-
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
-
-    private static final long serialVersionUID = 4835316442841009133L;
-
-    private final HostPanelFacade facade;
-
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
-
-        init();
+    private BundleContext context;
+    RegistryFactory(BundleContext context) {
+        this.context = context;
     }
-
-    private void init() {
-        setLayout(new BorderLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
+    
+    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
+        return new VMTreeDecoratorRegistry(context);
     }
-
+    
+    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
+        return new VMTreeFilterRegistry(context);
+    }
+    
+    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
+        return new MenuRegistry(context);
+    }
 }

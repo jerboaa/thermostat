@@ -34,49 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal.osgi;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import java.util.Arrays;
 
-import java.awt.BorderLayout;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+import com.redhat.thermostat.client.internal.GUIClientCommand;
+import com.redhat.thermostat.client.internal.Main;
+import com.redhat.thermostat.client.internal.UiFacadeFactory;
+import com.redhat.thermostat.client.internal.UiFacadeFactoryImpl;
+import com.redhat.thermostat.common.cli.CommandRegistry;
+import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
+public class ThermostatActivator implements BundleActivator {
 
-public class HostPanel extends JPanel {
+    private VmInformationServiceTracker vmInfoServiceTracker;
+    private VMContextActionServiceTracker contextActionTracker;
 
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
+    private CommandRegistry cmdReg;
 
-    private static final long serialVersionUID = 4835316442841009133L;
+    @Override
+    public void start(final BundleContext context) throws Exception {
+        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
 
-    private final HostPanelFacade facade;
+        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
+        vmInfoServiceTracker.open();
 
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
+        contextActionTracker =
+                new VMContextActionServiceTracker(context, uiFacadeFactory);
+        contextActionTracker.open();
 
-        init();
+        cmdReg = new CommandRegistryImpl(context);
+        Main main = new Main(uiFacadeFactory, new String[0]);
+        cmdReg.registerCommands(Arrays.asList(new GUIClientCommand(main)));
     }
 
-    private void init() {
-        setLayout(new BorderLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
+        contextActionTracker.close();
+        cmdReg.unregisterCommands();
     }
-
 }

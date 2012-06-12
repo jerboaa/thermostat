@@ -34,49 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import java.awt.Component;
+import java.awt.event.MouseEvent;
+import java.util.List;
 
-import java.awt.BorderLayout;
+import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.Filter;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.dao.Ref;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+public interface MainView {
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
-
-public class HostPanel extends JPanel {
-
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
-
-    private static final long serialVersionUID = 4835316442841009133L;
-
-    private final HostPanelFacade facade;
-
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
-
-        init();
+    enum Action {
+        VISIBLE,
+        HIDDEN,
+        HOST_VM_TREE_FILTER,
+        HOST_VM_SELECTION_CHANGED,
+        SHOW_AGENT_CONFIG,
+        SHOW_CLIENT_CONFIG,
+        SWITCH_HISTORY_MODE,
+        SHOW_ABOUT_DIALOG,
+        SHUTDOWN,
+        SHOW_VM_CONTEXT_MENU,
+        VM_CONTEXT_ACTION,
     }
 
-    private void init() {
-        setLayout(new BorderLayout());
+    void addActionListener(ActionListener<Action> capture);
 
-        JTabbedPane tabPane = new JTabbedPane();
+    void updateTree(List<Filter> filter, List<ReferenceDecorator> decorators, HostsVMsLoader any);
+    String getHostVmTreeFilterText();
+    
+    void setWindowTitle(String title);
 
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
+    void showMainWindow();
 
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
+    void hideMainWindow();
 
-        this.add(tabPane);
+    Ref getSelectedHostOrVm();
 
-    }
+    void setSubView(Component view);
 
+    void addMenu(String parentMenuName, MenuAction action);
+
+    void removeMenu(String parentMenuName, MenuAction action);
+
+    void showVMContextActions(List<VMContextAction> actions, MouseEvent e);
 }

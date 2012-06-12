@@ -34,49 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal.osgi;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-import java.awt.BorderLayout;
+import com.redhat.thermostat.client.internal.UiFacadeFactory;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+@SuppressWarnings("rawtypes")
+class VMContextActionServiceTracker extends ServiceTracker {
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
+    private UiFacadeFactory uiFacadeFactory;
 
-public class HostPanel extends JPanel {
+    private BundleContext context;
 
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
-
-    private static final long serialVersionUID = 4835316442841009133L;
-
-    private final HostPanelFacade facade;
-
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
-
-        init();
+    @SuppressWarnings("unchecked")
+    VMContextActionServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+        super(context, VMContextAction.class.getName(), null);
+        this.context = context;
+        this.uiFacadeFactory = uiFacadeFactory;
     }
 
-    private void init() {
-        setLayout(new BorderLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
+    @Override
+    public Object addingService(ServiceReference reference) {
+        @SuppressWarnings("unchecked")
+        VMContextAction service = (VMContextAction) context.getService(reference);
+        uiFacadeFactory.addVMContextAction(service);
+        return service;
     }
-
 }

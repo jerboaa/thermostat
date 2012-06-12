@@ -34,49 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import static org.junit.Assert.assertNotNull;
 
-import java.awt.BorderLayout;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+import org.junit.Test;
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.internal.SwingViewFactory;
+import com.redhat.thermostat.client.ui.AgentConfigurationView;
+import com.redhat.thermostat.client.ui.ClientConfigurationView;
+import com.redhat.thermostat.client.ui.HostCpuView;
+import com.redhat.thermostat.client.ui.HostMemoryView;
+import com.redhat.thermostat.client.ui.HostOverviewView;
+import com.redhat.thermostat.client.ui.VmCpuView;
+import com.redhat.thermostat.client.ui.VmGcView;
+import com.redhat.thermostat.client.ui.VmOverviewView;
+import com.redhat.thermostat.common.View;
 
-public class HostPanel extends JPanel {
+public class SwingViewFactoryTest {
 
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
+    @Test
+    public void test() throws InvocationTargetException, InterruptedException {
+        SwingViewFactory factory = new SwingViewFactory();
 
-    private static final long serialVersionUID = 4835316442841009133L;
+        List<Class<? extends View>> knownViewClasses = new ArrayList<>();
 
-    private final HostPanelFacade facade;
+        knownViewClasses.add(AgentConfigurationView.class);
+        knownViewClasses.add(ClientConfigurationView.class);
+        knownViewClasses.add(HostCpuView.class);
+        knownViewClasses.add(HostMemoryView.class);
+        knownViewClasses.add(HostOverviewView.class);
+        knownViewClasses.add(VmCpuView.class);
+        knownViewClasses.add(VmGcView.class);
+        knownViewClasses.add(VmOverviewView.class);
 
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
+        for (Class<? extends View> klass: knownViewClasses) {
+            assertNotNull(factory.getViewClass(klass));
+            assertNotNull(factory.getView(klass));
+        }
 
-        init();
     }
-
-    private void init() {
-        setLayout(new BorderLayout());
-
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
-    }
-
 }

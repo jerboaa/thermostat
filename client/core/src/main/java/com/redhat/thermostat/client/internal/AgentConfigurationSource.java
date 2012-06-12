@@ -34,49 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import java.awt.BorderLayout;
+public class AgentConfigurationSource {
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+    // FIXME fix this properly
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
-
-public class HostPanel extends JPanel {
-
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
-
-    private static final long serialVersionUID = 4835316442841009133L;
-
-    private final HostPanelFacade facade;
-
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
-
-        init();
+    public List<String> getKnownAgents() {
+        return Arrays.asList(new String[] { "Agent Smith", "Agent Jones", "Agent Brown" });
     }
 
-    private void init() {
-        setLayout(new BorderLayout());
+    public Map<String, Boolean> getAgentBackends(String agentName) {
+        Map<String, Boolean> fake = new HashMap<>();
+        fake.put("Monitor New JVMs", true);
+        fake.put("Use up all my CPU Cycles", false);
+        return fake;
+    }
 
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
+    public void updateAgentConfig(String agentName, Map<String, Boolean> newBackendStatus) {
+        // TODO Auto-generated method stub
     }
 
 }

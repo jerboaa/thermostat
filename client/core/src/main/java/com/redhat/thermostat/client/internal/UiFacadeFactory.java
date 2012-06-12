@@ -34,49 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import java.util.Collection;
 
-import java.awt.BorderLayout;
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.ui.HostInformationController;
+import com.redhat.thermostat.client.ui.SummaryController;
+import com.redhat.thermostat.client.ui.VmInformationController;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+public interface UiFacadeFactory {
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
+    public MainWindowController getMainWindow();
 
-public class HostPanel extends JPanel {
+    public SummaryController getSummary();
 
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
+    public HostInformationController getHostController(HostRef ref);
 
-    private static final long serialVersionUID = 4835316442841009133L;
+    public VmInformationController getVmController(VmRef ref);
 
-    private final HostPanelFacade facade;
+    Collection<VmInformationService> getVmInformationServices();
 
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
+    void addVmInformationService(VmInformationService vmInfoService);
 
-        init();
-    }
+    Collection<VMContextAction> getVMContextActions();
+    void addVMContextAction(VMContextAction service);
 
-    private void init() {
-        setLayout(new BorderLayout());
+    public void shutdown();
 
-        JTabbedPane tabPane = new JTabbedPane();
-
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
-
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
-
-        this.add(tabPane);
-
-    }
-
+    public void awaitShutdown() throws InterruptedException;
 }

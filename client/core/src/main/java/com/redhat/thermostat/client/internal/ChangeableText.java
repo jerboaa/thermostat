@@ -34,49 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.awt.BorderLayout;
+public class ChangeableText {
 
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
+    private final Set<TextListener> listeners = new HashSet<TextListener>();
+    private String text;
 
-import com.redhat.thermostat.client.internal.HostPanelFacade;
-import com.redhat.thermostat.client.locale.LocaleResources;
-
-public class HostPanel extends JPanel {
-
-    /*
-     * This entire class needs to be more dynamic. We should try to avoid
-     * creating objects and should just update them when necessary
-     */
-
-    private static final long serialVersionUID = 4835316442841009133L;
-
-    private final HostPanelFacade facade;
-
-    public HostPanel(final HostPanelFacade facade) {
-        this.facade = facade;
-
-        init();
+    public static interface TextListener {
+        public void textChanged(ChangeableText text);
     }
 
-    private void init() {
-        setLayout(new BorderLayout());
+    public ChangeableText(String text) {
+        this.text = text;
+    }
 
-        JTabbedPane tabPane = new JTabbedPane();
+    public synchronized void setText(String text) {
+        if (this.text.equals(text)) {
+            return;
+        }
+        this.text = text;
+        fireChanged();
+    }
 
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
+    public synchronized String getText() {
+        return text;
+    }
 
-        // TODO additional tabs provided by plugins
-        // tabPane.insertTab(title, icon, component, tip, 3)
+    public synchronized void addListener(TextListener listener) {
+        this.listeners.add(listener);
+    }
 
-        this.add(tabPane);
+    public synchronized void removeListener(TextListener listener) {
+        this.listeners.remove(listener);
+    }
 
+    private void fireChanged() {
+        for (TextListener listener: listeners) {
+            listener.textChanged(this);
+        }
     }
 
 }
