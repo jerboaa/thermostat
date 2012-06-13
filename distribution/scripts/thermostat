@@ -46,6 +46,7 @@ fi
 export THERMOSTAT_HOME
 THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
 
+# all the various libraries we need, mainly external dependencies
 JCOMMON_JAR="${THERMOSTAT_LIBS}/jcommon.jar"
 MONGO_JAR="${THERMOSTAT_LIBS}/mongo.jar"
 BSON_JAR="${THERMOSTAT_LIBS}/bson.jar"
@@ -53,7 +54,7 @@ JOPT_JAR="${THERMOSTAT_LIBS}/jopt-simple-4.3.jar"
 TOOLS_JAR="@java.home@/../lib/tools.jar"
 NETTY_JAR="${THERMOSTAT_LIBS}/netty-3.2.4.Final.jar"
 
-#SERVICE_CLASSPATH="${JCOMMON_JAR}:${MONGO_JAR}:${BSON_JAR}:${TOOLS_JAR}:${JOPT_JAR}:${NETTY_JAR}"
+# plus the main services we use and export
 SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
 
 THERM_DIR=${THERMOSTAT_LIBS}
@@ -61,5 +62,29 @@ THERM_DIR=${THERMOSTAT_LIBS}
 SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}:${THERM_DIR}/thermostat-agent-@project.version@.jar:${THERM_DIR}/thermostat-common-@project.version@.jar:${THERM_DIR}/thermostat-tools-@project.version@.jar"
 THERMOSTAT_MAIN="com.redhat.thermostat.launcher.Thermostat"
 
-${JAVA} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "$@"
+# start parsing arguments, we intercept jvm arguments vs thermostat specific
+# arguments
+JAVA_ARGS=()
+ARGS=()
+
+i=0
+j=0
+
+while [ "$#" -gt "0" ];
+do
+    case "$1" in
+    -J*)
+        JAVA_ARGS[$i]="${1##-J}"
+        i=$((i+1))
+        ;;
+    *)
+        ARGS[$j]="$1"
+        j=$((j+1))
+        ;;
+    esac
+    shift
+done
+
+# finally run thermostat
+${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
 exit $?

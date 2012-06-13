@@ -1,6 +1,16 @@
 Thank you for downloading Thermostat.
 
-REQUIREMENTS:
+This document contains the following information useful to compile and run
+Thermostat:
+
+1. REQUIREMENTS
+2. BUILDING THERMOSTAT
+3. RUNNING THERMOSTAT
+4. PASSING JVM SPECIFIC OPTIONS
+
+
+--------------------------------------------------------------------------------
+REQUIREMENTS
 
 OpenJDK7
 Thermostat requires at least Java 7 to build and run. Thermostat has been tested
@@ -13,7 +23,9 @@ Thermostat requires mongodb (http://www.mongodb.org/) server >= 2.0.0
 
 Either a /etc/os-release file or lsb_release
 
-BUILDING THERMOSTAT:
+
+--------------------------------------------------------------------------------
+BUILDING THERMOSTAT
 
 1. Run "mvn clean package". All tests should pass and the build should succeed.
    Requires a graphical environment for the ui tests.
@@ -29,7 +41,9 @@ BUILDING THERMOSTAT:
 2. The resultant Thermostat system can now be found under the directory
    distribution/target.
 
-RUNNING THERMOSTAT:
+
+--------------------------------------------------------------------------------
+RUNNING THERMOSTAT
 
 0. cd into distribution/target directory just created
 
@@ -41,3 +55,21 @@ RUNNING THERMOSTAT:
 
 3. To start the cli client:
    bin/thermostat [--help]
+
+
+--------------------------------------------------------------------------------
+PASSING JVM SPECIFIC OPTIONS
+
+In some cases, it may be desirable to pass arguments to the virtual machine,
+for example to increase memory or change the look and feel for the Swing Client.
+
+Thermostat follows a well established convention to enable this: options that
+start with -J are not passed to the thermostat launcher, but instead to the
+JVM itself.
+
+For example, this command launches thermostat with the Nimbus Look and Feel,
+rather then the default one:
+
+bin/thermostat gui \
+    -J-Dswing.defaultlaf=javax.swing.plaf.nimbus.NimbusLookAndFeel
+
