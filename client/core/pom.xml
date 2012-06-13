@@ -92,7 +92,7 @@
 
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common</artifactId>
+      <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
       <type>bundle</type>
     </dependency>
@@ -141,16 +141,18 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.client.osgi.ThermostatActivator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.client.internal.osgi.ThermostatActivator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.client.osgi.service,
               com.redhat.thermostat.client.ui,
               com.redhat.thermostat.client.locale
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.client,
-              com.redhat.thermostat.client.config,
-              com.redhat.thermostat.client.osgi,
+              com.redhat.thermostat.client.internal,
+              com.redhat.thermostat.client.internal.config,
+              com.redhat.thermostat.client.internal.osgi,
+              com.redhat.thermostat.client.internal.ui,
+              com.redhat.thermostat.client.internal.ui.swing
             </Private-Package>
           </instructions>
         </configuration>

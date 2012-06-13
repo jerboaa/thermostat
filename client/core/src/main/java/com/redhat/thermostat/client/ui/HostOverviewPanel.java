@@ -48,7 +48,7 @@ import javax.swing.JPanel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-import com.redhat.thermostat.client.ChangeableText;
+import com.redhat.thermostat.client.internal.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Key;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;

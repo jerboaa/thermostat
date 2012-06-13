@@ -57,7 +57,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.ChangeableText;
+import com.redhat.thermostat.client.internal.ChangeableText;
 
 public class SimpleTable implements ChangeableText.TextListener {
 

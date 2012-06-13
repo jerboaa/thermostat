@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.redhat.thermostat.client.AgentConfigurationSource;
+import com.redhat.thermostat.client.internal.AgentConfigurationSource;
 
 /**
  * This model sits between the current view and the remote model, and allows

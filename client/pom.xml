@@ -65,6 +65,7 @@
     <module>heapdumper</module>
     <module>memory-stats-panel</module>
     <module>living-vm-filter</module>
+    <module>command</module>
   </modules>
 
 </project>

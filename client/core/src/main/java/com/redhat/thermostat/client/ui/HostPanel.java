@@ -43,7 +43,7 @@ import java.awt.BorderLayout;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import com.redhat.thermostat.client.HostPanelFacade;
+import com.redhat.thermostat.client.internal.HostPanelFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
 
 public class HostPanel extends JPanel {

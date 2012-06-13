@@ -3,5 +3,5 @@ Version=1.0
 Type=Application
 Name=Thermostat
 Comment=A monitoring and serviceability tool for OpenJDK
-Excec=${thermostat.home}/bin/thermostat-client-gui
+Exec=${thermostat.home}/bin/thermostat gui
 Icon=thermostat

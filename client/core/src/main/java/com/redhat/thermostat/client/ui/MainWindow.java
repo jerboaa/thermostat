@@ -101,8 +101,8 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
-import com.redhat.thermostat.client.HostsVMsLoader;
-import com.redhat.thermostat.client.MainView;
+import com.redhat.thermostat.client.internal.HostsVMsLoader;
+import com.redhat.thermostat.client.internal.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
