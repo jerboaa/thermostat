@@ -55,12 +55,14 @@ public class ApplicationInfo {
 
     private static final Logger logger = LoggingUtils.getLogger(ApplicationInfo.class);
 
+    private static final String APP_INFO = "/com/redhat/thermostat/client/app-info.properties";
+    
     private Properties appInfo;
 
     public ApplicationInfo() {
         appInfo = new Properties();
         // the properties file should be in the same package as this class
-        InputStream res = getClass().getResourceAsStream("app-info.properties");
+        InputStream res = getClass().getResourceAsStream(APP_INFO);
         if (res != null) {
             try {
                 appInfo.load(res);
