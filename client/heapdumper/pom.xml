@@ -36,20 +36,33 @@
  to do so, delete this exception statement from your version.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-
   <parent>
+    <artifactId>thermostat-client</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
     <version>0.3-SNAPSHOT</version>
   </parent>
-
-  <artifactId>thermostat-agent</artifactId>
+  <artifactId>thermostat-client-heapdumper</artifactId>
   <packaging>bundle</packaging>
-
-  <name>Thermostat Agent</name>
-
+  <name>Thermostat Client Heap Dumper plugin</name>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Activator>com.redhat.thermostat.client.heap.Activator</Bundle-Activator>
+            <Private-Package>com.redhat.thermostat.client.heap</Private-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -61,6 +74,12 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+    
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
+    </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common</artifactId>
@@ -68,41 +87,10 @@
       <type>bundle</type>
     </dependency>
     <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun</groupId>
-      <artifactId>tools</artifactId>
-      <scope>system</scope>
-      <systemPath>${java.home}/../lib/tools.jar</systemPath>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-core</artifactId>
+      <version>${project.version}</version>
+      <type>bundle</type>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.agent.Activator</Bundle-Activator>
-            <Export-Package>
-              com.redhat.thermostat.agent,
-              com.redhat.thermostat.backend,
-            </Export-Package>
-            <Private-Package>
-              com.redhat.thermostat,
-              com.redhat.thermostat.agent.config,
-              com.redhat.thermostat.backend.sample,
-              com.redhat.thermostat.backend.system,
-            </Private-Package>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-
 </project>
