@@ -34,50 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal.osgi;
+package com.redhat.thermostat.common.cli;
 
-import java.util.Arrays;
-
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.internal.GUIClientCommand;
-import com.redhat.thermostat.client.internal.Main;
-import com.redhat.thermostat.client.internal.UiFacadeFactory;
-import com.redhat.thermostat.client.internal.UiFacadeFactoryImpl;
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+/**
+ * Interface that allows classes to carry a {@link BundleContext}.
+ */
+public interface OSGiContext {
 
-public class ThermostatActivator implements BundleActivator {
-
-    private VmInformationServiceTracker vmInfoServiceTracker;
-    private VMContextActionServiceTracker contextActionTracker;
-
-    private CommandRegistry cmdReg;
-
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
-
-        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        vmInfoServiceTracker.open();
-
-        contextActionTracker =
-                new VMContextActionServiceTracker(context, uiFacadeFactory);
-        contextActionTracker.open();
-
-        cmdReg = new CommandRegistryImpl(context);
-        Main main = new Main(uiFacadeFactory, new String[0]);
-        
-        GUIClientCommand cmd = new GUIClientCommand(main);
-        cmd.setBundleContext(context);
-        cmdReg.registerCommands(Arrays.asList(cmd));
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
-        contextActionTracker.close();
-        cmdReg.unregisterCommands();
-    }
+    void setBundleContext(BundleContext context);
 }

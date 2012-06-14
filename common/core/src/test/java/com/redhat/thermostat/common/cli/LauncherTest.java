@@ -231,20 +231,26 @@ public class LauncherTest {
         });
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
-        new LauncherImpl(ctxFactory).run(new String[] { "error" });
+        LauncherImpl launcher = new LauncherImpl(ctxFactory);
+        launcher.setBundleContext(bundleContext);
+        launcher.run(new String[] { "error" });
         assertEquals("test error\n", ctxFactory.getError());
 
     }
 
     private void runAndVerifyCommand(String[] args, String expected) {
-        new LauncherImpl(ctxFactory).run(args);
+        LauncherImpl launcher = new LauncherImpl(ctxFactory);
+        launcher.setBundleContext(bundleContext);
+        launcher.run(args);
         assertEquals(expected, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
     }
 
     @Test
     public void verifyStorageCommandSetsUpDAOFactory() {
-        new LauncherImpl(ctxFactory).run(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345" });
+        LauncherImpl launcher = new LauncherImpl(ctxFactory);
+        launcher.setBundleContext(bundleContext);
+        launcher.run(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345" });
         verify(appContextSetup).setupAppContext("mongo://fluff:12345");
     }
 
@@ -252,6 +258,7 @@ public class LauncherTest {
         ClientPreferences prefs = mock(ClientPreferences.class);
         when(prefs.getConnectionUrl()).thenReturn("mongo://fluff:12345");
         LauncherImpl l = new LauncherImpl(ctxFactory);
+        l.setBundleContext(bundleContext);
         l.setPreferences(prefs);
         l.run(new String[] { "test3" });
         verify(appContextSetup).setupAppContext("mongo://fluff:12345");

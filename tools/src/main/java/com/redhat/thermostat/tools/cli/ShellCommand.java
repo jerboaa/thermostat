@@ -59,11 +59,12 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Launcher;
+import com.redhat.thermostat.common.cli.OSGiContext;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class ShellCommand implements Command {
+public class ShellCommand implements Command, OSGiContext {
 
     private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
 
@@ -80,6 +81,8 @@ public class ShellCommand implements Command {
     private CommandContext context;
     private HistoryProvider historyProvider;
 
+    private BundleContext bundleContext;
+    
     static class HistoryProvider {
         public PersistentHistory get() {
             PersistentHistory history = null;
@@ -100,6 +103,11 @@ public class ShellCommand implements Command {
         this.historyProvider = provider;
     }
 
+    @Override
+    public void setBundleContext(BundleContext context) {
+        bundleContext = context;
+    }
+    
     @Override
     public void run(CommandContext ctx) throws CommandException {
         context = ctx;
@@ -156,10 +164,9 @@ public class ShellCommand implements Command {
 
     private void launchCommand(String line) throws CommandException {
         String[] parsed = line.split(" ");
-        BundleContext bCtx = context.getCommandContextFactory().getBundleContext();
-        ServiceReference launcherRef = bCtx.getServiceReference(Launcher.class.getName());
+        ServiceReference launcherRef = bundleContext.getServiceReference(Launcher.class.getName());
         if (launcherRef != null) {
-            Launcher launcher = (Launcher) bCtx.getService(launcherRef);
+            Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
             launcher.run(parsed);
         } else {
             throw new CommandException("Severe: Could not locate launcher");

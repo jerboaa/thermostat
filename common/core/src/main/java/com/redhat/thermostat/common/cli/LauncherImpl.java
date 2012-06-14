@@ -40,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -48,7 +49,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class LauncherImpl implements Launcher {
+public class LauncherImpl implements Launcher, OSGiContext {
 
     private static final String UNKNOWN_COMMAND_MESSAGE = "unknown command '%s'\n";
 
@@ -60,10 +61,17 @@ public class LauncherImpl implements Launcher {
 
     private int usageCount = 0;
 
+    private BundleContext context;
+    
     public LauncherImpl(CommandContextFactory cmdCtxFactory) {
         this.cmdCtxFactory = cmdCtxFactory;
     }
 
+    @Override
+    public void setBundleContext(BundleContext context) {
+        this.context = context;
+    }
+    
     public void run(String[] args) {
         usageCount++;
         try {
@@ -87,7 +95,7 @@ public class LauncherImpl implements Launcher {
         if (usageCount == 0) {
             try {
                 ApplicationContext.getInstance().getTimerFactory().shutdown();
-                cmdCtxFactory.getBundleContext().getBundle(0).stop();
+                context.getBundle(0).stop();
             } catch (BundleException e) {
                 throw (InternalError) new InternalError().initCause(e);
             }

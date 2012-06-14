@@ -43,11 +43,8 @@ public class CommandContextFactory {
     private CommandRegistry commandRegistry;
     private Console console = new SystemConsole();
 
-    private BundleContext bundleContext;
-
     public CommandContextFactory(BundleContext ctx) {
         commandRegistry = new CommandRegistryImpl(ctx);
-        bundleContext = ctx;
     }
 
     public CommandContext createContext(Arguments args) {
@@ -65,9 +62,4 @@ public class CommandContextFactory {
     public Console getConsole() {
         return console ;
     }
-
-    public BundleContext getBundleContext() {
-        return bundleContext;
-    }
-
 }

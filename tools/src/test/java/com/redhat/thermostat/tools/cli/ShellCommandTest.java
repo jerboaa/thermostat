@@ -86,6 +86,8 @@ public class ShellCommandTest {
     public void testBasic() throws CommandException {
         ServiceReference ref = mock(ServiceReference.class);
         BundleContext bundleContext = mock(BundleContext.class);
+        cmd.setBundleContext(bundleContext);
+        
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
@@ -151,12 +153,16 @@ public class ShellCommandTest {
 
         ServiceReference ref = mock(ServiceReference.class);
         BundleContext bundleContext = mock(BundleContext.class);
+        cmd.setBundleContext(bundleContext);
+        
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
 
         cmd = new ShellCommand(provider);
+        cmd.setBundleContext(bundleContext);
+        
         // "\u001b[A" is the escape code for up-arrow. use xxd -p to generate
         ctxFactory.setInput("\u001b[A\nexit\n");
         Arguments args = new SimpleArguments();
@@ -181,8 +187,11 @@ public class ShellCommandTest {
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-
+        cmd.setBundleContext(bundleContext);
+        
         cmd = new ShellCommand(provider);
+        cmd.setBundleContext(bundleContext);
+        
         ctxFactory.setInput("add-to-history\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
