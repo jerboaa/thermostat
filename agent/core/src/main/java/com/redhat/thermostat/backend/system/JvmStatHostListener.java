@@ -42,6 +42,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -52,6 +54,7 @@ import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
+import sun.jvmstat.monitor.event.VmListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.JvmStatusListener;
@@ -70,15 +73,29 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private final VmInfoDAO vmInfoDAO;
 
     private Map<Integer, MonitoredVm> monitoredVms  = new HashMap<>();
-
+    private Map<MonitoredVm, List<VmListener>> registeredListeners  = new ConcurrentHashMap<>();
+    
     private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
 
     JvmStatHostListener(DAOFactory df, boolean attachNew) {
         this.df = df;
         this.vmInfoDAO = df.getVmInfoDAO();
-        this.attachNew = attachNew;
+        this.attachNew = attachNew;        
     }
 
+    void removeAllListeners() {
+        for (MonitoredVm vm : monitoredVms.values()) {
+            for (VmListener listener : registeredListeners.get(vm)) {
+                try {
+                    if (listener != null) vm.removeVmListener(listener);
+                
+                } catch (MonitorException e) {
+                    logger.log(Level.WARNING, "can't remove vm listener", e);
+                }
+            }
+        }
+    }
+    
     @Override
     public void disconnected(HostEvent event) {
         logger.warning("Disconnected from host");
@@ -139,8 +156,21 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
             }
 
             if (attachNew) {
-                vm.addVmListener(new JvmStatVmListener(df, vmId));
-                vm.addVmListener(new JvmStatVmClassListener(df, vmId));
+                List<VmListener> listeners = registeredListeners.get(vm);
+                if (listeners == null) {
+                    listeners = new CopyOnWriteArrayList<>();
+                }
+                
+                VmListener listener =  new JvmStatVmListener(df, vmId);
+                vm.addVmListener(listener);
+                listeners.add(listener);
+                
+                listener = new JvmStatVmClassListener(df, vmId);
+                vm.addVmListener(listener);
+                listeners.add(listener);
+                
+                registeredListeners.put(vm, listeners);
+                
             } else {
                 logger.log(Level.FINE, "skipping new vm " + vmId);
             }
@@ -163,7 +193,16 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
             }
             vmInfoDAO.putVmStoppedTime(vmId, stopTime);
 
-            monitoredVms.remove(vmId).detach();
+            MonitoredVm vm = monitoredVms.remove(vmId);
+            List<VmListener> listeners = registeredListeners.remove(vm);
+            for (VmListener listener : listeners) {
+                try {
+                    if (listener != null) vm.removeVmListener(listener);
+                } catch (MonitorException e) {
+                    logger.log(Level.WARNING, "can't remove vm listener", e);
+                }
+            }
+            vm.detach();
         }
     }
 
