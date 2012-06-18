@@ -56,6 +56,8 @@ public class VMInfoCommand implements Command {
     private static final String NAME = "vm-info";
     private static final String DESCRIPTION = "shows basic information about a VM";
 
+    private static final String STILL_ALIVE = "<Running>";
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
@@ -76,7 +78,11 @@ public class VMInfoCommand implements Command {
         TableRenderer table = new TableRenderer(2);
         table.printLine("Process ID:", String.valueOf(vmInfo.getVmPid()));
         table.printLine("Start time:", new Date(vmInfo.getStartTimeStamp()).toString());
-        table.printLine("Stop time:", new Date(vmInfo.getStopTimeStamp()).toString());
+        if (vmInfo.isAlive()) {
+            table.printLine("Stop time:", STILL_ALIVE);
+        } else {
+            table.printLine("Stop time:", new Date(vmInfo.getStopTimeStamp()).toString());
+        }
         table.printLine("Main class:", vmInfo.getMainClass());
         table.printLine("Command line:", vmInfo.getJavaCommandLine());
         table.printLine("Java version:", vmInfo.getJavaVersion());

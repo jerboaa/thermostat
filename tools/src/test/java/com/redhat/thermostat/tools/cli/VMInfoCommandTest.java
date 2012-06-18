@@ -66,6 +66,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.test.Bug;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class VMInfoCommandTest {
@@ -87,6 +88,7 @@ public class VMInfoCommandTest {
     private VmInfoDAO vmsDAO;
     private AppContextSetup appContextSetup;
     private TestCommandContextFactory cmdCtxFactory;
+    private VmRef vm;
 
     @Before
     public void setUp() {
@@ -112,7 +114,7 @@ public class VMInfoCommandTest {
     private void setupDAOs() {
         vmsDAO = mock(VmInfoDAO.class);
         HostRef host = new HostRef("123", "dummy");
-        VmRef vm = new VmRef(host, 234, "dummy");
+        vm = new VmRef(host, 234, "dummy");
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
         Calendar end = Calendar.getInstance();
@@ -175,6 +177,31 @@ public class VMInfoCommandTest {
     @Test
     public void testDescription() {
         assertEquals("shows basic information about a VM", cmd.getDescription());
+    }
+
+    @Bug(id="1046",
+            summary="CLI vm-info display wrong stop time for living vms",
+            url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1046")
+    @Test
+    public void testStopTime() throws CommandException {
+        Calendar start = Calendar.getInstance();
+        start.set(2012, 5, 7, 15, 32, 0);
+        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new ArrayList<String>());
+        when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "Process ID:      234\n" +
+                          "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
+                          "Stop time:       <Running>\n" +
+                          "Main class:      mainClass\n" +
+                          "Command line:    commandLine\n" +
+                          "Java version:    vmVersion\n" +
+                          "Virtual machine: vmName\n" +
+                          "VM arguments:    vmArguments\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
     }
 
     @Test
