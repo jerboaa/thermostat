@@ -61,6 +61,10 @@ public class CommandRegistryImpl extends BaseCommandRegistry {
     }
 
     protected ServiceRegistration registerCommand(Command cmd) {
+        if (cmd instanceof OSGiContext) {
+            ((OSGiContext) cmd).setBundleContext(context);
+        }
+        
         Hashtable<String, String> props = new Hashtable<>();
         props.put(Command.NAME, cmd.getName());
         ServiceRegistration registration = context.registerService(Command.class.getName(), cmd, props);

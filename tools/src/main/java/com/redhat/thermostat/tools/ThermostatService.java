@@ -40,8 +40,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.agent.AgentApplication;
@@ -54,6 +57,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextImpl;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Launcher;
+import com.redhat.thermostat.common.cli.OSGiContext;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -68,7 +72,7 @@ import com.redhat.thermostat.tools.db.StorageAlreadyRunningException;
  * Simple service that allows starting Agent and DB Backend
  * in a single step.
  */
-public class ThermostatService extends BasicCommand implements ActionListener<ApplicationState> {
+public class ThermostatService extends BasicCommand implements ActionListener<ApplicationState>, OSGiContext {
     
     private static final String NAME = "service";
 
@@ -83,13 +87,19 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
     private ActionNotifier<ApplicationState> notifier;
 
     private CommandContext context;
-
+    private BundleContext bundleContext;
+    
     private List<Runnable> tasksOnStop = new CopyOnWriteArrayList<>();
 
     public ThermostatService() {
         database = new DBService();
         agent = new AgentApplication();
         notifier = new ActionNotifier<>(this);
+    }
+    
+    @Override
+    public void setBundleContext(BundleContext context) {
+        this.bundleContext = context;
     }
     
     private void addListeners() throws InvalidConfigurationException {
@@ -136,10 +146,23 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                     @Override
                     public void run() {
                         String[] args = new String[] { "storage", "--stop" };
-                        BundleContext bCtx = context.getCommandContextFactory().getBundleContext();
-                        ServiceReference launcherRef = bCtx.getServiceReference(Launcher.class.getName());
-                        Launcher launcher = (Launcher) bCtx.getService(launcherRef);
-                        launcher.run(args);
+                        
+                        ServiceReference launcherRef = bundleContext.getServiceReference(Launcher.class.getName());
+                        if (launcherRef != null) {
+                            Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
+                            launcher.run(args);
+                        } else {
+                            try {
+                                SimpleArguments arguments = new SimpleArguments();
+                                arguments.addArgument("stop", args[1]);
+                                database.run(new CommandContextImpl(arguments,
+                                        ThermostatService.this.context.getCommandContextFactory()));
+                                
+                            } catch (CommandException e) {
+                                Logger.getLogger(getClass().getSimpleName()).log(Level.WARNING, "Can't stop database", e);
+                            }
+                        }
+                        
                     }
                 });
                 

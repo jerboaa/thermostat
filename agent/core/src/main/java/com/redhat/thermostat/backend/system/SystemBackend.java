@@ -198,6 +198,10 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         removeJvmStatusListener(this);
 
         try {
+            
+            // remove all listener from the host listener
+            hostListener.removeAllListeners();
+            
             host.removeHostListener(hostListener);
         } catch (MonitorException me) {
             logger.log(Level.INFO, "something went wrong in jvmstat's listening to this host");
@@ -215,7 +219,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     @Override
     public String getConfigurationValue(String key) {
-        // TODO Auto-generated method stub
         return null;
     }
 

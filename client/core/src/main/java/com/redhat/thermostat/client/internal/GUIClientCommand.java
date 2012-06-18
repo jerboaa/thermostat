@@ -49,9 +49,11 @@ import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.OSGiContext;
 
-public class GUIClientCommand implements Command {
+public class GUIClientCommand implements Command, OSGiContext {
 
+    private BundleContext context;
     private Main clientMain;
 
     public GUIClientCommand(Main clientMain) {
@@ -59,8 +61,12 @@ public class GUIClientCommand implements Command {
     }
 
     @Override
+    public void setBundleContext(BundleContext context) {
+        this.context = context;
+    }
+    
+    @Override
     public void run(CommandContext ctx) throws CommandException {
-        BundleContext context = ctx.getCommandContextFactory().getBundleContext();
         context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
         context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
         

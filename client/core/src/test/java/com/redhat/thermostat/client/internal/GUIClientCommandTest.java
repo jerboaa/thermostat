@@ -81,10 +81,11 @@ public class GUIClientCommandTest {
     public void testRun() throws CommandException {
         BundleContext bCtx = mock(BundleContext.class);
         CommandContextFactory cmdCtxFactory = mock(CommandContextFactory.class);
-        when(cmdCtxFactory.getBundleContext()).thenReturn(bCtx);
+
         CommandContext cmdCtx = mock(CommandContext.class);
         when(cmdCtx.getCommandContextFactory()).thenReturn(cmdCtxFactory);
 
+        cmd.setBundleContext(bCtx);
         cmd.run(cmdCtx);
 
         verify(clientMain).run();

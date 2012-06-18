@@ -61,7 +61,9 @@ public class Activator implements BundleActivator {
         reg.registerCommands(cmds);
 
         CommandContextFactory cmdCtxFactory = new CommandContextFactory(context);
-        Launcher launcher = new LauncherImpl(cmdCtxFactory);
+        LauncherImpl launcher = new LauncherImpl(cmdCtxFactory);
+        launcher.setBundleContext(context);
+        
         launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
     }
 
