@@ -47,4 +47,9 @@ class VmClassStatService implements VmInformationService {
         return new VmClassStatController(ref);
     }
 
+    @Override
+    public boolean isApplicableFor(VmRef ref) {
+        return true;
+    }
+
 }

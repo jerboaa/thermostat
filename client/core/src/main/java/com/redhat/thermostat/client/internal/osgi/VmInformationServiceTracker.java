@@ -58,8 +58,14 @@ class VmInformationServiceTracker extends ServiceTracker {
 
     @Override
     public Object addingService(ServiceReference reference) {
-        VmInformationService service = (VmInformationService) context.getService(reference);
+        VmInformationService service = (VmInformationService) super.addingService(reference);
         uiFacadeFactory.addVmInformationService(service);
         return service;
+    }
+
+    @Override
+    public void removedService(ServiceReference reference, Object service) {
+        uiFacadeFactory.removeVmInformationService((VmInformationService)service);
+        super.removedService(reference, service);
     }
 }

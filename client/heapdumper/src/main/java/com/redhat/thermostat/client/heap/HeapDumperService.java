@@ -42,8 +42,19 @@ import com.redhat.thermostat.common.dao.VmRef;
 
 public class HeapDumperService implements VmInformationService {
 
+    private VmRef vmRef;
+
+    public HeapDumperService(VmRef reference) {
+        this.vmRef = reference;
+    }
+
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
         return new HeapDumpController(ref);
+    }
+
+    @Override
+    public boolean isApplicableFor(VmRef ref) {
+        return vmRef.equals(ref);
     }
 }

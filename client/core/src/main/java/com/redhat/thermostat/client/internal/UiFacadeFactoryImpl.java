@@ -100,6 +100,11 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
+    public void removeVmInformationService(VmInformationService vmInfoService) {
+        vmInformationServices.remove(vmInfoService);
+    }
+
+    @Override
     public Collection<VMContextAction> getVMContextActions() {
         return contextAction;
     }
