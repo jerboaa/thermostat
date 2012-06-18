@@ -39,6 +39,8 @@ package com.redhat.thermostat.tools.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -64,6 +66,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class ListVMsCommandTest {
@@ -118,8 +121,11 @@ public class ListVMsCommandTest {
     public void verifyOutputFormatOneLine() throws CommandException {
 
         HostRef host1 = new HostRef("123", "h1");
+        VmRef vm1 = new VmRef(host1, 1, "n");
+        VmInfo vm1Info = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null);
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1));
-        when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(new VmRef(host1, 1, "n")));
+        when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1));
+        when(vmsDAO.getVmInfo(eq(vm1))).thenReturn(vm1Info);
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("--dbUrl", "fluff");
@@ -128,8 +134,8 @@ public class ListVMsCommandTest {
         cmd.run(ctx);
 
         String output = cmdCtxFactory.getOutput();
-        assertEquals("HOST_ID HOST VM_ID VM_NAME\n" +
-                     "123     h1   1     n\n", output);
+        assertEquals("HOST_ID HOST VM_ID STATUS VM_NAME\n" +
+                     "123     h1   1     EXITED n\n", output);
     }
 
     @Test
@@ -139,8 +145,16 @@ public class ListVMsCommandTest {
         HostRef host2 = new HostRef("456", "longhostname");
         when(hostsDAO.getHosts()).thenReturn(Arrays.asList(host1, host2));
 
-        when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(new VmRef(host1, 1, "n"), new VmRef(host1, 2, "n1")));
-        when(vmsDAO.getVMs(host2)).thenReturn(Arrays.asList(new VmRef(host2, 123456, "longvmname")));
+        VmRef vm1 = new VmRef(host1, 1, "n");
+        VmRef vm2 = new VmRef(host1, 2, "n1");
+        VmRef vm3 = new VmRef(host2, 123456, "longvmname");
+
+        VmInfo vmInfo = new VmInfo(1, 0, 1, "", "", "", "", "", "", "", "", null, null, null);
+
+        when(vmsDAO.getVMs(host1)).thenReturn(Arrays.asList(vm1, vm2));
+        when(vmsDAO.getVMs(host2)).thenReturn(Arrays.asList(vm3));
+
+        when(vmsDAO.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("--dbUrl", "fluff");
@@ -149,10 +163,10 @@ public class ListVMsCommandTest {
         cmd.run(ctx);
 
         String output = cmdCtxFactory.getOutput();
-        assertEquals("HOST_ID HOST         VM_ID  VM_NAME\n" +
-                     "123     h1           1      n\n" +
-                     "123     h1           2      n1\n" +
-                     "456     longhostname 123456 longvmname\n", output);
+        assertEquals("HOST_ID HOST         VM_ID  STATUS VM_NAME\n" +
+                     "123     h1           1      EXITED n\n" +
+                     "123     h1           2      EXITED n1\n" +
+                     "456     longhostname 123456 EXITED longvmname\n", output);
     }
 
     @Test

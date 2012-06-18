@@ -39,6 +39,7 @@ package com.redhat.thermostat.tools.cli;
 import java.io.PrintStream;
 
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 
 class VMListFormatter {
 
@@ -51,15 +52,19 @@ class VMListFormatter {
 
     private static final String VM_NAME = "VM_NAME";
 
+    private static final String VM_STATUS = "STATUS";
+    private static final String STATUS_ALIVE = "RUNNING";
+    private static final String STATUS_DEAD = "EXITED";
+
     private TableRenderer tableRenderer;
 
     VMListFormatter() {
-        tableRenderer = new TableRenderer(4);
+        tableRenderer = new TableRenderer(5);
         printHeader();
     }
 
-    void addVM(VmRef vm) {
-        printVM(vm);
+    void addVM(VmRef vm, VmInfo info) {
+        printVM(vm, info);
     }
 
     void format(PrintStream output) {
@@ -67,15 +72,19 @@ class VMListFormatter {
     }
 
     private void printHeader() {
-        printLine(HOST_ID, HOST, VM_ID, VM_NAME);
+        printLine(HOST_ID, HOST, VM_ID, VM_STATUS, VM_NAME);
     }
 
-    private void printVM(VmRef vm) {
-        printLine(vm.getAgent().getAgentId(), vm.getAgent().getHostName(), vm.getId().toString(), vm.getName());
+    private void printVM(VmRef vm, VmInfo info) {
+        printLine(vm.getAgent().getAgentId(),
+                  vm.getAgent().getHostName(),
+                  vm.getId().toString(),
+                  info.isAlive() ? STATUS_ALIVE : STATUS_DEAD,
+                  vm.getName());
     }
 
-    private void printLine(String hostId, String host, String vmId, String vmName) {
-        tableRenderer.printLine(hostId, host, vmId, vmName);
+    private void printLine(String hostId, String host, String vmId, String status, String vmName) {
+        tableRenderer.printLine(hostId, host, vmId, status, vmName);
     }
 
 }

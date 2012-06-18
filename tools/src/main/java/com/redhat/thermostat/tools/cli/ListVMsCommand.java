@@ -49,6 +49,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.VmInfo;
 
 public class ListVMsCommand implements Command {
 
@@ -70,7 +71,8 @@ public class ListVMsCommand implements Command {
         for (HostRef host : hosts) {
             Collection<VmRef> vms = vmsDAO.getVMs(host);
             for (VmRef vm : vms) {
-                formatter.addVM(vm);
+                VmInfo info = vmsDAO.getVmInfo(vm);
+                formatter.addVM(vm, info);
             }
         }
         formatter.format(ctx.getConsole().getOutput());
