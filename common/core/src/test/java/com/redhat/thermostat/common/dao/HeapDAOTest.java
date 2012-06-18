@@ -39,10 +39,14 @@ package com.redhat.thermostat.common.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -55,6 +59,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
@@ -76,6 +81,25 @@ public class HeapDAOTest {
         byte[] data = new byte[] { 1, 2, 3 };
         dataStream = new ByteArrayInputStream(data);
         heapInfo.setHeapDump(dataStream);
+
+        // Setup for reading data from DB.
+        Chunk findAllQuery = new Chunk(HeapDAO.heapInfoCategory, false);
+        findAllQuery.put(Key.AGENT_ID, "123");
+        findAllQuery.put(Key.VM_ID, 234);
+        Cursor cursor = mock(Cursor.class);
+        Chunk info1 = new Chunk(HeapDAO.heapInfoCategory, false);
+        info1.put(Key.AGENT_ID, "123");
+        info1.put(Key.VM_ID, 234);
+        info1.put(Key.TIMESTAMP, 12345l);
+        info1.put(HeapDAO.heapDumpIdKey, "test1");
+        Chunk info2 = new Chunk(HeapDAO.heapInfoCategory, false);
+        info2.put(Key.AGENT_ID, "123");
+        info2.put(Key.VM_ID, 234);
+        info2.put(Key.TIMESTAMP, 23456l);
+        info2.put(HeapDAO.heapDumpIdKey, "test2");
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(info1).thenReturn(info2).thenReturn(null);
+        when(storage.findAll(findAllQuery)).thenReturn(cursor);
     }
 
     @After
@@ -124,5 +148,19 @@ public class HeapDAOTest {
 
         verify(storage).putChunk(expectedChunk);
         verify(storage, never()).saveFile(anyString(), any(InputStream.class));
+    }
+
+    @Test
+    public void testGetAllHeapInfo() {
+        HostRef host = new HostRef("123", "test-host");
+        VmRef vm = new VmRef(host, 234, "test-vm");
+        Collection<HeapInfo> heapInfos = dao.getAllHeapInfo(vm);
+        HeapInfo info1 = new HeapInfo(vm, 12345);
+        info1.setHeapDumpId("test1");
+        HeapInfo info2 = new HeapInfo(vm, 23456);
+        info2.setHeapDumpId("test2");
+        assertEquals(2, heapInfos.size());
+        assertTrue(heapInfos.contains(info1));
+        assertTrue(heapInfos.contains(info2));
     }
 }

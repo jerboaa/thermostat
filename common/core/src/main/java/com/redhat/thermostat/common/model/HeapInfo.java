@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.model;
 
 import java.io.InputStream;
+import java.util.Objects;
 
 import com.redhat.thermostat.common.dao.VmRef;
 
@@ -45,6 +46,7 @@ public class HeapInfo {
     private VmRef vm;
     private long timestamp;
     private InputStream heapDump;
+    private String heapDumpId;
 
     public HeapInfo(VmRef vm, long timestamp) {
         this.vm = vm;
@@ -65,5 +67,27 @@ public class HeapInfo {
 
     public void setHeapDump(InputStream heapDump) {
         this.heapDump = heapDump;
+    }
+
+    public void setHeapDumpId(String heapDumpId) {
+        this.heapDumpId = heapDumpId;
+    }
+
+    public String getHeapDumpId() {
+        return heapDumpId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (! (o instanceof HeapInfo)) {
+            return false;
+        }
+        HeapInfo other = (HeapInfo) o;
+        return Objects.equals(vm, other.vm) && Objects.equals(heapDumpId, other.heapDumpId) && timestamp == other.timestamp;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(vm, heapDumpId, timestamp);
     }
 }

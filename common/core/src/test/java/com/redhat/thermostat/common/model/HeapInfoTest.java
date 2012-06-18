@@ -78,4 +78,11 @@ public class HeapInfoTest {
         assertEquals(3, in.read());
         assertEquals(-1, in.read());
     }
+
+    @Test
+    public void testHeapDumpId() {
+        assertNull(heapInfo.getHeapDumpId());
+        heapInfo.setHeapDumpId("test");
+        assertEquals("test", heapInfo.getHeapDumpId());
+    }
 }

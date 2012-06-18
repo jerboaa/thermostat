@@ -37,9 +37,12 @@
 package com.redhat.thermostat.common.dao;
 
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
@@ -69,6 +72,25 @@ class HeapDAOImpl implements HeapDAO {
         if (heapDumpData != null) {
             storage.saveFile(heapDumpId, heapDumpData);
         }
+    }
+
+    @Override
+    public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
+        Chunk query = new Chunk(heapInfoCategory, false);
+        query.put(Key.AGENT_ID, vm.getAgent().getAgentId());
+        query.put(Key.VM_ID, vm.getId());
+        Cursor cursor = storage.findAll(query);
+        Collection<HeapInfo> heapInfos = new ArrayList<>();
+        while (cursor.hasNext()) {
+            heapInfos.add(convertChunkToHeapInfo(vm, cursor.next()));
+        }
+        return heapInfos;
+    }
+
+    private HeapInfo convertChunkToHeapInfo(VmRef vm, Chunk chunk) {
+        HeapInfo info = new HeapInfo(vm, chunk.get(Key.TIMESTAMP));
+        info.setHeapDumpId(chunk.get(HeapDAO.heapDumpIdKey));
+        return info;
     }
 
 }
