@@ -100,14 +100,17 @@ public class MongoStorage extends Storage {
         this.agentId = agentId;
     }
 
-    private BasicDBObject getAgentDBObject() {
-        return new BasicDBObject(KEY_AGENT_ID, agentId.toString());
+    private BasicDBObject getAgentQueryKeyFromGlobalAgent() {
+        if (agentId != null) {
+            return new BasicDBObject(KEY_AGENT_ID, agentId.toString());
+        } else {
+            return null;
+        }
     }
 
-    private BasicDBObject getAgentDBObject(Chunk chunk) {
-        if (agentId != null) {
-            return getAgentDBObject();
-        } else if (chunk.get(Key.AGENT_ID) != null) {
+    private BasicDBObject getAgentQueryKeyFromChunkOrGlobalAgent(Chunk chunk) {
+        BasicDBObject queryKey = getAgentQueryKeyFromGlobalAgent();
+        if (queryKey == null && chunk.get(Key.AGENT_ID) != null) {
             return new BasicDBObject(KEY_AGENT_ID, chunk.get(Key.AGENT_ID));
         } else {
             return null;
@@ -118,13 +121,13 @@ public class MongoStorage extends Storage {
     public void putChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
-        BasicDBObject toInsert = getAgentDBObject(chunk);
+        BasicDBObject toInsert = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
         BasicDBObject replaceKey = null;
         boolean replace = chunk.getReplace();
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> replaceKeyNestedParts = null;
         if (replace) {
-            replaceKey = getAgentDBObject(chunk);
+            replaceKey = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
             replaceKeyNestedParts = new HashMap<String, BasicDBObject>();
         }
         for (Key<?> key : cat.getKeys()) {
@@ -180,7 +183,7 @@ public class MongoStorage extends Storage {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         BasicDBObject toUpdate = new BasicDBObject();
-        BasicDBObject updateKey = getAgentDBObject(chunk);
+        BasicDBObject updateKey = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
         for (Key<?> key : cat.getKeys()) {
@@ -245,7 +248,7 @@ public class MongoStorage extends Storage {
     }
 
     private DBObject createConfigDBObject(AgentInformation agentInfo) {
-        BasicDBObject result = getAgentDBObject();
+        BasicDBObject result = getAgentQueryKeyFromGlobalAgent();
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_STOP_TIME, agentInfo.getStopTime());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ALIVE, agentInfo.isAlive());
@@ -281,7 +284,7 @@ public class MongoStorage extends Storage {
 
     @Override
     public void purge() {
-        BasicDBObject deleteKey = getAgentDBObject();
+        BasicDBObject deleteKey = getAgentQueryKeyFromGlobalAgent();
         for (DBCollection coll : collectionCache.values()) {
             coll.remove(deleteKey);
         }
@@ -347,13 +350,13 @@ public class MongoStorage extends Storage {
         DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
         DBObject toInsert = createConfigDBObject(agentInfo);
         /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
-        toInsert.putAll((BSONObject) getAgentDBObject());
+        toInsert.putAll((BSONObject) getAgentQueryKeyFromGlobalAgent());
         configCollection.insert(toInsert, WriteConcern.SAFE);
     }
     
     @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
-        BasicDBObject queryObject = getAgentDBObject();
+        BasicDBObject queryObject = getAgentQueryKeyFromGlobalAgent();
 
         DBObject updated = createConfigDBObject(agentInfo);
         updated.putAll((BSONObject) queryObject);
@@ -365,14 +368,14 @@ public class MongoStorage extends Storage {
     @Override
     public void removeAgentInformation() {
         DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        BasicDBObject toRemove = getAgentDBObject();
+        BasicDBObject toRemove = getAgentQueryKeyFromGlobalAgent();
         configCollection.remove(toRemove, WriteConcern.NORMAL);
     }
 
     @Override
     public String getBackendConfig(String backendName, String configurationKey) {
         DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        BasicDBObject query = getAgentDBObject();
+        BasicDBObject query = getAgentQueryKeyFromGlobalAgent();
         query.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS + "." + backendName, new BasicDBObject("$exists", true));
         DBObject config = configCollection.findOne(query);
         Object value = config.get(configurationKey);
