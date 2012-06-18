@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common.storage;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.UUID;
 
 
@@ -83,5 +85,7 @@ public abstract class Storage {
      * @return {@code null} if the value is invalid or missing
      */
     public abstract String getBackendConfig(String backendName, String configurationKey);
+
+    public abstract void saveFile(String filename, InputStream data);
 
 }

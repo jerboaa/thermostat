@@ -44,9 +44,14 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 
 import org.junit.After;
 import org.junit.Before;
@@ -64,6 +69,8 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 @RunWith(PowerMockRunner.class)
@@ -336,5 +343,20 @@ public class MongoStorageTest {
 
         assertFalse(cursor.hasNext());
         assertNull(cursor.next());
+    }
+
+    @Test
+    public void verifySaveFile() throws Exception {
+        GridFSInputFile gridFSFile = mock(GridFSInputFile.class);
+        GridFS gridFS = mock(GridFS.class);
+        when(gridFS.createFile(any(InputStream.class), anyString())).thenReturn(gridFSFile);
+        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        MongoStorage storage = makeStorage();
+        byte[] data = new byte[] { 1, 2, 3 };
+        InputStream dataStream = new ByteArrayInputStream(data);
+        storage.saveFile("test", dataStream);
+        verify(gridFS).createFile(same(dataStream), eq("test"));
+        verify(gridFSFile).save();
     }
 }

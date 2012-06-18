@@ -116,4 +116,10 @@ public class MongoDAOFactory implements DAOFactory {
             throw new IllegalStateException("Set up connection before accessing DAO");
         }
     }
+
+    @Override
+    public HeapDAO getHeapDAO() {
+        ensureStorageConnected();
+        return new HeapDAOImpl(storage);
+    }
 }

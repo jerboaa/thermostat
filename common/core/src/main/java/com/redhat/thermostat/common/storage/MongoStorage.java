@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.storage;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,6 +51,8 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
+import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -101,17 +104,27 @@ public class MongoStorage extends Storage {
         return new BasicDBObject(KEY_AGENT_ID, agentId.toString());
     }
 
+    private BasicDBObject getAgentDBObject(Chunk chunk) {
+        if (agentId != null) {
+            return getAgentDBObject();
+        } else if (chunk.get(Key.AGENT_ID) != null) {
+            return new BasicDBObject(KEY_AGENT_ID, chunk.get(Key.AGENT_ID));
+        } else {
+            return null;
+        }
+    }
+
     @Override
     public void putChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
-        BasicDBObject toInsert = getAgentDBObject();
+        BasicDBObject toInsert = getAgentDBObject(chunk);
         BasicDBObject replaceKey = null;
         boolean replace = chunk.getReplace();
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> replaceKeyNestedParts = null;
         if (replace) {
-            replaceKey = getAgentDBObject();
+            replaceKey = getAgentDBObject(chunk);
             replaceKeyNestedParts = new HashMap<String, BasicDBObject>();
         }
         for (Key<?> key : cat.getKeys()) {
@@ -167,7 +180,7 @@ public class MongoStorage extends Storage {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         BasicDBObject toUpdate = new BasicDBObject();
-        BasicDBObject updateKey = getAgentDBObject();
+        BasicDBObject updateKey = getAgentDBObject(chunk);
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
         for (Key<?> key : cat.getKeys()) {
@@ -367,5 +380,12 @@ public class MongoStorage extends Storage {
             return (String) value;
         }
         return null;
+    }
+
+    @Override
+    public void saveFile(String filename, InputStream data) {
+        GridFS gridFS = new GridFS(db);
+        GridFSInputFile inputFile = gridFS.createFile(data, filename);
+        inputFile.save();
     }
 }

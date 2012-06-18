@@ -37,6 +37,8 @@
 package com.redhat.thermostat.client.heap;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.logging.Level;
@@ -45,8 +47,10 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.model.VmInfo;
 
 /**

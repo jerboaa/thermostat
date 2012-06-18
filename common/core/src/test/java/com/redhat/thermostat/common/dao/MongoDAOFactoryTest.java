@@ -122,4 +122,10 @@ public class MongoDAOFactoryTest {
         NetworkInterfaceInfoDAO dao = daoFactory.getNetworkInterfaceInfoDAO();
         assertNotNull(dao);
     }
+
+    @Test
+    public void testGetHeapDAO() {
+        HeapDAO dao = daoFactory.getHeapDAO();
+        assertNotNull(dao);
+    }
 }
