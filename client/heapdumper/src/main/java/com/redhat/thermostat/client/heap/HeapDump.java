@@ -34,31 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.heap;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
+import java.util.Date;
 
-class RegistryFactory {
+public class HeapDump {
 
-    private BundleContext context;
-    RegistryFactory(BundleContext context) {
-        this.context = context;
+    private String name;
+    private Date timestamp;
+    
+    void setTimestamp(long currentTimeMillis) {
+        this.timestamp = new Date(currentTimeMillis);
+    }
+
+    void setVMName(String name) {
+        this.name = name;
     }
     
-    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
-        return new VMTreeDecoratorRegistry(context);
+    public String getName() {
+        return name;
     }
     
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
+    public Date getTimestamp() {
+        return timestamp;
     }
     
-    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
-        return new MenuRegistry(context);
-    }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
+    @Override
+    public String toString() {
+        return "[" + getTimestamp() +"] ";
     }
 }

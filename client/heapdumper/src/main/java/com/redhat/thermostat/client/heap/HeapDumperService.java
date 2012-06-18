@@ -34,31 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.heap;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
+import com.redhat.thermostat.common.dao.VmRef;
 
-class RegistryFactory {
+public class HeapDumperService implements VmInformationService {
 
-    private BundleContext context;
-    RegistryFactory(BundleContext context) {
-        this.context = context;
-    }
-    
-    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
-        return new VMTreeDecoratorRegistry(context);
-    }
-    
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
-    }
-    
-    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
-        return new MenuRegistry(context);
-    }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
+    @Override
+    public VmInformationServiceController getInformationServiceController(VmRef ref) {
+        return new HeapDumpController(ref);
     }
 }

@@ -34,31 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.heap.swing;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
 
-class RegistryFactory {
+import javax.swing.JPanel;
 
-    private BundleContext context;
-    RegistryFactory(BundleContext context) {
-        this.context = context;
+import com.redhat.thermostat.client.heap.chart.Chart;
+
+public class ChartPanel extends JPanel {
+
+    private Chart chart;
+    
+    public ChartPanel(Chart chart) {
+        this.chart = chart;
     }
     
-    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
-        return new VMTreeDecoratorRegistry(context);
-    }
-    
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
-    }
-    
-    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
-        return new MenuRegistry(context);
-    }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
+    @Override
+    protected void paintComponent(Graphics g) {
+        BufferedImage image = chart.getChart(getWidth(), getHeight(), getBackground());
+        g.drawImage(image, 0, 0, null);
     }
 }

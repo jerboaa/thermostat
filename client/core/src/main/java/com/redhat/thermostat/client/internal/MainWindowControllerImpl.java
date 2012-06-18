@@ -167,7 +167,18 @@ public class MainWindowControllerImpl implements MainWindowController {
             }
         };
     };
-    
+
+    private VMInformationRegistry vmInfoRegistry;
+    private ActionListener<ThermostatExtensionRegistry.Action> vmInfoRegistryListener =
+            new ActionListener<ThermostatExtensionRegistry.Action> ()
+    {
+        public void actionPerformed(com.redhat.thermostat.common.ActionEvent<ThermostatExtensionRegistry.Action>
+                                    actionEvent)
+        {
+            updateView();
+        };
+    };
+            
     private boolean showHistory;
 
     private VmInformationControllerProvider vmInfoControllerProvider;
@@ -178,6 +189,7 @@ public class MainWindowControllerImpl implements MainWindowController {
             filterRegistry = registryFactory.createVMTreeFilterRegistry();
             decoratorRegistry = registryFactory.createVMTreeDecoratorRegistry();
             menuRegistry = registryFactory.createMenuRegistry();
+            vmInfoRegistry = registryFactory.createVMInformationRegistry();
             
         } catch (InvalidSyntaxException e) {
             throw new RuntimeException(e);
@@ -214,6 +226,9 @@ public class MainWindowControllerImpl implements MainWindowController {
         
         decoratorRegistry.addActionListener(decoratorListener);
         decoratorRegistry.start();
+        
+        vmInfoRegistry.addActionListener(vmInfoRegistryListener);
+        vmInfoRegistry.start();
     }
 
     private class HostsVMsLoaderImpl implements HostsVMsLoader {

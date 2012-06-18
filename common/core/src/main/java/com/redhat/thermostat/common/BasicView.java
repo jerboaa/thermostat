@@ -34,31 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.common;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-
-class RegistryFactory {
-
-    private BundleContext context;
-    RegistryFactory(BundleContext context) {
-        this.context = context;
+public class BasicView implements View {
+    public enum Action {
+        VISIBLE,
+        HIDDEN,
+    }
+    private final ActionNotifier<Action> notifier;
+    
+    protected BasicView() {
+        notifier = new ActionNotifier<Action>(this);
     }
     
-    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
-        return new VMTreeDecoratorRegistry(context);
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
     }
     
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
     }
     
-    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
-        return new MenuRegistry(context);
-    }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
+    protected void notify(Action action) {
+        notifier.fireAction(action);
     }
 }

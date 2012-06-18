@@ -57,7 +57,11 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.client.heap.Activator</Bundle-Activator>
-            <Private-Package>com.redhat.thermostat.client.heap</Private-Package>
+            <Private-Package>
+               com.redhat.thermostat.client.heap,
+               com.redhat.thermostat.client.heap.swing,
+               com.redhat.thermostat.client.heap.chart
+            </Private-Package>
           </instructions>
         </configuration>
       </plugin>
@@ -92,5 +96,11 @@
       <version>${project.version}</version>
       <type>bundle</type>
     </dependency>
+    
+    <dependency>
+      <groupId>org.jfree</groupId>
+      <artifactId>jfreechart</artifactId>
+    </dependency>
+    
   </dependencies>
 </project>

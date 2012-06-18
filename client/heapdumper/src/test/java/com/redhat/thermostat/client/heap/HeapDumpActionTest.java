@@ -47,6 +47,7 @@ import java.io.IOException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -78,7 +79,9 @@ public class HeapDumpActionTest {
         deadVmRef = mock(VmRef.class);
         when(vmInfoDAO.getVmInfo(deadVmRef)).thenReturn(vmInfo2);
 
-        heapDumpAction = new HeapDumpAction(dao);
+        
+        BundleContext bundleContext = mock(BundleContext.class);
+        heapDumpAction = new HeapDumpAction(dao, bundleContext);
     }
 
     @After
@@ -91,12 +94,12 @@ public class HeapDumpActionTest {
 
     @Test
     public void testName() {
-        assertEquals("Heap Dump", heapDumpAction.getName());
+        assertEquals("Heap Analysis", heapDumpAction.getName());
     }
 
     @Test
     public void testDescription() {
-        assertEquals("Generate a heap dump", heapDumpAction.getDescription());
+        assertEquals("Heap View", heapDumpAction.getDescription());
     }
 
     @Test

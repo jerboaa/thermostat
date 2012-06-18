@@ -118,6 +118,7 @@ public class MainWindowControllerImplTest {
 
     private VMTreeFilterRegistry filters;
     private VMTreeDecoratorRegistry decorators;
+    private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menues;
     
     private ActionListener<ThermostatExtensionRegistry.Action> filtersListener;
@@ -155,17 +156,22 @@ public class MainWindowControllerImplTest {
         RegistryFactory registryFactory = mock(RegistryFactory.class);
         filters = mock(VMTreeFilterRegistry.class);
         decorators = mock(VMTreeDecoratorRegistry.class);
+        vmInfoRegistry = mock(VMInformationRegistry.class);
         menues = mock(MenuRegistry.class);
 
         when(registryFactory.createMenuRegistry()).thenReturn(menues);
         when(registryFactory.createVMTreeDecoratorRegistry()).thenReturn(decorators);
         when(registryFactory.createVMTreeFilterRegistry()).thenReturn(filters);
+        when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
         
         ArgumentCaptor<ActionListener> grabFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(filters).addActionListener(grabFiltersListener.capture());
 
         ArgumentCaptor<ActionListener> grabDecoratorsListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(decorators).addActionListener(grabDecoratorsListener.capture());
+        
+        ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
         
         // TODO remove this asap. the main window has a hard dependency on summary controller/view
         ViewFactory viewFactory = mock(ViewFactory.class);

@@ -54,7 +54,6 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
 
-        // FIXME: there should be a better way than this
         ServiceListener listener = new ServiceListener() {
             
             private ApplicationService appService;
@@ -82,7 +81,7 @@ public class Activator implements BundleActivator {
                 
                 if (contextActionServiceLoaded && applicationServiceLoaded) {
                     contextServiceReg = context.registerService(VMContextAction.class.getName(),
-                                            new HeapDumpAction(appService.getDAOFactory()), null);
+                                            new HeapDumpAction(appService.getDAOFactory(), context), null);
                 }
             }
         };

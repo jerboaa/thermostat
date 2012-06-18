@@ -34,31 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.heap.swing;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
+import java.awt.Dimension;
 
-class RegistryFactory {
+import javax.swing.JPanel;
+import javax.swing.JSplitPane;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 
-    private BundleContext context;
-    RegistryFactory(BundleContext context) {
-        this.context = context;
+public class HeapPanel extends JPanel {
+
+    private JSplitPane splitPane;
+    
+    public HeapPanel() {
+        
+        splitPane = new JSplitPane();
+        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        GroupLayout groupLayout = new GroupLayout(this);
+        groupLayout.setHorizontalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addComponent(splitPane, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE)
+        );
+        groupLayout.setVerticalGroup(
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addGap(5)
+                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 295, Short.MAX_VALUE))
+        );
+
+        splitPane.setOneTouchExpandable(true);
+        setLayout(groupLayout);
+    }
+
+    void hideBottom() {
+        splitPane.getBottomComponent().setMinimumSize(new Dimension(0, 0));
+        splitPane.setDividerLocation(1.0d);
     }
     
-    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
-        return new VMTreeDecoratorRegistry(context);
+    void hideTop() {
+        splitPane.getTopComponent().setMinimumSize(new Dimension(0, 0));
+        splitPane.setDividerLocation(0.0d);
     }
     
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
+    void setTop(JPanel panel) {
+        splitPane.setTopComponent(panel);
     }
     
-    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
-        return new MenuRegistry(context);
-    }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
+    void setBottom(JPanel panel) {
+        splitPane.setBottomComponent(panel);
     }
 }

@@ -37,28 +37,16 @@
 package com.redhat.thermostat.client.internal;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-class RegistryFactory {
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
 
-    private BundleContext context;
-    RegistryFactory(BundleContext context) {
-        this.context = context;
-    }
+class VMInformationRegistry extends ThermostatExtensionRegistry<VmInformationService> {
+
+    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + VmInformationService.class.getName() + "))";
     
-    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
-        return new VMTreeDecoratorRegistry(context);
-    }
-    
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
-    }
-    
-    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
-        return new MenuRegistry(context);
-    }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
+    public VMInformationRegistry(BundleContext context) throws InvalidSyntaxException {
+        super(context, FILTER, VmInformationService.class);
     }
 }

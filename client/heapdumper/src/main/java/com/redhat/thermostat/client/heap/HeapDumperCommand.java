@@ -36,70 +36,41 @@
 
 package com.redhat.thermostat.client.heap;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.client.heap.swing.HeapSwingView;
-import com.redhat.thermostat.client.osgi.service.Filter;
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmInfo;
 
-/**
- * Implements the {@link VMContextAction} entry point to provide a kill switch
- * for the currently selected Virtual Machine. 
- */
-public class HeapDumpAction implements VMContextAction {
-
+public class HeapDumperCommand {
+    
     private static final Logger log = Logger.getLogger(HeapDumpAction.class.getName());
 
-    private final DAOFactory dao;
-    private final BundleContext context;
-
-    public HeapDumpAction(DAOFactory dao, BundleContext context) {
-        this.dao = dao;
-        this.context = context;
-    }
-
-    @Override
-    public String getName() {
-        return "Heap Analysis";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Heap View";
-    }
-
-    @Override
-    public void execute(VmRef reference) {
-        ApplicationContext.getInstance().getViewFactory().setViewClass(HeapView.class, HeapSwingView.class);
-        context.registerService(VmInformationService.class.getName(), new HeapDumperService(), null);
-    }
-
-    @Override
-    public Filter getFilter() {
-        return new LocalAndAliveFilter();
-    }
-
-    private class LocalAndAliveFilter implements Filter {
-
-        @Override
-        public boolean matches(Ref ref) {
-            // TODO implement local checking too
-            if (ref instanceof VmRef) {
-                VmRef vm = (VmRef) ref;
-                VmInfo vmInfo = dao.getVmInfoDAO().getVmInfo(vm);
-                return vmInfo.isAlive();
-            } else {
-                return false;
+    public HeapDump execute(VmRef reference) {
+        try {
+            File tempFile = Files.createTempFile("thermostat-", "-heapdump").toFile();
+            String tempFileName = tempFile.getAbsolutePath();
+            tempFile.delete(); // Need to delete before dumping heap, jmap does not override existing file and stop with an error.
+            Process proc = Runtime.getRuntime().exec(new String[] {"jmap", "-dump:format=b,file=" + tempFileName, reference.getIdString()});
+            try {
+                proc.waitFor();
+                log.info("Heap dump written to: " + tempFileName);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
-        }
 
+            HeapDump dump = new HeapDump();
+            dump.setTimestamp(System.currentTimeMillis());
+            dump.setVMName(reference.getName());
+            
+            return dump;
+        
+        } catch (IOException e) {
+            
+            log.log(Level.SEVERE, "Unexpected IO problem while writing heap dump", e);
+            return null;
+        }
     }
 }

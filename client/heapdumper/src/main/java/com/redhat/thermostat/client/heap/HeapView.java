@@ -34,31 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.heap;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
+import com.redhat.thermostat.client.heap.chart.OverviewChart;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.BasicView.Action;
 
-class RegistryFactory {
+public abstract class HeapView<E> extends BasicView {
+    
+    public enum HeadDumperAction {
+        DUMP_REQUESTED,
+        REQUEST_ABORTED
+    }
+    
+    protected final ActionNotifier<HeadDumperAction> heapDumperNotifier;
+    protected HeapView() {
+        heapDumperNotifier = new ActionNotifier<HeadDumperAction>(this);
+    }
+    
+    public void addDumperListener(ActionListener<HeadDumperAction> listener) {
+        heapDumperNotifier.addActionListener(listener);
+    }
+    
+    public void removeDumperListener(ActionListener<HeadDumperAction> listener) {
+        heapDumperNotifier.removeActionListener(listener);
+    }
+        
+    public abstract E getComponent();
 
-    private BundleContext context;
-    RegistryFactory(BundleContext context) {
-        this.context = context;
-    }
-    
-    VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
-        return new VMTreeDecoratorRegistry(context);
-    }
-    
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
-    }
-    
-    MenuRegistry createMenuRegistry() throws InvalidSyntaxException {
-        return new MenuRegistry(context);
-    }
-    
-    VMInformationRegistry createVMInformationRegistry() throws InvalidSyntaxException {
-        return new VMInformationRegistry(context);
-    }
+    abstract public void updateOverview(OverviewChart model, String used, String capacity);
+    abstract public void addHeapDump(HeapDump dump);
 }
