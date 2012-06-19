@@ -46,4 +46,9 @@ class MemoryStatsService implements VmInformationService {
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
         return new MemoryStatsController(ref);
     }
+
+    @Override
+    public boolean isApplicableFor(VmRef ref) {
+        return true;
+    }
 }

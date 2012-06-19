@@ -52,7 +52,7 @@ import com.redhat.thermostat.common.model.VmInfo;
 
 /**
  * Implements the {@link VMContextAction} entry point to provide a kill switch
- * for the currently selected Virtual Machine. 
+ * for the currently selected Virtual Machine.
  */
 public class HeapDumpAction implements VMContextAction {
 
@@ -79,7 +79,7 @@ public class HeapDumpAction implements VMContextAction {
     @Override
     public void execute(VmRef reference) {
         ApplicationContext.getInstance().getViewFactory().setViewClass(HeapView.class, HeapSwingView.class);
-        context.registerService(VmInformationService.class.getName(), new HeapDumperService(), null);
+        context.registerService(VmInformationService.class.getName(), new HeapDumperService(reference), null);
     }
 
     @Override

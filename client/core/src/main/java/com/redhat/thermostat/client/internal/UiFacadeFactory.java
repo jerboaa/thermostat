@@ -60,10 +60,13 @@ public interface UiFacadeFactory {
 
     void addVmInformationService(VmInformationService vmInfoService);
 
+    void removeVmInformationService(VmInformationService vmInfoService);
+
     Collection<VMContextAction> getVMContextActions();
     void addVMContextAction(VMContextAction service);
 
     public void shutdown();
 
     public void awaitShutdown() throws InterruptedException;
+
 }

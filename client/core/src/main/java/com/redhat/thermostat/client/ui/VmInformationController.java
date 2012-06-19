@@ -69,10 +69,12 @@ public class VmInformationController {
 
         Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();
         for (VmInformationService vmInfoService : vmInfoServices) {
-            VmInformationServiceController ctrl = vmInfoService.getInformationServiceController(vmRef);
-            String name = ctrl.getLocalizedName();
-            Component viewComp = ctrl.getComponent();
-            view.addChildView(name, viewComp);
+            if (vmInfoService.isApplicableFor(vmRef)) {
+                VmInformationServiceController ctrl = vmInfoService.getInformationServiceController(vmRef);
+                String name = ctrl.getLocalizedName();
+                Component viewComp = ctrl.getComponent();
+                view.addChildView(name, viewComp);
+            }
         }
     }
 
