@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.heap.swing;
 
 import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
@@ -46,10 +47,12 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import com.redhat.thermostat.client.heap.HeapDump;
 import javax.swing.JList;
+import javax.swing.event.ListSelectionListener;
 
 public class StatsPanel extends JPanel {
     
@@ -98,6 +101,7 @@ public class StatsPanel extends JPanel {
         
         dumpList = new JList<>();
         listModel = new DefaultListModel<>();
+        dumpList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         dumpList.setModel(listModel);
         
         GroupLayout gl_rightPanel = new GroupLayout(rightPanel);
@@ -161,6 +165,10 @@ public class StatsPanel extends JPanel {
         heapDumpButton.addActionListener(listener);
     }
 
+    void addDumpListListener(MouseListener listener) {
+        dumpList.addMouseListener(listener);
+    }
+    
     public void disableHeapDumperControl() {
         heapDumpButton.setText("dumping...");
         heapDumpButton.setEnabled(false);
@@ -177,5 +185,16 @@ public class StatsPanel extends JPanel {
         if (!dumpList.isVisible()) {
             dumpList.setVisible(true);
         }
+    }
+
+    public void clearDumpList() {
+        listModel.clear();
+        if (dumpList.isVisible()) {
+            dumpList.setVisible(false);
+        }
+    }
+    
+    public HeapDump getSelectedHeapDump() {
+        return dumpList.getSelectedValue();
     }
 }

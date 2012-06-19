@@ -37,18 +37,24 @@
 package com.redhat.thermostat.client.heap;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.HeapInfo;
 
 public class HeapDumperCommand {
     
-    private static final Logger log = Logger.getLogger(HeapDumpAction.class.getName());
+    private static final Logger log = Logger.getLogger(HeapDumperCommand.class.getName());
 
     public HeapDump execute(VmRef reference) {
+
         try {
             File tempFile = Files.createTempFile("thermostat-", "-heapdump").toFile();
             String tempFileName = tempFile.getAbsolutePath();
@@ -57,13 +63,15 @@ public class HeapDumperCommand {
             try {
                 proc.waitFor();
                 log.info("Heap dump written to: " + tempFileName);
+            
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
 
+            HeapInfo info = saveHeapDumpInfo(reference, tempFile);
+            
             HeapDump dump = new HeapDump();
-            dump.setTimestamp(System.currentTimeMillis());
-            dump.setVMName(reference.getName());
+            dump.setHeapInfo(info);
             
             return dump;
         
@@ -72,5 +80,16 @@ public class HeapDumperCommand {
             log.log(Level.SEVERE, "Unexpected IO problem while writing heap dump", e);
             return null;
         }
+    }
+    
+    private HeapInfo saveHeapDumpInfo(VmRef reference, File tempFile) throws FileNotFoundException {
+    
+        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
+        HeapInfo heapInfo = new HeapInfo(reference, System.currentTimeMillis());
+        heapInfo.setHeapDumpId(reference.getStringID() + "-" + reference.getAgent().getAgentId() + "-" + heapInfo.getTimestamp());
+        
+        heapDAO.putHeapInfo(heapInfo, new FileInputStream(tempFile));
+        
+        return heapInfo;
     }
 }

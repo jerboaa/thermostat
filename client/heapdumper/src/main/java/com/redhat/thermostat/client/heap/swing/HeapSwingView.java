@@ -39,8 +39,13 @@ package com.redhat.thermostat.client.heap.swing;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
+import javax.swing.BoxLayout;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
@@ -50,11 +55,15 @@ import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 
 public class HeapSwingView extends HeapView<JComponent> {
+
+    private boolean heapDetailIsShowing;
     
     private StatsPanel stats;
 
-    private HeapPanel panel;
+    private HeapPanel heapDetailPanel;
     private HeaderPanel overview;
+    
+    private JPanel visiblePane;
     
     public HeapSwingView() {
         
@@ -81,18 +90,32 @@ public class HeapSwingView extends HeapView<JComponent> {
             }
         });
         
-        panel = new HeapPanel();
+        stats.addDumpListListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) { 
+                    HeapDump dump = stats.getSelectedHeapDump();
+                    heapDumperNotifier.fireAction(HeadDumperAction.ANALYSE, dump);
+                }
+            }
+        });
+        
+        visiblePane = new JPanel();
+        visiblePane.setLayout(new BoxLayout(visiblePane, BoxLayout.X_AXIS));
+        
+        heapDetailPanel = new HeapPanel();
         
         overview = new HeaderPanel("Heap Usage Overview");
         overview.setContent(stats);
         overview.addHierarchyListener(new ViewVisibleListener());
 
-        panel.setTop(overview);        
+        // at the beginning, only the overview is visible
+        visiblePane.add(overview);
     }
     
     @Override
     public JComponent getComponent() {
-        return overview;
+        return visiblePane;
     }
     
     private class ViewVisibleListener extends ComponentVisibleListener {
@@ -130,6 +153,60 @@ public class HeapSwingView extends HeapView<JComponent> {
             @Override
             public void run() {
                 stats.addDump(dump);
+            }
+        });
+    }
+    
+    @Override
+    public void clearHeapDumpList() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stats.clearDumpList();
+            }
+        });
+    }
+    
+    @Override
+    public void openDumpView(final HeapDump dump) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (!heapDetailIsShowing) {
+                    visiblePane.removeAll();
+                    
+                    heapDetailIsShowing = true;
+                    
+                    heapDetailPanel.divideView();
+                    heapDetailPanel.setTop(overview);
+                    
+                    String[] columnNames = {"First Name",
+                            "Last Name",
+                            "Sport",
+                            "# of Years",
+                            "Vegetarian"};
+                    Object[][] data = {
+                            {"Kathy", "Smith",
+                             "Snowboarding", new Integer(5), new Boolean(false)},
+                            {"John", "Doe",
+                             "Rowing", new Integer(3), new Boolean(true)},
+                            {"Sue", "Black",
+                             "Knitting", new Integer(2), new Boolean(false)},
+                            {"Jane", "White",
+                             "Speed reading", new Integer(20), new Boolean(true)},
+                            {"Joe", "Brown",
+                             "Pool", new Integer(10), new Boolean(false)}
+                        };
+                    JTable table = new JTable(data, columnNames);
+                    JPanel bottom = new JPanel();
+                    bottom.setLayout(new BoxLayout(bottom, BoxLayout.X_AXIS));
+                    bottom.add(table);
+                    heapDetailPanel.setBottom(bottom);
+                    
+                    visiblePane.add(heapDetailPanel);
+                    
+                    visiblePane.revalidate();                    
+                }
             }
         });
     }

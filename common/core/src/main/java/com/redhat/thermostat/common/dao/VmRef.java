@@ -63,6 +63,9 @@ public class VmRef implements Ref {
         return uid;
     }
 
+    /**
+     * Equivalent to {@link #getStringID()}.
+     */
     public String getIdString() {
         return uidString;
     }

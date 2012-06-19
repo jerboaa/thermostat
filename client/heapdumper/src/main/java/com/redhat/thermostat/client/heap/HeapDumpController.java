@@ -41,6 +41,7 @@ import javax.swing.JComponent;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -54,12 +55,16 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+
+import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
-import com.redhat.thermostat.common.utils.DisplayableValues;
+
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
 public class HeapDumpController implements VmInformationServiceController {
@@ -67,6 +72,8 @@ public class HeapDumpController implements VmInformationServiceController {
     private final VmMemoryStatDAO vmDao;
     private final VmRef ref;
     
+    private final HeapDAO heapDAO;
+        
     private HeapView<JComponent> view;
     private final Timer timer;
     
@@ -76,6 +83,7 @@ public class HeapDumpController implements VmInformationServiceController {
         
         this.ref = ref;
         this.vmDao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
+        this.heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         
         model = new OverviewChart("Heap Used vs. Current Capacity Difference", "Time", "Heap");
         
@@ -88,6 +96,16 @@ public class HeapDumpController implements VmInformationServiceController {
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
         
         view = ApplicationContext.getInstance().getViewFactory().getView(HeapView.class);
+
+        HeapDump dump = null;
+        view.clearHeapDumpList();
+        Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(ref);
+        for (HeapInfo info : infos) {
+            dump = new HeapDump();
+            dump.setHeapInfo(info);
+            view.addHeapDump(dump);
+        }
+        
         view.addActionListener(new ActionListener<Action>() {            
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
@@ -96,7 +114,7 @@ public class HeapDumpController implements VmInformationServiceController {
                     timer.stop();
                     break;
                 
-                case VISIBLE:
+                case VISIBLE:                    
                     timer.start();
                     break;
 
@@ -110,8 +128,17 @@ public class HeapDumpController implements VmInformationServiceController {
         view.addDumperListener(new ActionListener<HeapView.HeadDumperAction>() {
             @Override
             public void actionPerformed(ActionEvent<HeadDumperAction> actionEvent) {
-                HeapDump dump = command.execute(ref);
-                view.addHeapDump(dump);
+                HeapDump dump = null;
+                switch (actionEvent.getActionId()) {
+                case DUMP_REQUESTED:
+                    dump = command.execute(ref);
+                    view.addHeapDump(dump);
+                    break;
+                
+                case ANALYSE:
+                    view.openDumpView(dump);
+                    break;
+                }
             }
         });
     }

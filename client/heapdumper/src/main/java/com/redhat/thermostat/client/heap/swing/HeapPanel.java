@@ -67,6 +67,10 @@ public class HeapPanel extends JPanel {
         setLayout(groupLayout);
     }
 
+    void divideView() {
+        splitPane.setDividerLocation(.5d);
+    }
+    
     void hideBottom() {
         splitPane.getBottomComponent().setMinimumSize(new Dimension(0, 0));
         splitPane.setDividerLocation(1.0d);

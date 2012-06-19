@@ -38,29 +38,26 @@ package com.redhat.thermostat.client.heap;
 
 import java.util.Date;
 
+import com.redhat.thermostat.common.model.HeapInfo;
+
 public class HeapDump {
 
-    private String name;
-    private Date timestamp;
-    
-    void setTimestamp(long currentTimeMillis) {
-        this.timestamp = new Date(currentTimeMillis);
-    }
-
-    void setVMName(String name) {
-        this.name = name;
-    }
+    private HeapInfo info;
     
     public String getName() {
-        return name;
+        return info.getVm().getName();
     }
     
-    public Date getTimestamp() {
-        return timestamp;
+    public long getTimestamp() {
+        return info.getTimestamp();
     }
     
     @Override
     public String toString() {
-        return "[" + getTimestamp() +"] ";
+        return "[" + new Date(getTimestamp()) +"] ";
+    }
+
+    public void setHeapInfo(HeapInfo info) {
+        this.info = info;
     }
 }
