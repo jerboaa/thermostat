@@ -55,14 +55,13 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public void putHeapInfo(HeapInfo heapInfo) {
+    public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData) {
         VmRef vm = heapInfo.getVm();
         Chunk chunk = new Chunk(heapInfoCategory, false);
         
         chunk.put(Key.AGENT_ID, vm.getAgent().getStringID());
         chunk.put(Key.VM_ID, vm.getId());
         chunk.put(Key.TIMESTAMP, heapInfo.getTimestamp());
-        InputStream heapDumpData = heapInfo.getHeapDump();
         String heapDumpId = "heapdump-" + vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
         if (heapDumpData != null) {
             chunk.put(heapDumpIdKey, heapDumpId);
@@ -91,6 +90,11 @@ class HeapDAOImpl implements HeapDAO {
         HeapInfo info = new HeapInfo(vm, chunk.get(Key.TIMESTAMP));
         info.setHeapDumpId(chunk.get(HeapDAO.heapDumpIdKey));
         return info;
+    }
+
+    @Override
+    public InputStream getHeapDump(HeapInfo heapInfo) {
+        return storage.loadFile(heapInfo.getHeapDumpId());
     }
 
 }

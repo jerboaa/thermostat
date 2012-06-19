@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.io.InputStream;
 import java.util.Collection;
 
 import com.redhat.thermostat.common.model.HeapInfo;
@@ -48,8 +49,10 @@ public interface HeapDAO {
 
     public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey);
 
-    void putHeapInfo(HeapInfo heapInfo);
+    void putHeapInfo(HeapInfo heapInfo, InputStream heapDump);
 
     Collection<HeapInfo> getAllHeapInfo(VmRef vm);
+
+    InputStream getHeapDump(HeapInfo heapInfo);
 
 }

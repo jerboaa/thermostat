@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -71,6 +72,7 @@ import com.mongodb.DBObject;
 import com.mongodb.Mongo;
 import com.mongodb.MongoURI;
 import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
@@ -386,5 +388,23 @@ public class MongoStorageTest {
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
         assertEquals(new UUID(1, 2).toString(), val.get("agent-id"));
+    }
+
+    @Test
+    public void verifyLoadFile() throws Exception {
+        InputStream stream = mock(InputStream.class);
+        GridFSDBFile file = mock(GridFSDBFile.class);
+        when(file.getInputStream()).thenReturn(stream);
+        GridFS gridFS = mock(GridFS.class);
+        when(gridFS.findOne("test")).thenReturn(file);
+        PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        MongoStorage storage = makeStorage();
+
+        InputStream actual = storage.loadFile("test");
+        assertSame(stream, actual);
+
+        actual = storage.loadFile("doesnotexist");
+        assertNull(actual);
     }
 }

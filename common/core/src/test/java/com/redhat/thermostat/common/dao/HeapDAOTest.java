@@ -49,6 +49,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -69,7 +70,7 @@ public class HeapDAOTest {
     private HeapDAO dao;
     private Storage storage;
     private HeapInfo heapInfo;
-    private InputStream dataStream;
+    private InputStream heapDumpData;
 
     @Before
     public void setUp() {
@@ -79,8 +80,7 @@ public class HeapDAOTest {
         VmRef vm = new VmRef(host, 123, "test-vm");
         heapInfo = new HeapInfo(vm, 12345);
         byte[] data = new byte[] { 1, 2, 3 };
-        dataStream = new ByteArrayInputStream(data);
-        heapInfo.setHeapDump(dataStream);
+        heapDumpData = new ByteArrayInputStream(data);
 
         // Setup for reading data from DB.
         Chunk findAllQuery = new Chunk(HeapDAO.heapInfoCategory, false);
@@ -100,11 +100,14 @@ public class HeapDAOTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(info1).thenReturn(info2).thenReturn(null);
         when(storage.findAll(findAllQuery)).thenReturn(cursor);
+
+        // Setup for reading heapdump data.
+        when(storage.loadFile("test")).thenReturn(heapDumpData);
     }
 
     @After
     public void tearDown() {
-        dataStream = null;
+        heapDumpData = null;
         heapInfo = null;
         dao = null;
         storage = null;
@@ -125,7 +128,7 @@ public class HeapDAOTest {
 
     @Test
     public void testPutHeapInfo() {
-        dao.putHeapInfo(heapInfo);
+        dao.putHeapInfo(heapInfo, heapDumpData);
 
         Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
         expectedChunk.put(Key.AGENT_ID, "987");
@@ -133,13 +136,12 @@ public class HeapDAOTest {
         expectedChunk.put(Key.TIMESTAMP, 12345L);
         expectedChunk.put(HeapDAO.heapDumpIdKey, "heapdump-987-123-12345");
         verify(storage).putChunk(expectedChunk);
-        verify(storage).saveFile(eq("heapdump-987-123-12345"), same(dataStream));
+        verify(storage).saveFile(eq("heapdump-987-123-12345"), same(heapDumpData));
     }
 
     @Test
     public void testPutHeapInfoWithoutDump() {
-        heapInfo.setHeapDump(null);
-        dao.putHeapInfo(heapInfo);
+        dao.putHeapInfo(heapInfo, null);
 
         Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
         expectedChunk.put(Key.AGENT_ID, "987");
@@ -162,5 +164,15 @@ public class HeapDAOTest {
         assertEquals(2, heapInfos.size());
         assertTrue(heapInfos.contains(info1));
         assertTrue(heapInfos.contains(info2));
+    }
+
+    @Test
+    public void testGetHeapDump() throws IOException {
+        heapInfo.setHeapDumpId("test");
+        InputStream in = dao.getHeapDump(heapInfo);
+        assertEquals(1, in.read());
+        assertEquals(2, in.read());
+        assertEquals(3, in.read());
+        assertEquals(-1, in.read());
     }
 }

@@ -52,6 +52,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.WriteConcern;
 import com.mongodb.gridfs.GridFS;
+import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
@@ -392,5 +393,16 @@ public class MongoStorage extends Storage {
         GridFS gridFS = new GridFS(db);
         GridFSInputFile inputFile = gridFS.createFile(data, filename);
         inputFile.save();
+    }
+
+    @Override
+    public InputStream loadFile(String filename) {
+        GridFS gridFS = new GridFS(db);
+        GridFSDBFile file = gridFS.findOne(filename);
+        if (file == null) {
+            return null;
+        } else {
+            return file.getInputStream();
+        }
     }
 }
