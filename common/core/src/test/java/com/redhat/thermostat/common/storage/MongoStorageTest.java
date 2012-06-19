@@ -52,6 +52,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Before;
@@ -358,5 +359,32 @@ public class MongoStorageTest {
         storage.saveFile("test", dataStream);
         verify(gridFS).createFile(same(dataStream), eq("test"));
         verify(gridFSFile).save();
+    }
+
+    @Test
+    public void verifyPutChunkUsesCorrectChunkAgent() throws Exception {
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        MongoStorage storage = makeStorage();
+        Chunk chunk1 = new Chunk(testCategory, false);
+        chunk1.put(Key.AGENT_ID, "123");
+        storage.putChunk(chunk1);
+        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
+        verify(testCollection).insert(dbobj.capture());
+        DBObject val = dbobj.getValue();
+        assertEquals("123", val.get("agent-id"));
+    }
+
+    @Test
+    public void verifyPutChunkUsesCorrectGlobalAgent() throws Exception {
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        MongoStorage storage = makeStorage();
+        storage.setAgentId(new UUID(1, 2));
+        Chunk chunk1 = new Chunk(testCategory, false);
+        chunk1.put(Key.AGENT_ID, "123");
+        storage.putChunk(chunk1);
+        ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
+        verify(testCollection).insert(dbobj.capture());
+        DBObject val = dbobj.getValue();
+        assertEquals(new UUID(1, 2).toString(), val.get("agent-id"));
     }
 }

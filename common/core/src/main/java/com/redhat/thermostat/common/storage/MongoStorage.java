@@ -110,7 +110,9 @@ public class MongoStorage extends Storage {
 
     private BasicDBObject getAgentQueryKeyFromChunkOrGlobalAgent(Chunk chunk) {
         BasicDBObject queryKey = getAgentQueryKeyFromGlobalAgent();
-        if (queryKey == null && chunk.get(Key.AGENT_ID) != null) {
+        if (queryKey != null) {
+            return queryKey;
+        } else if (chunk.get(Key.AGENT_ID) != null) {
             return new BasicDBObject(KEY_AGENT_ID, chunk.get(Key.AGENT_ID));
         } else {
             return null;
