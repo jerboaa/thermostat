@@ -45,6 +45,7 @@ public class HeapInfo {
     private VmRef vm;
     private long timestamp;
     private String heapDumpId;
+    private String histogramId;
 
     public HeapInfo(VmRef vm, long timestamp) {
         this.vm = vm;
@@ -73,11 +74,20 @@ public class HeapInfo {
             return false;
         }
         HeapInfo other = (HeapInfo) o;
-        return Objects.equals(vm, other.vm) && Objects.equals(heapDumpId, other.heapDumpId) && timestamp == other.timestamp;
+        return Objects.equals(vm, other.vm) && Objects.equals(heapDumpId, other.heapDumpId)
+               && Objects.equals(histogramId, other.histogramId) && timestamp == other.timestamp;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(vm, heapDumpId, timestamp);
+        return Objects.hash(vm, heapDumpId, histogramId, timestamp);
+    }
+
+    public String getHistogramId() {
+        return histogramId;
+    }
+
+    public void setHistogramId(String histogramId) {
+        this.histogramId = histogramId;
     }
 }

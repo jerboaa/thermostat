@@ -40,6 +40,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,19 +57,9 @@ public class HeapDumperCommand {
     public HeapDump execute(VmRef reference) {
 
         try {
-            File tempFile = Files.createTempFile("thermostat-", "-heapdump").toFile();
-            String tempFileName = tempFile.getAbsolutePath();
-            tempFile.delete(); // Need to delete before dumping heap, jmap does not override existing file and stop with an error.
-            Process proc = Runtime.getRuntime().exec(new String[] {"jmap", "-dump:format=b,file=" + tempFileName, reference.getIdString()});
-            try {
-                proc.waitFor();
-                log.info("Heap dump written to: " + tempFileName);
-            
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-
-            HeapInfo info = saveHeapDumpInfo(reference, tempFile);
+            File heapDumpFile = dumpHeap(reference);
+            InputStream histogram = writeHistogram(reference);
+            HeapInfo info = saveHeapDumpInfo(reference, heapDumpFile, histogram);
             
             HeapDump dump = new HeapDump();
             dump.setHeapInfo(info);
@@ -81,14 +72,35 @@ public class HeapDumperCommand {
             return null;
         }
     }
+
+    private File dumpHeap(VmRef reference) throws IOException {
+        File tempFile = Files.createTempFile("thermostat-", "-heapdump").toFile();
+        String tempFileName = tempFile.getAbsolutePath();
+        tempFile.delete(); // Need to delete before dumping heap, jmap does not override existing file and stop with an error.
+        Process proc = Runtime.getRuntime().exec(new String[] {"jmap", "-dump:format=b,file=" + tempFileName, reference.getIdString()});
+        try {
+            proc.waitFor();
+            log.info("Heap dump written to: " + tempFileName);
+        
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return tempFile;
+    }
     
-    private HeapInfo saveHeapDumpInfo(VmRef reference, File tempFile) throws FileNotFoundException {
+    private InputStream writeHistogram(VmRef reference) throws IOException {
+        Process proc = Runtime.getRuntime().exec(new String[] {"jmap", "-histo", reference.getIdString()});
+        InputStream histogramStream = proc.getInputStream();
+        return histogramStream;
+    }
+
+    private HeapInfo saveHeapDumpInfo(VmRef reference, File tempFile, InputStream histogram) throws FileNotFoundException {
     
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         HeapInfo heapInfo = new HeapInfo(reference, System.currentTimeMillis());
         heapInfo.setHeapDumpId(reference.getStringID() + "-" + reference.getAgent().getAgentId() + "-" + heapInfo.getTimestamp());
         
-        heapDAO.putHeapInfo(heapInfo, new FileInputStream(tempFile));
+        heapDAO.putHeapInfo(heapInfo, new FileInputStream(tempFile), histogram);
         
         return heapInfo;
     }

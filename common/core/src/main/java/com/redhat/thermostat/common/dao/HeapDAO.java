@@ -46,13 +46,16 @@ import com.redhat.thermostat.common.storage.Key;
 public interface HeapDAO {
 
     static final Key<String> heapDumpIdKey = new Key<String>("heap-dump-id", false);
+    static final Key<String> histogramIdKey = new Key<String>("histogram-id", false);
 
-    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey);
+    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey, histogramIdKey);
 
-    void putHeapInfo(HeapInfo heapInfo, InputStream heapDump);
+    void putHeapInfo(HeapInfo heapInfo, InputStream heapDump, InputStream histogramData);
 
     Collection<HeapInfo> getAllHeapInfo(VmRef vm);
 
     InputStream getHeapDump(HeapInfo heapInfo);
+
+    InputStream getHistogram(HeapInfo heapInfo);
 
 }

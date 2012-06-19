@@ -56,7 +56,7 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData) {
+    public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData, InputStream histogramData) {
         VmRef vm = heapInfo.getVm();
         Chunk chunk = new Chunk(heapInfoCategory, false);
         
@@ -64,12 +64,19 @@ class HeapDAOImpl implements HeapDAO {
         chunk.put(Key.VM_ID, vm.getId());
         chunk.put(Key.TIMESTAMP, heapInfo.getTimestamp());
         String heapDumpId = "heapdump-" + vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
+        String histogramId = "histogram-" + vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
         if (heapDumpData != null) {
             chunk.put(heapDumpIdKey, heapDumpId);
+        }
+        if (histogramData != null) {
+            chunk.put(histogramIdKey, histogramId);
         }
         storage.putChunk(chunk);
         if (heapDumpData != null) {
             storage.saveFile(heapDumpId, heapDumpData);
+        }
+        if (histogramData != null) {
+            storage.saveFile(histogramId, histogramData);
         }
     }
 
@@ -96,6 +103,11 @@ class HeapDAOImpl implements HeapDAO {
     @Override
     public InputStream getHeapDump(HeapInfo heapInfo) {
         return storage.loadFile(heapInfo.getHeapDumpId());
+    }
+
+    @Override
+    public InputStream getHistogram(HeapInfo heapInfo) {
+        return storage.loadFile(heapInfo.getHistogramId());
     }
 
 }

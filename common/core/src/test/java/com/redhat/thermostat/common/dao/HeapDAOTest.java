@@ -71,6 +71,7 @@ public class HeapDAOTest {
     private Storage storage;
     private HeapInfo heapInfo;
     private InputStream heapDumpData;
+    private InputStream histogramData;
 
     @Before
     public void setUp() {
@@ -82,6 +83,8 @@ public class HeapDAOTest {
         heapInfo = new HeapInfo(vm, 12345);
         byte[] data = new byte[] { 1, 2, 3 };
         heapDumpData = new ByteArrayInputStream(data);
+        data = new byte[] { 4, 5, 6 };
+        histogramData = new ByteArrayInputStream(data);
 
         // Setup for reading data from DB.
         Chunk findAllQuery = new Chunk(HeapDAO.heapInfoCategory, false);
@@ -103,7 +106,8 @@ public class HeapDAOTest {
         when(storage.findAll(findAllQuery)).thenReturn(cursor);
 
         // Setup for reading heapdump data.
-        when(storage.loadFile("test")).thenReturn(heapDumpData);
+        when(storage.loadFile("test-heap")).thenReturn(heapDumpData);
+        when(storage.loadFile("test-histo")).thenReturn(histogramData);
     }
 
     @After
@@ -120,29 +124,32 @@ public class HeapDAOTest {
         assertNotNull(category);
         assertEquals("vm-heap-info", category.getName());
         Collection<Key<?>> keys = category.getKeys();
-        assertEquals(4, keys.size());
+        assertEquals(5, keys.size());
         assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<>("vm-id", false)));
         assertTrue(keys.contains(new Key<>("timestamp", false)));
         assertTrue(keys.contains(new Key<>("heap-dump-id", false)));
+        assertTrue(keys.contains(new Key<>("histogram-id", false)));
     }
 
     @Test
     public void testPutHeapInfo() {
-        dao.putHeapInfo(heapInfo, heapDumpData);
+        dao.putHeapInfo(heapInfo, heapDumpData, histogramData);
 
         Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
         expectedChunk.put(Key.AGENT_ID, "987");
         expectedChunk.put(Key.VM_ID, 123);
         expectedChunk.put(Key.TIMESTAMP, 12345L);
         expectedChunk.put(HeapDAO.heapDumpIdKey, "heapdump-987-123-12345");
+        expectedChunk.put(HeapDAO.histogramIdKey, "histogram-987-123-12345");
         verify(storage).putChunk(expectedChunk);
         verify(storage).saveFile(eq("heapdump-987-123-12345"), same(heapDumpData));
+        verify(storage).saveFile(eq("histogram-987-123-12345"), same(histogramData));
     }
 
     @Test
     public void testPutHeapInfoWithoutDump() {
-        dao.putHeapInfo(heapInfo, null);
+        dao.putHeapInfo(heapInfo, null, null);
 
         Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
         expectedChunk.put(Key.AGENT_ID, "987");
@@ -174,11 +181,21 @@ public class HeapDAOTest {
 
     @Test
     public void testGetHeapDump() throws IOException {
-        heapInfo.setHeapDumpId("test");
+        heapInfo.setHeapDumpId("test-heap");
         InputStream in = dao.getHeapDump(heapInfo);
         assertEquals(1, in.read());
         assertEquals(2, in.read());
         assertEquals(3, in.read());
+        assertEquals(-1, in.read());
+    }
+
+    @Test
+    public void testGetHistogram() throws IOException {
+        heapInfo.setHistogramId("test-histo");
+        InputStream in = dao.getHistogram(heapInfo);
+        assertEquals(4, in.read());
+        assertEquals(5, in.read());
+        assertEquals(6, in.read());
         assertEquals(-1, in.read());
     }
 }

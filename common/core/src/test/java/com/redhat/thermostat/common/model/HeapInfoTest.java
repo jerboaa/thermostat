@@ -70,4 +70,11 @@ public class HeapInfoTest {
         heapInfo.setHeapDumpId("test");
         assertEquals("test", heapInfo.getHeapDumpId());
     }
+
+    @Test
+    public void testHistogramId() {
+        assertNull(heapInfo.getHistogramId());
+        heapInfo.setHistogramId("test");
+        assertEquals("test", heapInfo.getHistogramId());
+    }
 }
