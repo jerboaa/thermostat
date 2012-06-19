@@ -52,6 +52,7 @@ class HeapDAOImpl implements HeapDAO {
 
     HeapDAOImpl(Storage storage) {
         this.storage = storage;
+        storage.createConnectionKey(heapInfoCategory);
     }
 
     @Override
@@ -66,7 +67,6 @@ class HeapDAOImpl implements HeapDAO {
         if (heapDumpData != null) {
             chunk.put(heapDumpIdKey, heapDumpId);
         }
-        storage.createConnectionKey(heapInfoCategory);
         storage.putChunk(chunk);
         if (heapDumpData != null) {
             storage.saveFile(heapDumpId, heapDumpData);
@@ -75,6 +75,7 @@ class HeapDAOImpl implements HeapDAO {
 
     @Override
     public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
+
         Chunk query = new Chunk(heapInfoCategory, false);
         query.put(Key.AGENT_ID, vm.getAgent().getAgentId());
         query.put(Key.VM_ID, vm.getId());

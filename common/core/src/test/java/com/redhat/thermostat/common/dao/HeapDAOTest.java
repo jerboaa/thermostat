@@ -76,6 +76,7 @@ public class HeapDAOTest {
     public void setUp() {
         storage = mock(Storage.class);
         dao = new HeapDAOImpl(storage);
+        
         HostRef host = new HostRef("987", "test-host");
         VmRef vm = new VmRef(host, 123, "test-vm");
         heapInfo = new HeapInfo(vm, 12345);
@@ -154,6 +155,11 @@ public class HeapDAOTest {
 
     @Test
     public void testGetAllHeapInfo() {
+        
+        // verify a connection key has been created before requesting the
+        // heap dumps
+        verify(storage).createConnectionKey(HeapDAO.heapInfoCategory);
+        
         HostRef host = new HostRef("123", "test-host");
         VmRef vm = new VmRef(host, 234, "test-vm");
         Collection<HeapInfo> heapInfos = dao.getAllHeapInfo(vm);
