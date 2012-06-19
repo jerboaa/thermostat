@@ -115,6 +115,7 @@ public class VmCpuStatBuilder {
         ProcessStatusInfo info = statusBuilder.build(pid);
         if (info == null) {
             logger.log(Level.WARNING, "can not learn about pid " + pid + " : statusBuilder returned null");
+            return;
         }
 
         lastProcessTickTime.put(pid, time);
