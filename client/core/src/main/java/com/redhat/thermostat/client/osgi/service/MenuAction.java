@@ -44,15 +44,17 @@ package com.redhat.thermostat.client.osgi.service;
  */
 public interface MenuAction extends ContextAction {
 
-    public static enum TYPE {
+    public static enum Type {
         CHECK,
         RADIO,
         STANDARD
     };
-    
-    public static final String PARENT_MENU = "parentMenu";
-    
+
     /** Invoked when the user selects this menu item */
     void execute();
-    TYPE getType();
+
+    Type getType();
+
+    /** The path to the menu action. The last element must equal getName() */
+    String[] getPath();
 }

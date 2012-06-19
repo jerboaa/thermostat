@@ -40,8 +40,6 @@ import com.redhat.thermostat.client.osgi.service.MenuAction;
 
 class LivingVMFilterMenuAction implements MenuAction {
 
-    public static final String PARENT_MENU = "Edit";
-
     private LivingVMFilter filter;
     
     public LivingVMFilterMenuAction(LivingVMFilter filter) {
@@ -64,7 +62,12 @@ class LivingVMFilterMenuAction implements MenuAction {
     }
 
     @Override
-    public TYPE getType() {
-        return TYPE.CHECK;
+    public Type getType() {
+        return Type.CHECK;
+    }
+
+    @Override
+    public String[] getPath() {
+        return new String[] { "Edit", getName() };
     }
 }

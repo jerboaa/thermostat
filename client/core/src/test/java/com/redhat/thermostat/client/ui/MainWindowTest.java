@@ -252,27 +252,29 @@ public class MainWindowTest {
     @Category(GUITest.class)
     @Test
     public void addRemoveMenu() {
-        final String MENU_NAME = "Test";
+    	final String PARENT_NAME = "File";
+        final String MENU_NAME = "Test2";
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getType()).thenReturn(MenuAction.TYPE.STANDARD);
+        when(action.getPath()).thenReturn(new String[] {PARENT_NAME, MENU_NAME});
+        when(action.getType()).thenReturn(MenuAction.Type.STANDARD);
 
         JMenuItemFixture menuItem;
 
         frameFixture.show();
 
-        window.addMenu("File", action);
+        window.addMenu(action);
 
-        menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
         assertNotNull(menuItem);
         menuItem.click();
 
         verify(action).execute();
 
-        window.removeMenu("File", action);
+        window.removeMenu(action);
 
         try {
-            menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+            menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
             // should not reach here
             assertTrue(false);
         } catch (ComponentLookupException cle) {
@@ -283,18 +285,22 @@ public class MainWindowTest {
     @Category(GUITest.class)
     @Test
     public void addRadioMenu() {
+    	final String PARENT_NAME = "File";
         final String MENU_NAME = "Test";
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getType()).thenReturn(MenuAction.TYPE.RADIO);
+        when(action.getPath()).thenReturn(new String[] {PARENT_NAME, MENU_NAME});
+
+
+        when(action.getType()).thenReturn(MenuAction.Type.RADIO);
 
         JMenuItemFixture menuItem;
 
         frameFixture.show();
 
-        window.addMenu("File", action);
+        window.addMenu(action);
 
-        menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
         assertNotNull(menuItem);
 
         assertTrue(menuItem.target instanceof JRadioButtonMenuItem);
@@ -303,18 +309,21 @@ public class MainWindowTest {
     @Category(GUITest.class)
     @Test
     public void addCheckBoxMenu() {
+    	final String PARENT_NAME = "File";
         final String MENU_NAME = "Test";
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn(MENU_NAME);
-        when(action.getType()).thenReturn(MenuAction.TYPE.CHECK);
+        when(action.getType()).thenReturn(MenuAction.Type.CHECK);
+        when(action.getPath()).thenReturn(new String[] {PARENT_NAME, MENU_NAME});
+
 
         JMenuItemFixture menuItem;
 
         frameFixture.show();
 
-        window.addMenu("File", action);
+        window.addMenu(action);
 
-        menuItem = frameFixture.menuItemWithPath("File", MENU_NAME);
+        menuItem = frameFixture.menuItemWithPath(PARENT_NAME, MENU_NAME);
         assertNotNull(menuItem);
 
         assertTrue(menuItem.target instanceof JCheckBoxMenuItem);

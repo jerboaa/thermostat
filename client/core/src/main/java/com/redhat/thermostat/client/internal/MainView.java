@@ -78,9 +78,17 @@ public interface MainView {
 
     void setSubView(Component view);
 
-    void addMenu(String parentMenuName, MenuAction action);
+    /**
+     * Adds a menu item to the window. Assumes the menu path is valid (has a
+     * non-zero length) and doesn't collide with existing menus.
+     */
+    void addMenu(MenuAction action);
 
-    void removeMenu(String parentMenuName, MenuAction action);
+    /**
+     * Removes a menu item to the window. Assumes the menu path is valid (has a
+     * non-zero length) and doesn't collide with existing menus.
+     */
+    void removeMenu(MenuAction action);
 
     void showVMContextActions(List<VMContextAction> actions, MouseEvent e);
 }

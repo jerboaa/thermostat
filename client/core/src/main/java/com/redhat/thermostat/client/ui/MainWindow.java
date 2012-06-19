@@ -76,13 +76,11 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
-import javax.swing.MenuElement;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.ToolTipManager;
@@ -104,10 +102,10 @@ import javax.swing.tree.TreeSelectionModel;
 import com.redhat.thermostat.client.internal.HostsVMsLoader;
 import com.redhat.thermostat.client.internal.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -263,7 +261,8 @@ public class MainWindow extends JFrame implements MainView {
 
     private static final long serialVersionUID = 5608972421496808177L;
 
-    private final JMenuBar mainMenuBar;
+    private final JMenuBar mainMenuBar = new JMenuBar();
+    private final MenuHelper mainMenuHelper = new MenuHelper(mainMenuBar);
     private JPanel contentArea = null;
 
     private JTextField searchField = null;
@@ -293,8 +292,6 @@ public class MainWindow extends JFrame implements MainView {
         agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
         contentArea = new JPanel(new BorderLayout());
-
-        mainMenuBar = new JMenuBar();
 
         setupMenus();
         setupPanels();
@@ -732,108 +729,17 @@ public class MainWindow extends JFrame implements MainView {
             }
         });
     }
-    
+
     @Override
-    public void addMenu(final String parentMenuName, final MenuAction action) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                JMenu parent = null;
-                int mainMenuCount = mainMenuBar.getMenuCount();
-                for (int i = 0; i < mainMenuCount; i++) {
-                    if (mainMenuBar.getMenu(i).getText().equals(parentMenuName)) {
-                        parent = mainMenuBar.getMenu(i);
-                        break;
-                    }
-                }
-                if (parent == null) {
-                    parent = new JMenu(parentMenuName);
-                    mainMenuBar.add(parent);
-                }
-
-                JMenuItem menu = null;
-                switch (action.getType()) {
-                case RADIO:
-                    menu = new JRadioButtonMenuItem();                    
-                    break;
-                case CHECK:
-                    menu = new JCheckBoxMenuItem();
-                    break;
-                    
-                case STANDARD:
-                default:
-                    menu = new JMenuItem();
-                    break;
-                }
-                
-                menu.setText(action.getName());
-                menu.addActionListener(new java.awt.event.ActionListener() {
-                    @Override
-                    public void actionPerformed(ActionEvent e) {
-                        action.execute();
-                    }
-                });
-                parent.add(menu);
-
-                mainMenuBar.revalidate();
-            }
-        });
+    public void addMenu(MenuAction action) {
+        mainMenuHelper.addMenuAction(action);
     }
 
     @Override
-    public void removeMenu(final String parentMenuName, final  MenuAction action) {
-        final String actionName = action.getName();
-        try {
-            new EdtHelper().callAndWait(new Runnable() {
-                @Override
-                public void run() {
-                    MenuElement parent = null;
-                    int mainMenuCount = mainMenuBar.getMenuCount();
-                    for (int i = 0; i < mainMenuCount; i++) {
-                        if (mainMenuBar.getMenu(i).getText().equals(parentMenuName)) {
-                            parent = mainMenuBar.getMenu(i);
-                            break;
-                        }
-                    }
-                    if (parent == null) {
-                        throw new IllegalArgumentException("parent menu not found");
-                    }
-
-                    boolean removed = false;
-                    MenuElement[] menus = parent.getSubElements();
-                    if (menus.length == 1 && (menus[0] instanceof JPopupMenu)) {
-                        parent = menus[0];
-                        menus = parent.getSubElements();
-                    }
-
-                    for (MenuElement menu: menus) {
-                        if (menu instanceof JMenuItem && ((JMenuItem)menu).getText().equals(actionName)) {
-                            if (parent instanceof JPopupMenu) {
-                                ((JPopupMenu)parent).remove((JMenuItem)menu);
-                                removed = true;
-                            }
-                        }
-                    }
-
-                    if (!removed) {
-                        throw new IllegalArgumentException("child menu not found");
-                    }
-
-                    mainMenuBar.revalidate();
-                }
-            });
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(ie);
-        } catch (InvocationTargetException roe) {
-            Throwable cause = roe.getCause();
-            if (cause instanceof IllegalArgumentException) {
-                throw (IllegalArgumentException) cause;
-            }
-            throw new RuntimeException(cause);
-        }
+    public void removeMenu(MenuAction action) {
+        mainMenuHelper.removeMenuAction(action);
     }
-    
+
     /**
      * Returns null to indicate no Ref is selected
      */

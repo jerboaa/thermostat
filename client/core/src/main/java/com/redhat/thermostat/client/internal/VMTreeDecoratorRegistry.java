@@ -44,7 +44,7 @@ import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 
 class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<ReferenceDecorator> {
 
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + ReferenceDecorator.class.getName() + "))";
+    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + ReferenceDecorator.class.getName() + ")";
     
     public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
         super(context, FILTER, ReferenceDecorator.class);

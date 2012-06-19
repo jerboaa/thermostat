@@ -35,108 +35,18 @@
  */
 package com.redhat.thermostat.client.internal;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 
-public class MenuRegistry {
+public class MenuRegistry extends ThermostatExtensionRegistry<MenuAction> {
 
-    public static interface MenuListener {
-
-        public void added(String parentMenuName, MenuAction action);
-
-        public void removed(String parentMenuName, MenuAction action);
-    }
-
-    public static final String PARENT_MENU = "parentMenu";
-
-    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" + MenuAction.class.getName() + ")(" + PARENT_MENU + "=*))";
-
-    private ServiceTracker menuTracker;
-
-    private Map<String,List<MenuAction>> menus = new HashMap<>();
-    private List<MenuListener> listeners = new CopyOnWriteArrayList<>();
+    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + MenuAction.class.getName() + ")";
 
     public MenuRegistry(BundleContext context) throws InvalidSyntaxException {
-        menuTracker = new ServiceTracker(context, FrameworkUtil.createFilter(FILTER), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                MenuAction action = (MenuAction) super.addingService(reference);
-                String parentMenuName = (String) reference.getProperty(PARENT_MENU);
-                menuAdded(parentMenuName, action);
-                return action;
-            }
-
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                if (!(service instanceof MenuAction)) {
-                    throw new AssertionError("removing a non-MenuAction service");
-                }
-                String parentMenuName = (String) reference.getProperty(PARENT_MENU);
-                menuRemoved(parentMenuName, (MenuAction)service);
-                super.removedService(reference, service);
-            }
-        };
-    }
-
-    public void start() {
-        menuTracker.open();
-    }
-
-    public void stop() {
-        menuTracker.close();
-    }
-
-    public void addMenuListener(MenuListener listener) {
-        listeners.add(listener);
-
-        for (Entry<String,List<MenuAction>> entry: menus.entrySet()) {
-            for (MenuAction action: entry.getValue()) {
-                listener.added(entry.getKey(), action);
-            }
-        }
-    }
-
-    public void removeMenuListener(MenuListener listener) {
-        listeners.remove(listener);
-    }
-
-    private void menuAdded(String parentMenuName, MenuAction action) {
-        if (!menus.containsKey(parentMenuName)) {
-            menus.put(parentMenuName, new ArrayList<MenuAction>());
-        }
-        List<MenuAction> list = menus.get(parentMenuName);
-        list.add(action);
-        for (MenuListener listener: listeners) {
-            listener.added(parentMenuName, action);
-        }
-    }
-
-    private void menuRemoved(String parentMenuName, MenuAction action) {
-        if (!menus.containsKey(parentMenuName)) {
-            throw new IllegalArgumentException("unknown parent menu name");
-        }
-        List<MenuAction> list = menus.get(parentMenuName);
-        if (!list.contains(action)) {
-            throw new IllegalArgumentException("unknown menu action");
-        }
-
-        list.remove(action);
-        for (MenuListener listener: listeners) {
-            listener.removed(parentMenuName, action);
-        }
+    	super(context, FILTER, MenuAction.class);
     }
 
 }

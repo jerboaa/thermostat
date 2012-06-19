@@ -76,6 +76,7 @@ import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry;
 import com.redhat.thermostat.client.internal.UiFacadeFactory;
 import com.redhat.thermostat.client.internal.VMTreeDecoratorRegistry;
 import com.redhat.thermostat.client.internal.VMTreeFilterRegistry;
+import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
@@ -120,7 +121,7 @@ public class MainWindowControllerImplTest {
     private VMTreeFilterRegistry filters;
     private VMTreeDecoratorRegistry decorators;
     private VMInformationRegistry vmInfoRegistry;
-    private MenuRegistry menues;
+    private MenuRegistry menus;
     
     private ActionListener<ThermostatExtensionRegistry.Action> filtersListener;
     private ActionListener<ThermostatExtensionRegistry.Action> decoratorsListener;
@@ -158,9 +159,9 @@ public class MainWindowControllerImplTest {
         filters = mock(VMTreeFilterRegistry.class);
         decorators = mock(VMTreeDecoratorRegistry.class);
         vmInfoRegistry = mock(VMInformationRegistry.class);
-        menues = mock(MenuRegistry.class);
+        menus = mock(MenuRegistry.class);
 
-        when(registryFactory.createMenuRegistry()).thenReturn(menues);
+        when(registryFactory.createMenuRegistry()).thenReturn(menus);
         when(registryFactory.createVMTreeDecoratorRegistry()).thenReturn(decorators);
         when(registryFactory.createVMTreeFilterRegistry()).thenReturn(filters);
         when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
@@ -519,16 +520,21 @@ public class MainWindowControllerImplTest {
     @Test
     public void verifyMenuItems() {
         
-        MenuRegistry.MenuListener menuListener = controller.getMenuListener();
+        ActionListener<ThermostatExtensionRegistry.Action> menuListener = controller.getMenuListener();
 
         MenuAction action = mock(MenuAction.class);
         when(action.getName()).thenReturn("Test1");
 
-        menuListener.added("File", action);
-        verify(view).addMenu("File", action);
+        ActionEvent<Action> addEvent = new ActionEvent<ThermostatExtensionRegistry.Action>(
+        		menus, ThermostatExtensionRegistry.Action.SERVICE_ADDED);
+        addEvent.setPayload(action);
+        menuListener.actionPerformed(addEvent);
+        verify(view).addMenu(action);
 
-        menuListener.removed("File", action);
-        verify(view).removeMenu("File", action);
+        ActionEvent<Action> removeEvent = new ActionEvent<ThermostatExtensionRegistry.Action>(menus, ThermostatExtensionRegistry.Action.SERVICE_REMOVED);
+        removeEvent.setPayload(action);
+        menuListener.actionPerformed(removeEvent);
+        verify(view).removeMenu(action);
     }
 
    @Test

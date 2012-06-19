@@ -97,22 +97,35 @@ public class MainWindowControllerImpl implements MainWindowController {
     private ApplicationInfo appInfo;
 
     private UiFacadeFactory facadeFactory;
+
+    // FIXME: sort out the code duplication in the registry listeners
+
     private MenuRegistry menuRegistry;
-    private MenuRegistry.MenuListener menuListener = new MenuRegistry.MenuListener() {
-
+    private ActionListener<ThermostatExtensionRegistry.Action> menuListener =
+            new ActionListener<ThermostatExtensionRegistry.Action>()
+    {
         @Override
-        public void removed(String parentMenuName, MenuAction action) {
-            view.removeMenu(parentMenuName, action);
-        }
+        public void actionPerformed(
+            ActionEvent<ThermostatExtensionRegistry.Action> actionEvent) {
+            MenuAction action = (MenuAction) actionEvent.getPayload();
 
-        @Override
-        public void added(String parentMenuName, MenuAction action) {
-            view.addMenu(parentMenuName, action);
+            switch (actionEvent.getActionId()) {
+            case SERVICE_ADDED:
+                view.addMenu(action);
+                break;
+
+            case SERVICE_REMOVED:
+                view.removeMenu(action);
+                break;
+
+            default:
+                logger.log(Level.WARNING, "received unknown event from MenuRegistry: " +
+                                           actionEvent.getActionId());
+                break;
+            }
         }
     };
 
-    // FIXME: sort out the code duplication in the registry listeners
-    
     private TreeViewFilter treeFilter;
     private VMTreeFilterRegistry filterRegistry;
     private ActionListener<ThermostatExtensionRegistry.Action> filterListener =
@@ -220,7 +233,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         updateView();
 
-        menuRegistry.addMenuListener(menuListener);
+        menuRegistry.addActionListener(menuListener);
         menuRegistry.start();
         
         filterRegistry.addActionListener(filterListener);
@@ -252,23 +265,23 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     /**
-     * This method is for testing purpouse only
+     * This method is for testing purposes only
      */
     Filter getTreeFilter() {
         return treeFilter;
     }
     
     /**
-     * This method is for testing purpouse only
+     * This method is for testing purposes only
      */ 
     List<ReferenceDecorator> getVmTreeDecorators() {
         return vmTreeDecorators;
     }
     
     /**
-     * This method is for testing purpouse only
+     * This method is for testing purposes only
      */
-    MenuRegistry.MenuListener getMenuListener() {
+    ActionListener<ThermostatExtensionRegistry.Action> getMenuListener() {
         return menuListener;
     }
     
@@ -373,7 +386,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void shutdownApplication() {
-        menuRegistry.removeMenuListener(menuListener);
+        menuRegistry.removeActionListener(menuListener);
         menuListener = null;
         menuRegistry.stop();
 

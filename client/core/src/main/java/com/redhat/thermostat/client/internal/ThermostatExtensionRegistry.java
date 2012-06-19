@@ -45,6 +45,9 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 
+/**
+ * A helper class to make it easier to implement registeries for osgi-services.
+ */
 public class ThermostatExtensionRegistry<E> {
 
     public enum Action {
@@ -93,7 +96,7 @@ public class ThermostatExtensionRegistry<E> {
         actionNotifier.addActionListener(l);
     }
 
-    public void removeViewActionListener(ActionListener<Action> l) {
+    public void removeActionListener(ActionListener<Action> l) {
         actionNotifier.removeActionListener(l);
     }
 }

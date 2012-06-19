@@ -56,9 +56,6 @@ public class VMFilterActivator implements BundleActivator {
         ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                Hashtable<String, String> props = new Hashtable<>();
-                props.put(MenuAction.PARENT_MENU, LivingVMFilterMenuAction.PARENT_MENU);
-                
                 ApplicationService service = (ApplicationService) context.getService(reference);
                 
                 LivingVMFilter filter = new LivingVMFilter(service.getDAOFactory());
@@ -71,7 +68,7 @@ public class VMFilterActivator implements BundleActivator {
                 context.registerService(ReferenceDecorator.class.getName(), decorator, null);
                 
                 context.registerService(Filter.class.getName(), filter, null);
-                context.registerService(MenuAction.class.getName(), menu, props);
+                context.registerService(MenuAction.class.getName(), menu, null);
                 
                 return super.addingService(reference);
             }

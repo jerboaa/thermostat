@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.client.internal;
 
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,8 +52,9 @@ import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.internal.MenuRegistry;
-import com.redhat.thermostat.client.internal.MenuRegistry.MenuListener;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 
 public class MenuRegistryTest {
 
@@ -62,7 +63,7 @@ public class MenuRegistryTest {
         ArgumentCaptor<ServiceListener> serviceListenerCaptor = ArgumentCaptor.forClass(ServiceListener.class);
         ArgumentCaptor<String> filterCaptor = ArgumentCaptor.forClass(String.class);
 
-        MenuListener menuListener = mock(MenuListener.class);
+        ActionListener<ThermostatExtensionRegistry.Action> menuListener = mock(ActionListener.class);
         MenuAction menuAction = mock(MenuAction.class);
 
         BundleContext context = mock(BundleContext.class);
@@ -70,22 +71,26 @@ public class MenuRegistryTest {
 
         ServiceReference ref = mock(ServiceReference.class);
         when(ref.getProperty("objectClass")).thenReturn(MenuAction.class.getName());
-        when(ref.getProperty(MenuRegistry.PARENT_MENU)).thenReturn("Test");
 
         when(context.getService(ref)).thenReturn(menuAction);
 
         MenuRegistry registry = new MenuRegistry(context);
-        registry.addMenuListener(menuListener);
+        registry.addActionListener(menuListener);
         registry.start();
 
         ServiceListener serviceListener = serviceListenerCaptor.getValue();
         serviceListener.serviceChanged(new ServiceEvent(ServiceEvent.REGISTERED, ref));
 
-        verify(menuListener).added(eq("Test"), isA(MenuAction.class));
-
+        ArgumentCaptor<ActionEvent> eventCaptor = ArgumentCaptor.forClass(ActionEvent.class);
         serviceListener.serviceChanged(new ServiceEvent(ServiceEvent.UNREGISTERING, ref));
 
-        verify(menuListener).removed(eq("Test"), isA(MenuAction.class));
+        verify(menuListener, times(2)).actionPerformed(eventCaptor.capture());
+
+        ActionEvent firstEvent = eventCaptor.getAllValues().get(0);
+        ActionEvent secondEvent = eventCaptor.getAllValues().get(1);
+
+        assertEquals(ThermostatExtensionRegistry.Action.SERVICE_ADDED, firstEvent.getActionId());
+        assertEquals(ThermostatExtensionRegistry.Action.SERVICE_REMOVED, secondEvent.getActionId());
 
     }
 }
