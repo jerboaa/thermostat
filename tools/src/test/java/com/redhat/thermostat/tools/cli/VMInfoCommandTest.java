@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
@@ -122,6 +123,7 @@ public class VMInfoCommandTest {
         VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new ArrayList<String>());
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
         when(vmsDAO.getVmInfo(new VmRef(host, 9876, "dummy"))).thenThrow(new DAOException("Unknown VM ID: 9876"));
+        when(vmsDAO.getVMs(host)).thenReturn(Arrays.asList(vm));
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getVmInfoDAO()).thenReturn(vmsDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
@@ -132,6 +134,22 @@ public class VMInfoCommandTest {
     public void testVmInfo() throws CommandException {
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "Process ID:      234\n" +
+                          "Start time:      Thu Jun 07 15:32:00 UTC 2012\n" +
+                          "Stop time:       Fri Nov 01 01:22:00 UTC 2013\n" +
+                          "Main class:      mainClass\n" +
+                          "Command line:    commandLine\n" +
+                          "Java version:    vmVersion\n" +
+                          "Virtual machine: vmName\n" +
+                          "VM arguments:    vmArguments\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+    }
+
+    @Test
+    public void testAllVmInfoForHost() throws CommandException {
+        SimpleArguments args = new SimpleArguments();
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
         String expected = "Process ID:      234\n" +
@@ -216,7 +234,7 @@ public class VMInfoCommandTest {
         Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
         assertNotNull(args);
         assertEquals(2, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("vmId", "the ID of the VM to monitor", true, true)));
+        assertTrue(args.contains(new SimpleArgumentSpec("vmId", "the ID of the VM to monitor", false, true)));
         assertTrue(args.contains(new SimpleArgumentSpec("hostId", "the ID of the host to monitor", true, true)));
     }
 

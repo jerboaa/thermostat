@@ -47,6 +47,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.dao.DAOException;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
@@ -62,12 +63,25 @@ public class VMInfoCommand implements Command {
     public void run(CommandContext ctx) throws CommandException {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
         VmInfoDAO vmsDAO = daoFactory.getVmInfoDAO();
-        HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
+        HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), false);
+        HostRef host = hostVMArgs.getHost();
         VmRef vm = hostVMArgs.getVM();
         try {
-            getAndPrintVMInfo(ctx, vmsDAO, vm);
+            if (vm != null) {
+                getAndPrintVMInfo(ctx, vmsDAO, vm);
+            } else {
+                getAndPrintAllVMInfo(ctx, vmsDAO, host);
+
+            }
         } catch (DAOException ex) {
             ctx.getConsole().getError().println(ex.getMessage());
+        }
+    }
+
+    private void getAndPrintAllVMInfo(CommandContext ctx, VmInfoDAO vmsDAO, HostRef host) {
+        Collection<VmRef> vms = vmsDAO.getVMs(host);
+        for (VmRef vm : vms) {
+            getAndPrintVMInfo(ctx, vmsDAO, vm);
         }
     }
 
@@ -113,7 +127,7 @@ public class VMInfoCommand implements Command {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs();
+        return HostVMArguments.getArgumentSpecs(false);
     }
 
     @Override

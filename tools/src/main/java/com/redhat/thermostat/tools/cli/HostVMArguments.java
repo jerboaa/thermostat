@@ -55,11 +55,22 @@ class HostVMArguments {
     private VmRef vm;
 
     HostVMArguments(Arguments args) throws CommandException {
+        this(args, true);
+    }
+
+    HostVMArguments(Arguments args, boolean vmRequired) throws CommandException {
         String hostId = args.getArgument(HOST_ID_ARGUMENT);
         String vmId = args.getArgument(VM_ID_ARGUMENT);
         host = new HostRef(hostId, "dummy");
-        int parsedVmId = parseVmId(vmId);
-        vm = new VmRef(host, parsedVmId, "dummy");
+        try {
+            int parsedVmId = parseVmId(vmId);
+            vm = new VmRef(host, parsedVmId, "dummy");
+        } catch (CommandException ce) {
+            if (vmRequired) {
+                throw ce;
+            }
+            vm = null;
+        }
     }
 
     private int parseVmId(String vmId) throws CommandException {
@@ -78,8 +89,20 @@ class HostVMArguments {
         return vm;
     }
 
+    /**
+     * @return a collection of arguments for accepting hosts and vms (where both
+     * are required)
+     */
     static Collection<ArgumentSpec> getArgumentSpecs() {
-        ArgumentSpec vmId = new SimpleArgumentSpec(VM_ID_ARGUMENT, "the ID of the VM to monitor", true, true);
+        return getArgumentSpecs(true);
+    }
+
+    /**
+     * @return a collection of arguments for accepting hosts and vms (where the
+     * vm is optional)
+     */
+    static Collection<ArgumentSpec> getArgumentSpecs(boolean vmRequired) {
+        ArgumentSpec vmId = new SimpleArgumentSpec(VM_ID_ARGUMENT, "the ID of the VM to monitor", vmRequired, true);
         ArgumentSpec hostId = new SimpleArgumentSpec(HOST_ID_ARGUMENT, "the ID of the host to monitor", true, true);
         return Arrays.asList(vmId, hostId);
     }
