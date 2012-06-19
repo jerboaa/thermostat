@@ -39,6 +39,7 @@ package com.redhat.thermostat.backend.system;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,6 +48,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.model.VmCpuStat;
+import com.redhat.thermostat.test.Bug;
 
 public class VmCpuStatBuilderTest {
 
@@ -142,4 +144,25 @@ public class VmCpuStatBuilderTest {
         assertEquals(CPU_LOAD_PERCENT, stat.getCpuLoad(), 0.0001);
     }
 
+    @Bug(id="1051",
+            summary="Avoid exceptions when reading /proc/ for dead processes",
+            url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1051")
+    @Test
+    public void testNoExceptionForBuilderLearningAboutDeadProcess() {
+        Clock clock = mock(Clock.class);
+        when(clock.getMonotonicTimeNanos()).thenReturn((long) (10000 * 1E6));
+        ProcessStatusInfoBuilder procBuilder = mock(ProcessStatusInfoBuilder.class);
+        // This thing returns null if the /proc entry goes away.  Rather than try to
+        // 'guess' at a pid that will not be present during test, just mock this.
+        when(procBuilder.build(any(Integer.class))).thenReturn(null);
+        VmCpuStatBuilder builder = new VmCpuStatBuilder(clock, 3, 100, procBuilder);
+        // If we can't handle a process' /proc entry disappearing, the next line
+        // will throw exception.  If it does not, then we are okay.
+        try {
+            builder.learnAbout(0);
+        } catch (Exception e) {
+            // Shouldn't happen.
+            assertTrue(false);
+        }
+    }
 }
