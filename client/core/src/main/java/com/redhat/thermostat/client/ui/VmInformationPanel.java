@@ -72,8 +72,12 @@ public class VmInformationPanel extends JPanel implements VmInformationView {
     }
 
     @Override
-    public void selectChildID(int id) {
-        tabPane.setSelectedIndex(id);
+    public boolean selectChildID(int id) {
+        if (tabPane.getComponentCount() > id) {
+            tabPane.setSelectedIndex(id);
+            return true;
+        }
+        return false;
     }
 
     @Override

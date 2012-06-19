@@ -40,6 +40,8 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -466,15 +468,23 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private class VmInformationControllerProvider {
         private VmInformationController lastSelectedVM;
-
+        private Map<VmRef, Integer> selectedForVM = new ConcurrentHashMap<>();
+        
         VmInformationController getVmInfoController(VmRef vmRef) {
             int id = 0;
             if (lastSelectedVM != null) {
                 id = lastSelectedVM.getSelectedChildID();
             }
+            
             lastSelectedVM = facadeFactory.getVmController(vmRef);
-            lastSelectedVM.selectChildID(id);
+            if (!lastSelectedVM.selectChildID(id)) {
+                Integer _id = selectedForVM.get(vmRef);
+                id = _id != null? _id : 0;
+                lastSelectedVM.selectChildID(id);
+            }
 
+            selectedForVM.put(vmRef, id);
+            
             return lastSelectedVM;
         }
     }

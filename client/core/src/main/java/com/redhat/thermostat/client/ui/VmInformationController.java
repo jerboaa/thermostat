@@ -86,8 +86,8 @@ public class VmInformationController {
         return view.getSelectedChildID();
     }
 
-    public void selectChildID(int id) {
-        view.selectChildID(id);
+    public boolean selectChildID(int id) {
+        return view.selectChildID(id);
     }
 
     public int getNumChildren() {

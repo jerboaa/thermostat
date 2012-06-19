@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -397,6 +398,7 @@ public class MainWindowControllerImplTest {
         VmInformationController vmInformationController = mock(VmInformationController.class);
         when(vmInformationController.getSelectedChildID()).thenReturn(3);
         when(uiFacadeFactory.getVmController(any(VmRef.class))).thenReturn(vmInformationController);
+        when(vmInformationController.selectChildID(anyInt())).thenReturn(true);
 
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
 
@@ -417,7 +419,72 @@ public class MainWindowControllerImplTest {
 
         assertEquals(3, id);
     }
+    
+    @Test
+    public void verifyOpenSameHostVMTab2() {
 
+        VmRef vmRef1 = mock(VmRef.class);
+        VmRef vmRef2 = mock(VmRef.class);
+        when(view.getSelectedHostOrVm()).thenReturn(vmRef1).thenReturn(vmRef1).thenReturn(vmRef2).thenReturn(vmRef1);
+
+        VmInformationController vmInformationController1 = mock(VmInformationController.class);
+        VmInformationController vmInformationController2 = mock(VmInformationController.class);
+        
+        when(vmInformationController1.getSelectedChildID()).thenReturn(2).thenReturn(2);
+        when(vmInformationController2.getSelectedChildID()).thenReturn(3);
+        
+        when(vmInformationController1.selectChildID(0)).thenReturn(true);
+        when(vmInformationController1.selectChildID(2)).thenReturn(true);
+        when(vmInformationController1.selectChildID(3)).thenReturn(false);
+        
+        when(vmInformationController2.selectChildID(0)).thenReturn(true);
+        when(vmInformationController2.selectChildID(2)).thenReturn(true);
+        when(vmInformationController2.selectChildID(3)).thenReturn(true);
+        
+        when(uiFacadeFactory.getVmController(any(VmRef.class))).
+                             thenReturn(vmInformationController1).
+                             thenReturn(vmInformationController2).
+                             thenReturn(vmInformationController2).
+                             thenReturn(vmInformationController1);
+
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+
+        ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
+        verify(vmInformationController1).selectChildID(arg.capture());
+        verify(vmInformationController1, times(0)).getSelectedChildID();
+
+        int id = arg.getValue();
+
+        assertEquals(0, id);
+
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+
+        arg = ArgumentCaptor.forClass(Integer.class);
+        verify(vmInformationController1).getSelectedChildID();
+        verify(vmInformationController2, times(1)).selectChildID(arg.capture());
+        id = arg.getValue();
+
+        assertEquals(2, id);
+        
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+
+        arg = ArgumentCaptor.forClass(Integer.class);
+        verify(vmInformationController2, times(1)).getSelectedChildID();
+        verify(vmInformationController2, times(2)).selectChildID(arg.capture());
+        id = arg.getValue();
+
+        assertEquals(3, id);
+        
+        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
+
+        arg = ArgumentCaptor.forClass(Integer.class);
+        verify(vmInformationController2, times(2)).getSelectedChildID();
+        verify(vmInformationController1, times(3)).selectChildID(arg.capture());
+        id = arg.getValue();
+
+        assertEquals(2, id);
+    }
+    
     @Test
     public void verityVMActionsAreShown() {
         VmInfo vmInfo = new VmInfo(0, 1, 2, null, null, null, null, null, null, null, null, null, null, null);
