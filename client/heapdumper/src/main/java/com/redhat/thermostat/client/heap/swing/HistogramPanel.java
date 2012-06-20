@@ -58,6 +58,7 @@ public class HistogramPanel extends JPanel {
     public void display(Histogram histogram) {
         JTable table = new JTable(new HistogramTableModel(histogram));
         table.setFillsViewportHeight(true);
+        table.setAutoCreateRowSorter(true);
         
         JScrollPane scrollPane = new JScrollPane(table);
         headerPanel.setContent(scrollPane);
