@@ -36,11 +36,20 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.common.dao.DAOFactory;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public interface ApplicationService {
-
-    DAOFactory getDAOFactory();
+public class ApplicationCache {
+    @SuppressWarnings("rawtypes")
+    private Map cache = new ConcurrentHashMap();
     
-    ApplicationCache getApplicationCache();
+
+    @SuppressWarnings("unchecked")
+    public void addAttribute(Object key, Object value) {
+        cache.put(key, value);
+    }
+    
+    public Object getAttribute(Object key) {
+        return cache.get(key);
+    }
 }

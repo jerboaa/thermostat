@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.internal.osgi;
 
+import com.redhat.thermostat.client.osgi.service.ApplicationCache;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -43,10 +44,16 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 
 public class ApplicationServiceProvider implements ApplicationService {
 
+    private ApplicationCache cache = new ApplicationCache();
+    
     @Override
     public DAOFactory getDAOFactory() {
         // TODO: Eventually we will no longer need a singleton for ApplicationContext!
         return ApplicationContext.getInstance().getDAOFactory();
     }
 
+    @Override
+    public ApplicationCache getApplicationCache() {
+        return cache;
+    }
 }

@@ -43,6 +43,7 @@ import com.redhat.thermostat.common.model.HeapInfo;
 public class HeapDump {
 
     private HeapInfo info;
+    private Histogram histogram;
     
     public String getName() {
         return info.getVm().getName();
@@ -59,5 +60,17 @@ public class HeapDump {
 
     public void setHeapInfo(HeapInfo info) {
         this.info = info;
+    }
+    
+    void setHistogram(Histogram histogram) {
+        this.histogram = histogram;
+    }
+    
+    public Histogram getHistogram() {
+        return histogram;
+    }
+    
+    public HeapInfo getInfo() {
+        return info;
     }
 }

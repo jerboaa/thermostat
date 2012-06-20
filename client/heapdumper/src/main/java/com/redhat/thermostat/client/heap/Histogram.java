@@ -34,13 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
+package com.redhat.thermostat.client.heap;
 
-import com.redhat.thermostat.common.dao.DAOFactory;
+import java.util.List;
 
-public interface ApplicationService {
+public class Histogram {
 
-    DAOFactory getDAOFactory();
+    private String[] header;
     
-    ApplicationCache getApplicationCache();
+    private List<String[]> data;
+    
+    Histogram(String[] header) {
+        this.header = header;
+    }
+    
+    public String[] getHistogramColums() {
+        return header;
+    }
+
+    void setData(List<String[]> data) {
+        this.data = data;
+    }
+
+   public List<String[]> getData() {
+    return data;
+   }
 }

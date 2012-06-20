@@ -67,9 +67,11 @@ class HeapDAOImpl implements HeapDAO {
         String histogramId = "histogram-" + vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
         if (heapDumpData != null) {
             chunk.put(heapDumpIdKey, heapDumpId);
+            heapInfo.setHeapDumpId(heapDumpId);
         }
         if (histogramData != null) {
             chunk.put(histogramIdKey, histogramId);
+            heapInfo.setHistogramId(histogramId);
         }
         storage.putChunk(chunk);
         if (heapDumpData != null) {

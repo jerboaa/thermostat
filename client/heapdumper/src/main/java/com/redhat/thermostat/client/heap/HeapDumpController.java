@@ -37,12 +37,19 @@
 package com.redhat.thermostat.client.heap;
 
 import java.awt.Component;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
 import javax.swing.JComponent;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.heap.HeapView.HeadDumperAction;
@@ -65,6 +72,7 @@ import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 
+import com.redhat.thermostat.common.utils.DescriptorConverter;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
 public class HeapDumpController implements VmInformationServiceController {
@@ -136,11 +144,70 @@ public class HeapDumpController implements VmInformationServiceController {
                     break;
                 
                 case ANALYSE:
+                    dump = (HeapDump) actionEvent.getPayload();
+                    readAndSetHistogram(dump);
                     view.openDumpView(dump);
                     break;
                 }
             }
         });
+    }
+
+    private String[] histogramHeader = { "Class", "Instances", "Size (in bytes)" };
+    private void readAndSetHistogram(HeapDump dump) {
+        Histogram histogram = new Histogram(histogramHeader);
+        
+        HeapInfo info = dump.getInfo();
+        InputStream stream = heapDAO.getHistogram(info);
+        
+        List<String[]> instances = new ArrayList<>();
+        
+        if (stream != null) {
+            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
+            String line = null;
+            try {
+                
+                DecimalFormat formatter = new DecimalFormat("###,###.###");
+                
+                boolean startParsing = false;
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("-")) {
+                        startParsing = true;
+                        continue;
+                        
+                    } else if (line.startsWith("Total")) {
+                        break;
+                    }
+                    
+                    if (startParsing) {
+                        
+                        String[] data = new String[3];
+                        
+                        StringTokenizer tokenizer = new StringTokenizer(line);
+                        tokenizer.nextToken();
+                        long number = Long.parseLong(tokenizer.nextToken());
+                        String token = formatter.format(number);
+                        data[1] = token;
+                        
+                        number = Long.parseLong(tokenizer.nextToken());
+                        token = formatter.format(number);
+                        data[2] = token;
+                        
+                        token = DescriptorConverter.toJavaType(tokenizer.nextToken());
+                        data[0] = token;
+                        
+                        instances.add(data);
+                    }
+                }
+                
+            
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            
+            histogram.setData(instances);
+        }
+        dump.setHistogram(histogram);
     }
     
     @Override

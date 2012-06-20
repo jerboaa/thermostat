@@ -86,5 +86,4 @@ public class ApplicationContext {
     public void setViewFactory(ViewFactory viewFactory) {
         this.viewFactory = viewFactory;
     }
-
 }
