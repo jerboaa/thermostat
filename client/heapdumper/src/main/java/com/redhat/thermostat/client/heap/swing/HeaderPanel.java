@@ -36,17 +36,21 @@
 
 package com.redhat.thermostat.client.heap.swing;
 
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.RenderingHints;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.BoxLayout;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 
@@ -55,6 +59,7 @@ import sun.swing.SwingUtilities2;
 /**
  * A component that hot a panel
  */
+@SuppressWarnings("restriction")
 public class HeaderPanel extends JPanel {
 
     private String header;
@@ -107,7 +112,7 @@ public class HeaderPanel extends JPanel {
         repaint();
     }
     
-    @SuppressWarnings({ "restriction", "serial" })
+    @SuppressWarnings({ "serial" })
     private class TopPanel extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
@@ -116,13 +121,23 @@ public class HeaderPanel extends JPanel {
             
             graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             
-            graphics.setColor(getForeground());
-            graphics.drawRect(0, 0, getWidth() - 1, getHeight() - 1);
-
+            Paint gradient = new GradientPaint(0, 0, Color.WHITE, 0, getHeight(), getBackground());
+            graphics.setPaint(gradient);
+            graphics.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
+            
             if (header != null) {
                 int currentHeight = getHeight();
-                int height = SwingUtilities2.getFontMetrics(this, getFont()).getAscent()/2 + currentHeight/2 - 1;
+                
+                // paint it twice to give a subtle drop shadow effect
+                Font font = getFont();
+                int height = SwingUtilities2.getFontMetrics(this, font).getAscent()/2 + currentHeight/2 - 1;
+                
+                graphics.setColor(new Color(0f, 0f, 0f, 0.1f));
+                SwingUtilities2.drawString(this, graphics, header, 6, height + 1);
+                
+                graphics.setColor(getForeground());
                 SwingUtilities2.drawString(this, graphics, header, 5, height);
+                
             }
             
             graphics.dispose();
