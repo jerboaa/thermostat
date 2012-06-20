@@ -38,14 +38,15 @@ package com.redhat.thermostat.client.heap;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
+import org.osgi.util.tracker.ServiceTracker;
+
+import com.redhat.thermostat.client.heap.swing.HeapSwingView;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 
 public class Activator implements BundleActivator {
 
@@ -54,49 +55,17 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
 
-        ServiceListener listener = new ServiceListener() {
-            
-            private ApplicationService appService;
-            private boolean contextActionServiceLoaded;
-            private boolean applicationServiceLoaded;
-            
+        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
             @Override
-            public void serviceChanged(ServiceEvent event) {
+            public Object addingService(ServiceReference reference) {
+                ApplicationService appService = (ApplicationService) context.getService(reference);
                 
-                ServiceReference reference = event.getServiceReference();
-                Object service = context.getService(reference);
-                switch (event.getType()) {
-                case ServiceEvent.REGISTERED:
-                    if (service instanceof ContextAction) {
-                        contextActionServiceLoaded = true;
-                    } else if (service instanceof ApplicationService) {
-                        applicationServiceLoaded = true;
-                        appService = (ApplicationService) service;
-                    }
-                    break;
-
-                default:
-                    break;
-                }
-                
-                if (contextActionServiceLoaded && applicationServiceLoaded) {
-                    contextServiceReg = context.registerService(VMContextAction.class.getName(),
-                                            new HeapDumpAction(appService.getDAOFactory(), context), null);
-                }
+                ApplicationContext.getInstance().getViewFactory().setViewClass(HeapView.class, HeapSwingView.class);
+                context.registerService(VmInformationService.class.getName(), new HeapDumperService(appService), null);
+                return super.addingService(reference);
             }
         };
-        
-        String filter = "(|(objectClass=" + ContextAction.class.getName() + ")"
-                + "  (objectClass=" + ApplicationService.class.getName() + "))";
-
-        context.addServiceListener(listener, filter);
-        ServiceReference[] services = context.getServiceReferences(null, null);
-        if (services != null) {
-            for (int i = 0; i < services.length; i++) {
-                listener.serviceChanged(new ServiceEvent(
-                        ServiceEvent.REGISTERED, services[i]));
-            }
-        }
+        tracker.open();
     }
 
     @Override

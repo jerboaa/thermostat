@@ -36,25 +36,26 @@
 
 package com.redhat.thermostat.client.heap;
 
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class HeapDumperService implements VmInformationService {
 
-    private VmRef vmRef;
-
-    public HeapDumperService(VmRef reference) {
-        this.vmRef = reference;
+    private ApplicationService appService;
+    
+    public HeapDumperService(ApplicationService appService) {
+        this.appService = appService;
     }
 
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new HeapDumpController(ref);
+        return new HeapDumpController(ref, appService);
     }
 
     @Override
     public boolean isApplicableFor(VmRef ref) {
-        return vmRef.equals(ref);
+        return true;
     }
 }

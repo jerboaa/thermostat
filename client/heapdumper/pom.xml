@@ -85,6 +85,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
