@@ -99,6 +99,7 @@ class HeapDAOImpl implements HeapDAO {
     private HeapInfo convertChunkToHeapInfo(VmRef vm, Chunk chunk) {
         HeapInfo info = new HeapInfo(vm, chunk.get(Key.TIMESTAMP));
         info.setHeapDumpId(chunk.get(HeapDAO.heapDumpIdKey));
+        info.setHistogramId(chunk.get(HeapDAO.histogramIdKey));
         return info;
     }
 

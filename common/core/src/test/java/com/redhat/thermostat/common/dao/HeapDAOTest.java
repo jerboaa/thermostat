@@ -96,11 +96,15 @@ public class HeapDAOTest {
         info1.put(Key.VM_ID, 234);
         info1.put(Key.TIMESTAMP, 12345l);
         info1.put(HeapDAO.heapDumpIdKey, "test1");
+        info1.put(HeapDAO.histogramIdKey, "histotest1");
+        
         Chunk info2 = new Chunk(HeapDAO.heapInfoCategory, false);
         info2.put(Key.AGENT_ID, "123");
         info2.put(Key.VM_ID, 234);
         info2.put(Key.TIMESTAMP, 23456l);
         info2.put(HeapDAO.heapDumpIdKey, "test2");
+        info2.put(HeapDAO.histogramIdKey, "histotest2");
+        
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(info1).thenReturn(info2).thenReturn(null);
         when(storage.findAll(findAllQuery)).thenReturn(cursor);
@@ -170,10 +174,15 @@ public class HeapDAOTest {
         HostRef host = new HostRef("123", "test-host");
         VmRef vm = new VmRef(host, 234, "test-vm");
         Collection<HeapInfo> heapInfos = dao.getAllHeapInfo(vm);
+        
         HeapInfo info1 = new HeapInfo(vm, 12345);
         info1.setHeapDumpId("test1");
+        info1.setHistogramId("histotest1");
+        
         HeapInfo info2 = new HeapInfo(vm, 23456);
         info2.setHeapDumpId("test2");
+        info2.setHistogramId("histotest2");
+        
         assertEquals(2, heapInfos.size());
         assertTrue(heapInfos.contains(info1));
         assertTrue(heapInfos.contains(info2));
