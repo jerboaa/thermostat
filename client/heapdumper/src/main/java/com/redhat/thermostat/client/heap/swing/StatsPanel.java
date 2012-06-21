@@ -46,6 +46,7 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
@@ -99,6 +100,7 @@ public class StatsPanel extends JPanel {
         
         heapDumpButton = new JButton("Heap Dump");
         
+        JScrollPane dumpListScrollPane = new JScrollPane();
         dumpList = new JList<>();
         listModel = new DefaultListModel<>();
         dumpList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -110,7 +112,7 @@ public class StatsPanel extends JPanel {
                 .addGroup(gl_rightPanel.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(gl_rightPanel.createParallelGroup(Alignment.TRAILING)
-                        .addComponent(dumpList, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE)
+                        .addComponent(dumpListScrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE)
                         .addComponent(heapDumpButton, GroupLayout.DEFAULT_SIZE, 173, Short.MAX_VALUE)
                         .addGroup(gl_rightPanel.createSequentialGroup()
                             .addGroup(gl_rightPanel.createParallelGroup(Alignment.TRAILING, false)
@@ -136,11 +138,13 @@ public class StatsPanel extends JPanel {
                     .addGap(18)
                     .addComponent(heapDumpButton)
                     .addGap(18)
-                    .addComponent(dumpList, GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
+                    .addComponent(dumpListScrollPane, GroupLayout.DEFAULT_SIZE, 172, Short.MAX_VALUE)
                     .addContainerGap())
         );
         rightPanel.setLayout(gl_rightPanel);
         setLayout(groupLayout);
+
+        dumpListScrollPane.setViewportView(dumpList);
 
         // initially invisible
         dumpList.setVisible(false);
