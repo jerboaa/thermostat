@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import org.junit.After;
@@ -115,6 +116,40 @@ public class HelpCommandTest {
 
         String actual = ctxFactory.getOutput();
         assertEquals("usage: test1 [--logLevel <arg>]\ntest usage command 1\n     --logLevel <arg>    log level\n", actual);
+    }
+
+    @Test
+    public void verifyHelpKnownCmdPrintsCommandUsageSorted() {
+        TestCommand cmd1 = new TestCommand("test1");
+        String description1 = "test command 1";
+        cmd1.setDescription(description1);
+
+        TestCommand cmd2 = new TestCommand("test2");
+        String description2 = "test command 2";
+        cmd2.setDescription(description2);
+
+        TestCommand cmd3 = new TestCommand("test3");
+        String description3 = "test command 3";
+        cmd3.setDescription(description3);
+
+        TestCommand cmd4 = new TestCommand("test4");
+        String description4 = "test command 4";
+        cmd4.setDescription(description4);
+
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(cmd3, cmd1, cmd2, cmd4));
+
+        HelpCommand cmd = new HelpCommand();
+        Arguments args = mock(Arguments.class);
+        when(args.getNonOptionArguments()).thenReturn(new ArrayList<String>());
+        cmd.run(ctxFactory.createContext(args));
+
+        String actual = ctxFactory.getOutput();
+        String expected = "list of commands:\n\n"
+                + " test1         test command 1\n"
+                + " test2         test command 2\n"
+                + " test3         test command 3\n"
+                + " test4         test command 4\n";
+        assertEquals(expected, actual);
     }
 
     @Test

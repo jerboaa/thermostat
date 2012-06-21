@@ -48,7 +48,7 @@ public abstract class HeapView<E> extends BasicView {
         ANALYSE,
         REQUEST_ABORTED
     }
-    
+   
     protected final ActionNotifier<HeadDumperAction> heapDumperNotifier;
     protected HeapView() {
         heapDumperNotifier = new ActionNotifier<HeadDumperAction>(this);
@@ -61,7 +61,7 @@ public abstract class HeapView<E> extends BasicView {
     public void removeDumperListener(ActionListener<HeadDumperAction> listener) {
         heapDumperNotifier.removeActionListener(listener);
     }
-        
+
     public abstract E getComponent();
 
     abstract public void updateOverview(OverviewChart model, String used, String capacity);

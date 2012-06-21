@@ -45,7 +45,6 @@ import java.awt.event.MouseEvent;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
@@ -55,9 +54,7 @@ import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 
 public class HeapSwingView extends HeapView<JComponent> {
-
-    private boolean heapDetailIsShowing;
-    
+        
     private StatsPanel stats;
 
     private HeapPanel heapDetailPanel;
@@ -93,10 +90,8 @@ public class HeapSwingView extends HeapView<JComponent> {
         stats.addDumpListListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) { 
-                    HeapDump dump = stats.getSelectedHeapDump();
-                    heapDumperNotifier.fireAction(HeadDumperAction.ANALYSE, dump);
-                }
+                HeapDump dump = stats.getSelectedHeapDump();
+                heapDumperNotifier.fireAction(HeadDumperAction.ANALYSE, dump);
             }
         });
         
@@ -172,22 +167,16 @@ public class HeapSwingView extends HeapView<JComponent> {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                if (!heapDetailIsShowing) {
-                    visiblePane.removeAll();
+                visiblePane.removeAll();                    
+                heapDetailPanel.divideView();
+                heapDetailPanel.setTop(overview);
                     
-                    heapDetailIsShowing = true;
-                    
-                    heapDetailPanel.divideView();
-                    heapDetailPanel.setTop(overview);
-                    
-                    HistogramPanel histogram = new HistogramPanel();
-                    histogram.display(dump.getHistogram());
-                    heapDetailPanel.setBottom(histogram);
-
-                    visiblePane.add(heapDetailPanel);
-                    
-                    visiblePane.revalidate();                    
-                }
+                HistogramPanel histogram = new HistogramPanel();
+                histogram.display(dump.getHistogram());
+                heapDetailPanel.setBottom(histogram);
+                
+                visiblePane.add(heapDetailPanel);                    
+                visiblePane.revalidate();
             }
         });
     }

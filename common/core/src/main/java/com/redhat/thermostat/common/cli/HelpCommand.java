@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.common.cli;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class HelpCommand implements Command {
@@ -46,6 +48,8 @@ public class HelpCommand implements Command {
     private static final String NAME = "help";
     private static final String DESCRIPTION = "show help for a given command or help overview";
     private static final String USAGE = DESCRIPTION;
+
+    private static final CommandComparator comparator = new CommandComparator();
 
     @Override
     public void run(CommandContext ctx) {
@@ -65,7 +69,10 @@ public class HelpCommand implements Command {
         out.append("list of commands:\n\n");
 
         Collection<Command> commands = cmdRegistry.getRegisteredCommands();
-        for (Command cmd : commands) {
+        List<Command> sortedCommands = new ArrayList<>(commands);
+
+        Collections.sort(sortedCommands, comparator);
+        for (Command cmd : sortedCommands) {
             printCommandSummary(out, cmd);
         }
         ctx.getConsole().getOutput().print(out);
@@ -117,6 +124,26 @@ public class HelpCommand implements Command {
     @Override
     public boolean isStorageRequired() {
         return false;
+    }
+
+    private static class CommandComparator implements Comparator<Command> {
+
+        @Override
+        public int compare(Command o1, Command o2) {
+            // this command ('help') is always listed first
+            if (o1.getName().equals(o2.getName())) {
+                return 0;
+            }
+            if (o1.getName().equals(NAME)) {
+                return -1;
+            }
+            if (o2.getName().equals(NAME)) {
+                return 1;
+            }
+
+            return o1.getName().compareTo(o2.getName());
+        }
+
     }
 
 }
