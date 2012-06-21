@@ -47,7 +47,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.TickUnits;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
@@ -74,9 +73,9 @@ public class OverviewChart extends Chart {
         this.xAxis = xAxis;
         this.yAxis = yAxis;
         
-        total = new TimeSeries("");
+        total = new TimeSeries("total");
         total.setDescription("total");
-        used = new TimeSeries("");
+        used = new TimeSeries("used");
         used.setDescription("used");
     }
     
@@ -86,7 +85,7 @@ public class OverviewChart extends Chart {
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         dataset.addSeries(total);
         dataset.addSeries(used);
-        
+
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 title,
                 xAxis,
@@ -133,6 +132,7 @@ public class OverviewChart extends Chart {
         yAxis.setStandardTickUnits(tickUnits);
         yAxis.setRangeType(RangeType.POSITIVE);
         yAxis.setAutoRangeMinimumSize(10);
+        yAxis.setAutoRange(true);
         return chart;
     }
 
