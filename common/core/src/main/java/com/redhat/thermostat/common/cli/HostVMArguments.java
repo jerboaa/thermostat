@@ -58,7 +58,7 @@ public class HostVMArguments {
         String hostId = args.getArgument(HOST_ID_ARGUMENT);
         String vmId = args.getArgument(VM_ID_ARGUMENT);
         if (hostRequired && hostId == null) {
-            throw new CommandException("a " + HOST_ID_ARGUMENT + "is required");
+            throw new CommandException("a " + HOST_ID_ARGUMENT + " is required");
         } else if (hostId == null) {
             host = null;
         } else {
