@@ -241,12 +241,12 @@ public class HeapDumpController implements VmInformationServiceController {
     class HeapOverviewDataCollector implements Runnable {
         @Override
         public void run() {
-            long used = 0l;
-            long capacity = 0l;
-            long max = 0l;
             
             List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref);
             for (VmMemoryStat memoryStats: vmInfo) {
+                long used = 0l;
+                long capacity = 0l;
+                long max = 0l;
                 List<Generation> generations = memoryStats.getGenerations();
                 for (Generation generation : generations) {
                     
