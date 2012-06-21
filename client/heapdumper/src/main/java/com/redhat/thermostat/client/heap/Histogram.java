@@ -42,7 +42,7 @@ public class Histogram {
 
     private String[] header;
     
-    private List<String[]> data;
+    private List<Object[]> data;
     
     Histogram(String[] header) {
         this.header = header;
@@ -52,11 +52,11 @@ public class Histogram {
         return header;
     }
 
-    void setData(List<String[]> data) {
+    void setData(List<Object[]> data) {
         this.data = data;
     }
 
-   public List<String[]> getData() {
+   public List<Object[]> getData() {
     return data;
    }
 }

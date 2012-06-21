@@ -36,12 +36,16 @@
 
 package com.redhat.thermostat.client.heap.swing;
 
+import java.text.DecimalFormat;
+
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.BoxLayout;
 import javax.swing.JScrollPane;
 
 import com.redhat.thermostat.client.heap.Histogram;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 public class HistogramPanel extends JPanel {
@@ -59,9 +63,25 @@ public class HistogramPanel extends JPanel {
         JTable table = new JTable(new HistogramTableModel(histogram));
         table.setFillsViewportHeight(true);
         table.setAutoCreateRowSorter(true);
-        
+        table.setDefaultRenderer(Long.class, new NiceNumberFormatter());
         JScrollPane scrollPane = new JScrollPane(table);
         headerPanel.setContent(scrollPane);
+    }
+
+    @SuppressWarnings("serial")
+    private final class NiceNumberFormatter extends DefaultTableCellRenderer {
+
+        private final DecimalFormat formatter = new DecimalFormat("###,###.###");
+
+        private NiceNumberFormatter() {
+            setHorizontalAlignment(JLabel.RIGHT);
+        }
+
+        @Override
+        protected void setValue(Object v) {
+            String formatted = formatter.format(v);
+            setText(formatted);
+        }
     }
 
     private class HistogramTableModel extends DefaultTableModel {
@@ -78,10 +98,19 @@ public class HistogramPanel extends JPanel {
             }
             return "";
         }
-        
+
+        @Override
+        public Class<?> getColumnClass(int column) {
+            if (column == 0) {
+                return String.class;
+            } else {
+                return Long.class;
+            }
+        }
+
         @Override
         public Object getValueAt(int row, int column) {
-            String result = null;
+            Object result = null;
             if (histogram != null) {
                 result = histogram.getData().get(row)[column];
             }

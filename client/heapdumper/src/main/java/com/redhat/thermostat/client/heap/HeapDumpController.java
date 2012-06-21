@@ -160,14 +160,12 @@ public class HeapDumpController implements VmInformationServiceController {
         HeapInfo info = dump.getInfo();
         InputStream stream = heapDAO.getHistogram(info);
         
-        List<String[]> instances = new ArrayList<>();
+        List<Object[]> instances = new ArrayList<>();
         
         if (stream != null) {
             BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
             String line = null;
             try {
-                
-                DecimalFormat formatter = new DecimalFormat("###,###.###");
                 
                 boolean startParsing = false;
                 while ((line = reader.readLine()) != null) {
@@ -181,19 +179,17 @@ public class HeapDumpController implements VmInformationServiceController {
                     
                     if (startParsing) {
                         
-                        String[] data = new String[3];
+                        Object[] data = new Object[3];
                         
                         StringTokenizer tokenizer = new StringTokenizer(line);
                         tokenizer.nextToken();
-                        long number = Long.parseLong(tokenizer.nextToken());
-                        String token = formatter.format(number);
-                        data[1] = token;
+                        Long number = Long.valueOf(Long.parseLong(tokenizer.nextToken()));
+                        data[1] = number;
                         
-                        number = Long.parseLong(tokenizer.nextToken());
-                        token = formatter.format(number);
-                        data[2] = token;
+                        number = Long.valueOf(Long.parseLong(tokenizer.nextToken()));
+                        data[2] = number;
                         
-                        token = DescriptorConverter.toJavaType(tokenizer.nextToken());
+                        String token = DescriptorConverter.toJavaType(tokenizer.nextToken());
                         data[0] = token;
                         
                         instances.add(data);
