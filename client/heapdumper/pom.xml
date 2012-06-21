@@ -102,7 +102,12 @@
       <version>${project.version}</version>
       <type>bundle</type>
     </dependency>
-    
+        <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-tools</artifactId>
+      <version>${project.version}</version>
+      <type>bundle</type>
+    </dependency>
     <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>

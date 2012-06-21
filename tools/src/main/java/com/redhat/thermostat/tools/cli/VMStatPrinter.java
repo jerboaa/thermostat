@@ -44,6 +44,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
