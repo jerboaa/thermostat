@@ -34,19 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.cli;
+package com.redhat.thermostat.common.cli;
 
 import java.util.Arrays;
 import java.util.Collection;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 
-class HostVMArguments {
+public class HostVMArguments {
 
     static final String HOST_ID_ARGUMENT = "hostId";
     static final String VM_ID_ARGUMENT = "vmId";
@@ -54,14 +50,20 @@ class HostVMArguments {
     private HostRef host;
     private VmRef vm;
 
-    HostVMArguments(Arguments args) throws CommandException {
-        this(args, true);
+    public HostVMArguments(Arguments args) throws CommandException {
+        this(args, true, true);
     }
 
-    HostVMArguments(Arguments args, boolean vmRequired) throws CommandException {
+    public HostVMArguments(Arguments args, boolean hostRequired, boolean vmRequired) throws CommandException {
         String hostId = args.getArgument(HOST_ID_ARGUMENT);
         String vmId = args.getArgument(VM_ID_ARGUMENT);
-        host = new HostRef(hostId, "dummy");
+        if (hostRequired && hostId == null) {
+            throw new CommandException("a " + HOST_ID_ARGUMENT + "is required");
+        } else if (hostId == null) {
+            host = null;
+        } else {
+            host = new HostRef(hostId, "dummy");
+        }
         try {
             int parsedVmId = parseVmId(vmId);
             vm = new VmRef(host, parsedVmId, "dummy");
@@ -81,11 +83,11 @@ class HostVMArguments {
         }
     }
 
-    HostRef getHost() {
+    public HostRef getHost() {
         return host;
     }
 
-    VmRef getVM() {
+    public VmRef getVM() {
         return vm;
     }
 
@@ -93,7 +95,7 @@ class HostVMArguments {
      * @return a collection of arguments for accepting hosts and vms (where both
      * are required)
      */
-    static Collection<ArgumentSpec> getArgumentSpecs() {
+    public static Collection<ArgumentSpec> getArgumentSpecs() {
         return getArgumentSpecs(true);
     }
 
@@ -101,9 +103,17 @@ class HostVMArguments {
      * @return a collection of arguments for accepting hosts and vms (where the
      * vm is optional)
      */
-    static Collection<ArgumentSpec> getArgumentSpecs(boolean vmRequired) {
+    public static Collection<ArgumentSpec> getArgumentSpecs(boolean vmRequired) {
+        return getArgumentSpecs(true, vmRequired);
+    }
+
+    /**
+     * @return a collection of arguments for accepting hosts and vms (where the
+     * vm is optional)
+     */
+    public static Collection<ArgumentSpec> getArgumentSpecs(boolean hostRequired, boolean vmRequired) {
         ArgumentSpec vmId = new SimpleArgumentSpec(VM_ID_ARGUMENT, "the ID of the VM to monitor", vmRequired, true);
-        ArgumentSpec hostId = new SimpleArgumentSpec(HOST_ID_ARGUMENT, "the ID of the host to monitor", true, true);
+        ArgumentSpec hostId = new SimpleArgumentSpec(HOST_ID_ARGUMENT, "the ID of the host to monitor", hostRequired, true);
         return Arrays.asList(vmId, hostId);
     }
 }

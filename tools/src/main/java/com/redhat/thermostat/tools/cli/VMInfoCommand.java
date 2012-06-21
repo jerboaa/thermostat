@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.DAOException;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -64,7 +65,7 @@ public class VMInfoCommand implements Command {
     public void run(CommandContext ctx) throws CommandException {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
         VmInfoDAO vmsDAO = daoFactory.getVmInfoDAO();
-        HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), false);
+        HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), true, false);
         HostRef host = hostVMArgs.getHost();
         VmRef vm = hostVMArgs.getVM();
         try {

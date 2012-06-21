@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.cli;
+package com.redhat.thermostat.common.cli;
 
 import static org.junit.Assert.assertEquals;
 
@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.HostVMArguments;
 
 public class HostVMArgumentsTest {
 

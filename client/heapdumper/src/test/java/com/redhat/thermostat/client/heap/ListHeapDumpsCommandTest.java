@@ -39,7 +39,11 @@ package com.redhat.thermostat.client.heap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -53,12 +57,15 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentMatcher;
+import org.mockito.Matchers;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -106,7 +113,7 @@ public class ListHeapDumpsCommandTest {
     public void verifyArguments() {
         Command command = new ListHeapDumpsCommand();
         List<ArgumentSpec> arguments = new ArrayList<>(command.getAcceptedArguments());
-        assertTrue(arguments.isEmpty());
+        assertEquals(2, arguments.size());
     }
 
     @Test
@@ -123,7 +130,7 @@ public class ListHeapDumpsCommandTest {
 
         Command command = new ListHeapDumpsCommand();
         TestCommandContextFactory factory = new TestCommandContextFactory();
-        command.run(factory.createContext(null));
+        command.run(factory.createContext(new SimpleArguments()));
         assertEquals("HOST ID VM ID HEAP ID TIMESTAMP\n", factory.getOutput());
     }
 
@@ -132,7 +139,7 @@ public class ListHeapDumpsCommandTest {
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getStringID()).thenReturn("host-id");
         VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getStringID()).thenReturn("vm-id");
+        when(vmRef.getStringID()).thenReturn("1");
 
         HeapInfo heapInfo = mock(HeapInfo.class);
         Calendar timestamp = Calendar.getInstance();
@@ -159,10 +166,111 @@ public class ListHeapDumpsCommandTest {
 
         Command command = new ListHeapDumpsCommand();
         TestCommandContextFactory factory = new TestCommandContextFactory();
-        command.run(factory.createContext(null));
+        command.run(factory.createContext(new SimpleArguments()));
 
         String expected = "HOST ID VM ID HEAP ID TIMESTAMP\n" +
-                          "host-id vm-id 0001    Thu Jun 07 15:32:00 UTC 2012\n";
+                          "host-id 1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
+
+        assertEquals(expected, factory.getOutput());
+    }
+
+    @Test
+    public void verifyWorksWithFilterOnHost() throws CommandException {
+        HostRef hostRef1 = mock(HostRef.class);
+        when(hostRef1.getStringID()).thenReturn("host1");
+        VmRef vmRef1 = mock(VmRef.class);
+        when(vmRef1.getStringID()).thenReturn("1");
+
+        HostRef hostRef2 = mock(HostRef.class);
+        when(hostRef2.getStringID()).thenReturn("host2");
+        VmRef vmRef2 = mock(VmRef.class);
+        when(vmRef2.getStringID()).thenReturn("2");
+
+        HeapInfo heapInfo = mock(HeapInfo.class);
+        Calendar timestamp = Calendar.getInstance();
+        timestamp.set(2012, 5, 7, 15, 32, 0);
+        when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
+        when(heapInfo.getHeapDumpId()).thenReturn("0001");
+
+        HeapDAO heapDao = mock(HeapDAO.class);
+
+        VmInfoDAO vmInfo = mock(VmInfoDAO.class);
+        when(vmInfo.getVMs(isA(HostRef.class))).thenReturn(Arrays.asList(vmRef1)).thenReturn(Arrays.asList(vmRef2));
+
+        HostInfoDAO hostInfo = mock(HostInfoDAO.class);
+        when(hostInfo.getHosts()).thenReturn(Arrays.asList(hostRef1, hostRef2));
+
+        when(heapDao.getAllHeapInfo(vmRef1)).thenReturn(Arrays.asList(heapInfo));
+        when(heapDao.getAllHeapInfo(vmRef2)).thenReturn(Arrays.asList(heapInfo));
+
+        DAOFactory daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfo);
+        when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
+        when(daoFactory.getHeapDAO()).thenReturn(heapDao);
+
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+
+        Command command = new ListHeapDumpsCommand();
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("hostId", "host1");
+
+        command.run(factory.createContext(args));
+
+        String expected = "HOST ID VM ID HEAP ID TIMESTAMP\n" +
+                          "host1   1     0001    Thu Jun 07 15:32:00 UTC 2012\n";
+
+        assertEquals(expected, factory.getOutput());
+    }
+
+    @Test
+    public void verifyWorksWithFilterOnHostAndVM() throws CommandException {
+        HostRef hostRef1 = mock(HostRef.class);
+        when(hostRef1.getStringID()).thenReturn("host1");
+        when(hostRef1.getAgentId()).thenReturn("host1");
+        VmRef vmRef1 = mock(VmRef.class);
+        when(vmRef1.getStringID()).thenReturn("1");
+
+        HostRef hostRef2 = mock(HostRef.class);
+        when(hostRef2.getStringID()).thenReturn("host2");
+        VmRef vmRef2 = mock(VmRef.class);
+        when(vmRef2.getStringID()).thenReturn("2");
+
+        HeapInfo heapInfo = mock(HeapInfo.class);
+        Calendar timestamp = Calendar.getInstance();
+        timestamp.set(2012, 5, 7, 15, 32, 0);
+        when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
+        when(heapInfo.getHeapDumpId()).thenReturn("0001");
+
+        HeapDAO heapDao = mock(HeapDAO.class);
+
+        VmInfoDAO vmInfo = mock(VmInfoDAO.class);
+        when(vmInfo.getVMs(isA(HostRef.class))).thenReturn(Arrays.asList(vmRef1)).thenReturn(Arrays.asList(vmRef2));
+
+        HostInfoDAO hostInfo = mock(HostInfoDAO.class);
+        when(hostInfo.getHosts()).thenReturn(Arrays.asList(hostRef1, hostRef2));
+
+        when(heapDao.getAllHeapInfo(vmRef1)).thenReturn(Arrays.asList(heapInfo));
+        when(heapDao.getAllHeapInfo(vmRef2)).thenReturn(Arrays.asList(heapInfo));
+
+        DAOFactory daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfo);
+        when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
+        when(daoFactory.getHeapDAO()).thenReturn(heapDao);
+
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+
+        Command command = new ListHeapDumpsCommand();
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("hostId", "host1");
+        args.addArgument("vmId", "1"); // vm id must be an int for the arg parser to work
+
+        command.run(factory.createContext(args));
+
+        String expected = "HOST ID VM ID HEAP ID TIMESTAMP\n";
 
         assertEquals(expected, factory.getOutput());
     }

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.heap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
@@ -45,6 +46,7 @@ import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -80,7 +82,7 @@ public class ListHeapDumpsCommand implements Command {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        return new ArrayList<>();
+        return HostVMArguments.getArgumentSpecs(false, false);
     }
 
     @Override
@@ -90,6 +92,8 @@ public class ListHeapDumpsCommand implements Command {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, false);
+
         TableRenderer renderer = new TableRenderer(4);
 
         renderer.printLine(COLUMN_NAMES);
@@ -99,19 +103,25 @@ public class ListHeapDumpsCommand implements Command {
         VmInfoDAO vmDAO = daoFactory.getVmInfoDAO();
         HeapDAO heapDAO = daoFactory.getHeapDAO();
 
-        for (HostRef hostRef : hostDAO.getHosts()) {
-            for (VmRef vmRef : vmDAO.getVMs(hostRef)) {
-                Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(vmRef);
-                for (HeapInfo info : infos) {
-                    renderer.printLine(hostRef.getStringID(),
-                                       vmRef.getStringID(),
-                                       info.getHeapDumpId(),
-                                       new Date(info.getTimestamp()).toString());
-                }
+        Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();
+        for (HostRef hostRef : hosts) {
+            Collection<VmRef> vms = args.getVM() != null ? Arrays.asList(args.getVM()) : vmDAO.getVMs(hostRef);
+            for (VmRef vmRef : vms) {
+                printDumpsForVm(heapDAO, hostRef, vmRef, renderer);
             }
         }
 
         renderer.render(ctx.getConsole().getOutput());
+    }
+
+    private void printDumpsForVm(HeapDAO heapDAO, HostRef hostRef, VmRef vmRef, TableRenderer renderer) {
+        Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(vmRef);
+        for (HeapInfo info : infos) {
+            renderer.printLine(hostRef.getStringID(),
+                               vmRef.getStringID(),
+                               info.getHeapDumpId(),
+                               new Date(info.getTimestamp()).toString());
+        }
     }
 
     @Override
