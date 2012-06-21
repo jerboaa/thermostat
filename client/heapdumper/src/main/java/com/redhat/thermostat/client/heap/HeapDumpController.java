@@ -103,6 +103,7 @@ public class HeapDumpController implements VmInformationServiceController {
         
         timer.setInitialDelay(0);
         timer.setDelay(1000);
+        model.setRange(3600);
         timer.setTimeUnit(TimeUnit.MILLISECONDS);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
         

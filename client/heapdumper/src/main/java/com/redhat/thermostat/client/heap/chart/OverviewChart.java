@@ -60,7 +60,8 @@ public class OverviewChart extends Chart {
         
     private static final ColorUIResource MAIN_BAR_BASE_COLOR = new ColorUIResource(0x4A90D9);
 
-    
+    private static final String lock = new String("chartLock");
+
     private TimeSeries total;
     private TimeSeries used;
     private String title;
@@ -75,17 +76,25 @@ public class OverviewChart extends Chart {
         
         total = new TimeSeries("total");
         total.setDescription("total");
+        
         used = new TimeSeries("used");
         used.setDescription("used");
     }
     
     @Override
     protected JFreeChart createChart(int width, int height, Color bgColor) {
-        
-        TimeSeriesCollection dataset = new TimeSeriesCollection();
-        dataset.addSeries(total);
-        dataset.addSeries(used);
 
+        TimeSeriesCollection dataset = new TimeSeriesCollection();
+        
+        synchronized (lock) {
+            try {
+                dataset.addSeries(total.createCopy(0, total.getItemCount() - 1));
+                dataset.addSeries(used.createCopy(0, used.getItemCount() - 1));
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
+        }
+        
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 title,
                 xAxis,
@@ -137,14 +146,24 @@ public class OverviewChart extends Chart {
     }
 
     public void addData(long timeStamp, long used, long total) {
+        
         Millisecond millisecond = new Millisecond(new Date(timeStamp));
-        if (this.total.getValue(millisecond) == null) {
-            this.total.add(millisecond, total);
-            this.total.removeAgedItems(true);
+        synchronized (lock) {            
+            if (this.total.getValue(millisecond) == null) {
+                this.total.add(millisecond, total);
+                this.total.removeAgedItems(true);
+            }
+            
+            if (this.used.getValue(millisecond) == null) {
+                this.used.add(millisecond, used);
+                this.used.removeAgedItems(true);
+            }
         }
-        if (this.used.getValue(millisecond) == null) {
-            this.used.add(millisecond, used);
-            this.used.removeAgedItems(true);
-        }
+        
+    }
+
+    public void setRange(int seconds) {
+        total.setMaximumItemCount(seconds);
+        used.setMaximumItemCount(seconds);
     }
 }
