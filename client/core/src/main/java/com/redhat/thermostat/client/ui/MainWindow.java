@@ -185,6 +185,7 @@ public class MainWindow extends JFrame implements MainView {
                     subTreeMatches = true;
                 }
             }
+            
             return subTreeMatches;
         }
 
@@ -215,8 +216,8 @@ public class MainWindow extends JFrame implements MainView {
             
             @SuppressWarnings("unchecked") // We know what we put into these trees.
             List<DefaultMutableTreeNode> sourceChildren = Collections.list(sourceRoot.children());
-            @SuppressWarnings("unchecked")
 
+            @SuppressWarnings("unchecked")
             List<DefaultMutableTreeNode> targetChildren = Collections.list(targetNode.children());
             for (DefaultMutableTreeNode sourceChild : sourceChildren) {
                 Ref sourceRef = (Ref) sourceChild.getUserObject();
@@ -225,6 +226,10 @@ public class MainWindow extends JFrame implements MainView {
                     Ref targetRef = (Ref) aChild.getUserObject();
                     if (targetRef.equals(sourceRef)) {
                         targetChild = aChild;
+                        if (sourceChild instanceof DecoratedDefaultMutableTreeNode) {
+                            DecoratedDefaultMutableTreeNode source = (DecoratedDefaultMutableTreeNode) sourceChild;
+                            ((DecoratedDefaultMutableTreeNode) targetChild).setDecorators(source.getDecorators());
+                        }
                         break;
                     }
                 }
