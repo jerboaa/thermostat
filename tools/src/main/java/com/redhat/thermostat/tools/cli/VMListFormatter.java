@@ -38,6 +38,7 @@ package com.redhat.thermostat.tools.cli;
 
 import java.io.PrintStream;
 
+import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 

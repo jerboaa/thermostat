@@ -34,43 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.cli;
+package com.redhat.thermostat.common.cli;
 
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-class TableRenderer {
+public class TableRenderer {
 
     private List<String[]> lines;
     private int[] maxColumnWidths;
     private int lastPrintedLine = -1;
 
     private int numColumns;
+    private int minWidth;
 
-    TableRenderer(int numColumns) {
+    public TableRenderer(int numColumns) {
+        this(numColumns, 1);
+    }
+
+    public TableRenderer(int numColumns, int minWidth) {
         this.numColumns = numColumns;
         lines = new ArrayList<>();
         maxColumnWidths = new int[numColumns];
+        this.minWidth = minWidth;
     }
 
-    void printLine(String... line) {
+    public void printLine(String... line) {
         if (line.length != numColumns) {
             throw new IllegalArgumentException("Invalid number of columns: " + line.length + ", expected: " + numColumns);
         }
         lines.add(line);
         for (int i = 0; i < numColumns; i++) {
-            maxColumnWidths[i] = Math.max(maxColumnWidths[i], line[i].length());
+            maxColumnWidths[i] = Math.max(Math.max(maxColumnWidths[i], line[i].length()), minWidth);
         }
     }
 
-    void render(OutputStream os) {
+    public void render(OutputStream os) {
         PrintStream out = new PrintStream(os);
         render(out);
     }
 
-    void render(PrintStream out) {
+    public void render(PrintStream out) {
         for (int i = lastPrintedLine + 1; i < lines.size(); i++) {
             String[] line = lines.get(i);
             renderLine(out, line);
@@ -82,7 +88,7 @@ class TableRenderer {
         for (int i = 0; i < numColumns; i++) {
             out.print(line[i]);
             padOrNewline(out, line, i);
-            
+
         }
     }
 

@@ -44,7 +44,7 @@ import java.util.List;
 
 public class HelpCommand implements Command {
 
-    private static final int COMMANDS_COLUMNS_WIDTH = 15;
+    private static final int COMMANDS_COLUMNS_WIDTH = 14;
     private static final String NAME = "help";
     private static final String DESCRIPTION = "show help for a given command or help overview";
     private static final String USAGE = DESCRIPTION;
@@ -65,27 +65,22 @@ public class HelpCommand implements Command {
     private void printCommandSummaries(CommandContext ctx) {
         CommandRegistry cmdRegistry = ctx.getCommandRegistry();
 
-        StringBuilder out = new StringBuilder();
-        out.append("list of commands:\n\n");
+        ctx.getConsole().getOutput().print("list of commands:\n\n");
+
+        TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
         Collection<Command> commands = cmdRegistry.getRegisteredCommands();
         List<Command> sortedCommands = new ArrayList<>(commands);
 
         Collections.sort(sortedCommands, comparator);
         for (Command cmd : sortedCommands) {
-            printCommandSummary(out, cmd);
+            printCommandSummary(renderer, cmd);
         }
-        ctx.getConsole().getOutput().print(out);
+        renderer.render(ctx.getConsole().getOutput());
     }
 
-    private void printCommandSummary(StringBuilder out, Command cmd) {
-        out.append(" ");
-        out.append(cmd.getName());
-        for (int i = 0; i < COMMANDS_COLUMNS_WIDTH - cmd.getName().length() - 1; i++) {
-            out.append(" ");
-        }
-        out.append(cmd.getDescription());
-        out.append("\n");
+    private void printCommandSummary(TableRenderer renderer, Command cmd) {
+        renderer.printLine(" " + cmd.getName(), cmd.getDescription());
     }
 
     private void printCommandUsage(CommandContext ctx, String cmdName) {

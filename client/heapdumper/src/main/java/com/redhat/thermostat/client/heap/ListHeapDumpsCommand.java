@@ -34,9 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools.cli;
+package com.redhat.thermostat.client.heap;
 
-import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 
@@ -46,70 +46,22 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.common.dao.DAOException;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HeapDAO;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.model.HeapInfo;
 
-public class VMInfoCommand implements Command {
+public class ListHeapDumpsCommand implements Command {
 
-    private static final String NAME = "vm-info";
-    private static final String DESCRIPTION = "shows basic information about a VM";
+    private static final String NAME = "list-heap-dumps";
+    private static final String DESCRIPTION = "list all heap dumps";
+    private static final String USAGE = DESCRIPTION;
 
-    private static final String STILL_ALIVE = "<Running>";
-
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-        VmInfoDAO vmsDAO = daoFactory.getVmInfoDAO();
-        HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), false);
-        HostRef host = hostVMArgs.getHost();
-        VmRef vm = hostVMArgs.getVM();
-        try {
-            if (vm != null) {
-                getAndPrintVMInfo(ctx, vmsDAO, vm);
-            } else {
-                getAndPrintAllVMInfo(ctx, vmsDAO, host);
-
-            }
-        } catch (DAOException ex) {
-            ctx.getConsole().getError().println(ex.getMessage());
-        }
-    }
-
-    private void getAndPrintAllVMInfo(CommandContext ctx, VmInfoDAO vmsDAO, HostRef host) {
-        Collection<VmRef> vms = vmsDAO.getVMs(host);
-        for (VmRef vm : vms) {
-            getAndPrintVMInfo(ctx, vmsDAO, vm);
-        }
-    }
-
-    private void getAndPrintVMInfo(CommandContext ctx, VmInfoDAO vmsDAO, VmRef vm) {
-
-        VmInfo vmInfo = vmsDAO.getVmInfo(vm);
-
-        TableRenderer table = new TableRenderer(2);
-        table.printLine("Process ID:", String.valueOf(vmInfo.getVmPid()));
-        table.printLine("Start time:", new Date(vmInfo.getStartTimeStamp()).toString());
-        if (vmInfo.isAlive()) {
-            table.printLine("Stop time:", STILL_ALIVE);
-        } else {
-            table.printLine("Stop time:", new Date(vmInfo.getStopTimeStamp()).toString());
-        }
-        table.printLine("Main class:", vmInfo.getMainClass());
-        table.printLine("Command line:", vmInfo.getJavaCommandLine());
-        table.printLine("Java version:", vmInfo.getJavaVersion());
-        table.printLine("Virtual machine:", vmInfo.getVmName());
-        table.printLine("VM arguments:", vmInfo.getVmArguments());
-
-        PrintStream out = ctx.getConsole().getOutput();
-        table.render(out);
-    }
-
-    @Override
-    public void disable() { /* NO-OP */ }
+    // TODO localize
+    private static final String[] COLUMN_NAMES = {"HOST ID", "VM ID", "HEAP ID", "TIMESTAMP"};
 
     @Override
     public String getName() {
@@ -123,17 +75,48 @@ public class VMInfoCommand implements Command {
 
     @Override
     public String getUsage() {
-        return DESCRIPTION;
+        return USAGE;
     }
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs(false);
+        return new ArrayList<>();
     }
 
     @Override
     public boolean isStorageRequired() {
         return true;
+    }
+
+    @Override
+    public void run(CommandContext ctx) throws CommandException {
+        TableRenderer renderer = new TableRenderer(4);
+
+        renderer.printLine(COLUMN_NAMES);
+
+        DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
+        HostInfoDAO hostDAO = daoFactory.getHostInfoDAO();
+        VmInfoDAO vmDAO = daoFactory.getVmInfoDAO();
+        HeapDAO heapDAO = daoFactory.getHeapDAO();
+
+        for (HostRef hostRef : hostDAO.getHosts()) {
+            for (VmRef vmRef : vmDAO.getVMs(hostRef)) {
+                Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(vmRef);
+                for (HeapInfo info : infos) {
+                    renderer.printLine(hostRef.getStringID(),
+                                       vmRef.getStringID(),
+                                       info.getHeapDumpId(),
+                                       new Date(info.getTimestamp()).toString());
+                }
+            }
+        }
+
+        renderer.render(ctx.getConsole().getOutput());
+    }
+
+    @Override
+    public void disable() {
+        /* NO-OP */
     }
 
 }

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.heap;
 
+import java.util.ServiceLoader;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -47,9 +49,13 @@ import com.redhat.thermostat.client.heap.swing.HeapSwingView;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CommandRegistry;
+import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
 public class Activator implements BundleActivator {
 
+    private CommandRegistry reg;
     private ServiceRegistration contextServiceReg;
 
     @Override
@@ -59,13 +65,17 @@ public class Activator implements BundleActivator {
             @Override
             public Object addingService(ServiceReference reference) {
                 ApplicationService appService = (ApplicationService) context.getService(reference);
-                
+
                 ApplicationContext.getInstance().getViewFactory().setViewClass(HeapView.class, HeapSwingView.class);
                 context.registerService(VmInformationService.class.getName(), new HeapDumperService(appService), null);
                 return super.addingService(reference);
             }
         };
         tracker.open();
+
+        reg = new CommandRegistryImpl(context);
+        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
+        reg.registerCommands(cmds);
     }
 
     @Override
@@ -73,5 +83,7 @@ public class Activator implements BundleActivator {
         if (contextServiceReg != null) {
             contextServiceReg.unregister();
         }
+
+        reg.unregisterCommands();
     }
 }
