@@ -38,10 +38,7 @@ package com.redhat.thermostat.client.heap.chart;
 
 import java.awt.Color;
 import java.awt.GradientPaint;
-import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
 import java.util.Date;
 
 import javax.swing.plaf.ColorUIResource;
@@ -49,9 +46,13 @@ import javax.swing.plaf.ColorUIResource;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.TickUnits;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYDifferenceRenderer;
+import org.jfree.data.RangeType;
 import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
@@ -114,7 +115,24 @@ public class OverviewChart extends Chart {
         domainAxis.setUpperMargin(0.0);
         plot.setDomainAxis(domainAxis);
         plot.setForegroundAlpha(0.5f);
-        
+        TickUnits tickUnits = new TickUnits();
+        tickUnits.add(new CustomTickUnit(1.));
+        tickUnits.add(new CustomTickUnit(10.));
+        tickUnits.add(new CustomTickUnit(100.));
+        tickUnits.add(new CustomTickUnit(1000.));
+        tickUnits.add(new CustomTickUnit(10000.));
+        tickUnits.add(new CustomTickUnit(100000.));
+        tickUnits.add(new CustomTickUnit(1000000.));
+        tickUnits.add(new CustomTickUnit(10000000.));
+        tickUnits.add(new CustomTickUnit(100000000.));
+        tickUnits.add(new CustomTickUnit(1000000000.));
+        tickUnits.add(new CustomTickUnit(10000000000.));
+        tickUnits.add(new CustomTickUnit(100000000000.));
+        tickUnits.add(new CustomTickUnit(1000000000000.));
+        NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
+        yAxis.setStandardTickUnits(tickUnits);
+        yAxis.setRangeType(RangeType.POSITIVE);
+        yAxis.setAutoRangeMinimumSize(10);
         return chart;
     }
 
