@@ -56,6 +56,8 @@ import org.jfree.ui.RectangleInsets;
 
 public class StatsModel {
 
+    private static final String lock = new String("MemoryStatsModelLock");
+
     private String name;
     
     private TimeSeries dataSet;
@@ -82,10 +84,17 @@ public class StatsModel {
         this.name = name;
     }
     
+    public void setRange(int seconds) {
+        dataSet.setMaximumItemCount(seconds);
+    }
+    
     public void addData(long timestamp, double value) {
         Millisecond millisecond = new Millisecond(new Date(timestamp));
-        if (dataSet.getValue(millisecond) == null) {
-            dataSet.add(millisecond, value);
+        synchronized (lock) {
+            if (dataSet.getValue(millisecond) == null) {
+                dataSet.add(millisecond, value);
+                dataSet.removeAgedItems(true);
+            }
         }
     }
     
@@ -96,7 +105,15 @@ public class StatsModel {
      */
     private JFreeChart createChart(ColorUIResource bgColor, ColorUIResource fgColor) {
 
-        XYDataset priceData = new TimeSeriesCollection(dataSet);
+        XYDataset priceData = null;
+        synchronized (lock) {            
+            try {
+                priceData = new TimeSeriesCollection(dataSet.createCopy(0,
+                                                     dataSet.getItemCount() - 1));
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+            }
+        }
 
         XYPlot plot = new XYPlot();
         
