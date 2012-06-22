@@ -120,6 +120,12 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
+    public void shutdown(int exitCode) {
+        // TODO implement returning exit codes
+        shutdown();
+    }
+
+    @Override
     public void awaitShutdown() throws InterruptedException {
         shutdown.await();
     }

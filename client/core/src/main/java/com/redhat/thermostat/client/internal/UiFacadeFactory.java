@@ -67,6 +67,8 @@ public interface UiFacadeFactory {
 
     public void shutdown();
 
+    public void shutdown(int exitCode);
+
     public void awaitShutdown() throws InterruptedException;
 
 }

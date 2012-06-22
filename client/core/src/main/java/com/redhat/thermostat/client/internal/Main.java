@@ -39,7 +39,6 @@ package com.redhat.thermostat.client.internal;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.EventQueue;
-import java.awt.Window;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,7 +52,6 @@ import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
-import com.redhat.thermostat.client.ui.LayoutDebugHelper;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
@@ -73,17 +71,10 @@ public class Main {
 
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
-    private ClientArgs arguments;
     private UiFacadeFactory uiFacadeFactory;
 
     public Main(UiFacadeFactory uiFacadeFactory, String[] args) {
         this.uiFacadeFactory = uiFacadeFactory;
-        try {
-            this.arguments = new ClientArgs(args);
-        } catch (IllegalArgumentException ex) {
-            logger.log(Level.SEVERE, "Bad arguments to Thermostat client.", ex);
-            System.exit(-1);
-        }
 
         ClientPreferences prefs = new ClientPreferences();
         StartupConfiguration config = new ConnectionConfiguration(prefs);
@@ -102,7 +93,7 @@ public class Main {
 
             @Override
             public void run() {
-                
+
                 // check if the user has other preferences...
                 // not that there is any reason!
                 String laf = System.getProperty("swing.defaultlaf");
@@ -113,12 +104,12 @@ public class Main {
                         logger.log(Level.WARNING, "cannot use DolphinLookAndFeel");
                     }
                 }
-                
+
                 showGui();
             }
-            
+
         });
-        
+
         try {
             uiFacadeFactory.awaitShutdown();
         } catch (InterruptedException e) {
@@ -127,7 +118,7 @@ public class Main {
     }
 
     private void showGui() {
-        
+
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
         Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
@@ -137,6 +128,7 @@ public class Main {
         dialog.setVisible(true);
 
         if (dialog.isCancelled()) {
+            uiFacadeFactory.shutdown();
             return;
         }
 
@@ -149,7 +141,7 @@ public class Main {
                             localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
                             localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
                             JOptionPane.ERROR_MESSAGE);
-                    System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
+                    uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
                 }
             }
         };
@@ -160,32 +152,6 @@ public class Main {
 
         MainWindowController mainController = uiFacadeFactory.getMainWindow();
         mainController.showMainMainWindow();
-
-        if (arguments.isDebugLayout()) {
-            Thread layoutDebugger = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    LayoutDebugHelper helper = new LayoutDebugHelper();
-                    try {
-                        while (true) {
-                            Thread.sleep(5000);
-                            Window[] windows = Window.getWindows();
-                            for (Window w : windows) {
-                                helper.debugLayout(w);
-                                w.invalidate();
-                                w.repaint();
-                            }
-                        }
-                    } catch (InterruptedException ie) {
-                        logger.log(Level.INFO, "layout debug helper interrupted; exiting", ie);
-                        // mark thread as interrupted
-                        Thread.currentThread().interrupt();
-                    }
-                }
-            });
-            layoutDebugger.setDaemon(true);
-            layoutDebugger.start();
-        }
 
     }
 
