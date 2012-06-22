@@ -4,7 +4,7 @@
   <parent>
     <artifactId>thermostat</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>0.3</version>
+    <version>0.4-SNAPSHOT</version>
   </parent>
   
   <artifactId>thermostat-osgi-process-handler</artifactId>
