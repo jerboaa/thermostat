@@ -86,16 +86,16 @@ public class StatsPanel extends JPanel {
                 .addComponent(leftPanel, GroupLayout.DEFAULT_SIZE, 293, Short.MAX_VALUE)
         );
         
-        JLabel currentLabel = new JLabel("size:");
+        JLabel currentLabel = new JLabel("used:");
         currentLabel.setHorizontalAlignment(SwingConstants.LEFT);
         
-        JLabel maxLabel = new JLabel("max:");
+        JLabel maxLabel = new JLabel("capacity:");
         maxLabel.setHorizontalAlignment(SwingConstants.LEFT);
         
-        current = new JLabel("12");
+        current = new JLabel("-");
         current.setHorizontalAlignment(SwingConstants.RIGHT);
         
-        max = new JLabel("12");
+        max = new JLabel("-");
         max.setHorizontalAlignment(SwingConstants.RIGHT);
         
         heapDumpButton = new JButton("Heap Dump");

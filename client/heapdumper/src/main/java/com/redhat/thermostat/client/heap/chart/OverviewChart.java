@@ -68,17 +68,17 @@ public class OverviewChart extends Chart {
     private String xAxis;
     private String yAxis;
     
-    public OverviewChart(String title, String xAxis, String yAxis) {
+    public OverviewChart(String title, String xAxis, String yAxis, String mainSeries, String secondarySeries) {
         
         this.title = title;
         this.xAxis = xAxis;
         this.yAxis = yAxis;
         
-        total = new TimeSeries("total");
-        total.setDescription("total");
+        total = new TimeSeries(mainSeries);
+        total.setDescription(mainSeries);
         
-        used = new TimeSeries("used");
-        used.setDescription("used");
+        used = new TimeSeries(secondarySeries);
+        used.setDescription(secondarySeries);
     }
     
     @Override
@@ -100,7 +100,7 @@ public class OverviewChart extends Chart {
                 xAxis,
                 yAxis,
                 dataset,
-                false,  // legend
+                true,  // legend
                 false,  // tool tips
                 false   // URLs
         );

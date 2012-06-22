@@ -96,7 +96,8 @@ public class HeapDumpController implements VmInformationServiceController {
         this.vmDao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
         this.heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         
-        model = new OverviewChart("Heap Used vs. Current Capacity Difference", "Time", "Heap");
+        model = new OverviewChart("Used Heap vs. Heap Capacity", "Time", "Heap",
+                                  "Heap Capacity", "Used Heap");
         
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         timer.setAction(new HeapOverviewDataCollector());
