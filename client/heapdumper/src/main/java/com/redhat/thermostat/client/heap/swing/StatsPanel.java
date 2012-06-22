@@ -53,8 +53,8 @@ import javax.swing.SwingConstants;
 
 import com.redhat.thermostat.client.heap.HeapDump;
 import javax.swing.JList;
-import javax.swing.event.ListSelectionListener;
 
+@SuppressWarnings("serial")
 public class StatsPanel extends JPanel {
     
     private JPanel leftPanel;

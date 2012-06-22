@@ -49,14 +49,13 @@ import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
-import java.lang.ProcessBuilder.Redirect;
 
 import javax.swing.JComponent;
 import javax.swing.plaf.ColorUIResource;
 
 import sun.swing.SwingUtilities2;
 
-@SuppressWarnings("restriction")
+@SuppressWarnings({ "restriction", "serial" })
 public class MemoryMeter extends JComponent {
     
     // TODO the font should be customizable

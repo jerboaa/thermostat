@@ -116,6 +116,7 @@ class MemoryStatsController implements VmInformationServiceController {
                         if (model == null) {
                             model = new StatsModel();
                             model.setName(space.name);
+                            model.setRange(3600);
                         }
                         
                         // normalize this always in the same unit
@@ -148,7 +149,7 @@ class MemoryStatsController implements VmInformationServiceController {
         timer.setAction(collector);
         
         timer.setInitialDelay(0);
-        timer.setDelay(500);
+        timer.setDelay(1000);
         timer.setTimeUnit(TimeUnit.MILLISECONDS);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
 
