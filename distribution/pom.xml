@@ -42,7 +42,7 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3</version>
   </parent>
 
   <artifactId>thermostat-distribution</artifactId>
@@ -89,7 +89,7 @@
               <resources>
                 <resource>
                   <directory>desktop</directory>
-                  <targetPath></targetPath>
+                  <targetPath />
                   <filtering>true</filtering>
                 </resource>
                 <resource>

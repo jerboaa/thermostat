@@ -42,7 +42,7 @@
   <parent>
     <groupId>com.redhat.thermostat</groupId>
     <artifactId>thermostat-common</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <version>0.3</version>
   </parent>
 
   <artifactId>thermostat-common-command</artifactId>
@@ -76,7 +76,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator></Bundle-Activator>
+            <Bundle-Activator />
             <Export-Package>
               com.redhat.thermostat.common.command
             </Export-Package>
