@@ -48,8 +48,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
-import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
@@ -108,9 +108,9 @@ public class Main {
                 String laf = System.getProperty("swing.defaultlaf");
                 if (laf == null) {
                     try {
-                        UIManager.setLookAndFeel(new DolphinLookAndFeel());
+                        UIManager.setLookAndFeel(new NimbusLookAndFeel());
                     } catch (UnsupportedLookAndFeelException e) {
-                        logger.log(Level.WARNING, "cannot use DolphinLookAndFeel");
+                        logger.log(Level.WARNING, "cannot use NimbusLookAndFeel");
                     }
                 }
                 
