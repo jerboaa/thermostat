@@ -178,6 +178,8 @@ class MongoProcessRunner {
             throw ae;
         }
 
+        Thread.sleep(500);
+
         if (status == 0) {
             pid = getPid();
             if (pid == null) status = -1;
