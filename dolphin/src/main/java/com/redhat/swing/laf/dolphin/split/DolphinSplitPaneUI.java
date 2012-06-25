@@ -34,50 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.borders;
+package com.redhat.swing.laf.dolphin.split;
 
-import java.awt.Component;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+import javax.swing.JComponent;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.basic.BasicSplitPaneDivider;
+import javax.swing.plaf.metal.MetalSplitPaneUI;
 
-import java.io.Serializable;
+public class DolphinSplitPaneUI extends MetalSplitPaneUI {
 
-import javax.swing.plaf.UIResource;
-
-import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
-import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
-
-/**
- */
-public class DolphinCommonBorder extends DolphinDebugBorder implements UIResource, Serializable {
-
+    public static ComponentUI createUI(JComponent x) {
+        return new DolphinSplitPaneUI();
+    }
+    
     @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width,
-                            int height) {
-
-        Graphics2D graphics = (Graphics2D) g.create();
-        DolphinThemeUtils.setAntialiasing(graphics);
-
-        graphics.translate(x, y);                        
-        
-        DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        Paint paint =
-            new GradientPaint(0, 0, theme.getBorderGradientTopColor(),
-                              0, c.getHeight(),
-                              theme.getBorderGradientTopColor());
-        graphics.setPaint(paint);
-
-        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL,
-                                  RenderingHints.VALUE_STROKE_DEFAULT);
-
-        Shape shape = new RoundRectangle2D.Float(0, 0, width - 1,
-                                                 height - 1, 4, 4);
-        graphics.draw(shape);
-        graphics.dispose();
+    public BasicSplitPaneDivider createDefaultDivider() {
+        return new DolphinSplitPaneDivider(this);
     }
 }

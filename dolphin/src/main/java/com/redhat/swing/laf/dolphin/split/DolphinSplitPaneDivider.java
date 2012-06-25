@@ -34,60 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.themes;
+package com.redhat.swing.laf.dolphin.split;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
-import java.awt.Graphics2D;
-import java.awt.MultipleGradientPaint;
-import java.awt.Paint;
-import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.Point2D;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.Graphics;
 
-import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
+import javax.swing.plaf.basic.BasicSplitPaneDivider;
 
-/**
- */
-public class DolphinThemeUtils {
+public class DolphinSplitPaneDivider extends BasicSplitPaneDivider {
+
+    private DolphinSplitPaneUI ui;
     
-    private static final boolean aaOff;
-    
-    static {
-       aaOff = Boolean.getBoolean("dolphin.aa.off");
+    public DolphinSplitPaneDivider(DolphinSplitPaneUI ui) {
+        super(ui);
+        this.ui = ui;
     }
     
-    /**
-     * Sets the Antialising hint on this graphics object.
-     * 
-     * The AA hint is on by default, but can be turned of by setting the system
-     * property: {@code icedlook.aa.off}
-     */
-    public static void setAntialiasing(Graphics2D graphics) {
-        if (!aaOff) {
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                                      RenderingHints.VALUE_ANTIALIAS_ON);   
-        }
-    }
-    
-    public static void setGradientPaint(Graphics2D g, int x, int y,
-                                        Color start, Color stop)
-    {
-        Paint paint = new GradientPaint(x, 0, start, 0, y, stop);
-        g.setPaint(paint);
+    DolphinSplitPaneUI getUi() {
+        return ui;
     }
         
-    public static DolphinTheme getCurrentTheme() {
-        return DolphinLookAndFeel.getTheme();
-    }
-
-    public static Shape getRoundShape(int width, int height) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, 4, 4);
-    }
-    
-    public static Shape getRoundShape(int width, int height, int arcx, int arcy) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, arcx, arcy);
+    @Override
+    public void paint(Graphics g) {
+        g.setColor(getBackground());
+        g.fillRect(0, 0, getWidth(), getHeight());
+        
+        // TODO: create the small dots in the center
+        super.paint(g);
     }
 }

@@ -47,7 +47,7 @@ import com.redhat.swing.laf.dolphin.text.DolphinTextAreaBorder;
 import com.redhat.swing.laf.dolphin.text.DolphinTextBorder;
 
 public class DolphinDefaultTheme extends DolphinTheme {
-    
+
     private static final ColorUIResource WHITE = new ColorUIResource(Color.WHITE);
     
     private static final ColorUIResource WINDOW_BACKGROUND = new ColorUIResource(0xEDEDED);
@@ -81,6 +81,11 @@ public class DolphinDefaultTheme extends DolphinTheme {
     private static final ColorUIResource TAB_UNSELECTED_TOP_GRADIENT_COLOR = new ColorUIResource(0xe6e6e6);
     private static final ColorUIResource TAB_UNSELECTED_BOTTOM_GRADIENT_COLOR = new ColorUIResource(0xcbcbcb);
 
+    private static final ColorUIResource THUMB_COLOR = new ColorUIResource(0x9B9D9E);
+    private static final ColorUIResource TRACK_COLOR = new ColorUIResource(0xD6D6D6);
+    private static final ColorUIResource THUMB_FOCUSED_COLOR = new ColorUIResource(0x828586);
+    private static final ColorUIResource THUMB_MOVING_COLOR = SELECTION_COLOR;
+    
     @Override
     public ColorUIResource getwindowBackgroundColor() {
         return WINDOW_BACKGROUND;
@@ -262,12 +267,36 @@ public class DolphinDefaultTheme extends DolphinTheme {
     }
     
     @Override
+    public Color getThumbColor() {
+        return THUMB_COLOR;
+    }
+    
+    @Override
+    public Color getScrollBarTrackColor() {
+        return TRACK_COLOR;
+    }
+    
+    @Override
+    public Color getThumbFocusedColor() {
+        return THUMB_FOCUSED_COLOR;
+    }
+    
+    @Override
+    public Color getThumbMovingColor() {
+        return THUMB_MOVING_COLOR;
+    }
+    
+    @Override
+    public Color getSplitPaneDividerBorderColor() {
+        return BORDER_GRADIENT_DEFAULT_TOP;
+    }
+    
+    @Override
     public void addCustomEntriesToTable(UIDefaults table) {
         super.addCustomEntriesToTable(table);
         
         Object[] uiDefaults = {
 //            "MenuBarUI",    "com.ladybug.swing.plaf.icedlook.menu.IcedLookMenuBarUI",
-               "TabbedPane.contentAreaColor", getTabAreaBackground(),
                "TabbedPane.contentAreaColor", getTabAreaBackground(),
                "TabbedPane.tabAreaBackground", getTabAreaBackground(),
                "TabbedPane.selectHighlight", getSelectionColor(),

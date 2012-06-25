@@ -36,6 +36,8 @@
 
 package com.redhat.swing.laf.dolphin.themes;
 
+import java.awt.Color;
+
 import javax.swing.border.AbstractBorder;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.metal.OceanTheme;
@@ -102,4 +104,13 @@ public abstract class DolphinTheme extends OceanTheme {
     
     public abstract ColorUIResource getUnselectedTabTopGradient();
     public abstract ColorUIResource getUnselectedTabBottomGradient();
+
+    abstract public Color getThumbColor();
+
+    abstract public Color getScrollBarTrackColor();
+
+    abstract public Color getThumbFocusedColor();
+    abstract public Color getThumbMovingColor();
+    
+    abstract public Color getSplitPaneDividerBorderColor();
 }

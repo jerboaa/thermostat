@@ -34,60 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.themes;
+package com.redhat.swing.laf.dolphin.showcase;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
-import java.awt.Graphics2D;
-import java.awt.MultipleGradientPaint;
-import java.awt.Paint;
-import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.Point2D;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.BorderLayout;
+import java.awt.EventQueue;
+
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+import javax.swing.JSplitPane;
 
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 
-/**
- */
-public class DolphinThemeUtils {
-    
-    private static final boolean aaOff;
-    
-    static {
-       aaOff = Boolean.getBoolean("dolphin.aa.off");
-    }
-    
+public class SplitPaneDemo extends JFrame {
+
+    private JPanel contentPane;
+
     /**
-     * Sets the Antialising hint on this graphics object.
-     * 
-     * The AA hint is on by default, but can be turned of by setting the system
-     * property: {@code icedlook.aa.off}
+     * Launch the application.
      */
-    public static void setAntialiasing(Graphics2D graphics) {
-        if (!aaOff) {
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                                      RenderingHints.VALUE_ANTIALIAS_ON);   
-        }
-    }
-    
-    public static void setGradientPaint(Graphics2D g, int x, int y,
-                                        Color start, Color stop)
-    {
-        Paint paint = new GradientPaint(x, 0, start, 0, y, stop);
-        g.setPaint(paint);
-    }
-        
-    public static DolphinTheme getCurrentTheme() {
-        return DolphinLookAndFeel.getTheme();
+    public static void main(String[] args) {
+        EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                try {
+                    UIManager.setLookAndFeel(new DolphinLookAndFeel());
+                    
+                    SplitPaneDemo frame = new SplitPaneDemo();
+                    frame.setVisible(true);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
-    public static Shape getRoundShape(int width, int height) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, 4, 4);
+    /**
+     * Create the frame.
+     */
+    public SplitPaneDemo() {
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setBounds(100, 100, 450, 300);
+        contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        contentPane.setLayout(new BorderLayout(0, 0));
+        setContentPane(contentPane);
+        
+        JSplitPane splitPane = new JSplitPane();
+        contentPane.add(splitPane, BorderLayout.CENTER);
+        
+        JSplitPane splitPane_1 = new JSplitPane();
+        splitPane_1.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPane.setRightComponent(splitPane_1);
+        
+        JPanel panel = new JPanel();
+        splitPane_1.setRightComponent(panel);
+        
+        JPanel panel_1 = new JPanel();
+        splitPane_1.setLeftComponent(panel_1);
     }
-    
-    public static Shape getRoundShape(int width, int height, int arcx, int arcy) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, arcx, arcy);
-    }
+
 }

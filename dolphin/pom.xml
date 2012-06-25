@@ -36,10 +36,12 @@
               com.redhat.swing.laf.dolphin,
               com.redhat.swing.laf.dolphin.borders,
               com.redhat.swing.laf.dolphin.button,
+              com.redhat.swing.laf.dolphin.scrollbars,
               com.redhat.swing.laf.dolphin.text,
               com.redhat.swing.laf.dolphin.themes,
               com.redhat.swing.laf.dolphin.tree,
-              com.redhat.swing.laf.dolphin.tab
+              com.redhat.swing.laf.dolphin.tab,
+              com.redhat.swing.laf.dolphin.split
             </Export-Package>
             <Private-Package>
               com.redhat.swing.laf.dolphin.showcase,

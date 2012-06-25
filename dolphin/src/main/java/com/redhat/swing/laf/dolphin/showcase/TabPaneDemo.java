@@ -51,7 +51,6 @@ import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import javax.swing.JLabel;
 import javax.swing.JButton;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.JTextPane;
 import javax.swing.JTextField;
 import javax.swing.JTextArea;
 
