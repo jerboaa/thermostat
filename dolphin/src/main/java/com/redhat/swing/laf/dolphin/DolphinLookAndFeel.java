@@ -37,6 +37,7 @@
 package com.redhat.swing.laf.dolphin;
 
 import javax.swing.UIDefaults;
+import javax.swing.plaf.InsetsUIResource;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
 import com.redhat.swing.laf.dolphin.split.DolphinSplitPaneDividerBorder;
@@ -67,6 +68,10 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
             "TabbedPaneUI", "com.redhat.swing.laf.dolphin.tab.DolphinTabbedPaneUI",
             "ScrollBarUI",  "com.redhat.swing.laf.dolphin.scrollbars.DolphinScrollBarUI",
             "SplitPaneUI",  "com.redhat.swing.laf.dolphin.split.DolphinSplitPaneUI",
+            "SeparatorUI",  "com.redhat.swing.laf.dolphin.split.DolphinSeparatorUI",
+            "PopupMenuSeparatorUI", "com.redhat.swing.laf.dolphin.split.DolphinSeparatorUI",
+
+            // menu ui defined in theme specific "addCustomEntriesToTable"
         };
         
         table.putDefaults(uiDefaults);
@@ -107,16 +112,12 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "TextArea.selectionForeground", theme.getSelectionColorForeground(),
                 "TextArea.caretBlinkRate",  0,
                 
-                "MenuBar.background", theme.getMenuBackgroundColor(),
-                "MenuBar.foreground", theme.getMenuForegroundColor(),
-                "menu", theme.getMenuForegroundColor(),
-                
                 "ScrollPane.border", theme.getScrollPaneBorder(),
                 
                 "List.selectionBackground", theme.getSelectionColor(),
                 "List.selectionForeground", theme.getSelectionColorForeground(),        
                 
-                "ScrollBar.width", 17,
+                "ScrollBar.width", 15,
                 "SplitPane.dividerSize", new Integer(7),
                 "SplitPaneDivider.border", new DolphinSplitPaneDividerBorder(),
                 "SplitPane.border", null,

@@ -70,34 +70,14 @@ public class DolphinSplitPaneDividerBorder extends DolphinDebugBorder {
         BasicSplitPaneUI splitPane =
                 ((BasicSplitPaneDivider)c).getBasicSplitPaneUI();
         if (splitPane.getOrientation() == JScrollBar.HORIZONTAL) {
-            graphics.translate(x, height - 1);
-            
-            LinearGradientPaint paint =
-                    new LinearGradientPaint(new Point2D.Float(0, 0),
-                                            new Point2D.Float(width, 0),
-                                            new float[] { 0.0f, 0.2f, 0.8f, 1.0f },
-                                            new Color[] { c.getBackground(),
-                                                          theme.getSplitPaneDividerBorderColor(),
-                                                          theme.getSplitPaneDividerBorderColor(),
-                                                          c.getBackground()});
-            
-            graphics.setPaint(paint);
-            graphics.drawLine(0, 0, width, 0);
 
+            DolphinSeparatorUI.paintSeparator(graphics, x, height - 1, width, 0,
+                                              c.getBackground(), theme.getSplitPaneDividerBorderColor());          
+            
         } else {
             
-            LinearGradientPaint paint =
-                    new LinearGradientPaint(new Point2D.Float(0, 0),
-                                            new Point2D.Float(0, height),
-                                            new float[] { 0.0f, 0.2f, 0.8f, 1.0f },
-                                            new Color[] { c.getBackground(),
-                                                          theme.getSplitPaneDividerBorderColor(),
-                                                          theme.getSplitPaneDividerBorderColor(),
-                                                          c.getBackground()});
-            
-            graphics.setPaint(paint);
-            graphics.translate(width - 1, y);
-            graphics.drawLine(0, 0, 0, height);
+            DolphinSeparatorUI.paintSeparator(graphics, width - 1, y, 0, height,
+                                              c.getBackground(), theme.getSplitPaneDividerBorderColor()); 
         }
         
         graphics.dispose();

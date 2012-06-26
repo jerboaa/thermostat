@@ -34,33 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.borders;
+package com.redhat.swing.laf.dolphin.menu;
 
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
 
-import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
+import javax.swing.JComponent;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.basic.BasicMenuUI;
 
-public class DolphinDebugBorder extends DolphinNullBorder {
+public class DolphinMenuUI extends BasicMenuUI {
 
-    @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width,
-                            int height)
-    {
-        Graphics2D graphics = (Graphics2D) g.create();
-
-        graphics.translate(x, y);
-        
-        graphics.setPaint(Color.RED);
-
-        Shape shape = new RoundRectangle2D.Float(0, 0, width - 1,
-                                                 height - 1, 4, 4);
-        graphics.draw(shape);
-        graphics.dispose();
+    public static ComponentUI createUI(JComponent x) {
+        return new DolphinMenuUI();
     }
 }

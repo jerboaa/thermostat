@@ -34,33 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.borders;
+package com.redhat.swing.laf.dolphin.menu;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.Insets;
 
+import com.redhat.swing.laf.dolphin.borders.DolphinDebugBorder;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-public class DolphinDebugBorder extends DolphinNullBorder {
+public class DolphinMenuBarBorder extends DolphinDebugBorder {
 
     @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width,
-                            int height)
+    public void paintBorder(Component c, Graphics g, int x, int y,
+                            int width, int height)
     {
         Graphics2D graphics = (Graphics2D) g.create();
-
-        graphics.translate(x, y);
+        graphics.translate(x, y + height - 1);
         
-        graphics.setPaint(Color.RED);
+        graphics.setPaint(DolphinThemeUtils.getCurrentTheme().getMenuBorderDefaultColor());
 
-        Shape shape = new RoundRectangle2D.Float(0, 0, width - 1,
-                                                 height - 1, 4, 4);
-        graphics.draw(shape);
+        graphics.drawLine(0, 0, width, 0);
         graphics.dispose();
+    }
+    
+    @Override
+    public Insets getBorderInsets(Component c, Insets insets) {
+
+        insets.top = 1;
+        insets.left = 2;
+        insets.right = 2;
+        insets.bottom = 1;
+        
+        return insets;
     }
 }

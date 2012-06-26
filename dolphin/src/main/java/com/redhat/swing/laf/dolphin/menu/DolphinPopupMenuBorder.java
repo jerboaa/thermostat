@@ -34,72 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.split;
+package com.redhat.swing.laf.dolphin.menu;
 
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.Insets;
 
-import javax.swing.JSplitPane;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
+import javax.swing.AbstractButton;
+import javax.swing.JToolBar;
+import javax.swing.text.JTextComponent;
 
-import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
+import com.redhat.swing.laf.dolphin.borders.DolphinDebugBorder;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-public class DolphinSplitPaneDivider extends BasicSplitPaneDivider {
+public class DolphinPopupMenuBorder extends DolphinDebugBorder {
 
-    private static final int MARKER_SIZE = 28;
-    
-    private DolphinSplitPaneUI ui;
-    
-    public DolphinSplitPaneDivider(DolphinSplitPaneUI ui) {
-        super(ui);
-        this.ui = ui;
-    }
-    
-    private void drawMarkers(Graphics2D graphics, Shape shape, int deltaX,
-                             int deltaY)
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y,
+                            int width, int height)
     {
-        for (int i = 0; i < 5; i++) {
-            graphics.translate(deltaX, deltaY);
-            graphics.draw(shape);
-        }
+        Graphics2D graphics = (Graphics2D) g.create();
+        graphics.translate(x, y);
+        
+        graphics.setPaint(DolphinThemeUtils.getCurrentTheme().getMenuBorderDefaultColor());
+
+        graphics.drawLine(0, 0, 0, height);
+        graphics.drawLine(0, height - 1, width - 1, height - 1);
+        graphics.drawLine(width -1, height - 1, width - 1, 0);
+        graphics.drawLine(width -1, 0, 0, 0);
+        
+        graphics.dispose();
     }
     
     @Override
-    public void paint(Graphics g) {
-                
-        Graphics2D graphics = (Graphics2D) g.create();
-        DolphinThemeUtils.setAntialiasing(graphics);
+    public Insets getBorderInsets(Component c, Insets insets) {
 
-        graphics.setColor(getBackground());
-        graphics.fillRect(0, 0, getWidth(), getHeight());
+        insets.top = 1;
+        insets.left = 1;
+        insets.right = 1;
+        insets.bottom = 1;
         
-        Shape shape = new RoundRectangle2D.Double(0., 0., 1., 1., 4, 4);
-        
-        DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        graphics.setColor(theme.getSplitPaneDividerBorderColor());
-        
-        int x = 0;
-        int y = 0;
-        
-        if (ui.getSplitPane().getOrientation() == JSplitPane.VERTICAL_SPLIT) {
-            x = getWidth()/2 - MARKER_SIZE/2;
-            y = getHeight()/2;
-            graphics.translate(x, y);
-            drawMarkers(graphics, shape, 5, 0);
-            
-        } else {
-            x = getWidth()/2;
-            y = getHeight()/2 - MARKER_SIZE/2;
-            graphics.translate(x, y);
-            drawMarkers(graphics, shape, 0, 5);
-        }
-        
-        graphics.dispose();
-        
-        super.paint(g);
+        return insets;
     }
 }

@@ -37,12 +37,20 @@
 package com.redhat.swing.laf.dolphin.themes;
 
 import java.awt.Color;
+import java.awt.Font;
 
 import javax.swing.UIDefaults;
 import javax.swing.border.AbstractBorder;
+import javax.swing.border.Border;
 import javax.swing.plaf.ColorUIResource;
+import javax.swing.plaf.FontUIResource;
+import javax.swing.plaf.InsetsUIResource;
 
 import com.redhat.swing.laf.dolphin.button.DolphinButtonBorder;
+import com.redhat.swing.laf.dolphin.menu.DolphinMenuBarBorder;
+import com.redhat.swing.laf.dolphin.menu.DolphinMenuBorder;
+import com.redhat.swing.laf.dolphin.menu.DolphinMenuItemBorder;
+import com.redhat.swing.laf.dolphin.menu.DolphinPopupMenuBorder;
 import com.redhat.swing.laf.dolphin.text.DolphinTextAreaBorder;
 import com.redhat.swing.laf.dolphin.text.DolphinTextBorder;
 
@@ -51,6 +59,7 @@ public class DolphinDefaultTheme extends DolphinTheme {
     private static final ColorUIResource WHITE = new ColorUIResource(Color.WHITE);
     
     private static final ColorUIResource WINDOW_BACKGROUND = new ColorUIResource(0xEDEDED);
+    
     private static final ColorUIResource BUTTON_GRADIENT_TOP = new ColorUIResource(0xf1f3f1);
     private static final ColorUIResource BUTTON_GRADIENT_TOP_ROLLOVER = new ColorUIResource(0xfcfdfc);
     private static final ColorUIResource BUTTON_GRADIENT_BOTTOM = new ColorUIResource(0xdbdddb);
@@ -85,6 +94,9 @@ public class DolphinDefaultTheme extends DolphinTheme {
     private static final ColorUIResource TRACK_COLOR = new ColorUIResource(0xD6D6D6);
     private static final ColorUIResource THUMB_FOCUSED_COLOR = new ColorUIResource(0x828586);
     private static final ColorUIResource THUMB_MOVING_COLOR = SELECTION_COLOR;
+    
+    private static final ColorUIResource SEPARATOR = new ColorUIResource(0xebebeb);
+
     
     @Override
     public ColorUIResource getwindowBackgroundColor() {
@@ -218,7 +230,7 @@ public class DolphinDefaultTheme extends DolphinTheme {
     
     @Override
     public ColorUIResource getMenuBackgroundColor() {
-        return SELECTION_FOREGROUND;
+        return WHITE;
     }
     
     @Override
@@ -267,44 +279,120 @@ public class DolphinDefaultTheme extends DolphinTheme {
     }
     
     @Override
-    public Color getThumbColor() {
+    public ColorUIResource getThumbColor() {
         return THUMB_COLOR;
     }
     
     @Override
-    public Color getScrollBarTrackColor() {
+    public ColorUIResource getScrollBarTrackColor() {
         return TRACK_COLOR;
     }
     
     @Override
-    public Color getThumbFocusedColor() {
+    public ColorUIResource getThumbFocusedColor() {
         return THUMB_FOCUSED_COLOR;
     }
     
     @Override
-    public Color getThumbMovingColor() {
+    public ColorUIResource getThumbMovingColor() {
         return THUMB_MOVING_COLOR;
     }
     
     @Override
-    public Color getSplitPaneDividerBorderColor() {
+    public ColorUIResource getSplitPaneDividerBorderColor() {
         return BORDER_GRADIENT_DEFAULT_TOP;
+    }
+    
+    @Override
+    public ColorUIResource getTabTopHedgeColor() {
+        return BORDER_GRADIENT_DEFAULT_TOP;
+    }
+    
+    @Override
+    public ColorUIResource getTabBottomHedgeColor() {
+        return BORDER_GRADIENT_DEFAULT_BOTTOM;
+    }
+    
+    @Override
+    public ColorUIResource getMenuBorderDefaultColor() {
+        return BORDER_GRADIENT_DEFAULT_BOTTOM;
+    }
+    
+    @Override
+    public ColorUIResource getMenuSelectedBackground() {
+        return SELECTION_COLOR;
+    }
+    
+    @Override
+    public ColorUIResource getMenuSelectedForeground() {
+        return SELECTION_FOREGROUND;
+    }
+    
+    @Override
+    public Color getSeparatorColor() {
+        return SEPARATOR;
+    }
+    
+    private FontUIResource defaultfont;
+    private void initFont() {
+        if (defaultfont == null) {
+            Font font = new Font("Cantarell", Font.PLAIN, 13);
+            defaultfont =  new FontUIResource(font);
+        }
+    }
+    
+    @Override
+    public FontUIResource getSystemTextFont() {
+        initFont();
+        return defaultfont;
+    }
+    
+    @Override
+    public FontUIResource getControlTextFont() {
+        initFont();
+        return defaultfont;
+    }
+    
+    @Override
+    public FontUIResource getMenuTextFont() {
+        initFont();
+        return defaultfont;
     }
     
     @Override
     public void addCustomEntriesToTable(UIDefaults table) {
         super.addCustomEntriesToTable(table);
         
+        Border menuItemBorder = new DolphinMenuItemBorder();
+        
         Object[] uiDefaults = {
-//            "MenuBarUI",    "com.ladybug.swing.plaf.icedlook.menu.IcedLookMenuBarUI",
-               "TabbedPane.contentAreaColor", getTabAreaBackground(),
-               "TabbedPane.tabAreaBackground", getTabAreaBackground(),
-               "TabbedPane.selectHighlight", getSelectionColor(),
-               "TabbedPane.selected", getSelectionColor(),
-               "TabbedPane.focus", getSelectionColor(),
-               //"TabbedPane.light", getTabAreaBackground(),
-               "TabbedPane.background", getTabAreaBackground(),
-               "TabbedPane.foreground", getTabAreaForeground(),
+
+                "MenuBarUI", "com.redhat.swing.laf.dolphin.menu.DolphinMenuBarUI",
+                "MenuBar.background", getMenuBackgroundColor(),
+                "MenuBar.border", new DolphinMenuBarBorder(),
+                
+                "MenuUI", "com.redhat.swing.laf.dolphin.menu.DolphinMenuUI",
+                
+                "Menu.border", menuItemBorder,
+                "MenuItem.border", menuItemBorder,
+                "MenuItem.selectionForeground", getMenuSelectedForeground(),
+                "MenuItem.selectionBackground", getMenuSelectedBackground(),
+                "MenuItem.background", getMenuBackgroundColor(),
+                
+                "RadioButtonMenuItem.background", getMenuBackgroundColor(),
+                "RadioButtonMenuItem.border", menuItemBorder,
+                
+                "CheckBoxMenuItem.border", menuItemBorder,
+                "CheckBoxMenuItem.background", getMenuBackgroundColor(),
+                
+                "PopupMenu.background", getMenuBackgroundColor(),
+                "PopupMenu.foreground", getMenuForegroundColor(),
+                "PopupMenu.border", new DolphinPopupMenuBorder(),
+                
+                "TabbedPane.contentAreaColor", getTabAreaBackground(),
+                "TabbedPane.tabAreaBackground", getTabAreaBackground(),
+                "TabbedPane.background", getTabAreaBackground(),
+                "TabbedPane.foreground", getTabAreaForeground(),
         };
         
         table.putDefaults(uiDefaults);        

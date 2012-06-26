@@ -105,12 +105,19 @@ public abstract class DolphinTheme extends OceanTheme {
     public abstract ColorUIResource getUnselectedTabTopGradient();
     public abstract ColorUIResource getUnselectedTabBottomGradient();
 
-    abstract public Color getThumbColor();
+    abstract public ColorUIResource getThumbColor();
 
-    abstract public Color getScrollBarTrackColor();
+    abstract public ColorUIResource getScrollBarTrackColor();
 
-    abstract public Color getThumbFocusedColor();
-    abstract public Color getThumbMovingColor();
+    abstract public ColorUIResource getThumbFocusedColor();
+    abstract public ColorUIResource getThumbMovingColor();
     
-    abstract public Color getSplitPaneDividerBorderColor();
+    abstract public ColorUIResource getSplitPaneDividerBorderColor();
+    
+    abstract public ColorUIResource getTabTopHedgeColor();
+    abstract public ColorUIResource getTabBottomHedgeColor();
+    
+    abstract public ColorUIResource getMenuBorderDefaultColor();
+
+    abstract public Color getSeparatorColor();
 }

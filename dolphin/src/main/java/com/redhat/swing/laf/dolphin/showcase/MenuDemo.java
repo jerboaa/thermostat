@@ -45,6 +45,9 @@ import javax.swing.JMenuItem;
 import javax.swing.UIManager;
 
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
+import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JSeparator;
 
 public class MenuDemo {
 
@@ -92,11 +95,29 @@ public class MenuDemo {
         JMenu mnNewMenu_1 = new JMenu("New menu");
         mnNewMenu.add(mnNewMenu_1);
         
+        JMenuItem mntmNewMenuItem_2 = new JMenuItem("New menu item");
+        mnNewMenu_1.add(mntmNewMenuItem_2);
+        
+        JRadioButtonMenuItem rdbtnmntmNewRadioItem_1 = new JRadioButtonMenuItem("New radio item");
+        mnNewMenu_1.add(rdbtnmntmNewRadioItem_1);
+        
+        JMenuItem mntmNewMenuItem_3 = new JMenuItem("New menu item");
+        mnNewMenu_1.add(mntmNewMenuItem_3);
+        
         JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
         mnNewMenu.add(mntmNewMenuItem);
         
         JMenuItem mntmNewMenuItem_1 = new JMenuItem("New menu item");
         mnNewMenu.add(mntmNewMenuItem_1);
+        
+        JSeparator separator = new JSeparator();
+        mnNewMenu.add(separator);
+        
+        JRadioButtonMenuItem rdbtnmntmNewRadioItem = new JRadioButtonMenuItem("New radio item");
+        mnNewMenu.add(rdbtnmntmNewRadioItem);
+        
+        JCheckBoxMenuItem chckbxmntmNewCheckItem = new JCheckBoxMenuItem("New check item");
+        mnNewMenu.add(chckbxmntmNewCheckItem);
         
         JMenu mnNewMenu_2 = new JMenu("New menu");
         menuBar.add(mnNewMenu_2);

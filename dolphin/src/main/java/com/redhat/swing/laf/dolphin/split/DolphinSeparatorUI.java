@@ -36,70 +36,62 @@
 
 package com.redhat.swing.laf.dolphin.split;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.LinearGradientPaint;
+import java.awt.geom.Point2D;
 
-import javax.swing.JSplitPane;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
+import javax.swing.JComponent;
+import javax.swing.JSeparator;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.metal.MetalSeparatorUI;
 
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-public class DolphinSplitPaneDivider extends BasicSplitPaneDivider {
+public class DolphinSeparatorUI extends MetalSeparatorUI {
 
-    private static final int MARKER_SIZE = 28;
-    
-    private DolphinSplitPaneUI ui;
-    
-    public DolphinSplitPaneDivider(DolphinSplitPaneUI ui) {
-        super(ui);
-        this.ui = ui;
-    }
-    
-    private void drawMarkers(Graphics2D graphics, Shape shape, int deltaX,
-                             int deltaY)
-    {
-        for (int i = 0; i < 5; i++) {
-            graphics.translate(deltaX, deltaY);
-            graphics.draw(shape);
-        }
+    public static ComponentUI createUI(JComponent c) {
+        return new DolphinSeparatorUI();
     }
     
     @Override
-    public void paint(Graphics g) {
-                
+    public void paint(Graphics g, JComponent c) {
+
         Graphics2D graphics = (Graphics2D) g.create();
         DolphinThemeUtils.setAntialiasing(graphics);
 
-        graphics.setColor(getBackground());
-        graphics.fillRect(0, 0, getWidth(), getHeight());
-        
-        Shape shape = new RoundRectangle2D.Double(0., 0., 1., 1., 4, 4);
-        
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        graphics.setColor(theme.getSplitPaneDividerBorderColor());
-        
-        int x = 0;
-        int y = 0;
-        
-        if (ui.getSplitPane().getOrientation() == JSplitPane.VERTICAL_SPLIT) {
-            x = getWidth()/2 - MARKER_SIZE/2;
-            y = getHeight()/2;
-            graphics.translate(x, y);
-            drawMarkers(graphics, shape, 5, 0);
-            
+
+        JSeparator separator = ((JSeparator) c);
+        if (separator.getOrientation() == JSeparator.HORIZONTAL) {
+
+            paintSeparator(graphics, c.getX(), 0, c.getWidth(), 0,
+                           c.getBackground(), theme.getSeparatorColor());
+
         } else {
-            x = getWidth()/2;
-            y = getHeight()/2 - MARKER_SIZE/2;
-            graphics.translate(x, y);
-            drawMarkers(graphics, shape, 0, 5);
+                        
+            paintSeparator(graphics, 0, c.getY(), 0, c.getHeight(),
+                           c.getBackground(), theme.getSeparatorColor());
         }
         
         graphics.dispose();
+    }
+    
+    static void paintSeparator(Graphics2D graphics, int x, int y, int w, int h, Color side, Color center) {
         
-        super.paint(g);
+        graphics.translate(x, y);
+        LinearGradientPaint paint =
+                new LinearGradientPaint(new Point2D.Float(0, 0),
+                                        new Point2D.Float(w, h),
+                                        new float[] { 0.0f, 0.499f, 0.5f, 1.0f },
+                                        new Color[] { side,
+                                                      center,
+                                                      center,
+                                                      side });
+        
+        graphics.setPaint(paint);
+        graphics.drawLine(0, 0, w, h);
     }
 }

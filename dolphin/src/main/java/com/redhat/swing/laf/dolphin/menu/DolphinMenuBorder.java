@@ -34,72 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.split;
+package com.redhat.swing.laf.dolphin.menu;
 
+import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.Insets;
 
-import javax.swing.JSplitPane;
-import javax.swing.plaf.basic.BasicSplitPaneDivider;
-
-import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
+import com.redhat.swing.laf.dolphin.borders.DolphinDebugBorder;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-public class DolphinSplitPaneDivider extends BasicSplitPaneDivider {
+public class DolphinMenuBorder extends DolphinDebugBorder {
 
-    private static final int MARKER_SIZE = 28;
-    
-    private DolphinSplitPaneUI ui;
-    
-    public DolphinSplitPaneDivider(DolphinSplitPaneUI ui) {
-        super(ui);
-        this.ui = ui;
-    }
-    
-    private void drawMarkers(Graphics2D graphics, Shape shape, int deltaX,
-                             int deltaY)
-    {
-        for (int i = 0; i < 5; i++) {
-            graphics.translate(deltaX, deltaY);
-            graphics.draw(shape);
-        }
-    }
-    
     @Override
-    public void paint(Graphics g) {
-                
+    public void paintBorder(Component c, Graphics g, int x, int y,
+                            int width, int height)
+    {        
         Graphics2D graphics = (Graphics2D) g.create();
-        DolphinThemeUtils.setAntialiasing(graphics);
+        graphics.translate(x, y + height - 1);
+        
+        graphics.setPaint(DolphinThemeUtils.getCurrentTheme().getMenuBorderDefaultColor());
 
-        graphics.setColor(getBackground());
-        graphics.fillRect(0, 0, getWidth(), getHeight());
-        
-        Shape shape = new RoundRectangle2D.Double(0., 0., 1., 1., 4, 4);
-        
-        DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        graphics.setColor(theme.getSplitPaneDividerBorderColor());
-        
-        int x = 0;
-        int y = 0;
-        
-        if (ui.getSplitPane().getOrientation() == JSplitPane.VERTICAL_SPLIT) {
-            x = getWidth()/2 - MARKER_SIZE/2;
-            y = getHeight()/2;
-            graphics.translate(x, y);
-            drawMarkers(graphics, shape, 5, 0);
-            
-        } else {
-            x = getWidth()/2;
-            y = getHeight()/2 - MARKER_SIZE/2;
-            graphics.translate(x, y);
-            drawMarkers(graphics, shape, 0, 5);
-        }
-        
+        graphics.drawLine(5, 0, width - 10, 0);
         graphics.dispose();
-        
-        super.paint(g);
     }
 }
