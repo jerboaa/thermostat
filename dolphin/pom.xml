@@ -24,6 +24,14 @@
   </dependencies>
       
   <build>
+    
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+    
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -36,6 +44,7 @@
               com.redhat.swing.laf.dolphin,
               com.redhat.swing.laf.dolphin.borders,
               com.redhat.swing.laf.dolphin.button,
+              com.redhat.swing.laf.dolphin.icons,
               com.redhat.swing.laf.dolphin.menu,
               com.redhat.swing.laf.dolphin.scrollbars,
               com.redhat.swing.laf.dolphin.split,
