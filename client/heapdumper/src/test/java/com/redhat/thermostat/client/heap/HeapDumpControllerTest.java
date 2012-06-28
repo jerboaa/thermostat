@@ -72,6 +72,7 @@ import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.model.VmClassStat;
 

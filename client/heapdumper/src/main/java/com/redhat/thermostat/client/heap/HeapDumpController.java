@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.heap.HeapDump;
 
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.model.VmMemoryStat;
@@ -114,15 +115,13 @@ public class HeapDumpController implements VmInformationServiceController {
         view.clearHeapDumpList();
         Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(ref);
         for (HeapInfo info : infos) {
-            dump = new HeapDump();
-            dump.setHeapInfo(info);
+            dump = new HeapDump(info, heapDAO);
             view.addHeapDump(dump);
         }
         
         // check if we were reading some of the dumps
         dump = (HeapDump) appService.getApplicationCache().getAttribute(ref);
         if (dump != null && infos.contains(dump.getInfo())) {
-            readAndSetHistogram(dump);
             view.openDumpView(dump);
         }
         
@@ -170,66 +169,12 @@ public class HeapDumpController implements VmInformationServiceController {
             }
             
             private void analyseDump(HeapDump dump) {
-                readAndSetHistogram(dump);
                 view.openDumpView(dump);
                 appService.getApplicationCache().addAttribute(ref, dump);
             }
         });
     }
 
-    private String[] histogramHeader = { "Class", "Instances", "Size (in bytes)" };
-    private void readAndSetHistogram(HeapDump dump) {
-        Histogram histogram = new Histogram(histogramHeader);
-        
-        HeapInfo info = dump.getInfo();
-        InputStream stream = heapDAO.getHistogram(info);
-        
-        List<Object[]> instances = new ArrayList<>();
-        
-        if (stream != null) {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-            String line = null;
-            try {
-                
-                boolean startParsing = false;
-                while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("-")) {
-                        startParsing = true;
-                        continue;
-                        
-                    } else if (line.startsWith("Total")) {
-                        break;
-                    }
-                    
-                    if (startParsing) {
-                        
-                        Object[] data = new Object[3];
-                        
-                        StringTokenizer tokenizer = new StringTokenizer(line);
-                        tokenizer.nextToken();
-                        Long number = Long.valueOf(Long.parseLong(tokenizer.nextToken()));
-                        data[1] = number;
-                        
-                        number = Long.valueOf(Long.parseLong(tokenizer.nextToken()));
-                        data[2] = number;
-                        
-                        String token = DescriptorConverter.toJavaType(tokenizer.nextToken());
-                        data[0] = token;
-                        
-                        instances.add(data);
-                    }
-                }
-                
-            
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            
-            histogram.setData(instances);
-        }
-        dump.setHistogram(histogram);
-    }
-    
     @Override
     public Component getComponent() {
         return view.getComponent();

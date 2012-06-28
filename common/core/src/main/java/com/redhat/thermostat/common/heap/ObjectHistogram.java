@@ -34,29 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.heap;
 
-import java.io.InputStream;
+import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import com.redhat.thermostat.common.heap.ObjectHistogram;
-import com.redhat.thermostat.common.model.HeapInfo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-public interface HeapDAO {
+public class ObjectHistogram implements Serializable {
 
-    static final Key<String> heapDumpIdKey = new Key<String>("heap-dump-id", false);
-    static final Key<String> histogramIdKey = new Key<String>("histogram-id", false);
+    private Map<String, HistogramRecord> histogram = new HashMap<>();
 
-    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey, histogramIdKey);
+    public void addThing(JavaHeapObject thing) {
+        JavaClass clazz = thing.getClazz();
+        HistogramRecord record = histogram.get(clazz.getName());
+        if (record == null) {
+            record = new HistogramRecord(clazz.getName());
+            histogram.put(clazz.getName(), record);
+        }
+        record.numberOf++;
+        record.totalSize += thing.getSize();
+    }
 
-    void putHeapInfo(HeapInfo heapInfo, InputStream heapDump, ObjectHistogram histogramData);
+    public Collection<HistogramRecord> getHistogram() {
+        return histogram.values();
+    }
 
-    Collection<HeapInfo> getAllHeapInfo(VmRef vm);
-
-    InputStream getHeapDump(HeapInfo heapInfo);
-
-    ObjectHistogram getHistogram(HeapInfo heapInfo);
-
+    public void print(PrintStream out) {
+        for (Map.Entry<String, HistogramRecord> entry : histogram.entrySet()) {
+            HistogramRecord record = entry.getValue();
+            out.println(record.classname + ", " + record.numberOf + ", " + record.totalSize);
+        }
+    }
 }

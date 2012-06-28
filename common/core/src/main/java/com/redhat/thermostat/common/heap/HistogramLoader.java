@@ -34,29 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.heap;
 
-import java.io.InputStream;
-import java.util.Collection;
+import java.io.File;
+import java.io.IOException;
+import java.util.Enumeration;
 
-import com.redhat.thermostat.common.heap.ObjectHistogram;
-import com.redhat.thermostat.common.model.HeapInfo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.model.Snapshot;
+import com.sun.tools.hat.internal.parser.Reader;
 
-public interface HeapDAO {
+public class HistogramLoader {
 
-    static final Key<String> heapDumpIdKey = new Key<String>("heap-dump-id", false);
-    static final Key<String> histogramIdKey = new Key<String>("histogram-id", false);
+    private String filename;
 
-    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey, histogramIdKey);
+    public HistogramLoader(String filename) {
+        this.filename = filename;
+    }
 
-    void putHeapInfo(HeapInfo heapInfo, InputStream heapDump, ObjectHistogram histogramData);
+    public ObjectHistogram load() throws IOException {
+        Snapshot snapshot = loadHeapdump();
+        return computeHistogram(snapshot);
+    }
 
-    Collection<HeapInfo> getAllHeapInfo(VmRef vm);
+    private Snapshot loadHeapdump() throws IOException {
+        File heapdump = new File(filename);
+        Snapshot snapshot = Reader.readFile(heapdump.getAbsolutePath(), true, 0);
+        snapshot.resolve(true);
+        return snapshot;
+    }
 
-    InputStream getHeapDump(HeapInfo heapInfo);
-
-    ObjectHistogram getHistogram(HeapInfo heapInfo);
+    private ObjectHistogram computeHistogram(Snapshot snapshot) {
+        Enumeration<JavaHeapObject> thingos = snapshot.getThings();
+        ObjectHistogram histogram = new ObjectHistogram();
+        while (thingos.hasMoreElements()) {
+            JavaHeapObject thingo = thingos.nextElement();
+            histogram.addThing(thingo);
+        }
+        return histogram;
+    }
 
 }

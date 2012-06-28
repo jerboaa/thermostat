@@ -51,7 +51,8 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
-import com.redhat.thermostat.client.heap.HeapDump;
+import com.redhat.thermostat.common.heap.HeapDump;
+
 import javax.swing.JList;
 
 @SuppressWarnings("serial")

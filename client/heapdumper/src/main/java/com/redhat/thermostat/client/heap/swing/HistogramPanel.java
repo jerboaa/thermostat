@@ -37,16 +37,19 @@
 package com.redhat.thermostat.client.heap.swing;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.BoxLayout;
 import javax.swing.JScrollPane;
-
-import com.redhat.thermostat.client.heap.Histogram;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+
+import com.redhat.thermostat.common.heap.HistogramRecord;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
 
 public class HistogramPanel extends JPanel {
     
@@ -59,7 +62,7 @@ public class HistogramPanel extends JPanel {
         add(headerPanel);
     }
 
-    public void display(Histogram histogram) {
+    public void display(ObjectHistogram histogram) {
         JTable table = new JTable(new HistogramTableModel(histogram));
         table.setFillsViewportHeight(true);
         table.setAutoCreateRowSorter(true);
@@ -85,18 +88,19 @@ public class HistogramPanel extends JPanel {
     }
 
     private class HistogramTableModel extends DefaultTableModel {
-        
-        private Histogram histogram;
-        public HistogramTableModel(Histogram histogram) {
-            this.histogram = histogram;
+
+        private final String[] columnNames = new String[]{"Class", "Instances", "Size (in bytes)"};
+
+        private List<HistogramRecord> histogram;
+
+        public HistogramTableModel(ObjectHistogram objHistogram) {
+            histogram = new ArrayList<>();
+            histogram.addAll(objHistogram.getHistogram());
         }
 
         @Override
         public String getColumnName(int column) {
-            if (histogram != null) {
-                return histogram.getHistogramColums()[column];
-            }
-            return "";
+            return columnNames[column];
         }
 
         @Override
@@ -111,24 +115,37 @@ public class HistogramPanel extends JPanel {
         @Override
         public Object getValueAt(int row, int column) {
             Object result = null;
+            if (row >= histogram.size()) {
+                throw new ArrayIndexOutOfBoundsException();
+            }
             if (histogram != null) {
-                result = histogram.getData().get(row)[column];
+                HistogramRecord record = histogram.get(row);
+                switch (column) {
+                case 0:
+                    result = record.getClassname();
+                    break;
+                case 1:
+                    result = Long.valueOf(record.getNumberOf());
+                    break;
+                case 2:
+                    result = Long.valueOf(record.getTotalSize());
+                    break;
+                default:
+                    throw new ArrayIndexOutOfBoundsException();
+                }
             }
             return result;
         }
         
         @Override
         public int getColumnCount() {
-            if (histogram != null) {
-                return histogram.getHistogramColums().length;
-            }
-            return 0;
+            return 3;
         }
         
         @Override
         public int getRowCount() {
             if (histogram != null) {
-                return histogram.getData().size();
+                return histogram.size();
             }
             return 0;
         }

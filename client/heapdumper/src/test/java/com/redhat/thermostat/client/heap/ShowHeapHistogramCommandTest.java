@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.heap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.isA;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -57,8 +57,11 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class ShowHeapHistogramCommandTest {
 
@@ -73,7 +76,25 @@ public class ShowHeapHistogramCommandTest {
 
     @Test
     public void verifyWorks() throws CommandException {
-        String histogram = "this is the histogram text expected";
+        ObjectHistogram histo = new ObjectHistogram();
+
+        JavaClass cls1 = mock(JavaClass.class);
+        JavaHeapObject obj1 = mock(JavaHeapObject.class);
+        when(cls1.getName()).thenReturn("class1");
+        when(obj1.getClazz()).thenReturn(cls1);
+        when(obj1.getSize()).thenReturn(5);
+        JavaHeapObject obj2 = mock(JavaHeapObject.class);
+        when(obj2.getClazz()).thenReturn(cls1);
+        when(obj2.getSize()).thenReturn(3);
+        JavaClass cls2 = mock(JavaClass.class);
+        JavaHeapObject obj3 = mock(JavaHeapObject.class);
+        when(cls2.getName()).thenReturn("verylongclassnameclass2");
+        when(obj3.getClazz()).thenReturn(cls2);
+        when(obj3.getSize()).thenReturn(10);
+
+        histo.addThing(obj1);
+        histo.addThing(obj2);
+        histo.addThing(obj3);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getStringID()).thenReturn("host-id");
@@ -89,7 +110,7 @@ public class ShowHeapHistogramCommandTest {
         HeapDAO heapDao = mock(HeapDAO.class);
 
         when(heapDao.getAllHeapInfo(isA(VmRef.class))).thenReturn(Arrays.asList(heapInfo));
-        when(heapDao.getHistogram(heapInfo)).thenReturn(new ByteArrayInputStream(histogram.getBytes(Charset.forName("UTF-8"))));
+        when(heapDao.getHistogram(heapInfo)).thenReturn(histo);
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
@@ -105,7 +126,8 @@ public class ShowHeapHistogramCommandTest {
 
         command.run(factory.createContext(args));
 
-        assertEquals(histogram, factory.getOutput());
+        assertEquals("class1                  2 8\n" +
+        		     "verylongclassnameclass2 1 10\n", factory.getOutput());
     }
 
 }

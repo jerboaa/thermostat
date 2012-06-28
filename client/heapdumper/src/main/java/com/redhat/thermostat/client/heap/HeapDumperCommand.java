@@ -48,6 +48,9 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.heap.HistogramLoader;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 
 public class HeapDumperCommand {
@@ -58,11 +61,10 @@ public class HeapDumperCommand {
 
         try {
             File heapDumpFile = dumpHeap(reference);
-            InputStream histogram = writeHistogram(reference);
+            ObjectHistogram histogram = loadHistogram(heapDumpFile.getAbsolutePath());
             HeapInfo info = saveHeapDumpInfo(reference, heapDumpFile, histogram);
             
-            HeapDump dump = new HeapDump();
-            dump.setHeapInfo(info);
+            HeapDump dump = new HeapDump(info, ApplicationContext.getInstance().getDAOFactory().getHeapDAO());
             
             return dump;
         
@@ -88,13 +90,12 @@ public class HeapDumperCommand {
         return tempFile;
     }
     
-    private InputStream writeHistogram(VmRef reference) throws IOException {
-        Process proc = Runtime.getRuntime().exec(new String[] {"jmap", "-histo", reference.getIdString()});
-        InputStream histogramStream = proc.getInputStream();
-        return histogramStream;
+    private ObjectHistogram loadHistogram(String heapDumpFilename) throws IOException {
+        HistogramLoader histoLoader = new HistogramLoader(heapDumpFilename);
+        return histoLoader.load();
     }
 
-    private HeapInfo saveHeapDumpInfo(VmRef reference, File tempFile, InputStream histogram) throws FileNotFoundException {
+    private HeapInfo saveHeapDumpInfo(VmRef reference, File tempFile, ObjectHistogram histogram) throws FileNotFoundException {
     
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         HeapInfo heapInfo = new HeapInfo(reference, System.currentTimeMillis());

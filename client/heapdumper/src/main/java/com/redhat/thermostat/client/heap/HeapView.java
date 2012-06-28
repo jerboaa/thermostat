@@ -40,6 +40,7 @@ import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.heap.HeapDump;
 
 public abstract class HeapView<E> extends BasicView {
     

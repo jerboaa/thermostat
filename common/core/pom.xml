@@ -71,6 +71,7 @@
               com.redhat.thermostat.common.model,
               com.redhat.thermostat.common.storage,
               com.redhat.thermostat.common.utils,
+              com.redhat.thermostat.common.heap,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.test,
@@ -118,6 +119,12 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun</groupId>
+      <artifactId>tools</artifactId>
+      <scope>system</scope>
+      <systemPath>${java.home}/../lib/tools.jar</systemPath>
     </dependency>
   </dependencies>
   

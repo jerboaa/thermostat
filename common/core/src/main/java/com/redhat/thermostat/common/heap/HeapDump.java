@@ -34,23 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.common.heap;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.ObjectInputStream;
 import java.util.Date;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.model.HeapInfo;
 
 public class HeapDump {
 
-    private HeapInfo info;
-    private Histogram histogram;
-    
+    private static final Logger log = Logger.getLogger(HeapDump.class.getName());
+
+    private HeapInfo heapInfo;
+
+    private HeapDAO heapDAO;
+
+    public HeapDump(HeapInfo heapInfo, HeapDAO heapDAO) {
+        this.heapInfo = heapInfo;
+        this.heapDAO = heapDAO;
+    }
+
     public String getName() {
-        return info.getVm().getName();
+        return heapInfo.getVm().getName();
     }
     
     public long getTimestamp() {
-        return info.getTimestamp();
+        return heapInfo.getTimestamp();
     }
     
     @Override
@@ -58,19 +72,11 @@ public class HeapDump {
         return "[" + new Date(getTimestamp()) +"] ";
     }
 
-    public void setHeapInfo(HeapInfo info) {
-        this.info = info;
+    public ObjectHistogram getHistogram() throws IOException {
+        return heapDAO.getHistogram(heapInfo);
     }
-    
-    void setHistogram(Histogram histogram) {
-        this.histogram = histogram;
-    }
-    
-    public Histogram getHistogram() {
-        return histogram;
-    }
-    
+
     public HeapInfo getInfo() {
-        return info;
+        return heapInfo;
     }
 }

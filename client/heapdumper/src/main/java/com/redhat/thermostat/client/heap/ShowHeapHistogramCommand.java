@@ -36,10 +36,7 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.io.BufferedInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,8 +50,12 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.heap.HistogramRecord;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 
 public class ShowHeapHistogramCommand implements Command {
@@ -101,19 +102,20 @@ public class ShowHeapHistogramCommand implements Command {
         Collection<HeapInfo> allHeapInfos = heapDAO.getAllHeapInfo(vmRef);
         for (HeapInfo heapInfo : allHeapInfos) {
             if (heapInfo.getHeapDumpId().equals(heapId)) {
-                printHeapHistogram(heapDAO, heapInfo, ctx.getConsole().getOutput());
+                printHeapHistogram(heapInfo, heapDAO, ctx.getConsole().getOutput());
             }
         }
     }
 
-    private void printHeapHistogram(HeapDAO heapDAO, HeapInfo heapInfo, PrintStream out) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        InputStream in = new BufferedInputStream(heapDAO.getHistogram(heapInfo));
+    private void printHeapHistogram(HeapInfo heapInfo, HeapDAO heapDAO, PrintStream out) {
         try {
-            int data;
-            while ((data = in.read()) != -1) {
-                out.print((char)data);
+            HeapDump heapDump = new HeapDump(heapInfo, heapDAO);
+            ObjectHistogram histogram = heapDump.getHistogram();
+            TableRenderer table = new TableRenderer(3);
+            for (HistogramRecord rec : histogram.getHistogram()) {
+                table.printLine(rec.getClassname(), String.valueOf(rec.getNumberOf()), String.valueOf(rec.getTotalSize()));
             }
+            table.render(out);
         } catch (IOException ioe) {
             ioe.printStackTrace();
         }

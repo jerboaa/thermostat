@@ -36,10 +36,18 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
@@ -47,6 +55,8 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
 class HeapDAOImpl implements HeapDAO {
+
+    private static final Logger log = Logger.getLogger(HeapDAOImpl.class.getName());
 
     private Storage storage;
 
@@ -56,7 +66,7 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData, InputStream histogramData) {
+    public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData, ObjectHistogram histogramData) {
         VmRef vm = heapInfo.getVm();
         Chunk chunk = new Chunk(heapInfoCategory, false);
         
@@ -78,7 +88,16 @@ class HeapDAOImpl implements HeapDAO {
             storage.saveFile(heapDumpId, heapDumpData);
         }
         if (histogramData != null) {
-            storage.saveFile(histogramId, histogramData);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            try {
+                ObjectOutputStream oos = new ObjectOutputStream(baos);
+                oos.writeObject(histogramData);
+                ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+                storage.saveFile(histogramId, bais);
+            } catch (IOException e) {
+                e.printStackTrace();
+                log.log(Level.SEVERE, "Unexpected error while writing histogram", e);
+            }
         }
     }
 
@@ -109,8 +128,15 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public InputStream getHistogram(HeapInfo heapInfo) {
-        return storage.loadFile(heapInfo.getHistogramId());
+    public ObjectHistogram getHistogram(HeapInfo heapInfo) {
+        try {
+            InputStream in = storage.loadFile(heapInfo.getHistogramId());
+            ObjectInputStream ois = new ObjectInputStream(in);
+            return (ObjectHistogram) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
+            log.log(Level.SEVERE, "Unexpected error while reading histogram", e);
+            return null;
+        }
     }
 
 }

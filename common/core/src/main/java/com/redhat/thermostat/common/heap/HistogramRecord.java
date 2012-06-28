@@ -34,29 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.heap;
 
-import java.io.InputStream;
-import java.util.Collection;
+import java.io.Serializable;
+import java.util.Objects;
 
-import com.redhat.thermostat.common.heap.ObjectHistogram;
-import com.redhat.thermostat.common.model.HeapInfo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+public class HistogramRecord implements Serializable {
 
-public interface HeapDAO {
+    String classname;
+    long numberOf;
+    long totalSize;
 
-    static final Key<String> heapDumpIdKey = new Key<String>("heap-dump-id", false);
-    static final Key<String> histogramIdKey = new Key<String>("histogram-id", false);
+    HistogramRecord(String classname) {
+        this(classname, 0, 0);
+    }
 
-    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey, histogramIdKey);
+    public HistogramRecord(String classname, long numberOf, long totalSize) {
+        this.classname = classname;
+        this.numberOf = numberOf;
+        this.totalSize = totalSize;
+    }
 
-    void putHeapInfo(HeapInfo heapInfo, InputStream heapDump, ObjectHistogram histogramData);
+    public String getClassname() {
+        return classname;
+    }
 
-    Collection<HeapInfo> getAllHeapInfo(VmRef vm);
+    public long getNumberOf() {
+        return numberOf;
+    }
 
-    InputStream getHeapDump(HeapInfo heapInfo);
+    public long getTotalSize() {
+        return totalSize;
+    }
 
-    ObjectHistogram getHistogram(HeapInfo heapInfo);
+    @Override
+    public boolean equals(Object o) {
+        if (! (o instanceof HistogramRecord)) {
+            return false;
+        }
+        HistogramRecord other = (HistogramRecord) o;
+        return Objects.equals(classname, other.classname) && numberOf == other.numberOf && totalSize == other.totalSize;
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(classname, numberOf, totalSize);
+    }
 }
