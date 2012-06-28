@@ -34,60 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.themes;
+package com.redhat.swing.laf.dolphin.icons;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
-import java.awt.Graphics2D;
-import java.awt.MultipleGradientPaint;
-import java.awt.Paint;
-import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.Point2D;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.Component;
+import java.awt.Graphics;
 
-import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
+import javax.swing.AbstractButton;
+import javax.swing.ImageIcon;
 
-/**
- */
-public class DolphinThemeUtils {
+public class DolphinCheckBoxIcon extends ImageIcon {
+
+    private ImageIcon delegate = new ImageIcon(getClass().getResource("/checkbox-menuitem-checked.png"));
     
-    private static final boolean aaOff;
-    
-    static {
-       aaOff = Boolean.getBoolean("dolphin.aa.off");
+    @Override
+    public int getIconHeight() {
+        return delegate.getIconHeight();
     }
     
-    /**
-     * Sets the Antialising hint on this graphics object.
-     * 
-     * The AA hint is on by default, but can be turned of by setting the system
-     * property: {@code icedlook.aa.off}
-     */
-    public static void setAntialiasing(Graphics2D graphics) {
-        if (!aaOff) {
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                                      RenderingHints.VALUE_ANTIALIAS_ON);   
-        }
+    @Override
+    public int getIconWidth() {
+        return delegate.getIconWidth();
     }
     
-    public static void setGradientPaint(Graphics2D g, int x, int y,
-                                        Color start, Color stop)
-    {
-        Paint paint = new GradientPaint(x, 0, start, 0, y, stop);
-        g.setPaint(paint);
-    }
+    @Override
+    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
         
-    public static DolphinTheme getCurrentTheme() {
-        return DolphinLookAndFeel.getTheme();
-    }
-
-    public static Shape getRoundShape(int width, int height) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, 4, 4);
-    }
-    
-    public static Shape getRoundShape(int width, int height, int arcx, int arcy) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, arcx, arcy);
+        AbstractButton button = (AbstractButton) c;
+        if (button.getModel().isSelected()) {
+            delegate.paintIcon(c, g, x, y);
+        }
     }
 }

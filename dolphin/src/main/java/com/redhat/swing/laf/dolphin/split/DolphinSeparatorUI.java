@@ -34,50 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.borders;
+package com.redhat.swing.laf.dolphin.split;
 
-import java.awt.Component;
-import java.awt.GradientPaint;
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.LinearGradientPaint;
+import java.awt.geom.Point2D;
 
-import java.io.Serializable;
-
-import javax.swing.plaf.UIResource;
+import javax.swing.JComponent;
+import javax.swing.JSeparator;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.metal.MetalSeparatorUI;
 
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-/**
- */
-public class DolphinCommonBorder extends DolphinDebugBorder implements UIResource, Serializable {
+public class DolphinSeparatorUI extends MetalSeparatorUI {
 
+    public static ComponentUI createUI(JComponent c) {
+        return new DolphinSeparatorUI();
+    }
+    
     @Override
-    public void paintBorder(Component c, Graphics g, int x, int y, int width,
-                            int height) {
+    public void paint(Graphics g, JComponent c) {
 
         Graphics2D graphics = (Graphics2D) g.create();
         DolphinThemeUtils.setAntialiasing(graphics);
 
-        graphics.translate(x, y);                        
-        
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        Paint paint =
-            new GradientPaint(0, 0, theme.getBorderGradientTopColor(),
-                              0, c.getHeight(),
-                              theme.getBorderGradientTopColor());
-        graphics.setPaint(paint);
 
-        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL,
-                                  RenderingHints.VALUE_STROKE_DEFAULT);
+        JSeparator separator = ((JSeparator) c);
+        if (separator.getOrientation() == JSeparator.HORIZONTAL) {
 
-        Shape shape = new RoundRectangle2D.Float(0, 0, width - 1,
-                                                 height - 1, 4, 4);
-        graphics.draw(shape);
+            paintSeparator(graphics, c.getX(), 0, c.getWidth(), 0,
+                           c.getBackground(), theme.getSeparatorColor());
+
+        } else {
+                        
+            paintSeparator(graphics, 0, c.getY(), 0, c.getHeight(),
+                           c.getBackground(), theme.getSeparatorColor());
+        }
+        
         graphics.dispose();
+    }
+    
+    static void paintSeparator(Graphics2D graphics, int x, int y, int w, int h, Color side, Color center) {
+        
+        graphics.translate(x, y);
+        LinearGradientPaint paint =
+                new LinearGradientPaint(new Point2D.Float(0, 0),
+                                        new Point2D.Float(w, h),
+                                        new float[] { 0.0f, 0.499f, 0.5f, 1.0f },
+                                        new Color[] { side,
+                                                      center,
+                                                      center,
+                                                      side });
+        
+        graphics.setPaint(paint);
+        graphics.drawLine(0, 0, w, h);
     }
 }

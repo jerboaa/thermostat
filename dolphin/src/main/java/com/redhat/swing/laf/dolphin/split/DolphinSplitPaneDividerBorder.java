@@ -34,60 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.themes;
+package com.redhat.swing.laf.dolphin.split;
 
 import java.awt.Color;
-import java.awt.GradientPaint;
+import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.MultipleGradientPaint;
-import java.awt.Paint;
+import java.awt.LinearGradientPaint;
 import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.geom.Point2D;
-import java.awt.geom.RoundRectangle2D;
 
-import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
+import javax.swing.JScrollBar;
+import javax.swing.plaf.basic.BasicSplitPaneDivider;
+import javax.swing.plaf.basic.BasicSplitPaneUI;
 
-/**
- */
-public class DolphinThemeUtils {
-    
-    private static final boolean aaOff;
-    
-    static {
-       aaOff = Boolean.getBoolean("dolphin.aa.off");
-    }
-    
-    /**
-     * Sets the Antialising hint on this graphics object.
-     * 
-     * The AA hint is on by default, but can be turned of by setting the system
-     * property: {@code icedlook.aa.off}
-     */
-    public static void setAntialiasing(Graphics2D graphics) {
-        if (!aaOff) {
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                                      RenderingHints.VALUE_ANTIALIAS_ON);   
+import com.redhat.swing.laf.dolphin.borders.DolphinDebugBorder;
+import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
+import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
+
+public class DolphinSplitPaneDividerBorder extends DolphinDebugBorder {
+
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y, int width,
+                            int height) {
+
+        if (!(c instanceof BasicSplitPaneDivider)) {
+            return;
         }
-    }
-    
-    public static void setGradientPaint(Graphics2D g, int x, int y,
-                                        Color start, Color stop)
-    {
-        Paint paint = new GradientPaint(x, 0, start, 0, y, stop);
-        g.setPaint(paint);
-    }
-        
-    public static DolphinTheme getCurrentTheme() {
-        return DolphinLookAndFeel.getTheme();
-    }
 
-    public static Shape getRoundShape(int width, int height) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, 4, 4);
-    }
-    
-    public static Shape getRoundShape(int width, int height, int arcx, int arcy) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, arcx, arcy);
+        Graphics2D graphics = (Graphics2D) g.create();
+        DolphinThemeUtils.setAntialiasing(graphics);
+
+        DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
+                
+        BasicSplitPaneUI splitPane =
+                ((BasicSplitPaneDivider)c).getBasicSplitPaneUI();
+        if (splitPane.getOrientation() == JScrollBar.HORIZONTAL) {
+
+            DolphinSeparatorUI.paintSeparator(graphics, x, height - 1, width, 0,
+                                              c.getBackground(), theme.getSplitPaneDividerBorderColor());          
+            
+        } else {
+            
+            DolphinSeparatorUI.paintSeparator(graphics, width - 1, y, 0, height,
+                                              c.getBackground(), theme.getSplitPaneDividerBorderColor()); 
+        }
+        
+        graphics.dispose();
     }
 }

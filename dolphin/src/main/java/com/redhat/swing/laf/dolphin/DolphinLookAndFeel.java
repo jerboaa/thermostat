@@ -37,8 +37,10 @@
 package com.redhat.swing.laf.dolphin;
 
 import javax.swing.UIDefaults;
+import javax.swing.plaf.InsetsUIResource;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
+import com.redhat.swing.laf.dolphin.split.DolphinSplitPaneDividerBorder;
 import com.redhat.swing.laf.dolphin.themes.DolphinDefaultTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
 
@@ -60,10 +62,16 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
         Object[] uiDefaults = {
             "swing.boldMetal", Boolean.FALSE,
             
-            "ButtonUI", "com.redhat.swing.laf.dolphin.button.DolphinButtonUI",
-            "TreeUI", "com.redhat.swing.laf.dolphin.tree.DolphinTreeUI",
-            "TextFieldUI", "com.redhat.swing.laf.dolphin.text.DolphinTextFieldUI",
+            "ButtonUI",     "com.redhat.swing.laf.dolphin.button.DolphinButtonUI",
+            "TreeUI",       "com.redhat.swing.laf.dolphin.tree.DolphinTreeUI",
+            "TextFieldUI",  "com.redhat.swing.laf.dolphin.text.DolphinTextFieldUI",
             "TabbedPaneUI", "com.redhat.swing.laf.dolphin.tab.DolphinTabbedPaneUI",
+            "ScrollBarUI",  "com.redhat.swing.laf.dolphin.scrollbars.DolphinScrollBarUI",
+            "SplitPaneUI",  "com.redhat.swing.laf.dolphin.split.DolphinSplitPaneUI",
+            "SeparatorUI",  "com.redhat.swing.laf.dolphin.split.DolphinSeparatorUI",
+            "PopupMenuSeparatorUI", "com.redhat.swing.laf.dolphin.split.DolphinSeparatorUI",
+
+            // menu ui defined in theme specific "addCustomEntriesToTable"
         };
         
         table.putDefaults(uiDefaults);
@@ -104,14 +112,15 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "TextArea.selectionForeground", theme.getSelectionColorForeground(),
                 "TextArea.caretBlinkRate",  0,
                 
-                "MenuBar.background", theme.getMenuBackgroundColor(),
-                "MenuBar.foreground", theme.getMenuForegroundColor(),
-                "menu", theme.getMenuForegroundColor(),
-                
                 "ScrollPane.border", theme.getScrollPaneBorder(),
                 
                 "List.selectionBackground", theme.getSelectionColor(),
-                "List.selectionForeground", theme.getSelectionColorForeground(),
+                "List.selectionForeground", theme.getSelectionColorForeground(),        
+                
+                "ScrollBar.width", 15,
+                "SplitPane.dividerSize", new Integer(7),
+                "SplitPaneDivider.border", new DolphinSplitPaneDividerBorder(),
+                "SplitPane.border", null,
         };
         
         table.putDefaults(uiDefaults);  

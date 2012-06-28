@@ -40,9 +40,11 @@ import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.LinearGradientPaint;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
+import java.awt.geom.Point2D;
 
 import javax.swing.JComponent;
 import javax.swing.JTabbedPane;
@@ -125,8 +127,68 @@ public class DolphinTabbedPaneUI extends MetalTabbedPaneUI {
         graphics.dispose();
     }
     
+    private void paintContentVerticalEdge(Graphics g, int x, int y,
+                                          int w, int h)
+    {
+        Graphics2D graphics = (Graphics2D) g.create();
+        graphics.translate(x, y);
+        
+        DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
+        
+        LinearGradientPaint paint =
+                new LinearGradientPaint(new Point2D.Float(0, 0),
+                                        new Point2D.Float(0, h),
+                                        new float[] { 0.0f, 0.2f, 1.0f },
+                                        new Color[] { theme.getTabTopHedgeColor(),
+                                                      theme.getTabTopHedgeColor(),
+                                                      theme.getTabBottomHedgeColor()});
+        graphics.setPaint(paint);
+        graphics.drawLine(0, 0, 0, h);
+        
+        graphics.dispose();
+    }
+    
+    @Override
+    protected void paintContentBorderLeftEdge(Graphics g, int tabPlacement,
+                                              int selectedIndex, int x, int y,
+                                              int w, int h)
+    {
+        if (tabPlacement == LEFT) {
+            System.err.println("LEFT");
+            super.paintContentBorderLeftEdge(g, tabPlacement, selectedIndex,
+                                             x, y, w, h);
+        }
+        
+        paintContentVerticalEdge(g, x, y, w, h);
+    }
+
+    @Override
+    protected void paintContentBorderRightEdge(Graphics g, int tabPlacement,
+                                               int selectedIndex, int x, int y,
+                                               int w, int h)
+    {
+        if (tabPlacement == RIGHT) {
+            super.paintContentBorderRightEdge(g, tabPlacement, selectedIndex,
+                                              x, y, w, h);
+        }
+        
+        paintContentVerticalEdge(g, x + w - 1, y, w, h);
+    }
+    
+    @Override
+    protected void paintContentBorderBottomEdge(Graphics g, int tabPlacement,
+                                                int selectedIndex, int x, int y,
+                                                int w, int h)
+    {
+        if (tabPlacement == BOTTOM) {
+            super.paintContentBorderBottomEdge(g, tabPlacement, selectedIndex,
+                                               x, y, w, h);
+        }
+    }
+    
     protected void paintContentBorderTopEdge(Graphics g, int tabPlacement,
-                                             int selectedIndex, int x, int y, int w, int h)
+                                             int selectedIndex, int x, int y,
+                                             int w, int h)
     {
         // This is a copy of the paintContentBorderTopEdge from
         // MetalTabbedPaneUI with the x starting and end points of the line
@@ -137,8 +199,9 @@ public class DolphinTabbedPaneUI extends MetalTabbedPaneUI {
                 selectedIndex, calcRect);
 
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        graphics.setColor(theme.getSelectionColor());
-        graphics.setStroke(new BasicStroke(1.5f));
+        graphics.setColor(theme.getTabTopHedgeColor());
+        
+        graphics.setStroke(new BasicStroke(1.0f));
         DolphinThemeUtils.setAntialiasing(graphics);
         
         // Draw unbroken line if tabs are not on TOP, OR

@@ -34,60 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.themes;
+package com.redhat.swing.laf.dolphin.menu;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
+import java.awt.Component;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.MultipleGradientPaint;
-import java.awt.Paint;
-import java.awt.RadialGradientPaint;
-import java.awt.RenderingHints;
-import java.awt.Shape;
-import java.awt.geom.Point2D;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.Insets;
 
-import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
+import javax.swing.AbstractButton;
+import javax.swing.JToolBar;
+import javax.swing.text.JTextComponent;
 
-/**
- */
-public class DolphinThemeUtils {
-    
-    private static final boolean aaOff;
-    
-    static {
-       aaOff = Boolean.getBoolean("dolphin.aa.off");
-    }
-    
-    /**
-     * Sets the Antialising hint on this graphics object.
-     * 
-     * The AA hint is on by default, but can be turned of by setting the system
-     * property: {@code icedlook.aa.off}
-     */
-    public static void setAntialiasing(Graphics2D graphics) {
-        if (!aaOff) {
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                                      RenderingHints.VALUE_ANTIALIAS_ON);   
-        }
-    }
-    
-    public static void setGradientPaint(Graphics2D g, int x, int y,
-                                        Color start, Color stop)
+import com.redhat.swing.laf.dolphin.borders.DolphinDebugBorder;
+import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
+
+public class DolphinPopupMenuBorder extends DolphinDebugBorder {
+
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y,
+                            int width, int height)
     {
-        Paint paint = new GradientPaint(x, 0, start, 0, y, stop);
-        g.setPaint(paint);
-    }
+        Graphics2D graphics = (Graphics2D) g.create();
+        graphics.translate(x, y);
         
-    public static DolphinTheme getCurrentTheme() {
-        return DolphinLookAndFeel.getTheme();
-    }
+        graphics.setPaint(DolphinThemeUtils.getCurrentTheme().getMenuBorderDefaultColor());
 
-    public static Shape getRoundShape(int width, int height) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, 4, 4);
+        graphics.drawLine(0, 0, 0, height);
+        graphics.drawLine(0, height - 1, width - 1, height - 1);
+        graphics.drawLine(width -1, height - 1, width - 1, 0);
+        graphics.drawLine(width -1, 0, 0, 0);
+        
+        graphics.dispose();
     }
     
-    public static Shape getRoundShape(int width, int height, int arcx, int arcy) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, arcx, arcy);
+    @Override
+    public Insets getBorderInsets(Component c, Insets insets) {
+
+        insets.top = 1;
+        insets.left = 1;
+        insets.right = 1;
+        insets.bottom = 1;
+        
+        return insets;
     }
 }
