@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,15 +47,11 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
-import com.redhat.thermostat.common.model.HeapInfo;
 
 public class ShowHeapHistogramCommand implements Command {
 
@@ -82,7 +77,6 @@ public class ShowHeapHistogramCommand implements Command {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         List<ArgumentSpec> args = new ArrayList<>();
-        args.addAll(HostVMArguments.getArgumentSpecs());
         args.add(new SimpleArgumentSpec("heapId", "heapId", "the heap id", true, true));
         return args;
     }
@@ -95,30 +89,25 @@ public class ShowHeapHistogramCommand implements Command {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         Arguments args = ctx.getArguments();
-        VmRef vmRef = new HostVMArguments(args).getVM();
         String heapId = args.getArgument("heapId");
 
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
-        Collection<HeapInfo> allHeapInfos = heapDAO.getAllHeapInfo(vmRef);
-        for (HeapInfo heapInfo : allHeapInfos) {
-            if (heapInfo.getHeapDumpId().equals(heapId)) {
-                printHeapHistogram(heapInfo, heapDAO, ctx.getConsole().getOutput());
-            }
+
+        String histogramId = heapDAO.getHistogramIdFromHeapId(heapId);
+        ObjectHistogram histogram = heapDAO.getHistogram(histogramId);
+        if (histogram == null) {
+            ctx.getConsole().getOutput().print("No matching heap histogram found\n");
+        } else {
+            printHeapHistogram(histogram, ctx.getConsole().getOutput());
         }
     }
 
-    private void printHeapHistogram(HeapInfo heapInfo, HeapDAO heapDAO, PrintStream out) {
-        try {
-            HeapDump heapDump = new HeapDump(heapInfo, heapDAO);
-            ObjectHistogram histogram = heapDump.getHistogram();
-            TableRenderer table = new TableRenderer(3);
-            for (HistogramRecord rec : histogram.getHistogram()) {
-                table.printLine(rec.getClassname(), String.valueOf(rec.getNumberOf()), String.valueOf(rec.getTotalSize()));
-            }
-            table.render(out);
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
+    private void printHeapHistogram(ObjectHistogram histogram, PrintStream out) {
+        TableRenderer table = new TableRenderer(3);
+        for (HistogramRecord rec : histogram.getHistogram()) {
+            table.printLine(rec.getClassname(), String.valueOf(rec.getNumberOf()), String.valueOf(rec.getTotalSize()));
         }
+        table.render(out);
     }
 
     @Override

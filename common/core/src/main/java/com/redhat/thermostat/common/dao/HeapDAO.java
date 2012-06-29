@@ -55,8 +55,12 @@ public interface HeapDAO {
 
     Collection<HeapInfo> getAllHeapInfo(VmRef vm);
 
+    String getHistogramIdFromHeapId(String heapId);
+
     InputStream getHeapDump(HeapInfo heapInfo);
+    InputStream getHeapDump(String heapDumpId);
 
     ObjectHistogram getHistogram(HeapInfo heapInfo);
+    ObjectHistogram getHistogram(String histogramId);
 
 }

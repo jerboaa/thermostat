@@ -41,6 +41,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,11 +53,8 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.StreamUtils;
 
 public class SaveHeapDumpToFileCommand implements Command {
@@ -96,8 +94,7 @@ public class SaveHeapDumpToFileCommand implements Command {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         List<ArgumentSpec> args = new ArrayList<>();
-        args.addAll(HostVMArguments.getArgumentSpecs());
-        args.add(new SimpleArgumentSpec(HEAP_ID_ARGUMENT, HEAP_ID_ARGUMENT, "the heap id", true, true));
+        args.add(new SimpleArgumentSpec(HEAP_ID_ARGUMENT, "i", "the heap id", true, true));
         args.add(new SimpleArgumentSpec(FILE_NAME_ARGUMENT, "f", "the file name to save to", true, true));
 
         return args;
@@ -111,7 +108,6 @@ public class SaveHeapDumpToFileCommand implements Command {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         Arguments args = ctx.getArguments();
-        VmRef vmRef = new HostVMArguments(args).getVM();
         String heapId = args.getArgument(HEAP_ID_ARGUMENT);
         if (heapId == null) {
             throw new CommandException("heapId required");
@@ -122,21 +118,24 @@ public class SaveHeapDumpToFileCommand implements Command {
         }
 
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
-        Collection<HeapInfo> allHeapInfos = heapDAO.getAllHeapInfo(vmRef);
-        for (HeapInfo heapInfo : allHeapInfos) {
-            if (heapInfo.getHeapDumpId().equals(heapId)) {
+        try (InputStream heapStream = heapDAO.getHeapDump(heapId)) {
+            if (heapStream != null) {
                 try {
-                    ctx.getConsole().getOutput().print("saving dump to " + filename + "\n");
-                    saveHeapDump(heapDAO, heapInfo, filename);
-                } catch (IOException ioe) {
-                    ctx.getConsole().getOutput().print("error saving to file: " + ioe.getMessage());
+                    saveHeapDump(heapStream, filename);
+                    ctx.getConsole().getOutput().print("Saved heap dump to " + filename + "\n");
+                } catch (IOException e) {
+                    ctx.getConsole().getOutput().print("error saving heap to file: " + e.getMessage());
                 }
+            } else {
+                ctx.getConsole().getOutput().print("no heap dump found for " + heapId + "\n");
             }
+        } catch (IOException e) {
+            throw new CommandException("error closing heap stream: " + e.getMessage());
         }
     }
 
-    private void saveHeapDump(HeapDAO heapDAO, HeapInfo heapInfo, String filename) throws FileNotFoundException, IOException {
-        try (BufferedInputStream bis = new BufferedInputStream(heapDAO.getHeapDump(heapInfo));
+    private void saveHeapDump(InputStream heapStream, String filename) throws FileNotFoundException, IOException {
+        try (BufferedInputStream bis = new BufferedInputStream(heapStream);
              BufferedOutputStream bout = new BufferedOutputStream(creator.createOutputStream(filename))) {
             StreamUtils.copyStream(bis, bout);
         }

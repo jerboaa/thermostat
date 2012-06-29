@@ -39,7 +39,6 @@ package com.redhat.thermostat.client.heap;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,8 +46,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
-import java.util.Calendar;
 
 import org.junit.After;
 import org.junit.Before;
@@ -62,9 +59,6 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class SaveHeapDumpToFileCommandTest {
@@ -115,24 +109,16 @@ public class SaveHeapDumpToFileCommandTest {
 
     @Test
     public void verifyCommandWorks() throws CommandException, FileNotFoundException {
-        String heap = "0xCAFEBABE";
+        final String HEAP_ID = "heap-id-1";
+        final String FILE_NAME = "some-file-name";
+        final String HEAP_CONTENTS = "0xCAFEBABE";
+        final byte[] HEAP_CONTENT_BYTES = HEAP_CONTENTS.getBytes(Charset.forName("UTF-8"));
+
         ByteArrayOutputStream heapDumpStream = new ByteArrayOutputStream();
-
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getStringID()).thenReturn("host-id");
-        VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getStringID()).thenReturn("1");
-
-        HeapInfo heapInfo = mock(HeapInfo.class);
-        Calendar timestamp = Calendar.getInstance();
-        timestamp.set(2012, 5, 7, 15, 32, 0);
-        when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
-        when(heapInfo.getHeapDumpId()).thenReturn("heap-id-1");
 
         HeapDAO heapDao = mock(HeapDAO.class);
 
-        when(heapDao.getAllHeapInfo(isA(VmRef.class))).thenReturn(Arrays.asList(heapInfo));
-        when(heapDao.getHeapDump(heapInfo)).thenReturn(new ByteArrayInputStream(heap.getBytes(Charset.forName("UTF-8"))));
+        when(heapDao.getHeapDump(HEAP_ID)).thenReturn(new ByteArrayInputStream(HEAP_CONTENT_BYTES));
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
@@ -141,18 +127,16 @@ public class SaveHeapDumpToFileCommandTest {
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("hostId", "host-id");
-        args.addArgument("vmId", "1");
-        args.addArgument("heapId", "heap-id-1");
-        args.addArgument("file", "some-file-name");
+        args.addArgument("heapId", HEAP_ID);
+        args.addArgument("file", FILE_NAME);
 
         FileStreamCreator creator = mock(FileStreamCreator.class);
-        when(creator.createOutputStream("some-file-name")).thenReturn(heapDumpStream);
+        when(creator.createOutputStream(FILE_NAME)).thenReturn(heapDumpStream);
 
         Command command = new SaveHeapDumpToFileCommand(creator);
         command.run(factory.createContext(args));
 
-        assertArrayEquals(heap.getBytes(Charset.forName("UTF-8")), heapDumpStream.toByteArray());
+        assertArrayEquals(HEAP_CONTENT_BYTES, heapDumpStream.toByteArray());
     }
 
 }

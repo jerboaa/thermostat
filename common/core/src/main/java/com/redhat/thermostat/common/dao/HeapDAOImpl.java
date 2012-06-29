@@ -66,15 +66,20 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
+    public String getHistogramIdFromHeapId(String heapId) {
+        return heapId.replace("heapdump-", "histogram-");
+    }
+
+    @Override
     public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData, ObjectHistogram histogramData) {
         VmRef vm = heapInfo.getVm();
         Chunk chunk = new Chunk(heapInfoCategory, false);
-        
+
         chunk.put(Key.AGENT_ID, vm.getAgent().getStringID());
         chunk.put(Key.VM_ID, vm.getId());
         chunk.put(Key.TIMESTAMP, heapInfo.getTimestamp());
         String heapDumpId = "heapdump-" + vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
-        String histogramId = "histogram-" + vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
+        String histogramId = getHistogramIdFromHeapId(heapDumpId);
         if (heapDumpData != null) {
             chunk.put(heapDumpIdKey, heapDumpId);
             heapInfo.setHeapDumpId(heapDumpId);
@@ -124,19 +129,29 @@ class HeapDAOImpl implements HeapDAO {
 
     @Override
     public InputStream getHeapDump(HeapInfo heapInfo) {
-        return storage.loadFile(heapInfo.getHeapDumpId());
+        return getHeapDump(heapInfo.getHeapDumpId());
     }
 
     @Override
-    public ObjectHistogram getHistogram(HeapInfo heapInfo) {
+    public InputStream getHeapDump(String heapDumpId) {
+        return storage.loadFile(heapDumpId);
+    }
+
+    @Override
+    public ObjectHistogram getHistogram(String histogramId) {
         try {
-            InputStream in = storage.loadFile(heapInfo.getHistogramId());
+            InputStream in = storage.loadFile(histogramId);
             ObjectInputStream ois = new ObjectInputStream(in);
             return (ObjectHistogram) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
             log.log(Level.SEVERE, "Unexpected error while reading histogram", e);
             return null;
         }
+    }
+
+    @Override
+    public ObjectHistogram getHistogram(HeapInfo heapInfo) {
+        return getHistogram(heapInfo.getHistogramId());
     }
 
 }
