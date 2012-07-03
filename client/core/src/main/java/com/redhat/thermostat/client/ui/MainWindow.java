@@ -44,7 +44,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Insets;
-import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
@@ -101,11 +100,14 @@ import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.internal.HostsVMsLoader;
 import com.redhat.thermostat.client.internal.MainView;
+import com.redhat.thermostat.client.internal.SearchFieldSwingView;
+import com.redhat.thermostat.client.internal.SearchFieldView.SearchAction;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -270,7 +272,7 @@ public class MainWindow extends JFrame implements MainView {
     private final MenuHelper mainMenuHelper = new MenuHelper(mainMenuBar);
     private JPanel contentArea = null;
 
-    private JTextField searchField = null;
+    private SearchFieldSwingView searchField = new SearchFieldSwingView();
     private JTree agentVmTree = null;
 
     private final ShutdownClient shutdownAction;
@@ -288,8 +290,16 @@ public class MainWindow extends JFrame implements MainView {
 
         shutdownAction = new ShutdownClient();
 
-        searchField = new JTextField();
-        searchField.setName("hostVMTreeFilter");
+        searchField.addActionListener(new ActionListener<SearchAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                case TEXT_CHANGED:
+                    fireViewAction(Action.HOST_VM_TREE_FILTER);
+                    break;
+                }
+            }
+        });
         agentVmTree = new JTree(publishedTreeModel);
         agentVmTree.setName("agentVmTree");
         publishedTreeModel.addTreeModelListener(new KeepRootExpandedListener(agentVmTree));
@@ -344,7 +354,7 @@ public class MainWindow extends JFrame implements MainView {
         configureAgentMenuItem.setName("showAgentConfig");
         configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
                 fireViewAction(Action.SHOW_AGENT_CONFIG);
             }
         });
@@ -354,7 +364,7 @@ public class MainWindow extends JFrame implements MainView {
         configureClientMenuItem.setName("showClientConfig");
         configureClientMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
                 fireViewAction(Action.SHOW_CLIENT_CONFIG);
             }
         });
@@ -366,7 +376,7 @@ public class MainWindow extends JFrame implements MainView {
         historyModeMenuItem.setSelected(false);
         historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
+            public void actionPerformed(java.awt.event.ActionEvent e) {
                 fireViewAction(Action.SWITCH_HISTORY_MODE);
             }
         });
@@ -392,46 +402,7 @@ public class MainWindow extends JFrame implements MainView {
 
         JPanel navigationPanel = new JPanel(new BorderLayout());
 
-        JPanel searchPanel = new JPanel(new BorderLayout());
-
-        navigationPanel.add(searchPanel, BorderLayout.PAGE_START);
-
-        /* the insets are so we can place the actual icon inside the searchField */
-        searchField.setMargin(new Insets(0, 0, 0, 30));
-        searchField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void removeUpdate(DocumentEvent event) {
-                changed(event.getDocument());
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent event) {
-                changed(event.getDocument());
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent event) {
-                changed(event.getDocument());
-            }
-
-            private void changed(Document doc) {
-                String filter = null;
-                try {
-                    filter = doc.getText(0, doc.getLength());
-                    if (filter.trim().equals("")) {
-                        filter = null;
-                    }
-                } catch (BadLocationException ble) {
-                    // ignore
-                }
-                fireViewAction(MainView.Action.HOST_VM_TREE_FILTER);
-            }
-        });
-        searchPanel.add(searchField);
-        // TODO move this icon inside the search field
-        JLabel searchIcon = new JLabel(IconResource.SEARCH.getIcon());
-        searchIcon.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        searchPanel.add(searchIcon, BorderLayout.LINE_END);
+        navigationPanel.add(searchField, BorderLayout.PAGE_START);
 
         agentVmTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
@@ -461,6 +432,7 @@ public class MainWindow extends JFrame implements MainView {
     private void registerContextActionListener(JTree agentVmTree2) {
         vmContextMenu = new JPopupMenu();
         agentVmTree2.addMouseListener(new MouseAdapter() {
+            @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     Ref ref = getSelectedHostOrVm();
@@ -487,7 +459,7 @@ public class MainWindow extends JFrame implements MainView {
 
                     contextAction.addActionListener(new java.awt.event.ActionListener() {
                         @Override
-                        public void actionPerformed(ActionEvent e) {
+                        public void actionPerformed(java.awt.event.ActionEvent e) {
                             fireViewAction(Action.VM_CONTEXT_ACTION, action);
                         }
                     });
@@ -759,20 +731,6 @@ public class MainWindow extends JFrame implements MainView {
 
     @Override
     public String getHostVmTreeFilterText() {
-        try {
-            return new EdtHelper().callAndWait(new Callable<String>() {
-
-                @Override
-                public String call() throws Exception {
-                    return searchField.getText();
-                }
-
-            });
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return null;
-        }
+        return searchField.getSearchText();
     }
 }

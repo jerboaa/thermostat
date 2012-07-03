@@ -74,6 +74,8 @@ import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.internal.HostsVMsLoader;
 import com.redhat.thermostat.client.internal.MainView;
+import com.redhat.thermostat.client.internal.SearchFieldSwingView;
+import com.redhat.thermostat.client.internal.SearchFieldView;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
@@ -168,11 +170,12 @@ public class MainWindowTest {
     @Category(GUITest.class)
     @Test
     public void testHostVMTreeFilterPropertySupport() {
+        String SEARCH_TEXT = "test";
         frameFixture.show();
-        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox("hostVMTreeFilter");
-        hostVMTreeFilterField.enterText("test");
+        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        hostVMTreeFilterField.enterText(SEARCH_TEXT);
 
-        verify(l, times(4)).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
+        verify(l, times(SEARCH_TEXT.length())).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
     }
 
     @Category(GUITest.class)
@@ -333,7 +336,7 @@ public class MainWindowTest {
     @Test
     public void testGetHostVMTreeFilter() {
         frameFixture.show();
-        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox("hostVMTreeFilter");
+        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchFieldView.VIEW_NAME);
         hostVMTreeFilterField.enterText("test");
         String actual = window.getHostVmTreeFilterText();
         assertEquals("test", actual);
