@@ -41,6 +41,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,4 +72,11 @@ public class SimpleArgumentsTest {
         assertNull(args.getArgument("bar"));
     }
 
+    @Test
+    public void testNonOptionArgs() {
+        args.addNonOptionArgument("fluff");
+        List<String> nonOptArgs = args.getNonOptionArguments();
+        assertEquals(1, nonOptArgs.size());
+        assertEquals("fluff", nonOptArgs.get(0));
+    }
 }

@@ -146,6 +146,11 @@ public class HeapDump {
         return dir;
     }
 
+    public Snapshot getSnapshot() {
+        loadHeapDumpIfNecessary();
+        return snapshot;
+    }
+
     private void loadHeapDumpIfNecessary() {
         if (snapshot == null) {
             try {
