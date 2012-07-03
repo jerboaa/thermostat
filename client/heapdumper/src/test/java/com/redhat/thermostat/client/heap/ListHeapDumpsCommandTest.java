@@ -145,7 +145,7 @@ public class ListHeapDumpsCommandTest {
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
         when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
-        when(heapInfo.getHeapDumpId()).thenReturn("0001");
+        when(heapInfo.getHeapId()).thenReturn("0001");
 
         HeapDAO heapDao = mock(HeapDAO.class);
 
@@ -190,7 +190,7 @@ public class ListHeapDumpsCommandTest {
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
         when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
-        when(heapInfo.getHeapDumpId()).thenReturn("0001");
+        when(heapInfo.getHeapId()).thenReturn("0001");
 
         HeapDAO heapDao = mock(HeapDAO.class);
 

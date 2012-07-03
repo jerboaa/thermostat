@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.dao;
 import java.io.InputStream;
 import java.util.Collection;
 
+import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.storage.Category;
@@ -49,18 +50,18 @@ public interface HeapDAO {
     static final Key<String> heapDumpIdKey = new Key<String>("heap-dump-id", false);
     static final Key<String> histogramIdKey = new Key<String>("histogram-id", false);
 
-    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey, histogramIdKey);
+    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.ID, Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey, histogramIdKey);
 
     void putHeapInfo(HeapInfo heapInfo, InputStream heapDump, ObjectHistogram histogramData);
 
     Collection<HeapInfo> getAllHeapInfo(VmRef vm);
 
-    String getHistogramIdFromHeapId(String heapId);
-
-    InputStream getHeapDump(HeapInfo heapInfo);
-    InputStream getHeapDump(String heapDumpId);
+    InputStream getHeapDumpData(HeapInfo heapInfo);
 
     ObjectHistogram getHistogram(HeapInfo heapInfo);
-    ObjectHistogram getHistogram(String histogramId);
+
+    HeapInfo getHeapInfo(String heapId);
+
+    HeapDump getHeapDump(HeapInfo heapInfo);
 
 }

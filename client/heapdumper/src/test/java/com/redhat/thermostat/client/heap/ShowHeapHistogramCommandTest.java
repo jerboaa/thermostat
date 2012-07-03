@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -89,12 +90,12 @@ public class ShowHeapHistogramCommandTest {
         histo.addThing(obj3);
 
         final String HEAP_ID = "heap-id-1";
-        final String HISTOGRAM_ID = "histogram-id-1";
 
         HeapDAO heapDao = mock(HeapDAO.class);
 
-        when(heapDao.getHistogramIdFromHeapId(HEAP_ID)).thenReturn(HISTOGRAM_ID);
-        when(heapDao.getHistogram(HISTOGRAM_ID)).thenReturn(histo);
+        HeapInfo heapInfo = mock(HeapInfo.class);
+        when(heapDao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
+        when(heapDao.getHistogram(heapInfo)).thenReturn(histo);
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
@@ -107,8 +108,6 @@ public class ShowHeapHistogramCommandTest {
         args.addArgument("heapId", HEAP_ID);
 
         command.run(factory.createContext(args));
-
-        verify(heapDao).getHistogramIdFromHeapId(HEAP_ID);
 
         assertEquals("class1                  2 8\n" +
         		     "verylongclassnameclass2 1 10\n", factory.getOutput());

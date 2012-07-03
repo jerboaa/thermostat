@@ -119,7 +119,7 @@ public class ListHeapDumpsCommand implements Command {
         for (HeapInfo info : infos) {
             renderer.printLine(hostRef.getStringID(),
                                vmRef.getStringID(),
-                               info.getHeapDumpId(),
+                               info.getHeapId(),
                                new Date(info.getTimestamp()).toString());
         }
     }

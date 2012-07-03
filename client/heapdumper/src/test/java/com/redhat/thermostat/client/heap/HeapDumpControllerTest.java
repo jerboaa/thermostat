@@ -36,27 +36,23 @@
 
 package com.redhat.thermostat.client.heap;
 
-import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import javax.swing.JComponent;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import org.mockito.ArgumentCaptor;
-import org.mockito.internal.verification.Times;
 
 import com.redhat.thermostat.client.osgi.service.ApplicationCache;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
@@ -74,7 +70,6 @@ import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
-import com.redhat.thermostat.common.model.VmClassStat;
 
 public class HeapDumpControllerTest {
 

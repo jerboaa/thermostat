@@ -44,6 +44,7 @@ public class HeapInfo {
 
     private VmRef vm;
     private long timestamp;
+    private String heapId;
     private String heapDumpId;
     private String histogramId;
 
@@ -58,6 +59,14 @@ public class HeapInfo {
 
     public long getTimestamp() {
         return timestamp;
+    }
+
+    public void setHeapId(String heapId) {
+        this.heapId = heapId;
+    }
+
+    public String getHeapId() {
+        return heapId;
     }
 
     public void setHeapDumpId(String heapDumpId) {

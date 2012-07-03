@@ -56,7 +56,6 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-laf</artifactId>
       <version>${project.version}</version>
-      <type>bundle</type>
     </dependency>
     
     <dependency>
@@ -94,7 +93,6 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
-      <type>bundle</type>
     </dependency>
     <dependency>
       <groupId>org.jfree</groupId>

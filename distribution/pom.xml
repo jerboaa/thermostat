@@ -230,19 +230,16 @@
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-osgi-process-handler</artifactId>
     	<version>${project.version}</version>
-    	<type>bundle</type>
     </dependency>
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-client-killvm</artifactId>
     	<version>${project.version}</version>
-    	<type>bundle</type>
     </dependency>
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-client-heapdumper</artifactId>
     	<version>${project.version}</version>
-    	<type>bundle</type>
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>

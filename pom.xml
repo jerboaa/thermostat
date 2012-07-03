@@ -69,7 +69,7 @@
     <mongo-driver.version>2.7.3</mongo-driver.version>
     <commons-cli.version>1.2</commons-cli.version>
     <jline.version>2.5</jline.version>
-
+    <lucene.version>3.6.0</lucene.version>
     <!--
          felix 4.0 is compliant with osgi 4.3
          for osgi clients, 4.3 is backwards compatible with 4.2
@@ -229,6 +229,11 @@
         <artifactId>jline</artifactId>
         <version>${jline.version}</version>
       </dependency>
+    <dependency>
+      <groupId>org.apache.lucene</groupId>
+      <artifactId>lucene-core</artifactId>
+      <version>${lucene.version}</version>
+    </dependency>
 
 
       <dependency>

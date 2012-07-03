@@ -59,6 +59,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
+import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class SaveHeapDumpToFileCommandTest {
@@ -118,7 +119,9 @@ public class SaveHeapDumpToFileCommandTest {
 
         HeapDAO heapDao = mock(HeapDAO.class);
 
-        when(heapDao.getHeapDump(HEAP_ID)).thenReturn(new ByteArrayInputStream(HEAP_CONTENT_BYTES));
+        HeapInfo info = mock(HeapInfo.class);
+        when(heapDao.getHeapInfo(HEAP_ID)).thenReturn(info);
+        when(heapDao.getHeapDumpData(info)).thenReturn(new ByteArrayInputStream(HEAP_CONTENT_BYTES));
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 

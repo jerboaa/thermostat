@@ -51,7 +51,6 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
-      <type>bundle</type>
     </dependency>
   </dependencies>
   

@@ -36,23 +36,57 @@
 
 package com.redhat.thermostat.common.heap;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectInputStream;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.lucene.analysis.SimpleAnalyzer;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.index.CorruptIndexException;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.WildcardQuery;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.LockObtainFailedException;
+import org.apache.lucene.store.RAMDirectory;
+import org.apache.lucene.util.Version;
+
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.model.Snapshot;
+import com.sun.tools.hat.internal.parser.Reader;
 
 public class HeapDump {
+
+    private static final String INDEX_FIELD_OBJECT_ID = "objectId";
+
+    private static final String INDEX_FIELD_CLASSNAME = "classname";
 
     private static final Logger log = Logger.getLogger(HeapDump.class.getName());
 
     private HeapInfo heapInfo;
 
     private HeapDAO heapDAO;
+
+    private Snapshot snapshot;
+
+    private Directory luceneIndex;
 
     public HeapDump(HeapInfo heapInfo, HeapDAO heapDAO) {
         this.heapInfo = heapInfo;
@@ -62,7 +96,7 @@ public class HeapDump {
     public String getName() {
         return heapInfo.getVm().getName();
     }
-    
+
     public long getTimestamp() {
         return heapInfo.getTimestamp();
     }
@@ -79,4 +113,98 @@ public class HeapDump {
     public HeapInfo getInfo() {
         return heapInfo;
     }
+
+    private Directory getLuceneIndex() {
+        if (luceneIndex == null) {
+            try {
+                luceneIndex = createLuceneIndex();
+            } catch (IOException ex) {
+                log.log(Level.SEVERE, "Unexpected IO Exception while creating heap dump index", ex);
+                return null;
+            }
+        }
+        return luceneIndex;
+    }
+
+    private Directory createLuceneIndex() throws IOException,
+            CorruptIndexException, LockObtainFailedException {
+
+        loadHeapDumpIfNecessary();
+
+        Enumeration<JavaHeapObject> thingos = snapshot.getThings();
+        Directory dir = new RAMDirectory();
+        IndexWriterConfig indexWriterConfig = new IndexWriterConfig(Version.LUCENE_36, new SimpleAnalyzer(Version.LUCENE_36));
+        IndexWriter writer = new IndexWriter(dir, indexWriterConfig);
+        while (thingos.hasMoreElements()) {
+            JavaHeapObject thingo = thingos.nextElement();
+            Document doc = new Document();
+            doc.add(new Field(INDEX_FIELD_CLASSNAME, thingo.getClazz().getName(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+            doc.add(new Field(INDEX_FIELD_OBJECT_ID, thingo.getIdString(), Field.Store.YES, Field.Index.NOT_ANALYZED));
+            writer.addDocument(doc);
+        }
+        writer.close();
+        return dir;
+    }
+
+    private void loadHeapDumpIfNecessary() {
+        if (snapshot == null) {
+            try {
+                loadHeapDump();
+            } catch (IOException e) {
+                log.log(Level.SEVERE, "Unexpected IO Exception while loading heap dump", e);
+            }
+        }
+    }
+
+    private void loadHeapDump() throws IOException {
+        String filename = "heapdump-" + heapInfo.getHeapId();
+        File tmpDir = getOrCreateHeapDumpDir();
+        File tmpFile = new File(tmpDir, filename);
+        if (! tmpFile.exists()) {
+            InputStream in = heapDAO.getHeapDumpData(heapInfo);
+            Files.copy(in, tmpFile.toPath());
+        }
+        snapshot = Reader.readFile(tmpFile.getAbsolutePath(), true, 0);
+        snapshot.resolve(true);
+    }
+
+    private File getOrCreateHeapDumpDir() throws IOException {
+        String dirname = "thermostat-" + System.getProperty("user.name");
+        File tmpFile = new File(System.getProperty("java.io.tmpdir"), dirname);
+        if (! tmpFile.exists()) {
+            Files.createDirectory(tmpFile.toPath(), PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
+            return tmpFile;
+        } else {
+            if (tmpFile.isDirectory()) {
+                return tmpFile;
+            } else {
+                throw new FileAlreadyExistsException(tmpFile.getAbsolutePath());
+            }
+        }
+    }
+
+    public Collection<String> searchObjects(String search, int limit) {
+        Directory searchIndex = getLuceneIndex();
+        WildcardQuery query = new WildcardQuery(new Term(INDEX_FIELD_CLASSNAME, search));
+        Collection<String> results = new ArrayList<String>();
+        try {
+            IndexReader indexReader = IndexReader.open(searchIndex);
+            IndexSearcher searcher = new IndexSearcher(indexReader);
+            TopDocs found = searcher.search(query, limit);
+            for (ScoreDoc scoreDoc : found.scoreDocs) {
+                Document doc = searcher.doc(scoreDoc.doc);
+                String objectId = doc.get(INDEX_FIELD_OBJECT_ID);
+                results.add(objectId);
+            }
+        } catch (IOException e) {
+            log.log(Level.SEVERE, "Unexpected IO Exception while searching heap dump index", e);
+        }
+        return results;
+    }
+
+    public JavaHeapObject findObject(String id) {
+        loadHeapDumpIfNecessary();
+        return snapshot.findThing(id);
+    }
+
 }

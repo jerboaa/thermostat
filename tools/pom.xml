@@ -84,13 +84,11 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-core</artifactId>
       <version>${project.version}</version>
-      <type>bundle</type>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-osgi-process-handler</artifactId>
       <version>${project.version}</version>
-      <type>bundle</type>
     </dependency>
     <dependency>
       <groupId>org.osgi</groupId>

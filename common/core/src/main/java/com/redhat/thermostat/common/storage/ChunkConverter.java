@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import org.bson.types.ObjectId;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -66,7 +68,12 @@ class ChunkConverter {
     private Map<String, DBObject> convertChunkKeyRecursively(Chunk chunk, Key<?> key, DBObject dbObject, String[] keyParts, int partIndex,
                                             String partialKeyName, Map<String, DBObject> dbObjectMap) {
         if (partIndex == keyParts.length - 1) {
-            dbObject.put(keyParts[partIndex], chunk.get(key));
+            String dbKey = keyParts[partIndex];
+            Object value = chunk.get(key);
+            if (dbKey.equals("_id")) {
+                value = new ObjectId((String) value);
+            }
+            dbObject.put(dbKey, value);
         } else {
             dbObjectMap = lazyCreateDBObjectMap(dbObjectMap);
             DBObject nestedDbObject = getOrCreateSubObject(partialKeyName, dbObjectMap);
@@ -105,26 +112,27 @@ class ChunkConverter {
 
     private void dbObjectToChunkRecurse(Chunk chunk, DBObject dbObject, Category category, String fullKey) {
         for (String dbKey : dbObject.keySet()) {
-            if (!dbKey.equals("_id")) { // Mongo adds this to any stored document.
-                String newFullKey;
-                if (fullKey == null) {
-                    newFullKey = dbKey;
-                } else {
-                    newFullKey = fullKey + "." + dbKey;
-                }
-                dbObjectToChunkRecursively(chunk, dbObject, category, dbKey, newFullKey);
+            String newFullKey;
+            if (fullKey == null) {
+                newFullKey = dbKey;
+            } else {
+                newFullKey = fullKey + "." + dbKey;
             }
+            dbObjectToChunkRecursively(chunk, dbObject, category, dbKey,
+                    newFullKey);
         }
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     private void dbObjectToChunkRecursively(Chunk chunk, DBObject dbObject, Category category, String dbKey, String fullKey) {
         Object value = dbObject.get(dbKey);
         if (value instanceof DBObject) {
             DBObject dbObj = (DBObject) value;
             dbObjectToChunkRecurse(chunk, dbObj, category, fullKey);
+        } else if (value instanceof ObjectId) {
+            Key key = category.getKey(fullKey);
+            chunk.put(key, objectIdToString((ObjectId) value));
         } else {
-            @SuppressWarnings("rawtypes")
             Key key = category.getKey(fullKey);
             if (key != null) {
                 chunk.put(key, value);
@@ -132,5 +140,9 @@ class ChunkConverter {
                 logger.warning("No key matching \"" + fullKey + "\" in category \"" + category + "\"");
             }
         }
+    }
+
+    private String objectIdToString(ObjectId value) {
+        return value.toString();
     }
 }

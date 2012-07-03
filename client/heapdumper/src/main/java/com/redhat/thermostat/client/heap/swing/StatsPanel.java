@@ -45,6 +45,7 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
@@ -52,8 +53,6 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 
 import com.redhat.thermostat.common.heap.HeapDump;
-
-import javax.swing.JList;
 
 @SuppressWarnings("serial")
 public class StatsPanel extends JPanel {

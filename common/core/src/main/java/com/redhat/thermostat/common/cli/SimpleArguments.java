@@ -45,6 +45,8 @@ public class SimpleArguments implements Arguments {
 
     private Map<String,String> arguments = new HashMap<>();
 
+    private List<String> nonOptionArguments = new ArrayList<>();
+
     @Override
     public boolean hasArgument(String name) {
         return arguments.containsKey(name);
@@ -62,7 +64,10 @@ public class SimpleArguments implements Arguments {
 
     @Override
     public List<String> getNonOptionArguments() {
-        return null;
+        return nonOptionArguments;
     }
 
+    public void addNonOptionArgument(String arg) {
+        nonOptionArguments.add(arg);
+    }
 }

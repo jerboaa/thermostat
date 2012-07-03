@@ -313,7 +313,8 @@ public class ChunkConverterTest {
         ChunkConverter converter = new ChunkConverter();
         Chunk chunk = converter.dbObjectToChunk(obj, new Category("invalidCategory", invalidMongoIdKey));
 
-        assertEquals(0, chunk.getKeys().size());
+        assertEquals(1, chunk.getKeys().size());
+        assertEquals("mongo_private_info", chunk.get(Key.ID));
     }
 
     @Test

@@ -37,20 +37,13 @@
 package com.redhat.thermostat.client.heap;
 
 import java.awt.Component;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-import javax.swing.JComponent;
-
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.StringTokenizer;
 import java.util.concurrent.TimeUnit;
+
+import javax.swing.JComponent;
 
 import com.redhat.thermostat.client.heap.HeapView.HeadDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
@@ -58,23 +51,19 @@ import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.heap.HeapDump;
-
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
-
-import com.redhat.thermostat.common.utils.DescriptorConverter;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
 public class HeapDumpController implements VmInformationServiceController {

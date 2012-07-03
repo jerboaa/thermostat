@@ -47,6 +47,9 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bson.types.ObjectId;
+
+import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.storage.Chunk;
@@ -66,11 +69,6 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public String getHistogramIdFromHeapId(String heapId) {
-        return heapId.replace("heapdump-", "histogram-");
-    }
-
-    @Override
     public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData, ObjectHistogram histogramData) {
         VmRef vm = heapInfo.getVm();
         Chunk chunk = new Chunk(heapInfoCategory, false);
@@ -78,8 +76,9 @@ class HeapDAOImpl implements HeapDAO {
         chunk.put(Key.AGENT_ID, vm.getAgent().getStringID());
         chunk.put(Key.VM_ID, vm.getId());
         chunk.put(Key.TIMESTAMP, heapInfo.getTimestamp());
-        String heapDumpId = "heapdump-" + vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
-        String histogramId = getHistogramIdFromHeapId(heapDumpId);
+        String id = vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
+        String heapDumpId = "heapdump-" + id;
+        String histogramId = "histogram-" + id;
         if (heapDumpData != null) {
             chunk.put(heapDumpIdKey, heapDumpId);
             heapInfo.setHeapDumpId(heapDumpId);
@@ -122,25 +121,21 @@ class HeapDAOImpl implements HeapDAO {
 
     private HeapInfo convertChunkToHeapInfo(VmRef vm, Chunk chunk) {
         HeapInfo info = new HeapInfo(vm, chunk.get(Key.TIMESTAMP));
+        info.setHeapId(chunk.get(Key.ID));
         info.setHeapDumpId(chunk.get(HeapDAO.heapDumpIdKey));
         info.setHistogramId(chunk.get(HeapDAO.histogramIdKey));
         return info;
     }
 
     @Override
-    public InputStream getHeapDump(HeapInfo heapInfo) {
-        return getHeapDump(heapInfo.getHeapDumpId());
+    public InputStream getHeapDumpData(HeapInfo heapInfo) {
+        return storage.loadFile(heapInfo.getHeapDumpId());
     }
 
     @Override
-    public InputStream getHeapDump(String heapDumpId) {
-        return storage.loadFile(heapDumpId);
-    }
-
-    @Override
-    public ObjectHistogram getHistogram(String histogramId) {
+    public ObjectHistogram getHistogram(HeapInfo heapInfo) {
         try {
-            InputStream in = storage.loadFile(histogramId);
+            InputStream in = storage.loadFile(heapInfo.getHistogramId());
             ObjectInputStream ois = new ObjectInputStream(in);
             return (ObjectHistogram) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
@@ -150,8 +145,20 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public ObjectHistogram getHistogram(HeapInfo heapInfo) {
-        return getHistogram(heapInfo.getHistogramId());
+    public HeapInfo getHeapInfo(String heapId) {
+        Chunk query = new Chunk(heapInfoCategory, false);
+        query.put(Key.ID, heapId);
+        Chunk found = storage.find(query);
+        if (found == null) {
+            return null;
+        } else {
+            return convertChunkToHeapInfo(null, found);
+        }
+    }
+
+    @Override
+    public HeapDump getHeapDump(HeapInfo heapInfo) {
+        return new HeapDump(heapInfo, this);
     }
 
 }

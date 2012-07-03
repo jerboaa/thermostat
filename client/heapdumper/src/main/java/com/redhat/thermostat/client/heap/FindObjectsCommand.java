@@ -36,29 +36,68 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.heap.HistogramRecord;
-import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-public class ShowHeapHistogramCommand implements Command {
+public class FindObjectsCommand implements Command {
 
-    private static final String NAME = "show-heap-histogram";
-    private static final String DESCRIPTION = "show the heap histogram";
-    private static final String USAGE = DESCRIPTION;
+    private static final String HEAP_ID_ARG = "heapId";
+    private static final String LIMIT_ARG = "limit";
+    private static final String NAME = "find-objects";
+    private static final String DESCRIPTION = "Finds objects in a heapdump";
+    private static final String HEADER_OBJECT_ID = "ID";
+    private static final String HEADER_TYPE = "TYPE";
+    private static final int DEFAULT_LIMIT = 10;
+
+    @Override
+    public void run(CommandContext ctx) throws CommandException {
+        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
+        String heapId = ctx.getArguments().getArgument(HEAP_ID_ARG);
+        HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
+        HeapDump heapDump = heapDAO.getHeapDump(heapInfo);
+        String searchTerm = ctx.getArguments().getNonOptionArguments().get(0);
+        String limitArg = ctx.getArguments().getArgument(LIMIT_ARG);
+        int limit = parseLimit(limitArg);
+        Collection<String> results = heapDump.searchObjects(searchTerm, limit);
+        TableRenderer table = new TableRenderer(2);
+        table.printLine(HEADER_OBJECT_ID, HEADER_TYPE);
+        for (String objectId : results) {
+            JavaHeapObject obj = heapDump.findObject(objectId);
+            String id = obj.getIdString();
+            String className = obj.getClazz().getName();
+            table.printLine(id, className);
+        }
+        table.render(ctx.getConsole().getOutput());
+    }
+
+    private int parseLimit(String limitArg) throws CommandException {
+        int limit = DEFAULT_LIMIT;
+        if (limitArg != null) {
+            try {
+                limit = Integer.parseInt(limitArg);
+            } catch (NumberFormatException ex) {
+                throw new CommandException("Invalid limit: " + limitArg);
+            }
+        }
+        return limit;
+    }
+
+    @Override
+    public void disable() {
+        // Nothing to do here.
+    }
 
     @Override
     public String getName() {
@@ -72,48 +111,19 @@ public class ShowHeapHistogramCommand implements Command {
 
     @Override
     public String getUsage() {
-        return USAGE;
+        return DESCRIPTION;
     }
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        List<ArgumentSpec> args = new ArrayList<>();
-        args.add(new SimpleArgumentSpec("heapId", "heapId", "the heap id", true, true));
-        return args;
+        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, "the ID of the heapdump to analyze", true, true);
+        ArgumentSpec limitArg = new SimpleArgumentSpec(LIMIT_ARG, "l", "limit search to top N results, defaults to " + DEFAULT_LIMIT, false, true);
+        return Arrays.asList(heapIdArg, limitArg);
     }
 
     @Override
     public boolean isStorageRequired() {
         return true;
-    }
-
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        Arguments args = ctx.getArguments();
-        String heapId = args.getArgument("heapId");
-
-        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
-
-        HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
-        ObjectHistogram histogram = heapDAO.getHistogram(heapInfo);
-        if (histogram == null) {
-            ctx.getConsole().getOutput().print("No matching heap histogram found\n");
-        } else {
-            printHeapHistogram(histogram, ctx.getConsole().getOutput());
-        }
-    }
-
-    private void printHeapHistogram(ObjectHistogram histogram, PrintStream out) {
-        TableRenderer table = new TableRenderer(3);
-        for (HistogramRecord rec : histogram.getHistogram()) {
-            table.printLine(rec.getClassname(), String.valueOf(rec.getNumberOf()), String.valueOf(rec.getTotalSize()));
-        }
-        table.render(out);
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
     }
 
 }

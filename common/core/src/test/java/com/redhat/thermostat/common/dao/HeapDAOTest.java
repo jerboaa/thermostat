@@ -164,7 +164,8 @@ public class HeapDAOTest {
         assertNotNull(category);
         assertEquals("vm-heap-info", category.getName());
         Collection<Key<?>> keys = category.getKeys();
-        assertEquals(5, keys.size());
+        assertEquals(6, keys.size());
+        assertTrue(keys.contains(new Key<>("_id", false)));
         assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<>("vm-id", false)));
         assertTrue(keys.contains(new Key<>("timestamp", false)));
@@ -236,7 +237,7 @@ public class HeapDAOTest {
     @Test
     public void testGetHeapDump() throws IOException {
         heapInfo.setHeapDumpId("test-heap");
-        InputStream in = dao.getHeapDump(heapInfo);
+        InputStream in = dao.getHeapDumpData(heapInfo);
         assertEquals(1, in.read());
         assertEquals(2, in.read());
         assertEquals(3, in.read());

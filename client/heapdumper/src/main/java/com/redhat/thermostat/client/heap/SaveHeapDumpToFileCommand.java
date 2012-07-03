@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.dao.HeapDAO;
+import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.StreamUtils;
 
 public class SaveHeapDumpToFileCommand implements Command {
@@ -118,7 +119,8 @@ public class SaveHeapDumpToFileCommand implements Command {
         }
 
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
-        try (InputStream heapStream = heapDAO.getHeapDump(heapId)) {
+        HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
+        try (InputStream heapStream = heapDAO.getHeapDumpData(heapInfo)) {
             if (heapStream != null) {
                 try {
                     saveHeapDump(heapStream, filename);
