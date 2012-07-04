@@ -111,7 +111,6 @@ public class SearchFieldSwingView extends JPanel implements SearchFieldView {
                     }
 
                     searchText.set(filter);
-                    System.out.println("Search text: '" + filter + "'");
                     if (!(filter.equals(previousText))) {
                         previousText = filter;
                         fireViewAction(SearchAction.TEXT_CHANGED);
