@@ -4,3 +4,4 @@ com.redhat.thermostat.client.heap.SaveHeapDumpToFileCommand
 com.redhat.thermostat.client.heap.ShowHeapHistogramCommand
 com.redhat.thermostat.client.heap.FindObjectsCommand
 com.redhat.thermostat.client.heap.ObjectInfoCommand
+com.redhat.thermostat.client.heap.FindRootCommand

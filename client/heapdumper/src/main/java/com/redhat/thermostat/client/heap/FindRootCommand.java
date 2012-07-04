@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.heap;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Enumeration;
+import java.util.Iterator;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
@@ -48,24 +48,19 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
-import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
-import com.sun.tools.hat.internal.model.JavaClass;
-import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
-import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
+import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.model.Snapshot;
 
-public class ObjectInfoCommand implements Command {
+public class FindRootCommand implements Command {
 
     private static final String OBJECT_ID_ARG = "objectId";
     private static final String HEAP_ID_ARG = "heapId";
-    private static final String DESCRIPTION = "prints information about an object in a heap dump";
-    private static final String NAME = "object-info";
-
-    private Snapshot snapshot;
+    private static final String DESCRIPTION = "finds the shortest path from an object to a GC root";
+    private static final String NAME = "find-root";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
@@ -78,62 +73,53 @@ public class ObjectInfoCommand implements Command {
             throw new CommandException("Heap ID not found: " + heapId);
         }
         HeapDump heapDump = dao.getHeapDump(heapInfo);
-        snapshot = heapDump.getSnapshot();
+        Snapshot snapshot = heapDump.getSnapshot();
         JavaHeapObject obj = heapDump.findObject(objectId);
         if (obj == null) {
             throw new CommandException("Object not found: " + objectId);
         }
-        TableRenderer table = new TableRenderer(2);
-        table.printLine("Object ID:", obj.getIdString());
-        table.printLine("Type:", obj.getClazz().getName());
-        table.printLine("Size:", String.valueOf(obj.getSize()) + " bytes");
-        table.printLine("Heap allocated:", String.valueOf(obj.isHeapAllocated()));
-        table.printLine("References:", "");
-        printReferences(table, obj);
-        table.printLine("Referrers:", "");
-        printReferrers(table, obj);
-
+        FindRoot findRoot = new FindRoot();
+        HeapPath<JavaHeapObject> pathToRoot = findRoot.findShortestPathToRoot(obj);
         PrintStream out = ctx.getConsole().getOutput();
-        table.render(out);
-
-    }
-
-    private void printReferences(final TableRenderer table, final JavaHeapObject obj) {
-        JavaHeapObjectVisitor v = new JavaHeapObjectVisitor() {
-            
-            @Override
-            public void visit(JavaHeapObject ref) {
-                table.printLine("", describeReference(obj, ref) + " -> " + PrintObjectUtils.objectToString(ref));
-            }
-            
-            @Override
-            public boolean mightExclude() {
-                return false;
-            }
-            
-            @Override
-            public boolean exclude(JavaClass arg0, JavaField arg1) {
-                return false;
-            }
-        };
-        obj.visitReferencedObjects(v);
-    }
-
-    private void printReferrers(TableRenderer table, JavaHeapObject obj) {
-        Enumeration<?> referrers = obj.getReferers();
-        while (referrers.hasMoreElements()) {
-            JavaHeapObject ref = (JavaHeapObject) referrers.nextElement();
-            table.printLine("", PrintObjectUtils.objectToString(ref) + " -> " + describeReference(ref, obj));
+        if (pathToRoot == null) {
+            out.println("No root found for: " + obj.getClazz().getName() + "@" + obj.getIdString());
+        } else {
+            printPathToRoot(snapshot, pathToRoot, out);
         }
     }
 
-    private String describeReference(JavaHeapObject from, JavaHeapObject to) {
-        return "[" + from.describeReferenceTo(to, snapshot) + "]";
+    private void printPathToRoot(Snapshot snapshot, HeapPath<JavaHeapObject> pathToRoot, PrintStream out) {
+        // Print root.
+        Iterator<JavaHeapObject> i = pathToRoot.iterator();
+        JavaHeapObject last = i.next();
+        Root root = last.getRoot();
+        out.println(root.getDescription() + " -> " + PrintObjectUtils.objectToString(last));
+        // Print reference 'tree'.
+        int indentation = 0;
+        while (i.hasNext()) {
+            JavaHeapObject next = i.next();
+            printIndentation(out, indentation);
+            out.print("\u2514");
+            out.print(last.describeReferenceTo(next, snapshot));
+            out.print(" in ");
+            out.print(PrintObjectUtils.objectToString(last));
+            out.print(" -> ");
+            out.println(PrintObjectUtils.objectToString(next));
+            last = next;
+            indentation++;
+        }
+    }
+
+    private void printIndentation(PrintStream out, int indentation) {
+        for (int i = 0; i < indentation; i++) {
+            out.print(" ");
+        }
     }
 
     @Override
     public void disable() {
-        // Nothing to do here.
+        // TODO Auto-generated method stub
+        
     }
 
     @Override
