@@ -34,28 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.heap;
+
+import java.util.Collection;
+
+import javax.swing.JComponent;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-public interface SearchFieldView extends View {
+public interface HeapDumpDetailsView extends View {
 
-    /** For use by tests only */
-    public static final String VIEW_NAME = "searchField";
-
-    public enum SearchAction {
-        TEXT_CHANGED,
-        PERFORM_SEARCH,
+    public enum Action {
+        SEARCH,
+        GET_OBJECT_DETAIL,
     }
 
-    public String getSearchText();
+    public static class HeapObjectUI {
+        public final String objectId;
+        public final String text;
 
-    public void setSearchText(String text);
+        public HeapObjectUI(String objectId, String text) {
+            this.objectId = objectId;
+            this.text = text;
+        }
 
-    void setLabel(String label);
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
 
-    public void addActionListener(ActionListener<SearchAction> listener);
-    public void removeActionListener(ActionListener<SearchAction> listener);
 
+    void addActionListener(ActionListener<Action> listener);
+    void removeActionListnener(ActionListener<Action> listener);
+
+    void setHeapHistogram(ObjectHistogram histogram);
+
+    String getSearchText();
+
+    void setMatchingObjects(Collection<HeapObjectUI> objects);
+
+    HeapObjectUI getSelectedMatchingObject();
+
+    void setObjectDetails(JavaHeapObject object);
+
+    JComponent getUIComponent();
 }

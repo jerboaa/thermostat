@@ -63,6 +63,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.client.ui.SearchFieldSwingView;
+import com.redhat.thermostat.client.ui.SearchFieldView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
