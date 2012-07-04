@@ -50,6 +50,7 @@ import javax.swing.table.DefaultTableModel;
 
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.redhat.thermostat.common.utils.DescriptorConverter;
 
 public class HistogramPanel extends JPanel {
     
@@ -122,7 +123,7 @@ public class HistogramPanel extends JPanel {
                 HistogramRecord record = histogram.get(row);
                 switch (column) {
                 case 0:
-                    result = record.getClassname();
+                    result = DescriptorConverter.toJavaType(record.getClassname());
                     break;
                 case 1:
                     result = Long.valueOf(record.getNumberOf());
