@@ -37,47 +37,29 @@
 package com.redhat.thermostat.client.heap;
 
 import java.io.PrintStream;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
-import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
-import com.redhat.thermostat.common.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 public class FindRootCommand implements Command {
 
-    private static final String OBJECT_ID_ARG = "objectId";
-    private static final String HEAP_ID_ARG = "heapId";
     private static final String DESCRIPTION = "finds the shortest path from an object to a GC root";
     private static final String NAME = "find-root";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        Arguments args = ctx.getArguments();
-        String heapId = args.getArgument(HEAP_ID_ARG);
-        String objectId = args.getArgument(OBJECT_ID_ARG);
-        HeapDAO dao = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
-        HeapInfo heapInfo = dao.getHeapInfo(heapId);
-        if (heapInfo == null) {
-            throw new CommandException("Heap ID not found: " + heapId);
-        }
-        HeapDump heapDump = dao.getHeapDump(heapInfo);
+        ObjectCommandHelper objCmdHelper = new ObjectCommandHelper(ctx);
+        HeapDump heapDump = objCmdHelper.getHeapDump();
         Snapshot snapshot = heapDump.getSnapshot();
-        JavaHeapObject obj = heapDump.findObject(objectId);
-        if (obj == null) {
-            throw new CommandException("Object not found: " + objectId);
-        }
+        JavaHeapObject obj = objCmdHelper.getJavaHeapObject();
         FindRoot findRoot = new FindRoot();
         HeapPath<JavaHeapObject> pathToRoot = findRoot.findShortestPathToRoot(obj);
         PrintStream out = ctx.getConsole().getOutput();
@@ -139,9 +121,7 @@ public class FindRootCommand implements Command {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, "the ID of the heap dump of the object", true, true);
-        ArgumentSpec objectIdArg = new SimpleArgumentSpec(OBJECT_ID_ARG, "the ID of the object to query", true, true);
-        return Arrays.asList(heapIdArg, objectIdArg);
+        return ObjectCommandHelper.getArgumentSpecs();
     }
 
     @Override

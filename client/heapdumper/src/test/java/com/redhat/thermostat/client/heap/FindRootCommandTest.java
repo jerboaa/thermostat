@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
@@ -266,4 +267,38 @@ public class FindRootCommandTest {
         assertEquals(expected, factory.getOutput());
 
     }
+
+    public void testHeapNotFound() throws CommandException {
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", "fluff");
+        args.addArgument("objectId", "foo");
+
+        try {
+            cmd.run(factory.createContext(args));
+            fail();
+        } catch (HeapNotFoundException ex) {
+           assertEquals("Heap ID not found: fluff", ex.getMessage());
+        }
+    }
+
+    public void testObjectNotFound() throws CommandException {
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", HEAP_ID);
+        args.addArgument("objectId", "fluff");
+
+        try {
+            cmd.run(factory.createContext(args));
+            fail();
+        } catch (ObjectNotFoundException ex) {
+            assertEquals("Object not found: fluff", ex.getMessage());
+         }
+    }
+
+    @Test
+    public void testDisable() {
+        cmd.disable(); // No side effects... hopefully :-)
+    }
+
 }

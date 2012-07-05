@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doAnswer;
@@ -213,16 +214,25 @@ public class ObjectInfoCommandTest {
         args.addArgument("heapId", "fluff");
         args.addArgument("objectId", "foo");
 
-        cmd.run(factory.createContext(args));
+        try {
+            cmd.run(factory.createContext(args));
+            fail();
+        } catch (HeapNotFoundException ex) {
+            assertEquals("Heap not found: fluff", ex.getMessage());
+        }
     }
 
-    @Test(expected=CommandException.class)
     public void testObjectNotFound() throws CommandException {
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", HEAP_ID);
         args.addArgument("objectId", "fluff");
 
-        cmd.run(factory.createContext(args));
+        try {
+            cmd.run(factory.createContext(args));
+            fail();
+        } catch (ObjectNotFoundException ex) {
+            assertEquals("Object not found: fluff", ex.getMessage());
+        }
     }
 }
