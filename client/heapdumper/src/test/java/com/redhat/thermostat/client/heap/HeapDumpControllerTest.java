@@ -80,6 +80,7 @@ public class HeapDumpControllerTest {
     
     private HeapDAO heapDao;
     private HeapView<JComponent> view;
+    private HeapDumpDetailsView detailsView;
     
     private HeapDumpController controller;
     private ApplicationService appService;
@@ -116,6 +117,9 @@ public class HeapDumpControllerTest {
 
         view = mock(HeapView.class);
         when(viewFactory.getView(eq(HeapView.class))).thenReturn(view);
+
+        detailsView = mock(HeapDumpDetailsView.class);
+        when(viewFactory.getView(HeapDumpDetailsView.class)).thenReturn(detailsView);
         
         ApplicationContext.getInstance().setViewFactory(viewFactory);
     }
@@ -207,7 +211,8 @@ public class HeapDumpControllerTest {
         VmRef ref = mock(VmRef.class);
         controller = new HeapDumpController(ref, appService);
         
-        verify(view, times(1)).openDumpView(dump);
+        verify(view, times(1)).setChildView(any(JComponent.class));
+        verify(view, times(1)).openDumpView();
     }
     
     @Test
@@ -229,7 +234,7 @@ public class HeapDumpControllerTest {
         VmRef ref = mock(VmRef.class);
         controller = new HeapDumpController(ref, appService);
         
-        verify(view, times(0)).openDumpView(any(HeapDump.class));
+        verify(view, times(0)).openDumpView();
     }
         
     @After

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -42,6 +42,8 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -57,7 +59,6 @@ import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
-import com.redhat.thermostat.client.ui.IconResource;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 
@@ -158,7 +159,16 @@ public class SearchFieldSwingView extends JPanel implements SearchFieldView {
 
     @Override
     public String getSearchText() {
-        return searchText.get();
+        try {
+            return new EdtHelper().callAndWait(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return searchText.get();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            return null;
+        }
     }
 
     @Override

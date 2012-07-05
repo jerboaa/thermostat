@@ -111,7 +111,7 @@ public class HeapDumpController implements VmInformationServiceController {
         // check if we were reading some of the dumps
         dump = (HeapDump) appService.getApplicationCache().getAttribute(ref);
         if (dump != null && infos.contains(dump.getInfo())) {
-            view.openDumpView(dump);
+            showHeapDumpDetails(dump);
         }
         
         view.addActionListener(new ActionListener<Action>() {            
@@ -158,10 +158,17 @@ public class HeapDumpController implements VmInformationServiceController {
             }
             
             private void analyseDump(HeapDump dump) {
-                view.openDumpView(dump);
+                showHeapDumpDetails(dump);
                 appService.getApplicationCache().addAttribute(ref, dump);
             }
         });
+    }
+
+    private void showHeapDumpDetails(HeapDump dump) {
+        HeapDumpDetailsController controller = new HeapDumpDetailsController();
+        controller.setDump(dump);
+        view.setChildView(controller.getComponent());
+        view.openDumpView();
     }
 
     @Override

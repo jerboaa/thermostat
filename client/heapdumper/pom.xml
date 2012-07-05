@@ -99,11 +99,18 @@
       <artifactId>thermostat-client-core</artifactId>
       <version>${project.version}</version>
     </dependency>
-        <dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-tools</artifactId>
       <version>${project.version}</version>
     </dependency>
+    
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-swing-components</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
     <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>

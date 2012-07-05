@@ -34,28 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.swing;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
-public interface SearchFieldView extends View {
+import javax.swing.JComponent;
 
-    /** For use by tests only */
-    public static final String VIEW_NAME = "searchField";
+import sun.swing.SwingUtilities2;
 
-    public enum SearchAction {
-        TEXT_CHANGED,
-        PERFORM_SEARCH,
+@SuppressWarnings("restriction")
+public class GraphicsUtils {
+
+    private static GraphicsUtils instance = new GraphicsUtils();
+    public static GraphicsUtils getInstance() {
+        return instance;
     }
-
-    public String getSearchText();
-
-    public void setSearchText(String text);
-
-    void setLabel(String label);
-
-    public void addActionListener(ActionListener<SearchAction> listener);
-    public void removeActionListener(ActionListener<SearchAction> listener);
-
+    
+    public Graphics2D createAAGraphics(Graphics g) {
+        Graphics2D graphics = (Graphics2D) g.create();
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        return graphics;
+    }
+    
+    public void drawStringWithShadow(JComponent component, Graphics2D graphics, String string, Color foreground, int x, int y) {
+        // paint it twice to give a subtle drop shadow effect
+        
+        graphics.setColor(new Color(0f, 0f, 0f, 0.1f));
+        SwingUtilities2.drawString(component, graphics, string, x, y + 1);
+        
+        graphics.setColor(foreground);
+        SwingUtilities2.drawString(component, graphics, string, x, y);
+    }
+    
+    public FontMetrics getFontMetrics(JComponent component, Font font) {
+        return SwingUtilities2.getFontMetrics(component, font);
+    }
 }

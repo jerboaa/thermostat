@@ -34,41 +34,28 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.BasicView;
-import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.View;
 
-public abstract class HeapView<E> extends BasicView {
-    
-    public enum HeadDumperAction {
-        DUMP_REQUESTED,
-        ANALYSE,
-        REQUEST_ABORTED
-    }
-   
-    protected final ActionNotifier<HeadDumperAction> heapDumperNotifier;
-    protected HeapView() {
-        heapDumperNotifier = new ActionNotifier<HeadDumperAction>(this);
-    }
-    
-    public void addDumperListener(ActionListener<HeadDumperAction> listener) {
-        heapDumperNotifier.addActionListener(listener);
-    }
-    
-    public void removeDumperListener(ActionListener<HeadDumperAction> listener) {
-        heapDumperNotifier.removeActionListener(listener);
+public interface SearchFieldView extends View {
+
+    /** For use by tests only */
+    public static final String VIEW_NAME = "searchField";
+
+    public enum SearchAction {
+        TEXT_CHANGED,
+        PERFORM_SEARCH,
     }
 
-    public abstract E getComponent();
+    public String getSearchText();
 
-    abstract public void updateOverview(OverviewChart model, String used, String capacity);
-    abstract public void addHeapDump(HeapDump dump);
-    abstract public void clearHeapDumpList();
-    
-    abstract public void openDumpView();
-    abstract public void setChildView(E childView);
+    public void setSearchText(String text);
+
+    void setLabel(String label);
+
+    public void addActionListener(ActionListener<SearchAction> listener);
+    public void removeActionListener(ActionListener<SearchAction> listener);
+
 }

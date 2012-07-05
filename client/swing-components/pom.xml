@@ -1,0 +1,63 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <artifactId>thermostat-client</artifactId>
+    <groupId>com.redhat.thermostat</groupId>
+    <version>0.4-SNAPSHOT</version>
+  </parent>
+  
+  <artifactId>thermostat-swing-components</artifactId>
+  <packaging>bundle</packaging>
+  <name>Swing Components and Utilities</name>
+  
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+  
+  <dependencies>
+
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.jfree</groupId>
+      <artifactId>jfreechart</artifactId>
+    </dependency>
+    
+  </dependencies>
+      
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Export-Package>
+              com.redhat.thermostat.swing,
+              com.redhat.thermostat.models,
+              com.redhat.thermostat.charts
+            </Export-Package>
+<!--             <Private-Package> -->
+<!--             </Private-Package> -->
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+
+  </build>
+  
+</project>

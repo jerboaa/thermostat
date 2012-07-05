@@ -188,9 +188,9 @@ public class HeapDump {
         }
     }
 
-    public Collection<String> searchObjects(String search, int limit) {
+    public Collection<String> searchObjects(String classNamePattern, int limit) {
         Directory searchIndex = getLuceneIndex();
-        WildcardQuery query = new WildcardQuery(new Term(INDEX_FIELD_CLASSNAME, search));
+        WildcardQuery query = new WildcardQuery(new Term(INDEX_FIELD_CLASSNAME, classNamePattern));
         Collection<String> results = new ArrayList<String>();
         try {
             IndexReader indexReader = IndexReader.open(searchIndex);

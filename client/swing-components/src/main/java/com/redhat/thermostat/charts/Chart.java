@@ -34,22 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap.chart;
+package com.redhat.thermostat.charts;
 
-import org.jfree.chart.axis.NumberTickUnit;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 
-import com.redhat.thermostat.common.utils.DisplayableValues;
+import org.jfree.chart.JFreeChart;
 
-@SuppressWarnings("serial")
-class CustomTickUnit extends NumberTickUnit {
-
-    public CustomTickUnit(double size) {
-        super(size);
+public abstract class Chart {
+    
+    public BufferedImage getChart(int width, int height, Color bgColor) {
+        JFreeChart chart = createChart(width, height, bgColor);
+        
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        chart.draw((Graphics2D) image.getGraphics(), new Rectangle2D.Double(0, 0, width, height), null);
+        
+        return image;
     }
-
-    @Override
-    public String valueToString(double value) {
-        String[] displayable = DisplayableValues.bytes((long) value);
-        return displayable[0] + " " + displayable[1];
-    }
+    
+    protected abstract JFreeChart createChart(int width, int height, Color bgColor);
 }

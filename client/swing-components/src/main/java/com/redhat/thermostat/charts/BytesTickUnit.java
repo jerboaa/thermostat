@@ -34,41 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.charts;
 
-import com.redhat.thermostat.client.heap.chart.OverviewChart;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.BasicView;
-import com.redhat.thermostat.common.heap.HeapDump;
+import org.jfree.chart.axis.NumberTickUnit;
 
-public abstract class HeapView<E> extends BasicView {
-    
-    public enum HeadDumperAction {
-        DUMP_REQUESTED,
-        ANALYSE,
-        REQUEST_ABORTED
-    }
-   
-    protected final ActionNotifier<HeadDumperAction> heapDumperNotifier;
-    protected HeapView() {
-        heapDumperNotifier = new ActionNotifier<HeadDumperAction>(this);
-    }
-    
-    public void addDumperListener(ActionListener<HeadDumperAction> listener) {
-        heapDumperNotifier.addActionListener(listener);
-    }
-    
-    public void removeDumperListener(ActionListener<HeadDumperAction> listener) {
-        heapDumperNotifier.removeActionListener(listener);
+import com.redhat.thermostat.common.utils.DisplayableValues;
+
+@SuppressWarnings("serial")
+public class BytesTickUnit extends NumberTickUnit {
+
+    public BytesTickUnit(double size) {
+        super(size);
     }
 
-    public abstract E getComponent();
-
-    abstract public void updateOverview(OverviewChart model, String used, String capacity);
-    abstract public void addHeapDump(HeapDump dump);
-    abstract public void clearHeapDumpList();
-    
-    abstract public void openDumpView();
-    abstract public void setChildView(E childView);
+    @Override
+    public String valueToString(double value) {
+        String[] displayable = DisplayableValues.bytes((long) value);
+        return displayable[0] + " " + displayable[1];
+    }
 }

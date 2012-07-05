@@ -43,6 +43,7 @@ import javax.swing.JSplitPane;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 
+@SuppressWarnings("serial")
 public class HeapPanel extends JPanel {
 
     private JSplitPane splitPane;

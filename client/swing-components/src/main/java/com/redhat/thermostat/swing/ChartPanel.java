@@ -34,14 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap.swing;
+package com.redhat.thermostat.swing;
 
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.client.heap.chart.Chart;
+import com.redhat.thermostat.charts.Chart;
 
 public class ChartPanel extends JPanel {
 

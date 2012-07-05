@@ -34,25 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap.chart;
+package com.redhat.thermostat.client.heap;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
+import java.util.Collection;
 
-import org.jfree.chart.JFreeChart;
+import javax.swing.JComponent;
 
-public abstract class Chart {
-    
-    public BufferedImage getChart(int width, int height, Color bgColor) {
-        JFreeChart chart = createChart(width, height, bgColor);
-        
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        chart.draw((Graphics2D) image.getGraphics(), new Rectangle2D.Double(0, 0, width, height), null);
-        
-        return image;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
+
+public interface HeapDumpDetailsView extends View {
+
+    public enum Action {
+        SEARCH,
+        GET_OBJECT_DETAIL,
     }
-    
-    protected abstract JFreeChart createChart(int width, int height, Color bgColor);
+
+    public static class HeapObjectUI {
+        public final String objectId;
+        public final String text;
+
+        public HeapObjectUI(String objectId, String text) {
+            this.objectId = objectId;
+            this.text = text;
+        }
+
+        @Override
+        public String toString() {
+            return text;
+        }
+    }
+
+
+    void addActionListener(ActionListener<Action> listener);
+    void removeActionListnener(ActionListener<Action> listener);
+
+    void setHeapHistogram(ObjectHistogram histogram);
+
+    String getSearchText();
+
+    void setMatchingObjects(Collection<HeapObjectUI> objects);
+
+    HeapObjectUI getSelectedMatchingObject();
+
+    void setObjectDetails(JavaHeapObject object);
+
+    JComponent getUIComponent();
 }

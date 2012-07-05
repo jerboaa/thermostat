@@ -45,6 +45,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.client.heap.swing.HeapDetailsSwing;
 import com.redhat.thermostat.client.heap.swing.HeapSwingView;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
@@ -67,6 +68,7 @@ public class Activator implements BundleActivator {
                 ApplicationService appService = (ApplicationService) context.getService(reference);
 
                 ApplicationContext.getInstance().getViewFactory().setViewClass(HeapView.class, HeapSwingView.class);
+                ApplicationContext.getInstance().getViewFactory().setViewClass(HeapDumpDetailsView.class, HeapDetailsSwing.class);
                 context.registerService(VmInformationService.class.getName(), new HeapDumperService(appService), null);
                 return super.addingService(reference);
             }

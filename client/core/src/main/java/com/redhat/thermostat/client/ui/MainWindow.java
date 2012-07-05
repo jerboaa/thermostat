@@ -100,13 +100,12 @@ import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.internal.HostsVMsLoader;
 import com.redhat.thermostat.client.internal.MainView;
-import com.redhat.thermostat.client.internal.SearchFieldSwingView;
-import com.redhat.thermostat.client.internal.SearchFieldView.SearchAction;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;

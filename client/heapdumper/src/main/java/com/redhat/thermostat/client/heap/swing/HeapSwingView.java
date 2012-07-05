@@ -41,24 +41,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+
+import com.redhat.thermostat.swing.ChartPanel;
+import com.redhat.thermostat.swing.HeaderPanel;
 
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.heap.HeapDump;
 
-public class HeapSwingView extends HeapView<JComponent> {
+public class HeapSwingView extends HeapView<JPanel> {
 
-    private static final Logger log = Logger.getLogger(HeapSwingView.class.getName());
     private StatsPanel stats;
 
     private HeapPanel heapDetailPanel;
@@ -113,7 +111,7 @@ public class HeapSwingView extends HeapView<JComponent> {
     }
     
     @Override
-    public JComponent getComponent() {
+    public JPanel getComponent() {
         return visiblePane;
     }
     
@@ -167,23 +165,26 @@ public class HeapSwingView extends HeapView<JComponent> {
     }
     
     @Override
-    public void openDumpView(final HeapDump dump) {
+    public void openDumpView() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                visiblePane.removeAll();                    
+                visiblePane.removeAll();
                 heapDetailPanel.divideView();
                 heapDetailPanel.setTop(overview);
-                    
-                HistogramPanel histogram = new HistogramPanel();
-                try {
-                    histogram.display(dump.getHistogram());
-                } catch (IOException e) {
-                    log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
-                }
-                heapDetailPanel.setBottom(histogram);
-                
-                visiblePane.add(heapDetailPanel);                    
+
+                visiblePane.add(heapDetailPanel);
+                visiblePane.revalidate();
+            }
+        });
+    }
+
+    @Override
+    public void setChildView(final JPanel childView) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                heapDetailPanel.setBottom(childView);
                 visiblePane.revalidate();
             }
         });

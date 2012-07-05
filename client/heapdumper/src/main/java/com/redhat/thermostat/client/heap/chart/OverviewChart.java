@@ -56,6 +56,9 @@ import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.charts.BytesTickUnit;
+import com.redhat.thermostat.charts.Chart;
+
 public class OverviewChart extends Chart {
         
     private static final ColorUIResource MAIN_BAR_BASE_COLOR = new ColorUIResource(0x4A90D9);
@@ -124,19 +127,19 @@ public class OverviewChart extends Chart {
         plot.setDomainAxis(domainAxis);
         plot.setForegroundAlpha(0.5f);
         TickUnits tickUnits = new TickUnits();
-        tickUnits.add(new CustomTickUnit(1.));
-        tickUnits.add(new CustomTickUnit(10.));
-        tickUnits.add(new CustomTickUnit(100.));
-        tickUnits.add(new CustomTickUnit(1000.));
-        tickUnits.add(new CustomTickUnit(10000.));
-        tickUnits.add(new CustomTickUnit(100000.));
-        tickUnits.add(new CustomTickUnit(1000000.));
-        tickUnits.add(new CustomTickUnit(10000000.));
-        tickUnits.add(new CustomTickUnit(100000000.));
-        tickUnits.add(new CustomTickUnit(1000000000.));
-        tickUnits.add(new CustomTickUnit(10000000000.));
-        tickUnits.add(new CustomTickUnit(100000000000.));
-        tickUnits.add(new CustomTickUnit(1000000000000.));
+        tickUnits.add(new BytesTickUnit(1.));
+        tickUnits.add(new BytesTickUnit(10.));
+        tickUnits.add(new BytesTickUnit(100.));
+        tickUnits.add(new BytesTickUnit(1000.));
+        tickUnits.add(new BytesTickUnit(10000.));
+        tickUnits.add(new BytesTickUnit(100000.));
+        tickUnits.add(new BytesTickUnit(1000000.));
+        tickUnits.add(new BytesTickUnit(10000000.));
+        tickUnits.add(new BytesTickUnit(100000000.));
+        tickUnits.add(new BytesTickUnit(1000000000.));
+        tickUnits.add(new BytesTickUnit(10000000000.));
+        tickUnits.add(new BytesTickUnit(100000000000.));
+        tickUnits.add(new BytesTickUnit(1000000000000.));
         NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
         yAxis.setStandardTickUnits(tickUnits);
         yAxis.setRangeType(RangeType.POSITIVE);

@@ -51,7 +51,9 @@ import javax.swing.table.DefaultTableModel;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
+import com.redhat.thermostat.swing.HeaderPanel;
 
+@SuppressWarnings("serial")
 public class HistogramPanel extends JPanel {
     
     private HeaderPanel headerPanel;
@@ -72,7 +74,6 @@ public class HistogramPanel extends JPanel {
         headerPanel.setContent(scrollPane);
     }
 
-    @SuppressWarnings("serial")
     private final class NiceNumberFormatter extends DefaultTableCellRenderer {
 
         private final DecimalFormat formatter = new DecimalFormat("###,###.###");
