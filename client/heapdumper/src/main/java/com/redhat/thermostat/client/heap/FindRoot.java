@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.heap;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -48,16 +50,17 @@ class FindRoot {
 
     private Set<JavaHeapObject> visitedObjects;
 
-    HeapPath<JavaHeapObject> findShortestPathToRoot(JavaHeapObject obj) {
+    Collection<HeapPath<JavaHeapObject>> findShortestPathsToRoot(JavaHeapObject obj, boolean findAll) {
         HeapPath<JavaHeapObject> path = new HeapPath<>(obj);
         List<HeapPath<JavaHeapObject>> pathsSoFar = new LinkedList<>();
         pathsSoFar.add(path);
         visitedObjects = new HashSet<>();
-        return findShortestPathToRoot(pathsSoFar);
+        return findShortestPathToRoot(pathsSoFar, findAll);
     }
 
-    private HeapPath<JavaHeapObject> findShortestPathToRoot(List<HeapPath<JavaHeapObject>> pathsSoFar) {
+    private Collection<HeapPath<JavaHeapObject>> findShortestPathToRoot(List<HeapPath<JavaHeapObject>> pathsSoFar, boolean findAll) {
         List<HeapPath<JavaHeapObject>> newPaths = new LinkedList<>();
+        Collection<HeapPath<JavaHeapObject>> roots = new ArrayList<>();
         for (HeapPath<JavaHeapObject> path : pathsSoFar) {
             JavaHeapObject last = path.getNode();
             if (visitedObjects.contains(last)) {
@@ -70,15 +73,20 @@ class FindRoot {
                 HeapPath<JavaHeapObject> newPath = new HeapPath<>(referrer, path);
                 newPaths.add(newPath);
                 if (referrer.getRoot() != null) {
-                    return newPath;
+                    roots.add(newPath);
+                    if (! findAll) {
+                        return roots;
+                    }
                 }
             }
             visitedObjects.add(last);
         }
         if (newPaths.isEmpty()) {
-            return null;
+            return roots;
         } else {
-            return findShortestPathToRoot(newPaths);
+            Collection<HeapPath<JavaHeapObject>> foundRoots = findShortestPathToRoot(newPaths, findAll);
+            roots.addAll(foundRoots);
+            return roots;
         }
     }
 

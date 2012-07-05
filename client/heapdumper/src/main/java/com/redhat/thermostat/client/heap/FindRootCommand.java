@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.heap;
 
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -44,6 +45,7 @@ import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Root;
@@ -51,6 +53,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 
 public class FindRootCommand implements Command {
 
+    private static final String ALL_ARG = "all";
     private static final String DESCRIPTION = "finds the shortest path from an object to a GC root";
     private static final String NAME = "find-root";
 
@@ -60,13 +63,21 @@ public class FindRootCommand implements Command {
         HeapDump heapDump = objCmdHelper.getHeapDump();
         Snapshot snapshot = heapDump.getSnapshot();
         JavaHeapObject obj = objCmdHelper.getJavaHeapObject();
+        boolean findAll = ctx.getArguments().hasArgument(ALL_ARG);
         FindRoot findRoot = new FindRoot();
-        HeapPath<JavaHeapObject> pathToRoot = findRoot.findShortestPathToRoot(obj);
+        Collection<HeapPath<JavaHeapObject>> pathsToRoot = findRoot.findShortestPathsToRoot(obj, findAll);
         PrintStream out = ctx.getConsole().getOutput();
-        if (pathToRoot == null) {
+        if (pathsToRoot.isEmpty()) {
             out.println("No root found for: " + obj.getClazz().getName() + "@" + obj.getIdString());
         } else {
-            printPathToRoot(snapshot, pathToRoot, out);
+            printPathsToRoot(snapshot, pathsToRoot, out);
+        }
+    }
+
+    private void printPathsToRoot(Snapshot snapshot, Collection<HeapPath<JavaHeapObject>> pathsToRoot, PrintStream out) {
+        for (HeapPath<JavaHeapObject> path : pathsToRoot) {
+            printPathToRoot(snapshot, path, out);
+            out.println();
         }
     }
 
@@ -121,7 +132,10 @@ public class FindRootCommand implements Command {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        return ObjectCommandHelper.getArgumentSpecs();
+        Collection<ArgumentSpec> commonObjArgs = ObjectCommandHelper.getArgumentSpecs();
+        Collection<ArgumentSpec> args = new ArrayList<>(commonObjArgs);
+        args.add(new SimpleArgumentSpec(ALL_ARG, "a", "finds all paths to GC roots", false, false));
+        return args;
     }
 
     @Override

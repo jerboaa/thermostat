@@ -199,14 +199,39 @@ public class FindRootCommandTest {
     @Test
     public void testAcceptedArguments() {
         Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertEquals(2, args.size());
+        assertEquals(3, args.size());
         assertTrue(args.contains(new SimpleArgumentSpec("heapId", "the ID of the heap dump of the object", true, true)));
         assertTrue(args.contains(new SimpleArgumentSpec("objectId", "the ID of the object to query", true, true)));
+        assertTrue(args.contains(new SimpleArgumentSpec("all", "a", "finds all paths to GC roots", false, false)));
     }
 
     @Test
     public void testStorageRequired() {
         assertTrue(cmd.isStorageRequired());
+    }
+
+    @Test
+    public void testSimpleAllRootsSearch() throws CommandException {
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", HEAP_ID);
+        args.addArgument("objectId", "foo");
+        args.addArgument("all", "true");
+
+        cmd.run(factory.createContext(args));
+
+        String expected = "baz root -> BazType@789\n" +
+                          "\u2514field bar in BazType@789 -> BarType@456\n" +
+                          " \u2514field foo in BarType@456 -> FooType@123\n" +
+                          "\n" +
+                          "bee root -> BeeType@654\n" +
+                          "\u2514field bum in BeeType@654 -> BumType@987\n" +
+                          " \u2514field bar in BumType@987 -> BarType@456\n" +
+                          "  \u2514field foo in BarType@456 -> FooType@123\n" +
+                          "\n";
+
+        assertEquals(expected, factory.getOutput());
+
     }
 
     @Test
@@ -220,7 +245,8 @@ public class FindRootCommandTest {
 
         String expected = "baz root -> BazType@789\n" +
                           "\u2514field bar in BazType@789 -> BarType@456\n" +
-                          " \u2514field foo in BarType@456 -> FooType@123\n";
+                          " \u2514field foo in BarType@456 -> FooType@123\n" +
+                          "\n";
 
         assertEquals(expected, factory.getOutput());
 
