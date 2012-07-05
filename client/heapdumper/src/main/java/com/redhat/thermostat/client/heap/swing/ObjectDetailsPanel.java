@@ -63,6 +63,7 @@ import javax.swing.JSplitPane;
 /**
  * A Panel that displays a list of JavaHeapObject and details about a single, selected one.
  */
+@SuppressWarnings("serial")
 class ObjectDetailsPanel extends JPanel {
 
     private final SearchFieldSwingView searchField;

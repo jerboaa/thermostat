@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap.swing;
+package com.redhat.thermostat.swing;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -42,7 +42,6 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
-import java.awt.RenderingHints;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.BoxLayout;
@@ -54,25 +53,30 @@ import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 
-import sun.swing.SwingUtilities2;
-
 /**
- * A component that hot a panel
+ * A component that host a panel with a nicely rendered header.
  */
-@SuppressWarnings("restriction")
 public class HeaderPanel extends JPanel {
 
+    private GraphicsUtils graphicsUtils;
+    
     private String header;
     private boolean open;
     
     private JPanel contentPanel;
-    
-    public HeaderPanel(String header) {
-        this();
-        this.header = header;
+        
+    public HeaderPanel() {
+        this(null);
     }
     
-    public HeaderPanel() {
+    public HeaderPanel(String header) {
+        this(header, 30);
+    }
+    
+    public HeaderPanel(String header, int headerHeight) {
+        
+        this.header = header;
+        graphicsUtils = GraphicsUtils.getInstance();
         
         this.open = true;
         
@@ -90,13 +94,13 @@ public class HeaderPanel extends JPanel {
         groupLayout.setVerticalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(groupLayout.createSequentialGroup()
-                    .addComponent(headerPanel, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(headerPanel, GroupLayout.PREFERRED_SIZE, headerHeight, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(contentPanel, GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE))
         );
         setLayout(groupLayout);
     }
-    
+   
     public String getHeader() {
         return header;
     }
@@ -117,9 +121,7 @@ public class HeaderPanel extends JPanel {
         @Override
         protected void paintComponent(Graphics g) {
             
-            Graphics2D graphics = (Graphics2D) g.create();
-            
-            graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            Graphics2D graphics = graphicsUtils.createAAGraphics(g);
             
             Paint gradient = new GradientPaint(0, 0, Color.WHITE, 0, getHeight(), getBackground());
             graphics.setPaint(gradient);
@@ -128,16 +130,9 @@ public class HeaderPanel extends JPanel {
             if (header != null) {
                 int currentHeight = getHeight();
                 
-                // paint it twice to give a subtle drop shadow effect
                 Font font = getFont();
-                int height = SwingUtilities2.getFontMetrics(this, font).getAscent()/2 + currentHeight/2 - 1;
-                
-                graphics.setColor(new Color(0f, 0f, 0f, 0.1f));
-                SwingUtilities2.drawString(this, graphics, header, 6, height + 1);
-                
-                graphics.setColor(getForeground());
-                SwingUtilities2.drawString(this, graphics, header, 5, height);
-                
+                int height = graphicsUtils.getFontMetrics(this, font).getAscent()/2 + currentHeight/2 - 1;
+                graphicsUtils.drawStringWithShadow(this, graphics, header, getForeground(), 6, height);
             }
             
             graphics.dispose();
@@ -150,6 +145,8 @@ public class HeaderPanel extends JPanel {
             @Override
             public void run() {
                JFrame frame = new JFrame();
+               frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+               
                HeaderPanel header = new HeaderPanel();
                header.setHeader("Test");
                frame.add(header);

@@ -41,12 +41,14 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.logging.Logger;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+
+import com.redhat.thermostat.swing.ChartPanel;
+import com.redhat.thermostat.swing.HeaderPanel;
 
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
@@ -55,7 +57,6 @@ import com.redhat.thermostat.common.heap.HeapDump;
 
 public class HeapSwingView extends HeapView<JPanel> {
 
-    private static final Logger log = Logger.getLogger(HeapSwingView.class.getName());
     private StatsPanel stats;
 
     private HeapPanel heapDetailPanel;

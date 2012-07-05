@@ -34,59 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap.swing;
+package com.redhat.thermostat.charts;
 
-import java.awt.Dimension;
+import org.jfree.chart.axis.NumberTickUnit;
 
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
+import com.redhat.thermostat.common.utils.DisplayableValues;
 
 @SuppressWarnings("serial")
-public class HeapPanel extends JPanel {
+public class BytesTickUnit extends NumberTickUnit {
 
-    private JSplitPane splitPane;
-    
-    public HeapPanel() {
-        
-        splitPane = new JSplitPane();
-        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        GroupLayout groupLayout = new GroupLayout(this);
-        groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addComponent(splitPane, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE)
-        );
-        groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addGap(5)
-                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 295, Short.MAX_VALUE))
-        );
-
-        splitPane.setOneTouchExpandable(true);
-        setLayout(groupLayout);
+    public BytesTickUnit(double size) {
+        super(size);
     }
 
-    void divideView() {
-        splitPane.setDividerLocation(.5d);
-    }
-    
-    void hideBottom() {
-        splitPane.getBottomComponent().setMinimumSize(new Dimension(0, 0));
-        splitPane.setDividerLocation(1.0d);
-    }
-    
-    void hideTop() {
-        splitPane.getTopComponent().setMinimumSize(new Dimension(0, 0));
-        splitPane.setDividerLocation(0.0d);
-    }
-    
-    void setTop(JPanel panel) {
-        splitPane.setTopComponent(panel);
-    }
-    
-    void setBottom(JPanel panel) {
-        splitPane.setBottomComponent(panel);
+    @Override
+    public String valueToString(double value) {
+        String[] displayable = DisplayableValues.bytes((long) value);
+        return displayable[0] + " " + displayable[1];
     }
 }

@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
+@SuppressWarnings("serial")
 public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
 
     private JTabbedPane tabPane = new JTabbedPane();

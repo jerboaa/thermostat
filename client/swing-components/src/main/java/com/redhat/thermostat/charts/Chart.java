@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap.chart;
+package com.redhat.thermostat.charts;
 
 import java.awt.Color;
 import java.awt.Graphics2D;

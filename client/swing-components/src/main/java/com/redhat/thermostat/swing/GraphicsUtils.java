@@ -34,22 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap.chart;
+package com.redhat.thermostat.swing;
 
-import org.jfree.chart.axis.NumberTickUnit;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.FontMetrics;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 
-import com.redhat.thermostat.common.utils.DisplayableValues;
+import javax.swing.JComponent;
 
-@SuppressWarnings("serial")
-class CustomTickUnit extends NumberTickUnit {
+import sun.swing.SwingUtilities2;
 
-    public CustomTickUnit(double size) {
-        super(size);
+@SuppressWarnings("restriction")
+public class GraphicsUtils {
+
+    private static GraphicsUtils instance = new GraphicsUtils();
+    public static GraphicsUtils getInstance() {
+        return instance;
     }
-
-    @Override
-    public String valueToString(double value) {
-        String[] displayable = DisplayableValues.bytes((long) value);
-        return displayable[0] + " " + displayable[1];
+    
+    public Graphics2D createAAGraphics(Graphics g) {
+        Graphics2D graphics = (Graphics2D) g.create();
+        graphics.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        return graphics;
+    }
+    
+    public void drawStringWithShadow(JComponent component, Graphics2D graphics, String string, Color foreground, int x, int y) {
+        // paint it twice to give a subtle drop shadow effect
+        
+        graphics.setColor(new Color(0f, 0f, 0f, 0.1f));
+        SwingUtilities2.drawString(component, graphics, string, x, y + 1);
+        
+        graphics.setColor(foreground);
+        SwingUtilities2.drawString(component, graphics, string, x, y);
+    }
+    
+    public FontMetrics getFontMetrics(JComponent component, Font font) {
+        return SwingUtilities2.getFontMetrics(component, font);
     }
 }
