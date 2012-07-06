@@ -68,8 +68,18 @@ public interface HeapDumpDetailsView extends View {
     }
 
 
+    public static interface ObjectReferenceCallback {
+        /** get a list of objects that refers to this object */
+        Collection<HeapObjectUI> getReferrers(HeapObjectUI obj);
+        /** get a list of objects that this object refers to */
+        Collection<HeapObjectUI> getReferences(HeapObjectUI obj);
+    }
+
     void addActionListener(ActionListener<Action> listener);
     void removeActionListnener(ActionListener<Action> listener);
+
+    void addObjectReferenceCallback(ObjectReferenceCallback callback);
+    void removeObjectReferenceCallback(ObjectReferenceCallback callback);
 
     void setHeapHistogram(ObjectHistogram histogram);
 

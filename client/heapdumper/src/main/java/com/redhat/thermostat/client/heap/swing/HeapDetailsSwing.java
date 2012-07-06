@@ -42,9 +42,10 @@ import java.util.Collection;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView;
 import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
@@ -83,12 +84,24 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
 
         objectDetailsPanel.getSearchField().setLabel("Search for objects by class name");
 
-        objectDetailsPanel.getObjectList().addListSelectionListener(new ListSelectionListener() {
+        objectDetailsPanel.getObjectTree().addTreeSelectionListener(new TreeSelectionListener() {
+
             @Override
-            public void valueChanged(ListSelectionEvent e) {
+            public void valueChanged(TreeSelectionEvent e) {
                 notifier.fireAction(Action.GET_OBJECT_DETAIL);
             }
         });
+
+        java.awt.event.ActionListener treeToggleListener = new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                notifier.fireAction(Action.SEARCH);
+            }
+        };
+        JToggleButton[] buttons = objectDetailsPanel.getTreeModeButtons();
+        for (JToggleButton button: buttons) {
+            button.addActionListener(treeToggleListener);
+        }
 
     }
 
@@ -142,6 +155,17 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
     @Override
     public JComponent getUIComponent() {
         return this;
+    }
+
+    @Override
+    public void addObjectReferenceCallback(ObjectReferenceCallback callback) {
+        objectDetailsPanel.addObjectReferenceCallback(callback);
+    }
+
+    @Override
+    public void removeObjectReferenceCallback(ObjectReferenceCallback callback) {
+        objectDetailsPanel.removeObjectReferenceCallback(callback);
+
     }
 
 }

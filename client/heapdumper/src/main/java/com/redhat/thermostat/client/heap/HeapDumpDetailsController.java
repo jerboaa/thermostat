@@ -39,6 +39,8 @@ package com.redhat.thermostat.client.heap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,13 +49,18 @@ import javax.swing.JComponent;
 
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView.Action;
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView.HeapObjectUI;
+import com.redhat.thermostat.client.heap.HeapDumpDetailsView.ObjectReferenceCallback;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.sun.tools.hat.internal.model.JavaClass;
+import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
+import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
+import com.sun.tools.hat.internal.model.JavaThing;
 
 public class HeapDumpDetailsController {
 
@@ -79,6 +86,58 @@ public class HeapDumpDetailsController {
                     throw new NotImplementedException("unknown action fired by " + actionEvent.getSource());
                 }
 
+            }
+        });
+
+        view.addObjectReferenceCallback(new ObjectReferenceCallback() {
+            @Override
+            public Collection<HeapObjectUI> getReferrers(HeapObjectUI obj) {
+                JavaHeapObject heapObject = heapDump.findObject(obj.objectId);
+
+                @SuppressWarnings("unchecked")
+                Enumeration<JavaHeapObject> referrers = heapObject.getReferers();
+
+                List<HeapObjectUI> objects = new ArrayList<>();
+                while (referrers.hasMoreElements()) {
+                    heapObject = referrers.nextElement();
+                    objects.add(new HeapObjectUI(heapObject.getIdString(), PrintObjectUtils.objectToString(heapObject)));
+                }
+                return objects;
+            }
+
+            @Override
+            public Collection<HeapObjectUI> getReferences(HeapObjectUI obj) {
+                final JavaHeapObject heapObject = heapDump.findObject(obj.objectId);
+
+                final List<JavaHeapObject> references = new ArrayList<>();
+
+                JavaHeapObjectVisitor v = new JavaHeapObjectVisitor() {
+
+                    @Override
+                    public void visit(JavaHeapObject other) {
+                        references.add(other);
+                    }
+
+                    @Override
+                    public boolean mightExclude() {
+                        // TODO what is this?
+                        return false;
+                    }
+
+                    @Override
+                    public boolean exclude(JavaClass clazz, JavaField f) {
+                        // TODO hmm.... what is this?
+                        return false;
+                    }
+                };
+
+                heapObject.visitReferencedObjects(v);
+
+                List<HeapObjectUI> objects = new ArrayList<>();
+                for (JavaHeapObject ref: references) {
+                    objects.add(new HeapObjectUI(ref.getIdString(), PrintObjectUtils.objectToString(ref)));
+                }
+                return objects;
             }
         });
     }
