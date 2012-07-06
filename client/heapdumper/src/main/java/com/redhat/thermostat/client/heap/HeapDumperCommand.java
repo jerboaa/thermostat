@@ -41,8 +41,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import javax.management.remote.JMXConnector;
+import javax.management.remote.JMXConnectorFactory;
+import javax.management.remote.JMXServiceURL;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -51,10 +62,15 @@ import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.HistogramLoader;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.sun.tools.attach.AgentInitializationException;
+import com.sun.tools.attach.AgentLoadException;
+import com.sun.tools.attach.AttachNotSupportedException;
+import com.sun.tools.attach.VirtualMachine;
 
 public class HeapDumperCommand {
     
     private static final Logger log = Logger.getLogger(HeapDumperCommand.class.getName());
+    private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
 
     public HeapDump execute(VmRef reference) {
 
@@ -78,17 +94,49 @@ public class HeapDumperCommand {
         File tempFile = Files.createTempFile("thermostat-", "-heapdump").toFile();
         String tempFileName = tempFile.getAbsolutePath();
         tempFile.delete(); // Need to delete before dumping heap, jmap does not override existing file and stop with an error.
-        Process proc = Runtime.getRuntime().exec(new String[] {"jmap", "-dump:format=b,file=" + tempFileName, reference.getIdString()});
-        try {
-            proc.waitFor();
-            log.info("Heap dump written to: " + tempFileName);
-        
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        dumpHeapUsingJMX(reference, tempFileName);
         return tempFile;
     }
     
+    private void dumpHeapUsingJMX(VmRef reference, String filename) {
+        try {
+            VirtualMachine vm = VirtualMachine.attach(reference.getStringID());
+            Properties props = vm.getAgentProperties();
+            String connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
+            if (connectorAddress == null) {
+               props = vm.getSystemProperties();
+               String home = props.getProperty("java.home");
+               String agent = home + File.separator + "lib" + File.separator + "management-agent.jar";
+               vm.loadAgent(agent);
+               props = vm.getAgentProperties();
+               connectorAddress = props.getProperty(CONNECTOR_ADDRESS_PROPERTY);
+            }
+            JMXServiceURL url = new JMXServiceURL(connectorAddress);
+            
+            JMXConnector conn = JMXConnectorFactory.connect(url);
+            MBeanServerConnection mbsc = conn.getMBeanServerConnection();                   
+            mbsc.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap",
+                                       new Object[] {filename, Boolean.TRUE},
+                                       new String[] {String.class.getName(), boolean.class.getName()});
+        } catch (AttachNotSupportedException | IOException | AgentLoadException | AgentInitializationException | InstanceNotFoundException | MalformedObjectNameException | MBeanException | ReflectionException e) {
+            log.log(Level.WARNING, "Heap dump using JMX failed, trying jmap", e);
+            dumpHeapUsingJMap(reference, filename);
+        }
+    }
+
+    private void dumpHeapUsingJMap(VmRef reference, String filename) {
+        try {
+            Process proc = Runtime.getRuntime().exec(
+                    new String[] { "jmap", "-dump:format=b,file=" + filename, reference.getIdString() });
+            proc.waitFor();
+            log.info("Heap dump written to: " + filename);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
     private ObjectHistogram loadHistogram(String heapDumpFilename) throws IOException {
         HistogramLoader histoLoader = new HistogramLoader(heapDumpFilename);
         return histoLoader.load();
