@@ -54,7 +54,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 public class FindRootCommand implements Command {
 
     private static final String ALL_ARG = "all";
-    private static final String DESCRIPTION = "finds the shortest path from an object to a GC root";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_FIND_ROOT_DESCRIPTION);
     private static final String NAME = "find-root";
 
     @Override
@@ -68,7 +68,7 @@ public class FindRootCommand implements Command {
         Collection<HeapPath<JavaHeapObject>> pathsToRoot = findRoot.findShortestPathsToRoot(obj, findAll);
         PrintStream out = ctx.getConsole().getOutput();
         if (pathsToRoot.isEmpty()) {
-            out.println("No root found for: " + obj.getClazz().getName() + "@" + obj.getIdString());
+            out.println(Translate.localize(LocaleResources.COMMAND_FIND_ROOT_NO_ROOT_FOUND, PrintObjectUtils.objectToString(obj)));
         } else {
             printPathsToRoot(snapshot, pathsToRoot, out);
         }
@@ -134,7 +134,7 @@ public class FindRootCommand implements Command {
     public Collection<ArgumentSpec> getAcceptedArguments() {
         Collection<ArgumentSpec> commonObjArgs = ObjectCommandHelper.getArgumentSpecs();
         Collection<ArgumentSpec> args = new ArrayList<>(commonObjArgs);
-        args.add(new SimpleArgumentSpec(ALL_ARG, "a", "finds all paths to GC roots", false, false));
+        args.add(new SimpleArgumentSpec(ALL_ARG, "a", Translate.localize(LocaleResources.COMMAND_FIND_ROOT_ARGUMENT_ALL), false, false));
         return args;
     }
 

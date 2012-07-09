@@ -59,11 +59,16 @@ import com.redhat.thermostat.common.model.HeapInfo;
 public class ListHeapDumpsCommand implements Command {
 
     private static final String NAME = "list-heap-dumps";
-    private static final String DESCRIPTION = "list all heap dumps";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_LIST_HEAP_DUMPS_DESCRIPTION);
     private static final String USAGE = DESCRIPTION;
 
     // TODO localize
-    private static final String[] COLUMN_NAMES = {"HOST ID", "VM ID", "HEAP ID", "TIMESTAMP"};
+    private static final String[] COLUMN_NAMES = {
+        Translate.localize(LocaleResources.HEADER_HOST_ID),
+        Translate.localize(LocaleResources.HEADER_VM_ID),
+        Translate.localize(LocaleResources.HEADER_HEAP_ID),
+        Translate.localize(LocaleResources.HEADER_TIMESTAMP),
+    };
 
     @Override
     public String getName() {

@@ -36,69 +36,51 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.Properties;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.HostVMArguments;
-import com.redhat.thermostat.common.heap.HeapDump;
+import junit.framework.Assert;
 
-public class DumpHeapCommand implements Command {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    private static final String NAME = "dump-heap";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_DUMP_HEAP_DESCRIPTION);
-    private static final String USAGE = DESCRIPTION;
+import static com.redhat.thermostat.client.heap.Translate.localize;
 
-    private final HeapDumperCommand implementation;
+public class TranslateTest {
 
-    public DumpHeapCommand() {
-        this(new HeapDumperCommand());
+    private Locale lang;
+
+    @Before
+    public void setUp() {
+        this.lang = Locale.getDefault();
+        Locale.setDefault(Locale.US);
     }
 
-    DumpHeapCommand(HeapDumperCommand impl) {
-        this.implementation = impl;
+    @After
+    public void tearDown() {
+        Locale.setDefault(lang);
     }
 
-    @Override
-    public String getName() {
-        return NAME;
+    @Test
+    public void testLocalizeWithoutArguments() {
+        String testString = localize(LocaleResources.MISSING_INFO);
+        Assert.assertEquals("Missing Information", testString);
     }
 
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
+    @Test
+    public void testLocalizedStringsArePresent() throws IOException {
+
+        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
+
+        Properties props = new Properties();
+        props.load(getClass().getResourceAsStream(stringsResource));
+
+        Assert.assertEquals(LocaleResources.values().length, props.values().size());
+        for (LocaleResources resource : LocaleResources.values()) {
+            Assert.assertTrue("missing property from resource bound file: " + resource,
+                              props.containsKey(resource.name()));
+        }
     }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
-    }
-
-    @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs();
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return true;
-    }
-
-
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        HostVMArguments args = new HostVMArguments(ctx.getArguments());
-
-        HeapDump hd = implementation.execute(args.getVM());
-        ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
-        ctx.getConsole().getOutput().print("\n");
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
-    }
-
 }

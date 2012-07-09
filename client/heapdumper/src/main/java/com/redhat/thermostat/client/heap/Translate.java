@@ -36,69 +36,22 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.util.Collection;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.HostVMArguments;
-import com.redhat.thermostat.common.heap.HeapDump;
+public class Translate {
 
-public class DumpHeapCommand implements Command {
+    private static ResourceBundle resourceBundle = null;
 
-    private static final String NAME = "dump-heap";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_DUMP_HEAP_DESCRIPTION);
-    private static final String USAGE = DESCRIPTION;
-
-    private final HeapDumperCommand implementation;
-
-    public DumpHeapCommand() {
-        this(new HeapDumperCommand());
+    static {
+        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
     }
 
-    DumpHeapCommand(HeapDumperCommand impl) {
-        this.implementation = impl;
+    public static String localize(LocaleResources toTranslate) {
+        return resourceBundle.getString(toTranslate.name());
     }
 
-    @Override
-    public String getName() {
-        return NAME;
+    public static String localize(LocaleResources toTranslate, String... params) {
+        return MessageFormat.format(localize(toTranslate), (Object[]) params);
     }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
-    }
-
-    @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs();
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return true;
-    }
-
-
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        HostVMArguments args = new HostVMArguments(ctx.getArguments());
-
-        HeapDump hd = implementation.execute(args.getVM());
-        ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
-        ctx.getConsole().getOutput().print("\n");
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
-    }
-
 }

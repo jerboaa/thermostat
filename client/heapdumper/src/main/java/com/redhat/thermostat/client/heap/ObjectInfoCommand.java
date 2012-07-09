@@ -54,7 +54,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 
 public class ObjectInfoCommand implements Command {
 
-    private static final String DESCRIPTION = "prints information about an object in a heap dump";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_DESCRIPTION);
     private static final String NAME = "object-info";
 
     private Snapshot snapshot;
@@ -66,13 +66,13 @@ public class ObjectInfoCommand implements Command {
         snapshot = heapDump.getSnapshot();
         JavaHeapObject obj = objCmdHelper.getJavaHeapObject();
         TableRenderer table = new TableRenderer(2);
-        table.printLine("Object ID:", obj.getIdString());
-        table.printLine("Type:", obj.getClazz().getName());
-        table.printLine("Size:", String.valueOf(obj.getSize()) + " bytes");
-        table.printLine("Heap allocated:", String.valueOf(obj.isHeapAllocated()));
-        table.printLine("References:", "");
+        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID), obj.getIdString());
+        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE), obj.getClazz().getName());
+        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE), String.valueOf(obj.getSize()) + " bytes");
+        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED), String.valueOf(obj.isHeapAllocated()));
+        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERENCES), "");
         printReferences(table, obj);
-        table.printLine("Referrers:", "");
+        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERRERS), "");
         printReferrers(table, obj);
 
         PrintStream out = ctx.getConsole().getOutput();

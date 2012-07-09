@@ -54,6 +54,8 @@ import javax.swing.JLabel;
 
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView.HeapObjectUI;
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView.ObjectReferenceCallback;
+import com.redhat.thermostat.client.heap.LocaleResources;
+import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.ui.EdtHelper;
 import com.redhat.thermostat.client.ui.SearchFieldSwingView;
 import com.redhat.thermostat.client.ui.SearchFieldView;
@@ -96,7 +98,7 @@ class ObjectDetailsPanel extends JPanel {
 
     public ObjectDetailsPanel() {
 
-        JLabel searchLabel = new JLabel("Search for Object");
+        JLabel searchLabel = new JLabel(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL));
 
         searchField = new SearchFieldSwingView();
 
@@ -104,10 +106,10 @@ class ObjectDetailsPanel extends JPanel {
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setDividerLocation(0.8 /* 80% */);
 
-        toggleReferrersButton = new JToggleButton("Referrers");
+        toggleReferrersButton = new JToggleButton(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_REFERRERS));
         refGroup.add(toggleReferrersButton);
 
-        toggleReferencesButton = new JToggleButton("References");
+        toggleReferencesButton = new JToggleButton(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_REFERENCES));
         refGroup.add(toggleReferencesButton);
 
         toggleReferrersButton.setSelected(true);
@@ -289,10 +291,11 @@ class ObjectDetailsPanel extends JPanel {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                String text = "Object ID:" + obj.getIdString() + "\n" +
-                              "Type:" + obj.getClazz().getName() + "\n" +
-                              "Size:" + String.valueOf(obj.getSize()) + " bytes" + "\n" +
-                              "Heap allocated:" + String.valueOf(obj.isHeapAllocated()) + "\n";
+                // TODO use some other gui control for this rather than a plain text box
+                String text = Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID) + obj.getIdString() + "\n" +
+                              Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE) + obj.getClazz().getName() + "\n" +
+                              Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE) + String.valueOf(obj.getSize()) + " bytes" + "\n" +
+                              Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED) + String.valueOf(obj.isHeapAllocated()) + "\n";
                 objectDetailsPane.setText(text);
             }
         });

@@ -53,6 +53,9 @@ import javax.swing.text.Document;
 
 import org.jfree.chart.ChartPanel;
 
+import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.locale.Translate;
+
 public class RecentTimeSeriesChartPanel extends JPanel {
 
     private static final long serialVersionUID = -1733906800911900456L;
@@ -92,7 +95,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         durationSelector.setText(String.valueOf(defaultValue));
         unitSelector.setSelectedItem(defaultUnit);
 
-        container.add(new JLabel("Display the most recent"));
+        container.add(new JLabel(Translate.localize(LocaleResources.CHART_DURATION_SELECTOR_LABEL)));
         container.add(durationSelector);
         container.add(unitSelector);
 

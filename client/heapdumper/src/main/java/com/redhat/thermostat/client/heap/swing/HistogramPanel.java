@@ -48,6 +48,8 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
+import com.redhat.thermostat.client.heap.LocaleResources;
+import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
@@ -61,7 +63,7 @@ public class HistogramPanel extends JPanel {
     public HistogramPanel() {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         
-        headerPanel = new HeaderPanel("Classes Usage");
+        headerPanel = new HeaderPanel(Translate.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
         add(headerPanel);
     }
 
@@ -91,7 +93,11 @@ public class HistogramPanel extends JPanel {
 
     private class HistogramTableModel extends DefaultTableModel {
 
-        private final String[] columnNames = new String[]{"Class", "Instances", "Size (in bytes)"};
+        private final String[] columnNames = new String[] {
+            Translate.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_CLASS),
+            Translate.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_INSTANCES),
+            Translate.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_SIZE),
+        };
 
         private List<HistogramRecord> histogram;
 

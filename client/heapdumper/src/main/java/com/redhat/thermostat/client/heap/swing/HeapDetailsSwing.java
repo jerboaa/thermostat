@@ -48,6 +48,8 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView;
+import com.redhat.thermostat.client.heap.LocaleResources;
+import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -68,8 +70,8 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
         setLayout(new BorderLayout());
         add(tabPane, BorderLayout.CENTER);
 
-        tabPane.addTab("Histogram", /* dummy */ new JPanel());
-        tabPane.addTab("Object Browser", objectDetailsPanel);
+        tabPane.addTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM), /* dummy */ new JPanel());
+        tabPane.addTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), objectDetailsPanel);
 
         objectDetailsPanel.getSearchField().addActionListener(new ActionListener<SearchAction>() {
             @Override
@@ -82,7 +84,7 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
             }
         });
 
-        objectDetailsPanel.getSearchField().setLabel("Search for objects by class name");
+        objectDetailsPanel.getSearchField().setLabel(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT));
 
         objectDetailsPanel.getObjectTree().addTreeSelectionListener(new TreeSelectionListener() {
 
@@ -124,7 +126,7 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
                 histogram.display(objectHistogram);
 
                 tabPane.removeTabAt(0);
-                tabPane.insertTab("Histogram", null, histogram, null, 0);
+                tabPane.insertTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM), null, histogram, null, 0);
                 tabPane.setSelectedIndex(0);
                 tabPane.revalidate();
             }

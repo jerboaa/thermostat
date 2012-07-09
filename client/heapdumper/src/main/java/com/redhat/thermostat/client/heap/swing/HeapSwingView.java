@@ -51,7 +51,9 @@ import com.redhat.thermostat.swing.ChartPanel;
 import com.redhat.thermostat.swing.HeaderPanel;
 
 import com.redhat.thermostat.client.heap.HeapView;
+import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
+import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.heap.HeapDump;
 
@@ -102,7 +104,7 @@ public class HeapSwingView extends HeapView<JPanel> {
         
         heapDetailPanel = new HeapPanel();
         
-        overview = new HeaderPanel("Heap Usage Overview");
+        overview = new HeaderPanel(Translate.localize(LocaleResources.HEAP_OVERVIEW_TITLE));
         overview.setContent(stats);
         overview.addHierarchyListener(new ViewVisibleListener());
 

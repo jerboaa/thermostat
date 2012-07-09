@@ -47,6 +47,7 @@ import javax.swing.JComponent;
 
 import com.redhat.thermostat.client.heap.HeapView.HeadDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
+import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.ActionEvent;
@@ -86,8 +87,12 @@ public class HeapDumpController implements VmInformationServiceController {
         this.vmDao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
         this.heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         
-        model = new OverviewChart("Used Heap vs. Heap Capacity", "Time", "Heap",
-                                  "Heap Capacity", "Used Heap");
+        model = new OverviewChart(
+                    Translate.localize(LocaleResources.HEAP_CHART_TITLE),
+                    Translate.localize(LocaleResources.HEAP_CHART_TIME_AXIS),
+                    Translate.localize(LocaleResources.HEAP_CHART_HEAP_AXIS),
+                    Translate.localize(LocaleResources.HEAP_CHART_CAPACITY),
+                    Translate.localize(LocaleResources.HEAP_CHART_USED));
         
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         timer.setAction(new HeapOverviewDataCollector());
@@ -178,7 +183,7 @@ public class HeapDumpController implements VmInformationServiceController {
 
     @Override
     public String getLocalizedName() {
-        return "Memory Analyzer";
+        return Translate.localize(LocaleResources.HEAP_SECTION_TITLE);
     }
 
     class HeapOverviewDataCollector implements Runnable {

@@ -169,7 +169,7 @@ public class ObjectInfoCommandTest {
     public void testAcceptedArguments() {
         Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
         assertEquals(2, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("heapId", "the ID of the heap dump of the object", true, true)));
+        assertTrue(args.contains(new SimpleArgumentSpec("heapId", "the ID of the heapdump to analyze", true, true)));
         assertTrue(args.contains(new SimpleArgumentSpec("objectId", "the ID of the object to query", true, true)));
     }
 

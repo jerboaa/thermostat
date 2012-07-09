@@ -56,9 +56,9 @@ public class FindObjectsCommand implements Command {
     private static final String HEAP_ID_ARG = "heapId";
     private static final String LIMIT_ARG = "limit";
     private static final String NAME = "find-objects";
-    private static final String DESCRIPTION = "Finds objects in a heapdump";
-    private static final String HEADER_OBJECT_ID = "ID";
-    private static final String HEADER_TYPE = "TYPE";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_FIND_OBJECTS_DESCRIPTION);
+    private static final String HEADER_OBJECT_ID = Translate.localize(LocaleResources.HEADER_OBJECT_ID);
+    private static final String HEADER_TYPE = Translate.localize(LocaleResources.HEADER_OBJECT_TYPE);
     private static final int DEFAULT_LIMIT = 10;
 
     @Override
@@ -88,7 +88,7 @@ public class FindObjectsCommand implements Command {
             try {
                 limit = Integer.parseInt(limitArg);
             } catch (NumberFormatException ex) {
-                throw new CommandException("Invalid limit: " + limitArg);
+                throw new CommandException(Translate.localize(LocaleResources.INVALID_LIMIT, limitArg));
             }
         }
         return limit;
@@ -116,8 +116,8 @@ public class FindObjectsCommand implements Command {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, "the ID of the heapdump to analyze", true, true);
-        ArgumentSpec limitArg = new SimpleArgumentSpec(LIMIT_ARG, "l", "limit search to top N results, defaults to " + DEFAULT_LIMIT, false, true);
+        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true);
+        ArgumentSpec limitArg = new SimpleArgumentSpec(LIMIT_ARG, "l", Translate.localize(LocaleResources.ARGUMENT_LIMIT_DESCRIPTION, String.valueOf(DEFAULT_LIMIT)), false, true);
         return Arrays.asList(heapIdArg, limitArg);
     }
 

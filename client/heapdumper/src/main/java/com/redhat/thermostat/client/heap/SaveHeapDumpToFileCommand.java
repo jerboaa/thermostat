@@ -61,7 +61,7 @@ import com.redhat.thermostat.common.utils.StreamUtils;
 public class SaveHeapDumpToFileCommand implements Command {
 
     private static final String NAME = "save-heap-dump-to-file";
-    private static final String DESCRIPTION = "saves a heap dump to a local file";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_DESCRIPTION);
     private static final String USAGE = DESCRIPTION;
 
     private static final String HEAP_ID_ARGUMENT = "heapId";
@@ -95,8 +95,8 @@ public class SaveHeapDumpToFileCommand implements Command {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         List<ArgumentSpec> args = new ArrayList<>();
-        args.add(new SimpleArgumentSpec(HEAP_ID_ARGUMENT, "i", "the heap id", true, true));
-        args.add(new SimpleArgumentSpec(FILE_NAME_ARGUMENT, "f", "the file name to save to", true, true));
+        args.add(new SimpleArgumentSpec(HEAP_ID_ARGUMENT, "i", Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true));
+        args.add(new SimpleArgumentSpec(FILE_NAME_ARGUMENT, "f", Translate.localize(LocaleResources.ARGUMENT_FILE_NAME_DESCRIPTION), true, true));
 
         return args;
     }
@@ -111,11 +111,11 @@ public class SaveHeapDumpToFileCommand implements Command {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument(HEAP_ID_ARGUMENT);
         if (heapId == null) {
-            throw new CommandException("heapId required");
+            throw new CommandException(Translate.localize(LocaleResources.HEAP_ID_REQUIRED));
         }
         String filename = args.getArgument(FILE_NAME_ARGUMENT);
         if (filename == null) {
-            throw new CommandException("file required");
+            throw new CommandException(Translate.localize(LocaleResources.FILE_REQUIRED));
         }
 
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
@@ -124,15 +124,15 @@ public class SaveHeapDumpToFileCommand implements Command {
             if (heapStream != null) {
                 try {
                     saveHeapDump(heapStream, filename);
-                    ctx.getConsole().getOutput().print("Saved heap dump to " + filename + "\n");
+                    ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_SAVED_TO_FILE, filename));
                 } catch (IOException e) {
-                    ctx.getConsole().getOutput().print("error saving heap to file: " + e.getMessage());
+                    ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_SAVING, e.getMessage()));
                 }
             } else {
-                ctx.getConsole().getOutput().print("no heap dump found for " + heapId + "\n");
+                ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
             }
         } catch (IOException e) {
-            throw new CommandException("error closing heap stream: " + e.getMessage());
+            throw new CommandException(Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_CLOSING_STREAM, e.getMessage()));
         }
     }
 

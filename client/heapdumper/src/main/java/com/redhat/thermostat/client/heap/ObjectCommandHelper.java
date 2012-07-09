@@ -75,7 +75,7 @@ class ObjectCommandHelper {
         HeapDAO dao = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         HeapInfo heapInfo = dao.getHeapInfo(heapId);
         if (heapInfo == null) {
-            throw new CommandException("Heap ID not found: " + heapId);
+            throw new CommandException(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
         }
         heapDump = dao.getHeapDump(heapInfo);
     }
@@ -92,8 +92,8 @@ class ObjectCommandHelper {
     }
 
     static Collection<ArgumentSpec> getArgumentSpecs() {
-        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, "the ID of the heap dump of the object", true, true);
-        ArgumentSpec objectIdArg = new SimpleArgumentSpec(OBJECT_ID_ARG, "the ID of the object to query", true, true);
+        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true);
+        ArgumentSpec objectIdArg = new SimpleArgumentSpec(OBJECT_ID_ARG, Translate.localize(LocaleResources.ARGUMENT_OBJECT_ID_DESCRIPTION), true, true);
         return Arrays.asList(heapIdArg, objectIdArg);
     }
 }

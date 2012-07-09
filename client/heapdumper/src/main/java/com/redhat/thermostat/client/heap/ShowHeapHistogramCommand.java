@@ -57,7 +57,7 @@ import com.redhat.thermostat.common.model.HeapInfo;
 public class ShowHeapHistogramCommand implements Command {
 
     private static final String NAME = "show-heap-histogram";
-    private static final String DESCRIPTION = "show the heap histogram";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SHOW_HEAP_HISTOGRAM_DESCRIPTION);
     private static final String USAGE = DESCRIPTION;
 
     @Override
@@ -78,7 +78,7 @@ public class ShowHeapHistogramCommand implements Command {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         List<ArgumentSpec> args = new ArrayList<>();
-        args.add(new SimpleArgumentSpec("heapId", "heapId", "the heap id", true, true));
+        args.add(new SimpleArgumentSpec("heapId", "heapId", Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true));
         return args;
     }
 
@@ -97,7 +97,7 @@ public class ShowHeapHistogramCommand implements Command {
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         ObjectHistogram histogram = heapDAO.getHistogram(heapInfo);
         if (histogram == null) {
-            ctx.getConsole().getOutput().print("No matching heap histogram found\n");
+            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
         } else {
             printHeapHistogram(histogram, ctx.getConsole().getOutput());
         }
