@@ -45,8 +45,6 @@ import java.awt.Graphics2D;
 import java.awt.Paint;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
-import java.lang.reflect.Field;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
@@ -54,56 +52,52 @@ import javax.swing.JComponent;
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.ComponentUI;
-import javax.swing.plaf.metal.MetalButtonUI;
+import javax.swing.plaf.metal.MetalToggleButtonUI;
 
 import sun.swing.SwingUtilities2;
 
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
-import com.sun.java.swing.SwingUtilities3;
 
-public class DolphinButtonUI extends MetalButtonUI {
+public class DolphinToggleButtonUI extends MetalToggleButtonUI {
 
-    private static final DolphinButtonUI singleton = new DolphinButtonUI();
+    private static final DolphinToggleButtonUI singleton = new DolphinToggleButtonUI();
     private boolean canPaintFocus;
-    
+
     public static ComponentUI createUI(JComponent b) {
         return singleton;
     }
 
     @Override
     public void installDefaults(AbstractButton b) {
-    
         super.installDefaults(b);
-        canPaintFocus = !UIManager.getBoolean("Button.borderPaintsFocus");
+        canPaintFocus = !UIManager.getBoolean("ToggleButton.borderPaintsFocus");
     }
-    
+
     @Override
     public void update(Graphics g, JComponent c) {
-        
         paint(g, c);
     }
 
     @Override
     public void paint(Graphics g, JComponent c) {
-        
+
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        
+
         Graphics2D graphics = (Graphics2D) g.create();
-        
+
         graphics.clearRect(0, 0, c.getWidth(), c.getHeight());
         DolphinThemeUtils.setAntialiasing(graphics);
 
         AbstractButton button = (AbstractButton) c;
         ButtonModel model = button.getModel();
-        
         Color topGradient = null;
         Color bottomGradient = null;
         if (!c.isEnabled()) {
             topGradient = theme.getButtonGradientDisabledTopColor();
             bottomGradient = theme.getButtonGradientDisabledBottomColor();
         } else {
-            if (model.isRollover()) {
+            if (model.isRollover() || (model.isPressed() && !model.isArmed())) {
                 topGradient = theme.getButtonGradientTopRolloverColor();
                 bottomGradient = theme.getButtonGradientBottomRolloverColor();
             } else {
@@ -111,31 +105,31 @@ public class DolphinButtonUI extends MetalButtonUI {
                 bottomGradient = theme.getButtonGradientBottomColor();
             }
         }
-        
+
         Paint paint = new GradientPaint(0, 0, topGradient, 0, c.getHeight(),
                                         bottomGradient);
         graphics.setPaint(paint);
 
         Shape shape = DolphinThemeUtils.getRoundShape(c.getWidth(), c.getHeight());
-        
+
         graphics.fill(shape);
         graphics.dispose();
-        
-        super.paint(g, c);        
+
+        super.paint(g, c);
     }
-    
+
     @Override
-    protected void paintButtonPressed(Graphics g, AbstractButton b) {    
+    protected void paintButtonPressed(Graphics g, AbstractButton b) {
 
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
 
         Graphics2D graphics = (Graphics2D) g.create();
-        
+
         Paint paint =
             new GradientPaint(0, 0, theme.getButtonGradientPressedTopColor(),
                               0, b.getHeight(),
                               theme.getButtonGradientPressedBottomColor());
-        
+
         graphics.setPaint(paint);
 
         Shape shape = DolphinThemeUtils.getRoundShape(b.getWidth(), b.getHeight());
@@ -147,18 +141,18 @@ public class DolphinButtonUI extends MetalButtonUI {
     @Override
     protected void paintFocus(Graphics g, AbstractButton b, Rectangle viewRect,
                               Rectangle textRect, Rectangle iconRect) {
-        
+
         if (!canPaintFocus)
             return;
-        
+
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-        
+
         Graphics2D graphics = (Graphics2D) g.create();
         DolphinThemeUtils.setAntialiasing(graphics);
-        
+
         graphics.translate(viewRect.x - 1, viewRect.y -1);
         graphics.setStroke(new BasicStroke(1));
-  
+
         ColorUIResource topGradient = theme.getButtonFocusGradientTopColor();
         ColorUIResource bottomGradient = theme.getButtonFocusGradientBottomColor();
 
@@ -180,14 +174,15 @@ public class DolphinButtonUI extends MetalButtonUI {
         FontMetrics metrics = button.getFontMetrics(button.getFont());
 
         if (!model.isEnabled()) {
-            g.setColor(UIManager.getColor("Button.disabledText"));
+            g.setColor(UIManager.getColor("ToggleButton.disabledText"));
         } else {
-            if (model.isPressed()) {
-                g.setColor(UIManager.getColor("Button.invertedForeground"));
+            if (model.isPressed() || model.isSelected()) {
+                g.setColor(UIManager.getColor("ToggleButton.invertedForeground"));
             } else {
                 g.setColor(UIManager.getColor("text"));
             }
         }
         SwingUtilities2.drawStringUnderlineCharAt(button, g, text, button.getDisplayedMnemonicIndex(), textRect.x, textRect.y + metrics.getAscent());
     }
+
 }

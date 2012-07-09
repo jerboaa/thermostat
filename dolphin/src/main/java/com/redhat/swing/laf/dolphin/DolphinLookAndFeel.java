@@ -63,6 +63,7 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
             "swing.boldMetal", Boolean.FALSE,
             
             "ButtonUI",     "com.redhat.swing.laf.dolphin.button.DolphinButtonUI",
+            "ToggleButtonUI",   "com.redhat.swing.laf.dolphin.button.DolphinToggleButtonUI",
             "TreeUI",       "com.redhat.swing.laf.dolphin.tree.DolphinTreeUI",
             "TextFieldUI",  "com.redhat.swing.laf.dolphin.text.DolphinTextFieldUI",
             "TabbedPaneUI", "com.redhat.swing.laf.dolphin.tab.DolphinTabbedPaneUI",
@@ -83,10 +84,10 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
         
         Object[] uiDefaults = {
 
-                "window", theme.getwindowBackgroundColor(),
-                "Panel.background", theme.getwindowBackgroundColor(),
+                "window", theme.getWindowBackgroundColor(),
+                "Panel.background", theme.getWindowBackgroundColor(),
                 
-                "text", theme.getwindowBackgroundColor(),
+                "text", theme.getSystemTextColor(),
                 "textHighlight", theme.getSelectionColor(),
                 "textHighlightText", theme.getSelectionColor(),
                 
@@ -95,6 +96,13 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "Button.focus", theme.getSelectionColor(),
                 "Button.border", theme.getButtonBorder(),
                 "Button.borderPaintsFocus", theme.borderPaintsFocus(),
+                "Button.invertedForeground", theme.getSelectionColorForeground(),
+
+                "ToggleButton.focus", theme.getSelectionColor(),
+                "ToggleButton.border", theme.getButtonBorder(),
+                "ToggleButton.borderPaintsFocus", theme.borderPaintsFocus(),
+                "ToggleButton.invertedForeground", theme.getSelectionColorForeground(),
+                "ToggleButton.rollover", Boolean.TRUE,
 
                 "Tree.repaintWholeRow", Boolean.TRUE,
                 "Tree.lineTypeDashed", theme.getTreeLineTypeDashed(),

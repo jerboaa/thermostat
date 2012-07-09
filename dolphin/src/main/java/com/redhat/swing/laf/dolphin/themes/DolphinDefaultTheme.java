@@ -91,9 +91,9 @@ public class DolphinDefaultTheme extends DolphinTheme {
     private static final ColorUIResource SELECTION_FOREGROUND = WHITE;
     
     private static final ColorUIResource TREE_HEADER_COLOR = new ColorUIResource(0x1A58AD);
-    
-    private static final ColorUIResource TAB_TOP_GRADIENT_COLOR = new ColorUIResource(0xF9F9F9);
 
+    private static final ColorUIResource TAB_TOP_GRADIENT_COLOR = new ColorUIResource(0xF9F9F9);
+    
     private static final ColorUIResource TAB_UNSELECTED_TOP_GRADIENT_COLOR = new ColorUIResource(0xe6e6e6);
     private static final ColorUIResource TAB_UNSELECTED_BOTTOM_GRADIENT_COLOR = new ColorUIResource(0xcbcbcb);
 
@@ -106,7 +106,7 @@ public class DolphinDefaultTheme extends DolphinTheme {
 
     
     @Override
-    public ColorUIResource getwindowBackgroundColor() {
+    public ColorUIResource getWindowBackgroundColor() {
         return WINDOW_BACKGROUND;
     }
     

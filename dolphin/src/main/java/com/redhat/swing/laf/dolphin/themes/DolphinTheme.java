@@ -92,7 +92,7 @@ public abstract class DolphinTheme extends OceanTheme {
         System.setProperty("dolphin.tab.keepbg", String.valueOf(value));
     }
     
-    public abstract ColorUIResource getwindowBackgroundColor();
+    public abstract ColorUIResource getWindowBackgroundColor();
     
     public abstract ColorUIResource getMenuBackgroundColor();
     public abstract ColorUIResource getMenuForegroundColor();
