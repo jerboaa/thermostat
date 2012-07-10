@@ -41,17 +41,17 @@ import java.util.Collection;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-public class FindObjectsCommand implements Command {
+public class FindObjectsCommand extends SimpleCommand {
 
     private static final String HEAP_ID_ARG = "heapId";
     private static final String LIMIT_ARG = "limit";
@@ -95,11 +95,6 @@ public class FindObjectsCommand implements Command {
     }
 
     @Override
-    public void disable() {
-        // Nothing to do here.
-    }
-
-    @Override
     public String getName() {
         return NAME;
     }
@@ -119,11 +114,6 @@ public class FindObjectsCommand implements Command {
         ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true);
         ArgumentSpec limitArg = new SimpleArgumentSpec(LIMIT_ARG, "l", Translate.localize(LocaleResources.ARGUMENT_LIMIT_DESCRIPTION, String.valueOf(DEFAULT_LIMIT)), false, true);
         return Arrays.asList(heapIdArg, limitArg);
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return true;
     }
 
 }

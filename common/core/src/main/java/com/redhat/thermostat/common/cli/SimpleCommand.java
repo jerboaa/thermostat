@@ -33,25 +33,33 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.tools.db;
 
-import java.io.File;
+package com.redhat.thermostat.common.cli;
 
-import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
+public abstract class SimpleCommand implements Command {
 
-public class StalePidFileException extends ApplicationException {
-
-    private final File pidFile;
-
-    public StalePidFileException(File pidFile) {
-        super(Translate.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()));
-        this.pidFile = pidFile;
+    @Override
+    public void enable() {
+        /* NO-OP */
     }
 
-    public File getPidFile() {
-        return pidFile;
+    @Override
+    public void disable() {
+        /* NO-OP */
     }
 
+    @Override
+    public boolean isStorageRequired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAvailableInShell() {
+        return true;
+    }
+
+    @Override
+    public boolean isAvailableOutsideShell() {
+        return true;
+    }
 }

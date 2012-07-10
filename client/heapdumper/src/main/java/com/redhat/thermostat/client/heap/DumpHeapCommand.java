@@ -39,13 +39,13 @@ package com.redhat.thermostat.client.heap;
 import java.util.Collection;
 
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.heap.HeapDump;
 
-public class DumpHeapCommand implements Command {
+public class DumpHeapCommand extends SimpleCommand {
 
     private static final String NAME = "dump-heap";
     private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_DUMP_HEAP_DESCRIPTION);
@@ -82,23 +82,12 @@ public class DumpHeapCommand implements Command {
     }
 
     @Override
-    public boolean isStorageRequired() {
-        return true;
-    }
-
-
-    @Override
     public void run(CommandContext ctx) throws CommandException {
         HostVMArguments args = new HostVMArguments(ctx.getArguments());
 
         HeapDump hd = implementation.execute(args.getVM());
         ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
         ctx.getConsole().getOutput().print("\n");
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
     }
 
 }

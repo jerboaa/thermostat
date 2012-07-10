@@ -51,13 +51,14 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 public class DBService extends BasicCommand {
 
     private static final String NAME = "storage";
 
-    // TODO: Use LocaleResources for i18n-ized strings.
-    private static final String DESCRIPTION = "starts and stops the thermostat storage";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_STORAGE_DESCRIPTION);
 
     private static final String USAGE = DESCRIPTION;
 

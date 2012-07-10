@@ -55,16 +55,18 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Launcher;
 import com.redhat.thermostat.common.cli.OSGiContext;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
-public class ShellCommand implements Command, OSGiContext {
+public class ShellCommand extends SimpleCommand implements OSGiContext {
 
     private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
 
@@ -72,7 +74,7 @@ public class ShellCommand implements Command, OSGiContext {
 
     private static final String NAME = "shell";
 
-    private static final String DESCRIPTION = "launches the Thermostat interactive shell";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SHELL_DESCRIPTION);
 
     private static final String USAGE = DESCRIPTION;
 
@@ -174,9 +176,6 @@ public class ShellCommand implements Command, OSGiContext {
     }
 
     @Override
-    public void disable() { /* NO-OP */ }
-
-    @Override
     public String getName() {
         return NAME;
     }
@@ -198,7 +197,6 @@ public class ShellCommand implements Command, OSGiContext {
 
     @Override
     public boolean isStorageRequired() {
-        // TODO Auto-generated method stub
         return false;
     }
 

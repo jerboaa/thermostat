@@ -48,12 +48,12 @@ import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.OSGiContext;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 
-public class GUIClientCommand implements Command, OSGiContext {
+public class GUIClientCommand extends SimpleCommand implements OSGiContext {
 
     private BundleContext context;
     private Main clientMain;

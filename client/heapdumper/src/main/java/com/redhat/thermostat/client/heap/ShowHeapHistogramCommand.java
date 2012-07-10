@@ -44,17 +44,17 @@ import java.util.List;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 
-public class ShowHeapHistogramCommand implements Command {
+public class ShowHeapHistogramCommand extends SimpleCommand {
 
     private static final String NAME = "show-heap-histogram";
     private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SHOW_HEAP_HISTOGRAM_DESCRIPTION);
@@ -83,11 +83,6 @@ public class ShowHeapHistogramCommand implements Command {
     }
 
     @Override
-    public boolean isStorageRequired() {
-        return true;
-    }
-
-    @Override
     public void run(CommandContext ctx) throws CommandException {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument("heapId");
@@ -109,11 +104,6 @@ public class ShowHeapHistogramCommand implements Command {
             table.printLine(rec.getClassname(), String.valueOf(rec.getNumberOf()), String.valueOf(rec.getTotalSize()));
         }
         table.render(out);
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
     }
 
 }

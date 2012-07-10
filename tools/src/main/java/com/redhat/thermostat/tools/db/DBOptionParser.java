@@ -45,6 +45,8 @@ import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 class DBOptionParser implements ThermostatOptionParser {
     
@@ -71,7 +73,7 @@ class DBOptionParser implements ThermostatOptionParser {
         } else if (args.hasArgument(DBArgs.STOP.option)) {
             serviceAction = DBArgs.STOP;
         } else {
-            throw new InvalidConfigurationException("either --start or --stop must be given");
+            throw new InvalidConfigurationException(Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_REQUIRED));
         }
 
         if (args.hasArgument(DBArgs.DRY.option)) {
@@ -103,17 +105,16 @@ class DBOptionParser implements ThermostatOptionParser {
 
     static enum DBArgs {
                         
-        CLUSTER("cluster", "launch the db in cluster mode, if not specified, " +
-                "local mode is the default", ApplicationState.NONE),
+        CLUSTER("cluster", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_CLUSTER_DESCRIPTION), ApplicationState.NONE),
                 
-        DRY("dryRun", "run the service in dry run mode", ApplicationState.NONE),
+        DRY("dryRun", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_DRYRUN_DESCRIPTION), ApplicationState.NONE),
         
-        HELP("help", "print this usage help", ApplicationState.HELP),
+        HELP("help", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_HELP_DESCRIPTION), ApplicationState.HELP),
         
-        START("start", "start the database", ApplicationState.START),
-        STOP("stop", "stop the database", ApplicationState.STOP),
+        START("start", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_START_DESCRIPTION), ApplicationState.START),
+        STOP("stop", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_STOP_DESCRIPTION), ApplicationState.STOP),
         
-        QUIET("quiet", "don't produce any output", ApplicationState.NONE);
+        QUIET("quiet", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_QUIET_DESCRIPTION), ApplicationState.NONE);
         
         private String option;
         private String description;

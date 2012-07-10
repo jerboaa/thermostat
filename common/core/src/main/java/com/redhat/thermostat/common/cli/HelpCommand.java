@@ -42,7 +42,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class HelpCommand implements Command {
+public class HelpCommand extends SimpleCommand {
 
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
     private static final String NAME = "help";
@@ -92,9 +92,6 @@ public class HelpCommand implements Command {
             printCommandSummaries(ctx);
         }
     }
-
-    @Override
-    public void disable() { /* NO-OP */ }
 
     @Override
     public String getName() {

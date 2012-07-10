@@ -188,11 +188,6 @@ public final class AgentApplication extends BasicCommand {
     }
 
     @Override
-    public void disable() {
-        /* NO-OP */
-    }
-
-    @Override
     public String getName() {
         return NAME;
     }
