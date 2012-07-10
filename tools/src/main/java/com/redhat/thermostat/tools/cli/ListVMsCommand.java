@@ -50,13 +50,14 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 public class ListVMsCommand extends SimpleCommand {
 
     private static final String NAME = "list-vms";
 
-    // TODO: Localize.
-    private static final String DESCRIPTION = "lists all currently monitored VMs";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_LIST_VMS_DESCRIPTION);
 
     private static final String USAGE = DESCRIPTION;
 

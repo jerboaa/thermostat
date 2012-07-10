@@ -53,11 +53,15 @@ import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 import com.redhat.thermostat.service.process.UnixProcessUtilities;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 class MongoProcessRunner {
     
     private static final Logger logger = LoggingUtils.getLogger(MongoProcessRunner.class);
     
+    private static final String MONGO_PROCESS = "mongod";
+
     private static final String [] MONGO_BASIC_ARGS = {
         "mongod", "--quiet", "--fork", "--nojournal", "--noauth", "--bind_ip"
     };
@@ -103,14 +107,14 @@ class MongoProcessRunner {
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = process.runAndReturnResult();
         if (status == 0) {
-            display("server shutdown complete: " + configuration.getDBPath());
-            display("log file is here: " + configuration.getLogFile());
+            display(Translate.localize(LocaleResources.SERVER_SHUTDOWN_COMPLETE, configuration.getDBPath().toString()));
+            display(Translate.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
             
         } else {
             
-            String message = "cannot shutdown server " + configuration.getDBPath() +
-                    ", exit status: " + status +
-                    ". Please check that your configuration is valid";
+            String message = Translate.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
+                    configuration.getDBPath().toString(),
+                    String.valueOf(status));
             display(message);
             throw new StorageStopException(configuration.getDBPath(), status, message);
         }
@@ -123,7 +127,7 @@ class MongoProcessRunner {
         
         String processName = UnixProcessUtilities.getInstance().getProcessName(getPid());
         // TODO: check if we want mongos or mongod from the configs
-        return processName != null && processName.equalsIgnoreCase("mongod");
+        return processName != null && processName.equalsIgnoreCase(MONGO_PROCESS);
     }
     
     void startService() throws IOException, InterruptedException, ApplicationException {
@@ -133,11 +137,10 @@ class MongoProcessRunner {
             String message = null;
             ApplicationException ex = null;
             if (!checkExistingProcess()) {
-                message = "A stale pid file (" + configuration.getPidFile() + ") is present " +
-                    "but there is no matching mongod process. Please remove the file if it has been shut down";
+                message = Translate.localize(LocaleResources.STALE_PID_FILE_NO_MATCHING_PROCESS, configuration.getPidFile().toString(), MONGO_PROCESS);
                 ex = new StalePidFileException(configuration.getPidFile());
             } else {
-                message = "An instance of the storage is already running with pid " + pid;
+                message = Translate.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
                 ex = new StorageAlreadyRunningException(Integer.valueOf(pid), message);
             }
             
@@ -148,7 +151,7 @@ class MongoProcessRunner {
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
        
         // check that the db directory exist
-        display("starting storage server...");
+        display(Translate.localize(LocaleResources.STARTING_STORAGE_SERVER));
 
         commands.add(configuration.getBindIP());
 
@@ -173,7 +176,7 @@ class MongoProcessRunner {
         try {
             status = process.runAndReturnResult();
         } catch (ApplicationException ae) {
-            String message = "can not execute mongo process. is it installed?";
+            String message = Translate.localize(LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
             display(message);
             throw ae;
         }
@@ -186,15 +189,15 @@ class MongoProcessRunner {
         }
         
         if (status == 0) {
-            display("server listening on ip: " + configuration.getDBConnectionString());
-            display("log file is here: " + configuration.getLogFile());
-            display("pid: " + pid);
+            display(Translate.localize(LocaleResources.SERVER_LISTENING_ON, configuration.getDBConnectionString()));
+            display(Translate.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
+            display(Translate.localize(LocaleResources.PID_IS,  String.valueOf(pid)));
             
         } else {
             
-            String message = "cannot start server " + configuration.getDBPath() +
-                             ", exit status: " + status +
-                             ". Please check that your configuration is valid";
+            String message = Translate.localize(LocaleResources.CANNOT_START_SERVER,
+                             configuration.getDBPath().toString(),
+                             String.valueOf(status));
             display(message);
             throw new StorageStartException(configuration.getDBPath(), status, message);
         }

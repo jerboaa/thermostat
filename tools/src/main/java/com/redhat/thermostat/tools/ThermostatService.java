@@ -76,8 +76,7 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
     
     private static final String NAME = "service";
 
-    // TODO: Use LocaleResources for i18n-ized strings.
-    private static final String DESCRIPTION = "starts and stops the thermostat storage and agent";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SERVICE_DESCRIPTION);
 
     private static final String USAGE = DESCRIPTION;
 
@@ -170,7 +169,7 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                 SimpleArguments args = new SimpleArguments();
                 args.addArgument("dbUrl", dbUrl);
                 try {
-                    System.err.println("starting agent now...");
+                    System.err.println(Translate.localize(LocaleResources.STARTING_AGENT));
                     agent.run(new CommandContextImpl(args, context.getCommandContextFactory()));
                 } catch (CommandException e) {
                     notifier.fireAction(ApplicationState.FAIL);
@@ -178,13 +177,12 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
                 break;
 
             case FAIL:
-                System.err.println("error starting db");
+                System.err.println(Translate.localize(LocaleResources.ERROR_STARTING_DB));
                 Object payload = actionEvent.getPayload();
                 if (payload instanceof ApplicationException) {
                     ApplicationException exception = (ApplicationException) payload;
                     if (exception instanceof StorageAlreadyRunningException) {
-                        System.err.println("Storage is already running. " +
-                            "Please use the \"agent --start\" command to start the agent");
+                        System.err.println(Translate.localize(LocaleResources.STORAGE_ALREADY_RUNNING));
                     }
                 }
 
@@ -225,8 +223,8 @@ public class ThermostatService extends BasicCommand implements ActionListener<Ap
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec start = new SimpleArgumentSpec("start", "start the database and agent");
-        ArgumentSpec stop = new SimpleArgumentSpec("stop", "stop the database and agent");
+        ArgumentSpec start = new SimpleArgumentSpec("start", Translate.localize(LocaleResources.COMMAND_SERVICE_ARGUMENT_START_DESCRIPTION));
+        ArgumentSpec stop = new SimpleArgumentSpec("stop", Translate.localize(LocaleResources.COMMAND_SERVICE_ARGUMENT_STOP_DESCRIPTION));
         return Arrays.asList(start, stop);
     }
 

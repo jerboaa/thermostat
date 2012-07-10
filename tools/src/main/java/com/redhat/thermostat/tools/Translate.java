@@ -33,25 +33,25 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.tools.db;
 
-import java.io.File;
+package com.redhat.thermostat.tools;
 
-import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
 
-public class StalePidFileException extends ApplicationException {
+public class Translate {
 
-    private final File pidFile;
+    private static ResourceBundle resourceBundle = null;
 
-    public StalePidFileException(File pidFile) {
-        super(Translate.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()));
-        this.pidFile = pidFile;
+    static {
+        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
     }
 
-    public File getPidFile() {
-        return pidFile;
+    public static String localize(LocaleResources toTranslate) {
+        return resourceBundle.getString(toTranslate.name());
     }
 
+    public static String localize(LocaleResources toTranslate, String... params) {
+        return MessageFormat.format(localize(toTranslate), (Object[]) params);
+    }
 }

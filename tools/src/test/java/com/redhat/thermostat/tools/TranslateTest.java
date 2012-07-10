@@ -33,25 +33,54 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.tools.db;
 
-import java.io.File;
+package com.redhat.thermostat.tools;
 
-import com.redhat.thermostat.common.tools.ApplicationException;
-import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
+import java.io.IOException;
+import java.util.Locale;
+import java.util.Properties;
 
-public class StalePidFileException extends ApplicationException {
+import junit.framework.Assert;
 
-    private final File pidFile;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    public StalePidFileException(File pidFile) {
-        super(Translate.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()));
-        this.pidFile = pidFile;
+import static com.redhat.thermostat.tools.Translate.localize;
+
+public class TranslateTest {
+
+    private Locale lang;
+
+    @Before
+    public void setUp() {
+        this.lang = Locale.getDefault();
+        Locale.setDefault(Locale.US);
     }
 
-    public File getPidFile() {
-        return pidFile;
+    @After
+    public void tearDown() {
+        Locale.setDefault(lang);
     }
 
+    @Test
+    public void testLocalizeWithoutArguments() {
+        String testString = localize(LocaleResources.MISSING_INFO);
+        Assert.assertEquals("Missing Information", testString);
+    }
+
+    @Test
+    public void testLocalizedStringsArePresent() throws IOException {
+
+        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
+
+        Properties props = new Properties();
+        props.load(getClass().getResourceAsStream(stringsResource));
+
+        Assert.assertEquals(LocaleResources.values().length, props.values().size());
+        for (LocaleResources resource : LocaleResources.values()) {
+            Assert.assertTrue("missing property from resource bound file: " + resource,
+                              props.containsKey(resource.name()));
+        }
+    }
 }

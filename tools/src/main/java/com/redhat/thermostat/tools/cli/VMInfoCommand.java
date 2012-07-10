@@ -53,13 +53,15 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 public class VMInfoCommand extends SimpleCommand {
 
     private static final String NAME = "vm-info";
-    private static final String DESCRIPTION = "shows basic information about a VM";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_VM_INFO_DESCRIPTION);
 
-    private static final String STILL_ALIVE = "<Running>";
+    private static final String STILL_ALIVE = Translate.localize(LocaleResources.VM_STOP_TIME_RUNNING);
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
@@ -92,18 +94,18 @@ public class VMInfoCommand extends SimpleCommand {
         VmInfo vmInfo = vmsDAO.getVmInfo(vm);
 
         TableRenderer table = new TableRenderer(2);
-        table.printLine("Process ID:", String.valueOf(vmInfo.getVmPid()));
-        table.printLine("Start time:", new Date(vmInfo.getStartTimeStamp()).toString());
+        table.printLine(Translate.localize(LocaleResources.VM_INFO_PROCESS_ID), String.valueOf(vmInfo.getVmPid()));
+        table.printLine(Translate.localize(LocaleResources.VM_INFO_START_TIME), new Date(vmInfo.getStartTimeStamp()).toString());
         if (vmInfo.isAlive()) {
-            table.printLine("Stop time:", STILL_ALIVE);
+            table.printLine(Translate.localize(LocaleResources.VM_INFO_STOP_TIME), STILL_ALIVE);
         } else {
-            table.printLine("Stop time:", new Date(vmInfo.getStopTimeStamp()).toString());
+            table.printLine(Translate.localize(LocaleResources.VM_INFO_STOP_TIME), new Date(vmInfo.getStopTimeStamp()).toString());
         }
-        table.printLine("Main class:", vmInfo.getMainClass());
-        table.printLine("Command line:", vmInfo.getJavaCommandLine());
-        table.printLine("Java version:", vmInfo.getJavaVersion());
-        table.printLine("Virtual machine:", vmInfo.getVmName());
-        table.printLine("VM arguments:", vmInfo.getVmArguments());
+        table.printLine(Translate.localize(LocaleResources.VM_INFO_MAIN_CLASS), vmInfo.getMainClass());
+        table.printLine(Translate.localize(LocaleResources.VM_INFO_COMMAND_LINE), vmInfo.getJavaCommandLine());
+        table.printLine(Translate.localize(LocaleResources.VM_INFO_JAVA_VERSION), vmInfo.getJavaVersion());
+        table.printLine(Translate.localize(LocaleResources.VM_INFO_VIRTUAL_MACHINE), vmInfo.getVmName());
+        table.printLine(Translate.localize(LocaleResources.VM_INFO_VM_ARGUMENTS), vmInfo.getVmArguments());
 
         PrintStream out = ctx.getConsole().getOutput();
         table.render(out);

@@ -57,13 +57,15 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 public class VMStatCommand extends SimpleCommand {
 
     private static final Logger log = Logger.getLogger(VMStatCommand.class.getName());
 
     private static final String CMD_NAME = "vm-stat";
-    private static final String CMD_DESCRIPTION = "show various statistics about a VM";
+    private static final String CMD_DESCRIPTION = Translate.localize(LocaleResources.COMMAND_VM_STAT_DESCRIPTION);
 
     @Override
     public void run(final CommandContext ctx) throws CommandException {
@@ -136,7 +138,7 @@ public class VMStatCommand extends SimpleCommand {
     public Collection<ArgumentSpec> getAcceptedArguments() {
         List<ArgumentSpec> acceptedArgs = new ArrayList<>(); 
         acceptedArgs.addAll(HostVMArguments.getArgumentSpecs());
-        acceptedArgs.add(new SimpleArgumentSpec("continuous", "c", "print data continuously", false, false));
+        acceptedArgs.add(new SimpleArgumentSpec("continuous", "c", Translate.localize(LocaleResources.COMMAND_VM_STAT_ARGUMENT_CONTINUOUS_DESCRIPTION), false, false));
         return acceptedArgs;
     }
 

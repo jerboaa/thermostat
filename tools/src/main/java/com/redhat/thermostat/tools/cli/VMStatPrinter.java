@@ -52,12 +52,13 @@ import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator;
 import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.utils.DisplayableValues;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 class VMStatPrinter {
 
-    private static final String CPU_PERCENT = "%CPU";
-    private static final String MEM_PREFIX = "MEM.";
-    private static final String TIME = "TIME";
+    private static final String CPU_PERCENT = Translate.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT);
+    private static final String TIME = Translate.localize(LocaleResources.COLUMN_HEADER_TIME);
 
 
     private VmRef vm;
@@ -137,7 +138,7 @@ class VMStatPrinter {
         for (VmMemoryStat.Generation gen : vmMemoryStat.getGenerations()) {
             for (VmMemoryStat.Space space : gen.spaces) {
                 String[] displayableSize = DisplayableValues.bytes(space.used);
-                memoryUsage[i] = displayableSize[0] + " " + displayableSize[1];
+                memoryUsage[i] = Translate.localize(LocaleResources.VALUE_AND_UNIT, displayableSize[0], displayableSize[1]);
                 i++;
             }
         }
@@ -153,7 +154,7 @@ class VMStatPrinter {
         int i = 0;
         for (VmMemoryStat.Generation gen : stat.getGenerations()) {
             for (VmMemoryStat.Space space : gen.spaces) {
-                spacesNames[i] = MEM_PREFIX + space.name;
+                spacesNames[i] = Translate.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.name);
                 i++;
             }
         }
