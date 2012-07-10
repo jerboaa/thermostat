@@ -42,7 +42,6 @@ import java.awt.EventQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.UIManager;
@@ -51,7 +50,6 @@ import javax.swing.UnsupportedLookAndFeelException;
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.ConnectionSelectionDialog;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
@@ -63,6 +61,7 @@ import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
+import com.redhat.thermostat.common.storage.Connection.ConnectionType;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -122,16 +121,7 @@ public class Main {
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
         Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
-        ConnectionSelectionDialog dialog = new ConnectionSelectionDialog((JFrame) null, connection);
-        dialog.pack();
-        dialog.setModal(true);
-        dialog.setVisible(true);
-
-        if (dialog.isCancelled()) {
-            uiFacadeFactory.shutdown();
-            return;
-        }
-
+        connection.setType(ConnectionType.LOCAL);
         ConnectionListener connectionListener = new ConnectionListener() {
             @Override
             public void changed(ConnectionStatus newStatus) {
