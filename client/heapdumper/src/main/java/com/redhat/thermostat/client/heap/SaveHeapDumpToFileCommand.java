@@ -50,15 +50,15 @@ import java.util.List;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.StreamUtils;
 
-public class SaveHeapDumpToFileCommand implements Command {
+public class SaveHeapDumpToFileCommand extends SimpleCommand {
 
     private static final String NAME = "save-heap-dump-to-file";
     private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_DESCRIPTION);
@@ -102,11 +102,6 @@ public class SaveHeapDumpToFileCommand implements Command {
     }
 
     @Override
-    public boolean isStorageRequired() {
-        return true;
-    }
-
-    @Override
     public void run(CommandContext ctx) throws CommandException {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument(HEAP_ID_ARGUMENT);
@@ -141,11 +136,6 @@ public class SaveHeapDumpToFileCommand implements Command {
              BufferedOutputStream bout = new BufferedOutputStream(creator.createOutputStream(filename))) {
             StreamUtils.copyStream(bis, bout);
         }
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
     }
 
     static class FileStreamCreator {

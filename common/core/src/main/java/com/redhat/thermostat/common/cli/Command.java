@@ -41,9 +41,15 @@ import java.util.Collection;
 /**
  * Represents a command on the command line.
  * <p>
- * To register a custom command, have a class implement this interface and
- * register it as an OSGi service with the {@link #NAME} set to the value of
- * {@link #getName()}.
+ * To register a custom command, use the CommandRegistry, registering the
+ * {@link Command}s when the bundle starts and and unregistering them when the
+ * bundle stops.
+ * <p>
+ * You can also register a custom command by registering it as an OSGi service
+ * with the {@link #NAME} set to the value of {@link #getName()}. You are
+ * responsible for enabling and disabling it at appropriate times then.
+ * <p>
+ * @see CommandRegistry
  */
 public interface Command {
 
@@ -55,9 +61,19 @@ public interface Command {
     void run(CommandContext ctx) throws CommandException;
 
     /**
+     * Called when the command is first installed into the system. This is a
+     * good point to initiate one-time initialization actions.
+     * <p>
+     * Should be idempotent.
+     */
+    void enable();
+
+    /**
      * Called when the command is being removed from the system. The command
      * should cancel any long-term action it has taken, such as any background
      * tasks or threads it has spawned.
+     * <p>
+     * Should be idempotent.
      */
     void disable();
 
@@ -85,4 +101,17 @@ public interface Command {
     Collection<ArgumentSpec> getAcceptedArguments();
 
     boolean isStorageRequired();
+
+    /**
+     * Whether the command is available to be invoked from within the shell.
+     * @return true if the command can be invoked from within the shell
+     */
+    boolean isAvailableInShell();
+
+    /**
+     * Indicates if the command is available to be invoked from outside the
+     * shell (from the main command line).
+     * @return true if can command can be invoked from the command line
+     */
+    boolean isAvailableOutsideShell();
 }

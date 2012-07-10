@@ -41,9 +41,9 @@ import java.util.Collections;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -51,7 +51,7 @@ import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 
-public class ListVMsCommand implements Command {
+public class ListVMsCommand extends SimpleCommand {
 
     private static final String NAME = "list-vms";
 
@@ -79,9 +79,6 @@ public class ListVMsCommand implements Command {
     }
 
     @Override
-    public void disable() { /* NO-OP */ }
-
-    @Override
     public String getName() {
         return NAME;
     }
@@ -99,11 +96,6 @@ public class ListVMsCommand implements Command {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         return Collections.emptyList();
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return true;
     }
 
 }

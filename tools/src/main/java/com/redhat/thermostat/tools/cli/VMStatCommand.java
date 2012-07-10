@@ -48,17 +48,17 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
-public class VMStatCommand implements Command {
+public class VMStatCommand extends SimpleCommand {
 
     private static final Logger log = Logger.getLogger(VMStatCommand.class.getName());
 
@@ -138,16 +138,6 @@ public class VMStatCommand implements Command {
         acceptedArgs.addAll(HostVMArguments.getArgumentSpecs());
         acceptedArgs.add(new SimpleArgumentSpec("continuous", "c", "print data continuously", false, false));
         return acceptedArgs;
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return true;
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
     }
 
 }

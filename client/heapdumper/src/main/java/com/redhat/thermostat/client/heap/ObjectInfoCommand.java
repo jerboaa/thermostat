@@ -41,9 +41,9 @@ import java.util.Collection;
 import java.util.Enumeration;
 
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaClass;
@@ -52,7 +52,7 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
 import com.sun.tools.hat.internal.model.Snapshot;
 
-public class ObjectInfoCommand implements Command {
+public class ObjectInfoCommand extends SimpleCommand {
 
     private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_DESCRIPTION);
     private static final String NAME = "object-info";
@@ -114,11 +114,6 @@ public class ObjectInfoCommand implements Command {
     }
 
     @Override
-    public void disable() {
-        // Nothing to do here.
-    }
-
-    @Override
     public String getName() {
         return NAME;
     }
@@ -136,11 +131,6 @@ public class ObjectInfoCommand implements Command {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         return ObjectCommandHelper.getArgumentSpecs();
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return true;
     }
 
 }

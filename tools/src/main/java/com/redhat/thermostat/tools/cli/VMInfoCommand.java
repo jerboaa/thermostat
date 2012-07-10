@@ -42,10 +42,10 @@ import java.util.Date;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.DAOException;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -54,7 +54,7 @@ import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 
-public class VMInfoCommand implements Command {
+public class VMInfoCommand extends SimpleCommand {
 
     private static final String NAME = "vm-info";
     private static final String DESCRIPTION = "shows basic information about a VM";
@@ -110,9 +110,6 @@ public class VMInfoCommand implements Command {
     }
 
     @Override
-    public void disable() { /* NO-OP */ }
-
-    @Override
     public String getName() {
         return NAME;
     }
@@ -130,11 +127,6 @@ public class VMInfoCommand implements Command {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         return HostVMArguments.getArgumentSpecs(false);
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return true;
     }
 
 }

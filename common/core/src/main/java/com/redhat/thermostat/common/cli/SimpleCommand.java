@@ -34,60 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.common.cli;
 
-import java.util.Collection;
+public abstract class SimpleCommand implements Command {
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.HostVMArguments;
-import com.redhat.thermostat.common.cli.SimpleCommand;
-import com.redhat.thermostat.common.heap.HeapDump;
-
-public class DumpHeapCommand extends SimpleCommand {
-
-    private static final String NAME = "dump-heap";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_DUMP_HEAP_DESCRIPTION);
-    private static final String USAGE = DESCRIPTION;
-
-    private final HeapDumperCommand implementation;
-
-    public DumpHeapCommand() {
-        this(new HeapDumperCommand());
-    }
-
-    DumpHeapCommand(HeapDumperCommand impl) {
-        this.implementation = impl;
+    @Override
+    public void enable() {
+        /* NO-OP */
     }
 
     @Override
-    public String getName() {
-        return NAME;
+    public void disable() {
+        /* NO-OP */
     }
 
     @Override
-    public String getDescription() {
-        return DESCRIPTION;
+    public boolean isStorageRequired() {
+        return true;
     }
 
     @Override
-    public String getUsage() {
-        return USAGE;
+    public boolean isAvailableInShell() {
+        return true;
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs();
+    public boolean isAvailableOutsideShell() {
+        return true;
     }
-
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        HostVMArguments args = new HostVMArguments(ctx.getArguments());
-
-        HeapDump hd = implementation.execute(args.getVM());
-        ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
-        ctx.getConsole().getOutput().print("\n");
-    }
-
 }

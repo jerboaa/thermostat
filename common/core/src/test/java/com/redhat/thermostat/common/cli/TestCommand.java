@@ -49,6 +49,8 @@ class TestCommand implements Command {
     private String description;
     private String usage;
     private boolean storageRequired;
+    private boolean availableInShell = true;
+    private boolean availableOutsideShell = true;
 
     private List<ArgumentSpec> arguments = new LinkedList<ArgumentSpec>();
 
@@ -71,6 +73,11 @@ class TestCommand implements Command {
         if (handle != null) {
             handle.run(ctx);
         }
+    }
+
+    @Override
+    public void enable() {
+        // TODO what do we do here?
     }
 
     @Override
@@ -112,11 +119,30 @@ class TestCommand implements Command {
         this.arguments.addAll(Arrays.asList(arguments));
     }
 
+    @Override
     public boolean isStorageRequired() {
         return storageRequired;
     }
 
     void setStorageRequired(boolean storageRequired) {
         this.storageRequired = storageRequired;
+    }
+
+    @Override
+    public boolean isAvailableInShell() {
+        return availableInShell;
+    }
+
+    void setAvailableInShell(boolean avaiable) {
+        this.availableInShell = avaiable;
+    }
+
+    @Override
+    public boolean isAvailableOutsideShell() {
+        return availableOutsideShell;
+    }
+
+    void setAvailableOutsideShell(boolean available) {
+        this.availableOutsideShell = available;
     }
 }

@@ -66,4 +66,24 @@ public abstract class BasicCommand implements Command {
     protected void setStorageRequired(boolean storageRequired) {
         this.storageRequired = storageRequired;
     }
+
+    @Override
+    public void enable() {
+        /* NO-OP */
+    }
+
+    @Override
+    public void disable() {
+        /* NO-OP */
+    }
+
+    @Override
+    public boolean isAvailableInShell() {
+        return true;
+    }
+
+    @Override
+    public boolean isAvailableOutsideShell() {
+        return true;
+    }
 }

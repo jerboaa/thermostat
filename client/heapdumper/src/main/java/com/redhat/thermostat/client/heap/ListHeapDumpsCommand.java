@@ -43,10 +43,10 @@ import java.util.Date;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -56,7 +56,7 @@ import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.HeapInfo;
 
-public class ListHeapDumpsCommand implements Command {
+public class ListHeapDumpsCommand extends SimpleCommand {
 
     private static final String NAME = "list-heap-dumps";
     private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_LIST_HEAP_DUMPS_DESCRIPTION);
@@ -91,11 +91,6 @@ public class ListHeapDumpsCommand implements Command {
     }
 
     @Override
-    public boolean isStorageRequired() {
-        return true;
-    }
-
-    @Override
     public void run(CommandContext ctx) throws CommandException {
         HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, false);
 
@@ -127,11 +122,6 @@ public class ListHeapDumpsCommand implements Command {
                                info.getHeapId(),
                                new Date(info.getTimestamp()).toString());
         }
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
     }
 
 }
