@@ -77,7 +77,7 @@ class MemoryStatsController implements VmInformationServiceController {
     class VMCollector implements Runnable {
         @Override
         public void run() {
-            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref);
+            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
             for (VmMemoryStat memoryStats: vmInfo) {
                 List<Generation> generations = memoryStats.getGenerations();
                 

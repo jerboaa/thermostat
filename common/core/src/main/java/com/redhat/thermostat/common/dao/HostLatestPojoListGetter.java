@@ -47,6 +47,7 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 
 class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoListGetter<T> {
 
@@ -58,10 +59,17 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
     private Map<HostRef, Long> lastUpdateTimes = new HashMap<>();
 
     HostLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, HostRef ref) {
+        this(storage, cat, converter, ref, 0);
+    }
+
+    HostLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, HostRef ref, long since) {
         this.storage = storage;
         this.cat = cat;
         this.converter = converter;
         this.ref = ref;
+        if (since > 0) {
+            lastUpdateTimes.put(ref, since);
+        }
     }
 
     @Override
@@ -75,6 +83,7 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
         // with the updateTimes
         Long lastUpdate = lastUpdateTimes.get(ref);
         Cursor cursor = storage.findAll(query);
+        cursor.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
             Chunk chunk = cursor.next();

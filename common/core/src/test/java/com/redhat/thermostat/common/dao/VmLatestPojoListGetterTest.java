@@ -121,6 +121,22 @@ public class VmLatestPojoListGetterTest {
     }
 
     @Test
+    public void testBuildQueryWithSince() {
+        Storage storage = mock(Storage.class);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef, 123);
+        Chunk query = getter.buildQuery();
+
+        assertNotNull(query);
+        assertEquals(cat, query.getCategory());
+        assertEquals(3, query.getKeys().size());
+        assertTrue(query.getKeys().contains(Key.AGENT_ID));
+        assertTrue(query.getKeys().contains(Key.VM_ID));
+        assertEquals("this.timestamp > 123" , query.get(Key.WHERE));
+        assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
+        assertEquals((Integer) VM_PID, query.get(Key.VM_ID));
+    }
+
+    @Test
     public void testBuildQueryPopulatesUpdateTimes() {
         Storage storage = mock(Storage.class);
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);

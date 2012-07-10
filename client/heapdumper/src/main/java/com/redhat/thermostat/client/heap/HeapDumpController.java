@@ -190,7 +190,7 @@ public class HeapDumpController implements VmInformationServiceController {
         @Override
         public void run() {
             
-            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref);
+            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
             for (VmMemoryStat memoryStats: vmInfo) {
                 long used = 0l;
                 long capacity = 0l;

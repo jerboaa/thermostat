@@ -127,6 +127,20 @@ public class HostLatestPojoListGetterTest {
     }
 
     @Test
+    public void testBuildQueryWithSince() {
+        Storage storage = mock(Storage.class);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, converter, ref, 123);
+        Chunk query = getter.buildQuery();
+
+        assertNotNull(query);
+        assertEquals(cat, query.getCategory());
+        assertEquals(2, query.getKeys().size());
+        assertTrue(query.getKeys().contains(Key.AGENT_ID));
+        assertEquals("this.timestamp > 123", query.get(Key.WHERE));
+        assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
+    }
+
+    @Test
     public void testBuildQueryPopulatesUpdateTimes() {
         Storage storage = mock(Storage.class);
         HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, converter, ref);

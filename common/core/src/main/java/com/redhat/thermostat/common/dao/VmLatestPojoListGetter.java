@@ -47,7 +47,11 @@ class VmLatestPojoListGetter<T extends TimeStampedPojo> extends HostLatestPojoLi
     private VmRef vmRef;
 
     VmLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, VmRef ref) {
-        super(storage, cat, converter, ref.getAgent());
+        this(storage, cat, converter, ref, 0);
+    }
+
+    VmLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, VmRef ref, long since) {
+        super(storage, cat, converter, ref.getAgent(), since);
         vmRef = ref;
     }
 

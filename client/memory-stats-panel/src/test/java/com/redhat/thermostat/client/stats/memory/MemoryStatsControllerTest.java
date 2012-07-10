@@ -36,32 +36,30 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.eq;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import junit.framework.Assert;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.stats.memory.MemoryStatsController.VMCollector;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
@@ -130,7 +128,7 @@ public class MemoryStatsControllerTest {
         generations.get(0).spaces.add(canary);
         
         VmMemoryStatDAO memoryStatDao = mock(VmMemoryStatDAO.class);
-        when(memoryStatDao.getLatestVmMemoryStats(any(VmRef.class))).thenReturn(vmInfo);
+        when(memoryStatDao.getLatestVmMemoryStats(any(VmRef.class), anyLong())).thenReturn(vmInfo);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getVmMemoryStatDAO()).thenReturn(memoryStatDao);

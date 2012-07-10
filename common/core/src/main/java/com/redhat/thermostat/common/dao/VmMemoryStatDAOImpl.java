@@ -40,7 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
@@ -81,6 +80,16 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
         VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
         if (getter == null) {
             getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, converter, ref);
+            getters.put(ref, getter);
+        }
+        return getter.getLatest();
+    }
+
+    @Override
+    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
+        VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
+        if (getter == null) {
+            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, converter, ref, since);
             getters.put(ref, getter);
         }
         return getter.getLatest();
