@@ -58,6 +58,7 @@ import javax.swing.text.JTextComponent;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
@@ -176,7 +177,10 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
             public void run() {
                 final TimeSeries series = dataset.get(tag);
                 for (DiscreteTimeData<? extends Number> timeData: copy) {
-                    series.add(new FixedMillisecond(timeData.getTimeInMillis()), timeData.getData(), false);
+                    RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
+                    if (series.getDataItem(period) == null) {
+                        series.add(new FixedMillisecond(timeData.getTimeInMillis()), timeData.getData(), false);
+                    }
                 }
                 series.fireSeriesChanged();
             }

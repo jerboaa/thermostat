@@ -50,6 +50,7 @@ import javax.swing.SwingUtilities;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
@@ -129,8 +130,10 @@ public class VmCpuPanel extends JPanel implements VmCpuView {
             @Override
             public void run() {
                 for (DiscreteTimeData<? extends Number> data: copy) {
-                    cpuTimeSeries.add(new FixedMillisecond(data.getTimeInMillis()),
-                            data.getData(), false);
+                    RegularTimePeriod period = new FixedMillisecond(data.getTimeInMillis());
+                    if (cpuTimeSeries.getDataItem(period) == null) {
+                        cpuTimeSeries.add(period, data.getData(), false);
+                    }
                 }
                 cpuTimeSeries.fireSeriesChanged();
             }

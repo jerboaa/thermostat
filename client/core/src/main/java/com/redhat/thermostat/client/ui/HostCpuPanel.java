@@ -53,6 +53,7 @@ import javax.swing.text.JTextComponent;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
@@ -126,7 +127,10 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
             @Override
             public void run() {
                 for (DiscreteTimeData<Double> timeData: copy) {
-                    dataset.add(new FixedMillisecond(timeData.getTimeInMillis()), timeData.getData(), false);
+                    RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
+                    if (dataset.getDataItem(period) == null) {
+                        dataset.add(period, timeData.getData(), false);
+                    }
                 }
                 dataset.fireSeriesChanged();
             }
