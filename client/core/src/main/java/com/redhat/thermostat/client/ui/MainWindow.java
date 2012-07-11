@@ -43,7 +43,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.Insets;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.InputEvent;
@@ -61,7 +60,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 
 import javax.swing.BorderFactory;
@@ -69,7 +67,6 @@ import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -77,20 +74,13 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTextField;
 import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.ToolTipManager;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import javax.swing.event.TreeModelEvent;
-import javax.swing.event.TreeModelListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -121,6 +111,8 @@ public class MainWindow extends JFrame implements MainView {
      */
     private static class BackgroundTreeModelWorker extends SwingWorker<DefaultMutableTreeNode, Void> {
 
+        private JTree tree;
+
         private final DefaultTreeModel treeModel;
         private DefaultMutableTreeNode treeRoot;
         
@@ -131,13 +123,14 @@ public class MainWindow extends JFrame implements MainView {
 
         public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root,
                                          List<Filter> filters, List<ReferenceDecorator> decorators,
-                                         HostsVMsLoader hostsVMsLoader)
+                                         HostsVMsLoader hostsVMsLoader, JTree tree)
         {
             this.filters = filters;
             this.treeModel = model;
             this.treeRoot = root;
             this.hostsVMsLoader = hostsVMsLoader;
             this.decorators = decorators;
+            this.tree = tree;
         }
 
         @Override
@@ -262,7 +255,14 @@ public class MainWindow extends JFrame implements MainView {
                     targetModel.removeNodeFromParent(targetChild);
                 }
             }
+            ensureRootIsExpanded(targetModel);
         }
+
+        private void ensureRootIsExpanded(final DefaultTreeModel model) {
+            DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+            tree.expandPath(new TreePath(root.getPath()));
+        }
+
     }
 
     private static final long serialVersionUID = 5608972421496808177L;
@@ -301,7 +301,6 @@ public class MainWindow extends JFrame implements MainView {
         });
         agentVmTree = new JTree(publishedTreeModel);
         agentVmTree.setName("agentVmTree");
-        publishedTreeModel.addTreeModelListener(new KeepRootExpandedListener(agentVmTree));
         agentVmTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
@@ -495,40 +494,6 @@ public class MainWindow extends JFrame implements MainView {
         }
     }
 
-    private static class KeepRootExpandedListener implements TreeModelListener {
-
-        private JTree toModify;
-
-        public KeepRootExpandedListener(JTree treeToModify) {
-            toModify = treeToModify;
-        }
-
-        @Override
-        public void treeStructureChanged(TreeModelEvent e) {
-            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
-        }
-
-        @Override
-        public void treeNodesRemoved(TreeModelEvent e) {
-            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
-        }
-
-        @Override
-        public void treeNodesInserted(TreeModelEvent e) {
-            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
-        }
-
-        @Override
-        public void treeNodesChanged(TreeModelEvent e) {
-            ensureRootIsExpanded((DefaultTreeModel) e.getSource());
-        }
-
-        private void ensureRootIsExpanded(DefaultTreeModel model) {
-            DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-            toModify.expandPath(new TreePath(root.getPath()));
-        }
-    }
-
     private static class AgentVmTreeCellRenderer extends DefaultTreeCellRenderer {
         private static final long serialVersionUID = 4444642511815252481L;
 
@@ -650,7 +615,7 @@ public class MainWindow extends JFrame implements MainView {
     public void updateTree(List<Filter> filters, List<ReferenceDecorator> decorators, HostsVMsLoader hostsVMsLoader) {
         BackgroundTreeModelWorker worker =
                 new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot,
-                                              filters, decorators, hostsVMsLoader);
+                                              filters, decorators, hostsVMsLoader, agentVmTree);
         worker.execute();
     }
 
