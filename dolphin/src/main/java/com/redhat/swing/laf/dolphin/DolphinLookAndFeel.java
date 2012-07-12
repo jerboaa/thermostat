@@ -36,10 +36,15 @@
 
 package com.redhat.swing.laf.dolphin;
 
+import java.awt.Color;
+
 import javax.swing.UIDefaults;
+import javax.swing.plaf.IconUIResource;
 import javax.swing.plaf.InsetsUIResource;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
+import com.redhat.swing.laf.dolphin.icons.DolphinAscendingArrowIcon;
+import com.redhat.swing.laf.dolphin.icons.DolphinDescendingArrowIcon;
 import com.redhat.swing.laf.dolphin.split.DolphinSplitPaneDividerBorder;
 import com.redhat.swing.laf.dolphin.themes.DolphinDefaultTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
@@ -71,7 +76,10 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
             "SplitPaneUI",  "com.redhat.swing.laf.dolphin.split.DolphinSplitPaneUI",
             "SeparatorUI",  "com.redhat.swing.laf.dolphin.split.DolphinSeparatorUI",
             "PopupMenuSeparatorUI", "com.redhat.swing.laf.dolphin.split.DolphinSeparatorUI",
-
+            "TableUI",      "com.redhat.swing.laf.dolphin.table.DolphinTableUI",
+            "TableUI",      "com.redhat.swing.laf.dolphin.table.DolphinTableUI",
+            "TableHeaderUI", "com.redhat.swing.laf.dolphin.table.DolphinTableHeaderUI",
+            
             // menu ui defined in theme specific "addCustomEntriesToTable"
         };
         
@@ -129,6 +137,15 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "SplitPane.dividerSize", new Integer(7),
                 "SplitPaneDivider.border", new DolphinSplitPaneDividerBorder(),
                 "SplitPane.border", null,
+                                
+                "TableHeader.cellBorder", theme.getTableCellBorder(),
+                "TableHeader.focusCellBorder", theme.getTableFocusCellBorder(),
+                "TableHeader.background", theme.getTableHeaderBackgroundColor(),
+                "TableHeader.foreground", theme.getTableHeaderForegroundColor(),
+                "TableHeader.font", theme.getTableHeaderFont(),
+                "Table.ascendingSortIcon", new IconUIResource(new DolphinAscendingArrowIcon()),
+                "Table.descendingSortIcon", new IconUIResource(new DolphinDescendingArrowIcon()),
+                "TableHeader.rightAlignSortArrow", true,
         };
         
         table.putDefaults(uiDefaults);  

@@ -38,13 +38,11 @@ package com.redhat.swing.laf.dolphin.themes;
 
 import java.awt.Color;
 import java.awt.GradientPaint;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.MultipleGradientPaint;
 import java.awt.Paint;
-import java.awt.RadialGradientPaint;
 import java.awt.RenderingHints;
 import java.awt.Shape;
-import java.awt.geom.Point2D;
 import java.awt.geom.RoundRectangle2D;
 
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
@@ -60,7 +58,7 @@ public class DolphinThemeUtils {
     }
     
     /**
-     * Sets the Antialising hint on this graphics object.
+     * Sets the Antialiasing hint on this graphics object.
      * 
      * The AA hint is on by default, but can be turned of by setting the system
      * property: {@code icedlook.aa.off}
@@ -72,10 +70,10 @@ public class DolphinThemeUtils {
         }
     }
     
-    public static void setGradientPaint(Graphics2D g, int x, int y,
+    public static void setGradientPaint(Graphics2D g, int x, int height,
                                         Color start, Color stop)
     {
-        Paint paint = new GradientPaint(x, 0, start, 0, y, stop);
+        Paint paint = new GradientPaint(x, 0, start, 0, height, stop);
         g.setPaint(paint);
     }
         
@@ -89,5 +87,11 @@ public class DolphinThemeUtils {
     
     public static Shape getRoundShape(int width, int height, int arcx, int arcy) {
         return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, arcx, arcy);
+    }
+    
+    public static Graphics2D createAAGraphics(Graphics graphics) {
+        Graphics2D result = (Graphics2D) graphics.create();
+        setAntialiasing(result);
+        return result;
     }
 }

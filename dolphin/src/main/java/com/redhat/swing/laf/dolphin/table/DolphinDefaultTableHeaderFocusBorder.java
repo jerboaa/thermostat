@@ -34,42 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.icons;
+package com.redhat.swing.laf.dolphin.table;
 
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-import javax.swing.AbstractButton;
-import javax.swing.ImageIcon;
+import com.redhat.swing.laf.dolphin.borders.DolphinDebugBorder;
+import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-public class DolphinCheckBoxIcon extends ImageIcon {
+@SuppressWarnings("serial")
+public class DolphinDefaultTableHeaderFocusBorder extends DolphinDebugBorder {
 
-    private ImageIcon delegate = new ImageIcon(getClass().getResource("/checkbox-menuitem-checked.png"));
     
     @Override
-    public int getIconHeight() {
-        return delegate.getIconHeight();
-    }
-    
-    @Override
-    public int getIconWidth() {
-        return delegate.getIconWidth();
-    }
-    
-    @Override
-    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
         
-        boolean paintIcon = true;
+        Graphics2D graphics = DolphinThemeUtils.createAAGraphics(g);
         
-        if (c instanceof AbstractButton) {
-            AbstractButton button = (AbstractButton) c;
-            if (!button.getModel().isSelected()) {
-                paintIcon = false;
-            }
-        }
+        DolphinThemeUtils.setGradientPaint(graphics, 0, height, c.getForeground(), c.getBackground());
         
-        if (paintIcon) {
-            delegate.paintIcon(c, g, x, y);
-        }
+        graphics.drawLine(0, 0, width - 1, 0);
+        
+        graphics.drawLine(0, 0, 0, height - 1);
+        graphics.drawLine(width - 1, 0, width - 1, height - 1);
+        
+        graphics.dispose();
     }
 }

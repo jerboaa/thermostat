@@ -33,6 +33,17 @@
     </resources>
     
     <plugins>
+    
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+                <source>1.7</source>
+                <target>1.7</target>
+                <compilerArgument>-XDignore.symbol.file=true</compilerArgument>
+            </configuration>
+        </plugin>
+    
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
@@ -51,10 +62,12 @@
               com.redhat.swing.laf.dolphin.tab,
               com.redhat.swing.laf.dolphin.text,
               com.redhat.swing.laf.dolphin.themes,
+              com.redhat.swing.laf.dolphin.table,
               com.redhat.swing.laf.dolphin.tree
             </Export-Package>
             <Private-Package>
               com.redhat.swing.laf.dolphin.showcase,
+              com.redhat.swing.laf.dolphin.showcase.table,
               com.redhat.swing.laf.dolphin.showcase.tree
             </Private-Package>
           </instructions>

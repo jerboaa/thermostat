@@ -34,42 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.icons;
+package com.redhat.swing.laf.dolphin.table;
 
-import java.awt.Component;
-import java.awt.Graphics;
+import javax.swing.JComponent;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.basic.BasicTableUI;
 
-import javax.swing.AbstractButton;
-import javax.swing.ImageIcon;
+public class DolphinTableUI extends BasicTableUI {
 
-public class DolphinCheckBoxIcon extends ImageIcon {
-
-    private ImageIcon delegate = new ImageIcon(getClass().getResource("/checkbox-menuitem-checked.png"));
-    
-    @Override
-    public int getIconHeight() {
-        return delegate.getIconHeight();
-    }
-    
-    @Override
-    public int getIconWidth() {
-        return delegate.getIconWidth();
-    }
-    
-    @Override
-    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
-        
-        boolean paintIcon = true;
-        
-        if (c instanceof AbstractButton) {
-            AbstractButton button = (AbstractButton) c;
-            if (!button.getModel().isSelected()) {
-                paintIcon = false;
-            }
-        }
-        
-        if (paintIcon) {
-            delegate.paintIcon(c, g, x, y);
-        }
+    public static ComponentUI createUI(JComponent c) {
+        return new DolphinTableUI();
     }
 }

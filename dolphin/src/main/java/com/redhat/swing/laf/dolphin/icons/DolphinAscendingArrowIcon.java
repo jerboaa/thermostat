@@ -36,40 +36,44 @@
 
 package com.redhat.swing.laf.dolphin.icons;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-import javax.swing.AbstractButton;
 import javax.swing.ImageIcon;
 
-public class DolphinCheckBoxIcon extends ImageIcon {
+import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-    private ImageIcon delegate = new ImageIcon(getClass().getResource("/checkbox-menuitem-checked.png"));
+public class DolphinAscendingArrowIcon extends ImageIcon {
     
     @Override
     public int getIconHeight() {
-        return delegate.getIconHeight();
+        return 12;
     }
     
     @Override
     public int getIconWidth() {
-        return delegate.getIconWidth();
+        return 12;
     }
     
     @Override
     public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+        Graphics2D graphics = DolphinThemeUtils.createAAGraphics(g);
         
-        boolean paintIcon = true;
+        Color baseColor = DolphinThemeUtils.getCurrentTheme().getIconsBaseColor();
         
-        if (c instanceof AbstractButton) {
-            AbstractButton button = (AbstractButton) c;
-            if (!button.getModel().isSelected()) {
-                paintIcon = false;
-            }
-        }
+        graphics.setColor(new Color(baseColor.getRed(), baseColor.getGreen(),
+                          baseColor.getBlue(), 200));
         
-        if (paintIcon) {
-            delegate.paintIcon(c, g, x, y);
-        }
+        graphics.setStroke(new BasicStroke(2.0f));
+
+        graphics.translate(x, y);
+        
+        graphics.drawLine(1, 7, 5, 3);
+        graphics.drawLine(6, 4, 9, 7);
+        
+        graphics.dispose();
     }
 }

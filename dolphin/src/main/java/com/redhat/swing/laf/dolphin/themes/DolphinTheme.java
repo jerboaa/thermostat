@@ -37,8 +37,10 @@
 package com.redhat.swing.laf.dolphin.themes;
 
 import java.awt.Color;
+import java.awt.Font;
 
 import javax.swing.border.AbstractBorder;
+import javax.swing.border.Border;
 import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.metal.OceanTheme;
 
@@ -120,4 +122,14 @@ public abstract class DolphinTheme extends OceanTheme {
     abstract public ColorUIResource getMenuBorderDefaultColor();
 
     abstract public Color getSeparatorColor();
+
+    abstract public ColorUIResource getTableHeaderBackgroundColor();
+    abstract public ColorUIResource getTableHeaderForegroundColor();
+    
+    abstract public Font getTableHeaderFont();
+
+    abstract public Border getTableCellBorder();
+    abstract public Border getTableFocusCellBorder();
+    
+    abstract public ColorUIResource getIconsBaseColor();
 }

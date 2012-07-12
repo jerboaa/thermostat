@@ -60,8 +60,16 @@ public class DolphinRadioButtonIcon extends ImageIcon {
     @Override
     public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
         
-        AbstractButton button = (AbstractButton) c;
-        if (button.getModel().isSelected()) {
+        boolean paintIcon = true;
+        
+        if (c instanceof AbstractButton) {
+            AbstractButton button = (AbstractButton) c;
+            if (!button.getModel().isSelected()) {
+                paintIcon = false;
+            }
+        }
+        
+        if (paintIcon) {
             delegate.paintIcon(c, g, x, y);
         }
     }

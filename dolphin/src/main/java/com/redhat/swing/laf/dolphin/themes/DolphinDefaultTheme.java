@@ -58,6 +58,7 @@ import com.redhat.swing.laf.dolphin.menu.DolphinMenuBarBorder;
 import com.redhat.swing.laf.dolphin.menu.DolphinMenuBorder;
 import com.redhat.swing.laf.dolphin.menu.DolphinMenuItemBorder;
 import com.redhat.swing.laf.dolphin.menu.DolphinPopupMenuBorder;
+import com.redhat.swing.laf.dolphin.table.DolphinDefaultTableHeaderFocusBorder;
 import com.redhat.swing.laf.dolphin.text.DolphinTextAreaBorder;
 import com.redhat.swing.laf.dolphin.text.DolphinTextBorder;
 
@@ -103,7 +104,10 @@ public class DolphinDefaultTheme extends DolphinTheme {
     private static final ColorUIResource THUMB_MOVING_COLOR = SELECTION_COLOR;
     
     private static final ColorUIResource SEPARATOR = new ColorUIResource(0xebebeb);
-
+    
+    private static final ColorUIResource TABLE_HEADER_FOREGROUND = new ColorUIResource(0x888a85);
+    
+    private static final ColorUIResource ICONS_COLOR = TABLE_HEADER_FOREGROUND;
     
     @Override
     public ColorUIResource getWindowBackgroundColor() {
@@ -364,6 +368,37 @@ public class DolphinDefaultTheme extends DolphinTheme {
     public FontUIResource getMenuTextFont() {
         initFont();
         return defaultfont;
+    }
+    
+    @Override
+    public ColorUIResource getTableHeaderBackgroundColor() {
+        return WHITE;
+    }
+    
+    @Override
+    public ColorUIResource getTableHeaderForegroundColor() {
+        return TABLE_HEADER_FOREGROUND;
+    }
+    
+    @Override
+    public Font getTableHeaderFont() {
+        initFont();
+        return defaultfont.deriveFont(Font.BOLD);
+    }
+    
+    @Override
+    public Border getTableCellBorder() {
+        return new DolphinDefaultTableHeaderFocusBorder();
+    }
+    
+    @Override
+    public Border getTableFocusCellBorder() {
+        return getTableCellBorder();
+    }
+    
+    @Override
+    public ColorUIResource getIconsBaseColor() {
+        return ICONS_COLOR;
     }
     
     @Override
