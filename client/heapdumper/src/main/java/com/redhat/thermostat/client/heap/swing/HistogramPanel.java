@@ -69,9 +69,11 @@ public class HistogramPanel extends JPanel {
 
     public void display(ObjectHistogram histogram) {
         JTable table = new JTable(new HistogramTableModel(histogram));
+
         table.setFillsViewportHeight(true);
         table.setAutoCreateRowSorter(true);
         table.setDefaultRenderer(Long.class, new NiceNumberFormatter());
+        
         JScrollPane scrollPane = new JScrollPane(table);
         headerPanel.setContent(scrollPane);
     }
@@ -156,6 +158,11 @@ public class HistogramPanel extends JPanel {
                 return histogram.size();
             }
             return 0;
+        }
+        
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
         }
     }
 }
