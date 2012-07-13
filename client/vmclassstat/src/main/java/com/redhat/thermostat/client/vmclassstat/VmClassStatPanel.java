@@ -53,6 +53,7 @@ import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.TickUnits;
 import org.jfree.data.RangeType;
 import org.jfree.data.time.FixedMillisecond;
+import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
@@ -138,7 +139,10 @@ public class VmClassStatPanel extends JPanel implements VmClassStatView {
             public void run() {
                 TimeSeries series = dataset.getSeries(0);
                 for (DiscreteTimeData<Long> data: copy) {
-                    series.add(new FixedMillisecond(data.getTimeInMillis()), data.getData(), false);
+                    RegularTimePeriod period = new FixedMillisecond(data.getTimeInMillis());
+                    if (series.getDataItem(period) == null) {
+                        series.add(period, data.getData(), false);
+                    }
                 }
                 series.fireSeriesChanged();
             }
