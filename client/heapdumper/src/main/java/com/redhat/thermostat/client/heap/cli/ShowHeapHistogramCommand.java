@@ -34,41 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.cli;
 
+import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
+import java.util.List;
 
+import com.redhat.thermostat.client.heap.LocaleResources;
+import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
+import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.HostVMArguments;
+import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.heap.HistogramRecord;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 
-public class ListHeapDumpsCommand extends SimpleCommand {
+public class ShowHeapHistogramCommand extends SimpleCommand {
 
-    private static final String NAME = "list-heap-dumps";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_LIST_HEAP_DUMPS_DESCRIPTION);
+    private static final String NAME = "show-heap-histogram";
+    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SHOW_HEAP_HISTOGRAM_DESCRIPTION);
     private static final String USAGE = DESCRIPTION;
-
-    // TODO localize
-    private static final String[] COLUMN_NAMES = {
-        Translate.localize(LocaleResources.HEADER_HOST_ID),
-        Translate.localize(LocaleResources.HEADER_VM_ID),
-        Translate.localize(LocaleResources.HEADER_HEAP_ID),
-        Translate.localize(LocaleResources.HEADER_TIMESTAMP),
-    };
 
     @Override
     public String getName() {
@@ -87,41 +79,33 @@ public class ListHeapDumpsCommand extends SimpleCommand {
 
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs(false, false);
+        List<ArgumentSpec> args = new ArrayList<>();
+        args.add(new SimpleArgumentSpec("heapId", "heapId", Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true));
+        return args;
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        HostVMArguments args = new HostVMArguments(ctx.getArguments(), false, false);
+        Arguments args = ctx.getArguments();
+        String heapId = args.getArgument("heapId");
 
-        TableRenderer renderer = new TableRenderer(4);
+        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
 
-        renderer.printLine(COLUMN_NAMES);
-
-        DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-        HostInfoDAO hostDAO = daoFactory.getHostInfoDAO();
-        VmInfoDAO vmDAO = daoFactory.getVmInfoDAO();
-        HeapDAO heapDAO = daoFactory.getHeapDAO();
-
-        Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();
-        for (HostRef hostRef : hosts) {
-            Collection<VmRef> vms = args.getVM() != null ? Arrays.asList(args.getVM()) : vmDAO.getVMs(hostRef);
-            for (VmRef vmRef : vms) {
-                printDumpsForVm(heapDAO, hostRef, vmRef, renderer);
-            }
+        HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
+        ObjectHistogram histogram = heapDAO.getHistogram(heapInfo);
+        if (histogram == null) {
+            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+        } else {
+            printHeapHistogram(histogram, ctx.getConsole().getOutput());
         }
-
-        renderer.render(ctx.getConsole().getOutput());
     }
 
-    private void printDumpsForVm(HeapDAO heapDAO, HostRef hostRef, VmRef vmRef, TableRenderer renderer) {
-        Collection<HeapInfo> infos = heapDAO.getAllHeapInfo(vmRef);
-        for (HeapInfo info : infos) {
-            renderer.printLine(hostRef.getStringID(),
-                               vmRef.getStringID(),
-                               info.getHeapId(),
-                               new Date(info.getTimestamp()).toString());
+    private void printHeapHistogram(ObjectHistogram histogram, PrintStream out) {
+        TableRenderer table = new TableRenderer(3);
+        for (HistogramRecord rec : histogram.getHistogram()) {
+            table.printLine(rec.getClassname(), String.valueOf(rec.getNumberOf()), String.valueOf(rec.getTotalSize()));
         }
+        table.render(out);
     }
 
 }

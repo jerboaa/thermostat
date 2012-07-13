@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -48,6 +48,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.client.heap.cli.FindObjectsCommand;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.ArgumentSpec;

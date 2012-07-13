@@ -58,6 +58,7 @@
             <Bundle-Activator>com.redhat.thermostat.client.heap.Activator</Bundle-Activator>
             <Private-Package>
                com.redhat.thermostat.client.heap,
+               com.redhat.thermostat.client.heap.cli,
                com.redhat.thermostat.client.heap.swing,
                com.redhat.thermostat.client.heap.chart
             </Private-Package>

@@ -34,17 +34,66 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.cli;
 
-import com.redhat.thermostat.common.cli.CommandException;
+import java.util.Iterator;
 
-@SuppressWarnings("serial")
-class ObjectNotFoundException extends CommandException {
+class HeapPath<T> {
 
-    private static final String MESSAGE_TEMPLATE = "Object not found: ";
+    private static class HeapPathIterator<T> implements Iterator<T> {
 
-    ObjectNotFoundException(String objectId) {
-        super(MESSAGE_TEMPLATE + objectId);
+        private HeapPath<T> path;
+
+        HeapPathIterator(HeapPath<T> path) {
+            this.path = path;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return path != null;
+        }
+
+        @Override
+        public T next() {
+            T next = path.node;
+            path = path.path;
+            return next;
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException();
+        }
+        
     }
 
+    private HeapPath<T> path;
+    private T node;
+    private int length;
+
+    HeapPath(T head) {
+        this(head, null);
+    }
+
+    HeapPath(T node, HeapPath<T> path) {
+        this.node = node;
+        this.path = path;
+        if (path != null) {
+            length = path.length + 1;
+        } else {
+            length = 1;
+        }
+    }
+
+    Iterator<T> iterator() {
+        return new HeapPathIterator<T>(this);
+    }
+
+    T getNode() {
+        return node;
+    }
+
+    int getLength() {
+        return length;
+    }
 }

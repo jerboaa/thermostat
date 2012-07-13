@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,6 +52,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
+import com.redhat.thermostat.client.heap.cli.ObjectNotFoundException;
+import com.redhat.thermostat.client.heap.cli.FindRootCommand;
+import com.redhat.thermostat.client.heap.cli.HeapNotFoundException;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.ArgumentSpec;

@@ -34,11 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.cli;
 
 import java.util.Arrays;
 import java.util.Collection;
 
+import com.redhat.thermostat.client.heap.LocaleResources;
+import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;

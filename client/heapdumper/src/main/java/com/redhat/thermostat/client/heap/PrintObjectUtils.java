@@ -40,9 +40,7 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class PrintObjectUtils {
 
-    static String objectToString(JavaHeapObject obj) {
+    public static String objectToString(JavaHeapObject obj) {
         return obj.getClazz().getName() + "@" + obj.getIdString();
     }
-
-
 }

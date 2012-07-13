@@ -1,7 +1,7 @@
-com.redhat.thermostat.client.heap.DumpHeapCommand
-com.redhat.thermostat.client.heap.ListHeapDumpsCommand
-com.redhat.thermostat.client.heap.SaveHeapDumpToFileCommand
-com.redhat.thermostat.client.heap.ShowHeapHistogramCommand
-com.redhat.thermostat.client.heap.FindObjectsCommand
-com.redhat.thermostat.client.heap.ObjectInfoCommand
-com.redhat.thermostat.client.heap.FindRootCommand
+com.redhat.thermostat.client.heap.cli.DumpHeapCommand
+com.redhat.thermostat.client.heap.cli.ListHeapDumpsCommand
+com.redhat.thermostat.client.heap.cli.SaveHeapDumpToFileCommand
+com.redhat.thermostat.client.heap.cli.ShowHeapHistogramCommand
+com.redhat.thermostat.client.heap.cli.FindObjectsCommand
+com.redhat.thermostat.client.heap.cli.ObjectInfoCommand
+com.redhat.thermostat.client.heap.cli.FindRootCommand

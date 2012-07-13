@@ -34,17 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.cli;
 
 import com.redhat.thermostat.common.cli.CommandException;
 
 @SuppressWarnings("serial")
-class HeapNotFoundException extends CommandException {
+class ObjectNotFoundException extends CommandException {
 
-    private static final String MESSAGE_TEMPLATE = "Heap ID not found: ";
+    private static final String MESSAGE_TEMPLATE = "Object not found: ";
 
-    HeapNotFoundException(String heapId) {
-        super(MESSAGE_TEMPLATE + heapId);
+    ObjectNotFoundException(String objectId) {
+        super(MESSAGE_TEMPLATE + objectId);
     }
 
 }

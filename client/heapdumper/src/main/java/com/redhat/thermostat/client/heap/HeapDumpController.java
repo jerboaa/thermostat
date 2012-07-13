@@ -47,6 +47,7 @@ import javax.swing.JComponent;
 
 import com.redhat.thermostat.client.heap.HeapView.HeadDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
+import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
