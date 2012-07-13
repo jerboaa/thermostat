@@ -38,16 +38,16 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.Component;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.HostMemoryView.Action;
 import com.redhat.thermostat.client.ui.HostMemoryView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -132,8 +132,8 @@ public class HostMemoryController {
         }
     }
 
-    public Component getComponent() {
-        return view.getUiComponent();
+    public BasicView getView() {
+        return view;
     }
 
     private void doMemoryChartUpdate() {

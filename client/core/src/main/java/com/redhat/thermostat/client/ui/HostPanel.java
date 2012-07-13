@@ -68,9 +68,10 @@ public class HostPanel extends JPanel {
 
         JTabbedPane tabPane = new JTabbedPane();
 
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, facade.getOverviewController().getComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, facade.getCpuController().getComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, facade.getMemoryController().getComponent(), null, 2);
+        // FIXME: Fix how we get old of the view impl specific UI component.
+        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, ((HostOverviewPanel)facade.getOverviewController().getView()).getUiComponent(), null, 0);
+        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, ((HostCpuPanel)facade.getCpuController().getView()).getUiComponent(), null, 1);
+        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, ((HostMemoryPanel)facade.getMemoryController().getView()).getUiComponent(), null, 2);
 
         // TODO additional tabs provided by plugins
         // tabPane.insertTab(title, icon, component, tip, 3)

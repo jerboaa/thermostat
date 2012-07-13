@@ -50,13 +50,11 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 
-public class VmOverviewPanel extends JPanel implements VmOverviewView {
-
-    private static final long serialVersionUID = 3280274963512229970L;
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
+public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
+    
+    private JPanel visiblePanel;
 
     private final ChangeableText pid = new ChangeableText("");
     private final ChangeableText startTimeStamp = new ChangeableText("");
@@ -69,8 +67,9 @@ public class VmOverviewPanel extends JPanel implements VmOverviewView {
     private final ChangeableText vmArguments = new ChangeableText("");
 
     public VmOverviewPanel() {
+        super();
         initializePanel();
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -146,13 +145,13 @@ public class VmOverviewPanel extends JPanel implements VmOverviewView {
 
     @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     private void initializePanel() {
-        JPanel panel = this;
-        panel.setBorder(Components.smallBorder());
-        panel.setLayout(new BorderLayout());
+        visiblePanel = new JPanel();
+        visiblePanel.setBorder(Components.smallBorder());
+        visiblePanel.setLayout(new BorderLayout());
 
         TableEntry entry;
         List<Section> allSections = new ArrayList<Section>();
@@ -184,7 +183,12 @@ public class VmOverviewPanel extends JPanel implements VmOverviewView {
         SimpleTable simpleTable = new SimpleTable();
         JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
-        panel.add(table, BorderLayout.PAGE_START);
+        visiblePanel.add(table, BorderLayout.PAGE_START);
+    }
+
+    @Override
+    public BasicView getView() {
+        return this;
     }
 
 }

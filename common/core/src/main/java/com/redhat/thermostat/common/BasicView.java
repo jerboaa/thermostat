@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.common;
 
-public class BasicView implements View {
+public abstract class BasicView implements View {
     public enum Action {
         VISIBLE,
         HIDDEN,
     }
-    private final ActionNotifier<Action> notifier;
+    protected final ActionNotifier<Action> notifier;
     
     protected BasicView() {
         notifier = new ActionNotifier<Action>(this);
@@ -58,4 +58,10 @@ public class BasicView implements View {
     protected void notify(Action action) {
         notifier.fireAction(action);
     }
+    
+    /**
+     * 
+     * @return a basic view which can be returned by a controller.
+     */
+    public abstract BasicView getView();
 }

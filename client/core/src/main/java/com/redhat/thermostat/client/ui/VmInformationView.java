@@ -36,21 +36,17 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
+import com.redhat.thermostat.common.BasicView;
 
-import com.redhat.thermostat.common.View;
-
-public interface VmInformationView extends View {
+public abstract class VmInformationView extends BasicView {
 
     /**
-     * @param view the view. FIXME currently a awt component
+     * @param view the view.
      */
-    void addChildView(String title, Component view);
+    public abstract void addChildView(String title, BasicView view);
 
-    Component getUiComponent();
-
-    int getNumChildren();
-    boolean selectChildID(int id);
-    int getSelectedChildID();
+    public abstract int getNumChildren();
+    public abstract boolean selectChildID(int id);
+    public abstract int getSelectedChildID();
 
 }

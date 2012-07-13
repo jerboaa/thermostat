@@ -36,38 +36,24 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
+import com.redhat.thermostat.common.BasicView;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+public abstract class HostOverviewView extends BasicView {
 
-public interface HostOverviewView extends View {
+    public abstract void setHostName(String newHostName);
 
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+    public abstract void setCpuModel(String newCpuModel);
 
-    void addActionListener(ActionListener<Action> listener);
+    public abstract void setCpuCount(String newCpuCount);
 
-    void removeActionListener(ActionListener<Action> listener);
+    public abstract void setTotalMemory(String newTotalMemory);
 
-    void setHostName(String newHostName);
+    public abstract void setOsName(String newOsName);
 
-    void setCpuModel(String newCpuModel);
+    public abstract void setOsKernel(String newOsKernel);
 
-    void setCpuCount(String newCpuCount);
+    public abstract void setNetworkTableColumns(Object[] columns);
 
-    void setTotalMemory(String newTotalMemory);
-
-    void setOsName(String newOsName);
-
-    void setOsKernel(String newOsKernel);
-
-    void setNetworkTableColumns(Object[] columns);
-
-    void setNetworkTableData(Object[][] table);
-
-    Component getUiComponent();
+    public abstract void setNetworkTableData(Object[][] table);
 
 }

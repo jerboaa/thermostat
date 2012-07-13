@@ -39,7 +39,6 @@ package com.redhat.thermostat.client.heap.swing;
 import java.awt.BorderLayout;
 import java.util.Collection;
 
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.JToggleButton;
@@ -51,24 +50,28 @@ import com.redhat.thermostat.client.heap.HeapDumpDetailsView;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
+import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-@SuppressWarnings("serial")
-public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
+public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingComponent {
 
+    private JPanel visiblePane;
+    
     private JTabbedPane tabPane = new JTabbedPane();
 
     private ObjectDetailsPanel objectDetailsPanel = new ObjectDetailsPanel();
 
-    private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
+    private final ActionNotifier<HeapDumpDetailsAction> notifier = new ActionNotifier<HeapDumpDetailsAction>(this);
 
     public HeapDetailsSwing() {
-        setLayout(new BorderLayout());
-        add(tabPane, BorderLayout.CENTER);
+        visiblePane = new JPanel();
+        visiblePane.setLayout(new BorderLayout());
+        visiblePane.add(tabPane, BorderLayout.CENTER);
 
         tabPane.addTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM), /* dummy */ new JPanel());
         tabPane.addTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), objectDetailsPanel);
@@ -78,7 +81,7 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
             public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
                 switch (actionEvent.getActionId()) {
                 case TEXT_CHANGED:
-                    notifier.fireAction(Action.SEARCH);
+                    notifier.fireAction(HeapDumpDetailsAction.SEARCH);
                     break;
                 }
             }
@@ -90,14 +93,14 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
 
             @Override
             public void valueChanged(TreeSelectionEvent e) {
-                notifier.fireAction(Action.GET_OBJECT_DETAIL);
+                notifier.fireAction(HeapDumpDetailsAction.GET_OBJECT_DETAIL);
             }
         });
 
         java.awt.event.ActionListener treeToggleListener = new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                notifier.fireAction(Action.SEARCH);
+                notifier.fireAction(HeapDumpDetailsAction.SEARCH);
             }
         };
         JToggleButton[] buttons = objectDetailsPanel.getTreeModeButtons();
@@ -105,16 +108,6 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
             button.addActionListener(treeToggleListener);
         }
 
-    }
-
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-
-    @Override
-    public void removeActionListnener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
     }
 
     @Override
@@ -155,7 +148,7 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
     }
 
     @Override
-    public JComponent getUIComponent() {
+    public BasicView getView() {
         return this;
     }
 
@@ -168,6 +161,11 @@ public class HeapDetailsSwing extends JPanel implements HeapDumpDetailsView {
     public void removeObjectReferenceCallback(ObjectReferenceCallback callback) {
         objectDetailsPanel.removeObjectReferenceCallback(callback);
 
+    }
+
+    @Override
+    public JPanel getUiComponent() {
+        return visiblePane;
     }
 
 }

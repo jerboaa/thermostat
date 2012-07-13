@@ -36,19 +36,12 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
 import java.util.List;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public interface HostMemoryView extends View {
-
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+public abstract class HostMemoryView extends BasicView {
 
     public interface GraphVisibilityChangeListener {
         public void show(String tag);
@@ -56,28 +49,22 @@ public interface HostMemoryView extends View {
         public void hide(String tag);
     }
 
-    void setTotalMemory(String totalMemory);
+    public abstract void setTotalMemory(String totalMemory);
 
-    void addMemoryChart(String tag, String humanReadableName);
+    public abstract void addMemoryChart(String tag, String humanReadableName);
 
-    void removeMemoryChart(String tag);
+    public abstract void removeMemoryChart(String tag);
 
-    void showMemoryChart(String tag);
+    public abstract void showMemoryChart(String tag);
 
-    void hideMemoryChart(String tag);
+    public abstract void hideMemoryChart(String tag);
 
-    void addMemoryData(String tag, List<DiscreteTimeData<? extends Number>> data);
+    public abstract void addMemoryData(String tag, List<DiscreteTimeData<? extends Number>> data);
 
-    void clearMemoryData(String tag);
+    public abstract void clearMemoryData(String tag);
 
-    void addActionListener(ActionListener<Action> listener);
+    public abstract void addGraphVisibilityListener(GraphVisibilityChangeListener listener);
 
-    void removeActionListener(ActionListener<Action> listener);
-
-    void addGraphVisibilityListener(GraphVisibilityChangeListener listener);
-
-    void removeGraphVisibilityListener(GraphVisibilityChangeListener listener);
-
-    Component getUiComponent();
+    public abstract void removeGraphVisibilityListener(GraphVisibilityChangeListener listener);
 
 }

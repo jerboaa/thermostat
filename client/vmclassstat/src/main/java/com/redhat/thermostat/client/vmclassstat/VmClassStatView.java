@@ -36,28 +36,15 @@
 
 package com.redhat.thermostat.client.vmclassstat;
 
-import java.awt.Component;
 import java.util.List;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public interface VmClassStatView extends View {
+public abstract class VmClassStatView extends BasicView {
 
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+    public abstract void clearClassCount();
 
-    void addActionListener(ActionListener<Action> listener);
+    public abstract void addClassCount(List<DiscreteTimeData<Long>> data);
 
-    void removeActionListener(ActionListener<Action> listener);
-
-
-    void clearClassCount();
-
-    void addClassCount(List<DiscreteTimeData<Long>> data);
-
-    Component getUiComponent();
 }

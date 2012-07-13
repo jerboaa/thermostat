@@ -48,7 +48,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -63,19 +62,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.internal.HostsVMsLoader;
-import com.redhat.thermostat.client.internal.MainView;
-import com.redhat.thermostat.client.internal.MainWindowControllerImpl;
-import com.redhat.thermostat.client.internal.MenuRegistry;
-import com.redhat.thermostat.client.internal.RegistryFactory;
-import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry;
-import com.redhat.thermostat.client.internal.UiFacadeFactory;
-import com.redhat.thermostat.client.internal.VMTreeDecoratorRegistry;
-import com.redhat.thermostat.client.internal.VMTreeFilterRegistry;
 import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
@@ -86,6 +74,7 @@ import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
@@ -293,7 +282,7 @@ public class MainWindowControllerImplTest {
 
     @Test
     public void verifySubViewIsSetByDefault() throws InvocationTargetException, InterruptedException {
-        verify(view).setSubView(any(Component.class));
+        verify(view).setSubView(any(BasicView.class));
     }
 
     @Test

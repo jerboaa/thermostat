@@ -62,14 +62,12 @@ import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.IntervalTimeData;
 
-public class VmGcPanel extends JPanel implements VmGcView {
-
-    private static final long serialVersionUID = -4924051863887499866L;
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
+public class VmGcPanel extends VmGcView implements SwingComponent {
+    
+    private JPanel visiblePanel;
 
     private final Map<String, SampledDataset> dataset = new HashMap<>();
     private final Map<String, JPanel> subPanels = new HashMap<>();
@@ -77,6 +75,7 @@ public class VmGcPanel extends JPanel implements VmGcView {
     private final GridBagConstraints gcPanelConstraints;
 
     public VmGcPanel() {
+        super();
         initializePanel();
 
         gcPanelConstraints = new GridBagConstraints();
@@ -86,7 +85,7 @@ public class VmGcPanel extends JPanel implements VmGcView {
         gcPanelConstraints.weightx = 1;
         gcPanelConstraints.weighty = 1;
 
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -111,11 +110,12 @@ public class VmGcPanel extends JPanel implements VmGcView {
 
     @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     private void initializePanel() {
-        setLayout(new GridBagLayout());
+        visiblePanel = new JPanel();
+        visiblePanel.setLayout(new GridBagLayout());
     }
 
     private JPanel createCollectorDetailsPanel(IntervalXYDataset timeSeriesCollection, String title, String units) {
@@ -159,9 +159,9 @@ public class VmGcPanel extends JPanel implements VmGcView {
                 dataset.put(tag, newData);
                 JPanel subPanel = createCollectorDetailsPanel(newData, title, units);
                 subPanels.put(tag, subPanel);
-                add(subPanel, gcPanelConstraints);
+                visiblePanel.add(subPanel, gcPanelConstraints);
                 gcPanelConstraints.gridy++;
-                revalidate();
+                visiblePanel.revalidate();
             }
         });
     }
@@ -173,8 +173,8 @@ public class VmGcPanel extends JPanel implements VmGcView {
             public void run() {
                 dataset.remove(tag);
                 JPanel subPanel = subPanels.remove(tag);
-                remove(subPanel);
-                revalidate();
+                visiblePanel.remove(subPanel);
+                visiblePanel.revalidate();
                 gcPanelConstraints.gridy--;
             }
         });
@@ -204,5 +204,10 @@ public class VmGcPanel extends JPanel implements VmGcView {
                 series.clear();
             }
         });
+    }
+
+    @Override
+    public BasicView getView() {
+        return this;
     }
 }

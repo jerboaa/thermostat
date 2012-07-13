@@ -36,28 +36,15 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
 import java.util.List;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public interface VmCpuView extends View {
+public abstract class VmCpuView extends BasicView {
 
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+    public abstract void addData(List<DiscreteTimeData<? extends Number>> data);
 
-    void addActionListener(ActionListener<Action> listener);
-
-    void removeActionListener(ActionListener<Action> listener);
-
-    void addData(List<DiscreteTimeData<? extends Number>> data);
-
-    void clearData();
-
-    Component getUiComponent();
+    public abstract void clearData();
 
 }

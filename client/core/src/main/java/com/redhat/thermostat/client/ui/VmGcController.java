@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -51,9 +50,10 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.VmGcView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -194,11 +194,8 @@ class VmGcController {
         return localize(LocaleResources.UNKNOWN_GEN);
     }
 
-    /**
-     * @return the {@link Component} representing the actual view of this controller
-     */
-    public Component getComponent() {
-        return view.getUiComponent();
+    public BasicView getView() {
+        return view;
     }
 
 }

@@ -36,32 +36,19 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
 import java.util.List;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.IntervalTimeData;
 
-public interface VmGcView extends View {
+public abstract class VmGcView extends BasicView {
 
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+    public abstract void addChart(String tag, String title, String valueUnit);
 
-    void addActionListener(ActionListener<Action> listener);
+    public abstract void removeChart(String tag);
 
-    void removeActionListener(ActionListener<Action> listener);
+    public abstract void addData(String tag, List<IntervalTimeData<Double>> data);
 
-    void addChart(String tag, String title, String valueUnit);
-
-    void removeChart(String tag);
-
-    void addData(String tag, List<IntervalTimeData<Double>> data);
-
-    void clearData(String tag);
-
-    Component getUiComponent();
+    public abstract void clearData(String tag);
 
 }

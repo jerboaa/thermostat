@@ -36,16 +36,12 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
+import com.redhat.thermostat.common.BasicView;
 
-import com.redhat.thermostat.common.View;
+public abstract class HostInformationView extends BasicView {
 
-public interface HostInformationView extends View {
+    public abstract void addChildView(String title, BasicView view);
 
-    void addChildView(String title, Component view);
-
-    void removeChildView(String title);
-
-    Component getUiComponent();
+    public abstract void removeChildView(String title);
 
 }

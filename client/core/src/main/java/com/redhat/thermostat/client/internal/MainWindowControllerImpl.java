@@ -464,16 +464,16 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         if (ref == null) {
             SummaryController controller = new SummaryController();
-            view.setSubView(controller.getComponent());
+            view.setSubView(controller.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
             HostInformationController hostController = facadeFactory.getHostController(hostRef);
-            view.setSubView(hostController.getComponent());
+            view.setSubView(hostController.getView());
         } else if (ref instanceof VmRef) {
             VmRef vmRef = (VmRef) ref;
             VmInformationController vmInformation =
                     vmInfoControllerProvider.getVmInfoController(vmRef);
-            view.setSubView(vmInformation.getComponent());
+            view.setSubView(vmInformation.getView());
         } else {
             throw new IllegalArgumentException("unknown type of ref");
         }

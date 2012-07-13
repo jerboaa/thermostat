@@ -39,19 +39,17 @@ package com.redhat.thermostat.client.heap;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.swing.JComponent;
-
-import com.redhat.thermostat.client.heap.HeapDumpDetailsView.Action;
+import com.redhat.thermostat.client.heap.HeapDumpDetailsView.HeapDumpDetailsAction;
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView.HeapObjectUI;
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView.ObjectReferenceCallback;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.heap.HeapDump;
@@ -60,7 +58,6 @@ import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
-import com.sun.tools.hat.internal.model.JavaThing;
 
 public class HeapDumpDetailsController {
 
@@ -72,9 +69,9 @@ public class HeapDumpDetailsController {
     public HeapDumpDetailsController() {
         view = ApplicationContext.getInstance().getViewFactory().getView(HeapDumpDetailsView.class);
 
-        view.addActionListener(new ActionListener<HeapDumpDetailsView.Action>() {
+        view.addDumpDetailsListener(new ActionListener<HeapDumpDetailsAction>() {
             @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
+            public void actionPerformed(ActionEvent<HeapDumpDetailsAction> actionEvent) {
                 switch (actionEvent.getActionId()) {
                 case SEARCH:
                     searchForObject();
@@ -169,10 +166,6 @@ public class HeapDumpDetailsController {
         view.setObjectDetails(object);
     }
 
-    public JComponent getComponent() {
-        return view.getUIComponent();
-    }
-
     public void setDump(HeapDump dump) {
         this.heapDump = dump;
         try {
@@ -182,6 +175,10 @@ public class HeapDumpDetailsController {
         }
         // do a dummy search right now to prep the index
         heapDump.searchObjects("A_RANDOM_PATTERN", 1);
+    }
+
+    public BasicView getView() {
+        return view;
     }
 
 }

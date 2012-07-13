@@ -38,18 +38,30 @@ package com.redhat.thermostat.client.heap;
 
 import java.util.Collection;
 
-import javax.swing.JComponent;
-
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-public interface HeapDumpDetailsView extends View {
+public abstract class HeapDumpDetailsView extends BasicView {
 
-    public enum Action {
+    public enum HeapDumpDetailsAction {
         SEARCH,
         GET_OBJECT_DETAIL,
+    }
+    
+    protected final ActionNotifier<HeapDumpDetailsAction> heapDumpDetailsNotifier;
+    protected HeapDumpDetailsView() {
+        heapDumpDetailsNotifier = new ActionNotifier<HeapDumpDetailsAction>(this);
+    }
+    
+    public void addDumpDetailsListener(ActionListener<HeapDumpDetailsAction> listener) {
+        heapDumpDetailsNotifier.addActionListener(listener);
+    }
+    
+    public void removeDumperListener(ActionListener<HeapDumpDetailsAction> listener) {
+        heapDumpDetailsNotifier.removeActionListener(listener);
     }
 
     public static class HeapObjectUI {
@@ -75,21 +87,16 @@ public interface HeapDumpDetailsView extends View {
         Collection<HeapObjectUI> getReferences(HeapObjectUI obj);
     }
 
-    void addActionListener(ActionListener<Action> listener);
-    void removeActionListnener(ActionListener<Action> listener);
+    public abstract void addObjectReferenceCallback(ObjectReferenceCallback callback);
+    public abstract void removeObjectReferenceCallback(ObjectReferenceCallback callback);
 
-    void addObjectReferenceCallback(ObjectReferenceCallback callback);
-    void removeObjectReferenceCallback(ObjectReferenceCallback callback);
+    public abstract void setHeapHistogram(ObjectHistogram histogram);
 
-    void setHeapHistogram(ObjectHistogram histogram);
+    public abstract String getSearchText();
 
-    String getSearchText();
+    public abstract void setMatchingObjects(Collection<HeapObjectUI> objects);
 
-    void setMatchingObjects(Collection<HeapObjectUI> objects);
+    public abstract HeapObjectUI getSelectedMatchingObject();
 
-    HeapObjectUI getSelectedMatchingObject();
-
-    void setObjectDetails(JavaHeapObject object);
-
-    JComponent getUIComponent();
+    public abstract void setObjectDetails(JavaHeapObject object);
 }

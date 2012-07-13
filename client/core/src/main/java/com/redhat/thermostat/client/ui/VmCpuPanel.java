@@ -56,24 +56,23 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public class VmCpuPanel extends JPanel implements VmCpuView {
+public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
-    private static final long serialVersionUID = 6181274336251822530L;
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
-
+    private JPanel visiblePanel;
+    
     private final TimeSeriesCollection data = new TimeSeriesCollection();
     private final TimeSeries cpuTimeSeries = new TimeSeries("cpu-stats");
 
     public VmCpuPanel() {
+        super();
         data.addSeries(cpuTimeSeries);
 
         initializePanel();
 
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -98,10 +97,11 @@ public class VmCpuPanel extends JPanel implements VmCpuView {
 
     @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     private void initializePanel() {
+        visiblePanel = new JPanel();
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
                 localize(LocaleResources.VM_CPU_CHART_TIME_LABEL),
@@ -113,14 +113,14 @@ public class VmCpuPanel extends JPanel implements VmCpuView {
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        setLayout(new GridBagLayout());
+        visiblePanel.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 0;
         c.fill = GridBagConstraints.BOTH;
         c.weightx = 1;
         c.weighty = 1;
-        add(chartPanel, c);
+        visiblePanel.add(chartPanel, c);
     }
 
     @Override
@@ -148,6 +148,11 @@ public class VmCpuPanel extends JPanel implements VmCpuView {
                 cpuTimeSeries.clear();
             }
         });
+    }
+
+    @Override
+    public BasicView getView() {
+        return this;
     }
 
 }

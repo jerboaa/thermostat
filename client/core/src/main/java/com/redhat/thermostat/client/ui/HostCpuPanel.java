@@ -42,12 +42,12 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
+import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.ChartFactory;
@@ -59,15 +59,13 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public class HostCpuPanel extends JPanel implements HostCpuView {
+public class HostCpuPanel extends HostCpuView implements SwingComponent {
 
-    private static final long serialVersionUID = -1840585935194027332L;
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
-
+    private JPanel visiblePanel;
+    
     private final JTextComponent cpuModel = new ValueField("${CPU_MODEL}");
     private final JTextComponent cpuCount = new ValueField("${CPU_COUNT}");
 
@@ -75,10 +73,11 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
     private final TimeSeries dataset = new TimeSeries("host-cpu");
 
     public HostCpuPanel() {
+        super();
         datasetCollection.addSeries(dataset);
         initializePanel();
 
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -149,11 +148,13 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
 
     @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     private void initializePanel() {
 
+        visiblePanel = new JPanel();
+        
         JLabel summaryLabel = Components.header(localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
 
         JLabel cpuModelLabel = Components.label(localize(LocaleResources.HOST_INFO_CPU_MODEL));
@@ -169,7 +170,7 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        GroupLayout groupLayout = new GroupLayout(this);
+        GroupLayout groupLayout = new GroupLayout(visiblePanel);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(groupLayout.createSequentialGroup()
@@ -207,6 +208,12 @@ public class HostCpuPanel extends JPanel implements HostCpuView {
                     .addGap(18)
                     .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE))
         );
-        setLayout(groupLayout);
+        visiblePanel.setLayout(groupLayout);
     }
+
+    @Override
+    public BasicView getView() {
+        return this;
+    }
+
 }

@@ -55,14 +55,12 @@ import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.client.ui.SimpleTable.Value;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 
-public class HostOverviewPanel extends JPanel implements HostOverviewView {
+public class HostOverviewPanel extends HostOverviewView implements SwingComponent {
 
-    private static final long serialVersionUID = 1692529334143017953L;
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
-
+    private JPanel visiblePanel;
+    
     private final ChangeableText hostname = new ChangeableText("");
     private final ChangeableText cpuModel = new ChangeableText("");
     private final ChangeableText cpuCount = new ChangeableText("");
@@ -75,9 +73,10 @@ public class HostOverviewPanel extends JPanel implements HostOverviewView {
     private Object[][] networkTableData;
 
     public HostOverviewPanel() {
+        super();
         initializePanel();
 
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -144,10 +143,11 @@ public class HostOverviewPanel extends JPanel implements HostOverviewView {
 
     @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     private void initializePanel() {
+        visiblePanel = new JPanel();
         TableEntry entry;
         List<Section> allSections = new ArrayList<Section>();
 
@@ -190,7 +190,12 @@ public class HostOverviewPanel extends JPanel implements HostOverviewView {
 
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
-        add(table, c);
+        visiblePanel.add(table, c);
+    }
+
+    @Override
+    public BasicView getView() {
+        return this;
     }
 
 }

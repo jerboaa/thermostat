@@ -38,9 +38,8 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.Component;
-
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostRef;
 
@@ -59,9 +58,9 @@ public class HostInformationController {
 
         view = ApplicationContext.getInstance().getViewFactory().getView(HostInformationView.class);
 
-        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getComponent());
-        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getComponent());
-        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getComponent());
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getView());
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getView());
+        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getView());
 
     }
 
@@ -76,9 +75,9 @@ public class HostInformationController {
     public HostMemoryController getMemoryController() {
         return memoryController;
     }
-
-    public Component getComponent() {
-        return view.getUiComponent();
+    
+    public BasicView getView() {
+        return view;
     }
 
 }

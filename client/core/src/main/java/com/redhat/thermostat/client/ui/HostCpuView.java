@@ -36,31 +36,19 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
 import java.util.List;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public interface HostCpuView extends View {
+public abstract class HostCpuView extends BasicView {
 
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+    public abstract void setCpuCount(String count);
 
-    void addActionListener(ActionListener<Action> listener);
+    public abstract void setCpuModel(String model);
 
-    void removeActionListener(ActionListener<Action> listener);
+    public abstract void clearCpuLoadData();
 
-    void setCpuCount(String count);
+    public abstract void addCpuLoadData(List<DiscreteTimeData<Double>> data);
 
-    void setCpuModel(String model);
-
-    void clearCpuLoadData();
-
-    void addCpuLoadData(List<DiscreteTimeData<Double>> data);
-
-    Component getUiComponent();
 }

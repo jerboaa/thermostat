@@ -56,7 +56,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.heap.HeapDumpDetailsView.Action;
+import com.redhat.thermostat.client.heap.HeapDumpDetailsView.HeapDumpDetailsAction;
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView.HeapObjectUI;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -70,7 +70,7 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 public class HeapDumpDetailsControllerTest {
 
     private HeapDumpDetailsView view;
-    private ActionListener<HeapDumpDetailsView.Action> actionListener;
+    private ActionListener<HeapDumpDetailsAction> actionListener;
 
     @Before
     public void setUp() {
@@ -119,14 +119,14 @@ public class HeapDumpDetailsControllerTest {
         when(dump.findObject(eq(OBJECT_ID))).thenReturn(heapObject);
 
         ArgumentCaptor<ActionListener> viewArgumentCaptor1 = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addActionListener(viewArgumentCaptor1.capture());
+        doNothing().when(view).addDumpDetailsListener(viewArgumentCaptor1.capture());
 
         HeapDumpDetailsController controller = new HeapDumpDetailsController();
         controller.setDump(dump);
 
         actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);
-        actionListener.actionPerformed(new ActionEvent<HeapDumpDetailsView.Action>(view, Action.SEARCH));
+        actionListener.actionPerformed(new ActionEvent<HeapDumpDetailsAction>(view, HeapDumpDetailsAction.SEARCH));
 
         ArgumentCaptor<Collection> matchingObjectsCaptor = ArgumentCaptor.forClass(Collection.class);
         verify(view).setMatchingObjects(matchingObjectsCaptor.capture());
@@ -148,7 +148,7 @@ public class HeapDumpDetailsControllerTest {
         when(dump.findObject(OBJECT_ID)).thenReturn(heapObject);
 
         ArgumentCaptor<ActionListener> viewArgumentCaptor1 = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addActionListener(viewArgumentCaptor1.capture());
+        doNothing().when(view).addDumpDetailsListener(viewArgumentCaptor1.capture());
 
         when(view.getSelectedMatchingObject()).thenReturn(heapObjectRepresentation);
 
@@ -157,7 +157,7 @@ public class HeapDumpDetailsControllerTest {
 
         actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);
-        actionListener.actionPerformed(new ActionEvent<HeapDumpDetailsView.Action>(view, Action.GET_OBJECT_DETAIL));
+        actionListener.actionPerformed(new ActionEvent<HeapDumpDetailsAction>(view, HeapDumpDetailsAction.GET_OBJECT_DETAIL));
 
         verify(view).setObjectDetails(heapObject);
     }

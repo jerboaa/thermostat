@@ -36,26 +36,12 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
+import com.redhat.thermostat.common.BasicView;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+public abstract class SummaryView extends BasicView {
 
-public interface SummaryView extends View {
+    public abstract void setTotalHosts(String count);
 
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
-
-    void addActionListener(ActionListener<Action> listener);
-
-    void removeActionListener(ActionListener<Action> listener);
-
-    void setTotalHosts(String count);
-
-    void setTotalVms(String count);
-
-    Component getUiComponent();
+    public abstract void setTotalVms(String count);
 
 }

@@ -36,23 +36,12 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.common.BasicView;
 
-interface MemoryStatsView<E> extends View {
+public abstract class MemoryStatsView extends BasicView {
     
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+    public abstract void addRegion(Payload region);
+    public abstract void updateRegion(Payload region);
     
-    void addActionListener(ActionListener<Action> listener);
-    void removeActionListener(ActionListener<Action> listener);
-    
-    void addRegion(Payload region);
-    void updateRegion(Payload region);
-    
-    E getUIComponent();
-    
-    void requestRepaint();
+    public abstract void requestRepaint();
 }

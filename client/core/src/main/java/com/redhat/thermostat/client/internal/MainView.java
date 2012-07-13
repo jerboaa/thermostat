@@ -36,15 +36,15 @@
 
 package com.redhat.thermostat.client.internal;
 
-import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
+import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.dao.Ref;
 
 public interface MainView {
@@ -76,7 +76,7 @@ public interface MainView {
 
     Ref getSelectedHostOrVm();
 
-    void setSubView(Component view);
+    void setSubView(BasicView view);
 
     /**
      * Adds a menu item to the window. Assumes the menu path is valid (has a

@@ -36,20 +36,18 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import java.awt.Component;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.JComponent;
-
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
-import com.redhat.thermostat.client.stats.memory.MemoryStatsView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -63,7 +61,7 @@ import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
 class MemoryStatsController implements VmInformationServiceController {
 
-    private final MemoryStatsView<JComponent> view;
+    private final MemoryStatsView view;
     private final VmMemoryStatDAO vmDao;
    
     private final VmRef ref;
@@ -154,7 +152,7 @@ class MemoryStatsController implements VmInformationServiceController {
         timer.setTimeUnit(TimeUnit.MILLISECONDS);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
 
-        view.addActionListener(new ActionListener<MemoryStatsView.Action>() {
+        view.addActionListener(new ActionListener<Action>() {
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
                 switch(actionEvent.getActionId()) {
@@ -212,15 +210,15 @@ class MemoryStatsController implements VmInformationServiceController {
     private void stop() {
         timer.stop();
     }
-    
-    @Override
-    public Component getComponent() {
-        return view.getUIComponent();
-    }
 
     @Override
     public String getLocalizedName() {
         // TODO: this class should have it's own bundle...
         return Translate.localize(LocaleResources.VM_INFO_TAB_MEMORY);
+    }
+
+    @Override
+    public BasicView getView() {
+        return view;
     }
 }

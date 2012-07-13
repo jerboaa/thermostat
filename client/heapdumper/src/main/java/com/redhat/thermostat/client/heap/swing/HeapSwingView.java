@@ -47,17 +47,18 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+import com.redhat.thermostat.client.heap.HeapView;
+import com.redhat.thermostat.client.heap.LocaleResources;
+import com.redhat.thermostat.client.heap.Translate;
+import com.redhat.thermostat.client.heap.chart.OverviewChart;
+import com.redhat.thermostat.client.ui.ComponentVisibleListener;
+import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.swing.ChartPanel;
 import com.redhat.thermostat.swing.HeaderPanel;
 
-import com.redhat.thermostat.client.heap.HeapView;
-import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.chart.OverviewChart;
-import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.client.ui.ComponentVisibleListener;
-import com.redhat.thermostat.common.heap.HeapDump;
-
-public class HeapSwingView extends HeapView<JPanel> {
+public class HeapSwingView extends HeapView implements SwingComponent {
 
     private StatsPanel stats;
 
@@ -110,11 +111,6 @@ public class HeapSwingView extends HeapView<JPanel> {
 
         // at the beginning, only the overview is visible
         visiblePane.add(overview);
-    }
-    
-    @Override
-    public JPanel getComponent() {
-        return visiblePane;
     }
     
     private class ViewVisibleListener extends ComponentVisibleListener {
@@ -182,13 +178,26 @@ public class HeapSwingView extends HeapView<JPanel> {
     }
 
     @Override
-    public void setChildView(final JPanel childView) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                heapDetailPanel.setBottom(childView);
-                visiblePane.revalidate();
-            }
-        });
+    public void setChildView(BasicView childView) {
+        if (childView instanceof HeapDetailsSwing) {
+            final HeapDetailsSwing view = (HeapDetailsSwing)childView;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    heapDetailPanel.setBottom(view.getUiComponent());
+                    visiblePane.revalidate();
+                }
+            });
+        }
+    }
+    
+    @Override
+    public Component getUiComponent() {
+        return visiblePane;
+    }
+
+    @Override
+    public BasicView getView() {
+        return this;
     }
 }

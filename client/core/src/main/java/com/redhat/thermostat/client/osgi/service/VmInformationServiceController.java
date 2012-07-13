@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import java.awt.Component;
+import com.redhat.thermostat.common.BasicView;
 
 public interface VmInformationServiceController {
-    Component getComponent();
+    BasicView getView();
 
     String getLocalizedName();
 }

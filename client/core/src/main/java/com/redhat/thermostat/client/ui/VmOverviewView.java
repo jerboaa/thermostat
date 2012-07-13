@@ -36,42 +36,28 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
+import com.redhat.thermostat.common.BasicView;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+public abstract class VmOverviewView extends BasicView {
 
-public interface VmOverviewView extends View {
+    public abstract void setVmPid(String pid);
 
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
+    public abstract void setVmStartTimeStamp(String timestamp);
 
-    void addActionListener(ActionListener<Action> listener);
+    public abstract void setVmStopTimeStamp(String timeStamp);
 
-    void removeActionListener(ActionListener<Action> listener);
+    public abstract void setMainClass(String mainClass);
 
-    void setVmPid(String pid);
+    public abstract void setJavaCommandLine(String javaCommandLine);
 
-    void setVmStartTimeStamp(String timestamp);
+    public abstract void setJavaHome(String string);
 
-    void setVmStopTimeStamp(String timeStamp);
+    public abstract void setJavaVersion(String javaVersion);
 
-    void setMainClass(String mainClass);
+    public abstract void setVmNameAndVersion(String vmNameAndVersion);
 
-    void setJavaCommandLine(String javaCommandLine);
+    public abstract void setVmArguments(String vmArguments);
 
-    void setJavaHome(String string);
-
-    void setJavaVersion(String javaVersion);
-
-    void setVmNameAndVersion(String vmNameAndVersion);
-
-    void setVmArguments(String vmArguments);
-
-    void setVmInfo(String string);
-
-    Component getUiComponent();
+    public abstract void setVmInfo(String string);
 
 }

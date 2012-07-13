@@ -43,30 +43,36 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
-public class HostInformationPanel extends JPanel implements HostInformationView {
+import com.redhat.thermostat.common.BasicView;
 
-    private static final long serialVersionUID = 4835316442841009133L;
+public class HostInformationPanel extends HostInformationView implements SwingComponent {
 
+    private JPanel visiblePanel;
     private final JTabbedPane tabPane;
 
     private int viewCount = 0;
 
     public HostInformationPanel() {
-        setLayout(new BorderLayout());
+        super();
+        visiblePanel = new JPanel();
+        visiblePanel.setLayout(new BorderLayout());
         tabPane = new JTabbedPane();
-        this.add(tabPane);
+        visiblePanel.add(tabPane);
     }
 
     @Override
-    public void addChildView(final String title, final Component view) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                tabPane.insertTab(title, null, view, null, viewCount);
-                viewCount++;
-            }
-
-        });
+    public void addChildView(final String title, final BasicView view) {
+        if (view instanceof SwingComponent) {
+            final SwingComponent component = (SwingComponent)view;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    tabPane.insertTab(title, null, component.getUiComponent(), null, viewCount);
+                    viewCount++;
+                }
+                
+            });
+        }
     }
 
     @Override
@@ -86,6 +92,11 @@ public class HostInformationPanel extends JPanel implements HostInformationView 
 
     @Override
     public Component getUiComponent() {
+        return visiblePanel;
+    }
+
+    @Override
+    public BasicView getView() {
         return this;
     }
 

@@ -99,6 +99,7 @@ import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -659,16 +660,19 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
-    public void setSubView(final Component view) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                contentArea.removeAll();
-                Component toAdd = view;
-                contentArea.add(toAdd);
-                contentArea.revalidate();
-            }
-        });
+    public void setSubView(final BasicView view) {
+        if (view instanceof SwingComponent) {
+            final SwingComponent swingComp = (SwingComponent)view;
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    contentArea.removeAll();
+                    Component toAdd = swingComp.getUiComponent();
+                    contentArea.add(toAdd);
+                    contentArea.revalidate();
+                }
+            });
+        }
     }
 
     @Override

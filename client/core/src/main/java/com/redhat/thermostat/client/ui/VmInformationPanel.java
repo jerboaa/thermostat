@@ -42,28 +42,34 @@ import java.awt.Component;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-public class VmInformationPanel extends JPanel implements VmInformationView {
+import com.redhat.thermostat.common.BasicView;
+
+public class VmInformationPanel extends VmInformationView implements SwingComponent {
 
     private final JTabbedPane tabPane = new JTabbedPane();
+    private JPanel visiblePanel;
 
     private int tabCount = 0;
 
     public VmInformationPanel() {
-        setLayout(new BorderLayout());
+        super();
+        visiblePanel = new JPanel();
+        visiblePanel.setLayout(new BorderLayout());
         tabPane.setName("tabPane");
-        add(tabPane);
+        visiblePanel.add(tabPane);
     }
 
     @Override
-    public void addChildView(String title, Component view) {
-        Component component = view;
-        tabPane.insertTab(title, null, component, null, tabCount);
-        tabCount++;
+    public void addChildView(String title, BasicView view) {
+        if (view instanceof SwingComponent) {
+            SwingComponent panel = (SwingComponent)view;
+            tabPane.insertTab(title, null, panel.getUiComponent(), null, tabCount);
+            tabCount++;
+        }
     }
 
-    @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     @Override
@@ -84,4 +90,10 @@ public class VmInformationPanel extends JPanel implements VmInformationView {
     public int getNumChildren() {
         return tabPane.getComponentCount();
     }
+
+    @Override
+    public BasicView getView() {
+        return this;
+    }
+
 }

@@ -44,35 +44,35 @@ import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
-import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.common.BasicView;
 
-@SuppressWarnings("serial")
-public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComponent> {
+public class MemoryStatsViewImpl extends MemoryStatsView implements SwingComponent {
 
     private static final long REPAINT_DELAY = 500;
     private long lastRepaint;
     
-    private final ActionNotifier<Action> notifier;
+    private JPanel visiblePanel;
+    
     private final Map<String, MemoryGraphPanel> regions;
     
     private Dimension preferredSize;
     
     public MemoryStatsViewImpl() {
-        notifier = new ActionNotifier<>(this);
+        super();
+        visiblePanel = new JPanel();
         regions = new HashMap<>();
  
         preferredSize = new Dimension(0, 0);
         
-        setBorder(new TitledBorder(null, "Memory Regions", TitledBorder.RIGHT, TitledBorder.TOP, null, null));
-        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.setBorder(new TitledBorder(null, "Memory Regions", TitledBorder.RIGHT, TitledBorder.TOP, null, null));
+        visiblePanel.setLayout(new BoxLayout(visiblePanel, BoxLayout.Y_AXIS));
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -85,7 +85,6 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComp
         });
     }
     
-    @Override
     @Transient
     public Dimension getPreferredSize() {
         return new Dimension(preferredSize);
@@ -110,8 +109,8 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComp
             public void run() {
                 MemoryGraphPanel memoryGraphPanel = new MemoryGraphPanel();
                 
-                add(memoryGraphPanel);
-                add(Box.createRigidArea(new Dimension(5,5)));                
+                visiblePanel.add(memoryGraphPanel);
+                visiblePanel.add(Box.createRigidArea(new Dimension(5,5)));                
                 regions.put(region.getName(), memoryGraphPanel);
                 
                 // components are stacked up vertically in this panel
@@ -122,24 +121,14 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComp
                 }
 
                 updateRegion(region);
-                revalidate();
+                visiblePanel.revalidate();
             }
         });
     }
-    
-    @Override
-    public JComponent getUIComponent() {
-        return this;
-    }
-    
-    @Override
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
 
     @Override
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
+    public Component getUiComponent() {
+        return visiblePanel;
     }
 
     @Override
@@ -147,8 +136,12 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComp
         // really only repaint every REPAINT_DELAY milliseconds
         long now = System.currentTimeMillis();
         if (now - lastRepaint > REPAINT_DELAY) {
-            repaint();
+            visiblePanel.repaint();
             lastRepaint = System.currentTimeMillis();
         }
+    }
+    
+    public BasicView getView() {
+        return this;
     }
 }

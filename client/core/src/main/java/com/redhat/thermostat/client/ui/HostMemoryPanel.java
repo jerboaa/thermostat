@@ -65,16 +65,14 @@ import org.jfree.data.time.TimeSeriesCollection;
 import com.redhat.thermostat.client.internal.ui.swing.WrapLayout;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 
-public class HostMemoryPanel extends JPanel implements HostMemoryView {
+public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
 
-    private static final long serialVersionUID = -6971357935957876582L;
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
-
+    private JPanel visiblePanel;
+    
     private final MemoryCheckboxListener memoryCheckboxListener = new MemoryCheckboxListener();
 
     private final JTextComponent totalMemory = new ValueField("${TOTAL_MEMORY}");
@@ -86,9 +84,10 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
     private final Map<String, JCheckBox> checkBoxes = new HashMap<>();
 
     public HostMemoryPanel() {
+        super();
         initializePanel();
 
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -112,7 +111,7 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
 
     @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     @Override
@@ -219,7 +218,8 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
     }
 
     private void initializePanel() {
-
+        visiblePanel = new JPanel();
+        
         JFreeChart chart = createMemoryChart();
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
@@ -228,7 +228,7 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
 
         JLabel totalMemoryLabel = Components.label(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
 
-        GroupLayout groupLayout = new GroupLayout(this);
+        GroupLayout groupLayout = new GroupLayout(visiblePanel);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(groupLayout.createSequentialGroup()
@@ -259,7 +259,7 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
                     .addComponent(memoryCheckBoxPanel, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addContainerGap())
         );
-        setLayout(groupLayout);
+        visiblePanel.setLayout(groupLayout);
     }
 
     private JFreeChart createMemoryChart() {
@@ -296,4 +296,10 @@ public class HostMemoryPanel extends JPanel implements HostMemoryView {
         }
 
     }
+
+    @Override
+    public BasicView getView() {
+        return this;
+    }
+
 }

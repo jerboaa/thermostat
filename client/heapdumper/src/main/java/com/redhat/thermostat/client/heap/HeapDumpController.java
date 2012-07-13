@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.awt.Component;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Collection;
@@ -53,6 +52,7 @@ import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
@@ -75,7 +75,7 @@ public class HeapDumpController implements VmInformationServiceController {
     
     private final HeapDAO heapDAO;
         
-    private HeapView<JComponent> view;
+    private HeapView view;
     private final Timer timer;
     
     private OverviewChart model;
@@ -173,13 +173,13 @@ public class HeapDumpController implements VmInformationServiceController {
     private void showHeapDumpDetails(HeapDump dump) {
         HeapDumpDetailsController controller = new HeapDumpDetailsController();
         controller.setDump(dump);
-        view.setChildView(controller.getComponent());
+        view.setChildView(controller.getView());
         view.openDumpView();
     }
 
     @Override
-    public Component getComponent() {
-        return view.getComponent();
+    public BasicView getView() {
+        return view;
     }
 
     @Override

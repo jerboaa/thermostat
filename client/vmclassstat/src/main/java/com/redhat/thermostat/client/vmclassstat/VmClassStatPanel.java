@@ -62,26 +62,29 @@ import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.Components;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartPanel;
+import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public class VmClassStatPanel extends JPanel implements VmClassStatView {
+public class VmClassStatPanel extends VmClassStatView implements SwingComponent {
 
-    private static final long serialVersionUID = 1067532168697544774L;
-
+    private JPanel visiblePanel;
+    
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
 
     public VmClassStatPanel() {
+        visiblePanel = new JPanel();
         // any name works
         dataset.addSeries(new TimeSeries("class-stat"));
 
-        setBorder(Components.smallBorder());
-        setLayout(new BorderLayout());
+        visiblePanel.setBorder(Components.smallBorder());
+        visiblePanel.setLayout(new BorderLayout());
 
-        add(Components.header(localize(LocaleResources.VM_LOADED_CLASSES)), BorderLayout.NORTH);
+        visiblePanel.add(Components.header(localize(LocaleResources.VM_LOADED_CLASSES)), BorderLayout.NORTH);
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
@@ -106,9 +109,9 @@ public class VmClassStatPanel extends JPanel implements VmClassStatView {
 
         Component chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        add(chartPanel, BorderLayout.CENTER);
+        visiblePanel.add(chartPanel, BorderLayout.CENTER);
 
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -163,6 +166,12 @@ public class VmClassStatPanel extends JPanel implements VmClassStatView {
 
     @Override
     public Component getUiComponent() {
+        return visiblePanel;
+    }
+
+    @Override
+    public BasicView getView() {
         return this;
     }
+
 }

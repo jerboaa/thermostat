@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.ui.SummaryView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -64,7 +64,7 @@ public class SummaryController {
 
         this.view = ctx.getViewFactory().getView(SummaryView.class);
 
-        view.addActionListener(new ActionListener<SummaryView.Action>() {
+        view.addActionListener(new ActionListener<Action>() {
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
                 switch (actionEvent.getActionId()) {
@@ -106,9 +106,8 @@ public class SummaryController {
         backgroundUpdateTimer.stop();
     }
 
-
-    public Component getComponent() {
-        return view.getUiComponent();
+    public BasicView getView() {
+        return view;
     }
 
 }

@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.client.ui;
 
-import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.ui.HostCpuView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -132,8 +132,8 @@ public class HostCpuController {
         view.addCpuLoadData(result);
     }
 
-    public Component getComponent() {
-        return view.getUiComponent();
+    public BasicView getView() {
+        return view;
     }
 
 }

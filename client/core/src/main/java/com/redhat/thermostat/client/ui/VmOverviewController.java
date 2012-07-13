@@ -38,15 +38,15 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.Component;
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.VmOverviewView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.BasicView.Action;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -74,7 +74,7 @@ class VmOverviewController {
 
         vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);
 
-        view.addActionListener(new ActionListener<VmOverviewView.Action>() {
+        view.addActionListener(new ActionListener<Action>() {
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
                 switch(actionEvent.getActionId()) {
@@ -131,7 +131,7 @@ class VmOverviewController {
         timer.stop();
     }
 
-    public Component getComponent() {
-        return view.getUiComponent();
+    public BasicView getView() {
+        return view;
     }
 }

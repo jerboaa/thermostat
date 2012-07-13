@@ -38,13 +38,13 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.Component;
 import java.util.Collection;
 
 import com.redhat.thermostat.client.internal.UiFacadeFactory;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmRef;
 
@@ -63,23 +63,18 @@ public class VmInformationController {
 
         view = ApplicationContext.getInstance().getViewFactory().getView(VmInformationView.class);
 
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_OVERVIEW), overviewController.getComponent());
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getComponent());
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_GC), gcController.getComponent());
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_OVERVIEW), overviewController.getView());
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getView());
+        view.addChildView(localize(LocaleResources.VM_INFO_TAB_GC), gcController.getView());
 
         Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();
         for (VmInformationService vmInfoService : vmInfoServices) {
             if (vmInfoService.isApplicableFor(vmRef)) {
                 VmInformationServiceController ctrl = vmInfoService.getInformationServiceController(vmRef);
                 String name = ctrl.getLocalizedName();
-                Component viewComp = ctrl.getComponent();
-                view.addChildView(name, viewComp);
+                view.addChildView(name, ctrl.getView());
             }
         }
-    }
-
-    public Component getComponent() {
-        return view.getUiComponent();
     }
 
     public int getSelectedChildID() {
@@ -93,4 +88,9 @@ public class VmInformationController {
     public int getNumChildren() {
         return view.getNumChildren();
     }
+
+    public BasicView getView() {
+        return view;
+    }
+
 }

@@ -42,7 +42,7 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.heap.HeapDump;
 
-public abstract class HeapView<E> extends BasicView {
+public abstract class HeapView extends BasicView {
     
     public enum HeadDumperAction {
         DUMP_REQUESTED,
@@ -63,12 +63,10 @@ public abstract class HeapView<E> extends BasicView {
         heapDumperNotifier.removeActionListener(listener);
     }
 
-    public abstract E getComponent();
-
     abstract public void updateOverview(OverviewChart model, String used, String capacity);
     abstract public void addHeapDump(HeapDump dump);
     abstract public void clearHeapDumpList();
     
     abstract public void openDumpView();
-    abstract public void setChildView(E childView);
+    abstract public void setChildView(BasicView childView);
 }

@@ -79,7 +79,7 @@ public class HeapDumpControllerTest {
     private Timer timer;
     
     private HeapDAO heapDao;
-    private HeapView<JComponent> view;
+    private HeapView view;
     private HeapDumpDetailsView detailsView;
     
     private HeapDumpController controller;
@@ -211,7 +211,7 @@ public class HeapDumpControllerTest {
         VmRef ref = mock(VmRef.class);
         controller = new HeapDumpController(ref, appService);
         
-        verify(view, times(1)).setChildView(any(JComponent.class));
+        verify(view, times(1)).setChildView(any(HeapView.class));
         verify(view, times(1)).openDumpView();
     }
     

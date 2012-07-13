@@ -42,6 +42,8 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JPanel;
+
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -69,10 +71,10 @@ public class VmClassStatPanelTest {
                 VmClassStatPanel panel = new VmClassStatPanel();
                 List<DiscreteTimeData<Long>> data = new ArrayList<>();
                 panel.addClassCount(data);
-                int numComponents = panel.getComponentCount();
+                int numComponents = ((JPanel)panel.getUiComponent()).getComponentCount();
                 assertTrue(numComponents > 0);
                 panel.addClassCount(data);
-                assertEquals(numComponents, panel.getComponentCount());
+                assertEquals(numComponents, ((JPanel)panel.getUiComponent()).getComponentCount());
             }
         });
     }

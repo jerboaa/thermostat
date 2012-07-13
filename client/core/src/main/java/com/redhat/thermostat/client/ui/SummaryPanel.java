@@ -43,34 +43,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.AbstractListModel;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListModel;
 import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.text.JTextComponent;
+import com.redhat.thermostat.common.BasicView;
 
-public class SummaryPanel extends JPanel implements SummaryView {
+public class SummaryPanel extends SummaryView implements SwingComponent {
 
-    private static final long serialVersionUID = -5953027789947771737L;
-
-    private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
-
+    private JPanel visiblePanel;
+    
     private final JTextComponent totalMonitoredHosts;
     private final JTextComponent totalMonitoredVms;
 
     private final List<String> issuesList;
 
     public SummaryPanel() {
-
+        super();
+        visiblePanel = new JPanel();
         JLabel lblHomepanel = Components.header(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
 
         JLabel lblTotalHosts = new JLabel(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
@@ -85,7 +84,7 @@ public class SummaryPanel extends JPanel implements SummaryView {
 
         JScrollPane scrollPane = new JScrollPane();
 
-        GroupLayout groupLayout = new GroupLayout(this);
+        GroupLayout groupLayout = new GroupLayout(visiblePanel);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(groupLayout.createSequentialGroup()
@@ -134,9 +133,9 @@ public class SummaryPanel extends JPanel implements SummaryView {
         JList<Object> issuesList = new JList<>();
         issuesList.setModel(issuesListModel);
         scrollPane.setViewportView(issuesList);
-        setLayout(groupLayout);
+        visiblePanel.setLayout(groupLayout);
 
-        addHierarchyListener(new ComponentVisibleListener() {
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
                 notifier.fireAction(Action.VISIBLE);
@@ -181,7 +180,7 @@ public class SummaryPanel extends JPanel implements SummaryView {
 
     @Override
     public Component getUiComponent() {
-        return this;
+        return visiblePanel;
     }
 
     private static class IssuesListModel extends AbstractListModel<Object> {
@@ -213,4 +212,10 @@ public class SummaryPanel extends JPanel implements SummaryView {
             return delegate.get(index);
         }
     }
+
+    @Override
+    public BasicView getView() {
+        return this;
+    }
+
 }
