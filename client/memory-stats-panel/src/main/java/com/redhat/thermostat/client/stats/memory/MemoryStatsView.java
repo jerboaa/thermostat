@@ -36,14 +36,10 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import javax.swing.JComponent;
-
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.View;
 
-import com.redhat.thermostat.common.model.VmMemoryStat.Space;
-
-interface MemoryStatsView extends View {
+interface MemoryStatsView<E> extends View {
     
     enum Action {
         VISIBLE,
@@ -56,5 +52,7 @@ interface MemoryStatsView extends View {
     void addRegion(Payload region);
     void updateRegion(Payload region);
     
-    JComponent getUIComponent();
+    E getUIComponent();
+    
+    void requestRepaint();
 }

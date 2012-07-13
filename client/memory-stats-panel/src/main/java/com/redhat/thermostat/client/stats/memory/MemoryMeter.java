@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.stats.memory;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.GradientPaint;
@@ -49,6 +50,7 @@ import java.awt.RenderingHints;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
+import java.beans.Transient;
 
 import javax.swing.JComponent;
 import javax.swing.plaf.ColorUIResource;
@@ -421,6 +423,11 @@ public class MemoryMeter extends JComponent {
         
         internalSecondaryModel.setMaxNormalized(max);
         internalSecondaryModel.setMinNormalized(0);
-        
+    }
+    
+    @Override
+    @Transient
+    public Dimension getPreferredSize() {
+        return new Dimension(850, 150);
     }
 }

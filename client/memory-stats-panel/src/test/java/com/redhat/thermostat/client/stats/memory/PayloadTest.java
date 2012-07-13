@@ -36,47 +36,47 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import java.awt.Dimension;
-import java.beans.Transient;
+import static org.junit.Assert.*;
 
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
+import org.junit.Test;
 
-@SuppressWarnings("serial")
-class MemoryGraphPanel extends JPanel {
+import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
-    private MemoryMeter meter;
-    
-    /**
-     * Create the panel.
-     */
-    public MemoryGraphPanel() {
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        meter = new MemoryMeter();
-        add(meter);
-    }
-    
-    public void setMemoryGraphProperties(Payload region) {
+public class PayloadTest {
 
-        meter.getPrimaryModel().setMinimum(0);
-        meter.getPrimaryModel().setMaximum(region.getMaxUsed());
-        meter.getPrimaryModel().setValue(region.getUsed());
+    @Test
+    public void testClone() {
         
-        meter.getSecondaryModel().setMinimum(0);
-        meter.getSecondaryModel().setMaximum(region.getMaxCapacity());
-        meter.getSecondaryModel().setValue(region.getCapacity());
+        StatsModel model = new StatsModel();
+        model.setName("fluffModel");
+        model.setRange(100);
+        model.addData(500, 2.0);
+        model.addData(501, 2.1);
         
-        meter.setToolTipText(region.getTooltip());
+        Payload source = new Payload();
+        source.setCapacity(10.0);
+        source.setName("fluff");
+        source.setCapacityUnit(Scale.GiB);
+        source.setMaxCapacity(100.0);
+        source.setMaxUsed(5.0);
+        source.setUsed(3.0);
+        source.setUsedUnit(Scale.MiB);
+        source.setModel(model);
+        source.setTooltip("fluffTooltip");
         
-        meter.setPrimaryScaleUnit(region.getUsedUnit().toString());
-        meter.setSecondayScaleUnit(region.getCapacityUnit().toString());
+        Payload cloned = source.clone();
+        assertNotSame(cloned, source);
         
-        meter.setStats(region.getModel());
-    }
-    
-    @Override
-    @Transient
-    public Dimension getPreferredSize() {
-        return meter.getPreferredSize();
+        assertEquals(source.getName(), cloned.getName());
+        assertEquals(source.getCapacity(), cloned.getCapacity(), 0);
+        assertEquals(source.getCapacityUnit(), cloned.getCapacityUnit());
+        assertEquals(source.getMaxCapacity(), cloned.getMaxCapacity(), 0);
+        assertEquals(source.getMaxUsed(), cloned.getMaxUsed(), 0);
+        assertEquals(source.getTooltip(), cloned.getTooltip());
+        assertEquals(source.getUsed(), cloned.getUsed(), 0);
+        assertEquals(source.getUsedUnit(), cloned.getUsedUnit());
+        assertNotSame(source.getModel(), cloned.getModel());
+
+        assertEquals(source.getModel().getName(), cloned.getModel().getName());
     }
 }

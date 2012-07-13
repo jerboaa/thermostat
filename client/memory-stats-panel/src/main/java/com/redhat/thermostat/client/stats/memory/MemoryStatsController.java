@@ -42,6 +42,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.JComponent;
+
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
@@ -52,11 +54,8 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator;
-import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
@@ -64,7 +63,7 @@ import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
 class MemoryStatsController implements VmInformationServiceController {
 
-    private final MemoryStatsView view;
+    private final MemoryStatsView<JComponent> view;
     private final VmMemoryStatDAO vmDao;
    
     private final VmRef ref;
@@ -89,7 +88,7 @@ class MemoryStatsController implements VmInformationServiceController {
                             payload = new Payload();
                             payload.setName(space.name);
                         }
-                                                    
+
                         Scale usedScale = normalizeScale(space.used, space.capacity);
                         double used = Scale.convertTo(usedScale, space.used, 100);
                         double maxUsed = Scale.convertTo(usedScale, space.capacity, 100);
@@ -125,11 +124,13 @@ class MemoryStatsController implements VmInformationServiceController {
                         
                         payload.setModel(model);
                         if (regions.containsKey(space.name)) {
-                            view.updateRegion(payload);
+                            view.updateRegion(payload.clone());
                         } else {
-                            view.addRegion(payload);
+                            view.addRegion(payload.clone());
                             regions.put(space.name, payload);
                         }
+                        
+                        view.requestRepaint();
                     }
                 }
             }

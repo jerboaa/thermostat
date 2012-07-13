@@ -36,47 +36,36 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import java.awt.Dimension;
-import java.beans.Transient;
+import static org.junit.Assert.*;
 
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
+import org.jfree.data.time.TimeSeries;
+import org.junit.Test;
 
-@SuppressWarnings("serial")
-class MemoryGraphPanel extends JPanel {
+public class StatsModelTest {
 
-    private MemoryMeter meter;
-    
-    /**
-     * Create the panel.
-     */
-    public MemoryGraphPanel() {
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        meter = new MemoryMeter();
-        add(meter);
+    @Test
+    public void testClone() {
+        
+        StatsModel source = new StatsModel();
+        source.setName("fluffModel");
+        source.setRange(100);
+        source.addData(500, 2.0);
+        source.addData(501, 2.1);
+        
+        StatsModel cloned = source.clone();
+        
+        assertNotSame(cloned, source);
+        
+        assertEquals(source.getName(), cloned.getName());
+     
+        assertNotSame(cloned.getDataSet(), source.getDataSet());
+        
+        for (Object series : cloned.getDataSet().getItems()) {
+            assertTrue(source.getDataSet().getItems().contains(series));
+        }
+        
+        assertEquals(cloned.getDataSet().getItemCount(),
+                     source.getDataSet().getItemCount());
     }
-    
-    public void setMemoryGraphProperties(Payload region) {
 
-        meter.getPrimaryModel().setMinimum(0);
-        meter.getPrimaryModel().setMaximum(region.getMaxUsed());
-        meter.getPrimaryModel().setValue(region.getUsed());
-        
-        meter.getSecondaryModel().setMinimum(0);
-        meter.getSecondaryModel().setMaximum(region.getMaxCapacity());
-        meter.getSecondaryModel().setValue(region.getCapacity());
-        
-        meter.setToolTipText(region.getTooltip());
-        
-        meter.setPrimaryScaleUnit(region.getUsedUnit().toString());
-        meter.setSecondayScaleUnit(region.getCapacityUnit().toString());
-        
-        meter.setStats(region.getModel());
-    }
-    
-    @Override
-    @Transient
-    public Dimension getPreferredSize() {
-        return meter.getPreferredSize();
-    }
 }

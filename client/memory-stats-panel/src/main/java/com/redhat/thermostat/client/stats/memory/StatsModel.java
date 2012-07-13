@@ -54,7 +54,7 @@ import org.jfree.data.time.TimeSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.ui.RectangleInsets;
 
-public class StatsModel {
+public class StatsModel implements Cloneable {
 
     private static final String lock = new String("MemoryStatsModelLock");
 
@@ -96,6 +96,23 @@ public class StatsModel {
                 dataSet.removeAgedItems(true);
             }
         }
+    }
+    
+    @Override
+    protected StatsModel clone() {
+        
+        StatsModel model = new StatsModel();
+        model.setName(name);
+        model.setRange(dataSet.getMaximumItemCount());
+        
+        try {
+            model.dataSet = dataSet.createCopy(0, dataSet.getItemCount() - 1);
+        } catch (CloneNotSupportedException e) {
+            // ah... it's supported here...
+            e.printStackTrace();
+        }
+        
+        return model;
     }
     
     /**
@@ -156,6 +173,9 @@ public class StatsModel {
         chart.setBorderVisible(false);
         
         return chart;
-
+    }
+    
+    TimeSeries getDataSet() {
+        return dataSet;
     }
 }

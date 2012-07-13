@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.stats.memory;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.beans.Transient;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,15 +53,20 @@ import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 
-public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView {
+@SuppressWarnings("serial")
+public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComponent> {
 
     private final ActionNotifier<Action> notifier;
     private final Map<String, MemoryGraphPanel> regions;
     
+    private Dimension preferredSize;
+    
     public MemoryStatsViewImpl() {
         notifier = new ActionNotifier<>(this);
         regions = new HashMap<>();
-
+ 
+        preferredSize = new Dimension(0, 0);
+        
         setBorder(new TitledBorder(null, "Memory Regions", TitledBorder.RIGHT, TitledBorder.TOP, null, null));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         addHierarchyListener(new ComponentVisibleListener() {
@@ -77,14 +83,18 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView {
     }
     
     @Override
+    @Transient
+    public Dimension getPreferredSize() {
+        return new Dimension(preferredSize);
+    }
+    
+    @Override
     public void updateRegion(final Payload region) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 MemoryGraphPanel memoryGraphPanel = regions.get(region.getName());
                 memoryGraphPanel.setMemoryGraphProperties(region);
-                
-                revalidate();
             }
         });
     }
@@ -101,7 +111,15 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView {
                 add(Box.createRigidArea(new Dimension(5,5)));                
                 regions.put(region.getName(), memoryGraphPanel);
                 
+                // components are stacked up vertically in this panel
+                Dimension memoryGraphPanelMinSize = memoryGraphPanel.getMinimumSize();
+                preferredSize.height += memoryGraphPanelMinSize.height + 5;
+                if (preferredSize.width < (memoryGraphPanelMinSize.width + 5)) {
+                    preferredSize.width = memoryGraphPanelMinSize.width + 5;
+                }
+
                 updateRegion(region);
+                revalidate();
             }
         });
     }
@@ -119,5 +137,10 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView {
     @Override
     public void removeActionListener(ActionListener<Action> listener) {
         notifier.removeActionListener(listener);
+    }
+
+    @Override
+    public void requestRepaint() {
+        repaint();
     }
 }

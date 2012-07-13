@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.stats.memory;
 
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
-public class Payload {
+public class Payload implements Cloneable {
 
     private String name;
     private String tooltip;
@@ -123,5 +123,23 @@ public class Payload {
     
     public void setTooltip(String tooltip) {
         this.tooltip = tooltip;
+    }
+    
+    @Override
+    protected Payload clone() {
+        
+        Payload copy = new Payload();
+        
+        copy.used = used;
+        copy.capacity = capacity;
+        copy.capacityUnit = capacityUnit;
+        copy.maxCapacity = maxCapacity;
+        copy.maxUsed = maxUsed;
+        copy.model = model.clone();
+        copy.name = name;
+        copy.tooltip = tooltip;
+        copy.usedUnit = usedUnit;
+        
+        return copy;
     }
 }
