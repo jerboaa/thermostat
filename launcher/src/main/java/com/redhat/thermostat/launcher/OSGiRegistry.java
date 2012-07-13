@@ -41,6 +41,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -48,6 +49,7 @@ import java.nio.file.PathMatcher;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -84,7 +86,7 @@ public class OSGiRegistry {
         String home = config.getThermostatHome();
         Path thermostatHome = new File(home, "libs").toPath();
         OSGiBundlesVisitor visitor = new OSGiBundlesVisitor();
-        Files.walkFileTree(thermostatHome, visitor);
+        Files.walkFileTree(thermostatHome, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE, visitor);
         return visitor.jars;
     }
 
