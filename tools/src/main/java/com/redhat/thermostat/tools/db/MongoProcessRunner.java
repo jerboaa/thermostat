@@ -39,6 +39,8 @@ package com.redhat.thermostat.tools.db;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -51,7 +53,6 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-
 import com.redhat.thermostat.service.process.UnixProcessUtilities;
 import com.redhat.thermostat.tools.LocaleResources;
 import com.redhat.thermostat.tools.Translate;
@@ -59,17 +60,20 @@ import com.redhat.thermostat.tools.Translate;
 class MongoProcessRunner {
     
     private static final Logger logger = LoggingUtils.getLogger(MongoProcessRunner.class);
-    
+
     private static final String MONGO_PROCESS = "mongod";
 
     private static final String [] MONGO_BASIC_ARGS = {
-        "mongod", "--quiet", "--fork", "--nojournal", "--noauth", "--bind_ip"
+        "mongod", "--quiet", "--fork", "--noauth", "--bind_ip"
     };
-    
+
     private static final String [] MONGO_SHUTDOWN_ARGS = {
         "mongod", "--shutdown", "--dbpath"
     };
-    
+
+    private static final String NO_JOURNAL_ARGUMENT = "--nojournal";
+    private static final String NO_JOURNAL_FIRST_VERSION = "1.9.2";
+
     private DBStartupConfiguration configuration;
     private boolean isQuiet;
     
@@ -77,7 +81,7 @@ class MongoProcessRunner {
         this.configuration = configuration;
         this.isQuiet = quiet;
     }
-   
+
     private String getPid() {
         
         String pid = null;
@@ -131,7 +135,7 @@ class MongoProcessRunner {
     }
     
     void startService() throws IOException, InterruptedException, ApplicationException {
-        
+
         String pid = getPid();
         if (pid != null) {
             String message = null;
@@ -149,7 +153,11 @@ class MongoProcessRunner {
         }
         
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
-       
+        String dbVersion = getDBVersion();
+        if (dbVersion.compareTo(NO_JOURNAL_FIRST_VERSION) >= 0) {
+            commands.add(1, NO_JOURNAL_ARGUMENT);
+        }
+
         // check that the db directory exist
         display(Translate.localize(LocaleResources.STARTING_STORAGE_SERVER));
 
@@ -203,6 +211,26 @@ class MongoProcessRunner {
         }
     }
  
+    private String getDBVersion() throws IOException {
+        Process process;
+        try {
+            process = new ProcessBuilder(Arrays.asList("mongod", "--version"))
+                    .start();
+        } catch (IOException e) {
+            String message = Translate.localize(
+                    LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
+            display(message);
+            throw e;
+        }
+        InputStream out = process.getInputStream();
+        InputStreamReader reader = new InputStreamReader(out);
+        BufferedReader bufReader = new BufferedReader(reader);
+        String firstLine = bufReader.readLine();
+        int commaIdx = firstLine.indexOf(",", 12);
+        String versionString = firstLine.substring(12, commaIdx);
+        return versionString;
+    }
+
     private void display(String message) {
         if (!isQuiet) {
             System.out.println(message);
