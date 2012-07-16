@@ -101,7 +101,7 @@ public class ClientConfigurationFrame extends JFrame implements ClientConfigurat
                             .addGap(248)
                             .addComponent(btnCancel, GroupLayout.PREFERRED_SIZE, 85, GroupLayout.PREFERRED_SIZE)
                             .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(btnOk, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE))
+                            .addComponent(btnOk, GroupLayout.PREFERRED_SIZE, 85, GroupLayout.PREFERRED_SIZE))
                         .addGroup(groupLayout.createSequentialGroup()
                             .addGap(12)
                             .addComponent(lblStorageUrl)
