@@ -111,8 +111,24 @@ public class HeapDumpTest {
     public void testSearchObjectsWithLimit() {
         Collection<String> foundObjectIds = heapDump.searchObjects("java.util.ArrayDeque", 2);
         assertEquals(2, foundObjectIds.size());
-        assertTrue(foundObjectIds.contains("0x7d704eb20"));
-        assertTrue(foundObjectIds.contains("0x7d70485e8"));
+        // we know 2 things matched. Don't know which ones (there is no guarentee on order).
+        String[] possibleMatches = new String[] {
+            "0x7d704eb20",
+            "0x7d70485e8",
+            "0x7d704aed8",
+            "0x7d70447a0",
+            "0x7d704d438",
+            "0x7d70471e8",
+            "0x7d7049aa0",
+            "0x7d704bfe0",
+        };
+        int totalMatches = 0;
+        for (String possible : possibleMatches) {
+            if (foundObjectIds.contains(possible)) {
+                totalMatches++;
+            }
+        }
+        assertEquals(2, totalMatches);
     }
 
     @Test
