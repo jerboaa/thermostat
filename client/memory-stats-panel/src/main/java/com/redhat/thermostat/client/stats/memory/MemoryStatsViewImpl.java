@@ -56,6 +56,9 @@ import com.redhat.thermostat.common.ActionNotifier;
 @SuppressWarnings("serial")
 public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComponent> {
 
+    private static final long REPAINT_DELAY = 500;
+    private long lastRepaint;
+    
     private final ActionNotifier<Action> notifier;
     private final Map<String, MemoryGraphPanel> regions;
     
@@ -141,6 +144,11 @@ public class MemoryStatsViewImpl extends JPanel implements MemoryStatsView<JComp
 
     @Override
     public void requestRepaint() {
-        repaint();
+        // really only repaint every REPAINT_DELAY milliseconds
+        long now = System.currentTimeMillis();
+        if (now - lastRepaint > REPAINT_DELAY) {
+            repaint();
+            lastRepaint = System.currentTimeMillis();
+        }
     }
 }
