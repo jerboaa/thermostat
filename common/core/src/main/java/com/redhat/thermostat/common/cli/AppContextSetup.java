@@ -38,5 +38,5 @@ package com.redhat.thermostat.common.cli;
 
 public interface AppContextSetup {
 
-    void setupAppContext(String dbUrl);
+    void setupAppContext(String dbUrl, String username, String password);
 }

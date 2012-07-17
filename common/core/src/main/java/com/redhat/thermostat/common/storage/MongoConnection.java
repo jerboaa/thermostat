@@ -44,6 +44,7 @@ import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 class MongoConnection extends Connection {
@@ -60,6 +61,7 @@ class MongoConnection extends Connection {
     public void connect() {
         try {
             createConnection();
+            authenticateIfNecessary();
             /* the mongo java driver does not ensure this connection is actually working */
             testConnection();
             connected = true;
@@ -69,6 +71,22 @@ class MongoConnection extends Connection {
             throw new ConnectionException(e.getMessage(), e);
         }
         fireChanged(ConnectionStatus.CONNECTED);
+    }
+
+    private void authenticateIfNecessary() {
+        if (conf instanceof AuthenticationConfiguration) {
+            AuthenticationConfiguration authConf = (AuthenticationConfiguration) conf;
+            String username = authConf.getUsername();
+            if (username != null && ! username.equals("")) {
+                authenticate(username, authConf.getPassword());
+            }
+        }
+    }
+
+    private void authenticate(String username, String password) {
+        if (! db.authenticate(username, password.toCharArray())) {
+            throw new MongoException("Invalid username/password");
+        }
     }
 
     @Override

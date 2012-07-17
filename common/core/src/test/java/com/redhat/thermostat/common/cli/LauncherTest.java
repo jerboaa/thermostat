@@ -251,7 +251,15 @@ public class LauncherTest {
         LauncherImpl launcher = new LauncherImpl(ctxFactory);
         launcher.setBundleContext(bundleContext);
         launcher.run(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345" });
-        verify(appContextSetup).setupAppContext("mongo://fluff:12345");
+        verify(appContextSetup).setupAppContext("mongo://fluff:12345", null, null);
+    }
+
+    @Test
+    public void verifyStorageCommandSetsUpDAOFactoryWithAuth() {
+        LauncherImpl launcher = new LauncherImpl(ctxFactory);
+        launcher.setBundleContext(bundleContext);
+        launcher.run(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345", "--username", "testuser", "--password", "testpwd" });
+        verify(appContextSetup).setupAppContext("mongo://fluff:12345", "testuser", "testpwd");
     }
 
     public void verifyPrefsAreUsed() {
@@ -261,6 +269,6 @@ public class LauncherTest {
         l.setBundleContext(bundleContext);
         l.setPreferences(prefs);
         l.run(new String[] { "test3" });
-        verify(appContextSetup).setupAppContext("mongo://fluff:12345");
+        verify(appContextSetup).setupAppContext("mongo://fluff:12345", null, null);
     }
 }

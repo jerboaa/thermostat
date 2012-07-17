@@ -45,11 +45,12 @@ import java.util.Properties;
 
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
-public class AgentStartupConfiguration implements StartupConfiguration {
+public class AgentStartupConfiguration implements StartupConfiguration, AuthenticationConfiguration {
 
     private List<BackendID> backends;
     
@@ -57,7 +58,9 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     private boolean purge;
     
     private String url;
-    
+    private String username;
+    private String password;
+
     private long startTime;
     
     AgentStartupConfiguration() {
@@ -131,5 +134,23 @@ public class AgentStartupConfiguration implements StartupConfiguration {
     
     public boolean purge() {
         return purge;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
     }
 }

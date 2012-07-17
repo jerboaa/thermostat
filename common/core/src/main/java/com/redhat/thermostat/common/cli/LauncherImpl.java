@@ -199,8 +199,10 @@ public class LauncherImpl implements Launcher, OSGiContext {
             if (dbUrl == null) {
                 dbUrl = prefs.getConnectionUrl();
             }
+            String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
+            String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
             try {
-                ctx.getAppContextSetup().setupAppContext(dbUrl);
+                ctx.getAppContextSetup().setupAppContext(dbUrl, username, password);
             } catch (ConnectionException ex) {
                 throw new CommandException("Could not connect to: " + dbUrl, ex);
             }

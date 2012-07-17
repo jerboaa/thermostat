@@ -42,7 +42,12 @@ import java.util.Collection;
 class CommonCommandOptions {
 
     static final String DB_URL_ARG = "dbUrl";
+    static final String USERNAME_ARG = "username";
+    static final String PASSWORD_ARG = "password";
+
     private static final String DB_URL_DESC = "the URL of the storage to connect to";
+    private static final String USERNAME_DESC = "the username to use for authentication";
+    private static final String PASSWORD_DESC = "the password to use for authentication";
 
     static final String LOG_LEVEL_ARG = "logLevel";
     private static final String LOG_LEVEL_DESC = "log level";
@@ -53,6 +58,7 @@ class CommonCommandOptions {
         acceptedArguments = new ArrayList<>(acceptedArguments);
         addDbUrlOptionForStorageCommand(cmd, acceptedArguments);
         addLogLevelOption(acceptedArguments);
+        addOptionalAuthenticationArguments(acceptedArguments);
         return acceptedArguments;
     }
 
@@ -64,6 +70,11 @@ class CommonCommandOptions {
 
     private void addLogLevelOption(Collection<ArgumentSpec> acceptedArguments) {
         acceptedArguments.add(new SimpleArgumentSpec(LOG_LEVEL_ARG, LOG_LEVEL_DESC, false, true));
+    }
+
+    private void addOptionalAuthenticationArguments(Collection<ArgumentSpec> acceptedArguments) {
+        acceptedArguments.add(new SimpleArgumentSpec(USERNAME_ARG, USERNAME_DESC, false, true));
+        acceptedArguments.add(new SimpleArgumentSpec(PASSWORD_ARG, PASSWORD_DESC, false, true));
     }
 
 }

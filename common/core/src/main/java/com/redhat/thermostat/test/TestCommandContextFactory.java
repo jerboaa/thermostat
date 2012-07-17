@@ -71,7 +71,7 @@ public class TestCommandContextFactory extends CommandContextFactory {
     private AppContextSetup appContextSetup = new AppContextSetup() {
 
         @Override
-        public void setupAppContext(String dbUrl) {
+        public void setupAppContext(String dbUrl, String username, String password) {
             // We do nothing for now.
         }
     };

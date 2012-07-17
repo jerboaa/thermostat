@@ -78,6 +78,8 @@ public class AgentOptionParser implements ThermostatOptionParser {
                 isHelp = true;
             }
         }
+        configuration.setUsername(args.getArgument(Args.USERNAME.option));
+        configuration.setPassword(args.getArgument(Args.PASSWORD.option));
     }
     
     public boolean isHelp() {
@@ -89,6 +91,8 @@ public class AgentOptionParser implements ThermostatOptionParser {
         // TODO: localize
         SAVE_ON_EXIT("saveOnExit", "save the data on exit"),
         DB("dbUrl", "connect to the given url"),
+        USERNAME("username", "the username to use for authentication"),
+        PASSWORD("password", "the password to use for authentication"),
         DEBUG("debug", "launch with debug console enabled"),
         HELP("help", "print this help and exit");
         
@@ -104,7 +108,9 @@ public class AgentOptionParser implements ThermostatOptionParser {
     public static Collection<ArgumentSpec> getAcceptedArguments() {
         ArgumentSpec saveOnExit = new SimpleArgumentSpec(Args.SAVE_ON_EXIT.option, "s", Args.SAVE_ON_EXIT.description, false, false);
         ArgumentSpec db = new SimpleArgumentSpec(Args.DB.option, "d",  Args.DB.description, true, true);
+        ArgumentSpec username = new SimpleArgumentSpec(Args.USERNAME.option, Args.USERNAME.description, false, true);
+        ArgumentSpec password = new SimpleArgumentSpec(Args.PASSWORD.option, Args.PASSWORD.description, false, true);
         ArgumentSpec debug = new SimpleArgumentSpec(Args.DEBUG.option, Args.DEBUG.description);
-        return Arrays.asList(saveOnExit, db, debug);
+        return Arrays.asList(saveOnExit, db, debug, username, password);
     }
 }

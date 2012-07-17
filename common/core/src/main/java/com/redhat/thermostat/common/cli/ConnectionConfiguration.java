@@ -38,12 +38,16 @@ package com.redhat.thermostat.common.cli;
 
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
-class ConnectionConfiguration implements StartupConfiguration {
+class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {
 
     private String dbUrl;
+    private String username;
+    private String password;
 
-    ConnectionConfiguration(String dbUrl) {
+    ConnectionConfiguration(String dbUrl, String username, String password) {
         this.dbUrl = dbUrl;
+        this.username = username;
+        this.password = password;
     }
 
     @Override
@@ -51,4 +55,13 @@ class ConnectionConfiguration implements StartupConfiguration {
         return dbUrl;
     }
 
+    @Override
+    public String getUsername() {
+        return username;
+    }
+
+    @Override
+    public String getPassword() {
+        return password;
+    }
 }
