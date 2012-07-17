@@ -40,7 +40,6 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.GridBagConstraints;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -188,9 +187,8 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
         JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        visiblePanel.add(table, c);
+        visiblePanel.setLayout(new BorderLayout());
+        visiblePanel.add(table, BorderLayout.CENTER);
     }
 
     @Override
