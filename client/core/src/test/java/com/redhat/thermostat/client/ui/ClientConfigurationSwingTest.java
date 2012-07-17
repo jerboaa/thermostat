@@ -41,6 +41,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+
+import javax.swing.UIManager;
+
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
@@ -64,7 +67,7 @@ import com.redhat.thermostat.test.Bug;
 
 @RunWith(CacioFESTRunner.class)
 public class ClientConfigurationSwingTest {
-
+    
     private ClientConfigurationSwing frame;
     private DialogFixture frameFixture;
     private ActionListener<ClientConfigurationView.Action> l;
@@ -77,6 +80,7 @@ public class ClientConfigurationSwingTest {
     @SuppressWarnings("unchecked") // ActionListener
     @Before
     public void setUp() {
+        
         frame = GuiActionRunner.execute(new GuiQuery<ClientConfigurationSwing>() {
 
             @Override
@@ -119,18 +123,15 @@ public class ClientConfigurationSwingTest {
         button.click();
 
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT)));
-
-
     }
 
     @Category(GUITest.class)
     @Test
     public void testCancelButton() {
-        JButtonFixture button = frameFixture.button(JButtonMatcher.withText("Cancel"));
+        JButtonFixture button = frameFixture.button(JButtonMatcher.withText(UIManager.getString("OptionPane.cancelButtonText")));
         button.click();
 
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
-
     }
 
     @Category(GUITest.class)
@@ -147,7 +148,7 @@ public class ClientConfigurationSwingTest {
     @Category(GUITest.class)
     @Test
     public void testButtonsSameSize() {
-        JButtonFixture cancel = frameFixture.button(JButtonMatcher.withText("Cancel"));
+        JButtonFixture cancel = frameFixture.button(JButtonMatcher.withText(UIManager.getString("OptionPane.cancelButtonText")));
         JButtonFixture ok = frameFixture.button(JButtonMatcher.withText("OK"));
 
         assertEquals(cancel.target.getSize(), ok.target.getSize());
