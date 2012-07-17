@@ -148,7 +148,19 @@ class HeapDAOImpl implements HeapDAO {
     public HeapInfo getHeapInfo(String heapId) {
         Chunk query = new Chunk(heapInfoCategory, false);
         query.put(Key.ID, heapId);
-        Chunk found = storage.find(query);
+        Chunk found = null;
+        try {
+            found = storage.find(query);
+        } catch (IllegalArgumentException iae) {
+            /*
+             * if the heap id is not found, we get a nice
+             * IllegalArgumentException but check if the illegal argument
+             * exception is caused by that before propagating it.
+             */
+            if (!iae.getMessage().contains("invalid ObjectId")) {
+                throw iae;
+            }
+        }
         if (found == null) {
             return null;
         } else {

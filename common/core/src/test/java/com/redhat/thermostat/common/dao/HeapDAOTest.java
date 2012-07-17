@@ -42,6 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -252,5 +253,14 @@ public class HeapDAOTest {
         assertEquals(2, histoRecs.size());
         assertTrue(histoRecs.contains(new HistogramRecord("class1", 2, 8)));
         assertTrue(histoRecs.contains(new HistogramRecord("class2", 1, 10)));
+    }
+
+    @Test
+    public void testInvalidHeapId() throws IOException {
+        storage = mock(Storage.class);
+        when(storage.find(isA(Chunk.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
+        dao = new HeapDAOImpl(storage);
+        heapInfo = dao.getHeapInfo("some-random-heap-id");
+        assertTrue(heapInfo == null);
     }
 }

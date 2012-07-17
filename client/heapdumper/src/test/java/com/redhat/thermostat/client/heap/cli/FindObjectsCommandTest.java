@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,7 +81,7 @@ public class FindObjectsCommandTest {
         setupHeapDump();
 
         setupDAO();
-        
+
     }
 
     private void setupHeapDump() {
@@ -207,6 +208,29 @@ public class FindObjectsCommandTest {
         cmd.run(factory.createContext(args));
 
 
+    }
+
+    @Test
+    public void testSearchWithBadHeapId() throws CommandException {
+        final String INVALID_HEAP_ID = "foobarbaz";
+
+
+        HeapDAO dao = mock(HeapDAO.class);
+        when(dao.getHeapInfo(INVALID_HEAP_ID)).thenReturn(null);
+        when(dao.getHeapDump(isA(HeapInfo.class))).thenReturn(null);
+
+        DAOFactory daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getHeapDAO()).thenReturn(dao);
+
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", INVALID_HEAP_ID);
+
+        cmd.run(factory.createContext(args));
+
+        assertEquals("Heap ID not found: " + INVALID_HEAP_ID + "\n", factory.getOutput());
     }
 
     @Test

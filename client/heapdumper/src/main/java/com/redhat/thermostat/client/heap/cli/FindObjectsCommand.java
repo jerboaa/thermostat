@@ -68,7 +68,15 @@ public class FindObjectsCommand extends SimpleCommand {
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         String heapId = ctx.getArguments().getArgument(HEAP_ID_ARG);
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
+        if (heapInfo == null) {
+            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            return;
+        }
         HeapDump heapDump = heapDAO.getHeapDump(heapInfo);
+        if (heapDump == null) {
+            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            return;
+        }
         String searchTerm = ctx.getArguments().getNonOptionArguments().get(0);
         String limitArg = ctx.getArguments().getArgument(LIMIT_ARG);
         int limit = parseLimit(limitArg);

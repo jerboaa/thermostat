@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -114,4 +115,28 @@ public class ShowHeapHistogramCommandTest {
         		     "verylongclassnameclass2 1 10\n", factory.getOutput());
     }
 
+    @Test
+    public void verifyWorkWithBadHeapId() throws CommandException {
+        final String BAD_HEAP_ID = "invalid-heap-id";
+
+        HeapDAO heapDao = mock(HeapDAO.class);
+
+        HeapInfo heapInfo = mock(HeapInfo.class);
+        when(heapDao.getHeapInfo(BAD_HEAP_ID)).thenReturn(null);
+        when(heapDao.getHistogram(any(HeapInfo.class))).thenReturn(null);
+        DAOFactory daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getHeapDAO()).thenReturn(heapDao);
+
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+
+        Command command = new ShowHeapHistogramCommand();
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", BAD_HEAP_ID);
+
+        command.run(factory.createContext(args));
+
+        assertEquals("Heap ID not found: " + BAD_HEAP_ID + "\n", factory.getOutput());
+    }
 }

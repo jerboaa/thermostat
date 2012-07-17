@@ -92,9 +92,15 @@ public class ShowHeapHistogramCommand extends SimpleCommand {
         HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
 
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
+        if (heapInfo == null) {
+            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            return;
+        }
+
         ObjectHistogram histogram = heapDAO.getHistogram(heapInfo);
         if (histogram == null) {
             ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            return;
         } else {
             printHeapHistogram(histogram, ctx.getConsole().getOutput());
         }
