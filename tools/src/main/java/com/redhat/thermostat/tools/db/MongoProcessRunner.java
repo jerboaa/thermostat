@@ -68,7 +68,7 @@ class MongoProcessRunner {
     };
 
     private static final String [] MONGO_SHUTDOWN_ARGS = {
-        "mongod", "--shutdown", "--dbpath"
+        "kill", "-s", "TERM"
     };
 
     private static final String NO_JOURNAL_ARGUMENT = "--nojournal";
@@ -106,7 +106,7 @@ class MongoProcessRunner {
     void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
  
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_SHUTDOWN_ARGS));
-        commands.add(configuration.getDBPath().getCanonicalPath());
+        commands.add(getPid());
 
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = process.runAndReturnResult();
