@@ -62,14 +62,13 @@ class MongoConnection extends Connection {
             createConnection();
             /* the mongo java driver does not ensure this connection is actually working */
             testConnection();
-        } catch (IOException | MongoException |
-                 NotImplementedException | IllegalArgumentException e)
-        {
+            connected = true;
+
+        } catch (IOException | MongoException | NotImplementedException | IllegalArgumentException e) {
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             throw new ConnectionException(e.getMessage(), e);
         }
         fireChanged(ConnectionStatus.CONNECTED);
-        connected = true;
     }
 
     @Override

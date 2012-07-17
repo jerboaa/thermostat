@@ -67,7 +67,7 @@ import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Main {
-
+    
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
     private UiFacadeFactory uiFacadeFactory;
@@ -117,15 +117,20 @@ public class Main {
     }
 
     private void showGui() {
-
+        
         JPopupMenu.setDefaultLightWeightPopupEnabled(false);
 
         Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
         connection.setType(ConnectionType.LOCAL);
         ConnectionListener connectionListener = new ConnectionListener() {
+            
             @Override
             public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
+                if (newStatus == ConnectionStatus.CONNECTED) {
+                    MainWindowController mainController = uiFacadeFactory.getMainWindow();
+                    mainController.showMainMainWindow();
+
+                } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
                     JOptionPane.showMessageDialog(
                             null,
                             localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
@@ -135,14 +140,13 @@ public class Main {
                 }
             }
         };
-
+        
         connection.addListener(connectionListener);
-        connection.connect();
-        connection.removeListener(connectionListener);
-
-        MainWindowController mainController = uiFacadeFactory.getMainWindow();
-        mainController.showMainMainWindow();
-
+        try {
+            connection.connect();
+            
+        } catch (Throwable t) {
+            logger.log(Level.WARNING, "connection attempt failed: ", t);
+        }
     }
-
 }
