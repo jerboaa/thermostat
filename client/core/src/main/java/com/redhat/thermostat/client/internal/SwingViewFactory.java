@@ -43,7 +43,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.ui.AgentConfigurationFrame;
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
-import com.redhat.thermostat.client.ui.ClientConfigurationFrame;
+import com.redhat.thermostat.client.ui.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.EdtHelper;
 import com.redhat.thermostat.client.ui.HostCpuPanel;
@@ -74,7 +74,7 @@ public class SwingViewFactory extends DefaultViewFactory implements ViewFactory 
 
     public SwingViewFactory() {
         setViewClass(AgentConfigurationView.class, AgentConfigurationFrame.class);
-        setViewClass(ClientConfigurationView.class, ClientConfigurationFrame.class);
+        setViewClass(ClientConfigurationView.class, ClientConfigurationSwing.class);
 
         setViewClass(SummaryView.class, SummaryPanel.class);
 

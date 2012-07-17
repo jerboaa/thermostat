@@ -36,19 +36,21 @@
 
 package com.redhat.thermostat.client.ui;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import junit.framework.Assert;
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
+import org.fest.swing.core.matcher.JButtonMatcher;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
-import org.fest.swing.edt.GuiTask;
-import org.fest.swing.fixture.FrameFixture;
+import org.fest.swing.fixture.DialogFixture;
 import org.fest.swing.fixture.JButtonFixture;
+import org.fest.swing.fixture.JTextComponentFixture;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -61,10 +63,10 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.test.Bug;
 
 @RunWith(CacioFESTRunner.class)
-public class ClientConfigurationFrameTest {
+public class ClientConfigurationSwingTest {
 
-    private ClientConfigurationFrame frame;
-    private FrameFixture frameFixture;
+    private ClientConfigurationSwing frame;
+    private DialogFixture frameFixture;
     private ActionListener<ClientConfigurationView.Action> l;
 
     @BeforeClass
@@ -75,27 +77,24 @@ public class ClientConfigurationFrameTest {
     @SuppressWarnings("unchecked") // ActionListener
     @Before
     public void setUp() {
-        frame = GuiActionRunner.execute(new GuiQuery<ClientConfigurationFrame>() {
+        frame = GuiActionRunner.execute(new GuiQuery<ClientConfigurationSwing>() {
 
             @Override
-            protected ClientConfigurationFrame executeInEDT() throws Throwable {
-                 return new ClientConfigurationFrame();
+            protected ClientConfigurationSwing executeInEDT() throws Throwable {
+                return new ClientConfigurationSwing();
             }
         });
         l = mock(ActionListener.class);
         frame.addListener(l);
-        frameFixture = new FrameFixture(frame);
+        frame.showDialog();
+        assertNotNull(frame.getDialog());
+        frameFixture = new DialogFixture(frame.getDialog());
 
     }
 
     @After
     public void tearDown() {
-        GuiActionRunner.execute(new GuiTask() {
-            @Override
-            protected void executeInEDT() throws Throwable {
-                frame.hideDialog();
-            }
-        });
+        frame.hideDialog();
 
         frameFixture.cleanUp();
         frame.removeListener(l);
@@ -105,10 +104,18 @@ public class ClientConfigurationFrameTest {
 
     @Category(GUITest.class)
     @Test
-    public void testOkayButton() {
-        frameFixture.show();
+    public void testConnectionUrlText() {
 
-        JButtonFixture button = frameFixture.button("ok");
+        JTextComponentFixture textBox = frameFixture.textBox();
+        textBox.enterText("foobar");
+
+        assertEquals("foobar", frame.getConnectionUrl());
+    }
+
+    @Category(GUITest.class)
+    @Test
+    public void testOkayButton() {
+        JButtonFixture button = frameFixture.button(JButtonMatcher.withText("OK"));
         button.click();
 
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_ACCEPT)));
@@ -119,9 +126,7 @@ public class ClientConfigurationFrameTest {
     @Category(GUITest.class)
     @Test
     public void testCancelButton() {
-        frameFixture.show();
-
-        JButtonFixture button = frameFixture.button("cancel");
+        JButtonFixture button = frameFixture.button(JButtonMatcher.withText("Cancel"));
         button.click();
 
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
@@ -131,26 +136,22 @@ public class ClientConfigurationFrameTest {
     @Category(GUITest.class)
     @Test
     public void testCloseWindow() {
-        frameFixture.show();
-
         frameFixture.close();
 
         verify(l).actionPerformed(eq(new ActionEvent<>(frame, ClientConfigurationView.Action.CLOSE_CANCEL)));
     }
-    
+
     @Bug(id="1030",
          summary="Buttons in client preferences dialog should have the same size",
          url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1030")
     @Category(GUITest.class)
     @Test
     public void testButtonsSameSize() {
-        frameFixture.show();
-        
-        JButtonFixture cancel = frameFixture.button("cancel");
-        JButtonFixture ok = frameFixture.button("ok");
-        
-        Assert.assertEquals(cancel.target.getSize(), ok.target.getSize());
-        
+        JButtonFixture cancel = frameFixture.button(JButtonMatcher.withText("Cancel"));
+        JButtonFixture ok = frameFixture.button(JButtonMatcher.withText("OK"));
+
+        assertEquals(cancel.target.getSize(), ok.target.getSize());
+
         frameFixture.close();
     }
 }
