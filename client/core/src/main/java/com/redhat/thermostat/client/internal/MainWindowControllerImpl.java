@@ -47,7 +47,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.client.internal.MainView.Action;
@@ -63,6 +62,7 @@ import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.SummaryController;
+import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -88,8 +88,6 @@ public class MainWindowControllerImpl implements MainWindowController {
     private Timer backgroundUpdater;
 
     private MainView view;
-
-    private String filter;
 
     private final HostInfoDAO hostsDAO;
     private final VmInfoDAO vmsDAO;
@@ -126,7 +124,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     };
 
-    private TreeViewFilter treeFilter;
+    private HostVmFilter treeFilter;
     private VMTreeFilterRegistry filterRegistry;
     private ActionListener<ThermostatExtensionRegistry.Action> filterListener =
             new ActionListener<ThermostatExtensionRegistry.Action>()
@@ -213,7 +211,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmTreeDecorators = new CopyOnWriteArrayList<>();
         
         vmTreefilters = new CopyOnWriteArrayList<>();
-        treeFilter = new TreeViewFilter();
+        treeFilter = new HostVmFilter();
         vmTreefilters.add(treeFilter);
         
         this.facadeFactory = facadeFactory;
@@ -308,25 +306,9 @@ public class MainWindowControllerImpl implements MainWindowController {
         backgroundUpdater.stop();
     }
 
-    private class TreeViewFilter implements Filter {
-        @Override
-        public boolean matches(Ref ref) {
-            if (filter == null || filter.isEmpty()) {
-                return true;
-                
-            } else {
-                return matches(ref, filter);                
-            }
-        }
-      
-        public boolean matches(Ref ref, String filter) {
-          return ref.getName().contains(filter) || ref.getStringID().contains(filter);
-        }
-    }
-    
     @Override
     public void setHostVmTreeFilter(String filter) {
-        this.filter = filter;
+        this.treeFilter.setFilter(filter);
         doUpdateTreeAsync();
     }
 

@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
@@ -57,6 +58,7 @@ import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
@@ -71,8 +73,18 @@ import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
 
+    private static final Color[] SERIES_COLORS = {
+        new Color(192,80,77),
+        new Color(79,129,189),
+        new Color(155,187,89),
+        new Color(128,100,162),
+        new Color(75,172,198),
+        new Color(128,128,128),
+        new Color(247,150,70),
+    };
+
     private JPanel visiblePanel;
-    
+
     private final MemoryCheckboxListener memoryCheckboxListener = new MemoryCheckboxListener();
 
     private final JTextComponent totalMemory = new ValueField("${TOTAL_MEMORY}");
@@ -82,6 +94,9 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
     private final TimeSeriesCollection memoryCollection = new TimeSeriesCollection();
     private final Map<String, TimeSeries> dataset = new HashMap<>();
     private final Map<String, JCheckBox> checkBoxes = new HashMap<>();
+    private final Map<String, Color> colors = new HashMap<>();
+
+    private JFreeChart chart;
 
     public HostMemoryPanel() {
         super();
@@ -119,18 +134,26 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                int colorIndex = colors.size();
+                colors.put(tag, SERIES_COLORS[colorIndex]);
                 TimeSeries series = new TimeSeries(tag);
                 dataset.put(tag, series);
-
-                JCheckBox newCheckBox = new JCheckBox(humanReadableName);
+                JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(humanReadableName, colors.get(tag)));
                 newCheckBox.setActionCommand(tag);
                 newCheckBox.setSelected(true);
                 newCheckBox.addActionListener(memoryCheckboxListener);
                 checkBoxes.put(tag, newCheckBox);
                 memoryCheckBoxPanel.add(newCheckBox);
+
+                updateColors();
             }
         });
 
+    }
+
+    private String createLabelWithLegend(String text, Color color) {
+        String hexColor = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
+        return "<html> <font color='" + hexColor + "'>\u2588</font> " + text + "</html>";
     }
 
     @Override
@@ -142,6 +165,8 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
                 memoryCollection.removeSeries(series);
                 JCheckBox box = checkBoxes.remove(tag);
                 memoryCheckBoxPanel.remove(box);
+
+                updateColors();
             }
         });
     }
@@ -153,6 +178,8 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
             public void run() {
                 TimeSeries series = dataset.get(tag);
                 memoryCollection.addSeries(series);
+
+                updateColors();
             }
         });
     }
@@ -164,6 +191,8 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
             public void run() {
                 TimeSeries series = dataset.get(tag);
                 memoryCollection.removeSeries(series);
+
+                updateColors();
             }
         });
     }
@@ -219,8 +248,8 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
 
     private void initializePanel() {
         visiblePanel = new JPanel();
-        
-        JFreeChart chart = createMemoryChart();
+
+        chart = createMemoryChart();
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
@@ -274,6 +303,11 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
                 false, // Use tooltips
                 false // Configure chart to generate URLs?
                 );
+
+        chart.getPlot().setBackgroundPaint( new Color(255,255,255,0) );
+        chart.getPlot().setBackgroundImageAlpha(0.0f);
+        chart.getPlot().setOutlinePaint(new Color(0,0,0,0));
+
         return chart;
     }
 
@@ -285,6 +319,20 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
             } else {
                 listener.hide(tag);
             }
+        }
+    }
+
+    /**
+     * Adding or removing series to the series collection may change the order
+     * of existing items. Plus the paint for the index is now out-of-date. So
+     * let's walk through all the series and set the right paint for those.
+     */
+    private void updateColors() {
+        XYItemRenderer itemRenderer = chart.getXYPlot().getRenderer();
+        for (int i = 0; i < memoryCollection.getSeriesCount(); i++) {
+            String tag = (String) memoryCollection.getSeriesKey(i);
+            Color color = colors.get(tag);
+            itemRenderer.setSeriesPaint(i, color);
         }
     }
 

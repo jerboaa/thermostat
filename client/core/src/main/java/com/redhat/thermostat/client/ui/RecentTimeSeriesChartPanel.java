@@ -59,6 +59,7 @@ import com.redhat.thermostat.client.locale.Translate;
 public class RecentTimeSeriesChartPanel extends JPanel {
 
     private static final long serialVersionUID = -1733906800911900456L;
+    private static final int MINIMUM_DRAW_SIZE = 100;
 
     private final RecentTimeSeriesChartController controller;
 
@@ -73,6 +74,17 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         cp.setDoubleBuffered(true);
         cp.setMouseZoomable(false);
         cp.setPopupMenu(null);
+
+        /*
+         * By default, ChartPanel scales itself instead of redrawing things when
+         * it's resized. To have it resize automatically, we need to set minimum
+         * and maximum sizes. Lets constrain the minimum, but not the maximum
+         * size.
+         */
+        cp.setMinimumDrawHeight(MINIMUM_DRAW_SIZE);
+        cp.setMaximumDrawHeight(Integer.MAX_VALUE);
+        cp.setMinimumDrawWidth(MINIMUM_DRAW_SIZE);
+        cp.setMaximumDrawWidth(Integer.MAX_VALUE);
 
         add(cp);
         add(getChartControls(), BorderLayout.SOUTH);
