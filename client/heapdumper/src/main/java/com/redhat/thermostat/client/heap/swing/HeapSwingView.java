@@ -39,18 +39,23 @@ package com.redhat.thermostat.client.heap.swing;
 import java.awt.Component;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.BasicView;
@@ -68,7 +73,8 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     private JPanel visiblePane;
     
     public HeapSwingView() {
-        
+        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference ref = ctx.getServiceReference(ApplicationService.class.getName());
         stats = new StatsPanel();
         stats.addHeapDumperListener(new ActionListener() {
             @Override
@@ -92,9 +98,9 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             }
         });
         
-        stats.addDumpListListener(new MouseAdapter() {
+        stats.addDumpListListener(new ListSelectionListener() {
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void valueChanged(ListSelectionEvent arg0) {
                 HeapDump dump = stats.getSelectedHeapDump();
                 heapDumperNotifier.fireAction(HeadDumperAction.ANALYSE, dump);
             }

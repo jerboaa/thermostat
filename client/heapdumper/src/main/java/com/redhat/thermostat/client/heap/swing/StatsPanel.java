@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.heap.swing;
 
 import java.awt.event.ActionListener;
-import java.awt.event.MouseListener;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
@@ -51,6 +50,7 @@ import javax.swing.JScrollPane;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
+import javax.swing.event.ListSelectionListener;
 
 import com.redhat.thermostat.common.heap.HeapDump;
 
@@ -169,8 +169,8 @@ public class StatsPanel extends JPanel {
         heapDumpButton.addActionListener(listener);
     }
 
-    void addDumpListListener(MouseListener listener) {
-        dumpList.addMouseListener(listener);
+    void addDumpListListener(ListSelectionListener listener) {
+        dumpList.addListSelectionListener(listener);
     }
     
     public void disableHeapDumperControl() {

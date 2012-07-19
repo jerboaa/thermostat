@@ -36,17 +36,49 @@
 
 package com.redhat.thermostat.client.internal.osgi;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
+
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 public class ApplicationServiceProviderTest {
 
+    private ApplicationServiceProvider provider;
+
+    @Before
+    public void setUp() {
+        provider = new ApplicationServiceProvider();
+    }
+
+    @After
+    public void tearDown() {
+        provider = null;
+    }
+
     @Test
     public void testCache() {
-        ApplicationServiceProvider provider = new ApplicationServiceProvider();
         provider.getApplicationCache().addAttribute("test", "fluff");
         assertEquals("fluff", provider.getApplicationCache().getAttribute("test"));
     }
 
+    @Test
+    public void testApplicationExecutor() throws Exception {
+        assertNotNull(provider.getApplicationExecutor());
+        final String obj = "test";
+        Future<String> future = provider.getApplicationExecutor().submit(new Callable<String>() {
+
+            @Override
+            public String call() throws Exception {
+                return obj;
+            }
+        });
+        String result = future.get();
+        assertSame(result, obj);
+    }
 }

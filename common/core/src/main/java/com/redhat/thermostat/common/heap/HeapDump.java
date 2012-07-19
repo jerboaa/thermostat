@@ -72,6 +72,9 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.parser.Reader;
 
+/**
+ * NOTE: This class is thread-safe with respect to loading the heapdump and creating the index.
+ */
 public class HeapDump {
 
     private static final String INDEX_FIELD_OBJECT_ID = "objectId";
@@ -80,9 +83,9 @@ public class HeapDump {
 
     private static final Logger log = Logger.getLogger(HeapDump.class.getName());
 
-    private HeapInfo heapInfo;
+    private final HeapInfo heapInfo;
 
-    private HeapDAO heapDAO;
+    private final HeapDAO heapDAO;
 
     private Snapshot snapshot;
 
@@ -114,7 +117,7 @@ public class HeapDump {
         return heapInfo;
     }
 
-    private Directory getLuceneIndex() {
+    private synchronized Directory getLuceneIndex() {
         if (luceneIndex == null) {
             try {
                 luceneIndex = createLuceneIndex();
@@ -151,7 +154,7 @@ public class HeapDump {
         return snapshot;
     }
 
-    private void loadHeapDumpIfNecessary() {
+    private synchronized void loadHeapDumpIfNecessary() {
         if (snapshot == null) {
             try {
                 loadHeapDump();
@@ -201,6 +204,7 @@ public class HeapDump {
                 String objectId = doc.get(INDEX_FIELD_OBJECT_ID);
                 results.add(objectId);
             }
+            searcher.close();
         } catch (IOException e) {
             log.log(Level.SEVERE, "Unexpected IO Exception while searching heap dump index", e);
         }

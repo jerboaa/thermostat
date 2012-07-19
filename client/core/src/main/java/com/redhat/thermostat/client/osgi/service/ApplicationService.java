@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
+import java.util.concurrent.ExecutorService;
+
 import com.redhat.thermostat.common.dao.DAOFactory;
 
 public interface ApplicationService {
@@ -43,4 +45,6 @@ public interface ApplicationService {
     DAOFactory getDAOFactory();
     
     ApplicationCache getApplicationCache();
+
+    ExecutorService getApplicationExecutor();
 }

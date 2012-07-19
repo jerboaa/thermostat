@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client.internal.osgi;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 import com.redhat.thermostat.client.osgi.service.ApplicationCache;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -45,7 +48,13 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 public class ApplicationServiceProvider implements ApplicationService {
 
     private ApplicationCache cache = new ApplicationCache();
-    
+
+    // NOTE: When merging with ApplicationContext, this could be provided by the same
+    // thread pool that does the timer scheduling. Not sure we want this though,
+    // as scheduled thread pools are always limited in number of threads (could lead to deadlocks
+    // when used carelessly).
+    private ExecutorService executor = Executors.newCachedThreadPool();
+
     @Override
     public DAOFactory getDAOFactory() {
         // TODO: Eventually we will no longer need a singleton for ApplicationContext!
@@ -55,5 +64,10 @@ public class ApplicationServiceProvider implements ApplicationService {
     @Override
     public ApplicationCache getApplicationCache() {
         return cache;
+    }
+
+    @Override
+    public ExecutorService getApplicationExecutor() {
+        return executor;
     }
 }

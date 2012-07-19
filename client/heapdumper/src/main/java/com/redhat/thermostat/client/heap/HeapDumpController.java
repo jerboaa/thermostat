@@ -42,12 +42,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import javax.swing.JComponent;
-
 import com.redhat.thermostat.client.heap.HeapView.HeadDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
-import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.ActionEvent;
@@ -80,7 +77,7 @@ public class HeapDumpController implements VmInformationServiceController {
     
     private OverviewChart model;
     private ApplicationService appService;
-    
+
     public HeapDumpController(final VmRef ref, final ApplicationService appService) {
         
         this.appService = appService;
@@ -162,8 +159,15 @@ public class HeapDumpController implements VmInformationServiceController {
                     break;
                 }
             }
+        });
+    }
+
+    
+    private void analyseDump(final HeapDump dump) {
+        appService.getApplicationExecutor().execute(new Runnable() {
             
-            private void analyseDump(HeapDump dump) {
+            @Override
+            public void run() {
                 showHeapDumpDetails(dump);
                 appService.getApplicationCache().addAttribute(ref, dump);
             }
