@@ -41,7 +41,9 @@ import java.util.prefs.Preferences;
 
 public class ClientPreferences {
 
-    private static final String CONNECTION_URL = "connection-url";
+    static final String USERNAME = "username";
+    static final String PASSWORD = "password";
+    static final String CONNECTION_URL = "connection-url";
 
     private final Preferences prefs;
 
@@ -57,10 +59,26 @@ public class ClientPreferences {
         return prefs.get(CONNECTION_URL, "mongodb://127.0.0.1:27518");
     }
 
+    public String getPassword() {
+        return prefs.get(PASSWORD, "");
+    }
+
+    public String getUserName() {
+        return prefs.get(USERNAME, "");
+    }
+
     public void setConnectionUrl(String url) {
         prefs.put(CONNECTION_URL, url);
     }
 
+    public void setPassword(String password) {
+        prefs.put(PASSWORD, password);
+    }
+    
+    public void setUserName(String username) {
+        prefs.put(USERNAME, username);
+    }
+    
     public void flush() throws BackingStoreException {
         prefs.flush();
     }

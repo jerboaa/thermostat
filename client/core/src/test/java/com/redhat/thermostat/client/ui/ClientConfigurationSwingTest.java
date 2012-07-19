@@ -110,12 +110,32 @@ public class ClientConfigurationSwingTest {
     @Test
     public void testConnectionUrlText() {
 
-        JTextComponentFixture textBox = frameFixture.textBox();
+        JTextComponentFixture textBox = frameFixture.textBox("connectionUrl");
         textBox.enterText("foobar");
 
         assertEquals("foobar", frame.getConnectionUrl());
     }
 
+    @Category(GUITest.class)
+    @Test
+    public void testPasswordText() {
+
+        JTextComponentFixture textBox = frameFixture.textBox("password");
+        textBox.enterText("foobar");
+
+        assertEquals("foobar", frame.getPassword());
+    }
+    
+    @Category(GUITest.class)
+    @Test
+    public void testUsernameText() {
+
+        JTextComponentFixture textBox = frameFixture.textBox("username");
+        textBox.enterText("foobar");
+
+        assertEquals("foobar", frame.getUserName());
+    }
+    
     @Category(GUITest.class)
     @Test
     public void testOkayButton() {

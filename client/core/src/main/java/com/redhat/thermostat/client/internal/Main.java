@@ -39,17 +39,33 @@ package com.redhat.thermostat.client.internal;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.EventQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
+import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.client.ui.ClientConfigurationController;
+import com.redhat.thermostat.client.ui.ClientConfigurationSwing;
+import com.redhat.thermostat.client.ui.ClientConfigurationView;
+import com.redhat.thermostat.client.ui.ClientConfigurationView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
@@ -71,7 +87,7 @@ public class Main {
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
     private UiFacadeFactory uiFacadeFactory;
-
+    
     public Main(UiFacadeFactory uiFacadeFactory, String[] args) {
         this.uiFacadeFactory = uiFacadeFactory;
 
@@ -104,6 +120,12 @@ public class Main {
                     }
                 }
 
+                // TODO: move them in an appropriate place
+                JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+                UIManager.getDefaults().put("OptionPane.buttonOrientation", SwingConstants.RIGHT);
+                UIManager.getDefaults().put("OptionPane.isYesLast", true);
+                UIManager.getDefaults().put("OptionPane.sameSizeButtons", true);
+                
                 showGui();
             }
 
@@ -118,19 +140,152 @@ public class Main {
 
     private void showGui() {
         
-        JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference ref = ctx.getServiceReference(ApplicationService.class.getName());
+        ApplicationService appSrv = (ApplicationService) ctx.getService(ref);
+        
+        final ExecutorService service = appSrv.getApplicationExecutor();
+        
+        service.execute(new ConnectorSetup(service));
+    }
+    
+    private class ConnectorSetup implements Runnable {
+        
+        private ExecutorService service;
+        public ConnectorSetup(ExecutorService service) {
+            this.service = service;
+        }
+        
+        @Override
+        public void run() {
+            Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
+            connection.setType(ConnectionType.LOCAL);
+            ConnectionListener connectionListener = new ConnectionHandler(connection, service);
+            connection.addListener(connectionListener);
+            try {
+                connection.connect();
+            } catch (Throwable t) {
+                logger.log(Level.WARNING, "connection attempt failed: ", t);
+            }
+        }
+    }
+    
+    private class Connector implements Runnable {
+        private Connection connection;
+        Connector(Connection connection) {
+            this.connection = connection;
+        }
+        
+        @Override
+        public void run() {
+            try {
+                connection.connect();
+            } catch (Throwable t) {
+                logger.log(Level.WARNING, "connection attempt failed: ", t);
+            }
+        }
+    }
+    
+    private class ConnectionAttemp implements Runnable {
+        private Connection connection;
+        private ExecutorService service;
+        public ConnectionAttemp(Connection connection, ExecutorService service) {
+            this.connection = connection;
+            this.service = service;
+        }
+        
+        @Override
+        public void run() {
+            Object[] options = {
+                    localize(LocaleResources.CONNECTION_WIZARD),
+                    localize(LocaleResources.CONNECTION_QUIT),
+            };
+            int n = JOptionPane
+                    .showOptionDialog(
+                            null,
+                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
+                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
+                            JOptionPane.OK_CANCEL_OPTION,
+                            JOptionPane.ERROR_MESSAGE, null, options,
+                            options[0]);
 
-        Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
-        connection.setType(ConnectionType.LOCAL);
-        ConnectionListener connectionListener = new ConnectionListener() {
+            switch (n) {
+
+            case JOptionPane.CANCEL_OPTION:
+            case JOptionPane.CLOSED_OPTION:
+            case JOptionPane.NO_OPTION:
+                uiFacadeFactory
+                        .shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
+                break;
+
+            case JOptionPane.YES_OPTION:
+            default:
+                createPreferencesDialog(connection, service);
+                break;
+            }
+        }
+    }
+    
+    private void connect(Connection connection, ExecutorService service) {
+        service.execute(new Connector(connection));
+    }
+    
+    private class ConfigDialogListener implements ActionListener<ClientConfigurationView.Action> {
+        private Connection connection;
+        private ExecutorService service;
+        public ConfigDialogListener(Connection connection, ExecutorService service) {
+            this.connection = connection;
+            this.service = service;
+        }
+        
+        @Override
+        public void actionPerformed(ActionEvent<ClientConfigurationView.Action> actionEvent) {
+            switch (actionEvent.getActionId()) {
+            case CLOSE_CANCEL:
+                uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
+                break;
             
-            @Override
-            public void changed(ConnectionStatus newStatus) {
-                if (newStatus == ConnectionStatus.CONNECTED) {
-                    MainWindowController mainController = uiFacadeFactory.getMainWindow();
-                    mainController.showMainMainWindow();
-
-                } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
+            case CLOSE_ACCEPT:
+            default:
+                connect(connection, service);
+                break;
+            }
+        }
+    }
+    
+    private void createPreferencesDialog(final Connection connection, final ExecutorService service) {
+        ClientPreferences prefs = new ClientPreferences();
+        ClientConfigurationView configDialog = new ClientConfigurationSwing();
+        ClientConfigurationController controller =
+                new ClientConfigurationController(prefs, configDialog);
+        
+        configDialog.addListener(new ConfigDialogListener(connection, service));
+        controller.showDialog();
+    }
+    
+    private class ConnectionHandler implements ConnectionListener {
+        private boolean retry;
+        private Connection connection;
+        private ExecutorService service;
+        public ConnectionHandler(Connection connection, ExecutorService service) {
+            this.connection = connection;
+            this.retry = true;
+            this.service = service;
+        }
+        
+        private void showConnectionAttemptWarning() {
+            SwingUtilities.invokeLater(new ConnectionAttemp(connection, service));
+        }
+        
+        @Override
+        public void changed(ConnectionStatus newStatus) {
+            if (newStatus == ConnectionStatus.CONNECTED) {
+                showMainWindow();
+            } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
+                if (retry) {
+                    retry = false;
+                    showConnectionAttemptWarning();
+                } else {
                     JOptionPane.showMessageDialog(
                             null,
                             localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
@@ -139,14 +294,18 @@ public class Main {
                     uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
                 }
             }
-        };
-        
-        connection.addListener(connectionListener);
-        try {
-            connection.connect();
-            
-        } catch (Throwable t) {
-            logger.log(Level.WARNING, "connection attempt failed: ", t);
+        }
+    }
+    
+    private void showMainWindow() {
+        SwingUtilities.invokeLater(new ShowMainWindow());
+    }
+    
+    private class ShowMainWindow implements Runnable {
+        @Override
+        public void run() {
+            MainWindowController mainController = uiFacadeFactory.getMainWindow();
+            mainController.showMainMainWindow();                        
         }
     }
 }

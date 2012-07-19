@@ -70,42 +70,30 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
 
         windowClosingListener = new WindowClosingListener();
         configurationPanel = new ClientConfigurationPanel();
-
-        try {
-            new EdtHelper().callAndWait(new Runnable() {
-                @Override
-                public void run() {
-                    final JOptionPane optionPane = new JOptionPane(configurationPanel);
-                    optionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
-                    optionPane.addPropertyChangeListener(new PropertyChangeListener() {
-
-                        @Override
-                        public void propertyChange(PropertyChangeEvent evt) {
-                            String propertyName = evt.getPropertyName();
-                            if ((evt.getSource() == optionPane) &&
-                                (propertyName.equals(JOptionPane.VALUE_PROPERTY))) {
-                                if (dialog.isVisible()) {
-                                    if (evt.getNewValue().equals(JOptionPane.OK_OPTION)) {
-                                        fireAction(new ActionEvent<>(ClientConfigurationSwing.this, Action.CLOSE_ACCEPT));
-                                    } else if (evt.getNewValue().equals(JOptionPane.CANCEL_OPTION)) {
-                                        fireAction(new ActionEvent<>(ClientConfigurationSwing.this, Action.CLOSE_CANCEL));
-                                    }
-                                }
-                            }
+        
+        final JOptionPane optionPane = new JOptionPane(configurationPanel);
+        optionPane.setOptionType(JOptionPane.OK_CANCEL_OPTION);
+        optionPane.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                String propertyName = evt.getPropertyName();
+                if ((evt.getSource() == optionPane) &&
+                    (propertyName.equals(JOptionPane.VALUE_PROPERTY))) {
+                    if (dialog.isVisible()) {
+                        if (evt.getNewValue().equals(JOptionPane.OK_OPTION)) {
+                            fireAction(new ActionEvent<>(ClientConfigurationSwing.this, Action.CLOSE_ACCEPT));
+                        } else if (evt.getNewValue().equals(JOptionPane.CANCEL_OPTION)) {
+                            fireAction(new ActionEvent<>(ClientConfigurationSwing.this, Action.CLOSE_CANCEL));
                         }
-                    });
-
-                    dialog = new JDialog((Frame) null, Translate.localize(LocaleResources.CLIENT_PREFS_WINDOW_TITLE));
-                    dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-                    dialog.setContentPane(optionPane);
-                    dialog.addWindowListener(windowClosingListener);
+                    }
                 }
-            });
-        } catch (InvocationTargetException | InterruptedException e) {
-            InternalError error = new InternalError();
-            error.initCause(e);
-            throw error;
-        }
+            }
+        });
+
+        dialog = new JDialog((Frame) null, Translate.localize(LocaleResources.CLIENT_PREFS_WINDOW_TITLE));
+        dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        dialog.setContentPane(optionPane);
+        dialog.addWindowListener(windowClosingListener);
     }
 
     JDialog getDialog() {
@@ -191,4 +179,55 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
         }
     }
 
+    @Override
+    public void setPassword(final String password) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                configurationPanel.password.setText(password);
+            }
+        });
+    }
+    
+    @Override
+    public void setUserName(final String username) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                configurationPanel.userName.setText(username);
+            }
+        });
+    };
+    
+    @Override
+    public String getPassword() {
+        try {
+            return new EdtHelper().callAndWait(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return configurationPanel.password.getText();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            InternalError error = new InternalError();
+            error.initCause(e);
+            throw error;
+        }
+    }
+    
+    @Override
+    public String getUserName() {
+        try {
+            return new EdtHelper().callAndWait(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return configurationPanel.userName.getText();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            InternalError error = new InternalError();
+            error.initCause(e);
+            throw error;
+        }
+    }
 }

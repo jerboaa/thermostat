@@ -108,7 +108,8 @@ class MongoConnection extends Connection {
     }
 
     private MongoURI getMongoURI() {
-        MongoURI uri = new MongoURI(conf.getDBConnectionString());
+        String url = conf.getDBConnectionString();
+        MongoURI uri = new MongoURI(url);
         return uri;
     }
 

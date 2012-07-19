@@ -52,13 +52,13 @@ public class ClientPreferencesTest {
     public void testGetConnectionUrl() {
 
         Preferences prefs = mock(Preferences.class);
-        when(prefs.get(eq("connection-url"), any(String.class))).thenReturn("mock-value");
+        when(prefs.get(eq(ClientPreferences.CONNECTION_URL), any(String.class))).thenReturn("mock-value");
 
         ClientPreferences clientPrefs = new ClientPreferences(prefs);
         String value = clientPrefs.getConnectionUrl();
 
         assertEquals("mock-value", value);
-        verify(prefs).get(eq("connection-url"), any(String.class));
+        verify(prefs).get(eq(ClientPreferences.CONNECTION_URL), any(String.class));
     }
 
     @Test
@@ -69,8 +69,54 @@ public class ClientPreferencesTest {
         ClientPreferences clientPrefs = new ClientPreferences(prefs);
         clientPrefs.setConnectionUrl("test");
 
-        verify(prefs).put(eq("connection-url"), eq("test"));
+        verify(prefs).put(eq(ClientPreferences.CONNECTION_URL), eq("test"));
     }
 
+    @Test
+    public void testSetUsername() {
+        
+        Preferences prefs = mock(Preferences.class);
 
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        clientPrefs.setUserName("fluff");
+
+        verify(prefs).put(eq(ClientPreferences.USERNAME), eq("fluff"));
+    }
+    
+    @Test
+    public void testGetUsername() {
+        
+        Preferences prefs = mock(Preferences.class);
+        when(prefs.get(eq(ClientPreferences.USERNAME), any(String.class))).thenReturn("mock-value");
+        
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        String username = clientPrefs.getUserName();
+
+        assertEquals("mock-value", username);
+        verify(prefs).get(eq(ClientPreferences.USERNAME), any(String.class));
+    }
+    
+    @Test
+    public void testSetPassword() {
+        
+        Preferences prefs = mock(Preferences.class);
+
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        clientPrefs.setPassword("fluff");
+
+        verify(prefs).put(eq(ClientPreferences.PASSWORD), eq("fluff"));
+    }
+    
+    @Test
+    public void testGetPassword() {
+        
+        Preferences prefs = mock(Preferences.class);
+        when(prefs.get(eq(ClientPreferences.PASSWORD), any(String.class))).thenReturn("mock-value");
+        
+        ClientPreferences clientPrefs = new ClientPreferences(prefs);
+        String password = clientPrefs.getPassword();
+
+        assertEquals("mock-value", password);
+        verify(prefs).get(eq(ClientPreferences.PASSWORD), any(String.class));
+    }
 }

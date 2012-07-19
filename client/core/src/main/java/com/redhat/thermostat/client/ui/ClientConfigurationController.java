@@ -67,11 +67,15 @@ public class ClientConfigurationController implements ActionListener<Action> {
 
     private void updateViewFromModel() {
         view.setConnectionUrl(model.getConnectionUrl());
+        view.setPassword(model.getPassword());
+        view.setUserName(model.getUserName());
     }
 
     private void updateModelFromView() {
         model.setConnectionUrl(view.getConnectionUrl());
-
+        model.setUserName(view.getUserName());
+        model.setPassword(view.getPassword());
+        
         try {
             model.flush();
         } catch (BackingStoreException e) {
@@ -84,7 +88,7 @@ public class ClientConfigurationController implements ActionListener<Action> {
         if (actionEvent.getSource() != view) {
             return;
         }
-
+        
         switch (actionEvent.getActionId()) {
             case CLOSE_ACCEPT:
                 updateModelFromView();

@@ -51,6 +51,11 @@ public interface ClientConfigurationView extends View {
     void removeListener(ActionListener<Action> listener);
 
     void setConnectionUrl(String url);
+    void setPassword(String password);
+    void setUserName(String username);
+    
+    String getUserName();
+    String getPassword();
     String getConnectionUrl();
 
     void showDialog();

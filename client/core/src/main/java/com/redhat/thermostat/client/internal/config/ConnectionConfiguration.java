@@ -36,10 +36,11 @@
 
 package com.redhat.thermostat.client.internal.config;
 
+import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
-public class ConnectionConfiguration implements StartupConfiguration {
+public class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {
 
     private final ClientPreferences clientPrefs;
 
@@ -50,5 +51,15 @@ public class ConnectionConfiguration implements StartupConfiguration {
     @Override
     public String getDBConnectionString() {
         return clientPrefs.getConnectionUrl();
+    }
+    
+    @Override
+    public String getPassword() {
+        return clientPrefs.getPassword();
+    }
+    
+    @Override
+    public String getUsername() {
+        return clientPrefs.getUserName();
     }
 }
