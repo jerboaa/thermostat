@@ -40,6 +40,8 @@ import java.util.Collection;
 import java.util.Collections;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.internal.osgi.ApplicationServiceProvider;
 import com.redhat.thermostat.client.internal.osgi.ContextActionServiceProvider;
@@ -69,11 +71,15 @@ public class GUIClientCommand extends SimpleCommand implements OSGiContext {
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        context.registerService(ApplicationService.class.getName(), new ApplicationServiceProvider(), null);
+        ApplicationService service = new ApplicationServiceProvider();
+        
+        context.registerService(ApplicationService.class.getName(), service, null);
         context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
         
         // this blocks, everything else needs to be done before
         clientMain.run();
+
+        service.getApplicationExecutor().shutdown();
     }
 
     @Override
