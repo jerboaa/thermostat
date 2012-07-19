@@ -11,7 +11,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.common.dao.VmRef;
 
-public class TreeViewFilterTest {
+public class HostVmFilterTest {
 
     private HostVmFilter filter;
     
