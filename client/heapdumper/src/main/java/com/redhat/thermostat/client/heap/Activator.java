@@ -47,8 +47,12 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.heap.swing.HeapDetailsSwing;
 import com.redhat.thermostat.client.heap.swing.HeapSwingView;
+import com.redhat.thermostat.client.heap.swing.HistogramPanel;
+import com.redhat.thermostat.client.heap.swing.ObjectDetailsPanel;
+import com.redhat.thermostat.client.heap.swing.ObjectRootsFrame;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
@@ -67,8 +71,11 @@ public class Activator implements BundleActivator {
             public Object addingService(ServiceReference reference) {
                 ApplicationService appService = (ApplicationService) context.getService(reference);
 
-                ApplicationContext.getInstance().getViewFactory().setViewClass(HeapView.class, HeapSwingView.class);
-                ApplicationContext.getInstance().getViewFactory().setViewClass(HeapDumpDetailsView.class, HeapDetailsSwing.class);
+                registerViewClass(HeapView.class, HeapSwingView.class);
+                registerViewClass(HeapDumpDetailsView.class, HeapDetailsSwing.class);
+                registerViewClass(HeapHistogramView.class, HistogramPanel.class);
+                registerViewClass(ObjectDetailsView.class, ObjectDetailsPanel.class);
+                registerViewClass(ObjectRootsView.class, ObjectRootsFrame.class);
                 context.registerService(VmInformationService.class.getName(), new HeapDumperService(appService), null);
                 return super.addingService(reference);
             }
@@ -78,6 +85,10 @@ public class Activator implements BundleActivator {
         reg = new CommandRegistryImpl(context);
         ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
         reg.registerCommands(cmds);
+    }
+
+    private <T extends View > void registerViewClass(Class<T> viewClass, Class<? extends T> implClass) {
+        ApplicationContext.getInstance().getViewFactory().setViewClass(viewClass, implClass);
     }
 
     @Override

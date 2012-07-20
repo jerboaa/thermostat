@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.heap.swing;
 
+import java.awt.Component;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,32 +49,39 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
+import com.redhat.thermostat.client.heap.HeapHistogramView;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
+import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
 import com.redhat.thermostat.swing.HeaderPanel;
 
 @SuppressWarnings("serial")
-public class HistogramPanel extends JPanel {
-    
+public class HistogramPanel extends HeapHistogramView implements SwingComponent {
+
+    private final JPanel panel;
+
     private HeaderPanel headerPanel;
-    
+
     public HistogramPanel() {
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
-        
+        panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
         headerPanel = new HeaderPanel(Translate.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
-        add(headerPanel);
+        panel.add(headerPanel);
     }
 
+    @Override
     public void display(ObjectHistogram histogram) {
         JTable table = new JTable(new HistogramTableModel(histogram));
 
         table.setFillsViewportHeight(true);
         table.setAutoCreateRowSorter(true);
         table.setDefaultRenderer(Long.class, new NiceNumberFormatter());
-        
+
         JScrollPane scrollPane = new JScrollPane(table);
         headerPanel.setContent(scrollPane);
     }
@@ -146,12 +154,12 @@ public class HistogramPanel extends JPanel {
             }
             return result;
         }
-        
+
         @Override
         public int getColumnCount() {
             return 3;
         }
-        
+
         @Override
         public int getRowCount() {
             if (histogram != null) {
@@ -159,10 +167,20 @@ public class HistogramPanel extends JPanel {
             }
             return 0;
         }
-        
+
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
         }
+    }
+
+    @Override
+    public Component getUiComponent() {
+        return panel;
+    }
+
+    @Override
+    public BasicView getView() {
+        return this;
     }
 }

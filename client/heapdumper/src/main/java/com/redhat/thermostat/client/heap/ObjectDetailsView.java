@@ -36,47 +36,40 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.Collection;
 
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.BasicView;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.heap.HeapDump;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-public class HeapDumpDetailsController {
+public abstract class ObjectDetailsView extends BasicView {
 
-    private static final Logger log = LoggingUtils.getLogger(HeapDumpDetailsController.class);
-
-    private HeapDumpDetailsView view;
-    private HeapDump heapDump;
-
-    public HeapDumpDetailsController() {
-        view = ApplicationContext.getInstance().getViewFactory().getView(HeapDumpDetailsView.class);
+    public enum ObjectAction {
+        SEARCH,
+        GET_OBJECT_DETAIL,
+        SHOW_ROOT_TO_GC,
     }
 
-    public void setDump(HeapDump dump) {
-        this.heapDump = dump;
-        try {
-            HeapHistogramView heapHistogramView = ApplicationContext.getInstance().getViewFactory().getView(HeapHistogramView.class);
-            heapHistogramView.display(heapDump.getHistogram());
-            String title = Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM);
-            view.addSubView(title, heapHistogramView);
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
-        }
+    public static interface ObjectReferenceCallback {
+        /** get a list of objects that refers to this object */
+        Collection<HeapObjectUI> getReferrers(HeapObjectUI obj);
 
-        ObjectDetailsController controller = new ObjectDetailsController(dump);
-        ObjectDetailsView detailsView = controller.getView();
-        view.addSubView(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), detailsView);
-
-        // do a dummy search right now to prep the index
-        heapDump.searchObjects("A_RANDOM_PATTERN", 1);
+        /** get a list of objects that this object refers to */
+        Collection<HeapObjectUI> getReferences(HeapObjectUI obj);
     }
 
-    public BasicView getView() {
-        return view;
-    }
+    public abstract void addObjectActionListener(ActionListener<ObjectAction> listener);
+    public abstract void removeObjectActionListnener(ActionListener<ObjectAction> listener);
+
+    public abstract void addObjectReferenceCallback(ObjectReferenceCallback callback);
+    public abstract void removeObjectReferenceCallback(ObjectReferenceCallback callback);
+
+    public abstract String getSearchText();
+
+    public abstract void setMatchingObjects(Collection<HeapObjectUI> objects);
+
+    public abstract HeapObjectUI getSelectedMatchingObject();
+
+    public abstract void setObjectDetails(JavaHeapObject object);
 
 }

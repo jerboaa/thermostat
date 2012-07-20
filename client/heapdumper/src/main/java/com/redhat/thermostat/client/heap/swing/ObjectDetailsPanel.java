@@ -44,29 +44,42 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.GroupLayout;
+import javax.swing.JPopupMenu;
 import javax.swing.JToggleButton;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 
-import com.redhat.thermostat.client.heap.HeapDumpDetailsView.HeapObjectUI;
-import com.redhat.thermostat.client.heap.HeapDumpDetailsView.ObjectReferenceCallback;
+import com.redhat.thermostat.client.heap.HeapObjectUI;
 import com.redhat.thermostat.client.heap.LocaleResources;
+import com.redhat.thermostat.client.heap.ObjectDetailsView;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.ui.EdtHelper;
 import com.redhat.thermostat.client.ui.SearchFieldSwingView;
-import com.redhat.thermostat.client.ui.SearchFieldView;
+import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
+import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.BasicView;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import java.awt.BorderLayout;
+import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 import javax.swing.JSplitPane;
 import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -79,7 +92,16 @@ import javax.swing.tree.TreeSelectionModel;
  * A Panel that displays JavaHeapObjects and referrers and references.
  */
 @SuppressWarnings("serial")
-class ObjectDetailsPanel extends JPanel {
+public class ObjectDetailsPanel extends ObjectDetailsView implements SwingComponent {
+
+    /** For TESTING ONLY! */
+    static final String TREE_NAME = "ref-tree";
+    /** For TESTING ONLY! */
+    static final String DETAILS_NAME = "object-details";
+
+    private final ActionNotifier<ObjectAction> notifier = new ActionNotifier<>(this);
+
+    private final JPanel panel;
 
     private final SearchFieldSwingView searchField;
 
@@ -98,6 +120,8 @@ class ObjectDetailsPanel extends JPanel {
 
     public ObjectDetailsPanel() {
 
+        panel = new JPanel();
+
         JLabel searchLabel = new JLabel(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL));
 
         searchField = new SearchFieldSwingView();
@@ -114,7 +138,7 @@ class ObjectDetailsPanel extends JPanel {
 
         toggleReferrersButton.setSelected(true);
 
-        GroupLayout groupLayout = new GroupLayout(this);
+        GroupLayout groupLayout = new GroupLayout(panel);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(groupLayout.createSequentialGroup()
@@ -148,6 +172,30 @@ class ObjectDetailsPanel extends JPanel {
                     .addContainerGap())
         );
 
+        searchField.addActionListener(new ActionListener<SearchAction>() {
+            @Override
+            public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                case TEXT_CHANGED:
+                    notifier.fireAction(ObjectAction.SEARCH);
+                    break;
+                }
+            }
+        });
+        searchField.setLabel(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT));
+
+        java.awt.event.ActionListener treeToggleListener = new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                notifier.fireAction(ObjectAction.SEARCH);
+            }
+        };
+
+        JToggleButton[] buttons = getTreeModeButtons();
+        for (JToggleButton button: buttons) {
+            button.addActionListener(treeToggleListener);
+        }
+
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(objectTree);
 
@@ -159,18 +207,28 @@ class ObjectDetailsPanel extends JPanel {
         panel.setLayout(new BorderLayout(0, 0));
 
         objectDetailsPane = new JTextPane();
+        objectDetailsPane.setName(DETAILS_NAME);
         objectDetailsPane.setEditable(false);
         panel.add(objectDetailsPane);
-        setLayout(groupLayout);
+        this.panel.setLayout(groupLayout);
 
         initializeTree();
         clearTree();
     }
 
     private void initializeTree() {
+        objectTree.setName(TREE_NAME);
         objectTree.setRootVisible(false);
         objectTree.setShowsRootHandles(true);
         objectTree.setEditable(false);
+
+        objectTree.addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                notifier.fireAction(ObjectAction.GET_OBJECT_DETAIL);
+            }
+        });
+
         if (objectTree.getCellRenderer() instanceof DefaultTreeCellRenderer) {
             DefaultTreeCellRenderer cellRenderer = (DefaultTreeCellRenderer) objectTree.getCellRenderer();
             cellRenderer.setClosedIcon(null);
@@ -196,6 +254,31 @@ class ObjectDetailsPanel extends JPanel {
             public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
                 if (new TreePath(ROOT.getPath()).equals(event.getPath())) {
                     throw new ExpandVetoException(event, "root cant be collapsed");
+                }
+            }
+        });
+
+        objectTree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    int row = objectTree.getRowForLocation(e.getX(), e.getY());
+                    if (row == -1) {
+                        return;
+                    }
+
+                    TreePath path = objectTree.getPathForRow(row);
+                    final HeapObjectUI heapObject = (HeapObjectUI) ((LazyMutableTreeNode)path.getLastPathComponent()).getUserObject();
+                    JPopupMenu popup = new JPopupMenu();
+                    JMenuItem findRootItem = new JMenuItem(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_FIND_ROOT));
+                    findRootItem.addActionListener(new java.awt.event.ActionListener() {
+                        @Override
+                        public void actionPerformed(java.awt.event.ActionEvent e) {
+                            notifier.fireAction(ObjectAction.SHOW_ROOT_TO_GC, heapObject);
+                        }
+                    });
+                    popup.add(findRootItem);
+                    popup.show(e.getComponent(), e.getX(), e.getY());
                 }
             }
         });
@@ -250,26 +333,46 @@ class ObjectDetailsPanel extends JPanel {
         }
     }
 
-    public SearchFieldView getSearchField() {
-        return searchField;
-    }
-
-    public JToggleButton[] getTreeModeButtons() {
+    private JToggleButton[] getTreeModeButtons() {
         return new JToggleButton[] { toggleReferencesButton, toggleReferrersButton };
     }
 
-    public JTree getObjectTree() {
-        return objectTree;
+    @Override
+    public void addObjectActionListener(ActionListener<ObjectAction> listener) {
+        notifier.addActionListener(listener);
     }
 
+    @Override
+    public void removeObjectActionListnener(ActionListener<ObjectAction> listener) {
+        notifier.removeActionListener(listener);
+    }
+
+    @Override
     public void addObjectReferenceCallback(ObjectReferenceCallback callback) {
         callbacks.add(callback);
     }
 
+    @Override
     public void removeObjectReferenceCallback(ObjectReferenceCallback callback) {
         callbacks.remove(callback);
     }
 
+    @Override
+    public String getSearchText() {
+        try {
+            return new EdtHelper().callAndWait(new Callable<String>() {
+                @Override
+                public String call() throws Exception {
+                    return searchField.getSearchText();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @Override
     public void setMatchingObjects(final Collection<HeapObjectUI> objects) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -287,6 +390,7 @@ class ObjectDetailsPanel extends JPanel {
         });
     }
 
+    @Override
     public void setObjectDetails(final JavaHeapObject obj) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -304,6 +408,7 @@ class ObjectDetailsPanel extends JPanel {
     /**
      * @return null if no selected object
      */
+    @Override
     public HeapObjectUI getSelectedMatchingObject() {
         try {
             return new EdtHelper().callAndWait(new Callable<HeapObjectUI>() {
@@ -316,6 +421,16 @@ class ObjectDetailsPanel extends JPanel {
         } catch (InvocationTargetException | InterruptedException e) {
             return null;
         }
+    }
+
+    @Override
+    public Component getUiComponent() {
+        return panel;
+    }
+
+    @Override
+    public BasicView getView() {
+        return this;
     }
 
     private static class LazyMutableTreeNode extends javax.swing.tree.DefaultMutableTreeNode {

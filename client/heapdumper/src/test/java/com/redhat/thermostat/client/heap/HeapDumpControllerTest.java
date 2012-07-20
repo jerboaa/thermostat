@@ -87,6 +87,7 @@ public class HeapDumpControllerTest {
     
     @Before
     public void setUp() {
+        ApplicationContextUtil.resetApplicationContext();
 
         VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
         
@@ -121,6 +122,12 @@ public class HeapDumpControllerTest {
         detailsView = mock(HeapDumpDetailsView.class);
         when(viewFactory.getView(HeapDumpDetailsView.class)).thenReturn(detailsView);
         
+        HeapHistogramView histogramView = mock(HeapHistogramView.class);
+        when(viewFactory.getView(HeapHistogramView.class)).thenReturn(histogramView);
+
+        ObjectDetailsView objectDetailsView = mock(ObjectDetailsView.class);
+        when(viewFactory.getView(ObjectDetailsView.class)).thenReturn(objectDetailsView);
+
         ApplicationContext.getInstance().setViewFactory(viewFactory);
     }
     

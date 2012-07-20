@@ -46,11 +46,11 @@ import java.util.Set;
 
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-class FindRoot {
+public class FindRoot {
 
     private Set<JavaHeapObject> visitedObjects;
 
-    Collection<HeapPath<JavaHeapObject>> findShortestPathsToRoot(JavaHeapObject obj, boolean findAll) {
+    public Collection<HeapPath<JavaHeapObject>> findShortestPathsToRoot(JavaHeapObject obj, boolean findAll) {
         HeapPath<JavaHeapObject> path = new HeapPath<>(obj);
         List<HeapPath<JavaHeapObject>> pathsSoFar = new LinkedList<>();
         pathsSoFar.add(path);

@@ -103,6 +103,9 @@ public enum LocaleResources {
     HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL,
     HEAP_DUMP_OBJECT_BROWSE_REFERRERS,
     HEAP_DUMP_OBJECT_BROWSE_REFERENCES,
+    HEAP_DUMP_OBJECT_FIND_ROOT,
+
+    OBJECT_ROOTS_VIEW_TITLE,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.heap.strings";

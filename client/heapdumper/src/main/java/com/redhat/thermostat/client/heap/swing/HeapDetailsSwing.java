@@ -37,114 +37,71 @@
 package com.redhat.thermostat.client.heap.swing;
 
 import java.awt.BorderLayout;
-import java.util.Collection;
 
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
 
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView;
-import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
+import com.redhat.thermostat.client.heap.HeapHistogramView;
+import com.redhat.thermostat.client.heap.ObjectDetailsView;
 import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.BasicView;
-import com.redhat.thermostat.common.heap.ObjectHistogram;
-import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingComponent {
 
+    /** For TESTING only! */
+    static final String TAB_NAME = "tabs";
+
     private JPanel visiblePane;
-    
+
     private JTabbedPane tabPane = new JTabbedPane();
-
-    private ObjectDetailsPanel objectDetailsPanel = new ObjectDetailsPanel();
-
-    private final ActionNotifier<HeapDumpDetailsAction> notifier = new ActionNotifier<HeapDumpDetailsAction>(this);
 
     public HeapDetailsSwing() {
         visiblePane = new JPanel();
         visiblePane.setLayout(new BorderLayout());
         visiblePane.add(tabPane, BorderLayout.CENTER);
 
-        tabPane.addTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM), /* dummy */ new JPanel());
-        tabPane.addTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), objectDetailsPanel);
-
-        objectDetailsPanel.getSearchField().addActionListener(new ActionListener<SearchAction>() {
-            @Override
-            public void actionPerformed(ActionEvent<SearchAction> actionEvent) {
-                switch (actionEvent.getActionId()) {
-                case TEXT_CHANGED:
-                    notifier.fireAction(HeapDumpDetailsAction.SEARCH);
-                    break;
-                }
-            }
-        });
-
-        objectDetailsPanel.getSearchField().setLabel(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT));
-
-        objectDetailsPanel.getObjectTree().addTreeSelectionListener(new TreeSelectionListener() {
-
-            @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                notifier.fireAction(HeapDumpDetailsAction.GET_OBJECT_DETAIL);
-            }
-        });
-
-        java.awt.event.ActionListener treeToggleListener = new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                notifier.fireAction(HeapDumpDetailsAction.SEARCH);
-            }
-        };
-        JToggleButton[] buttons = objectDetailsPanel.getTreeModeButtons();
-        for (JToggleButton button: buttons) {
-            button.addActionListener(treeToggleListener);
-        }
-
+        tabPane.setName(TAB_NAME);
     }
 
     @Override
-    public void setHeapHistogram(final ObjectHistogram objectHistogram) {
+    public void addSubView(final String title, final HeapHistogramView view) {
+        verifyIsSwingComponent(view);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                HistogramPanel histogram = new HistogramPanel();
-                histogram.display(objectHistogram);
-
-                tabPane.removeTabAt(0);
-                tabPane.insertTab(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM), null, histogram, null, 0);
-                tabPane.setSelectedIndex(0);
-                tabPane.revalidate();
+                tabPane.insertTab(title, null, ((SwingComponent)view).getUiComponent(), null, 0);
             }
         });
     }
 
     @Override
-    public String getSearchText() {
-        return objectDetailsPanel.getSearchField().getSearchText();
-
+    public void addSubView(final String title, final ObjectDetailsView view) {
+        verifyIsSwingComponent(view);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                tabPane.insertTab(title, null, ((SwingComponent)view).getUiComponent(), null, 1);
+            }
+        });
     }
 
     @Override
-    public HeapObjectUI getSelectedMatchingObject() {
-        return objectDetailsPanel.getSelectedMatchingObject();
-    }
-
-    @Override
-    public void setObjectDetails(JavaHeapObject object) {
-        objectDetailsPanel.setObjectDetails(object);
-    }
-
-    @Override
-    public void setMatchingObjects(Collection<HeapObjectUI> objects) {
-        objectDetailsPanel.setMatchingObjects(objects);
+    public void removeSubView(final String title) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                int tabCount = tabPane.getTabCount();
+                for (int i = 0; i < tabCount; i++) {
+                    String tabTitle = tabPane.getTitleAt(i);
+                    if (tabTitle.equals(title)) {
+                        tabPane.removeTabAt(i);
+                        return;
+                    }
+                }
+            }
+        });
     }
 
     @Override
@@ -153,19 +110,14 @@ public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingCompon
     }
 
     @Override
-    public void addObjectReferenceCallback(ObjectReferenceCallback callback) {
-        objectDetailsPanel.addObjectReferenceCallback(callback);
-    }
-
-    @Override
-    public void removeObjectReferenceCallback(ObjectReferenceCallback callback) {
-        objectDetailsPanel.removeObjectReferenceCallback(callback);
-
-    }
-
-    @Override
     public JPanel getUiComponent() {
         return visiblePane;
+    }
+
+    private void verifyIsSwingComponent(Object obj) {
+        if (!(obj instanceof SwingComponent)) {
+            throw new IllegalArgumentException("component is not swing");
+        }
     }
 
 }

@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.heap.cli;
 
 import java.util.Iterator;
 
-class HeapPath<T> {
+public class HeapPath<T> implements Iterable<T> {
 
     private static class HeapPathIterator<T> implements Iterator<T> {
 
@@ -64,7 +64,7 @@ class HeapPath<T> {
         public void remove() {
             throw new UnsupportedOperationException();
         }
-        
+
     }
 
     private HeapPath<T> path;
@@ -85,7 +85,8 @@ class HeapPath<T> {
         }
     }
 
-    Iterator<T> iterator() {
+    @Override
+    public Iterator<T> iterator() {
         return new HeapPathIterator<T>(this);
     }
 

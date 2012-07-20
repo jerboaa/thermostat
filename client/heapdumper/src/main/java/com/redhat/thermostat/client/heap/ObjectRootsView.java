@@ -36,47 +36,25 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
 
-import com.redhat.thermostat.common.BasicView;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.heap.HeapDump;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.View;
 
-public class HeapDumpDetailsController {
+public interface ObjectRootsView extends View {
 
-    private static final Logger log = LoggingUtils.getLogger(HeapDumpDetailsController.class);
-
-    private HeapDumpDetailsView view;
-    private HeapDump heapDump;
-
-    public HeapDumpDetailsController() {
-        view = ApplicationContext.getInstance().getViewFactory().getView(HeapDumpDetailsView.class);
+    enum Action {
+        VISIBILE,
+        HIDDEN,
+        OBJECT_SELECTED,
     }
 
-    public void setDump(HeapDump dump) {
-        this.heapDump = dump;
-        try {
-            HeapHistogramView heapHistogramView = ApplicationContext.getInstance().getViewFactory().getView(HeapHistogramView.class);
-            heapHistogramView.display(heapDump.getHistogram());
-            String title = Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM);
-            view.addSubView(title, heapHistogramView);
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
-        }
+    void addActionListener(ActionListener<Action> listener);
+    void removeActionListener(ActionListener<Action> listener);
 
-        ObjectDetailsController controller = new ObjectDetailsController(dump);
-        ObjectDetailsView detailsView = controller.getView();
-        view.addSubView(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), detailsView);
+    void showView();
+    void hideView();
 
-        // do a dummy search right now to prep the index
-        heapDump.searchObjects("A_RANDOM_PATTERN", 1);
-    }
-
-    public BasicView getView() {
-        return view;
-    }
-
+    void setPathToRoot(List<HeapObjectUI> pathToRoot);
+    void setObjectDetails(String information);
 }

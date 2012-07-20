@@ -36,47 +36,11 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.redhat.thermostat.common.BasicView;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.heap.HeapDump;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.heap.ObjectHistogram;
 
-public class HeapDumpDetailsController {
+public abstract class HeapHistogramView extends BasicView {
 
-    private static final Logger log = LoggingUtils.getLogger(HeapDumpDetailsController.class);
-
-    private HeapDumpDetailsView view;
-    private HeapDump heapDump;
-
-    public HeapDumpDetailsController() {
-        view = ApplicationContext.getInstance().getViewFactory().getView(HeapDumpDetailsView.class);
-    }
-
-    public void setDump(HeapDump dump) {
-        this.heapDump = dump;
-        try {
-            HeapHistogramView heapHistogramView = ApplicationContext.getInstance().getViewFactory().getView(HeapHistogramView.class);
-            heapHistogramView.display(heapDump.getHistogram());
-            String title = Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM);
-            view.addSubView(title, heapHistogramView);
-        } catch (IOException e) {
-            log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
-        }
-
-        ObjectDetailsController controller = new ObjectDetailsController(dump);
-        ObjectDetailsView detailsView = controller.getView();
-        view.addSubView(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), detailsView);
-
-        // do a dummy search right now to prep the index
-        heapDump.searchObjects("A_RANDOM_PATTERN", 1);
-    }
-
-    public BasicView getView() {
-        return view;
-    }
+    public abstract void display(ObjectHistogram histogram);
 
 }
