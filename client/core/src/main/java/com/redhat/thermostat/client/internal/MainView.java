@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.Ref;
 
 public interface MainView {

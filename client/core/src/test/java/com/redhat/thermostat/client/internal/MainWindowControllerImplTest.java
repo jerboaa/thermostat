@@ -75,6 +75,7 @@ import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
@@ -328,6 +329,10 @@ public class MainWindowControllerImplTest {
         assertEqualCollection(liveHost, actualHosts);
 
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SWITCH_HISTORY_MODE));
+        ArgumentCaptor<HostsVMsLoader> argCaptor = ArgumentCaptor.forClass(HostsVMsLoader.class);
+        // actionPerformed triggers updateTree
+        verify(view, times(2)).updateTree(any(List.class), any(List.class), argCaptor.capture());
+        loader = argCaptor.getValue();
 
         actualHosts = loader.getHosts();
         assertEqualCollection(allHosts, actualHosts);

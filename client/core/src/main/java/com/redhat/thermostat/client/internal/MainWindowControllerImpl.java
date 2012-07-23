@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.internal;
 
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,11 +60,13 @@ import com.redhat.thermostat.client.ui.AgentConfigurationView;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostInformationController;
-import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.HostVmFilter;
+import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.DefaultHostsVMsLoader;
+import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -246,24 +247,6 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmInfoRegistry.start();
     }
 
-    private class HostsVMsLoaderImpl implements HostsVMsLoader {
-
-        @Override
-        public Collection<HostRef> getHosts() {
-            if (showHistory) {
-                return hostsDAO.getHosts();
-            } else {
-                return hostsDAO.getAliveHosts();
-            }
-        }
-
-        @Override
-        public Collection<VmRef> getVMs(HostRef host) {
-            return vmsDAO.getVMs(host);
-        }
-
-    }
-
     /**
      * This method is for testing purposes only
      */
@@ -315,7 +298,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     public void doUpdateTreeAsync() {
-        HostsVMsLoader loader = new HostsVMsLoaderImpl();
+        HostsVMsLoader loader = new DefaultHostsVMsLoader(hostsDAO, vmsDAO, !showHistory);
         view.updateTree(vmTreefilters, vmTreeDecorators, loader);
     }
 
