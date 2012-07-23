@@ -70,6 +70,8 @@
               com.redhat.swing.laf.dolphin.showcase.table,
               com.redhat.swing.laf.dolphin.showcase.tree
             </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

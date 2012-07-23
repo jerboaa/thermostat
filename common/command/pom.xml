@@ -80,8 +80,8 @@
             <Export-Package>
               com.redhat.thermostat.common.command
             </Export-Package>
-            <Private-Package>
-            </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

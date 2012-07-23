@@ -51,8 +51,8 @@
               com.redhat.thermostat.models,
               com.redhat.thermostat.charts
             </Export-Package>
-<!--             <Private-Package> -->
-<!--             </Private-Package> -->
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

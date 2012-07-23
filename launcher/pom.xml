@@ -67,5 +67,5 @@
       <artifactId>org.apache.felix.framework</artifactId>
     </dependency>
   </dependencies>
-
+  
 </project>

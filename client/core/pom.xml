@@ -152,6 +152,8 @@
               com.redhat.thermostat.client.internal.ui,
               com.redhat.thermostat.client.internal.ui.swing
             </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

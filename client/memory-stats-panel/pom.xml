@@ -20,6 +20,8 @@
             <Private-Package>com.redhat.thermostat.client.stats.memory</Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.stats.memory.MemoryStatsPanelActivator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

@@ -112,6 +112,8 @@
               com.redhat.thermostat.tools.db,
             </Export-Package>
             <Private-Package>META_INF.services</Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

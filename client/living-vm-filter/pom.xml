@@ -24,13 +24,14 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>1.4.0</version>
         <extensions>true</extensions>
         <configuration>
           <instructions>
             <Private-Package>com.redhat.thermostat.client.filter.vm</Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.filter.vm.VMFilterActivator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

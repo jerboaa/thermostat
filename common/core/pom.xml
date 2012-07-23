@@ -77,6 +77,8 @@
               com.redhat.thermostat.test,
               com.redhat.thermostat.tools,
             </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

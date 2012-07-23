@@ -62,6 +62,8 @@
                com.redhat.thermostat.client.heap.swing,
                com.redhat.thermostat.client.heap.chart
             </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

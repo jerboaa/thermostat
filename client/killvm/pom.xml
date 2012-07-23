@@ -21,6 +21,8 @@
             <Bundle-Activator>com.redhat.thermostat.client.killvm.Activator</Bundle-Activator>
             <Private-Package>com.redhat.thermostat.client.killvm</Private-Package>
           </instructions>
+          <!-- Do not autogenerate uses clauses in Manifests -->
+          <_nouses>true</_nouses>
         </configuration>
       </plugin>
     </plugins>

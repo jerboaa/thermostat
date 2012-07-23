@@ -98,6 +98,8 @@
               com.redhat.thermostat.backend.sample,
               com.redhat.thermostat.backend.system,
             </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>
