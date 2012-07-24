@@ -34,53 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.locale;
+package com.redhat.thermostat.common.locale;
 
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Properties;
+public enum LocaleResources {
 
-import junit.framework.Assert;
+    MISSING_INFO,
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+    APPLICATION_INFO_LICENSE,
+    APPLICATION_INFO_DESCRIPTION,
+    APPLICATION_VERSION_INFO,
+    ;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
-public class TranslateTest {
-
-    private Locale lang;
-    
-    @Before
-    public void setUp() {
-        this.lang = Locale.getDefault();
-        Locale.setDefault(Locale.US);
-    }
-    
-    @After
-    public void tearDown() {
-        Locale.setDefault(lang);
-    }
-    
-    @Test
-    public void testLocalizeWithoutArguments() {
-        String testString = localize(LocaleResources.MISSING_INFO);
-        Assert.assertEquals("Missing Information", testString);
-    }
-    
-    @Test
-    public void testLocalizedStringsArePresent() throws IOException {
-        
-        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
-        
-        Properties props = new Properties();
-        props.load(getClass().getResourceAsStream(stringsResource));
-        
-        Assert.assertEquals(LocaleResources.values().length, props.values().size());
-        for (LocaleResources resource : LocaleResources.values()) {
-            Assert.assertTrue("missing property from resource bound file: " + resource,
-                              props.containsKey(resource.name()));
-        }
-    }
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.common.locale.strings";
 }

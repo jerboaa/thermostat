@@ -68,6 +68,7 @@ import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.DefaultHostsVMsLoader;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.Timer;

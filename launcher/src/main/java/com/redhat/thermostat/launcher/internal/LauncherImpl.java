@@ -48,6 +48,7 @@ import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.bundles.OSGiRegistryService;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -101,6 +102,11 @@ public class LauncherImpl implements Launcher {
             initLogging();
             if (hasNoArguments()) {
                 runHelpCommand();
+            } else if (isVersionQuery()) {
+                // We want to print the version of core
+                // thermostat, so we use the no-arg constructor of Version
+                Version coreVersion = new Version();
+                cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
             } else {
                 runCommandFromArguments();
             }
@@ -253,6 +259,10 @@ public class LauncherImpl implements Launcher {
             }
         }
         return ctx;
+    }
+    
+    private boolean isVersionQuery() {
+        return args[0].equals(Version.VERSION_OPTION);
     }
 
 }

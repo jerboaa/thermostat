@@ -52,6 +52,22 @@
   <url>${project.parent.url}</url>
 
   <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <excludes>
+          <exclude>**/*.png</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>false</filtering>
+        <includes>
+          <include>**/*.png</include>
+        </includes>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -71,6 +87,7 @@
               com.redhat.thermostat.common.storage,
               com.redhat.thermostat.common.utils,
               com.redhat.thermostat.common.heap,
+              com.redhat.thermostat.common.locale
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.test,

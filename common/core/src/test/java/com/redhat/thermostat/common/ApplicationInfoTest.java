@@ -34,9 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.common;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
+import static com.redhat.thermostat.common.locale.Translate.localize;
 import static org.junit.Assert.*;
 
 import java.util.Locale;
@@ -45,7 +45,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.ApplicationInfo;
 
 public class ApplicationInfoTest {
 

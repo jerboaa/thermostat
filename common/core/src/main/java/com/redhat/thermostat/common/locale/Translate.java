@@ -34,53 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.locale;
+package com.redhat.thermostat.common.locale;
 
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Properties;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
 
-import junit.framework.Assert;
+public class Translate {
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+    private static ResourceBundle resourceBundle = null;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
-public class TranslateTest {
-
-    private Locale lang;
-    
-    @Before
-    public void setUp() {
-        this.lang = Locale.getDefault();
-        Locale.setDefault(Locale.US);
+    static {
+        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
     }
-    
-    @After
-    public void tearDown() {
-        Locale.setDefault(lang);
+
+    public static String localize(LocaleResources toTranslate) {
+        return resourceBundle.getString(toTranslate.name());
     }
-    
-    @Test
-    public void testLocalizeWithoutArguments() {
-        String testString = localize(LocaleResources.MISSING_INFO);
-        Assert.assertEquals("Missing Information", testString);
-    }
-    
-    @Test
-    public void testLocalizedStringsArePresent() throws IOException {
-        
-        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
-        
-        Properties props = new Properties();
-        props.load(getClass().getResourceAsStream(stringsResource));
-        
-        Assert.assertEquals(LocaleResources.values().length, props.values().size());
-        for (LocaleResources resource : LocaleResources.values()) {
-            Assert.assertTrue("missing property from resource bound file: " + resource,
-                              props.containsKey(resource.name()));
-        }
+
+    public static String localize(LocaleResources toTranslate, String... params) {
+        return MessageFormat.format(localize(toTranslate), (Object[]) params);
     }
 }

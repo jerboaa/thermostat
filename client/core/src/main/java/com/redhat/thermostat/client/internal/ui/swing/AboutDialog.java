@@ -61,10 +61,10 @@ import javax.swing.SwingWorker;
 
 import javax.swing.border.TitledBorder;
 
-import com.redhat.thermostat.client.internal.ApplicationInfo;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.IconResource;
 import com.redhat.thermostat.client.ui.UIResources;
+import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class AboutDialog extends JDialog {
@@ -92,8 +92,8 @@ public class AboutDialog extends JDialog {
         
         name = appInfo.getName();
         description = appInfo.getDescription();
-        version = appInfo.getVersion();
-        icon = IconResource.QUESTION.getIcon(); // TODO appInfo.getIcon();
+        version = appInfo.getVersion().getVersionNumber();
+        icon = IconResource.QUESTION.getIcon();
         copyright = appInfo.getCopyright();
         license = appInfo.getLicenseSummary();
         website = appInfo.getWebsite();

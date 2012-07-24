@@ -36,12 +36,14 @@
 
 package com.redhat.thermostat.launcher;
 
+import static com.redhat.thermostat.common.locale.Translate.localize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,10 +53,17 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.AppContextSetup;
@@ -63,14 +72,17 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
+import com.redhat.thermostat.test.cli.TestCommand;
 import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.utils.keyring.KeyringProvider;
-import com.redhat.thermostat.test.cli.TestCommand;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(FrameworkUtil.class)
 public class LauncherTest {
     
     private static String defaultKeyringProvider;
@@ -306,5 +318,40 @@ public class LauncherTest {
         l.setArgs(new String[] { "test3" });
         l.run();
         verify(appContextSetup).setupAppContext("mongo://fluff:12345", null, null);
+    }
+    
+    @Test
+    public void verifyVersionInfoQuery() {
+        int major = 0;
+        int minor = 3;
+        int micro = 0;
+        
+        ApplicationInfo appInfo = new ApplicationInfo();
+        String format = MessageFormat.format(
+                localize(LocaleResources.APPLICATION_VERSION_INFO),
+                appInfo.getName())
+                + " " + Version.VERSION_NUMBER_FORMAT;
+        
+        String expectedVersionInfo = String.format(format,
+                major, minor, micro) + "\n";
+        
+        String qualifier = "201207241700";
+        Bundle sysBundle = mock(Bundle.class);
+        Bundle framework = mock(Bundle.class);
+        org.osgi.framework.Version ver = org.osgi.framework.Version
+                .parseVersion(String.format(Version.VERSION_NUMBER_FORMAT,
+                        major, minor, micro) + "." + qualifier);
+        when(sysBundle.getVersion()).thenReturn(ver);
+        bundleContext = mock(BundleContext.class);
+        when(bundleContext.getBundle(0)).thenReturn(framework);
+        
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        when(FrameworkUtil.getBundle(Version.class)).thenReturn(sysBundle);
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
+        
+        launcher.setArgs(new String[] {Version.VERSION_OPTION});
+        launcher.run();
+        assertEquals(expectedVersionInfo, ctxFactory.getOutput());
+        assertTrue(timerFactory.isShutdown());
     }
 }
