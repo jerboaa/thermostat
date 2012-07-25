@@ -39,8 +39,10 @@ package com.redhat.thermostat.client.heap;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.contains;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -49,13 +51,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
+import org.mockito.stubbing.OngoingStubbing;
 
 import com.redhat.thermostat.client.heap.ObjectDetailsView.ObjectAction;
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ViewFactory;
@@ -68,6 +74,9 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 public class ObjectDetailsControllerTest {
 
     private ObjectDetailsView view;
+    private ApplicationService appService;
+
+    private ArgumentCaptor<Runnable> runnableCaptor;
 
     @Before
     public void setUp() {
@@ -80,6 +89,14 @@ public class ObjectDetailsControllerTest {
         when(viewFactory.getView(ObjectDetailsView.class)).thenReturn(view);
 
         ApplicationContext.getInstance().setViewFactory(viewFactory);
+
+        runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
+        ExecutorService executorService = mock(ExecutorService.class);
+        doNothing().when(executorService).execute(runnableCaptor.capture());
+
+        appService = mock(ApplicationService.class);
+        when(appService.getApplicationExecutor()).thenReturn(executorService);
+
     }
 
     @After
@@ -103,17 +120,19 @@ public class ObjectDetailsControllerTest {
         when(heapObject.getClazz()).thenReturn(heapObjectClass);
 
         HeapDump dump = mock(HeapDump.class);
-        when(dump.searchObjects(eq(SEARCH_TEXT), anyInt())).thenReturn(Arrays.asList(OBJECT_ID));
+        when(dump.searchObjects(contains(SEARCH_TEXT), anyInt())).thenReturn(Arrays.asList(OBJECT_ID));
         when(dump.findObject(eq(OBJECT_ID))).thenReturn(heapObject);
 
         ArgumentCaptor<ActionListener> viewArgumentCaptor1 = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addObjectActionListener(viewArgumentCaptor1.capture());
 
-        ObjectDetailsController controller = new ObjectDetailsController(dump);
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
 
         ActionListener<ObjectAction> actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);
         actionListener.actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));
+
+        runnableCaptor.getValue().run();
 
         ArgumentCaptor<Collection> matchingObjectsCaptor = ArgumentCaptor.forClass(Collection.class);
         verify(view).setMatchingObjects(matchingObjectsCaptor.capture());
@@ -121,6 +140,86 @@ public class ObjectDetailsControllerTest {
         List<HeapObjectUI> matchingObjects = new ArrayList<HeapObjectUI>(matchingObjectsCaptor.getValue());
         assertEquals(1, matchingObjects.size());
         assertEquals(OBJECT_ID, matchingObjects.get(0).objectId);
+    }
+
+    @Test
+    public void verifyInputConvertedIntoWildcardsIfNeeded() {
+        HeapDump heap = mock(HeapDump.class);
+        when(view.getSearchText()).thenReturn("a");
+
+        ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
+
+        ObjectDetailsController controller = new ObjectDetailsController(appService, heap);
+
+        ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
+        assertNotNull(actionListener);
+        actionListener.actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));
+
+        runnableCaptor.getValue().run();
+
+        verify(heap).searchObjects("*a*", 100);
+    }
+
+    @Test
+    public void verifyWildcardInputNotConvertedIntoWildcards() {
+        HeapDump heap = mock(HeapDump.class);
+        when(view.getSearchText()).thenReturn("*a?");
+
+        ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
+
+        ObjectDetailsController controller = new ObjectDetailsController(appService, heap);
+
+        ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
+        assertNotNull(actionListener);
+        actionListener.actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));
+
+        runnableCaptor.getValue().run();
+
+        verify(heap).searchObjects("*a?", 300);
+    }
+
+    @Test
+    public void verifySearchLimits() {
+
+        Object[][] limits = new Object[][] {
+            { "a",       100 },
+            { "ab",      200 },
+            { "abc",     300 },
+            { "abcd",    400 },
+            { "abcde",   500 },
+            { "abcdef",  600},
+            { "abcdefg", 700},
+            { "java.lang.Class", 1000 },
+        };
+
+        HeapDump heap = mock(HeapDump.class);
+
+        OngoingStubbing<String> ongoing = when(view.getSearchText());
+        for (int i = 0; i < limits.length; i++) {
+            ongoing = ongoing.thenReturn((String)limits[i][0]);
+        }
+
+        ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
+
+        ObjectDetailsController controller = new ObjectDetailsController(appService, heap);
+
+        ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
+        assertNotNull(actionListener);
+
+        for (int i = 0; i < limits.length; i++) {
+            actionListener.actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));
+            runnableCaptor.getValue().run();
+        }
+
+        InOrder inOrder = inOrder(heap);
+        for (int i = 0; i < limits.length; i++) {
+            String text = (String) limits[i][0];
+            int times = (Integer) limits[i][1];
+            inOrder.verify(heap).searchObjects("*" + text + "*", times);
+        }
     }
 
     @Test
@@ -140,7 +239,7 @@ public class ObjectDetailsControllerTest {
 
         when(view.getSelectedMatchingObject()).thenReturn(heapObjectRepresentation);
 
-        ObjectDetailsController controller = new ObjectDetailsController(dump);
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
 
         ActionListener<ObjectAction> actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);
@@ -166,7 +265,7 @@ public class ObjectDetailsControllerTest {
 
         when(view.getSelectedMatchingObject()).thenReturn(heapObjectRepresentation);
 
-        ObjectDetailsController controller = new ObjectDetailsController(dump);
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
 
         ActionListener<ObjectAction> actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);

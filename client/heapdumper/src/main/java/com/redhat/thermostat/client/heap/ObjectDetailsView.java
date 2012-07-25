@@ -44,6 +44,11 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public abstract class ObjectDetailsView extends BasicView {
 
+    // TODO this should be some sort of aggregate view
+    // showing users 1000 instances of a class is not very useful unless we
+    // allow the user some aggregate results or allow additional sorting or
+    // filtering
+
     public enum ObjectAction {
         SEARCH,
         GET_OBJECT_DETAIL,

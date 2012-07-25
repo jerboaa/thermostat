@@ -43,6 +43,7 @@ import java.util.List;
 
 import com.redhat.thermostat.client.heap.ObjectDetailsView.ObjectAction;
 import com.redhat.thermostat.client.heap.ObjectDetailsView.ObjectReferenceCallback;
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -55,10 +56,12 @@ import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
 
 public class ObjectDetailsController {
 
+    private ApplicationService appService;
     private HeapDump heapDump;
     private ObjectDetailsView view;
 
-    public ObjectDetailsController(HeapDump heapDump) {
+    public ObjectDetailsController(ApplicationService appService, HeapDump heapDump) {
+        this.appService = appService;
         this.heapDump = heapDump;
 
         view = ApplicationContext.getInstance().getViewFactory().getView(ObjectDetailsView.class);
@@ -147,15 +150,33 @@ public class ObjectDetailsController {
             return;
         }
 
-        Collection<String> objectIds = heapDump.searchObjects(searchText, /* max results = */ 10);
+        final int maxResults = computeResultLimit(searchText);
 
-        List<HeapObjectUI> toDisplay = new ArrayList<>();
-        for (String id: objectIds) {
-            JavaHeapObject heapObject = heapDump.findObject(id);
-            toDisplay.add(new HeapObjectUI(id, PrintObjectUtils.objectToString(heapObject)));
+        if (!searchText.contains("*") && !searchText.contains("?")) {
+            searchText = "*" + searchText + "*";
         }
 
-        view.setMatchingObjects(toDisplay);
+        final String wildcardQuery = searchText;
+
+        appService.getApplicationExecutor().execute(new Runnable() {
+
+            @Override
+            public void run() {
+                Collection<String> objectIds = heapDump.searchObjects(wildcardQuery, maxResults);
+
+                List<HeapObjectUI> toDisplay = new ArrayList<>();
+                for (String id: objectIds) {
+                    JavaHeapObject heapObject = heapDump.findObject(id);
+                    toDisplay.add(new HeapObjectUI(id, PrintObjectUtils.objectToString(heapObject)));
+                }
+                view.setMatchingObjects(toDisplay);
+            }
+        });
+
+    }
+
+    private int computeResultLimit(String searchText) {
+        return Math.min(1000, searchText.length() * 100);
     }
 
     private void showObjectInfo() {

@@ -125,6 +125,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
         JLabel searchLabel = new JLabel(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL));
 
         searchField = new SearchFieldSwingView();
+        searchField.setTooltip(Translate.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP));
 
         JSplitPane splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
@@ -374,20 +375,24 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
 
     @Override
     public void setMatchingObjects(final Collection<HeapObjectUI> objects) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                // clear children
-                clearTree();
+        try {
+            new EdtHelper().callAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    // clear children
+                    clearTree();
 
-                // add new children
-                for (HeapObjectUI object: objects) {
-                    MutableTreeNode node = new LazyMutableTreeNode(object);
-                    model.insertNodeInto(node, ROOT, ROOT.getChildCount());
+                    // add new children
+                    for (HeapObjectUI object: objects) {
+                        MutableTreeNode node = new LazyMutableTreeNode(object);
+                        model.insertNodeInto(node, ROOT, ROOT.getChildCount());
+                    }
+                    objectTree.expandPath(new TreePath(ROOT.getPath()));
                 }
-                objectTree.expandPath(new TreePath(ROOT.getPath()));
-            }
-        });
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

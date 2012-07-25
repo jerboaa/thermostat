@@ -175,7 +175,7 @@ public class HeapDumpController implements VmInformationServiceController {
     }
 
     private void showHeapDumpDetails(HeapDump dump) {
-        HeapDumpDetailsController controller = new HeapDumpDetailsController();
+        HeapDumpDetailsController controller = new HeapDumpDetailsController(appService);
         controller.setDump(dump);
         view.setChildView(controller.getView());
         view.openDumpView();

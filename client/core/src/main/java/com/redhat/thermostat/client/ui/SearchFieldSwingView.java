@@ -196,6 +196,16 @@ public class SearchFieldSwingView extends JPanel implements SearchFieldView {
     }
 
     @Override
+    public void setTooltip(final String tooltip) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                searchField.setToolTipText(tooltip);
+            }
+        });
+    }
+
+    @Override
     public void addActionListener(ActionListener<SearchAction> listener) {
         notifier.addActionListener(listener);
     }

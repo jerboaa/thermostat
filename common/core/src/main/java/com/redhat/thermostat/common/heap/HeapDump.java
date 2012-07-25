@@ -103,7 +103,7 @@ public class HeapDump {
     public long getTimestamp() {
         return heapInfo.getTimestamp();
     }
-    
+
     @Override
     public String toString() {
         return "[" + new Date(getTimestamp()) +"] ";
@@ -191,9 +191,16 @@ public class HeapDump {
         }
     }
 
-    public Collection<String> searchObjects(String classNamePattern, int limit) {
+    /**
+     * Find objects with class names matching the given pattern
+     * @param wildCardClassNamePattern a case-sensitive wildcard pattern to match class names against
+     * @param limit the maximum number of results to return
+     * @return a collection of object ids that can be used with {@link #findObject(String)}
+     */
+    public Collection<String> searchObjects(String wildCardClassNamePattern, int limit) {
         Directory searchIndex = getLuceneIndex();
-        WildcardQuery query = new WildcardQuery(new Term(INDEX_FIELD_CLASSNAME, classNamePattern));
+
+        WildcardQuery query = new WildcardQuery(new Term(INDEX_FIELD_CLASSNAME, wildCardClassNamePattern));
         Collection<String> results = new ArrayList<String>();
         try {
             IndexReader indexReader = IndexReader.open(searchIndex);

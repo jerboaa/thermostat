@@ -55,6 +55,8 @@ public interface SearchFieldView extends View {
 
     void setLabel(String label);
 
+    void setTooltip(String tooltip);
+
     public void addActionListener(ActionListener<SearchAction> listener);
     public void removeActionListener(ActionListener<SearchAction> listener);
 

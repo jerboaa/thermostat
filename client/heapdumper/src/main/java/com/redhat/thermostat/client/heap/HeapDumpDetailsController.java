@@ -40,6 +40,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.heap.HeapDump;
@@ -49,10 +50,13 @@ public class HeapDumpDetailsController {
 
     private static final Logger log = LoggingUtils.getLogger(HeapDumpDetailsController.class);
 
+    private final ApplicationService appService;
+
     private HeapDumpDetailsView view;
     private HeapDump heapDump;
 
-    public HeapDumpDetailsController() {
+    public HeapDumpDetailsController(ApplicationService appService) {
+        this.appService = appService;
         view = ApplicationContext.getInstance().getViewFactory().getView(HeapDumpDetailsView.class);
     }
 
@@ -67,7 +71,7 @@ public class HeapDumpDetailsController {
             log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
         }
 
-        ObjectDetailsController controller = new ObjectDetailsController(dump);
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
         ObjectDetailsView detailsView = controller.getView();
         view.addSubView(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), detailsView);
 
