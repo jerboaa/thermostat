@@ -41,12 +41,9 @@ import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JScrollPane;
-import javax.swing.ListSelectionModel;
-import javax.swing.ScrollPaneConstants;
+import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.heap.HeapObjectUI;
@@ -59,43 +56,51 @@ import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreePath;
 import javax.swing.JTextPane;
 
 public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
 
+    /** For TESTING ONLY! */
+    static final String TREE_NAME = "roots-tree";
+
+    static final String DETAILS_NAME = "object-details";
+
     private final ActionNotifier<Action> notifier = new ActionNotifier<>(this);
 
-    private final DefaultListModel<HeapObjectUI> dataModel;
+    private final LazyMutableTreeNode ROOT = new LazyMutableTreeNode();
+    private final DefaultTreeModel dataModel;
+    private final JTree pathToRootTree;
 
-    private JTextPane objectDetails;
+    private final JTextPane objectDetails;
 
     public ObjectRootsFrame() {
         setTitle(Translate.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
 
-        dataModel = new DefaultListModel<>();
-        JList<HeapObjectUI> pathList = new JList<>(dataModel);
-        pathList.setLayoutOrientation(JList.HORIZONTAL_WRAP);
-        pathList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        pathList.setVisibleRowCount(1);
-
-        JScrollPane scrollPane = new JScrollPane(pathList,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        dataModel = new DefaultTreeModel(ROOT);
+        pathToRootTree = new JTree(dataModel);
+        pathToRootTree.setName(TREE_NAME);
 
         JLabel lblNewLabel = new JLabel(Translate.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
 
+        JScrollPane scrollPane = new JScrollPane(pathToRootTree);
+
         objectDetails = new JTextPane();
+        objectDetails.setName(DETAILS_NAME);
+
         GroupLayout groupLayout = new GroupLayout(getContentPane());
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+                        .addComponent(scrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 416, Short.MAX_VALUE)
                         .addComponent(objectDetails, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 416, Short.MAX_VALUE)
-                        .addComponent(lblNewLabel, Alignment.LEADING)
-                        .addComponent(scrollPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 416, Short.MAX_VALUE))
+                        .addComponent(lblNewLabel, Alignment.LEADING))
                     .addContainerGap())
         );
         groupLayout.setVerticalGroup(
@@ -104,9 +109,9 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
                     .addContainerGap()
                     .addComponent(lblNewLabel)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(scrollPane, GroupLayout.PREFERRED_SIZE, 40, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 126, Short.MAX_VALUE)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(objectDetails, GroupLayout.DEFAULT_SIZE, 216, Short.MAX_VALUE)
+                    .addComponent(objectDetails, GroupLayout.PREFERRED_SIZE, 93, GroupLayout.PREFERRED_SIZE)
                     .addContainerGap())
         );
         getContentPane().setLayout(groupLayout);
@@ -123,13 +128,11 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
             }
         });
 
-        pathList.addListSelectionListener(new ListSelectionListener() {
+        pathToRootTree.addTreeSelectionListener(new TreeSelectionListener() {
             @Override
-            public void valueChanged(ListSelectionEvent e) {
-                if (e.getValueIsAdjusting()) {
-                    return;
-                }
-                notifier.fireAction(Action.OBJECT_SELECTED, ((JList<?>)e.getSource()).getSelectedValue());
+            public void valueChanged(TreeSelectionEvent e) {
+                HeapObjectUI obj = (HeapObjectUI) ((LazyMutableTreeNode)e.getPath().getLastPathComponent()).getUserObject();
+                notifier.fireAction(Action.OBJECT_SELECTED, obj);
             }
         });
 
@@ -170,19 +173,37 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
 
     @Override
     public void setPathToRoot(List<HeapObjectUI> pathToRoot) {
-        final List<HeapObjectUI> path = new ArrayList<>();
-        for (HeapObjectUI heapObj : pathToRoot) {
-            path.add(heapObj);
-        }
+        final List<HeapObjectUI> path = new ArrayList<>(pathToRoot);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                dataModel.clear();
-                for (HeapObjectUI obj : path) {
-                    dataModel.addElement(obj);
+                clearTree();
+
+                LazyMutableTreeNode node = ROOT;
+                node.setUserObject(path.get(0));
+                TreePath treePath = new TreePath(node);
+                LazyMutableTreeNode parent = ROOT;
+                for (int i = 1; i < path.size(); i++) {
+                    HeapObjectUI obj = path.get(i);
+                    node = new LazyMutableTreeNode(obj);
+                    dataModel.insertNodeInto(node, parent, node.getChildCount());
+                    parent = node;
+                    treePath = treePath.pathByAddingChild(node);
                 }
+
+                pathToRootTree.expandPath(treePath);
+                pathToRootTree.setSelectionPath(treePath);
             }
         });
+    }
+
+    private void clearTree() {
+        // clear children from model
+        int childrenCount = ROOT.getChildCount();
+        for (int i = 0; i < childrenCount; i++) {
+            MutableTreeNode child = (MutableTreeNode) ROOT.getChildAt(0);
+            dataModel.removeNodeFromParent(child);
+        }
     }
 
     @Override

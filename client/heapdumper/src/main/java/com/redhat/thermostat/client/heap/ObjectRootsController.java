@@ -57,10 +57,17 @@ public class ObjectRootsController {
 
     private final HeapDump heapDump;
     private final JavaHeapObject heapObject;
+    private final FindRoot rootFinder;
 
     public ObjectRootsController(HeapDump dump, JavaHeapObject heapObject) {
+        this(dump, heapObject, new FindRoot());
+    }
+
+    public ObjectRootsController(HeapDump dump, JavaHeapObject heapObject, FindRoot findRoot) {
         this.heapDump = dump;
         this.heapObject = heapObject;
+        this.rootFinder = findRoot;
+
         view = ApplicationContext.getInstance().getViewFactory().getView(ObjectRootsView.class);
 
         view.addActionListener(new ActionListener<ObjectRootsView.Action>() {
@@ -89,19 +96,20 @@ public class ObjectRootsController {
 
     private void showObjectDetails(HeapObjectUI uiObject) {
         JavaHeapObject obj = heapDump.findObject(uiObject.objectId);
+        String text = Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID) + " " + obj.getIdString() + "\n" +
+                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE) + " " + obj.getClazz().getName() + "\n" +
+                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE) + " " + String.valueOf(obj.getSize()) + " bytes" + "\n" +
+                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED) + " " + String.valueOf(obj.isHeapAllocated()) + "\n";
 
-        String text = Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID) + obj.getIdString() + "\n" +
-                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE) + obj.getClazz().getName() + "\n" +
-                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE) + String.valueOf(obj.getSize()) + " bytes" + "\n" +
-                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED) + String.valueOf(obj.isHeapAllocated()) + "\n";
-
+        if (obj.getRoot() != null) {
+            text = text + obj.getRoot().getDescription();
+        }
         view.setObjectDetails(text);
     }
 
 
     public void show() {
-        FindRoot findRoot = new FindRoot();
-        Collection<HeapPath<JavaHeapObject>> paths = findRoot.findShortestPathsToRoot(heapObject, false);
+        Collection<HeapPath<JavaHeapObject>> paths = rootFinder.findShortestPathsToRoot(heapObject, false);
         Iterator<HeapPath<JavaHeapObject>> iter = paths.iterator();
         if (iter.hasNext()) {
             HeapPath<JavaHeapObject> pathToRoot = iter.next();

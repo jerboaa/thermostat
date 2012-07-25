@@ -432,16 +432,4 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
     public BasicView getView() {
         return this;
     }
-
-    private static class LazyMutableTreeNode extends javax.swing.tree.DefaultMutableTreeNode {
-
-        public LazyMutableTreeNode(HeapObjectUI heapObjectUI) {
-            super(heapObjectUI);
-        }
-
-        @Override
-        public boolean isLeaf() {
-            return !getAllowsChildren();
-        }
-    }
 }
