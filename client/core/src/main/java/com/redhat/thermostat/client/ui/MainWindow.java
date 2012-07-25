@@ -79,11 +79,14 @@ import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.ToolTipManager;
+import javax.swing.event.TreeExpansionEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.event.TreeWillExpandListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.ExpandVetoException;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -304,6 +307,19 @@ public class MainWindow extends JFrame implements MainView {
         agentVmTree.setName("agentVmTree");
         agentVmTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         agentVmTree.setCellRenderer(new AgentVmTreeCellRenderer());
+        agentVmTree.addTreeWillExpandListener(new TreeWillExpandListener() {
+            @Override
+            public void treeWillExpand(TreeExpansionEvent event) throws ExpandVetoException {
+                /* Yup, tree will expand */
+            }
+
+            @Override
+            public void treeWillCollapse(TreeExpansionEvent event) throws ExpandVetoException {
+                if (new TreePath(publishedRoot.getPath()).equals(event.getPath())) {
+                    throw new ExpandVetoException(event, "root cant be collapsed");
+                }
+            }
+        });
         ToolTipManager.sharedInstance().registerComponent(agentVmTree);
         contentArea = new JPanel(new BorderLayout());
 
