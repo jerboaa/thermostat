@@ -103,6 +103,9 @@ class HeapDAOImpl implements HeapDAO {
                 log.log(Level.SEVERE, "Unexpected error while writing histogram", e);
             }
         }
+
+        Chunk entry = storage.find(chunk);
+        heapInfo.setHeapId(entry.get(Key.ID));
     }
 
     @Override

@@ -120,6 +120,26 @@ public class HeapDAOTest {
         // Setup for reading heapdump data.
         when(storage.loadFile("test-heap")).thenReturn(heapDumpData);
         when(storage.loadFile("test-histo")).thenReturn(histogramData);
+
+        // Prepare queries for read-back of _id in putHeapInfo() tests.
+        Chunk heap1query = new Chunk(HeapDAO.heapInfoCategory, false);
+        heap1query.put(Key.AGENT_ID, "987");
+        heap1query.put(Key.VM_ID, 123);
+        heap1query.put(Key.TIMESTAMP, 12345l);
+        heap1query.put(HeapDAO.heapDumpIdKey, "heapdump-987-123-12345");
+        heap1query.put(HeapDAO.histogramIdKey, "histogram-987-123-12345");
+        Chunk heap1 = new Chunk(HeapDAO.heapInfoCategory, false);
+        heap1.put(Key.ID, "id1");
+        when(storage.find(heap1query)).thenReturn(heap1);
+
+        Chunk heap2query = new Chunk(HeapDAO.heapInfoCategory, false);
+        heap2query.put(Key.AGENT_ID, "987");
+        heap2query.put(Key.VM_ID, 123);
+        heap2query.put(Key.TIMESTAMP, 12345l);
+        Chunk heap2 = new Chunk(HeapDAO.heapInfoCategory, false);
+        heap2.put(Key.ID, "id2");
+        when(storage.find(heap2query)).thenReturn(heap2);
+
     }
 
     private InputStream createHistogramData() throws IOException {
@@ -186,6 +206,7 @@ public class HeapDAOTest {
         expectedChunk.put(HeapDAO.histogramIdKey, "histogram-987-123-12345");
         verify(storage).putChunk(expectedChunk);
         verify(storage).saveFile(eq("heapdump-987-123-12345"), same(heapDumpData));
+        assertEquals("id1", heapInfo.getHeapId());
         ArgumentCaptor<InputStream> histoStream = ArgumentCaptor.forClass(InputStream.class);
         verify(storage).saveFile(eq("histogram-987-123-12345"), histoStream.capture());
         InputStream histoActual = histoStream.getValue();
@@ -209,6 +230,7 @@ public class HeapDAOTest {
 
         verify(storage).putChunk(expectedChunk);
         verify(storage, never()).saveFile(anyString(), any(InputStream.class));
+        assertEquals("id2", heapInfo.getHeapId());
     }
 
     @Test
