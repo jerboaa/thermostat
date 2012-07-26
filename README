@@ -7,22 +7,41 @@ Thermostat:
 2. BUILDING THERMOSTAT
 3. RUNNING THERMOSTAT
 4. PASSING JVM SPECIFIC OPTIONS
+5. GNOME KEYRING
 
 
 --------------------------------------------------------------------------------
 REQUIREMENTS
 
-OpenJDK7
+* OpenJDK7
+
 Thermostat requires at least Java 7 to build and run. Thermostat has been tested
-with OpenJDK7. Other VMs or versons may or may not work.
+with OpenJDK7. Other VMs or versions may or may not work.
 
-Maven (it will download all the java dependencies for you)
+* Maven (it will download all the java dependencies for you)
 
-MongoDB server
+* MongoDB server
+
 Thermostat requires mongodb (http://www.mongodb.org/) server >= 2.0.0
 
-Either a /etc/os-release file or lsb_release
+* Either a /etc/os-release file or lsb_release
 
+* Gnome Keyring Daemon development libraries, plus pkg-configs and gcc
+
+Gnome Keyring development libraries are required at build time.
+
+You should check your distribution for the exact name of the library, on Fedora
+17 based distributions you can obtain it via:
+
+# yum install libgnome-keyring-devel,
+
+on RHEL/Centos 6.x via:
+
+# yum install gnome-keyring-devel
+
+On Debian (and probably Ubuntu):
+
+# aptitude install libgnome-keyring-dev
 
 --------------------------------------------------------------------------------
 BUILDING THERMOSTAT
@@ -40,8 +59,8 @@ BUILDING THERMOSTAT
    
 2. The resultant Thermostat system can now be found under the directory
    distribution/target.
-
-
+           
+            
 --------------------------------------------------------------------------------
 RUNNING THERMOSTAT
 
@@ -72,4 +91,25 @@ rather then the default one:
 
 bin/thermostat gui \
     -J-Dswing.defaultlaf=javax.swing.plaf.nimbus.NimbusLookAndFeel
+
+
+--------------------------------------------------------------------------------
+GNOME KEYRING
+
+Thermostat includes experimental support to store user credentials in the
+Gnome Keyring daemon, this support is currently limited to passwords only.
+
+Runtime supports for the Keyring is optional and can be disabled via a system
+property:
+
+ * -J-Dcom.redhat.thermostat.utils.keyring.provider=com.redhat.thermostat.utils.keyring.MemoryKeyring
+
+The memory keyring stores password in memory, and not on disk, so password don't
+persist across Thermostat sessions when the user quits and restarts the
+application.
+
+NOTE: thermostat keeps all the passwords in clear text memory during execution,
+the keyring is only used to securely store passwords on disk. The passwords are
+saved in the user session keychain and available to other applications that
+can access the keyring. 
 

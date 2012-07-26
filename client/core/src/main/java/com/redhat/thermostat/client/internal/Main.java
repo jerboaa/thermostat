@@ -39,7 +39,6 @@ package com.redhat.thermostat.client.internal;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.EventQueue;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,7 +47,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
@@ -63,7 +61,6 @@ import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
-import com.redhat.thermostat.client.ui.ClientConfigurationView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Constants;
@@ -81,6 +78,8 @@ import com.redhat.thermostat.common.storage.Connection.ConnectionType;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Main {
     
@@ -88,19 +87,9 @@ public class Main {
 
     private UiFacadeFactory uiFacadeFactory;
     
-    public Main(UiFacadeFactory uiFacadeFactory, String[] args) {
+    public Main(Keyring keyring, UiFacadeFactory uiFacadeFactory, String[] args) {
         this.uiFacadeFactory = uiFacadeFactory;
-
-        ClientPreferences prefs = new ClientPreferences();
-        StartupConfiguration config = new ConnectionConfiguration(prefs);
-
-        StorageProvider connProv = new MongoStorageProvider(config);
-        DAOFactory daoFactory = new MongoDAOFactory(connProv);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
-        SwingViewFactory viewFactory = new SwingViewFactory();
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
+        setUp(keyring);
     }
 
     void run() {
@@ -138,12 +127,22 @@ public class Main {
         }
     }
 
+    void setUp(Keyring keyring) {
+        ClientPreferences prefs = new ClientPreferences(keyring);
+        StartupConfiguration config = new ConnectionConfiguration(prefs);
+
+        StorageProvider connProv = new MongoStorageProvider(config);
+        DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        SwingViewFactory viewFactory = new SwingViewFactory();
+        ApplicationContext.getInstance().setViewFactory(viewFactory);
+    }
+        
     private void showGui() {
         
-        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceReference ref = ctx.getServiceReference(ApplicationService.class.getName());
-        ApplicationService appSrv = (ApplicationService) ctx.getService(ref);
-        
+        ApplicationService appSrv = OSGIUtils.getInstance().getService(ApplicationService.class);
         final ExecutorService service = appSrv.getApplicationExecutor();
         
         service.execute(new ConnectorSetup(service));
@@ -158,6 +157,7 @@ public class Main {
         
         @Override
         public void run() {
+            
             Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
             connection.setType(ConnectionType.LOCAL);
             ConnectionListener connectionListener = new ConnectionHandler(connection, service);
@@ -254,7 +254,8 @@ public class Main {
     }
     
     private void createPreferencesDialog(final Connection connection, final ExecutorService service) {
-        ClientPreferences prefs = new ClientPreferences();
+
+        ClientPreferences prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
         ClientConfigurationView configDialog = new ClientConfigurationSwing();
         ClientConfigurationController controller =
                 new ClientConfigurationController(prefs, configDialog);

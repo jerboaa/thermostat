@@ -34,33 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.utils.keyring;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import java.util.HashMap;
+import java.util.Map;
 
-public interface ClientConfigurationView extends View {
+class MemoryKeyring implements Keyring {
 
-    enum Action {
-        CLOSE_CANCEL,
-        CLOSE_ACCEPT,
-    }
-
-    void addListener(ActionListener<Action> listener);
-
-    void removeListener(ActionListener<Action> listener);
-
-    void setConnectionUrl(String url);
-    void setPassword(String password);
-    void setUserName(String username);
-    void setSaveEntitlemens(boolean save);
+    private Map<Credentials, String> keyring = new HashMap<>();
     
-    boolean getSaveEntitlements();
-    String getUserName();
-    String getPassword();
-    String getConnectionUrl();
-
-    void showDialog();
-    void hideDialog();
-
+    public MemoryKeyring() {
+        
+    }
+    
+    @Override
+    public synchronized void loadPassword(Credentials credentials) {
+        if (credentials == null) {
+            throw new NullPointerException("credentials can't be null");
+        }
+        if (credentials.getUserName() == null) {
+            throw new NullPointerException("username can't be null");
+        }
+        credentials.setPassword(keyring.get(credentials));
+    }
+    
+    @Override
+    public synchronized boolean savePassword(Credentials credentials) {
+        if (credentials == null) {
+            throw new NullPointerException("credentials can't be null");
+        }
+        if (credentials.getUserName() == null) {
+            throw new NullPointerException("username can't be null");
+        }
+        
+        String password = credentials.getPassword();
+        if (password == null) {
+            password = "";
+        }
+        
+        Credentials saved = credentials.clone();
+        keyring.put(saved, password);
+        return true;
+    }
 }

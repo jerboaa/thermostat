@@ -40,6 +40,8 @@ import java.util.Arrays;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.internal.GUIClientCommand;
 import com.redhat.thermostat.client.internal.Main;
@@ -47,6 +49,7 @@ import com.redhat.thermostat.client.internal.UiFacadeFactory;
 import com.redhat.thermostat.client.internal.UiFacadeFactoryImpl;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {
 
@@ -57,21 +60,33 @@ public class ThermostatActivator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
-        UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
-
-        vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-        vmInfoServiceTracker.open();
-
-        contextActionTracker =
-                new VMContextActionServiceTracker(context, uiFacadeFactory);
-        contextActionTracker.open();
-
-        cmdReg = new CommandRegistryImpl(context);
-        Main main = new Main(uiFacadeFactory, new String[0]);
         
-        GUIClientCommand cmd = new GUIClientCommand(main);
-        cmd.setBundleContext(context);
-        cmdReg.registerCommands(Arrays.asList(cmd));
+        ServiceTracker tracker = new ServiceTracker(context, Keyring.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+              
+                Keyring keyring = (Keyring) context.getService(reference);
+                
+                UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
+
+                vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
+                vmInfoServiceTracker.open();
+
+                contextActionTracker =
+                        new VMContextActionServiceTracker(context, uiFacadeFactory);
+                contextActionTracker.open();
+
+                cmdReg = new CommandRegistryImpl(context);
+                Main main = new Main(keyring, uiFacadeFactory, new String[0]);
+                
+                GUIClientCommand cmd = new GUIClientCommand(main);
+                cmd.setBundleContext(context);
+                cmdReg.registerCommands(Arrays.asList(cmd));
+                
+                return super.addingService(reference);
+            }
+        };
+        tracker.open();
     }
 
     @Override

@@ -56,6 +56,7 @@ public class ClientConfigurationControllerTest {
         when(model.getConnectionUrl()).thenReturn("mock-connection-url");
         when(model.getPassword()).thenReturn("mock-password");
         when(model.getUserName()).thenReturn("mock-username");
+        when(model.getSaveEntitlements()).thenReturn(false);
         
         ClientConfigurationView view = mock(ClientConfigurationView.class);
         ClientConfigurationController controller = new ClientConfigurationController(model, view);
@@ -66,6 +67,7 @@ public class ClientConfigurationControllerTest {
         verify(view).setConnectionUrl(eq("mock-connection-url"));
         verify(view).setPassword(eq("mock-password"));
         verify(view).setUserName(eq("mock-username"));
+        verify(view).setSaveEntitlemens(eq(false));
         verify(view).showDialog();
     }
 
@@ -78,8 +80,7 @@ public class ClientConfigurationControllerTest {
         controller.actionPerformed(new ActionEvent<>(view, ClientConfigurationView.Action.CLOSE_CANCEL));
 
         verify(model, times(0)).setConnectionUrl(any(String.class));
-        verify(model, times(0)).setPassword(any(String.class));
-        verify(model, times(0)).setUserName(any(String.class));
+        verify(model, times(0)).setCredentials(any(String.class), any(String.class));
         
         verify(view, times(0)).getConnectionUrl();
         verify(view, times(0)).showDialog();
@@ -93,14 +94,15 @@ public class ClientConfigurationControllerTest {
         when(view.getConnectionUrl()).thenReturn("mock-connection-url");
         when(view.getPassword()).thenReturn("mock-password");
         when(view.getUserName()).thenReturn("mock-username");
+        when(view.getSaveEntitlements()).thenReturn(true);
         
         ClientConfigurationController controller = new ClientConfigurationController(model, view);
 
         controller.actionPerformed(new ActionEvent<>(view, ClientConfigurationView.Action.CLOSE_ACCEPT));
 
         verify(model).setConnectionUrl(eq("mock-connection-url"));
-        verify(model).setPassword(eq("mock-password"));
-        verify(model).setUserName(eq("mock-username"));
+        verify(model).setCredentials(eq("mock-username"), eq("mock-password"));
+        verify(model).setSaveEntitlements(eq(true));
         
         verify(view).getConnectionUrl();
         verify(view, times(0)).showDialog();

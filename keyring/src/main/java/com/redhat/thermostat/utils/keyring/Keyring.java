@@ -34,33 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.utils.keyring;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+public interface Keyring {
 
-public interface ClientConfigurationView extends View {
-
-    enum Action {
-        CLOSE_CANCEL,
-        CLOSE_ACCEPT,
-    }
-
-    void addListener(ActionListener<Action> listener);
-
-    void removeListener(ActionListener<Action> listener);
-
-    void setConnectionUrl(String url);
-    void setPassword(String password);
-    void setUserName(String username);
-    void setSaveEntitlemens(boolean save);
+    /**
+     * Loads the password into the given {@link Credentials}.
+     * 
+     * <br /><br />
+     * 
+     * A {@link NullPointerException} is thrown is {@link Credentials} is
+     * {@code null} or {@link Credentials#getUserName()} is {@code null}.
+     */
+    void loadPassword(Credentials credentials);
     
-    boolean getSaveEntitlements();
-    String getUserName();
-    String getPassword();
-    String getConnectionUrl();
-
-    void showDialog();
-    void hideDialog();
-
+    /**
+     * Stores the password from the {@link Credentials} into the keyring.
+     * 
+     * <br /><br />
+     * 
+     * A {@link NullPointerException} is thrown is {@link Credentials} is
+     * {@code null} or {@link Credentials#getUserName()} is {@code null}. 
+     * 
+     * <br /><br />
+     * 
+     * If {@link Credentials#getPassword()} is {@code null}, an emtpy String
+     * password is saved in the keyring.
+     */
+    boolean savePassword(Credentials credentials);
 }

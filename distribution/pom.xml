@@ -52,6 +52,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
 
   <build>
@@ -165,6 +166,12 @@
                 <mkdir dir="${project.build.directory}/agent/logs" />
                 <mkdir dir="${project.build.directory}/agent/run" />
                 <mkdir dir="${project.build.directory}/client" />
+                <mkdir dir="${project.build.directory}/libs/native" />
+                
+                <!--  also copy the native libraries -->
+                <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper.so"
+                      todir="${project.build.directory}/libs/native" />
+                
               </target>
             </configuration>
             <goals>
@@ -282,6 +289,11 @@
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-swing-components</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-keyring</artifactId>
         <version>${project.version}</version>
     </dependency>
   </dependencies>

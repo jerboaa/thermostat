@@ -39,31 +39,61 @@ package com.redhat.thermostat.common.config;
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
 
+import com.redhat.thermostat.utils.keyring.Credentials;
+import com.redhat.thermostat.utils.keyring.Keyring;
+import com.redhat.thermostat.utils.keyring.KeyringProvider;
+
 public class ClientPreferences {
 
     static final String USERNAME = "username";
     static final String PASSWORD = "password";
     static final String CONNECTION_URL = "connection-url";
-
+    static final String SAVE_ENTITLEMENTS = "save-entitlements";
+    
     private final Preferences prefs;
-
-    public ClientPreferences() {
-        this(Preferences.userRoot().node("thermostat"));
+    
+    private Keyring keyring;
+    
+    private Credentials userCredentials;
+    
+    public ClientPreferences(Keyring keyring) {
+        this(Preferences.userRoot().node("thermostat"), keyring);
     }
 
-    ClientPreferences(Preferences prefs) {
+    ClientPreferences(Preferences prefs, Keyring keyring) {
         this.prefs = prefs;
+        this.keyring = keyring;
+        this.userCredentials = new Credentials();
+        userCredentials.setDescription("thermostat keychain");
+
+        // load the initial defaults
+        userCredentials.setUserName(prefs.get(USERNAME, ""));
+        this.userCredentials.setPassword("");
+        if (getSaveEntitlements()) {
+            keyring.loadPassword(userCredentials);
+        }
     }
 
+    public boolean getSaveEntitlements() {
+        return prefs.getBoolean(SAVE_ENTITLEMENTS, false);
+    }
+    
+    public void setSaveEntitlements(boolean save) {
+        prefs.putBoolean(SAVE_ENTITLEMENTS, save);
+    }
+    
     public String getConnectionUrl() {
         return prefs.get(CONNECTION_URL, "mongodb://127.0.0.1:27518");
     }
 
     public String getPassword() {
-        return prefs.get(PASSWORD, "");
+        if (getSaveEntitlements()) {
+            keyring.loadPassword(userCredentials);
+        }
+        return userCredentials.getPassword();
     }
 
-    public String getUserName() {
+    public String getUserName() {        
         return prefs.get(USERNAME, "");
     }
 
@@ -71,15 +101,22 @@ public class ClientPreferences {
         prefs.put(CONNECTION_URL, url);
     }
 
-    public void setPassword(String password) {
-        prefs.put(PASSWORD, password);
-    }
-    
-    public void setUserName(String username) {
-        prefs.put(USERNAME, username);
+    public void setCredentials(String userName, String password) {
+        
+        userCredentials.setUserName(userName);
+        userCredentials.setPassword(password);
+        prefs.put(USERNAME, userName);
+        
+        if (getSaveEntitlements()) {
+            keyring.savePassword(userCredentials);
+        }
     }
     
     public void flush() throws BackingStoreException {
         prefs.flush();
+        userCredentials.setUserName(getUserName());
+        if (getSaveEntitlements()) {
+            keyring.loadPassword(userCredentials);
+        }
     }
 }

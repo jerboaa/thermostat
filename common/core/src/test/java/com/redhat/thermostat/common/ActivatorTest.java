@@ -40,12 +40,11 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -53,9 +52,12 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
@@ -69,6 +71,7 @@ public class ActivatorTest {
     public void testRegisterServices() throws Exception {
         final Map<ServiceRegistration, Object> regs = new HashMap<>();
         BundleContext bCtx = mock(BundleContext.class);
+        
         when(bCtx.registerService(anyString(), any(), any(Dictionary.class))).then(new Answer<ServiceRegistration>() {
 
             @Override
@@ -91,11 +94,26 @@ public class ActivatorTest {
                 return null;
             }
         });
+        
+        ArgumentCaptor<ServiceListener> serviceCaptor = ArgumentCaptor.forClass(ServiceListener.class);
+        doNothing().when(bCtx).addServiceListener(serviceCaptor.capture());
 
         Activator activator = new Activator();
-
         activator.start(bCtx);
 
+        verify(bCtx).addServiceListener(serviceCaptor.capture(), anyString());
+        ServiceListener listener = serviceCaptor.getValue();
+        
+        ServiceReference reference = mock(ServiceReference.class);
+        ServiceEvent event = mock(ServiceEvent.class);
+        when(event.getServiceReference()).thenReturn(reference);
+        when(event.getType()).thenReturn(ServiceEvent.REGISTERED);
+        
+        listener.serviceChanged(event);
+        verify(event).getServiceReference();
+        
+        
+        
         Hashtable<String, Object> props = new Hashtable<>();
         props.put(Command.NAME, "help");
         verify(bCtx).registerService(eq(Command.class.getName()), isA(HelpCommand.class), eq(props));

@@ -48,12 +48,14 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class LauncherImpl implements Launcher, OSGiContext {
 
     private static final String UNKNOWN_COMMAND_MESSAGE = "unknown command '%s'\n";
 
-    private ClientPreferences prefs = new ClientPreferences();
+    private ClientPreferences prefs;
 
     private String[] args;
 
@@ -193,6 +195,10 @@ public class LauncherImpl implements Launcher, OSGiContext {
 
     private CommandContext setupCommandContext(Command cmd, Arguments args) throws CommandException {
 
+        if (prefs == null) {
+            prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
+        }
+        
         CommandContext ctx = cmdCtxFactory.createContext(args);
         if (cmd.isStorageRequired()) {
             String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);

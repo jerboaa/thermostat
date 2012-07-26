@@ -34,33 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.common.utils;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
-public interface ClientConfigurationView extends View {
-
-    enum Action {
-        CLOSE_CANCEL,
-        CLOSE_ACCEPT,
-    }
-
-    void addListener(ActionListener<Action> listener);
-
-    void removeListener(ActionListener<Action> listener);
-
-    void setConnectionUrl(String url);
-    void setPassword(String password);
-    void setUserName(String username);
-    void setSaveEntitlemens(boolean save);
+public class OSGIUtils {
     
-    boolean getSaveEntitlements();
-    String getUserName();
-    String getPassword();
-    String getConnectionUrl();
-
-    void showDialog();
-    void hideDialog();
-
+    private final static OSGIUtils instance = new OSGIUtils();
+    public static OSGIUtils getInstance() {
+        return instance;
+    }
+    
+    public <E extends Object> E getService(Class<E> clazz) {
+        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference ref = ctx.getServiceReference(clazz.getName());
+        return (E) ctx.getService(ref);
+    }
 }

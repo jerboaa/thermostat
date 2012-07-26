@@ -230,4 +230,30 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
             throw error;
         }
     }
+    
+    @Override
+    public boolean getSaveEntitlements() {
+        try {
+            return new EdtHelper().callAndWait(new Callable<Boolean>() {
+                @Override
+                public Boolean call() throws Exception {
+                    return configurationPanel.saveEntitlements.isSelected();
+                }
+            });
+        } catch (InvocationTargetException | InterruptedException e) {
+            InternalError error = new InternalError();
+            error.initCause(e);
+            throw error;
+        }
+    }
+    
+    @Override
+    public void setSaveEntitlemens(final boolean save) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                configurationPanel.saveEntitlements.setSelected(save);
+            }
+        });
+    }
 }

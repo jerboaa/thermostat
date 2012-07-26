@@ -66,15 +66,18 @@ public class ClientConfigurationController implements ActionListener<Action> {
     }
 
     private void updateViewFromModel() {
+        view.setSaveEntitlemens(model.getSaveEntitlements());
         view.setConnectionUrl(model.getConnectionUrl());
+        
         view.setPassword(model.getPassword());
         view.setUserName(model.getUserName());
     }
 
     private void updateModelFromView() {
+        model.setSaveEntitlements(view.getSaveEntitlements());
         model.setConnectionUrl(view.getConnectionUrl());
-        model.setUserName(view.getUserName());
-        model.setPassword(view.getPassword());
+        
+        model.setCredentials(view.getUserName(), view.getPassword());
         
         try {
             model.flush();

@@ -123,6 +123,12 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+    <dependency>
       <groupId>org.apache.lucene</groupId>
       <artifactId>lucene-core</artifactId>
     </dependency>
@@ -131,6 +137,12 @@
       <artifactId>tools</artifactId>
       <scope>system</scope>
       <systemPath>${java.home}/../lib/tools.jar</systemPath>
+    </dependency>
+    <dependency>
+    	<groupId>com.redhat.thermostat</groupId>
+    	<artifactId>thermostat-keyring</artifactId>
+    	<version>${project.version}</version>
+    	<type>bundle</type>
     </dependency>
   </dependencies>
   

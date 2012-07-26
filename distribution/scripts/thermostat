@@ -56,6 +56,7 @@ NETTY_JAR="${THERMOSTAT_LIBS}/netty-3.2.4.Final.jar"
 
 # plus the main services we use and export
 SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
+SERVICE_NATIVE="${THERMOSTAT_LIBS}/native"
 
 THERM_DIR=${THERMOSTAT_LIBS}
 
@@ -86,5 +87,5 @@ do
 done
 
 # finally run thermostat
-${JAVA} "${JAVA_ARGS[@]}" -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
+${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
 exit $?

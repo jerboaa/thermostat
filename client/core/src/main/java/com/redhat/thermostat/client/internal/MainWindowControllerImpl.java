@@ -77,6 +77,8 @@ import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class MainWindowControllerImpl implements MainWindowController {
 
@@ -429,7 +431,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void showConfigureClientPreferences() {
-        ClientPreferences prefs = new ClientPreferences();
+        ClientPreferences prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
         ClientConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(ClientConfigurationView.class);
         ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
         controller.showDialog();

@@ -34,33 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.utils.keyring;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
-
-public interface ClientConfigurationView extends View {
-
-    enum Action {
-        CLOSE_CANCEL,
-        CLOSE_ACCEPT,
-    }
-
-    void addListener(ActionListener<Action> listener);
-
-    void removeListener(ActionListener<Action> listener);
-
-    void setConnectionUrl(String url);
-    void setPassword(String password);
-    void setUserName(String username);
-    void setSaveEntitlemens(boolean save);
+class GnomeKeyringLibraryNative implements Keyring {
     
-    boolean getSaveEntitlements();
-    String getUserName();
-    String getPassword();
-    String getConnectionUrl();
-
-    void showDialog();
-    void hideDialog();
-
+    static {
+        System.loadLibrary("GnomeKeyringWrapper");
+    }
+    
+    public GnomeKeyringLibraryNative() {
+        
+    }
+    
+    @Override
+    public synchronized void loadPassword(Credentials credentials) {
+        if (credentials == null) {
+            throw new NullPointerException("credentials can't be null");
+        }
+        if (credentials.getUserName() == null) {
+            throw new NullPointerException("username can't be null");
+        }
+        String password = gnomeKeyringWrapperGetPasswordNative(credentials.getUserName());
+        credentials.setPassword(password);
+    }
+    
+    @Override
+    public synchronized boolean savePassword(Credentials credentials) {
+        
+        if (credentials == null) {
+            throw new NullPointerException("credentials can't be null");
+        }
+        if (credentials.getUserName() == null) {
+            throw new NullPointerException("username can't be null");
+        }
+        
+        String password = credentials.getPassword();
+        if (password == null) {
+            password = "";
+        }
+        
+        String description = credentials.getDescription();
+        if (description == null) {
+             description = ""; 
+        }
+        
+        return gnomeKeyringWrapperSetPasswordNative(credentials.getUserName(), password, description);
+    }
+    
+    private static native boolean gnomeKeyringWrapperSetPasswordNative(String userName, String password, String description);
+    private static native String gnomeKeyringWrapperGetPasswordNative(String userName);
 }

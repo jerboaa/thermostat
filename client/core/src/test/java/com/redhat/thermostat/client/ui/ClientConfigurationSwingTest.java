@@ -42,6 +42,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import javax.swing.JCheckBox;
 import javax.swing.UIManager;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
@@ -53,6 +54,7 @@ import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiQuery;
 import org.fest.swing.fixture.DialogFixture;
 import org.fest.swing.fixture.JButtonFixture;
+import org.fest.swing.fixture.JCheckBoxFixture;
 import org.fest.swing.fixture.JTextComponentFixture;
 import org.junit.After;
 import org.junit.Before;
@@ -134,6 +136,21 @@ public class ClientConfigurationSwingTest {
         textBox.enterText("foobar");
 
         assertEquals("foobar", frame.getUserName());
+    }
+    
+    @Category(GUITest.class)
+    @Test
+    public void testSaveEntitlements() {
+
+        JCheckBoxFixture saveBox = frameFixture.checkBox("saveEntitlements");
+        saveBox.requireEnabled();
+        saveBox.requireNotSelected();
+
+        saveBox.click();
+        assertEquals(true, frame.getSaveEntitlements());
+        
+        saveBox.click();
+        assertEquals(false, frame.getSaveEntitlements());
     }
     
     @Category(GUITest.class)

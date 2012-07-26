@@ -34,33 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.utils.keyring;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import static org.junit.Assert.*;
 
-public interface ClientConfigurationView extends View {
+import org.junit.Test;
 
-    enum Action {
-        CLOSE_CANCEL,
-        CLOSE_ACCEPT,
-    }
+import com.redhat.thermostat.utils.keyring.Credentials;
+import com.redhat.thermostat.utils.keyring.Keyring;
+import com.redhat.thermostat.utils.keyring.MemoryKeyring;
 
-    void addListener(ActionListener<Action> listener);
-
-    void removeListener(ActionListener<Action> listener);
-
-    void setConnectionUrl(String url);
-    void setPassword(String password);
-    void setUserName(String username);
-    void setSaveEntitlemens(boolean save);
+public class KeyringTest {
     
-    boolean getSaveEntitlements();
-    String getUserName();
-    String getPassword();
-    String getConnectionUrl();
-
-    void showDialog();
-    void hideDialog();
-
+    @Test
+    public void testSetGetPassword() {
+        Credentials credentials = new Credentials();
+        
+        String userName = System.getProperty("user.name");
+        
+        credentials.setUserName(userName);
+        credentials.setPassword("fluff-password");
+        credentials.setDescription("fluff");
+        
+        Keyring keyring = new MemoryKeyring();
+        assertTrue(keyring.savePassword(credentials));
+        
+        credentials.setPassword("fluff-wrong");
+        assertEquals("fluff-wrong", credentials.getPassword());
+        
+        keyring.loadPassword(credentials);
+        assertEquals("fluff-password", credentials.getPassword());
+    }
+    
+    @Test
+    public void testSetGetPasswordNullValues() {
+        Credentials credentials = new Credentials();
+        
+        String userName = System.getProperty("user.name");
+        
+        credentials.setUserName(userName);
+        credentials.setPassword("fluff-password");
+        
+        Keyring keyring = new MemoryKeyring();
+        assertTrue(keyring.savePassword(credentials));
+        
+        credentials.setPassword("fluff-wrong");
+        assertEquals("fluff-wrong", credentials.getPassword());
+        
+        keyring.loadPassword(credentials);
+        assertEquals("fluff-password", credentials.getPassword());
+    }
 }

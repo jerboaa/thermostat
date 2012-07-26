@@ -1,0 +1,90 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <artifactId>thermostat</artifactId>
+    <groupId>com.redhat.thermostat</groupId>
+    <version>0.4-SNAPSHOT</version>
+  </parent>
+  
+  <artifactId>thermostat-keyring</artifactId>
+  <packaging>bundle</packaging>
+  <name>Thermostat Keyring API</name>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Activator>com.redhat.thermostat.utils.keyring.activator.Activator</Bundle-Activator>
+	        <Private-Package>com.redhat.thermostat.utils.keyring.activator</Private-Package>
+            <Export-Package>com.redhat.thermostat.utils.keyring</Export-Package>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
+          </instructions>
+        </configuration>
+      </plugin>
+    
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <systemPropertyVariables>
+              <com.redhat.thermostat.utils.keyring.provider>com.redhat.thermostat.utils.keyring.MemoryKeyring</com.redhat.thermostat.utils.keyring.provider>
+            </systemPropertyVariables>
+            <argLine>-Djava.library.path=${project.build.directory}/</argLine>
+          </configuration>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>  
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>  
+        </executions>
+        <configuration>
+          <executable>make</executable>
+          <arguments>
+            <argument>all</argument>
+          </arguments>
+          <systemProperties>
+            <systemProperty>
+              <key>JAVA_HOME</key>
+              <value>${java.home}</value>
+            </systemProperty>
+          </systemProperties>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    
+  </dependencies>
+</project>

@@ -34,33 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.utils.keyring.activator;
 
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-public interface ClientConfigurationView extends View {
+import com.redhat.thermostat.utils.keyring.Keyring;
+import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
-    enum Action {
-        CLOSE_CANCEL,
-        CLOSE_ACCEPT,
+public class Activator implements BundleActivator {
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+        context.registerService(Keyring.class.getName(), KeyringProvider.getKeyring(), null);
     }
-
-    void addListener(ActionListener<Action> listener);
-
-    void removeListener(ActionListener<Action> listener);
-
-    void setConnectionUrl(String url);
-    void setPassword(String password);
-    void setUserName(String username);
-    void setSaveEntitlemens(boolean save);
     
-    boolean getSaveEntitlements();
-    String getUserName();
-    String getPassword();
-    String getConnectionUrl();
-
-    void showDialog();
-    void hideDialog();
-
+    @Override
+    public void stop(BundleContext context) throws Exception {
+    }
 }

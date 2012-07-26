@@ -41,20 +41,24 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 import javax.swing.GroupLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import javax.swing.border.TitledBorder;
+import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 class ClientConfigurationPanel extends JPanel {
 
     final JTextField storageUrl = new JTextField();
     final JTextField userName = new JTextField();
-    final JTextField password = new JTextField();
-
+    final JPasswordField password = new JPasswordField();
+    
+    final JCheckBox saveEntitlements;
+    
     public ClientConfigurationPanel() {
         setBorder(new TitledBorder(null,
                   localize(LocaleResources.CLIENT_PREFS_CONNECTION),
@@ -77,22 +81,29 @@ class ClientConfigurationPanel extends JPanel {
         
         password.setName("password");
         password.setColumns(10);
+        
+        saveEntitlements = new JCheckBox(localize(LocaleResources.CLIENT_PREFS_STORAGE_SAVE_ENTITLEMENTS));
+        saveEntitlements.setName("saveEntitlements");
+        saveEntitlements.setSelected(false);
 
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(storageURLText, GroupLayout.PREFERRED_SIZE, 83, GroupLayout.PREFERRED_SIZE)
-                        .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
-                            .addComponent(passowrdText, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(userNameText, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
-                    .addPreferredGap(ComponentPlacement.UNRELATED)
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(userName, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE)
-                        .addComponent(storageUrl, GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE)
-                        .addComponent(password, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE))
+                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
+                        .addComponent(saveEntitlements)
+                        .addGroup(groupLayout.createSequentialGroup()
+                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                                .addComponent(storageURLText, GroupLayout.PREFERRED_SIZE, 83, GroupLayout.PREFERRED_SIZE)
+                                .addGroup(groupLayout.createParallelGroup(Alignment.LEADING, false)
+                                    .addComponent(passowrdText, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(userNameText, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addPreferredGap(ComponentPlacement.UNRELATED)
+                            .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                                .addComponent(userName, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE)
+                                .addComponent(storageUrl, GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE)
+                                .addComponent(password, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 326, Short.MAX_VALUE))))
                     .addGap(24))
         );
         groupLayout.setVerticalGroup(
@@ -116,7 +127,9 @@ class ClientConfigurationPanel extends JPanel {
                         .addGroup(groupLayout.createSequentialGroup()
                             .addPreferredGap(ComponentPlacement.RELATED)
                             .addComponent(password, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)))
-                    .addContainerGap(76, Short.MAX_VALUE))
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(saveEntitlements)
+                    .addContainerGap(15, Short.MAX_VALUE))
         );
         setLayout(groupLayout);
     }

@@ -47,7 +47,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -57,9 +59,25 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
+import com.redhat.thermostat.utils.keyring.Keyring;
+import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 public class LauncherTest {
-
+    
+    private static String defaultKeyringProvider;
+      
+    @BeforeClass
+    public static void beforeClassSetUp() {
+        defaultKeyringProvider = System.getProperty(KeyringProvider.KEYRING_FACTORY_PROPERTY);
+    }
+    
+    @AfterClass
+    public static void afterClassTearDown() {
+        if (defaultKeyringProvider != null) {
+            System.setProperty(KeyringProvider.KEYRING_FACTORY_PROPERTY, defaultKeyringProvider);
+        }
+    }
+    
     private static class TestCmd1 implements TestCommand.Handle {
 
         @Override
@@ -232,6 +250,9 @@ public class LauncherTest {
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
         LauncherImpl launcher = new LauncherImpl(ctxFactory);
+        Keyring keyring = mock(Keyring.class);
+        launcher.setPreferences(new ClientPreferences(keyring));
+        
         launcher.setBundleContext(bundleContext);
         launcher.run(new String[] { "error" });
         assertEquals("test error\n", ctxFactory.getError());
@@ -240,6 +261,10 @@ public class LauncherTest {
 
     private void runAndVerifyCommand(String[] args, String expected) {
         LauncherImpl launcher = new LauncherImpl(ctxFactory);
+        
+        Keyring keyring = mock(Keyring.class);
+        launcher.setPreferences(new ClientPreferences(keyring));
+        
         launcher.setBundleContext(bundleContext);
         launcher.run(args);
         assertEquals(expected, ctxFactory.getOutput());
@@ -250,6 +275,9 @@ public class LauncherTest {
     public void verifyStorageCommandSetsUpDAOFactory() {
         LauncherImpl launcher = new LauncherImpl(ctxFactory);
         launcher.setBundleContext(bundleContext);
+        Keyring keyring = mock(Keyring.class);
+        launcher.setPreferences(new ClientPreferences(keyring));
+        
         launcher.run(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345" });
         verify(appContextSetup).setupAppContext("mongo://fluff:12345", null, null);
     }
@@ -258,6 +286,9 @@ public class LauncherTest {
     public void verifyStorageCommandSetsUpDAOFactoryWithAuth() {
         LauncherImpl launcher = new LauncherImpl(ctxFactory);
         launcher.setBundleContext(bundleContext);
+        Keyring keyring = mock(Keyring.class);
+        launcher.setPreferences(new ClientPreferences(keyring));
+        
         launcher.run(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345", "--username", "testuser", "--password", "testpwd" });
         verify(appContextSetup).setupAppContext("mongo://fluff:12345", "testuser", "testpwd");
     }

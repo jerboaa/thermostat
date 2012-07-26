@@ -40,7 +40,9 @@ import java.util.ServiceLoader;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
@@ -48,6 +50,7 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.cli.Launcher;
 import com.redhat.thermostat.common.cli.LauncherImpl;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator implements BundleActivator {
 
@@ -55,16 +58,25 @@ public class Activator implements BundleActivator {
     private CommandRegistry reg;
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        reg = new CommandRegistryImpl(context);
-        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
-        reg.registerCommands(cmds);
-
-        CommandContextFactory cmdCtxFactory = new CommandContextFactory(context);
-        LauncherImpl launcher = new LauncherImpl(cmdCtxFactory);
-        launcher.setBundleContext(context);
-        
-        launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
+    public void start(final BundleContext context) throws Exception {        
+        ServiceTracker tracker = new ServiceTracker(context, Keyring.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                                
+                reg = new CommandRegistryImpl(context);
+                ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
+                reg.registerCommands(cmds);
+                
+                CommandContextFactory cmdCtxFactory = new CommandContextFactory(context);
+                LauncherImpl launcher = new LauncherImpl(cmdCtxFactory);
+                launcher.setBundleContext(context);
+                
+                launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
+                
+                return super.addingService(reference);
+            }
+        };
+        tracker.open();
     }
 
     @Override

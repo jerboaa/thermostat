@@ -48,6 +48,9 @@
   <url>${thermostat.url}</url>
 
   <properties>
+  
+    <main.basedir>${project.basedir}</main.basedir>  
+  
     <maven.build.timestamp.format>yyyy-MM-dd</maven.build.timestamp.format>
     <thermostat.releasedate>${maven.build.timestamp}</thermostat.releasedate>
     <thermostat.email>thermostat@icedtea.classpath.org</thermostat.email>
@@ -101,6 +104,7 @@
     <module>launcher</module>
     <module>tools</module>
     <module>unix-process-handler</module>
+    <module>keyring</module>
   </modules>
 
   <build>
@@ -133,6 +137,7 @@
               <java.awt.headless>false</java.awt.headless>
               <awt.toolkit>net.java.openjdk.cacio.ctc.CTCToolkit</awt.toolkit>
               <java.awt.graphicsenv>net.java.openjdk.cacio.ctc.CTCGraphicsEnvironment</java.awt.graphicsenv>
+              <com.redhat.thermostat.utils.keyring.provider>com.redhat.thermostat.utils.keyring.MemoryKeyring</com.redhat.thermostat.utils.keyring.provider>
             </systemPropertyVariables>
           </configuration>
           <dependencies>
