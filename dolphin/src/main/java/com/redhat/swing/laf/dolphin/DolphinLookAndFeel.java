@@ -71,6 +71,7 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
             "ToggleButtonUI",   "com.redhat.swing.laf.dolphin.button.DolphinToggleButtonUI",
             "TreeUI",       "com.redhat.swing.laf.dolphin.tree.DolphinTreeUI",
             "TextFieldUI",  "com.redhat.swing.laf.dolphin.text.DolphinTextFieldUI",
+            "PasswordFieldUI", "com.redhat.swing.laf.dolphin.text.DolphinPasswordFieldUI",
             "TabbedPaneUI", "com.redhat.swing.laf.dolphin.tab.DolphinTabbedPaneUI",
             "ScrollBarUI",  "com.redhat.swing.laf.dolphin.scrollbars.DolphinScrollBarUI",
             "SplitPaneUI",  "com.redhat.swing.laf.dolphin.split.DolphinSplitPaneUI",
@@ -122,6 +123,11 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "TextField.caretBlinkRate", 0,
                 "TextField.selectionBackground", theme.getSelectionColor(),
                 "TextField.selectionForeground", theme.getSelectionColorForeground(),
+
+                "PasswordField.border", theme.getTextFieldBorder(),
+                "PasswordField.caretBlinkRate", 0,
+                "PasswordField.selectionBackground", theme.getSelectionColor(),
+                "PasswordField.selectionForeground", theme.getSelectionColorForeground(),
                 
                 "TextArea.border", theme.getTextAreaBorder(),
                 "TextArea.selectionBackground", theme.getSelectionColor(),

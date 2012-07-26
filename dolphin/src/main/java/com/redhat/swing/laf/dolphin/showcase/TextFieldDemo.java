@@ -52,21 +52,28 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JTextArea;
 
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
+import javax.swing.JPasswordField;
+import javax.swing.JFormattedTextField;
+import javax.swing.JTextPane;
 
 public class TextFieldDemo {
 
     private JFrame frame;
     private JTextField textField;
+    private JPasswordField passwordField;
+    private JFormattedTextField formattedTextField;
+    private JTextPane textPane;
 
     /**
      * Launch the application.
      */
     public static void main(String[] args) {
         EventQueue.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 try {
                     UIManager.setLookAndFeel(new DolphinLookAndFeel());
-                    
+
                     TextFieldDemo window = new TextFieldDemo();
                     window.frame.setVisible(true);
                 } catch (Exception e) {
@@ -90,30 +97,50 @@ public class TextFieldDemo {
         frame = new JFrame();
         frame.setBounds(100, 100, 450, 300);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        
+
         JPanel panel = new JPanel();
         frame.getContentPane().add(panel, BorderLayout.CENTER);
-        
+
         JLabel lblNewLabel = new JLabel("text field:");
-        
+
         textField = new JTextField();
         textField.setColumns(10);
-        
+
         JLabel lblNewLabel_1 = new JLabel("text area:");
-        
+
         JTextArea textArea = new JTextArea();
+
+        JLabel lblPassswordField = new JLabel("passsword field");
+
+        passwordField = new JPasswordField();
+
+        JLabel lblFormattedField = new JLabel("formatted field");
+
+        formattedTextField = new JFormattedTextField();
+
+        JLabel lblTextpane = new JLabel("textpane");
+
+        textPane = new JTextPane();
         GroupLayout gl_panel = new GroupLayout(panel);
         gl_panel.setHorizontalGroup(
             gl_panel.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_panel.createSequentialGroup()
+                .addGroup(Alignment.TRAILING, gl_panel.createSequentialGroup()
                     .addContainerGap()
-                    .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
-                        .addComponent(textArea, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE)
-                        .addGroup(gl_panel.createSequentialGroup()
-                            .addComponent(lblNewLabel)
+                    .addGroup(gl_panel.createParallelGroup(Alignment.TRAILING)
+                        .addComponent(textPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 549, Short.MAX_VALUE)
+                        .addComponent(textArea, GroupLayout.DEFAULT_SIZE, 416, Short.MAX_VALUE)
+                        .addGroup(Alignment.LEADING, gl_panel.createSequentialGroup()
+                            .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+                                .addComponent(lblPassswordField)
+                                .addComponent(lblNewLabel)
+                                .addComponent(lblFormattedField))
                             .addPreferredGap(ComponentPlacement.RELATED)
-                            .addComponent(textField, GroupLayout.DEFAULT_SIZE, 346, Short.MAX_VALUE))
-                        .addComponent(lblNewLabel_1))
+                            .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+                                .addComponent(formattedTextField, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
+                                .addComponent(textField, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 424, Short.MAX_VALUE)
+                                .addComponent(passwordField, GroupLayout.DEFAULT_SIZE, 430, Short.MAX_VALUE)))
+                        .addComponent(lblNewLabel_1, Alignment.LEADING)
+                        .addComponent(lblTextpane, Alignment.LEADING))
                     .addContainerGap())
         );
         gl_panel.setVerticalGroup(
@@ -121,12 +148,25 @@ public class TextFieldDemo {
                 .addGroup(gl_panel.createSequentialGroup()
                     .addContainerGap()
                     .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
-                        .addComponent(textField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(lblNewLabel))
-                    .addGap(18)
+                        .addComponent(lblNewLabel)
+                        .addComponent(textField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(lblPassswordField)
+                        .addGroup(gl_panel.createSequentialGroup()
+                            .addComponent(passwordField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addGroup(gl_panel.createParallelGroup(Alignment.BASELINE)
+                                .addComponent(formattedTextField, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                                .addComponent(lblFormattedField))))
+                    .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(lblNewLabel_1)
-                    .addPreferredGap(ComponentPlacement.UNRELATED)
-                    .addComponent(textArea, GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(textArea, GroupLayout.DEFAULT_SIZE, 146, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(lblTextpane)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(textPane, GroupLayout.DEFAULT_SIZE, 222, Short.MAX_VALUE)
                     .addContainerGap())
         );
         panel.setLayout(gl_panel);
