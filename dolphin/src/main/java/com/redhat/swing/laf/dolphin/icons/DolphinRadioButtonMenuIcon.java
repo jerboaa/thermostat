@@ -36,9 +36,41 @@
 
 package com.redhat.swing.laf.dolphin.icons;
 
-public class DolphinCheckBoxIcon extends ToggleIcon {
+import java.awt.Component;
+import java.awt.Graphics;
 
-    public DolphinCheckBoxIcon() {
-        super("/checkbox-unchecked.png", "/checkbox-checked.png", "/checkbox-disabled.png", "/checkbox-checked-disabled.png");
+import javax.swing.AbstractButton;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+
+public class DolphinRadioButtonMenuIcon extends ImageIcon {
+
+    private ImageIcon delegate = new ImageIcon(getClass().getResource("/radio-menuitem-checked.png"));
+    
+    @Override
+    public int getIconHeight() {
+        return delegate.getIconHeight();
+    }
+    
+    @Override
+    public int getIconWidth() {
+        return delegate.getIconWidth();
+    }
+    
+    @Override
+    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+        
+        boolean paintIcon = true;
+        
+        if (c instanceof AbstractButton) {
+            AbstractButton button = (AbstractButton) c;
+            if (!button.getModel().isSelected()) {
+                paintIcon = false;
+            }
+        }
+        
+        if (paintIcon) {
+            delegate.paintIcon(c, g, x, y);
+        }
     }
 }

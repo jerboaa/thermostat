@@ -54,6 +54,8 @@ import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import javax.swing.JLabel;
 import javax.swing.JToggleButton;
 import javax.swing.SwingConstants;
+import javax.swing.JRadioButton;
+import javax.swing.JCheckBox;
 
 public class ButtonsDemo extends JFrame {
 
@@ -108,6 +110,17 @@ public class ButtonsDemo extends JFrame {
         lblNewLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         
         JToggleButton tglbtnNewToggleButton = new JToggleButton("New toggle button");
+
+        JRadioButton rdbtnNewRadioButton = new JRadioButton("Radio");
+
+        JCheckBox chckbxCheckbox = new JCheckBox("CheckBox");
+
+        JCheckBox chckbxDisabled = new JCheckBox("Disabled");
+        chckbxDisabled.setEnabled(false);
+        chckbxDisabled.setSelected(true);
+
+        JRadioButton rdbtnDisabled = new JRadioButton("Disabled");
+        rdbtnDisabled.setEnabled(false);
         GroupLayout gl_panel = new GroupLayout(panel);
         gl_panel.setHorizontalGroup(
             gl_panel.createParallelGroup(Alignment.LEADING)
@@ -119,7 +132,25 @@ public class ButtonsDemo extends JFrame {
                         .addComponent(tglbtnNewToggleButton, 0, 0, Short.MAX_VALUE)
                         .addComponent(button, GroupLayout.PREFERRED_SIZE, 113, GroupLayout.PREFERRED_SIZE)
                         .addComponent(btnNewButton, GroupLayout.PREFERRED_SIZE, 113, GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap(125, Short.MAX_VALUE))
+                    .addContainerGap(115, Short.MAX_VALUE))
+                .addGroup(gl_panel.createSequentialGroup()
+                    .addGap(135)
+                    .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+                        .addGroup(gl_panel.createSequentialGroup()
+                            .addComponent(rdbtnDisabled)
+                            .addContainerGap())
+                        .addGroup(gl_panel.createSequentialGroup()
+                            .addComponent(rdbtnNewRadioButton, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGap(135))))
+                .addGroup(gl_panel.createSequentialGroup()
+                    .addGap(121)
+                    .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
+                        .addGroup(gl_panel.createSequentialGroup()
+                            .addComponent(chckbxDisabled, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addContainerGap())
+                        .addGroup(gl_panel.createSequentialGroup()
+                            .addComponent(chckbxCheckbox, GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                            .addGap(122))))
         );
         gl_panel.setVerticalGroup(
             gl_panel.createParallelGroup(Alignment.LEADING)
@@ -132,7 +163,15 @@ public class ButtonsDemo extends JFrame {
                     .addGroup(gl_panel.createParallelGroup(Alignment.BASELINE)
                         .addComponent(tglbtnNewToggleButton)
                         .addComponent(lblNewLabel, GroupLayout.PREFERRED_SIZE, 25, GroupLayout.PREFERRED_SIZE))
-                    .addContainerGap(249, Short.MAX_VALUE))
+                    .addGap(18)
+                    .addComponent(rdbtnNewRadioButton)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(rdbtnDisabled)
+                    .addGap(18)
+                    .addComponent(chckbxCheckbox)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(chckbxDisabled)
+                    .addContainerGap(114, Short.MAX_VALUE))
         );
         panel.setLayout(gl_panel);
         contentPane.setLayout(gl_contentPane);

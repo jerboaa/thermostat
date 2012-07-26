@@ -48,9 +48,9 @@ import javax.swing.JLabel;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
 import com.redhat.swing.laf.dolphin.icons.DolphinAscendingArrowIcon;
-import com.redhat.swing.laf.dolphin.icons.DolphinCheckBoxIcon;
+import com.redhat.swing.laf.dolphin.icons.DolphinCheckBoxMenuIcon;
 import com.redhat.swing.laf.dolphin.icons.DolphinDescendingArrowIcon;
-import com.redhat.swing.laf.dolphin.icons.DolphinRadioButtonIcon;
+import com.redhat.swing.laf.dolphin.icons.DolphinRadioButtonMenuIcon;
 
 public class IconsDemo extends JFrame {
 
@@ -87,10 +87,10 @@ public class IconsDemo extends JFrame {
         contentPane.add(panel, BorderLayout.CENTER);
         
         JLabel lblCheckbox = new JLabel("Check");
-        lblCheckbox.setIcon(new DolphinCheckBoxIcon());
+        lblCheckbox.setIcon(new DolphinCheckBoxMenuIcon());
         
         JLabel lblRadio = new JLabel("Radio");
-        lblRadio.setIcon(new DolphinRadioButtonIcon());
+        lblRadio.setIcon(new DolphinRadioButtonMenuIcon());
         
         JLabel lblAscending = new JLabel("Ascending");
         lblAscending.setIcon(new DolphinAscendingArrowIcon());

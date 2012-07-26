@@ -34,11 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.icons;
+package com.redhat.swing.laf.dolphin.button;
 
-public class DolphinCheckBoxIcon extends ToggleIcon {
+import javax.swing.JComponent;
+import javax.swing.plaf.ComponentUI;
 
-    public DolphinCheckBoxIcon() {
-        super("/checkbox-unchecked.png", "/checkbox-checked.png", "/checkbox-disabled.png", "/checkbox-checked-disabled.png");
+public class DolphinCheckBoxUI extends DolphinRadioButtonUI {
+
+    private static final DolphinCheckBoxUI singleton = new DolphinCheckBoxUI();
+
+    private final static String propertyPrefix = "CheckBox" + ".";
+
+    public static ComponentUI createUI(JComponent b) {
+        return singleton;
+    }
+
+    @Override
+    protected String getPropertyPrefix() {
+        return propertyPrefix;
     }
 }

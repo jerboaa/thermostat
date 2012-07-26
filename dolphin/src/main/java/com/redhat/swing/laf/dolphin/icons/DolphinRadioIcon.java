@@ -36,9 +36,9 @@
 
 package com.redhat.swing.laf.dolphin.icons;
 
-public class DolphinCheckBoxIcon extends ToggleIcon {
+public class DolphinRadioIcon extends ToggleIcon {
 
-    public DolphinCheckBoxIcon() {
-        super("/checkbox-unchecked.png", "/checkbox-checked.png", "/checkbox-disabled.png", "/checkbox-checked-disabled.png");
+    public DolphinRadioIcon() {
+        super("/radio-unselected.png", "/radio-selected.png", "/radio-disabled-unselected.png", "/radio-disabled-selected.png");
     }
 }

@@ -34,43 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.swing.laf.dolphin.icons;
+package com.redhat.swing.laf.dolphin.button;
 
-import java.awt.Component;
 import java.awt.Graphics;
 
-import javax.swing.AbstractButton;
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
+import javax.swing.JComponent;
+import javax.swing.plaf.ComponentUI;
+import javax.swing.plaf.metal.MetalRadioButtonUI;
 
-public class DolphinRadioButtonIcon extends ImageIcon {
+public class DolphinRadioButtonUI extends MetalRadioButtonUI {
 
-    private ImageIcon delegate = new ImageIcon(getClass().getResource("/radio-menuitem-checked.png"));
-    
-    @Override
-    public int getIconHeight() {
-        return delegate.getIconHeight();
+    private static final DolphinRadioButtonUI singleton = new DolphinRadioButtonUI();
+
+    public static ComponentUI createUI(JComponent b) {
+        return singleton;
     }
-    
+
     @Override
-    public int getIconWidth() {
-        return delegate.getIconWidth();
+    public synchronized void paint(Graphics g, JComponent c) {
+        super.paint(g, c);
     }
-    
-    @Override
-    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
-        
-        boolean paintIcon = true;
-        
-        if (c instanceof AbstractButton) {
-            AbstractButton button = (AbstractButton) c;
-            if (!button.getModel().isSelected()) {
-                paintIcon = false;
-            }
-        }
-        
-        if (paintIcon) {
-            delegate.paintIcon(c, g, x, y);
-        }
-    }
+
 }

@@ -44,7 +44,9 @@ import javax.swing.plaf.InsetsUIResource;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 
 import com.redhat.swing.laf.dolphin.icons.DolphinAscendingArrowIcon;
+import com.redhat.swing.laf.dolphin.icons.DolphinCheckBoxIcon;
 import com.redhat.swing.laf.dolphin.icons.DolphinDescendingArrowIcon;
+import com.redhat.swing.laf.dolphin.icons.DolphinRadioIcon;
 import com.redhat.swing.laf.dolphin.split.DolphinSplitPaneDividerBorder;
 import com.redhat.swing.laf.dolphin.themes.DolphinDefaultTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
@@ -69,6 +71,7 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
             
             "ButtonUI",     "com.redhat.swing.laf.dolphin.button.DolphinButtonUI",
             "ToggleButtonUI",   "com.redhat.swing.laf.dolphin.button.DolphinToggleButtonUI",
+            "CheckBoxUI",   "com.redhat.swing.laf.dolphin.button.DolphinCheckBoxUI",
             "TreeUI",       "com.redhat.swing.laf.dolphin.tree.DolphinTreeUI",
             "TextFieldUI",  "com.redhat.swing.laf.dolphin.text.DolphinTextFieldUI",
             "PasswordFieldUI", "com.redhat.swing.laf.dolphin.text.DolphinPasswordFieldUI",
@@ -112,6 +115,10 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "ToggleButton.borderPaintsFocus", theme.borderPaintsFocus(),
                 "ToggleButton.invertedForeground", theme.getSelectionColorForeground(),
                 "ToggleButton.rollover", Boolean.TRUE,
+
+                "CheckBox.icon", new IconUIResource(new DolphinCheckBoxIcon()),
+
+                "RadioButton.icon", new IconUIResource(new DolphinRadioIcon()),
 
                 "Tree.repaintWholeRow", Boolean.TRUE,
                 "Tree.lineTypeDashed", theme.getTreeLineTypeDashed(),

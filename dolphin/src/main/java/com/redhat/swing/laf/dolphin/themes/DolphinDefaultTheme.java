@@ -52,8 +52,8 @@ import javax.swing.plaf.IconUIResource;
 import javax.swing.plaf.InsetsUIResource;
 
 import com.redhat.swing.laf.dolphin.button.DolphinButtonBorder;
-import com.redhat.swing.laf.dolphin.icons.DolphinCheckBoxIcon;
-import com.redhat.swing.laf.dolphin.icons.DolphinRadioButtonIcon;
+import com.redhat.swing.laf.dolphin.icons.DolphinCheckBoxMenuIcon;
+import com.redhat.swing.laf.dolphin.icons.DolphinRadioButtonMenuIcon;
 import com.redhat.swing.laf.dolphin.menu.DolphinMenuBarBorder;
 import com.redhat.swing.laf.dolphin.menu.DolphinMenuBorder;
 import com.redhat.swing.laf.dolphin.menu.DolphinMenuItemBorder;
@@ -423,11 +423,11 @@ public class DolphinDefaultTheme extends DolphinTheme {
                 
                 "RadioButtonMenuItem.background", getMenuBackgroundColor(),
                 "RadioButtonMenuItem.border", menuItemBorder,
-                "RadioButtonMenuItem.checkIcon", new IconUIResource(new DolphinRadioButtonIcon()),
+                "RadioButtonMenuItem.checkIcon", new IconUIResource(new DolphinRadioButtonMenuIcon()),
                 
                 "CheckBoxMenuItem.border", menuItemBorder,
                 "CheckBoxMenuItem.background", getMenuBackgroundColor(),
-                "CheckBoxMenuItem.checkIcon", new IconUIResource(new DolphinCheckBoxIcon()),
+                "CheckBoxMenuItem.checkIcon", new IconUIResource(new DolphinCheckBoxMenuIcon()),
                 
                 "PopupMenu.background", getMenuBackgroundColor(),
                 "PopupMenu.foreground", getMenuForegroundColor(),
