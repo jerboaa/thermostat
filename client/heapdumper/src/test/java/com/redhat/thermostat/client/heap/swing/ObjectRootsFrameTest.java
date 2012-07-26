@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.atLeastOnce;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -130,7 +131,6 @@ public class ObjectRootsFrameTest {
         assertEquals(path.get(1), getUserObject(paths[1]));
     }
 
-
     private static Object getUserObject(TreePath path) {
         return ((DefaultMutableTreeNode)path.getLastPathComponent()).getUserObject();
     }
@@ -161,7 +161,7 @@ public class ObjectRootsFrameTest {
         tree.selectRow(0);
 
         ArgumentCaptor<ActionEvent> argCaptor = ArgumentCaptor.forClass(ActionEvent.class);
-        verify(listener).actionPerformed(argCaptor.capture());
+        verify(listener, atLeastOnce()).actionPerformed(argCaptor.capture());
 
         assertEquals(frame, argCaptor.getValue().getSource());
         assertEquals(Action.OBJECT_SELECTED, argCaptor.getValue().getActionId());
