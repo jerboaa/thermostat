@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Thermostat Eclipse client boot exports
+Bundle-SymbolicName: com.redhat.thermostat.eclipse.boot
+Bundle-Version: 0.4.0.qualifier
+Bundle-Vendor: Redhat Inc.
+Fragment-Host: system.bundle
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Export-Package: sun.swing,
+ sun.swing.table,
+ sun.misc,
+ sun.jvm.hotspot.tools,
+ com.sun.tools.hat.internal.model,
+ com.sun.tools.hat.internal.parser,
+ com.sun.tools.attach,
+ sun.jvmstat,
+ sun.jvmstat.monitor,
+ sun.jvmstat.monitor.event
