@@ -104,9 +104,9 @@ property:
 
  * -J-Dcom.redhat.thermostat.utils.keyring.provider=com.redhat.thermostat.utils.keyring.MemoryKeyring
 
-The memory keyring stores password in memory, and not on disk, so password don't
-persist across Thermostat sessions when the user quits and restarts the
-application.
+The memory keyring stores passwords in memory and not on disk. This means
+passwords don't persist across Thermostat sessions. A session is terminated by
+exiting the application.
 
 NOTE: thermostat keeps all the passwords in clear text memory during execution,
 the keyring is only used to securely store passwords on disk. The passwords are
