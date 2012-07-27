@@ -36,8 +36,6 @@
 
 package com.redhat.swing.laf.dolphin.button;
 
-import java.awt.Graphics;
-
 import javax.swing.JComponent;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.metal.MetalRadioButtonUI;
@@ -49,10 +47,4 @@ public class DolphinRadioButtonUI extends MetalRadioButtonUI {
     public static ComponentUI createUI(JComponent b) {
         return singleton;
     }
-
-    @Override
-    public synchronized void paint(Graphics g, JComponent c) {
-        super.paint(g, c);
-    }
-
 }

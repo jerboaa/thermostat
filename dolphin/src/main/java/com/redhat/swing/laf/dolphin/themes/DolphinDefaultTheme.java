@@ -86,6 +86,9 @@ public class DolphinDefaultTheme extends DolphinTheme {
     
     private static final ColorUIResource TEXT_DEFAULT_COLOR = new ColorUIResource(0x2e3436);
     
+    private static final ColorUIResource TEXT_FIELD_BACKGROUND_TOP_GRADIENT = new ColorUIResource(0xF2F2F2);
+    private static final ColorUIResource TEXT_FIELD_BACKGROUND_BOTTOM_GRADIENT = new ColorUIResource(Color.WHITE);
+
     private static final ColorUIResource TITLED_BORDER_BORDER_COLOR = new ColorUIResource(0xa8aca8);
     
     private static final ColorUIResource SELECTION_COLOR = new ColorUIResource(0x4A90D9);
@@ -287,6 +290,16 @@ public class DolphinDefaultTheme extends DolphinTheme {
     @Override
     public ColorUIResource getUnselectedTabTopGradient() {
         return TAB_UNSELECTED_TOP_GRADIENT_COLOR;
+    }
+
+    @Override
+    public ColorUIResource getTextFieldBackgroundTopGradient() {
+        return TEXT_FIELD_BACKGROUND_TOP_GRADIENT;
+    }
+
+    @Override
+    public ColorUIResource getTextFieldBackgroundBottomGradient() {
+        return TEXT_FIELD_BACKGROUND_BOTTOM_GRADIENT;
     }
     
     @Override

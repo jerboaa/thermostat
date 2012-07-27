@@ -107,6 +107,9 @@ public abstract class DolphinTheme extends OceanTheme {
     public abstract ColorUIResource getUnselectedTabTopGradient();
     public abstract ColorUIResource getUnselectedTabBottomGradient();
 
+    public abstract ColorUIResource getTextFieldBackgroundTopGradient();
+    public abstract ColorUIResource getTextFieldBackgroundBottomGradient();
+
     abstract public ColorUIResource getThumbColor();
 
     abstract public ColorUIResource getScrollBarTrackColor();

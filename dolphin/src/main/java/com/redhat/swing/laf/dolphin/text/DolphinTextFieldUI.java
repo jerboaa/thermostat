@@ -36,38 +36,26 @@
 
 package com.redhat.swing.laf.dolphin.text;
 
-import java.awt.Color;
-import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Paint;
-import java.awt.Shape;
-import java.awt.geom.RoundRectangle2D;
+
 import javax.swing.JComponent;
+import javax.swing.Painter;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.metal.MetalTextFieldUI;
+import javax.swing.text.JTextComponent;
 
-/**
- */
 public class DolphinTextFieldUI extends MetalTextFieldUI {
-    
+
+    private final Painter<JComponent> backgroundPainter = new TextFieldBackgroundPainter();
+
     public static ComponentUI createUI(JComponent b) {
         return new DolphinTextFieldUI();
     }
 
     @Override
     protected void paintBackground(Graphics g) {
-        
-        Graphics2D graphics = (Graphics2D) g.create();
-        
-        Paint paint =
-            new GradientPaint(0, 0, new Color(0xF2F2F2), 0, 10, Color.WHITE);
-        graphics.setPaint(paint);
-        
-        Shape shape = new RoundRectangle2D.Double(0, 0, getComponent().getWidth() - 1,
-                                                 getComponent().getHeight() - 1, 4, 4);        
-        graphics.fill(shape);
-       
-        graphics.dispose();
+        JTextComponent c = getComponent();
+        backgroundPainter.paint((Graphics2D) g, c, c.getWidth(), c.getHeight());
     }
 }

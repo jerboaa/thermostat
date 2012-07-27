@@ -36,26 +36,30 @@
 
 package com.redhat.swing.laf.dolphin.text;
 
-import java.awt.Graphics;
+import java.awt.GradientPaint;
 import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.JComponent;
 import javax.swing.Painter;
-import javax.swing.plaf.ComponentUI;
-import javax.swing.plaf.basic.BasicPasswordFieldUI;
-import javax.swing.text.JTextComponent;
 
-public class DolphinPasswordFieldUI extends BasicPasswordFieldUI {
+import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
+import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
-    private final Painter<JComponent> backgroundPainter = new TextFieldBackgroundPainter();
-
-    public static ComponentUI createUI(JComponent b) {
-        return new DolphinPasswordFieldUI();
-    }
+class TextFieldBackgroundPainter implements Painter<JComponent> {
 
     @Override
-    protected void paintBackground(Graphics g) {
-        JTextComponent c = getComponent();
-        backgroundPainter.paint((Graphics2D) g, c, c.getWidth(), c.getHeight());
+    public void paint(Graphics2D g, JComponent c, int width, int height) {
+        DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
+
+        Paint paint =
+            new GradientPaint(0, 0, theme.getTextFieldBackgroundTopGradient(),
+                    0, 10, theme.getTextFieldBackgroundBottomGradient());
+        g.setPaint(paint);
+        Shape shape = new RoundRectangle2D.Double(0, 0, width - 1, height - 1, 4, 4);
+        g.fill(shape);
+        g.dispose();
     }
 }
