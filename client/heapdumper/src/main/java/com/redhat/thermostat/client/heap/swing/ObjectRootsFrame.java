@@ -38,8 +38,10 @@ package com.redhat.thermostat.client.heap.swing;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import javax.swing.JFrame;
 import javax.swing.JScrollPane;
@@ -52,6 +54,9 @@ import com.redhat.thermostat.client.heap.ObjectRootsView;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.swing.EdtHelper;
+import com.sun.jdi.event.EventQueue;
+
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
@@ -151,24 +156,40 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
 
     @Override
     public void showView() {
-        SwingUtilities.invokeLater(new Runnable() {
+        Callable<Boolean> hideViewRunnable = new Callable<Boolean>() {
             @Override
-            public void run() {
+            public Boolean call() {
                 pack();
                 setVisible(true);
+                return new Boolean(true);
             }
-        });
+        };
+        try {
+            new EdtHelper().callAndWait(hideViewRunnable);
+        } catch (InvocationTargetException | InterruptedException e) {
+            InternalError error = new InternalError();
+            error.initCause(e);
+            throw error;
+        }
     }
 
     @Override
     public void hideView() {
-        SwingUtilities.invokeLater(new Runnable() {
+        Callable<Boolean> hideViewRunnable = new Callable<Boolean>() {
             @Override
-            public void run() {
+            public Boolean call() {
                 setVisible(false);
                 dispose();
+                return new Boolean(true);
             }
-        });
+        };
+        try {
+            new EdtHelper().callAndWait(hideViewRunnable);
+        } catch (InvocationTargetException | InterruptedException e) {
+            InternalError error = new InternalError();
+            error.initCause(e);
+            throw error;
+        }
     }
 
     @Override

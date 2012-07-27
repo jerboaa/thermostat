@@ -35,6 +35,12 @@
       <artifactId>jfreechart</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>net.java.openjdk.cacio</groupId>
+      <artifactId>cacio-tta</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
   </dependencies>
       
   <build>

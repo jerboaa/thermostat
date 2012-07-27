@@ -45,7 +45,6 @@ import com.redhat.thermostat.client.ui.AgentConfigurationFrame;
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
 import com.redhat.thermostat.client.ui.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
-import com.redhat.thermostat.client.ui.EdtHelper;
 import com.redhat.thermostat.client.ui.HostCpuPanel;
 import com.redhat.thermostat.client.ui.HostCpuView;
 import com.redhat.thermostat.client.ui.HostInformationPanel;
@@ -67,6 +66,7 @@ import com.redhat.thermostat.client.ui.VmOverviewView;
 import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.swing.EdtHelper;
 
 public class SwingViewFactory extends DefaultViewFactory implements ViewFactory {
 

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.swing;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
@@ -42,6 +42,7 @@ import java.util.concurrent.Callable;
 
 public class EdtHelper {
 
+    @SuppressWarnings("serial")
     private static class CallableException extends RuntimeException {
 
         private CallableException(Exception ex) {

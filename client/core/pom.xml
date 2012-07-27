@@ -109,7 +109,12 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>provided</scope>
     </dependency>
-    
+
+    <dependency>
+    	<groupId>com.redhat.thermostat</groupId>
+    	<artifactId>thermostat-swing-components</artifactId>
+    	<version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>

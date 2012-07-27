@@ -60,7 +60,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.ui.EdtHelper;
+import com.redhat.thermostat.swing.EdtHelper;
 
 @RunWith(CacioFESTRunner.class)
 public class HeapDetailsSwingTest {

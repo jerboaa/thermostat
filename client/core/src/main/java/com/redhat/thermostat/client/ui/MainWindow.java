@@ -107,6 +107,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.swing.EdtHelper;
 
 public class MainWindow extends JFrame implements MainView {
 

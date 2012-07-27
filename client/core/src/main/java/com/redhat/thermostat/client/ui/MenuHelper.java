@@ -52,6 +52,7 @@ import javax.swing.MenuElement;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.swing.EdtHelper;
 
 public class MenuHelper {
 

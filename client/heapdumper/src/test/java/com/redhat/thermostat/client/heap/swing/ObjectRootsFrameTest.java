@@ -38,9 +38,7 @@ package com.redhat.thermostat.client.heap.swing;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.atLeastOnce;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +95,7 @@ public class ObjectRootsFrameTest {
     public void tearDown() {
         frameFixture.cleanUp();
         frameFixture = null;
+        frame.hideView();
     }
 
     @GUITest
@@ -143,6 +142,7 @@ public class ObjectRootsFrameTest {
         return paths.toArray(new TreePath[0]);
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @GUITest
     @Test
     public void verifyTreeInteraction() {
@@ -161,9 +161,14 @@ public class ObjectRootsFrameTest {
         tree.selectRow(0);
 
         ArgumentCaptor<ActionEvent> argCaptor = ArgumentCaptor.forClass(ActionEvent.class);
-        verify(listener, atLeastOnce()).actionPerformed(argCaptor.capture());
+        // We really want to verify that there's exactly one actionPerformend() call.
+        // If there are more events (such as VISIBLE events) fired, this may be a recipe
+        // for desaster if visble events trigger other actions, such as spawning a thread or
+        // starting/stopping a timer.
+        verify(listener).actionPerformed(argCaptor.capture());
 
         assertEquals(frame, argCaptor.getValue().getSource());
+        
         assertEquals(Action.OBJECT_SELECTED, argCaptor.getValue().getActionId());
         assertEquals(path.get(0), argCaptor.getValue().getPayload());
     }

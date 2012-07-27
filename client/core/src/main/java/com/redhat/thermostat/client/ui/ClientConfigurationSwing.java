@@ -54,6 +54,7 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.swing.EdtHelper;
 
 public class ClientConfigurationSwing implements ClientConfigurationView {
 
