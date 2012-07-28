@@ -53,7 +53,7 @@ class TextFieldBackgroundPainter implements Painter<JComponent> {
     @Override
     public void paint(Graphics2D g, JComponent c, int width, int height) {
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
-
+        g = (Graphics2D) g.create();
         Paint paint =
             new GradientPaint(0, 0, theme.getTextFieldBackgroundTopGradient(),
                     0, 10, theme.getTextFieldBackgroundBottomGradient());
