@@ -36,25 +36,13 @@
 
 package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.common.BasicView;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
-public abstract class HostOverviewView extends BasicView {
+public class LabelField extends JLabel {
 
-    public abstract void setHostName(String newHostName);
-
-    public abstract void setCpuModel(String newCpuModel);
-
-    public abstract void setCpuCount(String newCpuCount);
-
-    public abstract void setTotalMemory(String newTotalMemory);
-
-    public abstract void setOsName(String newOsName);
-
-    public abstract void setOsKernel(String newOsKernel);
-
-    public abstract void setNetworkTableColumns(Object[] columns);
-
-    public abstract void setInitialNetworkTableData(Object[][] table);
-
-    public abstract void updateNetworkTableData(int row, int column, String data);
+    public LabelField(String text) {
+        super(text);
+        setHorizontalAlignment(SwingConstants.TRAILING);
+    }
 }

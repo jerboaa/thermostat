@@ -38,36 +38,40 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.JPanel;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 
-import com.redhat.thermostat.client.internal.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.SimpleTable.Key;
-import com.redhat.thermostat.client.ui.SimpleTable.Section;
-import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
-import com.redhat.thermostat.client.ui.SimpleTable.Value;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.BasicView;
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
+import java.awt.BorderLayout;
 
 public class HostOverviewPanel extends HostOverviewView implements SwingComponent {
 
     private JPanel visiblePanel;
-    
-    private final ChangeableText hostname = new ChangeableText("");
-    private final ChangeableText cpuModel = new ChangeableText("");
-    private final ChangeableText cpuCount = new ChangeableText("");
-    private final ChangeableText totalMemory = new ChangeableText("");
-    private final ChangeableText osName = new ChangeableText("");
-    private final ChangeableText osKernel = new ChangeableText("");
 
-    private final DefaultTableModel networkTableModel = new DefaultTableModel();
+    private final ValueField hostname = new ValueField("${hostname}");
+    private final ValueField cpuModel = new ValueField("${cpu-model}");
+    private final ValueField cpuCount = new ValueField("${cpu-count}");
+    private final ValueField totalMemory = new ValueField("${total-memory}");
+    private final ValueField osName = new ValueField("${os-name}");
+    private final ValueField osKernel = new ValueField("${os-kernel}");
+
+    private final DefaultTableModel networkTableModel = new DefaultTableModel() {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+
     private Object[] networkTableColumns;
     private Object[][] networkTableData;
 
@@ -99,45 +103,95 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
     }
 
     @Override
-    public void setHostName(String newHostName) {
-        hostname.setText(newHostName);
+    public void setHostName(final String newHostName) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                hostname.setText(newHostName);
+            }
+        });
     }
 
     @Override
-    public void setCpuModel(String newCpuModel) {
-        cpuModel.setText(newCpuModel);
+    public void setCpuModel(final String newCpuModel) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                cpuModel.setText(newCpuModel);
+            }
+        });
     }
 
     @Override
-    public void setCpuCount(String newCpuCount) {
-        cpuCount.setText(newCpuCount);
+    public void setCpuCount(final String newCpuCount) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                cpuCount.setText(newCpuCount);
+            }
+        });
     }
 
     @Override
-    public void setTotalMemory(String newTotalMemory) {
-        totalMemory.setText(newTotalMemory);
+    public void setTotalMemory(final String newTotalMemory) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                totalMemory.setText(newTotalMemory);
+            }
+        });
     }
 
     @Override
-    public void setOsName(String newOsName) {
-        osName.setText(newOsName);
+    public void setOsName(final String newOsName) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                osName.setText(newOsName);
+            }
+        });
     }
 
     @Override
-    public void setOsKernel(String newOsKernel) {
-        osKernel.setText(newOsKernel);
+    public void setOsKernel(final String newOsKernel) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                osKernel.setText(newOsKernel);
+            }
+        });
     }
 
     @Override
-    public void setNetworkTableColumns(Object[] columns) {
+    public void setNetworkTableColumns(final Object[] columns) {
         this.networkTableColumns = columns;
-        networkTableModel.setDataVector(this.networkTableData, this.networkTableColumns);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                networkTableModel.setColumnIdentifiers(networkTableColumns);
+            }
+        });
     }
 
     @Override
-    public void setNetworkTableData(Object[][] data) {
+    public void setInitialNetworkTableData(final Object[][] data) {
         this.networkTableData = data;
-        networkTableModel.setDataVector(this.networkTableData, this.networkTableColumns);
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                networkTableModel.setDataVector(networkTableData, networkTableColumns);
+            }
+        });
+    }
+
+    @Override
+    public void updateNetworkTableData(final int row, final int column, final String data) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                networkTableModel.setValueAt(data, row, column);
+            }
+        });
     }
 
     @Override
@@ -147,53 +201,108 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
 
     private void initializePanel() {
         visiblePanel = new JPanel();
-        TableEntry entry;
-        List<Section> allSections = new ArrayList<Section>();
+        SectionHeader overviewSection = new SectionHeader(localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS));
+        LabelField hostnameLabel = new LabelField(localize(LocaleResources.HOST_INFO_HOSTNAME));
+        SectionHeader hardwareSection = new SectionHeader(localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE));
+        LabelField cpuModelLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_MODEL));
+        LabelField cpuCountLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_COUNT));
+        LabelField memoryTotalLabel = new LabelField(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+        LabelField networkLabel = new LabelField(localize(LocaleResources.HOST_INFO_NETWORK));
+        SectionHeader softwareSection = new SectionHeader(localize(LocaleResources.HOST_OVERVIEW_SECTION_SOFTWARE));
+        LabelField osNameLabel = new LabelField(localize(LocaleResources.HOST_INFO_OS_NAME));
+        LabelField osKernelLabel = new LabelField(localize(LocaleResources.HOST_INFO_OS_KERNEL));
 
-        Section basics = new Section(localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS));
-        allSections.add(basics);
+        JPanel panel = new JPanel();
 
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_HOSTNAME), hostname);
-        basics.add(entry);
+        GroupLayout gl_visiblePanel = new GroupLayout(visiblePanel);
+        gl_visiblePanel.setHorizontalGroup(
+            gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_visiblePanel.createSequentialGroup()
+                    .addContainerGap()
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(hardwareSection, GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
+                        .addComponent(overviewSection, GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
+                        .addGroup(gl_visiblePanel.createSequentialGroup()
+                            .addGroup(gl_visiblePanel.createParallelGroup(Alignment.TRAILING, false)
+                                .addGroup(gl_visiblePanel.createSequentialGroup()
+                                    .addGap(12)
+                                    .addComponent(hostnameLabel, GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE))
+                                .addComponent(cpuCountLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cpuModelLabel, GroupLayout.DEFAULT_SIZE, 134, Short.MAX_VALUE)
+                                .addComponent(memoryTotalLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addGroup(gl_visiblePanel.createSequentialGroup()
+                                    .addGap(12)
+                                    .addComponent(networkLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                                .addComponent(panel, GroupLayout.DEFAULT_SIZE, 462, Short.MAX_VALUE)
+                                .addComponent(cpuCount, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(cpuModel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(hostname, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(totalMemory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addComponent(softwareSection, GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
+                        .addGroup(gl_visiblePanel.createSequentialGroup()
+                            .addGap(12)
+                            .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING, false)
+                                .addComponent(osKernelLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(osNameLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE))
+                            .addPreferredGap(ComponentPlacement.RELATED)
+                            .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                                .addComponent(osKernel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(osName, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                    .addContainerGap())
+        );
+        gl_visiblePanel.setVerticalGroup(
+            gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_visiblePanel.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(overviewSection, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(hostname, GroupLayout.PREFERRED_SIZE, 15, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(hostnameLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.UNRELATED)
+                    .addComponent(hardwareSection, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(cpuModelLabel, GroupLayout.PREFERRED_SIZE, 15, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cpuModel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(cpuCountLabel, GroupLayout.PREFERRED_SIZE, 15, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(cpuCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(memoryTotalLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(totalMemory, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(networkLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(panel, GroupLayout.PREFERRED_SIZE, 109, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(softwareSection, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(osNameLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(osName, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_visiblePanel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(osKernelLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addComponent(osKernel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+                    .addGap(128))
+        );
 
-        Section hardware = new Section(localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE));
-        allSections.add(hardware);
-
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_MODEL), cpuModel);
-        hardware.add(entry);
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_CPU_COUNT), cpuCount);
-        hardware.add(entry);
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL), totalMemory);
-        hardware.add(entry);
+        panel.setLayout(new BorderLayout(0, 0));
 
         JTable networkTable = new JTable(networkTableModel);
-
-        JPanel networkPanel = new JPanel(new BorderLayout());
-        networkPanel.add(networkTable.getTableHeader(), BorderLayout.PAGE_START);
-        networkPanel.add(networkTable, BorderLayout.CENTER);
-
-        Key key = new Key(localize(LocaleResources.HOST_INFO_NETWORK));
-        hardware.add(new TableEntry(key, new Value(networkPanel)));
-
-        Section software = new Section(localize(LocaleResources.HOST_OVERVIEW_SECTION_SOFTWARE));
-        allSections.add(software);
-
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_OS_NAME), osName);
-        software.add(entry);
-        entry = new TableEntry(localize(LocaleResources.HOST_INFO_OS_KERNEL), osKernel);
-        software.add(entry);
-
-        SimpleTable simpleTable = new SimpleTable();
-        JPanel table = simpleTable.createTable(allSections);
-        table.setBorder(Components.smallBorder());
-
-        visiblePanel.setLayout(new BorderLayout());
-        visiblePanel.add(table, BorderLayout.CENTER);
+        panel.add(networkTable);
+        JTableHeader header = networkTable.getTableHeader();
+        panel.add(header, BorderLayout.PAGE_START);
+        visiblePanel.setLayout(gl_visiblePanel);
     }
 
     @Override
     public BasicView getView() {
         return this;
     }
-
 }

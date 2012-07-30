@@ -48,6 +48,7 @@ public class ValueField extends JEditorPane {
     public ValueField(String text) {
         setText(text);
         setBorder(null);
+        setOpaque(false);
         setBackground(UIManager.getColor("Label.background"));
         setForeground(UIManager.getColor("Label.foreground"));
         setFont(UIManager.getFont("Label.font"));

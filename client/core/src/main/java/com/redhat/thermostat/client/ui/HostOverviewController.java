@@ -41,12 +41,8 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
@@ -74,6 +70,7 @@ public class HostOverviewController {
     private final NetworkInterfaceInfoDAO networkInfoDAO;
 
     private final Timer backgroundUpdateTimer;
+    private final List<String> knownNetworkIfaces = new ArrayList<>();
 
     private final HostOverviewView view;
 
@@ -101,7 +98,31 @@ public class HostOverviewController {
                 view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
                 view.setTotalMemory(String.valueOf(hostInfo.getTotalMemory()));
 
-                doNetworkTableUpdateAsync();
+                List<NetworkInterfaceInfo> networkInfo = networkInfoDAO.getNetworkInterfaces(ref);
+
+                boolean firstRun = knownNetworkIfaces.isEmpty();
+                if (firstRun) {
+                    List<Object[]> data = new ArrayList<Object[]>();
+                    for (NetworkInterfaceInfo info: networkInfo) {
+                        String ifaceName = info.getInterfaceName();
+                        String ipv4 = info.getIp4Addr();
+                        String ipv6 = info.getIp6Addr();
+                        data.add(new String[] { ifaceName, ipv4, ipv6 });
+                        knownNetworkIfaces.add(ifaceName);
+                    }
+                    view.setInitialNetworkTableData(data.toArray(new Object[0][0]));
+                } else {
+                    for (NetworkInterfaceInfo info: networkInfo) {
+                        String ifaceName = info.getInterfaceName();
+                        String ipv4 = info.getIp4Addr();
+                        String ipv6 = info.getIp6Addr();
+                        int index = knownNetworkIfaces.indexOf(ifaceName);
+                        int row = index;
+                        view.updateNetworkTableData(index, 0, ifaceName);
+                        view.updateNetworkTableData(row, 1, ipv4);
+                        view.updateNetworkTableData(row, 2, ipv6);
+                    }
+                }
             }
         });
         backgroundUpdateTimer.setSchedulingType(SchedulingType.FIXED_RATE);
@@ -128,42 +149,6 @@ public class HostOverviewController {
                 }
             }
         });
-    }
-
-    private void doNetworkTableUpdateAsync() {
-        new NetworkTableModelUpdater().execute();
-    }
-
-    private class NetworkTableModelUpdater extends SwingWorker<List<NetworkInterfaceInfo>, Void> {
-
-        @Override
-        protected List<NetworkInterfaceInfo> doInBackground() throws Exception {
-            return networkInfoDAO.getNetworkInterfaces(ref);
-        }
-
-        @Override
-        protected void done() {
-            List<Object[]> data = new ArrayList<Object[]>();
-
-            List<NetworkInterfaceInfo> networkInfo;
-            try {
-                networkInfo = get();
-                for (NetworkInterfaceInfo info: networkInfo) {
-                    String ifaceName = info.getInterfaceName();
-                    String ipv4 = info.getIp4Addr();
-                    String ipv6 = info.getIp6Addr();
-                    data.add(new String[] { ifaceName, ipv4, ipv6 });
-                }
-                view.setNetworkTableData(data.toArray(new Object[0][0]));
-
-            } catch (InterruptedException ie) {
-                logger.log(Level.WARNING, "interrupted while updating network info", ie);
-                // preserve interrupted flag
-                Thread.currentThread().interrupt();
-            } catch (ExecutionException ee) {
-                logger.log(Level.WARNING, "error updating network info", ee);
-            }
-        }
     }
 
     private void start() {
