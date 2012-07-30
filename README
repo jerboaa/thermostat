@@ -33,15 +33,15 @@ Gnome Keyring development libraries are required at build time.
 You should check your distribution for the exact name of the library, on Fedora
 17 based distributions you can obtain it via:
 
-# yum install libgnome-keyring-devel,
+   yum install libgnome-keyring-devel
 
 on RHEL/Centos 6.x via:
 
-# yum install gnome-keyring-devel
+   yum install gnome-keyring-devel
 
 On Debian (and probably Ubuntu):
 
-# aptitude install libgnome-keyring-dev
+   aptitude install libgnome-keyring-dev
 
 --------------------------------------------------------------------------------
 BUILDING THERMOSTAT
