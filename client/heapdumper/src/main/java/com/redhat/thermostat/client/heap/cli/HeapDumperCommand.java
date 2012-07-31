@@ -99,6 +99,7 @@ public class HeapDumperCommand {
     }
     
     private void dumpHeapUsingJMX(VmRef reference, String filename) {
+
         try {
             VirtualMachine vm = VirtualMachine.attach(reference.getStringID());
             Properties props = vm.getAgentProperties();
@@ -113,12 +114,14 @@ public class HeapDumperCommand {
             }
             JMXServiceURL url = new JMXServiceURL(connectorAddress);
             
-            JMXConnector conn = JMXConnectorFactory.connect(url);
-            MBeanServerConnection mbsc = conn.getMBeanServerConnection();                   
-            mbsc.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap",
-                                       new Object[] {filename, Boolean.TRUE},
-                                       new String[] {String.class.getName(), boolean.class.getName()});
-        } catch (AttachNotSupportedException | IOException | AgentLoadException | AgentInitializationException | InstanceNotFoundException | MalformedObjectNameException | MBeanException | ReflectionException e) {
+            try (JMXConnector conn = JMXConnectorFactory.connect(url)) {
+                MBeanServerConnection mbsc = conn.getMBeanServerConnection();                   
+                mbsc.invoke(new ObjectName("com.sun.management:type=HotSpotDiagnostic"), "dumpHeap",
+                        new Object[] {filename, Boolean.TRUE},
+                        new String[] {String.class.getName(), boolean.class.getName()});                
+            }
+        } catch (AttachNotSupportedException | IOException | AgentLoadException | AgentInitializationException |
+                 InstanceNotFoundException | MalformedObjectNameException | MBeanException | ReflectionException e) {
             log.log(Level.WARNING, "Heap dump using JMX failed, trying jmap", e);
             dumpHeapUsingJMap(reference, filename);
         }
