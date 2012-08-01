@@ -41,27 +41,27 @@ import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.common.dao.Ref;
 
 class DecoratedDefaultMutableTreeNode  extends DefaultMutableTreeNode {
     
-    private List<ReferenceDecorator> decorators;
+    private List<Decorator> decorators;
     
     DecoratedDefaultMutableTreeNode(Ref ref) {
         super(ref);
         decorators = new ArrayList<>();
     }
     
-    public void addDecorator(ReferenceDecorator decorator) {
+    public void addDecorator(Decorator decorator) {
         decorators.add(decorator);
     }
     
-    public void setDecorators(List<ReferenceDecorator> decorators) {
+    public void setDecorators(List<Decorator> decorators) {
         this.decorators = decorators;
     }
     
-    public List<ReferenceDecorator> getDecorators() {
+    public List<Decorator> getDecorators() {
         return decorators;
     }
 }

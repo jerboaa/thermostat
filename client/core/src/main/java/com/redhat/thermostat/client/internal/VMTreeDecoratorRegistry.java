@@ -40,13 +40,13 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
 
-class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<ReferenceDecorator> {
+class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<VmDecorator> {
 
-    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + ReferenceDecorator.class.getName() + ")";
+    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + VmDecorator.class.getName() + ")";
     
     public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, ReferenceDecorator.class);
+        super(context, FILTER, VmDecorator.class);
     }
 }

@@ -44,9 +44,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 
 public class VMFilterActivator implements BundleActivator {
     
@@ -64,10 +64,10 @@ public class VMFilterActivator implements BundleActivator {
                 
                 LivingVMFilterMenuAction menu = new LivingVMFilterMenuAction(filter);
                 
-                context.registerService(ReferenceDecorator.class.getName(), deadDecorator, null);
-                context.registerService(ReferenceDecorator.class.getName(), decorator, null);
+                context.registerService(VmDecorator.class.getName(), deadDecorator, null);
+                context.registerService(VmDecorator.class.getName(), decorator, null);
                 
-                context.registerService(Filter.class.getName(), filter, null);
+                context.registerService(VmFilter.class.getName(), filter, null);
                 context.registerService(MenuAction.class.getName(), menu, null);
                 
                 return super.addingService(reference);

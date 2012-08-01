@@ -33,22 +33,12 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-
 package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.common.dao.VmRef;
 
-/**
- * This interface allows plugins to install a custom {@link Decorator} into
- * the Reference List view.
- * 
- * <br /><br />
- * 
- * Active {@link ReferenceDecorator}s are first queried against their filters
- * and then installed into the view if the filter passes. 
- */
-public interface ReferenceDecorator {
+public interface VmFilter {
 
-    Decorator getDecorator();
-    Filter getFilter();
+    boolean matches(VmRef toMatch);
+
 }

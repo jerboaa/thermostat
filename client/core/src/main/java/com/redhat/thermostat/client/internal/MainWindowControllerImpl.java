@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.internal;
 
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,10 +51,12 @@ import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.client.internal.MainView.Action;
 import com.redhat.thermostat.client.internal.ui.swing.AboutDialog;
-import com.redhat.thermostat.client.osgi.service.Filter;
+import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.AgentConfigurationController;
 import com.redhat.thermostat.client.ui.AgentConfigurationModel;
 import com.redhat.thermostat.client.ui.AgentConfigurationView;
@@ -85,9 +88,11 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
     
-    private List<Filter> vmTreefilters;
-    private List<ReferenceDecorator> vmTreeDecorators;
+    private List<HostFilter> hostFilters;
+    private List<VmFilter> vmFilters;
     
+    private List<VmDecorator> vmTreeDecorators;
+
     private Timer backgroundUpdater;
 
     private MainView view;
@@ -127,25 +132,55 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     };
 
-    private HostVmFilter treeFilter;
-    private VMTreeFilterRegistry filterRegistry;
-    private ActionListener<ThermostatExtensionRegistry.Action> filterListener =
+    private HostVmFilter searchFilter;
+    private VmFilterRegistry vmFilterRegistry;
+    private HostFilterRegistry hostFilterRegistry;
+
+    private ActionListener<ThermostatExtensionRegistry.Action> hostFilterListener =
             new ActionListener<ThermostatExtensionRegistry.Action>()
     {
         @Override
         public void actionPerformed(ActionEvent<com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action>
                                     actionEvent)
         {
-            Filter filter = (Filter) actionEvent.getPayload();
+            HostFilter filter = (HostFilter) actionEvent.getPayload();
+
+            switch (actionEvent.getActionId()) {
+            case SERVICE_ADDED:
+                hostFilters.add(filter);
+                doUpdateTreeAsync();
+                break;
+
+            case SERVICE_REMOVED:
+                hostFilters.remove(filter);
+                doUpdateTreeAsync();
+                break;
+
+            default:
+                logger.log(Level.WARNING, "received unknown event from VMTreeFilterRegistry: " +
+                                           actionEvent.getActionId());
+                break;
+            }
+        }
+    };
+
+    private ActionListener<ThermostatExtensionRegistry.Action> vmFilterListener =
+            new ActionListener<ThermostatExtensionRegistry.Action>()
+    {
+        @Override
+        public void actionPerformed(ActionEvent<com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action>
+                                    actionEvent)
+        {
+            VmFilter filter = (VmFilter) actionEvent.getPayload();
             
             switch (actionEvent.getActionId()) {
             case SERVICE_ADDED:
-                vmTreefilters.add(filter);
+                vmFilters.add(filter);
                 doUpdateTreeAsync();
                 break;
             
             case SERVICE_REMOVED:
-                vmTreefilters.remove(filter);
+                vmFilters.remove(filter);
                 doUpdateTreeAsync();
                 break;
                 
@@ -164,7 +199,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         public void actionPerformed(com.redhat.thermostat.common.ActionEvent<ThermostatExtensionRegistry.Action>
                                     actionEvent)
         {
-            ReferenceDecorator decorator = (ReferenceDecorator) actionEvent.getPayload();
+            VmDecorator decorator = (VmDecorator) actionEvent.getPayload();
             switch (actionEvent.getActionId()) {
             case SERVICE_ADDED:
                 vmTreeDecorators.add(decorator);
@@ -202,7 +237,8 @@ public class MainWindowControllerImpl implements MainWindowController {
     public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory)
     {
         try {
-            filterRegistry = registryFactory.createVMTreeFilterRegistry();
+            vmFilterRegistry = registryFactory.createVmFilterRegistry();
+            hostFilterRegistry = registryFactory.createHostFilterRegistry();
             decoratorRegistry = registryFactory.createVMTreeDecoratorRegistry();
             menuRegistry = registryFactory.createMenuRegistry();
             vmInfoRegistry = registryFactory.createVMInformationRegistry();
@@ -213,9 +249,11 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         vmTreeDecorators = new CopyOnWriteArrayList<>();
         
-        vmTreefilters = new CopyOnWriteArrayList<>();
-        treeFilter = new HostVmFilter();
-        vmTreefilters.add(treeFilter);
+        hostFilters = new CopyOnWriteArrayList<>();
+        vmFilters = new CopyOnWriteArrayList<>();
+        searchFilter = new HostVmFilter();
+        hostFilters.add(searchFilter);
+        vmFilters.add(searchFilter);
         
         this.facadeFactory = facadeFactory;
 
@@ -236,10 +274,13 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         menuRegistry.addActionListener(menuListener);
         menuRegistry.start();
-        
-        filterRegistry.addActionListener(filterListener);
-        filterRegistry.start();
-        
+
+        hostFilterRegistry.addActionListener(hostFilterListener);
+        hostFilterRegistry.start();
+
+        vmFilterRegistry.addActionListener(vmFilterListener);
+        vmFilterRegistry.start();
+
         decoratorRegistry.addActionListener(decoratorListener);
         decoratorRegistry.start();
         
@@ -250,14 +291,14 @@ public class MainWindowControllerImpl implements MainWindowController {
     /**
      * This method is for testing purposes only
      */
-    Filter getTreeFilter() {
-        return treeFilter;
+    HostVmFilter getSearchFilter() {
+        return searchFilter;
     }
     
     /**
      * This method is for testing purposes only
      */ 
-    List<ReferenceDecorator> getVmTreeDecorators() {
+    List<VmDecorator> getVmTreeDecorators() {
         return vmTreeDecorators;
     }
     
@@ -293,13 +334,13 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     @Override
     public void setHostVmTreeFilter(String filter) {
-        this.treeFilter.setFilter(filter);
+        this.searchFilter.setFilter(filter);
         doUpdateTreeAsync();
     }
 
     public void doUpdateTreeAsync() {
         HostsVMsLoader loader = new DefaultHostsVMsLoader(hostsDAO, vmsDAO, !showHistory);
-        view.updateTree(vmTreefilters, vmTreeDecorators, loader);
+        view.updateTree(hostFilters, vmFilters, Collections.<HostDecorator>emptyList(), vmTreeDecorators, loader);
     }
 
     private void initView(MainView mainView) {

@@ -38,14 +38,14 @@ package com.redhat.thermostat.client.filter.vm;
 
 import java.io.IOException;
 
-import com.redhat.thermostat.client.osgi.service.Filter;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.client.ui.IconResource;
 import com.redhat.thermostat.common.dao.DAOFactory;
 
-public class VMDecorator implements ReferenceDecorator {
+public class VMDecorator implements VmDecorator {
     
     private class LivingVMDecorator implements Decorator {
         @Override
@@ -83,7 +83,7 @@ public class VMDecorator implements ReferenceDecorator {
     }
     
     @Override
-    public Filter getFilter() {
+    public VmFilter getFilter() {
         return decoratorFilter;
     }
 }

@@ -93,10 +93,12 @@ import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.internal.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.Filter;
+import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -121,20 +123,27 @@ public class MainWindow extends JFrame implements MainView {
         private final DefaultTreeModel treeModel;
         private DefaultMutableTreeNode treeRoot;
         
-        private List<Filter> filters;
-        private List<ReferenceDecorator> decorators;
+        private List<HostFilter> hostFilters;
+        private List<VmFilter> vmFilters;
+        private List<HostDecorator> hostDecorators;
+        private List<VmDecorator> vmDecorators;
         
         private HostsVMsLoader hostsVMsLoader;
 
         public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root,
-                                         List<Filter> filters, List<ReferenceDecorator> decorators,
+                                         List<HostFilter> hostFilters, List<VmFilter> vmFilters,
+                                         List<HostDecorator> hostDecorators, List<VmDecorator> vmDecorators,
                                          HostsVMsLoader hostsVMsLoader, JTree tree)
         {
-            this.filters = filters;
+            this.hostFilters = hostFilters;
+            this.vmFilters = vmFilters;
+
+            this.vmDecorators = vmDecorators;
+            this.hostDecorators = hostDecorators;
+
             this.treeModel = model;
             this.treeRoot = root;
             this.hostsVMsLoader = hostsVMsLoader;
-            this.decorators = decorators;
             this.tree = tree;
         }
 
@@ -143,22 +152,22 @@ public class MainWindow extends JFrame implements MainView {
             DefaultMutableTreeNode root = new DefaultMutableTreeNode();
             
             Collection<HostRef> hostsInRemoteModel = hostsVMsLoader.getHosts();
-            buildSubTree(root, hostsInRemoteModel);
+            buildHostSubTree(root, hostsInRemoteModel);
             return root;
         }
 
-        private boolean buildSubTree(DefaultMutableTreeNode parent, Collection<? extends Ref> objectsInRemoteModel) {
+        private boolean buildHostSubTree(DefaultMutableTreeNode parent, Collection<HostRef> objectsInRemoteModel) {
             boolean subTreeMatches = false;
-            for (Ref inRemoteModel : objectsInRemoteModel) {
+            for (HostRef inRemoteModel : objectsInRemoteModel) {
                 DecoratedDefaultMutableTreeNode inTreeNode =
                         new DecoratedDefaultMutableTreeNode(inRemoteModel);
 
                 boolean shouldInsert = false;
-                if (filters == null) {
+                if (hostFilters == null) {
                     shouldInsert = true;
                 } else {
                     shouldInsert = true;
-                    for (Filter filter : filters) {
+                    for (HostFilter filter : hostFilters) {
                         if (!filter.matches(inRemoteModel)) {
                             shouldInsert = false;
                             break;
@@ -166,17 +175,17 @@ public class MainWindow extends JFrame implements MainView {
                     }
                 }
                 
-                Collection<? extends Ref> children = getChildren(inRemoteModel);
-                boolean subtreeResult = buildSubTree(inTreeNode, children);
+                Collection<VmRef> children = hostsVMsLoader.getVMs(inRemoteModel);
+                boolean subtreeResult = buildVmSubTree(inTreeNode, children);
                 if (subtreeResult) {
                     shouldInsert = true;
                 }
 
                 if (shouldInsert) {
-                    for (ReferenceDecorator decorator : decorators) {
-                        Filter filter = decorator.getFilter();
+                    for (HostDecorator decorator : hostDecorators) {
+                        HostFilter filter = decorator.getFilter();
                         if (filter != null && filter.matches(inRemoteModel)) {
-                            inTreeNode.addDecorator(decorator);
+                            inTreeNode.addDecorator(decorator.getDecorator());
                         }
                     }
                     
@@ -185,6 +194,41 @@ public class MainWindow extends JFrame implements MainView {
                 }
             }
             
+            return subTreeMatches;
+        }
+
+        private boolean buildVmSubTree(DefaultMutableTreeNode parent, Collection<VmRef> objectsInRemoteModel) {
+            boolean subTreeMatches = false;
+            for (VmRef inRemoteModel : objectsInRemoteModel) {
+                DecoratedDefaultMutableTreeNode inTreeNode =
+                        new DecoratedDefaultMutableTreeNode(inRemoteModel);
+
+                boolean shouldInsert = false;
+                if (vmFilters == null) {
+                    shouldInsert = true;
+                } else {
+                    shouldInsert = true;
+                    for (VmFilter filter : vmFilters) {
+                        if (!filter.matches(inRemoteModel)) {
+                            shouldInsert = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (shouldInsert) {
+                    for (VmDecorator decorator : vmDecorators) {
+                        VmFilter filter = decorator.getFilter();
+                        if (filter != null && filter.matches(inRemoteModel)) {
+                            inTreeNode.addDecorator(decorator.getDecorator());
+                        }
+                    }
+
+                    parent.add(inTreeNode);
+                    subTreeMatches = true;
+                }
+            }
+
             return subTreeMatches;
         }
 
@@ -199,16 +243,6 @@ public class MainWindow extends JFrame implements MainView {
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
-        }
-
-        private Collection<? extends Ref> getChildren(Ref parent) {
-            if (parent == null) {
-                return hostsVMsLoader.getHosts();
-            } else if (parent instanceof HostRef) {
-                HostRef host = (HostRef) parent;
-                return hostsVMsLoader.getVMs(host);
-            }
-            return Collections.emptyList();
         }
 
         private void syncTree(DefaultMutableTreeNode sourceRoot, DefaultTreeModel targetModel, DefaultMutableTreeNode targetNode) {
@@ -534,9 +568,8 @@ public class MainWindow extends JFrame implements MainView {
         private Map<Decorator, ImageIcon> decoratorsCache = new HashMap<>();
         private void setAnnotation(DecoratedDefaultMutableTreeNode treeNode, Object value, Component component) {
 
-            List<ReferenceDecorator> decorators = treeNode.getDecorators();
-            for (ReferenceDecorator decorator : decorators) {
-                Decorator dec = decorator.getDecorator();
+            List<Decorator> decorators = treeNode.getDecorators();
+            for (Decorator dec : decorators) {
                 String newText = dec.getLabel(getText());
                 setText(newText);
                 setLabelFor(component);
@@ -630,10 +663,13 @@ public class MainWindow extends JFrame implements MainView {
     }
     
     @Override
-    public void updateTree(List<Filter> filters, List<ReferenceDecorator> decorators, HostsVMsLoader hostsVMsLoader) {
+    public void updateTree(List<HostFilter> hostFilters, List<VmFilter> vmFilters,
+            List<HostDecorator> hostDecorators, List<VmDecorator> vmDecorators,
+            HostsVMsLoader hostsVMsLoader)
+    {
         BackgroundTreeModelWorker worker =
                 new BackgroundTreeModelWorker(publishedTreeModel, publishedRoot,
-                                              filters, decorators, hostsVMsLoader, agentVmTree);
+                                              hostFilters, vmFilters, hostDecorators, vmDecorators, hostsVMsLoader, agentVmTree);
         worker.execute();
     }
 

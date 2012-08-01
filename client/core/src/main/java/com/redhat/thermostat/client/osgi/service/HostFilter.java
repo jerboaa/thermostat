@@ -34,61 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm;
+package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmInfo;
-import com.redhat.thermostat.service.process.UNIXProcessHandler;
-import com.redhat.thermostat.service.process.UNIXSignal;
+import com.redhat.thermostat.common.dao.HostRef;
 
-/**
- * Implements the {@link VMContextAction} entry point to provide a kill switch
- * for the currently selected Virtual Machine. 
- */
-public class KillVMAction implements VMContextAction {
+public interface HostFilter {
 
-    private final UNIXProcessHandler unixService;
-    private final DAOFactory dao;
-
-    public KillVMAction(UNIXProcessHandler unixService, DAOFactory dao) {
-        this.unixService = unixService;
-        this.dao = dao;
-    }
-
-    @Override
-    public String getName() {
-        return "Kill Application";
-    }
-
-    @Override
-    public String getDescription() {
-        return "Kill the selected VM Process";
-    }
-
-    @Override
-    public void execute(VmRef reference) {
-        // TODO this should be executed on the agent-side
-        unixService.sendSignal(reference.getIdString(), UNIXSignal.TERM);
-    }
-
-    @Override
-    public VmFilter getFilter() {
-        return new LocalAndAliveFilter();
-    }
-
-    private class LocalAndAliveFilter implements VmFilter {
-
-        @Override
-        public boolean matches(VmRef ref) {
-            VmRef vm = ref;
-
-            // TODO implement local checking too
-            VmInfo vmInfo = dao.getVmInfoDAO().getVmInfo(vm);
-            return vmInfo.isAlive();
-        }
-
-    }
+    boolean matches(HostRef toMatch);
 }

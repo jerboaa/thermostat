@@ -50,8 +50,12 @@ class RegistryFactory {
         return new VMTreeDecoratorRegistry(context);
     }
     
-    VMTreeFilterRegistry createVMTreeFilterRegistry() throws InvalidSyntaxException {
-        return new VMTreeFilterRegistry(context);
+    HostFilterRegistry createHostFilterRegistry() throws InvalidSyntaxException {
+        return new HostFilterRegistry(context);
+    }
+
+    VmFilterRegistry createVmFilterRegistry() throws InvalidSyntaxException {
+        return new VmFilterRegistry(context);
     }
     
     MenuRegistry createMenuRegistry() throws InvalidSyntaxException {

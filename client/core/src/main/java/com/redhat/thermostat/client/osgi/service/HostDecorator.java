@@ -36,9 +36,19 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.client.ui.Decorator;
 
-public interface Filter {
+/**
+ * This interface allows plugins to install a custom {@link Decorator} into
+ * the Reference List view.
+ * 
+ * <br /><br />
+ * 
+ * Active {@link HostDecorator}s are first queried against their filters
+ * and then installed into the view if the filter passes. 
+ */
+public interface HostDecorator {
 
-    boolean matches(Ref ref);
+    Decorator getDecorator();
+    HostFilter getFilter();
 }

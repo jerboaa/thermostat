@@ -65,10 +65,11 @@ import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action;
-import com.redhat.thermostat.client.osgi.service.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
+import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmInformationController;
@@ -108,12 +109,14 @@ public class MainWindowControllerImplTest {
     private VMContextAction action1;
     private VMContextAction action2;
 
-    private VMTreeFilterRegistry filters;
+    private HostFilterRegistry hostFilterRegistry;
+    private VmFilterRegistry vmFilterRegistry;
     private VMTreeDecoratorRegistry decorators;
     private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menus;
     
-    private ActionListener<ThermostatExtensionRegistry.Action> filtersListener;
+    private ActionListener<ThermostatExtensionRegistry.Action> hostFiltersListener;
+    private ActionListener<ThermostatExtensionRegistry.Action> vmFiltersListener;
     private ActionListener<ThermostatExtensionRegistry.Action> decoratorsListener;
     
     @BeforeClass
@@ -146,18 +149,23 @@ public class MainWindowControllerImplTest {
         doNothing().when(view).addActionListener(grabListener.capture());
         
         RegistryFactory registryFactory = mock(RegistryFactory.class);
-        filters = mock(VMTreeFilterRegistry.class);
+        hostFilterRegistry = mock(HostFilterRegistry.class);
+        vmFilterRegistry = mock(VmFilterRegistry.class);
         decorators = mock(VMTreeDecoratorRegistry.class);
         vmInfoRegistry = mock(VMInformationRegistry.class);
         menus = mock(MenuRegistry.class);
 
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
         when(registryFactory.createVMTreeDecoratorRegistry()).thenReturn(decorators);
-        when(registryFactory.createVMTreeFilterRegistry()).thenReturn(filters);
+        when(registryFactory.createHostFilterRegistry()).thenReturn(hostFilterRegistry);
+        when(registryFactory.createVmFilterRegistry()).thenReturn(vmFilterRegistry);
         when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
         
-        ArgumentCaptor<ActionListener> grabFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(filters).addActionListener(grabFiltersListener.capture());
+        ArgumentCaptor<ActionListener> grabHostFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(hostFilterRegistry).addActionListener(grabHostFiltersListener.capture());
+
+        ArgumentCaptor<ActionListener> grabVmFiltersListener = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(vmFilterRegistry).addActionListener(grabVmFiltersListener.capture());
 
         ArgumentCaptor<ActionListener> grabDecoratorsListener = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(decorators).addActionListener(grabDecoratorsListener.capture());
@@ -176,13 +184,14 @@ public class MainWindowControllerImplTest {
         controller = new MainWindowControllerImpl(uiFacadeFactory, view, registryFactory);
         l = grabListener.getValue();
         
-        filtersListener = grabFiltersListener.getValue();
+        hostFiltersListener = grabHostFiltersListener.getValue();
+        vmFiltersListener = grabVmFiltersListener.getValue();
         decoratorsListener = grabDecoratorsListener.getValue();
     }
 
     private void setUpVMContextActions() {
         action1 = mock(VMContextAction.class);
-        Filter action1Filter = mock(Filter.class);
+        VmFilter action1Filter = mock(VmFilter.class);
         when(action1Filter.matches(isA(VmRef.class))).thenReturn(true);
 
         when(action1.getName()).thenReturn("action1");
@@ -190,7 +199,7 @@ public class MainWindowControllerImplTest {
         when(action1.getFilter()).thenReturn(action1Filter);
         
         action2 = mock(VMContextAction.class);
-        Filter action2Filter = mock(Filter.class);
+        VmFilter action2Filter = mock(VmFilter.class);
         when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
 
         when(action2.getName()).thenReturn("action2");
@@ -228,14 +237,14 @@ public class MainWindowControllerImplTest {
     @Test
     public void verifyDecoratorsAdded() {
 
-        List<ReferenceDecorator> currentDecoratros = controller.getVmTreeDecorators();
+        List<VmDecorator> currentDecoratros = controller.getVmTreeDecorators();
         assertEquals(0, currentDecoratros.size());
         
         ActionEvent<ThermostatExtensionRegistry.Action> event =
                 new ActionEvent<ThermostatExtensionRegistry.Action>(decorators,
                         ThermostatExtensionRegistry.Action.SERVICE_ADDED);
         
-        ReferenceDecorator payload = mock(ReferenceDecorator.class);
+        VmDecorator payload = mock(VmDecorator.class);
         event.setPayload(payload);
         
         decoratorsListener.actionPerformed(event);
@@ -244,7 +253,7 @@ public class MainWindowControllerImplTest {
         assertEquals(1, currentDecoratros.size());
         assertEquals(payload, currentDecoratros.get(0));
         
-        verify(view).updateTree(any(List.class), any(List.class), any(HostsVMsLoader.class));
+        verify(view).updateTree(any(List.class), isA(List.class), isA(List.class), any(List.class), any(HostsVMsLoader.class));
     }
     
     @Test
@@ -262,7 +271,7 @@ public class MainWindowControllerImplTest {
 
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_TREE_FILTER));
 
-        verify(view).updateTree(any(List.class), any(List.class), any(HostsVMsLoader.class));
+        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), isA(HostsVMsLoader.class));
     }
     
     @Test
@@ -298,7 +307,7 @@ public class MainWindowControllerImplTest {
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(any(List.class), any(List.class), arg.capture());
+        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), arg.capture());
         HostsVMsLoader loader = arg.getValue();
 
         Collection<HostRef> actualHosts = loader.getHosts();
@@ -322,7 +331,7 @@ public class MainWindowControllerImplTest {
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(any(List.class), any(List.class), arg.capture());
+        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), arg.capture());
         HostsVMsLoader loader = arg.getValue();
 
         Collection<HostRef> actualHosts = loader.getHosts();
@@ -331,7 +340,7 @@ public class MainWindowControllerImplTest {
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SWITCH_HISTORY_MODE));
         ArgumentCaptor<HostsVMsLoader> argCaptor = ArgumentCaptor.forClass(HostsVMsLoader.class);
         // actionPerformed triggers updateTree
-        verify(view, times(2)).updateTree(any(List.class), any(List.class), argCaptor.capture());
+        verify(view, times(2)).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), argCaptor.capture());
         loader = argCaptor.getValue();
 
         actualHosts = loader.getHosts();
@@ -351,7 +360,7 @@ public class MainWindowControllerImplTest {
         controller.doUpdateTreeAsync();
 
         ArgumentCaptor<HostsVMsLoader> arg = ArgumentCaptor.forClass(HostsVMsLoader.class);
-        verify(view).updateTree(any(List.class), any(List.class), arg.capture());
+        verify(view).updateTree(isA(List.class), isA(List.class), isA(List.class), isA(List.class), arg.capture());
         HostsVMsLoader loader = arg.getValue();
 
         Collection<VmRef> actualVMs = loader.getVMs(host);
@@ -371,7 +380,7 @@ public class MainWindowControllerImplTest {
         
         controller.setHostVmTreeFilter("test1");
                 
-        Filter filter = controller.getTreeFilter();
+        HostVmFilter filter = controller.getSearchFilter();
         assertTrue(filter.matches(ref1));
         assertFalse(filter.matches(ref2));
     }

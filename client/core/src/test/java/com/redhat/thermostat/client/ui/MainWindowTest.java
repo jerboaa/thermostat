@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.isA;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,9 +74,11 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.internal.MainView;
-import com.redhat.thermostat.client.osgi.service.Filter;
+import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.HostsVMsLoader;
@@ -133,15 +136,15 @@ public class MainWindowTest {
     @Test
     public void testHostVmDecoratorsAdded() throws InterruptedException {
         
-        List<ReferenceDecorator> decorators = new ArrayList<>();
-        ReferenceDecorator refDecorator = mock(ReferenceDecorator.class);
+        List<HostDecorator> decorators = new ArrayList<>();
+        HostDecorator refDecorator = mock(HostDecorator.class);
         final Decorator decorator = mock(Decorator.class);
         when(decorator.getLabel(anyString())).thenReturn("fluff");
         
         when(refDecorator.getDecorator()).thenReturn(decorator);
         
-        Filter filter = mock(Filter.class);
-        when(filter.matches(any(Ref.class))).thenReturn(false).thenReturn(true);
+        HostFilter filter = mock(HostFilter.class);
+        when(filter.matches(isA(HostRef.class))).thenReturn(false).thenReturn(true);
 
         when(refDecorator.getFilter()).thenReturn(filter);
         
@@ -154,7 +157,7 @@ public class MainWindowTest {
         
         when(hostsVMsLoader.getHosts()).thenReturn(expectedHosts);
         
-        window.updateTree(null, decorators, hostsVMsLoader);
+        window.updateTree(null, null, decorators, null, hostsVMsLoader);
 
         Thread.sleep(50);
         

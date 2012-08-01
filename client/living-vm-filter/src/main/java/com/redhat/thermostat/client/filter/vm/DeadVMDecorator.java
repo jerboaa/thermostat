@@ -38,17 +38,16 @@ package com.redhat.thermostat.client.filter.vm;
 
 import java.io.IOException;
 
-import com.redhat.thermostat.client.osgi.service.Filter;
-import com.redhat.thermostat.client.osgi.service.ReferenceDecorator;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 
-public class DeadVMDecorator implements ReferenceDecorator {
+public class DeadVMDecorator implements VmDecorator {
     
     private class VMDecorator implements Decorator {
         @Override
@@ -72,23 +71,18 @@ public class DeadVMDecorator implements ReferenceDecorator {
         }
     }
 
-    private Filter decoratorFilter;
+    private VmFilter decoratorFilter;
     private VMDecorator decorator;
     
     public DeadVMDecorator(final DAOFactory dao) {
         decorator = new VMDecorator();
-        decoratorFilter = new Filter() {            
+        decoratorFilter = new VmFilter() {
             @Override
-            public boolean matches(Ref ref) {
-                if (ref instanceof VmRef) {
-                    VmRef vm = (VmRef) ref;
-                    
-                    VmInfoDAO info = dao.getVmInfoDAO();
-                    VmInfo vmInfo = info.getVmInfo(vm);
-                    
-                    return !vmInfo.isAlive();
-                }
-                return false;
+            public boolean matches(VmRef vm) {
+                VmInfoDAO info = dao.getVmInfoDAO();
+                VmInfo vmInfo = info.getVmInfo(vm);
+
+                return !vmInfo.isAlive();
             }
         };
     }
@@ -99,7 +93,7 @@ public class DeadVMDecorator implements ReferenceDecorator {
     }
     
     @Override
-    public Filter getFilter() {
+    public VmFilter getFilter() {
         return decoratorFilter;
     }
 }
