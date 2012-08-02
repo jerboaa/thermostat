@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -116,7 +115,7 @@ class VmCpuController {
         timer.stop();
     }
 
-    public BasicView getView() {
-        return view;
+    public UIComponent getView() {
+        return (UIComponent) view;
     }
 }

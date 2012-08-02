@@ -46,9 +46,14 @@ class VmClassStatService implements VmInformationService {
 
     private VmFilter filter = new AlwaysMatchFilter();
 
+    private VmClassStatViewProvider viewProvider;
+    public VmClassStatService() {
+        viewProvider = new VmClassStatViewProvider();
+    }
+    
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new VmClassStatController(ref);
+        return new VmClassStatController(ref, viewProvider);
     }
 
     @Override

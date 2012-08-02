@@ -194,8 +194,8 @@ class VmGcController {
         return localize(LocaleResources.UNKNOWN_GEN);
     }
 
-    public BasicView getView() {
-        return view;
+    public UIComponent getView() {
+        return (UIComponent) view;
     }
 
 }

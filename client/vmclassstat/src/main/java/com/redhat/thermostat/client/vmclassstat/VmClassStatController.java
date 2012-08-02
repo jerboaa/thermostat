@@ -42,9 +42,9 @@ import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -76,7 +76,7 @@ class VmClassStatController implements VmInformationServiceController {
     private final VmClassStatDAO dao;
     private final Timer timer;
 
-    public VmClassStatController(VmRef ref) {
+    public VmClassStatController(VmRef ref, VmClassStatViewProvider viewProvider) {
         this.ref = ref;
         dao = ApplicationContext.getInstance().getDAOFactory().getVmClassStatsDAO();
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
@@ -87,7 +87,7 @@ class VmClassStatController implements VmInformationServiceController {
         timer.setDelay(5);
         timer.setInitialDelay(0);
 
-        classesView = ApplicationContext.getInstance().getViewFactory().getView(VmClassStatView.class);
+        classesView = viewProvider.createView();
 
         classesView.addActionListener(new ActionListener<VmClassStatView.Action>() {
             @Override
@@ -120,8 +120,8 @@ class VmClassStatController implements VmInformationServiceController {
     }
 
     @Override
-    public BasicView getView() {
-        return classesView;
+    public UIComponent getView() {
+        return (UIComponent) classesView;
     }
 
 }

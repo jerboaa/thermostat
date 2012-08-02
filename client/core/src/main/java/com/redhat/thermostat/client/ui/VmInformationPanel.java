@@ -42,8 +42,6 @@ import java.awt.Component;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
 
     private final JTabbedPane tabPane = new JTabbedPane();
@@ -60,7 +58,7 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     }
 
     @Override
-    public void addChildView(String title, BasicView view) {
+    public void addChildView(String title, UIComponent view) {
         if (view instanceof SwingComponent) {
             SwingComponent panel = (SwingComponent)view;
             tabPane.insertTab(title, null, panel.getUiComponent(), null, tabCount);

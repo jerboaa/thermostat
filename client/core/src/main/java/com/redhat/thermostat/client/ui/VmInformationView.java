@@ -43,7 +43,7 @@ public abstract class VmInformationView extends BasicView {
     /**
      * @param view the view.
      */
-    public abstract void addChildView(String title, BasicView view);
+    public abstract void addChildView(String title, UIComponent view);
 
     public abstract int getNumChildren();
     public abstract boolean selectChildID(int id);

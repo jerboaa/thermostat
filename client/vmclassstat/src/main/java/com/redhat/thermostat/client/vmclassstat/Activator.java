@@ -43,7 +43,6 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 
 public class Activator implements BundleActivator {
 
@@ -52,7 +51,6 @@ public class Activator implements BundleActivator {
         ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(VmClassStatView.class, VmClassStatPanel.class);
                 context.registerService(VmInformationService.class.getName(), new VmClassStatService(), null);
                 return super.addingService(reference);
             }

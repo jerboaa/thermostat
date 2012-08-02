@@ -91,12 +91,11 @@ public class VmClassStatControllerTest {
         VmClassStatView view = mock(VmClassStatView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(VmClassStatView.class))).thenReturn(view);
+        
+        VmClassStatViewProvider viewFactory = mock(VmClassStatViewProvider.class);
+        when(viewFactory.createView()).thenReturn(view);
 
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
-
-        VmClassStatController controller = new VmClassStatController(ref);
+        VmClassStatController controller = new VmClassStatController(ref, viewFactory);
 
         ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
 

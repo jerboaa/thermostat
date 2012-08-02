@@ -49,6 +49,7 @@ import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -182,8 +183,8 @@ public class HeapDumpController implements VmInformationServiceController {
     }
 
     @Override
-    public BasicView getView() {
-        return view;
+    public UIComponent getView() {
+        return (UIComponent) view;
     }
 
     @Override

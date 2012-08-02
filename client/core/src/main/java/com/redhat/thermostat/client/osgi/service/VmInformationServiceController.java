@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
+import com.redhat.thermostat.client.ui.UIComponent;
 
 public interface VmInformationServiceController {
-    BasicView getView();
-
+    UIComponent getView();
     String getLocalizedName();
 }

@@ -34,33 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
+package com.redhat.thermostat.client.vmclassstat;
 
-import com.redhat.thermostat.client.ui.UIComponent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.View;
+import com.redhat.thermostat.client.osgi.service.ViewProvider;
 
-public abstract class BasicView implements View, UIComponent {
-    public enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
-    protected final ActionNotifier<Action> notifier;
-    
-    protected BasicView() {
-        notifier = new ActionNotifier<Action>(this);
-    }
-    
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-    
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
-    }
-    
-    protected void notify(Action action) {
-        notifier.fireAction(action);
+public class VmClassStatViewProvider implements ViewProvider {
+
+    @Override
+    public VmClassStatView createView() {
+        return new VmClassStatPanel();
     }
 }

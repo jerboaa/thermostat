@@ -131,7 +131,7 @@ class VmOverviewController {
         timer.stop();
     }
 
-    public BasicView getView() {
-        return view;
+    public UIComponent getView() {
+        return (UIComponent) view;
     }
 }
