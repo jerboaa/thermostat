@@ -37,93 +37,97 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.verifyNew;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.Hashtable;
-import java.util.Map;
-import java.util.Map.Entry;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceEvent;
-import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.common.CommandLoadingBundleActivator;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.launcher.internal.Activator.RegisterLauncherAction;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({Activator.class, CommandLoadingBundleActivator.class, RegisterLauncherAction.class, BundleActivator.class})
 public class ActivatorTest {
 
-    @Test
-    public void testRegisterServices() throws Exception {
-        final Map<ServiceRegistration, Object> regs = new HashMap<>();
-        BundleContext bCtx = mock(BundleContext.class);
-        
-        when(bCtx.registerService(anyString(), any(), any(Dictionary.class))).then(new Answer<ServiceRegistration>() {
+    private BundleContext context;
+    private MultipleServiceTracker tracker;
+    private ServiceReference registryServiceReference, helpCommandReference;
+    private ServiceRegistration launcherServiceRegistration, helpCommandRegistration;
+    private OSGiRegistryService registryService;
+    private Command helpCommand;
 
-            @Override
-            public ServiceRegistration answer(InvocationOnMock invocation) throws Throwable {
-                ServiceRegistration reg = mock(ServiceRegistration.class);
-                when(reg.getReference()).thenReturn(mock(ServiceReference.class));
-                regs.put(reg, invocation.getArguments()[1]);
-                return reg;
-            }
-        });
-        when(bCtx.getService(isA(ServiceReference.class))).then(new Answer<Object>() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                ServiceReference ref = (ServiceReference) invocation.getArguments()[0];
-                for (Entry<ServiceRegistration,Object> registration: regs.entrySet()) {
-                    if (registration.getKey().getReference().equals(ref)) {
-                        return registration.getValue();
-                    }
-                }
-                return null;
-            }
-        });
-        
-        ArgumentCaptor<ServiceListener> serviceCaptor = ArgumentCaptor.forClass(ServiceListener.class);
-        doNothing().when(bCtx).addServiceListener(serviceCaptor.capture());
+    @Before
+    public void setUp() throws Exception {
+        context = mock(BundleContext.class);
 
-        Activator activator = new Activator();
-        activator.start(bCtx);
+        registryServiceReference = mock(ServiceReference.class);
+        launcherServiceRegistration = mock(ServiceRegistration.class);
+        registryService = mock(OSGiRegistryService.class);
+        when(context.getServiceReference(eq(OSGiRegistryService.class))).thenReturn(registryServiceReference);
+        when(context.getService(eq(registryServiceReference))).thenReturn(registryService);
+        when(context.registerService(eq(Launcher.class.getName()), any(), (Dictionary) isNull())).
+                thenReturn(launcherServiceRegistration);
 
-        verify(bCtx).addServiceListener(serviceCaptor.capture(), anyString());
-        ServiceListener listener = serviceCaptor.getValue();
-        
-        ServiceReference reference = mock(ServiceReference.class);
-        ServiceEvent event = mock(ServiceEvent.class);
-        when(event.getServiceReference()).thenReturn(reference);
-        when(event.getType()).thenReturn(ServiceEvent.REGISTERED);
-        
-        listener.serviceChanged(event);
-        verify(event).getServiceReference();
-        
-        
-        
-        Hashtable<String, Object> props = new Hashtable<>();
-        props.put(Command.NAME, "help");
-        verify(bCtx).registerService(eq(Command.class.getName()), isA(HelpCommand.class), eq(props));
+        helpCommandRegistration = mock(ServiceRegistration.class);
+        helpCommandReference = mock(ServiceReference.class);
+        helpCommand = mock(Command.class);
+        when(helpCommandRegistration.getReference()).thenReturn(helpCommandReference);
+        when(context.registerService(eq(Command.class.getName()), any(), isA(Dictionary.class))).
+                thenReturn(helpCommandRegistration);
+        when(context.getService(helpCommandReference)).thenReturn(helpCommand);
 
-        verify(bCtx).registerService(eq(Launcher.class.getName()), isA(Launcher.class), any(Dictionary.class));
-
-        activator.stop(bCtx);
-
-        for (ServiceRegistration reg : regs.keySet()) {
-            verify(reg).unregister();
-        }
+        tracker = mock(MultipleServiceTracker.class);
+        whenNew(MultipleServiceTracker.class).
+                withParameterTypes(BundleContext.class, Class[].class, Action.class).
+                withArguments(eq(context), eq(new Class[] {OSGiRegistryService.class, Keyring.class}),
+                        isA(Action.class)).thenReturn(tracker);
     }
 
+    @Test
+    public void testActivatorLifecycle() throws Exception {
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        Hashtable<String, Object> props = new Hashtable<>();
+        props.put(Command.NAME, "help");
+        verify(context).registerService(eq(Command.class.getName()), isA(HelpCommand.class), eq(props));
+
+        ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
+        verifyNew(MultipleServiceTracker.class).withArguments(eq(context),
+                eq(new Class[] {OSGiRegistryService.class, Keyring.class}),
+                actionCaptor.capture());
+        Action action = actionCaptor.getValue();
+
+        action.doIt();
+        verify(context).registerService(eq(Launcher.class.getName()), isA(Launcher.class), (Dictionary) isNull());
+
+        activator.stop(context);
+        verify(launcherServiceRegistration).unregister();
+        verify(tracker).close();
+    }
 }

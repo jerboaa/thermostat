@@ -56,7 +56,6 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.OSGiContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
@@ -66,7 +65,7 @@ import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
-public class LauncherImpl implements Launcher, OSGiContext {
+public class LauncherImpl implements Launcher {
 
     private static final String UNKNOWN_COMMAND_MESSAGE = "unknown command '%s'\n";
 
@@ -82,14 +81,11 @@ public class LauncherImpl implements Launcher, OSGiContext {
     private BundleContext context;
     private OSGiRegistryService registry;
     
-    public LauncherImpl(CommandContextFactory cmdCtxFactory, OSGiRegistryService registry) {
+    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory,
+            OSGiRegistryService registry) {
+        this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
-    }
-
-    @Override
-    public void setBundleContext(BundleContext context) {
-        this.context = context;
     }
 
     @Override

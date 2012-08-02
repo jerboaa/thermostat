@@ -256,11 +256,9 @@ public class LauncherTest {
         });
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
-        LauncherImpl launcher = new LauncherImpl(ctxFactory, registry);
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
         Keyring keyring = mock(Keyring.class);
         launcher.setPreferences(new ClientPreferences(keyring));
-        
-        launcher.setBundleContext(bundleContext);
         launcher.setArgs(new String[] { "error" });
         launcher.run();
         assertEquals("test error\n", ctxFactory.getError());
@@ -268,12 +266,10 @@ public class LauncherTest {
     }
 
     private void runAndVerifyCommand(String[] args, String expected) {
-        LauncherImpl launcher = new LauncherImpl(ctxFactory, registry);
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
         
         Keyring keyring = mock(Keyring.class);
         launcher.setPreferences(new ClientPreferences(keyring));
-        
-        launcher.setBundleContext(bundleContext);
         launcher.setArgs(args);
         launcher.run();
         assertEquals(expected, ctxFactory.getOutput());
@@ -282,8 +278,7 @@ public class LauncherTest {
 
     @Test
     public void verifyStorageCommandSetsUpDAOFactory() {
-        LauncherImpl launcher = new LauncherImpl(ctxFactory, registry);
-        launcher.setBundleContext(bundleContext);
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
         Keyring keyring = mock(Keyring.class);
         launcher.setPreferences(new ClientPreferences(keyring));
         
@@ -294,8 +289,7 @@ public class LauncherTest {
 
     @Test
     public void verifyStorageCommandSetsUpDAOFactoryWithAuth() {
-        LauncherImpl launcher = new LauncherImpl(ctxFactory, registry);
-        launcher.setBundleContext(bundleContext);
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
         Keyring keyring = mock(Keyring.class);
         launcher.setPreferences(new ClientPreferences(keyring));
         
@@ -307,8 +301,7 @@ public class LauncherTest {
     public void verifyPrefsAreUsed() {
         ClientPreferences prefs = mock(ClientPreferences.class);
         when(prefs.getConnectionUrl()).thenReturn("mongo://fluff:12345");
-        LauncherImpl l = new LauncherImpl(ctxFactory, registry);
-        l.setBundleContext(bundleContext);
+        LauncherImpl l = new LauncherImpl(bundleContext, ctxFactory, registry);
         l.setPreferences(prefs);
         l.setArgs(new String[] { "test3" });
         l.run();

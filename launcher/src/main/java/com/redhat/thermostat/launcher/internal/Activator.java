@@ -39,24 +39,45 @@ package com.redhat.thermostat.launcher.internal;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.bundles.OSGiRegistryService;
 import com.redhat.thermostat.common.CommandLoadingBundleActivator;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator extends CommandLoadingBundleActivator {
 
+    class RegisterLauncherAction implements Action {
+
+        private BundleContext context;
+
+        RegisterLauncherAction(BundleContext context) {
+            this.context = context;
+        }
+        @Override
+        public void doIt() {
+            ServiceReference reference = context.getServiceReference(OSGiRegistryService.class);
+            OSGiRegistryService bundleService = (OSGiRegistryService) context.getService(reference);
+            LauncherImpl launcher = new LauncherImpl(context,
+                    new CommandContextFactory(context), bundleService);
+            launcherServiceRegistration = context.registerService(Launcher.class.getName(), launcher, null);
+        }
+        
+    }
+
+    @SuppressWarnings("rawtypes")
     private ServiceRegistration launcherServiceRegistration;
-    private ServiceTracker bundleRegistryServiceTracker, keyringServiceTracker;
+    @SuppressWarnings("rawtypes")
+    private MultipleServiceTracker tracker;
 
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-        keyringServiceTracker = new KeyringServiceTracker(context);
-        keyringServiceTracker.open();
+        tracker = new MultipleServiceTracker(context, new Class[] {OSGiRegistryService.class, Keyring.class}, new RegisterLauncherAction(context));
+        tracker.open();
     }
 
     @Override
@@ -65,46 +86,8 @@ public class Activator extends CommandLoadingBundleActivator {
         if (launcherServiceRegistration != null) {
             launcherServiceRegistration.unregister();
         }
-        if (bundleRegistryServiceTracker != null) {
-            bundleRegistryServiceTracker.close();
-        }
-        if (keyringServiceTracker != null) {
-            keyringServiceTracker.close();
+        if (tracker != null) {
+            tracker.close();
         }
     }
-
-    private class KeyringServiceTracker extends ServiceTracker {
-        public KeyringServiceTracker(BundleContext context) {
-            super(context, Keyring.class.getName(), null);
-        }
-
-        @Override
-        public Object addingService(ServiceReference reference) {
-            bundleRegistryServiceTracker = new OSGiRegistryServiceTracker(context);
-            bundleRegistryServiceTracker.open();
-            
-            return super.addingService(reference);
-        }
-    }
-
-    private class OSGiRegistryServiceTracker extends ServiceTracker {
-
-        private CommandContextFactory cmdContextFactory;
-
-        public OSGiRegistryServiceTracker(BundleContext context) {
-            super(context, OSGiRegistryService.class.getName(), null);
-            this.cmdContextFactory = new CommandContextFactory(context);
-        }
-            
-        @Override
-        public Object addingService(ServiceReference reference) {
-            OSGiRegistryService bundleService = (OSGiRegistryService) context.getService(reference);
-            LauncherImpl launcher = new LauncherImpl(cmdContextFactory, bundleService);
-            launcher.setBundleContext(context);
-            launcherServiceRegistration = context.registerService(Launcher.class.getName(), launcher, null);
-
-            return super.addingService(reference);
-        }
-    }
-
 }
