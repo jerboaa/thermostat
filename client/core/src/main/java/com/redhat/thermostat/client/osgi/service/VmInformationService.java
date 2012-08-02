@@ -40,7 +40,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 
 public interface VmInformationService {
 
-    boolean isApplicableFor(VmRef ref);
+    VmFilter getFilter();
 
     VmInformationServiceController getInformationServiceController(VmRef ref);
 }

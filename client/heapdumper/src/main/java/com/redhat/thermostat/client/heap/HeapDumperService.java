@@ -36,15 +36,18 @@
 
 package com.redhat.thermostat.client.heap;
 
+import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class HeapDumperService implements VmInformationService {
-
-    private ApplicationService appService;
     
+    private ApplicationService appService;
+    private VmFilter filter = new AlwaysMatchFilter();
+
     public HeapDumperService(ApplicationService appService) {
         this.appService = appService;
     }
@@ -55,7 +58,7 @@ public class HeapDumperService implements VmInformationService {
     }
 
     @Override
-    public boolean isApplicableFor(VmRef ref) {
-        return true;
+    public VmFilter getFilter() {
+        return filter;
     }
 }

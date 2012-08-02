@@ -36,11 +36,15 @@
 
 package com.redhat.thermostat.client.vmclassstat;
 
+import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
+import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmRef;
 
 class VmClassStatService implements VmInformationService {
+
+    private VmFilter filter = new AlwaysMatchFilter();
 
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
@@ -48,8 +52,7 @@ class VmClassStatService implements VmInformationService {
     }
 
     @Override
-    public boolean isApplicableFor(VmRef ref) {
-        return true;
+    public VmFilter getFilter() {
+        return filter;
     }
-
 }

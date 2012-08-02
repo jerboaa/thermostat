@@ -34,26 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.stats.memory;
+package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
-import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 
-class MemoryStatsService implements VmInformationService {
-    
-    private VmFilter filter = new AlwaysMatchFilter();
-    
-    @Override
-    public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new MemoryStatsController(ref);
-    }
+public class AlwaysMatchFilter implements VmFilter {
 
     @Override
-    public VmFilter getFilter() {
-        return filter;
+    public boolean matches(VmRef ref) {
+        return true;
     }
 }

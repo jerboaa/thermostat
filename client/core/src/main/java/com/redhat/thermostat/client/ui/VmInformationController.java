@@ -69,7 +69,7 @@ public class VmInformationController {
 
         Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();
         for (VmInformationService vmInfoService : vmInfoServices) {
-            if (vmInfoService.isApplicableFor(vmRef)) {
+            if (vmInfoService.getFilter().matches(vmRef)) {
                 VmInformationServiceController ctrl = vmInfoService.getInformationServiceController(vmRef);
                 String name = ctrl.getLocalizedName();
                 view.addChildView(name, ctrl.getView());
