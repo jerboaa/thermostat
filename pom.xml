@@ -96,13 +96,15 @@
   </repositories>
 
   <modules>
+    <module>distribution</module>
+    <module>main</module>
+    <module>launcher</module>
+    <module>tools</module>
+    <module>bundles</module>
     <module>common</module>
     <module>agent</module>
     <module>dolphin</module>
     <module>client</module>
-    <module>distribution</module>
-    <module>launcher</module>
-    <module>tools</module>
     <module>unix-process-handler</module>
     <module>keyring</module>
   </modules>

@@ -44,4 +44,5 @@ import org.osgi.framework.BundleContext;
 public interface OSGiContext {
 
     void setBundleContext(BundleContext context);
+
 }

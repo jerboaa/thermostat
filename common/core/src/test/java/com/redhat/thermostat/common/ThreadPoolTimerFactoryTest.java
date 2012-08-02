@@ -141,7 +141,7 @@ public class ThreadPoolTimerFactoryTest {
                 // Wait a little less than delay to
                 // 1. Verify more easily that the duration of the task does not push back the activation of next task.
                 // 2. Not congest the timer thread (which would happen if we take >= DELAY).
-                Thread.sleep(DELAY * 9 / 10 );
+                Thread.sleep(DELAY * 8 / 10 );
                 return null;
             }
             

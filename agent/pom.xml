@@ -59,6 +59,7 @@
   </dependencies>
 
   <modules>
+    <module>cli</module>
     <module>core</module>
     <module>command</module>
   </modules>

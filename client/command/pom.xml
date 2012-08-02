@@ -85,7 +85,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.client.command.AgentConfigurationActivator</Bundle-Activator>
+            <!-- >Bundle-Activator>com.redhat.thermostat.client.command.AgentConfigurationActivator</Bundle-Activator -->
             <Export-Package>
               com.redhat.thermostat.client.command
             </Export-Package>

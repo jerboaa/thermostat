@@ -53,12 +53,12 @@ import java.util.Collection;
  */
 public interface Command {
 
-    static final String NAME = "COMMAND_NAME";
+    public static final String NAME = "COMMAND_NAME";
 
     /**
      * Execute the command
      */
-    void run(CommandContext ctx) throws CommandException;
+    public void run(CommandContext ctx) throws CommandException;
 
     /**
      * Called when the command is first installed into the system. This is a
@@ -66,7 +66,7 @@ public interface Command {
      * <p>
      * Should be idempotent.
      */
-    void enable();
+    public void enable();
 
     /**
      * Called when the command is being removed from the system. The command
@@ -75,43 +75,44 @@ public interface Command {
      * <p>
      * Should be idempotent.
      */
-    void disable();
+    public void disable();
 
     /**
      * Returns a name for this command. This will be used by the user to select
      * this command.
      */
-    String getName();
+    public String getName();
 
     /**
      * A short description for the command indicating what it does.
      */
-    String getDescription();
+    public String getDescription();
 
     /**
      * How the user should invoke this command
      */
-    String getUsage();
+    public String getUsage();
 
     /**
      * Returns a collection of arguments that the command is prepared to handle.
      * If the user provides unknown or malformed arguments, this command will
      * not be invoked.
      */
-    Collection<ArgumentSpec> getAcceptedArguments();
+    public Collection<ArgumentSpec> getAcceptedArguments();
 
-    boolean isStorageRequired();
+    public boolean isStorageRequired();
 
     /**
      * Whether the command is available to be invoked from within the shell.
      * @return true if the command can be invoked from within the shell
      */
-    boolean isAvailableInShell();
+    public boolean isAvailableInShell();
 
     /**
      * Indicates if the command is available to be invoked from outside the
      * shell (from the main command line).
      * @return true if can command can be invoked from the command line
      */
-    boolean isAvailableOutsideShell();
+    public boolean isAvailableOutsideShell();
+
 }

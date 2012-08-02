@@ -41,6 +41,8 @@ import java.util.Collection;
 
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.common.cli.Command;
+
 
 public abstract class BaseCommandRegistry implements CommandRegistry {
 

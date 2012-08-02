@@ -57,12 +57,12 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.Launcher;
 import com.redhat.thermostat.common.cli.OSGiContext;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.tools.LocaleResources;
 import com.redhat.thermostat.tools.Translate;
 
@@ -169,7 +169,8 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
         ServiceReference launcherRef = bundleContext.getServiceReference(Launcher.class.getName());
         if (launcherRef != null) {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
-            launcher.run(parsed);
+            launcher.setArgs(parsed);
+            launcher.run();
         } else {
             throw new CommandException("Severe: Could not locate launcher");
         }

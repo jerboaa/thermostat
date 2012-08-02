@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -61,8 +60,8 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.Launcher;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.tools.cli.ShellCommand.HistoryProvider;
 
@@ -96,7 +95,8 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        verify(launcher).run(new String[]{"help"});
+        verify(launcher).setArgs(new String[]{"help"});
+        verify(launcher).run();
     }
 
     @Test
@@ -172,7 +172,8 @@ public class ShellCommandTest {
         assertEquals("Thermostat > old-history-value\nThermostat > exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
 
-        verify(launcher).run(new String[] {"old-history-value"});
+        verify(launcher).setArgs(new String[] {"old-history-value"});
+        verify(launcher).run();
     }
 
     @Test
@@ -197,7 +198,8 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        verify(launcher).run(new String[] {"add-to-history"});
+        verify(launcher).setArgs(new String[] {"add-to-history"});
+        verify(launcher).run();
         verify(mockHistory).add("add-to-history");
         verify(mockHistory).flush();
 

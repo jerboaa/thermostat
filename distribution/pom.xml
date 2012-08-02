@@ -129,6 +129,7 @@
                   <includes>
                     <include>logging.properties</include>
                     <include>osgi-export.properties</include>
+                    <include>bundles.properties</include>
                   </includes>
                 </resource>
               </resources>
@@ -166,6 +167,7 @@
                 <mkdir dir="${project.build.directory}/agent/logs" />
                 <mkdir dir="${project.build.directory}/agent/run" />
                 <mkdir dir="${project.build.directory}/client" />
+                <mkdir dir="${project.build.directory}/osgi" />
                 <mkdir dir="${project.build.directory}/libs/native" />
                 
                 <!--  also copy the native libraries -->
@@ -223,12 +225,32 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-main</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-bundles</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-tools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-launcher</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -253,6 +275,11 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-command</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -260,11 +287,6 @@
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-tools</artifactId>
-    	<version>${project.version}</version>
     </dependency>
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>

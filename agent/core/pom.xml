@@ -67,6 +67,16 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-launcher</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-tools</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
     </dependency>
@@ -87,14 +97,12 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.agent.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.agent,
+              com.redhat.thermostat.agent.config,
               com.redhat.thermostat.backend,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat,
-              com.redhat.thermostat.agent.config,
               com.redhat.thermostat.backend.sample,
               com.redhat.thermostat.backend.system,
             </Private-Package>

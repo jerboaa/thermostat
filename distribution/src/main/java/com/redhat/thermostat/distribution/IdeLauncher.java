@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.distribution;
 
-import com.redhat.thermostat.launcher.Thermostat;
+import com.redhat.thermostat.main.Thermostat;
 
 /**
  * This class is meant for launching through IDEs only. IDEs that know about

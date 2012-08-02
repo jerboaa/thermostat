@@ -71,9 +71,7 @@ public class ThermostatActivator implements BundleActivator {
 
                 vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
                 vmInfoServiceTracker.open();
-
-                contextActionTracker =
-                        new VMContextActionServiceTracker(context, uiFacadeFactory);
+                contextActionTracker = new VMContextActionServiceTracker(context, uiFacadeFactory);
                 contextActionTracker.open();
 
                 cmdReg = new CommandRegistryImpl(context);
