@@ -47,7 +47,6 @@ import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.internal.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.common.ActionListener;
@@ -185,10 +184,4 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
         table.setBorder(Components.smallBorder());
         visiblePanel.add(table, BorderLayout.PAGE_START);
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
-
 }

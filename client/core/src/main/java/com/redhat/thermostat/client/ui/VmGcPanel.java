@@ -205,9 +205,4 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             }
         });
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
 }

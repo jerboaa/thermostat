@@ -90,10 +90,4 @@ public class VmInformationPanel extends VmInformationView implements SwingCompon
     public int getNumChildren() {
         return tabPane.getComponentCount();
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
-
 }

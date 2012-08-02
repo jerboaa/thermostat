@@ -47,15 +47,10 @@ import javax.swing.SwingWorker;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
@@ -73,8 +68,6 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     private JPanel visiblePane;
     
     public HeapSwingView() {
-        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceReference ref = ctx.getServiceReference(ApplicationService.class.getName());
         stats = new StatsPanel();
         stats.addHeapDumperListener(new ActionListener() {
             @Override
@@ -200,10 +193,5 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     @Override
     public Component getUiComponent() {
         return visiblePane;
-    }
-
-    @Override
-    public BasicView getView() {
-        return this;
     }
 }

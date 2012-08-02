@@ -52,7 +52,6 @@ import javax.swing.table.DefaultTableModel;
 import com.redhat.thermostat.client.heap.HeapHistogramView;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
@@ -177,10 +176,5 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
     @Override
     public Component getUiComponent() {
         return panel;
-    }
-
-    @Override
-    public BasicView getView() {
-        return this;
     }
 }

@@ -300,9 +300,4 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
         panel.add(header, BorderLayout.PAGE_START);
         visiblePanel.setLayout(gl_visiblePanel);
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
 }

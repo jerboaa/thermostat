@@ -149,10 +149,4 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
             }
         });
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
-
 }

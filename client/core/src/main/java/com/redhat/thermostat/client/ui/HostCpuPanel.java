@@ -210,10 +210,4 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
         );
         visiblePanel.setLayout(groupLayout);
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
-
 }

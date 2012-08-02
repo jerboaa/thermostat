@@ -94,10 +94,4 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
     public Component getUiComponent() {
         return visiblePanel;
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
-
 }

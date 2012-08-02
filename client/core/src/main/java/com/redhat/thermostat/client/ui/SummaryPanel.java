@@ -212,10 +212,4 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
             return delegate.get(index);
         }
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
-
 }

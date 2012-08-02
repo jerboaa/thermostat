@@ -58,7 +58,6 @@ import com.redhat.thermostat.client.heap.HeapObjectUI;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.ObjectDetailsView;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.SearchFieldSwingView;
 import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
 import com.redhat.thermostat.client.ui.SwingComponent;
@@ -91,7 +90,6 @@ import javax.swing.tree.TreeSelectionModel;
 /**
  * A Panel that displays JavaHeapObjects and referrers and references.
  */
-@SuppressWarnings("serial")
 public class ObjectDetailsPanel extends ObjectDetailsView implements SwingComponent {
 
     /** For TESTING ONLY! */
@@ -431,10 +429,5 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
     @Override
     public Component getUiComponent() {
         return panel;
-    }
-
-    @Override
-    public BasicView getView() {
-        return this;
     }
 }

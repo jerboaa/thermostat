@@ -62,10 +62,4 @@ public abstract class BasicView implements View {
     protected void notify(Action action) {
         notifier.fireAction(action);
     }
-    
-    /**
-     * 
-     * @return a basic view which can be returned by a controller.
-     */
-    public abstract BasicView getView();
 }

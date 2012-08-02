@@ -58,7 +58,6 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.Components;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
@@ -168,10 +167,4 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
     public Component getUiComponent() {
         return visiblePanel;
     }
-
-    @Override
-    public BasicView getView() {
-        return this;
-    }
-
 }
