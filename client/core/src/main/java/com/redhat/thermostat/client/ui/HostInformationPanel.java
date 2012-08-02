@@ -43,7 +43,7 @@ import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 
 public class HostInformationPanel extends HostInformationView implements SwingComponent {
 

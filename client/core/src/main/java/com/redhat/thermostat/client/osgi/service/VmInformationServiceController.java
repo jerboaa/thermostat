@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.common.BasicView;
 
 public interface VmInformationServiceController {
     BasicView getView();

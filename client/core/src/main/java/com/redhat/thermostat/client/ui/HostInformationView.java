@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 
 public abstract class HostInformationView extends BasicView {
 

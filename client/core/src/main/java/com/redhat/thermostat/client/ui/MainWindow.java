@@ -93,6 +93,7 @@ import javax.swing.tree.TreeSelectionModel;
 
 import com.redhat.thermostat.client.internal.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.HostDecorator;
 import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
@@ -103,7 +104,6 @@ import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;

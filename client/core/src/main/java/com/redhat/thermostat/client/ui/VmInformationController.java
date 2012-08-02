@@ -42,9 +42,9 @@ import java.util.Collection;
 
 import com.redhat.thermostat.client.internal.UiFacadeFactory;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
-import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmRef;
 

@@ -42,7 +42,7 @@ import java.awt.Component;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
-import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
 

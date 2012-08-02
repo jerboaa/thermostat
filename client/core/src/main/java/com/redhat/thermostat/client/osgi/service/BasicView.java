@@ -34,14 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.stats.memory;
+package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.View;
 
-public abstract class MemoryStatsView extends BasicView {
+public abstract class BasicView implements View {
+    public enum Action {
+        VISIBLE,
+        HIDDEN,
+    }
+    protected final ActionNotifier<Action> notifier;
     
-    public abstract void addRegion(Payload region);
-    public abstract void updateRegion(Payload region);
+    protected BasicView() {
+        notifier = new ActionNotifier<Action>(this);
+    }
     
-    public abstract void requestRepaint();
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+    
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.removeActionListener(listener);
+    }
+    
+    protected void notify(Action action) {
+        notifier.fireAction(action);
+    }
+    
+    /**
+     * 
+     * @return a basic view which can be returned by a controller.
+     */
+    public abstract BasicView getView();
 }

@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.ui;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostRef;
 

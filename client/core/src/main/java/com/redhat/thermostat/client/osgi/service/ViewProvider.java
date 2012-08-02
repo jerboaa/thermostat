@@ -34,34 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.client.osgi.service;
 
-public abstract class BasicView implements View {
-    public enum Action {
-        VISIBLE,
-        HIDDEN,
-    }
-    protected final ActionNotifier<Action> notifier;
-    
-    protected BasicView() {
-        notifier = new ActionNotifier<Action>(this);
-    }
-    
-    public void addActionListener(ActionListener<Action> listener) {
-        notifier.addActionListener(listener);
-    }
-    
-    public void removeActionListener(ActionListener<Action> listener) {
-        notifier.removeActionListener(listener);
-    }
-    
-    protected void notify(Action action) {
-        notifier.fireAction(action);
-    }
-    
-    /**
-     * 
-     * @return a basic view which can be returned by a controller.
-     */
-    public abstract BasicView getView();
+import com.redhat.thermostat.client.ui.UIComponent;
+
+/**
+ * Interface for View plugins to notify the controllers that the
+ * appropriate view have been registered in the framework.
+ * 
+ * <br /><br />
+ * 
+ * View plugins should register an implementation of this class as a service
+ * for the views that have been installed in the Thermostat framework.
+ * 
+ * <br /><br />
+ * 
+ * <strong>Note</strong>: Controllers should listen for this service to be
+ * available before registering themselves into the framework if they come into
+ * separate bundles. 
+ */
+public interface ViewProvider {
+    UIComponent createView();
 }

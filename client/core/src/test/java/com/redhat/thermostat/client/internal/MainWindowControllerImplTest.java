@@ -65,6 +65,7 @@ import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
@@ -75,7 +76,6 @@ import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;

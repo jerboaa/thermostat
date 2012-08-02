@@ -48,9 +48,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.TitledBorder;
 
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.BasicView;
 
 public class MemoryStatsViewImpl extends MemoryStatsView implements SwingComponent {
 

@@ -55,8 +55,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.BasicView;
 
 public class SummaryPanel extends SummaryView implements SwingComponent {
 

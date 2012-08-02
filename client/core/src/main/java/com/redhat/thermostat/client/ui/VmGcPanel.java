@@ -61,8 +61,8 @@ import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.IntervalTimeData;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {

@@ -45,8 +45,8 @@ import javax.swing.SwingUtilities;
 import com.redhat.thermostat.client.heap.HeapDumpDetailsView;
 import com.redhat.thermostat.client.heap.HeapHistogramView;
 import com.redhat.thermostat.client.heap.ObjectDetailsView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.BasicView;
 
 public class HeapDetailsSwing extends HeapDumpDetailsView implements SwingComponent {
 

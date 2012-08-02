@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.model.IntervalTimeData;
 
 public abstract class VmGcView extends BasicView {

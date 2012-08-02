@@ -58,6 +58,7 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.Components;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
@@ -65,7 +66,6 @@ import com.redhat.thermostat.client.ui.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class VmClassStatPanel extends VmClassStatView implements SwingComponent {

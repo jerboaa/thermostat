@@ -66,8 +66,8 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.internal.ui.swing.WrapLayout;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 

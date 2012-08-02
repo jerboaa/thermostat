@@ -58,13 +58,13 @@ import com.redhat.thermostat.client.heap.HeapObjectUI;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.ObjectDetailsView;
 import com.redhat.thermostat.client.heap.Translate;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.SearchFieldSwingView;
 import com.redhat.thermostat.client.ui.SearchFieldView.SearchAction;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.BasicView;
 import com.redhat.thermostat.swing.EdtHelper;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 

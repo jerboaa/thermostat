@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public abstract class VmCpuView extends BasicView {

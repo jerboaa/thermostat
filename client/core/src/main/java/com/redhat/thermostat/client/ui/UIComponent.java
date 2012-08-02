@@ -34,14 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.stats.memory;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-
-public abstract class MemoryStatsView extends BasicView {
-    
-    public abstract void addRegion(Payload region);
-    public abstract void updateRegion(Payload region);
-    
-    public abstract void requestRepaint();
+/**
+ * Marker interface to signal the the class implements a UI component.
+ */
+public interface UIComponent {
 }

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.heap;
 
-import com.redhat.thermostat.common.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 
 public abstract class HeapHistogramView extends BasicView {
