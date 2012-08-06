@@ -40,8 +40,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.internal.UiFacadeFactory;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.ui.UiFacadeFactory;
 
 @SuppressWarnings("rawtypes")
 class VMContextActionServiceTracker extends ServiceTracker {

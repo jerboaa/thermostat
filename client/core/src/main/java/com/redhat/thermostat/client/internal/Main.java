@@ -61,6 +61,8 @@ import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
+import com.redhat.thermostat.client.ui.MainWindowController;
+import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Constants;

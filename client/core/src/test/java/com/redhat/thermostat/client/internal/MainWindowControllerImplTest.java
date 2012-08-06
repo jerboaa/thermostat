@@ -73,6 +73,7 @@ import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.SummaryView;
+import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;

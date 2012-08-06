@@ -45,8 +45,8 @@ import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.internal.GUIClientCommand;
 import com.redhat.thermostat.client.internal.Main;
-import com.redhat.thermostat.client.internal.UiFacadeFactory;
 import com.redhat.thermostat.client.internal.UiFacadeFactoryImpl;
+import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.utils.keyring.Keyring;

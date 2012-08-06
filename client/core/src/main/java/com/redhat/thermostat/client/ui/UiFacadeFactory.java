@@ -34,15 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.ui;
 
 import java.util.Collection;
 
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.ui.HostInformationController;
-import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 
