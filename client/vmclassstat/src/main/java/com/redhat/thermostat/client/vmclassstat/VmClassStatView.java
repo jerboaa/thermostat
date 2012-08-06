@@ -39,9 +39,10 @@ package com.redhat.thermostat.client.vmclassstat;
 import java.util.List;
 
 import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-public abstract class VmClassStatView extends BasicView {
+public abstract class VmClassStatView extends BasicView implements UIComponent {
 
     public abstract void clearClassCount();
 

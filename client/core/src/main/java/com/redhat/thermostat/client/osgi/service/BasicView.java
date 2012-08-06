@@ -36,12 +36,11 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.View;
 
-public abstract class BasicView implements View, UIComponent {
+public abstract class BasicView implements View {
     public enum Action {
         VISIBLE,
         HIDDEN,
