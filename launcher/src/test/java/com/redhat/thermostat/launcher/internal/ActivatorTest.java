@@ -48,6 +48,7 @@ import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -123,7 +124,7 @@ public class ActivatorTest {
                 actionCaptor.capture());
         Action action = actionCaptor.getValue();
 
-        action.doIt();
+        action.doIt(any(Map.class));
         verify(context).registerService(eq(Launcher.class.getName()), isA(Launcher.class), (Dictionary) isNull());
 
         activator.stop(context);

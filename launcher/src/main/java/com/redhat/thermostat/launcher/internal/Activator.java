@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -58,7 +60,8 @@ public class Activator extends CommandLoadingBundleActivator {
             this.context = context;
         }
         @Override
-        public void doIt() {
+        public void doIt(Map<Object, Object> services) {
+            
             ServiceReference reference = context.getServiceReference(OSGiRegistryService.class);
             OSGiRegistryService bundleService = (OSGiRegistryService) context.getService(reference);
             LauncherImpl launcher = new LauncherImpl(context,

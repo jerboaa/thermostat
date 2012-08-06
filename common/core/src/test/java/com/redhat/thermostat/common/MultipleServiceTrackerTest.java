@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.common;
 
+import java.util.Map;
+
+import junit.framework.Assert;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -55,6 +59,8 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.any;
+
 import static org.powermock.api.mockito.PowerMockito.verifyNew;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
@@ -109,7 +115,7 @@ public class MultipleServiceTrackerTest {
         verify(objectTracker).open();
 
         customizer.addingService(objectReference);
-        verify(action).doIt();
+        verify(action).doIt(any(Map.class));
     }
 
     @Test
@@ -117,6 +123,8 @@ public class MultipleServiceTrackerTest {
         Class[] deps = { Object.class, String.class };
         MultipleServiceTracker tracker = new MultipleServiceTracker(context, deps, action);
 
+        ArgumentCaptor<Map> serviceMap = ArgumentCaptor.forClass(Map.class);
+        
         ArgumentCaptor<ServiceTrackerCustomizer> customizerCaptor = ArgumentCaptor.forClass(ServiceTrackerCustomizer.class);
         verifyNew(ServiceTracker.class).withArguments(eq(context),
                 eq(Object.class.getName()),
@@ -132,8 +140,11 @@ public class MultipleServiceTrackerTest {
 
         customizer.addingService(objectReference);
         customizer.addingService(stringReference);
-        verify(action).doIt();
+        verify(action).doIt(serviceMap.capture());
+        
+        Map caputerServices = serviceMap.getValue();
+        Assert.assertTrue(caputerServices.containsKey(Object.class.getName()));
+        Assert.assertTrue(caputerServices.containsKey(String.class.getName()));
+        Assert.assertEquals(2, caputerServices.size());
     }
-
-    
 }
