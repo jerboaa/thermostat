@@ -117,7 +117,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
-        cpuStatBuilder = new CpuStatBuilder(source);
+        cpuStatBuilder = new CpuStatBuilder(clock, source, ticksPerSecond);
         memoryStatBuilder = new MemoryStatBuilder(source);
 
         int cpuCount = hostInfoBuilder.getCpuInfo().count;
@@ -154,7 +154,11 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                cpuStats.putCpuStat(cpuStatBuilder.build());
+                if (!cpuStatBuilder.isInitialized()) {
+                    cpuStatBuilder.initialize();
+                } else {
+                    cpuStats.putCpuStat(cpuStatBuilder.build());
+                }
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
                     networkInterfaces.putNetworkInterfaceInfo(info);
                 }

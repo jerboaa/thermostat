@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.ui;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.doNothing;
@@ -100,8 +101,8 @@ public class HostCpuControllerTest {
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
-        CpuStat cpuStat1 = new CpuStat(1l, 10.0, 20.0, 30.0);
-        CpuStat cpuStat2 = new CpuStat(2l, 15.0, 25.0, 35.0);
+        CpuStat cpuStat1 = new CpuStat(1l, new double[] {10.0, 20.0, 30.0});
+        CpuStat cpuStat2 = new CpuStat(2l, new double[] {15.0, 25.0, 35.0});
         CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
         when(cpuStatDAO.getLatestCpuStats(any(HostRef.class))).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
 
@@ -160,7 +161,8 @@ public class HostCpuControllerTest {
         verify(view).setCpuCount("12345");
         @SuppressWarnings("rawtypes")
         ArgumentCaptor<List> captor = ArgumentCaptor.forClass(List.class);
-        verify(view).addCpuLoadData(captor.capture());
+        verify(view).addCpuUsageChart(eq(0), anyString());
+        verify(view).addCpuUsageData(eq(0), captor.capture());
         List<DiscreteTimeData<Double>> cpuLoadData = captor.getValue();
         assertEquals(1, cpuLoadData.get(0).getTimeInMillis());
         assertEquals(10.0, cpuLoadData.get(0).getData().doubleValue(), 0.0001);

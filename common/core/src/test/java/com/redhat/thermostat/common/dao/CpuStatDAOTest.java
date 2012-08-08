@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +46,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -57,6 +59,7 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.utils.ArrayUtils;
 
 public class CpuStatDAOTest {
 
@@ -66,10 +69,9 @@ public class CpuStatDAOTest {
         Collection<Key<?>> keys = CpuStatDAO.cpuStatCategory.getKeys();
         assertTrue(keys.contains(new Key<>("agent-id", false)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
-        assertTrue(keys.contains(new Key<Double>("5load", false)));
-        assertTrue(keys.contains(new Key<Double>("10load", false)));
-        assertTrue(keys.contains(new Key<Double>("15load", false)));
-        assertEquals(5, keys.size());
+        assertTrue(keys.contains(new Key<Double>("processor-usage", false)));
+
+        assertEquals(3, keys.size());
     }
 
     @Test
@@ -80,11 +82,11 @@ public class CpuStatDAOTest {
         HostRef hostRef = mock(HostRef.class);
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
+        Double LOAD = 5.0;
+        List<Double> loadList = Arrays.asList(LOAD);
         Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, 1234L);
-        chunk.put(CpuStatDAO.cpu5LoadKey, 5.0);
-        chunk.put(CpuStatDAO.cpu10LoadKey, 10.0);
-        chunk.put(CpuStatDAO.cpu15LoadKey, 15.0);
+        chunk.put(CpuStatDAO.cpuLoadKey, loadList);
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(chunk);
@@ -100,9 +102,8 @@ public class CpuStatDAOTest {
         assertEquals(1, cpuStats.size());
         CpuStat stat = cpuStats.get(0);
         assertEquals(1234L, stat.getTimeStamp());
-        assertEquals(5.0, stat.getLoad5(), 0.001);
-        assertEquals(10.0, stat.getLoad10(), 0.001);
-        assertEquals(15.0, stat.getLoad15(), 0.001);
+        assertArrayEquals(new double[] { LOAD }, stat.getPerProcessorUsage(), 0.001);
+
     }
 
     @Test
@@ -116,9 +117,8 @@ public class CpuStatDAOTest {
 
         Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, 1234L);
-        chunk.put(CpuStatDAO.cpu5LoadKey, 5.0);
-        chunk.put(CpuStatDAO.cpu10LoadKey, 10.0);
-        chunk.put(CpuStatDAO.cpu15LoadKey, 15.0);
+        chunk.put(CpuStatDAO.cpuLoadKey, Arrays.asList(5.0));
+
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(chunk);
@@ -136,7 +136,7 @@ public class CpuStatDAOTest {
     @Test
     public void testPutCpuStat() {
         Storage storage = mock(Storage.class);
-        CpuStat stat = new CpuStat(1, 5.0, 15.0, 10.0);
+        CpuStat stat = new CpuStat(1, new double[] {5.0, 10.0, 15.0});
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
         dao.putCpuStat(stat);
 
@@ -146,9 +146,8 @@ public class CpuStatDAOTest {
 
         assertEquals(CpuStatDAO.cpuStatCategory, chunk.getCategory());
         assertEquals((Long) 1L, chunk.get(Key.TIMESTAMP));
-        assertEquals((Double) 5.0, chunk.get(CpuStatDAO.cpu5LoadKey));
-        assertEquals((Double) 15.0, chunk.get(CpuStatDAO.cpu10LoadKey));
-        assertEquals((Double) 10.0, chunk.get(CpuStatDAO.cpu15LoadKey));
+        double[] result = ArrayUtils.toPrimitiveDoubleArray(chunk.get(CpuStatDAO.cpuLoadKey));
+        assertArrayEquals(new double[] {5.0, 10.0, 15.0}, result, 0.01);
     }
 
     @Test

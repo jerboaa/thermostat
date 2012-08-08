@@ -47,8 +47,10 @@ public abstract class HostCpuView extends BasicView {
 
     public abstract void setCpuModel(String model);
 
-    public abstract void clearCpuLoadData();
+    public abstract void clearCpuUsageData();
 
-    public abstract void addCpuLoadData(List<DiscreteTimeData<Double>> data);
+    public abstract void addCpuUsageChart(int cpuIndex, String humanReadableName);
+
+    public abstract void addCpuUsageData(int cpuIndex, List<DiscreteTimeData<Double>> data);
 
 }

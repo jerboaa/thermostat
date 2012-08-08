@@ -34,23 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.client.ui;
 
-import java.util.List;
+import java.awt.Color;
 
-import com.redhat.thermostat.common.model.CpuStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+public class ChartColors {
+    private static final Color[] SERIES_COLORS = {
+        new Color(192,80,77),
+        new Color(79,129,189),
+        new Color(155,187,89),
+        new Color(128,100,162),
+        new Color(75,172,198),
+        new Color(128,128,128),
+        new Color(247,150,70),
+    };
 
-public interface CpuStatDAO extends Countable {
+    private ChartColors() {
+        /* should not be instantiated */
+    }
 
-    static Key<List<Double>> cpuLoadKey = new Key<>("processor-usage", false);
-
-    static final Category cpuStatCategory = new Category("cpu-stats",
-            Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
-
-    List<CpuStat> getLatestCpuStats(HostRef ref);
-
-    void putCpuStat(CpuStat stat);
-
+    public static Color getColor(int index) {
+        return SERIES_COLORS[index % SERIES_COLORS.length];
+    }
 }

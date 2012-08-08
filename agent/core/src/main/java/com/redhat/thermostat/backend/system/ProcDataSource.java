@@ -40,9 +40,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
+/**
+ * Wrapper for files under /proc. See proc(5) for details about this.
+ */
 public class ProcDataSource {
 
     private static final String LOAD_FILE = "/proc/loadavg";
+    private static final String STAT_FILE = "/proc/stat";
     private static final String MEMINFO_FILE = "/proc/meminfo";
     private static final String CPUINFO_FILE = "/proc/cpuinfo";
 
@@ -61,6 +65,13 @@ public class ProcDataSource {
      */
     public Reader getCpuLoadReader() throws IOException {
         return new FileReader(LOAD_FILE);
+    }
+
+    /**
+     * Returns a reader for /proc/stat. Kernel/System statistics.
+     */
+    public Reader getStatReader() throws IOException {
+        return new FileReader(STAT_FILE);
     }
 
     /**

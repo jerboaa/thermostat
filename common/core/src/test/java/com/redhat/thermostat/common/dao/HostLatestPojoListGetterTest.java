@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -50,6 +51,7 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -72,17 +74,17 @@ public class HostLatestPojoListGetterTest {
     private static long t2 = 5;
     private static long t3 = 10;
 
-    private static double load5_1 = 2.0;
-    private static double load5_2 = 6.0;
-    private static double load5_3 = 11.0;
+    private static Double load5_1 = 2.0;
+    private static Double load5_2 = 6.0;
+    private static Double load5_3 = 11.0;
 
-    private static double load10_1 = 3.0;
-    private static double load10_2 = 7.0;
-    private static double load10_3 = 12.0;
+    private static Double load10_1 = 3.0;
+    private static Double load10_2 = 7.0;
+    private static Double load10_3 = 12.0;
 
-    private static double load15_1 = 4.0;
-    private static double load15_2 = 8.0;
-    private static double load15_3 = 13.0;
+    private static Double load15_1 = 4.0;
+    private static Double load15_2 = 8.0;
+    private static Double load15_3 = 13.0;
 
     private HostRef ref;
     private Converter<CpuStat> converter;
@@ -95,21 +97,15 @@ public class HostLatestPojoListGetterTest {
         result1 = new Chunk(cat, false);
         result1.put(Key.AGENT_ID, AGENT_ID);
         result1.put(Key.TIMESTAMP, t1);
-        result1.put(CpuStatDAO.cpu5LoadKey, load5_1);
-        result1.put(CpuStatDAO.cpu10LoadKey, load10_1);
-        result1.put(CpuStatDAO.cpu15LoadKey, load15_1);
+        result1.put(CpuStatDAO.cpuLoadKey, Arrays.asList(load5_1, load10_1, load15_1));
         result2 = new Chunk(cat, false);
         result2.put(Key.AGENT_ID, AGENT_ID);
         result2.put(Key.TIMESTAMP, t2);
-        result2.put(CpuStatDAO.cpu5LoadKey, load5_2);
-        result2.put(CpuStatDAO.cpu10LoadKey, load10_2);
-        result2.put(CpuStatDAO.cpu15LoadKey, load15_2);
+        result2.put(CpuStatDAO.cpuLoadKey, Arrays.asList(load5_2, load10_2, load15_2));
         result3 = new Chunk(cat, false);
         result3.put(Key.AGENT_ID, AGENT_ID);
         result3.put(Key.TIMESTAMP, t3);
-        result3.put(CpuStatDAO.cpu5LoadKey, load5_3);
-        result3.put(CpuStatDAO.cpu10LoadKey, load10_3);
-        result3.put(CpuStatDAO.cpu15LoadKey, load15_3);
+        result3.put(CpuStatDAO.cpuLoadKey, Arrays.asList(load5_3, load10_3, load15_3));
     }
 
     @Test
@@ -172,14 +168,10 @@ public class HostLatestPojoListGetterTest {
         assertEquals(2, stats.size());
         CpuStat stat1 = stats.get(0);
         assertEquals(t1, stat1.getTimeStamp());
-        assertEquals(load5_1, stat1.getLoad5(), 0.001);
-        assertEquals(load10_1, stat1.getLoad10(), 0.001);
-        assertEquals(load15_1, stat1.getLoad15(), 0.001);
+        assertArrayEquals(new double[] {load5_1, load10_1, load15_1}, stat1.getPerProcessorUsage(), 0.001);
         CpuStat stat2 = stats.get(1);
         assertEquals(t2, stat2.getTimeStamp());
-        assertEquals(load5_2, stat2.getLoad5(), 0.001);
-        assertEquals(load10_2, stat2.getLoad10(), 0.001);
-        assertEquals(load15_2, stat2.getLoad15(), 0.001);
+        assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, stat2.getPerProcessorUsage(), 0.001);
     }
 
     @Test

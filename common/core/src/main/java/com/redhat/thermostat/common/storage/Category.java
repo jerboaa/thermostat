@@ -94,4 +94,9 @@ public class Category {
     public Key<?> getKey(String name) {
         return keys.get(name);
     }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
 }

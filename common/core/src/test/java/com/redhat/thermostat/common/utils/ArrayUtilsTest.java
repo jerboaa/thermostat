@@ -34,23 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.utils;
 
+import static org.junit.Assert.assertEquals;
+
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-import com.redhat.thermostat.common.model.CpuStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import org.junit.Test;
 
-public interface CpuStatDAO extends Countable {
+public class ArrayUtilsTest {
 
-    static Key<List<Double>> cpuLoadKey = new Key<>("processor-usage", false);
+    @Test
+    public void testConversionToPrimitiveDoubleArray() {
+        final int NUMBER_OF_ENTRIES = 20;
+        Random random = new Random();
+        List<Double> input = new ArrayList<>();
 
-    static final Category cpuStatCategory = new Category("cpu-stats",
-            Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
+        for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+            input.add(random.nextDouble());
+        }
 
-    List<CpuStat> getLatestCpuStats(HostRef ref);
+        double[] output = ArrayUtils.toPrimitiveDoubleArray(input);
 
-    void putCpuStat(CpuStat stat);
+        assertEquals(input.size(), output.length);
 
+        for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+            assertEquals(input.get(i), output[i], 0.00001);
+        }
+    }
+
+    @Test
+    public void testConversionToObjectDoubleArray() {
+        final int NUMBER_OF_ENTRIES = 20;
+        Random random = new Random();
+        double[] input = new double[NUMBER_OF_ENTRIES];
+
+        for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+            input[i] = random.nextDouble();
+        }
+
+        List<Double> output = ArrayUtils.toDoubleList(input);
+
+        assertEquals(input.length, output.size());
+
+        for (int i = 0; i < NUMBER_OF_ENTRIES; i++) {
+            assertEquals(input[i], output.get(i), 0.00001);
+        }
+    }
 }

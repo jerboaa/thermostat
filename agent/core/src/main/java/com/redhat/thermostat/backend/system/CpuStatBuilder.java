@@ -38,9 +38,12 @@ package com.redhat.thermostat.backend.system;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -49,36 +52,85 @@ public class CpuStatBuilder {
     private static final Logger logger = LoggingUtils.getLogger(CpuStatBuilder.class);
 
     private final ProcDataSource dataSource;
+    private final Clock clock;
+    private final long ticksPerSecond;
 
-    public CpuStatBuilder(ProcDataSource dataSource) {
+    private boolean initialized = false;
+
+    private long[] previousCpuTicks;
+    private long previousTime;
+
+    public CpuStatBuilder(Clock clock, ProcDataSource dataSource, long ticksPerSecond) {
         this.dataSource = dataSource;
+        this.clock = clock;
+        this.ticksPerSecond = ticksPerSecond;
+    }
+
+    public void initialize() {
+        if (initialized) {
+            throw new IllegalStateException("already initialized");
+        }
+
+        previousTime = clock.getMonotonicTimeNanos();
+        previousCpuTicks = getCurrentCpuTicks();
+        initialized = true;
     }
 
     public CpuStat build() {
-        try (BufferedReader reader = new BufferedReader(dataSource.getCpuLoadReader())) {
-            return build(reader);
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "unable to read data source for cpu info");
+        if (!initialized) {
+            throw new IllegalStateException("not initialized yet");
         }
-        return new CpuStat(System.currentTimeMillis(),
-                CpuStat.INVALID_LOAD, CpuStat.INVALID_LOAD, CpuStat.INVALID_LOAD);
+
+        long currentRealTime = clock.getRealTimeMillis();
+        long currentTime = clock.getMonotonicTimeNanos();
+        long[] currentValues = getCurrentCpuTicks();
+
+        double[] cpuUsage = new double[currentValues.length];
+
+        double timeDelta = (currentTime - previousTime) * 1E-9;
+        for (int i = 0; i < cpuUsage.length; i++) {
+            long cpuTicksDelta = currentValues[i] - previousCpuTicks[i];
+            // 100 as in 100 percent.
+            cpuUsage[i] = cpuTicksDelta * (100.0 / timeDelta / ticksPerSecond);
+        }
+        previousTime = currentTime;
+        previousCpuTicks = currentValues;
+
+        return new CpuStat(currentRealTime, cpuUsage);
     }
 
-    private CpuStat build(BufferedReader reader) throws IOException {
-        long timestamp = System.currentTimeMillis();
-        double load5 = CpuStat.INVALID_LOAD;
-        double load10 = CpuStat.INVALID_LOAD;
-        double load15 = CpuStat.INVALID_LOAD;
-        String[] loadAvgParts = reader.readLine().split(" +");
-        if (loadAvgParts.length >= 3) {
-            try {
-                load5 = Double.valueOf(loadAvgParts[0]);
-                load10 = Double.valueOf(loadAvgParts[1]);
-                load15 = Double.valueOf(loadAvgParts[2]);
-            } catch (NumberFormatException nfe) {
-                logger.log(Level.WARNING, "error extracting load");
+    private long[] getCurrentCpuTicks() {
+        int maxIndex = 0;
+        long[] values = new long[1];
+        try (BufferedReader reader = new BufferedReader(dataSource.getStatReader())) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.startsWith("cpu")) {
+                    continue;
+                }
+                String[] parts = line.split("\\s");
+                if (!parts[0].matches("cpu\\d+")) {
+                    continue;
+                }
+
+                int cpuIndex = Integer.valueOf(parts[0].substring("cpu".length()));
+                if (cpuIndex > maxIndex) {
+                    long[] newValues = new long[cpuIndex+1];
+                    System.arraycopy(values, 0, newValues, 0, cpuIndex);
+                    values = newValues;
+                    maxIndex = cpuIndex;
+                }
+                values[cpuIndex] = Long.valueOf(parts[1]) + Long.valueOf(parts[2]) + Long.valueOf(parts[3]);
             }
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "error reading stat file", e);
         }
-        return new CpuStat(timestamp, load5, load10, load15);
+
+        return values;
     }
+
+    public boolean isInitialized() {
+        return initialized;
+    }
+
 }

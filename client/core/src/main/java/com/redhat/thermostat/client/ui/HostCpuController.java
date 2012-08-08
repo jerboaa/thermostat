@@ -40,6 +40,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
@@ -65,10 +67,12 @@ public class HostCpuController {
     private final CpuStatDAO cpuStatDAO;
     private final HostRef ref;
 
+    private int chartsAdded = 0;
+
     public HostCpuController(HostRef ref) {
         this.ref = ref;
         view = ApplicationContext.getInstance().getViewFactory().getView(HostCpuView.class);
-        view.clearCpuLoadData();
+        view.clearCpuUsageData();
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
         hostInfoDAO = daos.getHostInfoDAO();
         cpuStatDAO = daos.getCpuStatDAO();
@@ -125,11 +129,24 @@ public class HostCpuController {
 
     private void doCpuChartUpdate() {
         List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats(ref);
-        List<DiscreteTimeData<Double>> result = new ArrayList<DiscreteTimeData<Double>>();
+        List<List<DiscreteTimeData<Double>>> results = new ArrayList<>();
         for (CpuStat stat : cpuStats) {
-            result.add(new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getLoad5()));
+            double[] data = stat.getPerProcessorUsage();
+            for (int i = 0 ; i < data.length; i++) {
+                if (results.size() == i) {
+                    results.add(new ArrayList<DiscreteTimeData<Double>>());
+                }
+                results.get(i).add(new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getPerProcessorUsage()[i]));
+            }
         }
-        view.addCpuLoadData(result);
+
+        for (int i = 0; i < results.size(); i++) {
+            if (i == chartsAdded) {
+                view.addCpuUsageChart(i, Translate.localize(LocaleResources.HOST_CPU_ID, String.valueOf(i)));
+                chartsAdded++;
+            }
+            view.addCpuUsageData(i, results.get(i));
+        }
     }
 
     public BasicView getView() {

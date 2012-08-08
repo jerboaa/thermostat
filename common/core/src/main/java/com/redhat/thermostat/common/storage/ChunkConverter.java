@@ -42,6 +42,7 @@ import java.util.logging.Logger;
 
 import org.bson.types.ObjectId;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -86,7 +87,7 @@ class ChunkConverter {
         return dbObjectMap;
     }
 
-    
+
     private Map<String, DBObject> lazyCreateDBObjectMap(Map<String, DBObject> dbObjectMap) {
         if (dbObjectMap == null) {
             dbObjectMap = new HashMap<String, DBObject>();
@@ -123,17 +124,21 @@ class ChunkConverter {
         }
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     private void dbObjectToChunkRecursively(Chunk chunk, DBObject dbObject, Category category, String dbKey, String fullKey) {
         Object value = dbObject.get(dbKey);
-        if (value instanceof DBObject) {
+        Key key = category.getKey(fullKey);
+        if (value instanceof BasicDBList) {
+            if (key != null) {
+                chunk.put(key, value);
+            } else {
+                logger.warning("No key matching \"" + fullKey + "\" in category \"" + category + "\"");
+            }
+        } else if (value instanceof DBObject) {
             DBObject dbObj = (DBObject) value;
             dbObjectToChunkRecurse(chunk, dbObj, category, fullKey);
         } else if (value instanceof ObjectId) {
-            Key key = category.getKey(fullKey);
             chunk.put(key, objectIdToString((ObjectId) value));
         } else {
-            Key key = category.getKey(fullKey);
             if (key != null) {
                 chunk.put(key, value);
             } else {

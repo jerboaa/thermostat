@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.List;
+
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.utils.ArrayUtils;
 
 public class CpuStatConverter implements Converter<CpuStat> {
 
@@ -46,18 +49,16 @@ public class CpuStatConverter implements Converter<CpuStat> {
     public Chunk toChunk(CpuStat cpuStat) {
         Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, cpuStat.getTimeStamp());
-        chunk.put(CpuStatDAO.cpu5LoadKey, cpuStat.getLoad5());
-        chunk.put(CpuStatDAO.cpu10LoadKey, cpuStat.getLoad10());
-        chunk.put(CpuStatDAO.cpu15LoadKey, cpuStat.getLoad15());
+        List<Double> objectArray = ArrayUtils.toDoubleList(cpuStat.getPerProcessorUsage());
+        chunk.put(CpuStatDAO.cpuLoadKey, objectArray);
         return chunk;
     }
 
     @Override
     public CpuStat fromChunk(Chunk chunk) {
         long timestamp = chunk.get(Key.TIMESTAMP);
-        double load5 = chunk.get(CpuStatDAO.cpu5LoadKey);
-        double load10 = chunk.get(CpuStatDAO.cpu10LoadKey);
-        double load15 = chunk.get(CpuStatDAO.cpu15LoadKey);
-        return new CpuStat(timestamp, load5, load10, load15);
+        List<Double> loads = chunk.get(CpuStatDAO.cpuLoadKey);
+        double[] load = ArrayUtils.toPrimitiveDoubleArray(loads);
+        return new CpuStat(timestamp, load);
     }
 }

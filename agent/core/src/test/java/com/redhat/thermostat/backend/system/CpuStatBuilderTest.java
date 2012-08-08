@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.backend.system;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,6 +50,8 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.model.CpuStat;
 
 public class CpuStatBuilderTest {
@@ -55,23 +59,53 @@ public class CpuStatBuilderTest {
     @Test
     public void testSimpleBuild() {
         ProcDataSource dataSource = new ProcDataSource();
-        CpuStat stat = new CpuStatBuilder(dataSource).build();
+        CpuStatBuilder builder= new CpuStatBuilder(new SystemClock(), dataSource, 100l);
+        builder.initialize();
+        CpuStat stat = builder.build();
         assertNotNull(stat);
+    }
+
+    @Test (expected=IllegalStateException.class)
+    public void buildWithoutInitializeThrowsException() {
+        Clock clock = mock(Clock.class);
+        ProcDataSource dataSource = mock(ProcDataSource.class);
+        long ticksPerSecond = 1;
+        CpuStatBuilder builder = new CpuStatBuilder(clock, dataSource, ticksPerSecond);
+        builder.build();
     }
 
     @Test
     public void testBuildCpuStatFromFile() throws IOException {
-        String line = "0.05 0.08 0.06 1/368 16413";
-        BufferedReader reader = new BufferedReader(new StringReader(line));
+        long CLOCK1 = 1000;
+        long CLOCK2 = 2000;
+
+        String firstReadContents =
+            "cpu 100 0 0 1000 1000\n" +
+            "cpu0 100 0 0 1000 1000\n" +
+            "cpu1 10 80 10 1000 1000\n";
+        BufferedReader reader1 = new BufferedReader(new StringReader(firstReadContents));
+
+        String secondReadContents =
+            "cpu 400 0 0 1000 1000\n" +
+            "cpu0 200 0 0 1000 1000\n" +
+            "cpu1 30 50 120 1000 1000\n";
+        BufferedReader reader2 = new BufferedReader(new StringReader(secondReadContents));
+
+        long ticksPerSecond = 100;
+        Clock clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(CLOCK2);
+        when(clock.getMonotonicTimeNanos()).thenReturn((long)(CLOCK1 * 1E6)).thenReturn((long)(CLOCK2 * 1E6));
 
         ProcDataSource dataSource = mock(ProcDataSource.class);
-        when(dataSource.getCpuLoadReader()).thenReturn(reader);
-        CpuStat stat = new CpuStatBuilder(dataSource).build();
+        when(dataSource.getStatReader()).thenReturn(reader1).thenReturn(reader2);
+        CpuStatBuilder builder = new CpuStatBuilder(clock, dataSource, ticksPerSecond);
 
-        verify(dataSource).getCpuLoadReader();
-        assertEquals(0.05, stat.getLoad5(), 0.01);
-        assertEquals(0.08, stat.getLoad10(), 0.01);
-        assertEquals(0.06, stat.getLoad15(), 0.01);
+        builder.initialize();
 
+        CpuStat stat = builder.build();
+
+        verify(dataSource, times(2)).getStatReader();
+        assertArrayEquals(new double[] {100, 100}, stat.getPerProcessorUsage(), 0.01);
     }
+
 }

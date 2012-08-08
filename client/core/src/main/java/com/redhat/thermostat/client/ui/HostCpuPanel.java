@@ -38,43 +38,55 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.awt.FlowLayout;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.internal.ui.swing.WrapLayout;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class HostCpuPanel extends HostCpuView implements SwingComponent {
 
     private JPanel visiblePanel;
-    
+
     private final JTextComponent cpuModel = new ValueField("${CPU_MODEL}");
     private final JTextComponent cpuCount = new ValueField("${CPU_COUNT}");
 
     private final TimeSeriesCollection datasetCollection = new TimeSeriesCollection();
-    private final TimeSeries dataset = new TimeSeries("host-cpu");
+    private final Map<Integer, TimeSeries> datasets = new HashMap<>();
+    private final Map<String, Color> colors = new HashMap<>();
+    private final Map<String, JLabel> labels = new HashMap<>();
+
+    private JFreeChart chart;
+
+    private JPanel legendPanel;
 
     public HostCpuPanel() {
         super();
-        datasetCollection.addSeries(dataset);
         initializePanel();
 
         visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
@@ -120,11 +132,35 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
     }
 
     @Override
-    public void addCpuLoadData(List<DiscreteTimeData<Double>> data) {
+    public void addCpuUsageChart(final int cpuIndex, final String humanReadableName) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                TimeSeries series = new TimeSeries(humanReadableName);
+                Color color = ChartColors.getColor(colors.size());
+                colors.put(humanReadableName, color);
+
+                datasets.put(cpuIndex, series);
+                datasetCollection.addSeries(series);
+
+                updateColors();
+
+                JLabel label = createLabelWithLegend(humanReadableName, color);
+                labels.put(humanReadableName, label);
+
+                legendPanel.add(label);
+                legendPanel.revalidate();
+            }
+        });
+    }
+
+    @Override
+    public void addCpuUsageData(final int cpuIndex, List<DiscreteTimeData<Double>> data) {
         final ArrayList<DiscreteTimeData<Double>> copy = new ArrayList<>(data);
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                TimeSeries dataset = datasets.get(cpuIndex);
                 for (DiscreteTimeData<Double> timeData: copy) {
                     RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
                     if (dataset.getDataItem(period) == null) {
@@ -137,11 +173,19 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
     }
 
     @Override
-    public void clearCpuLoadData() {
+    public void clearCpuUsageData() {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                dataset.clear();
+                for (Iterator<Map.Entry<Integer, TimeSeries>> iter = datasets.entrySet().iterator(); iter.hasNext();) {
+                    Map.Entry<Integer, TimeSeries> entry = iter.next();
+                    datasetCollection.removeSeries(entry.getValue());
+                    entry.getValue().clear();
+
+                    iter.remove();
+
+                }
+                updateColors();
             }
         });
     }
@@ -154,60 +198,90 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
     private void initializePanel() {
 
         visiblePanel = new JPanel();
-        
-        JLabel summaryLabel = Components.header(localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
 
-        JLabel cpuModelLabel = Components.label(localize(LocaleResources.HOST_INFO_CPU_MODEL));
+        JLabel summaryLabel = new SectionHeader(localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
 
-        JLabel cpuCountLabel = Components.label(localize(LocaleResources.HOST_INFO_CPU_COUNT));
+        JLabel cpuModelLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_MODEL));
 
-        JFreeChart chart = ChartFactory.createTimeSeriesChart(
+        JLabel cpuCountLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_COUNT));
+
+        chart = ChartFactory.createTimeSeriesChart(
                 null,
                 localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL),
                 localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL),
                 datasetCollection,
                 false, false, false);
 
+        chart.getPlot().setBackgroundPaint( new Color(255,255,255,0) );
+        chart.getPlot().setBackgroundImageAlpha(0.0f);
+        chart.getPlot().setOutlinePaint(new Color(0,0,0,0));
+
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+
+        legendPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));
+        legendPanel.setOpaque(false);
 
         GroupLayout groupLayout = new GroupLayout(visiblePanel);
         groupLayout.setHorizontalGroup(
             groupLayout.createParallelGroup(Alignment.TRAILING)
                 .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.TRAILING)
-                        .addComponent(chartPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 947, Short.MAX_VALUE)
-                        .addComponent(summaryLabel, Alignment.LEADING)
-                        .addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
+                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
+                        .addComponent(legendPanel, GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
+                        .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 427, Short.MAX_VALUE)
+                        .addComponent(summaryLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
+                        .addGroup(groupLayout.createSequentialGroup()
                             .addGap(12)
                             .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
                                 .addGroup(groupLayout.createSequentialGroup()
                                     .addPreferredGap(ComponentPlacement.RELATED)
-                                    .addComponent(cpuCountLabel)
+                                    .addComponent(cpuCountLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                                     .addGap(18)
-                                    .addComponent(cpuCount, GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE))
+                                    .addComponent(cpuCount, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                 .addGroup(groupLayout.createSequentialGroup()
-                                    .addComponent(cpuModelLabel)
+                                    .addComponent(cpuModelLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                                     .addGap(18)
-                                    .addComponent(cpuModel, GroupLayout.DEFAULT_SIZE, 806, Short.MAX_VALUE)))))
-                    .addContainerGap())
+                                    .addComponent(cpuModel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))))
+                    .addGap(11))
         );
         groupLayout.setVerticalGroup(
             groupLayout.createParallelGroup(Alignment.LEADING)
                 .addGroup(groupLayout.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(summaryLabel)
+                    .addComponent(summaryLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(cpuModelLabel)
+                        .addComponent(cpuModelLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
                         .addComponent(cpuModel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                     .addGap(10)
                     .addGroup(groupLayout.createParallelGroup(Alignment.BASELINE)
                         .addComponent(cpuCount, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE)
-                        .addComponent(cpuCountLabel))
+                        .addComponent(cpuCountLabel, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
                     .addGap(18)
-                    .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE))
+                    .addComponent(chartPanel, GroupLayout.DEFAULT_SIZE, 263, Short.MAX_VALUE)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(legendPanel, GroupLayout.PREFERRED_SIZE, 30, GroupLayout.PREFERRED_SIZE)
+                    .addContainerGap())
         );
         visiblePanel.setLayout(groupLayout);
+    }
+
+    /**
+     * Adding or removing series to the series collection may change the order
+     * of existing items. Plus the paint for the index is now out-of-date. So
+     * let's walk through all the series and set the right paint for those.
+     */
+    private void updateColors() {
+        XYItemRenderer itemRenderer = chart.getXYPlot().getRenderer();
+        for (int i = 0; i < datasetCollection.getSeriesCount(); i++) {
+            String tag = (String) datasetCollection.getSeriesKey(i);
+            Color color = colors.get(tag);
+            itemRenderer.setSeriesPaint(i, color);
+        }
+    }
+
+    private JLabel createLabelWithLegend(String text, Color color) {
+        String hexColor = "#" + Integer.toHexString(color.getRGB() & 0x00ffffff);
+        return new JLabel("<html> <font color='" + hexColor + "'>\u2588</font> " + text + "</html>");
     }
 }

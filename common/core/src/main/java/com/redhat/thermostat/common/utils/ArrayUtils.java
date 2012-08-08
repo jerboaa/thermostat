@@ -34,23 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.model.CpuStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+public class ArrayUtils {
 
-public interface CpuStatDAO extends Countable {
+    private ArrayUtils() {
+        /* Do not instantiate */
+    }
 
-    static Key<List<Double>> cpuLoadKey = new Key<>("processor-usage", false);
+    public static double[] toPrimitiveDoubleArray(List<Double> input) {
+        int size = input.size();
+        double[] converted = new double[size];
+        for (int i = 0; i < size; i++) {
+            converted[i] = input.get(i);
+        }
+        return converted;
+    }
 
-    static final Category cpuStatCategory = new Category("cpu-stats",
-            Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
-
-    List<CpuStat> getLatestCpuStats(HostRef ref);
-
-    void putCpuStat(CpuStat stat);
+    public static List<Double> toDoubleList(double[] input) {
+        int size = input.length;
+        List<Double> converted = new ArrayList<>(size);
+        for (int i = 0; i < size; i++) {
+            converted.add(input[i]);
+        }
+        return converted;
+    }
 
 }

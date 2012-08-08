@@ -36,7 +36,14 @@
 
 package com.redhat.thermostat.common.storage;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -60,6 +67,8 @@ public class ChunkConverterTest {
     private static final Key<String> key2_key2 = new Key<>("key2.key2", false);
     private static final Key<String> key2_key3 = new Key<>("key2.key3", false);
 
+    private static final Key<List<Integer>> listKey = new Key<>("list", false);
+
     private static final String mongoId = "_id";
     private static final Key<String> invalidMongoIdKey = new Key<>(mongoId, false);
 
@@ -67,6 +76,8 @@ public class ChunkConverterTest {
                                                              key1_key1, key1_key2, key2_key1, key2_key2, key2_key3,
                                                              key1_key2_key1, key1_key2_key2, key1_key2_key3);
     private static final Category smallerCategory = new Category("SmallerTest", key1, key2);
+
+    private static final Category listCategory = new Category("something-with-lists", listKey);
 
     @Test
     public void verifyBasicChunkToDBObject() {
@@ -95,6 +106,18 @@ public class ChunkConverterTest {
 
         assertEquals(5, dbObject.keySet().size());
         assertArrayEquals(new String[]{"key5", "key4", "key3", "key2", "key1"}, dbObject.keySet().toArray());
+    }
+
+    @Test
+    public void verifyChunkToDBObjectWithLists() {
+        Chunk chunk = new Chunk(listCategory, false);
+        chunk.put(listKey, Arrays.asList(1, 2, 3, 4));
+
+        ChunkConverter converter = new ChunkConverter();
+        DBObject dbObj = converter.chunkToDBObject(chunk);
+
+        assertEquals(Arrays.asList(1,2,3,4), dbObj.get("list"));
+
     }
 
     @Test
@@ -133,6 +156,18 @@ public class ChunkConverterTest {
         assertEquals("test2", chunk.get(key4));
         assertEquals("test1", chunk.get(key5));
 
+    }
+
+    @Test
+    public void verifyDBObjectToChunkWithLists() {
+        BasicDBObject dbObj = new BasicDBObject();
+        dbObj.put("list", Arrays.asList(1, 2, 3, 4));
+
+        ChunkConverter converter = new ChunkConverter();
+        Chunk chunk = converter.dbObjectToChunk(dbObj, listCategory);
+
+        List<Integer> data = chunk.get(listKey);
+        assertEquals(Arrays.asList(1, 2, 3, 4), data);
     }
 
     @Test

@@ -70,18 +70,7 @@ import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
-
 public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
-
-    private static final Color[] SERIES_COLORS = {
-        new Color(192,80,77),
-        new Color(79,129,189),
-        new Color(155,187,89),
-        new Color(128,100,162),
-        new Color(75,172,198),
-        new Color(128,128,128),
-        new Color(247,150,70),
-    };
 
     private JPanel visiblePanel;
 
@@ -135,7 +124,7 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
             @Override
             public void run() {
                 int colorIndex = colors.size();
-                colors.put(tag, SERIES_COLORS[colorIndex]);
+                colors.put(tag, ChartColors.getColor(colorIndex));
                 TimeSeries series = new TimeSeries(tag);
                 dataset.put(tag, series);
                 JCheckBox newCheckBox = new JCheckBox(createLabelWithLegend(humanReadableName, colors.get(tag)));

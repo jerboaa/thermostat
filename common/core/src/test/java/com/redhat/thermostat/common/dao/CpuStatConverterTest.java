@@ -38,38 +38,36 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.*;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.utils.ArrayUtils;
 
 public class CpuStatConverterTest {
 
     @Test
     public void testToChunk() {
-        CpuStat stat = new CpuStat(10, 5.0, 10.0, 15.0);
+        CpuStat stat = new CpuStat(10, new double[]{ 5, 10, 15} );
         Chunk chunk = new CpuStatConverter().toChunk(stat);
         assertNotNull(chunk);
         assertEquals("cpu-stats", chunk.getCategory().getName());
         assertEquals((Long) 10L, chunk.get(Key.TIMESTAMP));
-        assertEquals(5.0, chunk.get(CpuStatDAO.cpu5LoadKey), 0.001);
-        assertEquals(10.0, chunk.get(CpuStatDAO.cpu10LoadKey), 0.001);
-        assertEquals(15.0, chunk.get(CpuStatDAO.cpu15LoadKey), 0.001);
+        double[] result = ArrayUtils.toPrimitiveDoubleArray(chunk.get(CpuStatDAO.cpuLoadKey));
+        assertArrayEquals(new double[] {5, 10, 15}, result, 0.001);
     }
 
     @Test
     public void testFromChunk() {
         Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, 10L);
-        chunk.put(CpuStatDAO.cpu5LoadKey, 5.0);
-        chunk.put(CpuStatDAO.cpu10LoadKey, 10.0);
-        chunk.put(CpuStatDAO.cpu15LoadKey, 15.0);
+        chunk.put(CpuStatDAO.cpuLoadKey, Arrays.asList(5.0, 10.0, 15.0));
         CpuStat stat = new CpuStatConverter().fromChunk(chunk);
         assertNotNull(stat);
         assertEquals(10L, stat.getTimeStamp());
-        assertEquals(5.0, stat.getLoad5(), 0.001);
-        assertEquals(10.0, stat.getLoad10(), 0.001);
-        assertEquals(15.0, stat.getLoad15(), 0.001);
+        assertArrayEquals(new double[] {5.0, 10.0, 15.0} , stat.getPerProcessorUsage(), 0.001);
     }
 }
