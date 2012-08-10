@@ -54,7 +54,10 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.event.ChartProgressEvent;
+import org.jfree.chart.event.ChartProgressListener;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.StandardXYBarPainter;
 import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.RangeType;
@@ -66,7 +69,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.IntervalTimeData;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {
-    
+
     private JPanel visiblePanel;
 
     private final Map<String, SampledDataset> dataset = new HashMap<>();
@@ -118,7 +121,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
         visiblePanel.setLayout(new GridBagLayout());
     }
 
-    private JPanel createCollectorDetailsPanel(IntervalXYDataset timeSeriesCollection, String title, String units) {
+    private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, String title, String units) {
         JPanel detailsPanel = new JPanel();
         detailsPanel.setBorder(Components.smallBorder());
         detailsPanel.setLayout(new BorderLayout());
@@ -129,25 +132,54 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             null,
             localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL),
             localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units),
-            timeSeriesCollection,
+            collectorData,
             PlotOrientation.VERTICAL,
             false,
             false,
             false);
 
         ((XYBarRenderer)(chart.getXYPlot().getRenderer())).setBarPainter(new StandardXYBarPainter());
-        chart.getXYPlot().setDomainAxis(new DateAxis());
-        JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        NumberAxis axis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        setupPlotAxes(chart.getXYPlot());
 
-        axis.setRangeType(RangeType.POSITIVE);
-        axis.setAutoRange(true);
-        axis.setAutoRangeMinimumSize(1);
+        chart.getXYPlot().setDomainCrosshairLockedOnData(true);
+        chart.getXYPlot().setDomainCrosshairVisible(true);
+
+        final RecentTimeSeriesChartPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+
+        chart.addProgressListener(new ChartProgressListener() {
+
+            @Override
+            public void chartProgress(ChartProgressEvent event) {
+                if (event.getType() != ChartProgressEvent.DRAWING_FINISHED) {
+                    return;
+                }
+
+                double rangeCrossHairValue = event.getChart().getXYPlot().getRangeCrosshairValue();
+                chartPanel.setDataInformationLabel(String.valueOf(rangeCrossHairValue));
+            }
+        });
 
         detailsPanel.add(chartPanel, BorderLayout.CENTER);
 
         return detailsPanel;
+    }
+
+    private void setupPlotAxes(XYPlot plot) {
+        setupDomainAxis(plot);
+        setupRangeAxis(plot);
+    }
+
+    private void setupDomainAxis(XYPlot plot) {
+        plot.setDomainAxis(new DateAxis());
+    }
+
+    private void setupRangeAxis(XYPlot plot) {
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+
+        rangeAxis.setRangeType(RangeType.POSITIVE);
+        rangeAxis.setAutoRange(true);
+        rangeAxis.setAutoRangeMinimumSize(1);
     }
 
     @Override

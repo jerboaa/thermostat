@@ -38,18 +38,23 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.ChartPanel;
 
@@ -63,12 +68,15 @@ public class RecentTimeSeriesChartPanel extends JPanel {
 
     private final RecentTimeSeriesChartController controller;
 
+    private JPanel labelContainer;
+    private JTextComponent label;
+
     public RecentTimeSeriesChartPanel(RecentTimeSeriesChartController controller) {
         this.controller = controller;
 
         this.setLayout(new BorderLayout());
 
-        ChartPanel cp = controller.getChartPanel();
+        final ChartPanel cp = controller.getChartPanel();
 
         cp.setDisplayToolTips(false);
         cp.setDoubleBuffered(true);
@@ -86,15 +94,28 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         cp.setMinimumDrawWidth(MINIMUM_DRAW_SIZE);
         cp.setMaximumDrawWidth(Integer.MAX_VALUE);
 
-        add(cp);
-        add(getChartControls(), BorderLayout.SOUTH);
+        add(getControlsAndAdditionalDisplay(), BorderLayout.SOUTH);
+
+        add(cp, BorderLayout.CENTER);
+    }
+
+    private Component getControlsAndAdditionalDisplay() {
+        JPanel container = new JPanel();
+
+        container.setLayout(new BorderLayout());
+
+        container.add(getChartControls(), BorderLayout.LINE_START);
+        container.add(getAdditionalDataDisplay(), BorderLayout.LINE_END);
+
+        return container;
     }
 
     private Component getChartControls() {
         JPanel container = new JPanel();
 
         final JTextField durationSelector = new JTextField(5);
-        final JComboBox<TimeUnit> unitSelector = new JComboBox<>(controller.getTimeUnits());
+        final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
+        unitSelector.setModel(new DefaultComboBoxModel<>(controller.getTimeUnits()));
 
         int defaultValue = controller.getTimeValue();
         TimeUnit defaultUnit = controller.getTimeUnit();
@@ -112,6 +133,30 @@ public class RecentTimeSeriesChartPanel extends JPanel {
         container.add(unitSelector);
 
         return container;
+    }
+
+    private Component getAdditionalDataDisplay() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        labelContainer = new JPanel();
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.fill = GridBagConstraints.BOTH;
+        constraints.anchor = GridBagConstraints.CENTER;
+        panel.add(labelContainer, constraints);
+        return panel;
+    }
+
+    public void setDataInformationLabel(final String text) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                if (label == null) {
+                    label = new ValueField(text);
+                    labelContainer.add(label);
+                }
+
+                label.setText(text);
+            }
+        });
     }
 
     private static class TimeUnitChangeListener implements DocumentListener, ActionListener {
