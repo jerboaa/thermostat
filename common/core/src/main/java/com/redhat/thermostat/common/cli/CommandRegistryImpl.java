@@ -38,84 +38,56 @@ package com.redhat.thermostat.common.cli;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
-public class CommandRegistryImpl extends BaseCommandRegistry {
+import com.redhat.thermostat.common.utils.ServiceRegistry;
 
-    private static final Logger log = Logger.getLogger(CommandRegistryImpl.class.getName());
+public class CommandRegistryImpl implements CommandRegistry {
 
     private BundleContext context;
-
-    private List<ServiceRegistration> ourRegistrations = new ArrayList<ServiceRegistration>();
+    private ServiceRegistry<Command> proxy;
+    private Collection<Command> myRegisteredCommands;
 
     public CommandRegistryImpl(BundleContext ctx) {
         context = ctx;
+        proxy = new ServiceRegistry<Command>(ctx, Command.class.getName());
+        myRegisteredCommands = new ArrayList<>();
     }
 
-    protected ServiceRegistration registerCommand(Command cmd) {
+    @Override
+    public void registerCommand(Command cmd) {
         if (cmd instanceof OSGiContext) {
             ((OSGiContext) cmd).setBundleContext(context);
         }
-        
-        Hashtable<String, String> props = new Hashtable<>();
-        props.put(Command.NAME, cmd.getName());
-        ServiceRegistration registration = context.registerService(Command.class.getName(), cmd, props);
-        ourRegistrations.add(registration);
-        return registration;
+        cmd.enable();
+        proxy.registerService(cmd, cmd.getName());
+        myRegisteredCommands.add(cmd);
+    }
+
+    @Override
+    public void registerCommands(Iterable<? extends Command> cmds) {
+        for (Command cmd : cmds) {
+            registerCommand(cmd);
+        }
     }
 
     @Override
     public void unregisterCommands() {
-        Iterator<ServiceRegistration> iter = ourRegistrations.iterator();
-        while (iter.hasNext()) {
-            ServiceRegistration registration = iter.next();
-            Object serviceObject =  context.getService(registration.getReference());
-            Command cmd = (Command) serviceObject;
-            cmd.disable();
-            registration.unregister();
-            iter.remove();
+        for (Command command : myRegisteredCommands) {
+            command.disable();
         }
+        proxy.unregisterAll();
     }
 
     @Override
     public Command getCommand(String name) {
-        ServiceReference[] refs = getCommandServiceRefs("(&(objectclass=*)(" + Command.NAME + "=" + name + "))");
-        if (refs == null || refs.length == 0) {
-            return null;
-        } else if (refs.length > 1) {
-            log.warning("More than one command implementation found for: " + name);
-        }
-        ServiceReference ref = refs[0];
-        return (Command) context.getService(ref);
+        return proxy.getService(name);
     }
 
     @Override
     public Collection<Command> getRegisteredCommands() {
-        ServiceReference[] refs = getCommandServiceRefs(null);
-        List<Command> cmds = new ArrayList<>();
-        for (ServiceReference ref : refs) {
-            Command cmd = (Command) context.getService(ref);
-            cmds.add(cmd);
-        }
-        return cmds;
-    }
-
-    private ServiceReference[] getCommandServiceRefs(String filter) {
-        ServiceReference[] refs;
-        try {
-            refs = context.getServiceReferences(Command.class.getName(), filter);
-        } catch (InvalidSyntaxException e) {
-            throw (InternalError) new InternalError().initCause(e);
-        }
-        return refs;
+        return proxy.getRegisteredServices();
     }
 
 }

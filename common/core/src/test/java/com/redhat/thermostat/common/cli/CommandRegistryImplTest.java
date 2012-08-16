@@ -58,6 +58,8 @@ import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.common.utils.ServiceRegistry;
+
 public class CommandRegistryImplTest {
 
     private CommandRegistryImpl commandRegistry;
@@ -85,9 +87,9 @@ public class CommandRegistryImplTest {
         commandRegistry.registerCommands(Arrays.asList(cmd1, cmd2));
 
         Hashtable<String,Object> props1 = new Hashtable<>();
-        props1.put(Command.NAME, "test1");
+        props1.put(ServiceRegistry.SERVICE_NAME, "test1");
         Hashtable<String,Object> props2 = new Hashtable<>();
-        props2.put(Command.NAME, "test2");
+        props2.put(ServiceRegistry.SERVICE_NAME, "test2");
         verify(bundleContext).registerService(Command.class.getName(), cmd1, props1);
         verify(bundleContext).registerService(Command.class.getName(), cmd2, props2);
 
@@ -96,7 +98,7 @@ public class CommandRegistryImplTest {
     }
 
     @Test
-    public void testUnregisterCommand() {
+    public void testUnregisterCommand() throws InvalidSyntaxException {
         Command cmd1 = mock(Command.class);
         when(cmd1.getName()).thenReturn("test1");
         Command cmd2 = mock(Command.class);
@@ -111,9 +113,9 @@ public class CommandRegistryImplTest {
         when(cmd2Reg.getReference()).thenReturn(cmd2Reference);
 
         Hashtable<String,String> props1 = new Hashtable<>();
-        props1.put(Command.NAME, cmd1.getName());
+        props1.put(ServiceRegistry.SERVICE_NAME, cmd1.getName());
         Hashtable<String,String> props2 = new Hashtable<>();
-        props2.put(Command.NAME, cmd2.getName());
+        props2.put(ServiceRegistry.SERVICE_NAME, cmd2.getName());
 
         when(bundleContext.registerService(Command.class.getName(), cmd1, props1)).thenReturn(cmd1Reg);
         when(bundleContext.registerService(Command.class.getName(), cmd2, props2)).thenReturn(cmd2Reg);
@@ -125,13 +127,12 @@ public class CommandRegistryImplTest {
 
         when(bundleContext.getService(eq(cmd1Reference))).thenReturn(cmd1);
         when(bundleContext.getService(eq(cmd2Reference))).thenReturn(cmd2);
+        when(bundleContext.getServiceReferences(Command.class.getName(), (String) null)).thenReturn(new ServiceReference[] {cmd1Reference, cmd2Reference});
 
         commandRegistry.unregisterCommands();
 
-        verify(bundleContext).getService(cmd1Reference);
         verify(cmd1).disable();
         verify(cmd1Reg).unregister();
-        verify(bundleContext).getService(cmd2Reference);
         verify(cmd2).disable();
         verify(cmd2Reg).unregister();
 
@@ -141,7 +142,7 @@ public class CommandRegistryImplTest {
     @Test
     public void testGetCommand() throws InvalidSyntaxException {
         ServiceReference ref1 = mock(ServiceReference.class);
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(COMMAND_NAME=test1))")).thenReturn(new ServiceReference[] { ref1 });
+        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenReturn(new ServiceReference[] { ref1 });
         Command cmd1 = mock(Command.class);
         when(bundleContext.getService(ref1)).thenReturn(cmd1);
 
@@ -163,7 +164,7 @@ public class CommandRegistryImplTest {
 
     @Test
     public void testNotRegisteredCommandEmptyList() throws InvalidSyntaxException {
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(COMMAND_NAME=test1))")).thenReturn(new ServiceReference[0]);
+        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenReturn(new ServiceReference[0]);
 
         Command cmd = commandRegistry.getCommand("test1");
 
@@ -176,7 +177,7 @@ public class CommandRegistryImplTest {
         ServiceReference ref2 = mock(ServiceReference.class);
         Command cmd1 = mock(Command.class);
         Command cmd2 = mock(Command.class);
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(COMMAND_NAME=test1))")).thenReturn(new ServiceReference[] { ref1, ref2 });
+        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenReturn(new ServiceReference[] { ref1, ref2 });
         when(bundleContext.getService(ref1)).thenReturn(cmd1);
         when(bundleContext.getService(ref2)).thenReturn(cmd2);
 
@@ -187,7 +188,7 @@ public class CommandRegistryImplTest {
 
     @Test(expected=InternalError.class)
     public void testGetCommandInvalidSyntax() throws InvalidSyntaxException {
-        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(COMMAND_NAME=test1))")).thenThrow(new InvalidSyntaxException("test", "test"));
+        when(bundleContext.getServiceReferences(Command.class.getName(), "(&(objectclass=*)(servicename=test1))")).thenThrow(new InvalidSyntaxException("test", "test"));
 
         commandRegistry.getCommand("test1");
     }

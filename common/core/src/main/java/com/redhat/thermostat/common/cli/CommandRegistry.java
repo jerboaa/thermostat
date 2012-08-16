@@ -38,16 +38,16 @@ package com.redhat.thermostat.common.cli;
 
 import java.util.Collection;
 
-import org.osgi.framework.ServiceRegistration;
-
 public interface CommandRegistry {
 
-    public abstract Collection<ServiceRegistration> registerCommands(Iterable<? extends Command> cmds);
+    public void registerCommand(Command cmd);
 
-    public abstract void unregisterCommands();
+    public void registerCommands(Iterable<? extends Command> cmds);
 
-    public abstract Command getCommand(String name);
+    public void unregisterCommands();
 
-    public abstract Collection<Command> getRegisteredCommands();
+    public Command getCommand(String name);
+
+    public Collection<Command> getRegisteredCommands();
 
 }

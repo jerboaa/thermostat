@@ -37,37 +37,13 @@
 package com.redhat.thermostat.test;
 
 import java.util.Collection;
-import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
-
-import com.redhat.thermostat.common.cli.BaseCommandRegistry;
+import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.Command;
 
-class TestCommandRegistry extends BaseCommandRegistry {
-
-    private static class TestServiceRegistration implements ServiceRegistration {
-
-        @Override
-        public ServiceReference getReference() {
-            // Nothing to do for now.
-            return null;
-        }
-
-        @Override
-        public void setProperties(Dictionary properties) {
-            // Nothing to do for now.
-        }
-
-        @Override
-        public void unregister() {
-            // Nothing to do for now.
-        }
-
-    }
+class TestCommandRegistry implements CommandRegistry {
 
     private Map<String, Command> commands = new HashMap<>();
 
@@ -79,13 +55,19 @@ class TestCommandRegistry extends BaseCommandRegistry {
         return commands.values();
     }
 
-    protected ServiceRegistration registerCommand(Command cmd) {
+    public void registerCommand(Command cmd) {
         commands.put(cmd.getName(), cmd);
-        return new TestServiceRegistration();
     }
 
     @Override
     public void unregisterCommands() {
         commands.clear();
+    }
+
+    @Override
+    public void registerCommands(Iterable<? extends Command> cmds) {
+        for (Command cmd : cmds) {
+            registerCommand(cmd);
+        }
     }
 }

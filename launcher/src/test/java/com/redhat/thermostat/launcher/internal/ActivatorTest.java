@@ -54,7 +54,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -62,16 +61,15 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.bundles.OSGiRegistryService;
-import com.redhat.thermostat.common.CommandLoadingBundleActivator;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.utils.ServiceRegistry;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.launcher.internal.Activator.RegisterLauncherAction;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Activator.class, CommandLoadingBundleActivator.class, RegisterLauncherAction.class, BundleActivator.class})
+@PrepareForTest({Activator.class})
 public class ActivatorTest {
 
     private BundleContext context;
@@ -100,6 +98,7 @@ public class ActivatorTest {
         when(context.registerService(eq(Command.class.getName()), any(), isA(Dictionary.class))).
                 thenReturn(helpCommandRegistration);
         when(context.getService(helpCommandReference)).thenReturn(helpCommand);
+        when(context.getServiceReferences(Command.class.getName(), null)).thenReturn(new ServiceReference[] {helpCommandReference});
 
         tracker = mock(MultipleServiceTracker.class);
         whenNew(MultipleServiceTracker.class).
@@ -115,7 +114,7 @@ public class ActivatorTest {
         activator.start(context);
 
         Hashtable<String, Object> props = new Hashtable<>();
-        props.put(Command.NAME, "help");
+        props.put(ServiceRegistry.SERVICE_NAME, "help");
         verify(context).registerService(eq(Command.class.getName()), isA(HelpCommand.class), eq(props));
 
         ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
