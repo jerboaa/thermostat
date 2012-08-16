@@ -36,63 +36,26 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Category {
-    private final String name;
-    private final Map<String, Key<?>> keys;
+public class Categories {
 
-    private ConnectionKey connectionKey;
+    private static final Map<String, Category> namesToCategories = new HashMap<>();
 
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name, Key<?>... keys) {
-        if (Categories.contains(name)) {
-            throw new IllegalStateException();
+    public static synchronized boolean contains(String name) {
+        return namesToCategories.containsKey(name);
+    }
+
+    public static synchronized void add(Category category) {
+        if (namesToCategories.containsKey(category.getName())) {
+            throw new IllegalArgumentException("category already registered");
         }
-        this.name = name;
-        Map<String, Key<?>> keysMap = new HashMap<String, Key<?>>();
-        for (Key<?> key : keys) {
-            keysMap.put(key.getName(), key);
-        }
-        this.keys = Collections.unmodifiableMap(keysMap);
-        Categories.add(this);
+        namesToCategories.put(category.getName(), category);
     }
 
-    public String getName() {
-        return name;
+    public static synchronized Category getByName(String categoryName) {
+        return namesToCategories.get(categoryName);
     }
 
-    public synchronized Collection<Key<?>> getKeys() {
-        return keys.values();
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
-    }
-
-    public Key<?> getKey(String name) {
-        return keys.get(name);
-    }
-
-    @Override
-    public String toString() {
-        return getName();
-    }
 }

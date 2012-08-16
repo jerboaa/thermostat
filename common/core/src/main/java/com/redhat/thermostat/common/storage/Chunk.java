@@ -38,7 +38,6 @@ package com.redhat.thermostat.common.storage;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -47,10 +46,15 @@ import java.util.Set;
  * that exists behind the storage layer.
  */
 public class Chunk {
-    private final Category category;
     private final boolean replace;
 
+    protected Category category;
     private Map<Key<?>, Object> values = new LinkedHashMap<Key<?>, Object>();
+
+    protected Chunk() {
+        // FIXME this replace is wrong. it depends on the type of data we are interested in
+        replace = false;
+    }
 
     /**
      *
@@ -60,6 +64,7 @@ public class Chunk {
      * or be added to a set of values in this category
      */
     public Chunk(Category category, boolean replace) {
+        // FIXME the insertion behaviour should not be part of the data structure itself
         this.category = category;
         this.replace = replace;
     }
@@ -92,29 +97,7 @@ public class Chunk {
             return false;
         }
         Chunk other = (Chunk) o;
-        return equalCategory(other) && equalValues(other);
-
-    }
-
-    private boolean equalCategory(Chunk other) {
-        return category == other.category;
-    }
-
-    private boolean equalValues(Chunk other) {
-        if (values.size() != other.values.size()) {
-            return false;
-        }
-        for (Entry<Key<?>, Object> entry : values.entrySet()) {
-            if (! equalEntry(other, entry)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean equalEntry(Chunk other, Entry<Key<?>, Object> entry) {
-        Key<?> key = entry.getKey();
-        return other.values.containsKey(key) && Objects.equals(other.values.get(key), values.get(key));
+        return Objects.equals(this.category, other.category) && Objects.equals(this.values, other.values);
     }
 
 }

@@ -36,63 +36,13 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public class Category {
-    private final String name;
-    private final Map<String, Key<?>> keys;
-
-    private ConnectionKey connectionKey;
-
-    /**
-     * Creates a new Category instance with the specified name.
-     *
-     * @param name the name of the category
-     *
-     * @throws IllegalArgumentException if a Category is created with a name that has been used before
-     */
-    public Category(String name, Key<?>... keys) {
-        if (Categories.contains(name)) {
-            throw new IllegalStateException();
-        }
-        this.name = name;
-        Map<String, Key<?>> keysMap = new HashMap<String, Key<?>>();
-        for (Key<?> key : keys) {
-            keysMap.put(key.getName(), key);
-        }
-        this.keys = Collections.unmodifiableMap(keysMap);
-        Categories.add(this);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public synchronized Collection<Key<?>> getKeys() {
-        return keys.values();
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
-    }
-
-    public Key<?> getKey(String name) {
-        return keys.get(name);
-    }
-
-    @Override
-    public String toString() {
-        return getName();
-    }
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Persist {
+    public String name() default "";
 }

@@ -70,6 +70,7 @@
     <jdktools.version>1.7.0</jdktools.version>
     <jfreechart.version>1.0.14</jfreechart.version>
     <mongo-driver.version>2.7.3</mongo-driver.version>
+    <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-cli.version>1.2</commons-cli.version>
     <jline.version>2.5</jline.version>
     <lucene.version>3.6.0</lucene.version>
@@ -225,6 +226,11 @@
         <groupId>org.mongodb</groupId>
         <artifactId>mongo-java-driver</artifactId>
         <version>${mongo-driver.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-beanutils</groupId>
+        <artifactId>commons-beanutils</artifactId>
+        <version>${commons-beanutils.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-cli</groupId>
