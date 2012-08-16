@@ -86,6 +86,12 @@ public class AgentConfigsUtils {
             String purge = (String) properties.get(AgentProperties.SAVE_ON_EXIT.name());
             configuration.setPurge(!Boolean.parseBoolean(purge));
         }
+
+        configuration.setConfigListenPort(12000); // Needs some default value.
+        if (properties.containsKey(AgentProperties.CONFIG_LISTEN_PORT.name())) {
+            String port = properties.getProperty(AgentProperties.CONFIG_LISTEN_PORT.name());
+            configuration.setConfigListenPort(Integer.parseInt(port));
+        }
     }
     
 }

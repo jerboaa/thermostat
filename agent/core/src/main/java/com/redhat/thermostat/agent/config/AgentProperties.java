@@ -42,5 +42,6 @@ public enum AgentProperties {
     BACKENDS,
     DEBUG_CONSOLE,
     DB_URL,
-    SAVE_ON_EXIT
+    SAVE_ON_EXIT,
+    CONFIG_LISTEN_PORT,
 }

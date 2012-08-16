@@ -49,10 +49,10 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 
-class ConfigurationServerContext extends ConfigurationCommandContext {
+class ConfigurationServerContext implements ConfigurationCommandContext {
 
-    final ServerBootstrap bootstrap;
-    final ChannelGroup channels;
+    private final ServerBootstrap bootstrap;
+    private final ChannelGroup channels;
 
     ConfigurationServerContext() {
         bootstrap = createBootstrap();

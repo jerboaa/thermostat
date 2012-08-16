@@ -47,7 +47,7 @@ import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 
-public class ConfigurationRequestContext extends ConfigurationCommandContext {
+public class ConfigurationRequestContext implements ConfigurationCommandContext {
 
     private final ClientBootstrap bootstrap;
 

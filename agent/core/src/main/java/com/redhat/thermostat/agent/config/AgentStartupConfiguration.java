@@ -62,6 +62,7 @@ public class AgentStartupConfiguration implements StartupConfiguration, Authenti
     private String password;
 
     private long startTime;
+    private int configListenPort;
     
     AgentStartupConfiguration() {
         this.backends = new ArrayList<>();
@@ -152,5 +153,13 @@ public class AgentStartupConfiguration implements StartupConfiguration, Authenti
     @Override
     public String getPassword() {
         return password;
+    }
+
+    public void setConfigListenPort(int port) {
+        configListenPort = port;
+    }
+
+    public int getConfigListenPort() {
+        return configListenPort;
     }
 }

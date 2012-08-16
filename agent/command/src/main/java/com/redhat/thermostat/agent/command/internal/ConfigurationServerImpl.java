@@ -36,27 +36,32 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.net.InetSocketAddress;
+
 import org.jboss.netty.bootstrap.ServerBootstrap;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 
 class ConfigurationServerImpl implements ConfigurationServer {
 
+    private static final String HOST = "127.0.0.1";
     private final ConfigurationServerContext ctx;
 
     ConfigurationServerImpl(ConfigurationServerContext ctx) {
         this.ctx = ctx;
     }
 
-    void startup() {
-
+    @Override
+    public void startListening(int configListenPort) {
         ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
 
         // Bind and start to accept incoming connections.
-        bootstrap.bind(ctx.getAddress());
+        bootstrap.bind(new InetSocketAddress(HOST, configListenPort));
     }
 
-    void shutdown() {
+    @Override
+    public void stopListening() {
         ctx.getChannelGroup().close().awaitUninterruptibly();
+        ctx.getBootstrap().releaseExternalResources();
     }
 }

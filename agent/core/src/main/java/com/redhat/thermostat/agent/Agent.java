@@ -40,7 +40,6 @@ import java.util.UUID;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.agent.config.ConfigurationWatcher;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
@@ -64,7 +63,7 @@ public class Agent {
     private AgentInformation agentInfo;
     
     private Storage storage;
-    private Thread configWatcherThread = null;
+    private boolean started = false;
 
     public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daos) {
         this(backendRegistry, UUID.randomUUID(), config, daos);
@@ -101,12 +100,11 @@ public class Agent {
     }
 
     public synchronized void start() throws LaunchException {
-        if (configWatcherThread == null) {
+        if (!started) {
             startBackends();
             agentInfo = createAgentInformation();
             storage.addAgentInformation(agentInfo);
-            configWatcherThread = new Thread(new ConfigurationWatcher(storage, backendRegistry), "Configuration Watcher");
-            configWatcherThread.start();
+            started = true;
         } else {
             logger.warning("Attempt to start agent when already started.");
         }
@@ -123,20 +121,12 @@ public class Agent {
             agentInfo.addBackend(backendInfo);
         }
         agentInfo.setAlive(true);
+        agentInfo.setConfigListenPort(config.getConfigListenPort());
         return agentInfo;
     }
 
     public synchronized void stop() {
-        if (configWatcherThread != null) {
-            configWatcherThread.interrupt(); // This thread checks for its own interrupted state and ends if interrupted.
-            while (configWatcherThread.isAlive()) {
-                try {
-                    configWatcherThread.join();
-                } catch (InterruptedException e) {
-                    logger.fine("Interrupted while waiting for ConfigurationWatcher to die.");
-                }
-            }
-            configWatcherThread = null;
+        if (started) {
 
             stopBackends();
             if (config.purge()) {
@@ -149,7 +139,7 @@ public class Agent {
                 agentInfo.setAlive(false);
                 storage.updateAgentInformation(agentInfo);
             }
-            
+            started = false;
         } else {
             logger.warning("Attempt to stop agent which is not active");
         }

@@ -46,16 +46,21 @@ import org.osgi.framework.BundleContext;
 
 public class Activator implements BundleActivator {
 
+    ExecutorService e;
+
+    public Activator() {
+        e = Executors.newSingleThreadExecutor();
+    }
+
     @Override
     public void start(BundleContext context) throws Exception {
         Thermostat thermostat = new Thermostat(context);
-        ExecutorService e = Executors.newSingleThreadExecutor();
         e.execute(thermostat);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // nothing to do here
+        e.shutdownNow();
     }
 
 }

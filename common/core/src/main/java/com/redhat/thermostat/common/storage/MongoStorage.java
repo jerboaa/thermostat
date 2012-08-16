@@ -55,6 +55,7 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 
@@ -255,6 +256,7 @@ public class MongoStorage extends Storage {
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_STOP_TIME, agentInfo.getStopTime());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ALIVE, agentInfo.isAlive());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_LISTEN_PORT, agentInfo.getConfigListenPort());
         
         BasicDBObject backends = new BasicDBObject();
         for (BackendInformation backend : agentInfo.getBackends()) {
@@ -386,6 +388,23 @@ public class MongoStorage extends Storage {
             return (String) value;
         }
         return null;
+    }
+
+    @Override
+    public int getConfigListenPort(HostRef ref) {
+        return getConfigListenPort(ref.getAgentId());
+    }
+
+    private int getConfigListenPort(String id) {
+        int port = -1;
+        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
+        BasicDBObject query = new BasicDBObject(KEY_AGENT_ID, id);
+        DBObject config = configCollection.findOne(query);
+        Object value = config.get(StorageConstants.KEY_AGENT_CONFIG_LISTEN_PORT);
+        if (value instanceof Integer) {
+            port = (int) value;
+        }
+        return port;
     }
 
     @Override

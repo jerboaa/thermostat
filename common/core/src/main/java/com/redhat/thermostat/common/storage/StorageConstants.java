@@ -51,4 +51,6 @@ public class StorageConstants {
 
     public static final String KEY_AGENT_CONFIG_AGENT_ALIVE = "alive";
     public static final String KEY_AGENT_CONFIG_AGENT_STOP_TIME = "stop-time";
+
+    public static final String KEY_AGENT_CONFIG_LISTEN_PORT = "config-listen-port";
 }

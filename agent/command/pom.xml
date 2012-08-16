@@ -46,7 +46,7 @@
   </parent>
 
   <artifactId>thermostat-agent-command</artifactId>
-  <packaging>jar</packaging>
+  <packaging>bundle</packaging>
 
   <name>Thermostat Command Channel Server</name>
 
@@ -78,14 +78,12 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
-      <scope>provided</scope>
     </dependency>
 
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-command</artifactId>
       <version>${project.version}</version>
-      <type>jar</type>
     </dependency>
     
   </dependencies>
@@ -99,13 +97,15 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.agent.config.command.internal.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.agent.command.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.agent.command
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.command.internal
             </Private-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
           </instructions>
         </configuration>
       </plugin>

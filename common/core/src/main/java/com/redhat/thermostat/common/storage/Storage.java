@@ -39,6 +39,8 @@ package com.redhat.thermostat.common.storage;
 import java.io.InputStream;
 import java.util.UUID;
 
+import com.redhat.thermostat.common.dao.HostRef;
+
 
 public abstract class Storage {
 
@@ -84,6 +86,8 @@ public abstract class Storage {
      * @return {@code null} if the value is invalid or missing
      */
     public abstract String getBackendConfig(String backendName, String configurationKey);
+
+    public abstract int getConfigListenPort(HostRef ref);
 
     public abstract void saveFile(String filename, InputStream data);
 

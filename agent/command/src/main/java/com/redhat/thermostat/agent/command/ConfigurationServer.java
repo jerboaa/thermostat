@@ -38,4 +38,8 @@ package com.redhat.thermostat.agent.command;
 
 public interface ConfigurationServer {
 
+    void startListening(int configListenPort);
+
+    void stopListening();
+
 }

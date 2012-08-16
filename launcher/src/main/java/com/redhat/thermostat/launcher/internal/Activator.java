@@ -73,7 +73,6 @@ public class Activator extends CommandLoadingBundleActivator {
 
     @SuppressWarnings("rawtypes")
     private ServiceRegistration launcherServiceRegistration;
-    @SuppressWarnings("rawtypes")
     private MultipleServiceTracker tracker;
 
     @Override

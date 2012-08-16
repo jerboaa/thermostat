@@ -42,6 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.Agent;
+import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
@@ -66,6 +67,7 @@ import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -136,6 +138,9 @@ public final class AgentApplication extends BasicCommand {
         connection.connect();
         logger.fine("Connecting to storage...");
 
+        final ConfigurationServer configServer = OSGIUtils.getInstance().getService(ConfigurationServer.class);
+        configServer.startListening(configuration.getConfigListenPort());
+
         BackendRegistry backendRegistry = null;
         try {
             backendRegistry = new BackendRegistry(configuration);
@@ -163,6 +168,7 @@ public final class AgentApplication extends BasicCommand {
         final CountDownLatch shutdownLatch = new CountDownLatch(1);
         Signal.handle(new Signal("INT"), new SignalHandler() {
             public void handle(sun.misc.Signal sig) {
+                configServer.stopListening();
                 agent.stop();
                 logger.fine("Agent stopped.");       
                 shutdownLatch.countDown();
@@ -170,7 +176,7 @@ public final class AgentApplication extends BasicCommand {
         });
         try {
             shutdownLatch.await();
-            logger.fine("terimating agent cmd");
+            logger.fine("terminating agent cmd");
         } catch (InterruptedException e) {
             return;
         }

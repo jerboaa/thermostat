@@ -41,16 +41,16 @@ import java.util.logging.Logger;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
-
-
 
 public class Activator implements BundleActivator {
 
     private static final Logger logger = Logger.getLogger(Activator.class.getSimpleName());
 
     private ConfigurationServerImpl confServer;
+    private ServiceRegistration registration;
 
     public Activator() {
         confServer = new ConfigurationServerImpl(new ConfigurationServerContext());
@@ -59,13 +59,14 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {    
         logger.log(Level.INFO, "activating thermostat-agent-confserver");
-        context.registerService(ConfigurationServer.class.getName(), confServer, null);
-        confServer.startup();
+        registration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        confServer.shutdown();
+        if (registration != null) {
+            registration.unregister();
+        }
     }
 
 }

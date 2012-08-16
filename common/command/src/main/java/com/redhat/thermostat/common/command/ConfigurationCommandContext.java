@@ -36,19 +36,10 @@
 
 package com.redhat.thermostat.common.command;
 
-import java.net.InetSocketAddress;
-
 import org.jboss.netty.bootstrap.Bootstrap;
 
-public abstract class ConfigurationCommandContext {
+public interface ConfigurationCommandContext {
 
-    private static final String HOST = "127.0.0.1";
-    private static final int PORT = 12000;
-
-    public abstract Bootstrap getBootstrap();
-
-    public InetSocketAddress getAddress() {
-        return new InetSocketAddress(HOST, PORT);
-    }
+    public Bootstrap getBootstrap();
 
 }

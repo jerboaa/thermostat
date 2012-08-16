@@ -58,7 +58,6 @@ public class ConfigurationServerImplTest {
     private ConfigurationServerContext ctx;
     ChannelGroup cg;
     ServerBootstrap bootstrap;
-    InetSocketAddress addr;
 
     @Before
     public void setUp() {
@@ -66,18 +65,16 @@ public class ConfigurationServerImplTest {
         ChannelGroupFuture future = mock(ChannelGroupFuture.class);
         when(cg.close()).thenReturn(future);
         bootstrap = mock(ServerBootstrap.class);
-        addr = new InetSocketAddress(123);
         ctx = mock(ConfigurationServerContext.class);
         when(ctx.getBootstrap()).thenReturn(bootstrap);
         when(ctx.getChannelGroup()).thenReturn(cg);
-        when(ctx.getAddress()).thenReturn(addr);
     }
 
     @Test
-    public void testStartup() {
+    public void testStartListening() {
+        InetSocketAddress addr = new InetSocketAddress("127.0.0.1", 123);
         ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
-        server.startup();
-
+        server.startListening(addr.getPort());
 
         ArgumentCaptor<InetSocketAddress> argument = ArgumentCaptor.forClass(InetSocketAddress.class);
         verify(bootstrap).bind(argument.capture());
@@ -85,9 +82,9 @@ public class ConfigurationServerImplTest {
     }
 
     @Test
-    public void testShutdown() {
+    public void testStopListening() {
         ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
-        server.shutdown();
+        server.stopListening();
 
         verify(cg).close();
     }
