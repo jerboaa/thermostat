@@ -34,12 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command;
+package com.redhat.thermostat.client.command.internal;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.MessageEvent;
+
+import com.redhat.thermostat.common.command.EncodingHelper;
+import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
 
-public interface RequestQueue {
 
-    public void putRequest(Request request);
+class RequestEncoder extends MessageEncoder {
+
+    @Override
+    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) {
+
+        Request request = (Request) e.getMessage();
+
+        // Request Type
+        String requestType = EncodingHelper.trimType(request.getType().toString());
+        byte[] message = requestType.getBytes();
+        ChannelBuffer typeBuffer = EncodingHelper.encode(message);
+
+        // Compose the full message.
+        ChannelBuffer buf = wrappedBuffer(typeBuffer);
+        Channels.write(ctx, e.getFuture(), buf);
+    }
 
 }

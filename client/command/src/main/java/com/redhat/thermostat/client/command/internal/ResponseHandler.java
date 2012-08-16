@@ -34,27 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command;
+package com.redhat.thermostat.client.command.internal;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
+import java.util.logging.Logger;
+
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
-import com.redhat.thermostat.common.command.DecodingHelper;
-import com.redhat.thermostat.common.command.MessageDecoder;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
 
-class ResponseDecoder extends MessageDecoder {
+public class ResponseHandler extends SimpleChannelUpstreamHandler {
 
-    @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel,
-            ChannelBuffer buffer) {
-        String typeAsString = DecodingHelper.decodeString(buffer);
-        if (typeAsString == null) {
-            return null;
-        }
-        return new Response(ResponseType.valueOf(typeAsString));
+    private static final Logger logger = Logger.getLogger(
+            ResponseHandler.class.getName());
+
+    private final Request request;
+
+    ResponseHandler(Request request) {
+        this.request = request;
     }
 
+    @Override
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
+        ctx.getPipeline().remove(this);
+        Response response = (Response) e.getMessage();
+        logger.info((response).getType().toString());
+        e.getChannel().close();
+        for (RequestResponseListener listener : request.getListeners()) {
+            listener.fireComplete(request, response);
+        }
+    }
 }

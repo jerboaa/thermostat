@@ -34,37 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command;
+package com.redhat.thermostat.client.command.internal;
 
-import java.util.logging.Logger;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import com.redhat.thermostat.client.command.RequestQueue;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.command.Response;
+public class Activator implements BundleActivator {
 
-public class ResponseHandler extends SimpleChannelUpstreamHandler {
+    private RequestQueueImpl queue;
+    private ServiceRegistration queueRegistration;
 
-    private static final Logger logger = Logger.getLogger(
-            ResponseHandler.class.getName());
-
-    private final Request request;
-
-    ResponseHandler(Request request) {
-        this.request = request;
+    public Activator() {
+        queue = new RequestQueueImpl(new ConfigurationRequestContext());
     }
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        ctx.getPipeline().remove(this);
-        Response response = (Response) e.getMessage();
-        logger.info((response).getType().toString());
-        e.getChannel().close();
-        for (RequestResponseListener listener : request.getListeners()) {
-            listener.fireComplete(request, response);
+    public void start(BundleContext context) throws Exception {
+        queueRegistration = context.registerService(RequestQueue.class.getName(), queue, null);
+        queue.startProcessingRequests();
+    }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        queue.stopProcessingRequests();
+        if (queueRegistration != null) {
+            queueRegistration.unregister();
         }
     }
+
 }
