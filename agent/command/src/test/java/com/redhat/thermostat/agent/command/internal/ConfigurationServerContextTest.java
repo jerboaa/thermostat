@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -48,11 +48,10 @@ import org.jboss.netty.channel.group.ChannelGroup;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.command.ConfigurationServer;
-import com.redhat.thermostat.agent.command.ConfigurationServerContext;
-import com.redhat.thermostat.agent.command.RequestDecoder;
-import com.redhat.thermostat.agent.command.ResponseEncoder;
-import com.redhat.thermostat.agent.command.ServerHandler;
+import com.redhat.thermostat.agent.command.internal.ConfigurationServerContext;
+import com.redhat.thermostat.agent.command.internal.RequestDecoder;
+import com.redhat.thermostat.agent.command.internal.ResponseEncoder;
+import com.redhat.thermostat.agent.command.internal.ServerHandler;
 
 public class ConfigurationServerContextTest {
 
@@ -102,6 +101,6 @@ public class ConfigurationServerContextTest {
     public void testChannelGroup() {
         ChannelGroup cg = ctx.getChannelGroup();
         assertNotNull(cg);
-        assertEquals(ConfigurationServer.class.getName(), cg.getName());
+        assertEquals(ConfigurationServerImpl.class.getName(), cg.getName());
     }
 }

@@ -34,58 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
+import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
 
+import com.redhat.thermostat.common.command.DecodingHelper;
+import com.redhat.thermostat.common.command.MessageDecoder;
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.common.command.Response.ResponseType;
 
-public class ServerHandler extends SimpleChannelHandler {
-
-    private static final Logger logger = Logger.getLogger(ServerHandler.class.getName());
+class RequestDecoder extends MessageDecoder {
 
     @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-        Request request = (Request) e.getMessage();
-        logger.info("Request received: " + request.getType().toString());
-        Response response = doRequest(request);
-        Channel channel = ctx.getChannel();
-        if (channel.isConnected()) {
-            logger.info("Sending response: " + response.getType().toString());
-            ChannelFuture f = channel.write(response);
-
-            f.addListener(ChannelFutureListener.CLOSE);
-        } else {
-            logger.warning("Channel not connected.");
+    protected Object decode(ChannelHandlerContext ctx, Channel channel,
+            ChannelBuffer buffer) {
+        String typeAsString = DecodingHelper.decodeString(buffer);
+        if (typeAsString == null) {
+            return null;
         }
+        return new Request(RequestType.valueOf(typeAsString), channel.getRemoteAddress());
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.log(Level.WARNING, "Unexpected exception from downstream.", e.getCause());
-        e.getChannel().close();
-    }
-
-    private Response doRequest(Request request) {
-        Response response = new Response(ResponseType.ERROR);
-        switch ((RequestType) request.getType()) {
-        case PING:
-            response = new Response(ResponseType.PONG);
-            break;
-        default:
-        }
-        return response;
-    }
 }

@@ -90,7 +90,7 @@
     
   </dependencies>
 
-  <!-- build>
+  <build>
     <plugins>
       <plugin>
         <groupId>org.apache.felix</groupId>
@@ -99,17 +99,17 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.agent.config.command.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.agent.config.command.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.agent.command
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.agent.command.osgi
+              com.redhat.thermostat.agent.command.internal
             </Private-Package>
           </instructions>
         </configuration>
       </plugin>
     </plugins>
-  </build -->
+  </build>
 
 </project>

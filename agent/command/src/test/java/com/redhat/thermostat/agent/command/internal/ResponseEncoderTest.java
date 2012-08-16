@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
 import java.nio.ByteBuffer;
 
@@ -51,7 +51,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.agent.command.ResponseEncoder;
+import com.redhat.thermostat.agent.command.internal.ResponseEncoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 

@@ -36,25 +36,6 @@
 
 package com.redhat.thermostat.agent.command;
 
-import org.jboss.netty.bootstrap.ServerBootstrap;
+public interface ConfigurationServer {
 
-public class ConfigurationServer {
-
-    private final ConfigurationServerContext ctx;
-
-    public ConfigurationServer(ConfigurationServerContext ctx) {
-        this.ctx = ctx;
-    }
-
-    public void startup() {
-
-        ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
-
-        // Bind and start to accept incoming connections.
-        bootstrap.bind(ctx.getAddress());
-    }
-
-    public void shutdown() {
-        ctx.getChannelGroup().close().awaitUninterruptibly();
-    }
 }

@@ -34,27 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.bootstrap.ServerBootstrap;
 
-import com.redhat.thermostat.common.command.DecodingHelper;
-import com.redhat.thermostat.common.command.MessageDecoder;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.agent.command.ConfigurationServer;
 
-class RequestDecoder extends MessageDecoder {
+class ConfigurationServerImpl implements ConfigurationServer {
 
-    @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel,
-            ChannelBuffer buffer) {
-        String typeAsString = DecodingHelper.decodeString(buffer);
-        if (typeAsString == null) {
-            return null;
-        }
-        return new Request(RequestType.valueOf(typeAsString), channel.getRemoteAddress());
+    private final ConfigurationServerContext ctx;
+
+    ConfigurationServerImpl(ConfigurationServerContext ctx) {
+        this.ctx = ctx;
     }
 
+    void startup() {
+
+        ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
+
+        // Bind and start to accept incoming connections.
+        bootstrap.bind(ctx.getAddress());
+    }
+
+    void shutdown() {
+        ctx.getChannelGroup().close().awaitUninterruptibly();
+    }
 }

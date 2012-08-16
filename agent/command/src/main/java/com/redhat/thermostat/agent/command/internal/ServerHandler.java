@@ -34,35 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
-import org.jboss.netty.buffer.ChannelBuffer;
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelHandler;
 
-import com.redhat.thermostat.common.command.EncodingHelper;
-import com.redhat.thermostat.common.command.MessageEncoder;
+import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 
+class ServerHandler extends SimpleChannelHandler {
 
-class ResponseEncoder extends MessageEncoder {
+    private static final Logger logger = Logger.getLogger(ServerHandler.class.getName());
 
     @Override
-    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) {
+    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
+        Request request = (Request) e.getMessage();
+        logger.info("Request received: " + request.getType().toString());
+        Response response = doRequest(request);
+        Channel channel = ctx.getChannel();
+        if (channel.isConnected()) {
+            logger.info("Sending response: " + response.getType().toString());
+            ChannelFuture f = channel.write(response);
 
-        Response response = (Response) e.getMessage();
-
-        // Response Type
-        String responseType = EncodingHelper.trimType(response.getType().toString());
-        byte[] message = responseType.getBytes();
-        ChannelBuffer typeBuffer = EncodingHelper.encode(message);
-
-        // Compose the full message.
-        ChannelBuffer buf = wrappedBuffer(typeBuffer);
-        Channels.write(ctx, e.getFuture(), buf);
-        
+            f.addListener(ChannelFutureListener.CLOSE);
+        } else {
+            logger.warning("Channel not connected.");
+        }
     }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+        logger.log(Level.WARNING, "Unexpected exception from downstream.", e.getCause());
+        e.getChannel().close();
+    }
+
+    private Response doRequest(Request request) {
+        Response response = new Response(ResponseType.ERROR);
+        switch ((RequestType) request.getType()) {
+        case PING:
+            response = new Response(ResponseType.PONG);
+            break;
+        default:
+        }
+        return response;
+    }
 }

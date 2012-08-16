@@ -34,62 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
-import java.net.InetSocketAddress;
-
-import org.jboss.netty.bootstrap.ServerBootstrap;
-import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.channel.group.ChannelGroupFuture;
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.Channel;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.command.ConfigurationServer;
-import com.redhat.thermostat.agent.command.ConfigurationServerContext;
+import com.redhat.thermostat.agent.command.internal.RequestDecoder;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Request.RequestType;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-public class ConfigurationServerTest {
+public class RequestDecoderTest {
+    private static final byte[] PING = "PING".getBytes();
 
-    private ConfigurationServerContext ctx;
-    ChannelGroup cg;
-    ServerBootstrap bootstrap;
-    InetSocketAddress addr;
+    private ChannelBuffer buffer;
+    private Channel channel;
 
     @Before
     public void setUp() {
-        cg = mock(ChannelGroup.class);
-        ChannelGroupFuture future = mock(ChannelGroupFuture.class);
-        when(cg.close()).thenReturn(future);
-        bootstrap = mock(ServerBootstrap.class);
-        addr = new InetSocketAddress(123);
-        ctx = mock(ConfigurationServerContext.class);
-        when(ctx.getBootstrap()).thenReturn(bootstrap);
-        when(ctx.getChannelGroup()).thenReturn(cg);
-        when(ctx.getAddress()).thenReturn(addr);
+        channel = mock(Channel.class);
+        
+        buffer = ChannelBuffers.dynamicBuffer();
+        buffer.writeInt(PING.length);
+        buffer.writeBytes(PING);
     }
 
     @Test
-    public void testStartup() {
-        ConfigurationServer server = new ConfigurationServer(ctx);
-        server.startup();
+    public void testDecode() {
+        RequestDecoder decoder = new RequestDecoder();
+        Request request = (Request) decoder.decode(null, channel, buffer);
 
-
-        ArgumentCaptor<InetSocketAddress> argument = ArgumentCaptor.forClass(InetSocketAddress.class);
-        verify(bootstrap).bind(argument.capture());
-        assertEquals(addr, argument.getValue());
+        assertTrue(RequestType.PING == (RequestType) request.getType());
     }
-
-    @Test
-    public void testShutdown() {
-        ConfigurationServer server = new ConfigurationServer(ctx);
-        server.shutdown();
-
-        verify(cg).close();
-    }
-    
 }

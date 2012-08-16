@@ -34,9 +34,8 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.osgi;
+package com.redhat.thermostat.agent.command.internal;
 
-import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,26 +43,23 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
-import com.redhat.thermostat.agent.command.ConfigurationServerContext;
+
+
 
 public class Activator implements BundleActivator {
 
     private static final Logger logger = Logger.getLogger(Activator.class.getSimpleName());
-    private static final String SERVICE_NAME = "com.redhat.thermostat.agent.config.netty.ConfigurationServer";
 
-    private ConfigurationServer confServer;
+    private ConfigurationServerImpl confServer;
 
     public Activator() {
-        confServer = new ConfigurationServer(new ConfigurationServerContext());
+        confServer = new ConfigurationServerImpl(new ConfigurationServerContext());
     }
 
     @Override
     public void start(BundleContext context) throws Exception {    
         logger.log(Level.INFO, "activating thermostat-agent-confserver");
-
-        Hashtable<String, String> props = new Hashtable<String, String>();
-        props.put(SERVICE_NAME, SERVICE_NAME);
-        context.registerService(ConfigurationServer.class.getName(), confServer, props);
+        context.registerService(ConfigurationServer.class.getName(), confServer, null);
         confServer.startup();
     }
 

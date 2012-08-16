@@ -34,41 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
 import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.channel.Channel;
-import org.junit.Before;
-import org.junit.Test;
+import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.MessageEvent;
 
-import com.redhat.thermostat.agent.command.RequestDecoder;
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.EncodingHelper;
+import com.redhat.thermostat.common.command.MessageEncoder;
+import com.redhat.thermostat.common.command.Response;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
-public class RequestDecoderTest {
-    private static final byte[] PING = "PING".getBytes();
+class ResponseEncoder extends MessageEncoder {
 
-    private ChannelBuffer buffer;
-    private Channel channel;
+    @Override
+    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) {
 
-    @Before
-    public void setUp() {
-        channel = mock(Channel.class);
+        Response response = (Response) e.getMessage();
+
+        // Response Type
+        String responseType = EncodingHelper.trimType(response.getType().toString());
+        byte[] message = responseType.getBytes();
+        ChannelBuffer typeBuffer = EncodingHelper.encode(message);
+
+        // Compose the full message.
+        ChannelBuffer buf = wrappedBuffer(typeBuffer);
+        Channels.write(ctx, e.getFuture(), buf);
         
-        buffer = ChannelBuffers.dynamicBuffer();
-        buffer.writeInt(PING.length);
-        buffer.writeBytes(PING);
     }
 
-    @Test
-    public void testDecode() {
-        RequestDecoder decoder = new RequestDecoder();
-        Request request = (Request) decoder.decode(null, channel, buffer);
-
-        assertTrue(RequestType.PING == (RequestType) request.getType());
-    }
 }

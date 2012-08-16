@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command;
+package com.redhat.thermostat.agent.command.internal;
 
 import java.util.concurrent.Executors;
 
@@ -49,12 +49,12 @@ import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 
-public class ConfigurationServerContext extends ConfigurationCommandContext {
+class ConfigurationServerContext extends ConfigurationCommandContext {
 
     final ServerBootstrap bootstrap;
     final ChannelGroup channels;
 
-    public ConfigurationServerContext() {
+    ConfigurationServerContext() {
         bootstrap = createBootstrap();
         channels = createChannelGroup();
     }
@@ -65,7 +65,7 @@ public class ConfigurationServerContext extends ConfigurationCommandContext {
     }
 
     private ChannelGroup createChannelGroup() {
-        return new DefaultChannelGroup(ConfigurationServer.class.getName());
+        return new DefaultChannelGroup(ConfigurationServerImpl.class.getName());
     }
 
     private ServerBootstrap createBootstrap() {
@@ -99,7 +99,7 @@ public class ConfigurationServerContext extends ConfigurationCommandContext {
         
     }
 
-    public ChannelGroup getChannelGroup() {
+    ChannelGroup getChannelGroup() {
         return channels;
     }
 
