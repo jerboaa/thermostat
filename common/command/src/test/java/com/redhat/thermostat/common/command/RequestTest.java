@@ -43,7 +43,6 @@ import static org.junit.Assert.assertTrue;
 import java.net.InetSocketAddress;
 import java.util.Collection;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.command.Request;

@@ -39,12 +39,14 @@ package com.redhat.thermostat.client.command.internal;
 import java.util.logging.Logger;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 
 public class ResponseHandler extends SimpleChannelUpstreamHandler {
 
@@ -63,6 +65,17 @@ public class ResponseHandler extends SimpleChannelUpstreamHandler {
         Response response = (Response) e.getMessage();
         logger.info((response).getType().toString());
         e.getChannel().close();
+        notifyListeners(response);
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
+        // TODO when response has support for parameters, provide the exception as well.
+        Response response = new Response(ResponseType.EXCEPTION);
+        notifyListeners(response);
+    }
+
+    private void notifyListeners(Response response) {
         for (RequestResponseListener listener : request.getListeners()) {
             listener.fireComplete(request, response);
         }

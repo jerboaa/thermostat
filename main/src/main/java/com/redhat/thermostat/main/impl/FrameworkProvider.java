@@ -62,7 +62,6 @@ import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.ConfigurationException;
 import com.redhat.thermostat.launcher.Launcher;
 
-
 public class FrameworkProvider {
 
     private static final String DEBUG_PREFIX = "FrameworkProvider: ";

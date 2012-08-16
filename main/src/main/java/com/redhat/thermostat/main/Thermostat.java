@@ -62,9 +62,6 @@ public class Thermostat implements Runnable {
         this.context = context;
     }
 
-    // This is our ticket into OSGi land. Unfortunately, we need the reflection.  The launcher
-    // is instantiated from within a bundle, which means it comes from its own classloader (so
-    // we cannot simply cast it).
     private void launch()
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
             FileNotFoundException, IOException, BundleException, InterruptedException {
@@ -72,8 +69,8 @@ public class Thermostat implements Runnable {
         ServiceTracker tracker = new ServiceTracker(context, Launcher.class.getName(), null);
         tracker.open();
         launcher = (Launcher) tracker.waitForService(0);
-        tracker.close();
         launcher.run();
+        tracker.close();
     }
 
     @Override

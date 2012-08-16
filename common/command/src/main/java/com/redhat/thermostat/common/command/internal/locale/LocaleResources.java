@@ -33,41 +33,11 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.common.command.internal.locale;
 
-package com.redhat.thermostat.client.command.internal;
+public enum LocaleResources {
+    ARGUMENT_HEAP_ID_DESCRIPTION,
+    ARGUMENT_FILE_NAME_DESCRIPTION;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-
-import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.CommandLoadingBundleActivator;
-
-public class Activator extends CommandLoadingBundleActivator {
-
-    private RequestQueueImpl queue;
-    private ServiceRegistration queueRegistration;
-    private ConfigurationRequestContext configContext;
-
-    public Activator() {
-        configContext = new ConfigurationRequestContext();
-        queue = new RequestQueueImpl(configContext);
-    }
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        queueRegistration = context.registerService(RequestQueue.class.getName(), queue, null);
-        queue.startProcessingRequests();
-        super.start(context);
-    }
-
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        queue.stopProcessingRequests();
-        if (queueRegistration != null) {
-            queueRegistration.unregister();
-        }
-        configContext.getBootstrap().releaseExternalResources();
-        super.stop(context);
-    }
-
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.common.command.internal.strings";
 }

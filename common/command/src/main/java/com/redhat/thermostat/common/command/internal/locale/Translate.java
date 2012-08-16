@@ -34,40 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.command.internal;
+package com.redhat.thermostat.common.command.internal.locale;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import java.text.MessageFormat;
+import java.util.ResourceBundle;
 
-import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.CommandLoadingBundleActivator;
+public class Translate {
 
-public class Activator extends CommandLoadingBundleActivator {
+    private static ResourceBundle resourceBundle = null;
 
-    private RequestQueueImpl queue;
-    private ServiceRegistration queueRegistration;
-    private ConfigurationRequestContext configContext;
-
-    public Activator() {
-        configContext = new ConfigurationRequestContext();
-        queue = new RequestQueueImpl(configContext);
+    static {
+        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
     }
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        queueRegistration = context.registerService(RequestQueue.class.getName(), queue, null);
-        queue.startProcessingRequests();
-        super.start(context);
+    public static String localize(LocaleResources toTranslate) {
+        return resourceBundle.getString(toTranslate.name());
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        queue.stopProcessingRequests();
-        if (queueRegistration != null) {
-            queueRegistration.unregister();
-        }
-        configContext.getBootstrap().releaseExternalResources();
-        super.stop(context);
+    public static String localize(LocaleResources toTranslate, String... params) {
+        return MessageFormat.format(localize(toTranslate), (Object[]) params);
     }
 
 }

@@ -41,9 +41,14 @@ package com.redhat.thermostat.common.command;
 
 public class Response implements Message {
 
+    // TODO add parameter support to provide more information in some of these types.
     public enum ResponseType implements MessageType {
-        PONG,
-        ERROR;
+        PONG,      // Just here as response to PING.
+        OK,        // Request has been acknowledged and completed agent-side.
+        NOK,       // Request has been acknowledged and refused agent-side.
+        NOOP,      // Request has been acknowledged, but no action deemed necessary agent-side.
+        ERROR,     // An error on the agent side.
+        EXCEPTION; // Exception caught by channel handler.  Agent-side status unknown.
     }
 
     ResponseType type;
