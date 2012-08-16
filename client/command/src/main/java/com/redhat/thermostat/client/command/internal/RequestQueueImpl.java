@@ -50,7 +50,8 @@ class RequestQueueImpl implements RequestQueue {
 
     private final BlockingQueue<Request> queue;
     private final ConfigurationRequestContext ctx;
-    private boolean processing;
+    private volatile boolean processing;
+    private Thread runningThread;
 
     RequestQueueImpl(ConfigurationRequestContext ctx) {
         processing = false;
@@ -63,21 +64,30 @@ class RequestQueueImpl implements RequestQueue {
         queue.add(request);
     }
 
-    void startProcessingRequests() {
-        if (!processing) {
+    synchronized void startProcessingRequests() {
+        if (!running()) {
             processing = true;
             new QueueRunner().start();
         }
     }
 
-    void stopProcessingRequests() {
-        processing = false;
+    synchronized void stopProcessingRequests() {
+        if (running()) {
+            processing = false;
+            runningThread.interrupt();
+            runningThread = null;
+        }
+    }
+
+    private boolean running() {
+        return runningThread != null && runningThread.isAlive();
     }
 
     private class QueueRunner extends Thread {
 
         @Override
         public void run() {
+            runningThread = Thread.currentThread();
             while (processing) {
                 Request request = null;
                 try {
