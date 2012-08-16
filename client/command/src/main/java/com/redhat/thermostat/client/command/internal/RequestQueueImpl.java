@@ -91,6 +91,7 @@ class RequestQueueImpl implements RequestQueue {
             while (processing) {
                 Request request = null;
                 try {
+                    // This will block until available (or interrupted).
                     request = queue.take();
                 } catch (InterruptedException e) {
                     if (Thread.interrupted()) {

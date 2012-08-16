@@ -44,14 +44,52 @@ public class DecodingHelper {
         if (buffer.readableBytes() < 4) {
             return null;
         }
-        buffer.markReaderIndex();
         int length = buffer.readInt();
+        return decodeString(length, buffer);
+    }
+
+    public static boolean decodeParameters(ChannelBuffer buffer, Request request) {
+        int bytesLeft = buffer.readableBytes();
+        if (bytesLeft == 0) {
+            // Exactly zero parameters in this request.
+            return true;
+        }
+        if (bytesLeft < 4) {
+            // Bad encoding or some stream issue.
+            return false;
+        }
+        int numParms = buffer.readInt();
+        for (int i = 0; i < numParms; i++) {
+            if (!decodeParameter(buffer, request)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static boolean decodeParameter(ChannelBuffer buffer, Request request) {
+        if (buffer.readableBytes() < 8) {
+            return false;
+        }
+        int nameLength = buffer.readInt();
+        int valueLength = buffer.readInt();
+        String name = decodeString(nameLength, buffer);
+        if (name == null) {
+            return false;
+        }
+        String value = decodeString(valueLength, buffer);
+        if (value == null) {
+            return false;
+        }
+        request.setParameter(name, value);
+        return true;
+    }
+
+    private static String decodeString(int length, ChannelBuffer buffer) {
         if (buffer.readableBytes() < length) {
-            buffer.resetReaderIndex();
             return null;
         }
         byte[] stringBytes = buffer.readBytes(length).array();
         return new String(stringBytes);
     }
-
 }

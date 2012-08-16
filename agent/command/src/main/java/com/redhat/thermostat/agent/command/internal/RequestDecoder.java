@@ -50,11 +50,18 @@ class RequestDecoder extends MessageDecoder {
     @Override
     protected Object decode(ChannelHandlerContext ctx, Channel channel,
             ChannelBuffer buffer) {
+        buffer.markReaderIndex();
         String typeAsString = DecodingHelper.decodeString(buffer);
         if (typeAsString == null) {
+            buffer.resetReaderIndex();
             return null;
         }
-        return new Request(RequestType.valueOf(typeAsString), channel.getRemoteAddress());
+        Request request = new Request(RequestType.valueOf(typeAsString), channel.getRemoteAddress());
+        if (!DecodingHelper.decodeParameters(buffer, request)) {
+            buffer.resetReaderIndex();
+            return null;
+        }
+        return request;
     }
 
 }

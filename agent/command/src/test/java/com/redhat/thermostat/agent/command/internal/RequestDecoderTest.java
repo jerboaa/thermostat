@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.util.Collection;
+
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
@@ -46,29 +48,52 @@ import com.redhat.thermostat.agent.command.internal.RequestDecoder;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class RequestDecoderTest {
     private static final byte[] PING = "PING".getBytes();
 
-    private ChannelBuffer buffer;
     private Channel channel;
+    private RequestDecoder decoder;
 
     @Before
     public void setUp() {
         channel = mock(Channel.class);
-        
-        buffer = ChannelBuffers.dynamicBuffer();
-        buffer.writeInt(PING.length);
-        buffer.writeBytes(PING);
+        decoder = new RequestDecoder();
     }
 
     @Test
     public void testDecode() {
-        RequestDecoder decoder = new RequestDecoder();
+        ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+        buffer.writeInt(PING.length);
+        buffer.writeBytes(PING);
+
         Request request = (Request) decoder.decode(null, channel, buffer);
 
         assertTrue(RequestType.PING == (RequestType) request.getType());
+    }
+
+    @Test
+    public void testDecodeWithParameters() {
+        String parmName = "parameter";
+        String parmValue = "hello";
+        ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
+        buffer.writeInt(PING.length);
+        buffer.writeBytes(PING);
+        buffer.writeInt(1);
+        buffer.writeInt(parmName.getBytes().length);
+        buffer.writeInt(parmValue.getBytes().length);
+        buffer.writeBytes(parmName.getBytes());
+        buffer.writeBytes(parmValue.getBytes());
+        
+        Request request = (Request) decoder.decode(null, channel, buffer);
+        Collection<String> parmNames = request.getParameterNames();
+
+        assertEquals(1, parmNames.size());
+        assertTrue(parmNames.contains(parmName));
+        String decodedValue = request.getParameter(parmName);
+        assertEquals(parmValue, decodedValue);
     }
 }

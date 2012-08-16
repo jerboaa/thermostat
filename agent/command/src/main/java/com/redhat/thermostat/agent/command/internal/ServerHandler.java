@@ -65,7 +65,6 @@ class ServerHandler extends SimpleChannelHandler {
         if (channel.isConnected()) {
             logger.info("Sending response: " + response.getType().toString());
             ChannelFuture f = channel.write(response);
-
             f.addListener(ChannelFutureListener.CLOSE);
         } else {
             logger.warning("Channel not connected.");

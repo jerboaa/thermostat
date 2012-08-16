@@ -39,6 +39,8 @@ package com.redhat.thermostat.common.command;
 import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 
@@ -49,11 +51,13 @@ public class Request implements Message {
     }
 
     private final RequestType type;
+    private final Map<String, String> parameters;
     private final SocketAddress target;
     private final Collection<RequestResponseListener> listeners;
- 
+
     public Request(RequestType type, SocketAddress target) {
         this.type = type;
+        parameters = new TreeMap<>();
         this.target = target;
         listeners = new CopyOnWriteArrayList<>();
     }
@@ -61,6 +65,18 @@ public class Request implements Message {
     @Override
     public MessageType getType() {
         return type;
+    }
+
+    public void setParameter(String name, String value) {
+        parameters.put(name, value);
+    }
+
+    public String getParameter(String name) {
+        return parameters.get(name);
+    }
+
+    public Collection<String> getParameterNames() {
+        return parameters.keySet();
     }
 
     public SocketAddress getTarget() {

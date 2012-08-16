@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.client.command.internal;
 
+import java.util.Collection;
+
 import org.jboss.netty.buffer.ChannelBuffer;
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.MessageEvent;
@@ -46,6 +47,8 @@ import com.redhat.thermostat.common.command.EncodingHelper;
 import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
 
+import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
+import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
 
 class RequestEncoder extends MessageEncoder {
 
@@ -56,11 +59,20 @@ class RequestEncoder extends MessageEncoder {
 
         // Request Type
         String requestType = EncodingHelper.trimType(request.getType().toString());
-        byte[] message = requestType.getBytes();
-        ChannelBuffer typeBuffer = EncodingHelper.encode(message);
+        ChannelBuffer typeBuffer = EncodingHelper.encode(requestType);
+
+        // Parameters
+        // TODO: if in practice parms take up more than 256 bytes, use appropriate
+        // dynamicBuffer() variant to specify initial/estimated capacity.
+        ChannelBuffer parmsBuffer = dynamicBuffer();
+        Collection<String> parmNames = request.getParameterNames();
+        parmsBuffer.writeInt(parmNames.size());
+        for (String parmName : parmNames) {
+            EncodingHelper.encode(parmName, request.getParameter(parmName), parmsBuffer);
+        }
 
         // Compose the full message.
-        ChannelBuffer buf = wrappedBuffer(typeBuffer);
+        ChannelBuffer buf = wrappedBuffer(typeBuffer, parmsBuffer);
         Channels.write(ctx, e.getFuture(), buf);
     }
 

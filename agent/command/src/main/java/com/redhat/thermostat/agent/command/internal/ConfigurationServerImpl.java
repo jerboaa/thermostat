@@ -62,6 +62,7 @@ class ConfigurationServerImpl implements ConfigurationServer {
     @Override
     public void stopListening() {
         ctx.getChannelGroup().close().awaitUninterruptibly();
+        ctx.getChannelGroup().clear();
         ctx.getBootstrap().releaseExternalResources();
     }
 }

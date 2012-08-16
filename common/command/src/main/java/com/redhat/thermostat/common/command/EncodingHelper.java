@@ -41,7 +41,21 @@ import static org.jboss.netty.buffer.ChannelBuffers.buffer;
 
 public class EncodingHelper {
 
-    public static ChannelBuffer encode(byte[] message) {
+    public static void encode(String name, String value, ChannelBuffer dynamicBuffer) {
+        byte[] nameBytes = name.getBytes();
+        byte[] valueBytes = value.getBytes();
+        dynamicBuffer.writeInt(nameBytes.length);
+        dynamicBuffer.writeInt(valueBytes.length);
+        dynamicBuffer.writeBytes(nameBytes);
+        dynamicBuffer.writeBytes(valueBytes);
+    }
+
+    public static ChannelBuffer encode(String message) {
+        byte[] messageBytes = message.getBytes();
+        return encode(messageBytes);
+    }
+    
+    private static ChannelBuffer encode(byte[] message) {
         ChannelBuffer buf = buffer(4 + message.length);
         buf.writeInt(message.length);
         buf.writeBytes(message);

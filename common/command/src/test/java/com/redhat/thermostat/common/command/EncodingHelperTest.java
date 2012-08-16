@@ -49,16 +49,17 @@ public class EncodingHelperTest {
 
     @Test
     public void testEncode() {
-        byte[] input = "a test string".getBytes();
+        String input = "a test string";
+        byte[] inputBytes = input.getBytes();
         ChannelBuffer buf = EncodingHelper.encode(input);
         int encodedMessageLength = buf.readInt();
-        assertEquals(input.length, encodedMessageLength);
+        assertEquals(inputBytes.length, encodedMessageLength);
         ByteBuffer bbuf = ByteBuffer.allocate(buf.readableBytes());
         buf.readBytes(bbuf);
         byte[] output = bbuf.array();
-        assertEquals(input.length, output.length);
-        for (int i = 0; i < input.length; i++) {
-            assertEquals(input[i], output[i]);
+        assertEquals(inputBytes.length, output.length);
+        for (int i = 0; i < inputBytes.length; i++) {
+            assertEquals(inputBytes[i], output[i]);
         }
     }
 

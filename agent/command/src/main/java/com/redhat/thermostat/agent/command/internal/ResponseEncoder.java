@@ -56,8 +56,7 @@ class ResponseEncoder extends MessageEncoder {
 
         // Response Type
         String responseType = EncodingHelper.trimType(response.getType().toString());
-        byte[] message = responseType.getBytes();
-        ChannelBuffer typeBuffer = EncodingHelper.encode(message);
+        ChannelBuffer typeBuffer = EncodingHelper.encode(responseType);
 
         // Compose the full message.
         ChannelBuffer buf = wrappedBuffer(typeBuffer);
