@@ -64,9 +64,9 @@ public class RequestTest {
 
     @Test
     public void testGetTypeAndTarget() {
-        Request request = new Request(RequestType.PING, new InetSocketAddress(HOST, PORT));
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(HOST, PORT));
         RequestType type = (RequestType) request.getType();
-        assertEquals(RequestType.PING, type);
+        assertEquals(RequestType.RESPONSE_EXPECTED, type);
 
         InetSocketAddress target = (InetSocketAddress) request.getTarget();
         assertEquals(PORT, target.getPort());
@@ -75,7 +75,7 @@ public class RequestTest {
 
     @Test
     public void testAddListener() {
-        Request request = new Request(RequestType.PING, new InetSocketAddress(HOST, PORT));
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(HOST, PORT));
         RequestResponseListener listener1 = new RequestResponseListenerImpl();
         RequestResponseListener listener2 = new RequestResponseListenerImpl();
         request.addListener(listener1);
@@ -88,7 +88,7 @@ public class RequestTest {
 
     @Test
     public void testRemoveListener() {
-        Request request = new Request(RequestType.PING, new InetSocketAddress(HOST, PORT));
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, new InetSocketAddress(HOST, PORT));
         RequestResponseListener listener1 = new RequestResponseListenerImpl();
         RequestResponseListener listener2 = new RequestResponseListenerImpl();
         request.addListener(listener1);

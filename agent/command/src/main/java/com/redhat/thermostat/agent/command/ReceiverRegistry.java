@@ -34,65 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
-
-import java.util.ArrayList;
-import java.util.Collection;
+package com.redhat.thermostat.agent.command;
 
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.utils.ServiceRegistry;
 
-/**
- * This class mainly wraps around a ServiceRegistry object, handling the additional
- * non-osgi-specific task of enable/disable of Command objects as they are registered
- * or unregistered.
- */
-public class CommandRegistryImpl implements CommandRegistry {
+public class ReceiverRegistry {
 
-    private BundleContext context;
-    private ServiceRegistry<Command> proxy;
-    private Collection<Command> myRegisteredCommands;
+    private ServiceRegistry<RequestReceiver> proxy;
 
-    public CommandRegistryImpl(BundleContext ctx) {
-        context = ctx;
-        proxy = new ServiceRegistry<Command>(ctx, Command.class.getName());
-        myRegisteredCommands = new ArrayList<>();
+    public ReceiverRegistry(BundleContext context) {
+        proxy = new ServiceRegistry<RequestReceiver>(context, RequestReceiver.class.getName());
     }
 
-    @Override
-    public void registerCommand(Command cmd) {
-        if (cmd instanceof OSGiContext) {
-            ((OSGiContext) cmd).setBundleContext(context);
-        }
-        cmd.enable();
-        proxy.registerService(cmd, cmd.getName());
-        myRegisteredCommands.add(cmd);
+    public void registerReceiver(RequestReceiver receiver) {
+        proxy.registerService(receiver, receiver.getClass().getName());
     }
 
-    @Override
-    public void registerCommands(Iterable<? extends Command> cmds) {
-        for (Command cmd : cmds) {
-            registerCommand(cmd);
-        }
+    public RequestReceiver getReceiver(String clazz) {
+        return proxy.getService(clazz);
     }
 
-    @Override
-    public void unregisterCommands() {
-        for (Command command : myRegisteredCommands) {
-            command.disable();
-        }
+    public void unregisterReceivers() {
         proxy.unregisterAll();
     }
-
-    @Override
-    public Command getCommand(String name) {
-        return proxy.getService(name);
-    }
-
-    @Override
-    public Collection<Command> getRegisteredCommands() {
-        return proxy.getRegisteredServices();
-    }
-
 }

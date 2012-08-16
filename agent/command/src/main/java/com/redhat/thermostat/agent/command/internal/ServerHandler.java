@@ -47,6 +47,8 @@ import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
 
+import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Request.RequestType;
@@ -54,13 +56,25 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 
 class ServerHandler extends SimpleChannelHandler {
 
+    private ReceiverRegistry receivers;
+
+    public ServerHandler(ReceiverRegistry receivers) {
+        this.receivers = receivers;
+    }
+
     private static final Logger logger = Logger.getLogger(ServerHandler.class.getName());
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
         Request request = (Request) e.getMessage();
         logger.info("Request received: " + request.getType().toString());
-        Response response = doRequest(request);
+        RequestReceiver receiver = receivers.getReceiver(request.getReceiver());
+        Response response = null;
+        if (receiver != null) {
+            response = receiver.receive(request);
+        } else {
+            response = new Response(ResponseType.ERROR);
+        }
         Channel channel = ctx.getChannel();
         if (channel.isConnected()) {
             logger.info("Sending response: " + response.getType().toString());
@@ -80,7 +94,7 @@ class ServerHandler extends SimpleChannelHandler {
     private Response doRequest(Request request) {
         Response response = new Response(ResponseType.ERROR);
         switch ((RequestType) request.getType()) {
-        case PING:
+        case RESPONSE_EXPECTED:
             response = new Response(ResponseType.PONG);
             break;
         default:

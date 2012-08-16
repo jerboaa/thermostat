@@ -47,13 +47,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class Request implements Message {
 
     public enum RequestType implements MessageType {
-        PING;
+        NO_RESPONSE_EXPECTED,
+        RESPONSE_EXPECTED,
+        MULTIPART_RESPONSE_EXPECTED;
     }
 
     private final RequestType type;
     private final Map<String, String> parameters;
     private final SocketAddress target;
     private final Collection<RequestResponseListener> listeners;
+
+    private static final String RECEIVER = "receiver";
 
     public Request(RequestType type, SocketAddress target) {
         this.type = type;
@@ -77,6 +81,14 @@ public class Request implements Message {
 
     public Collection<String> getParameterNames() {
         return parameters.keySet();
+    }
+
+    public void setReceiver(String clazz) {
+        setParameter(RECEIVER, clazz);
+    }
+
+    public String getReceiver() {
+        return getParameter(RECEIVER);
     }
 
     public SocketAddress getTarget() {

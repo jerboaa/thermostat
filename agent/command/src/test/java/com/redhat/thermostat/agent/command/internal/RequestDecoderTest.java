@@ -53,7 +53,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 public class RequestDecoderTest {
-    private static final byte[] PING = "PING".getBytes();
+    private static final byte[] TYPE = RequestType.RESPONSE_EXPECTED.toString().getBytes();
 
     private Channel channel;
     private RequestDecoder decoder;
@@ -67,12 +67,12 @@ public class RequestDecoderTest {
     @Test
     public void testDecode() {
         ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
-        buffer.writeInt(PING.length);
-        buffer.writeBytes(PING);
+        buffer.writeInt(TYPE.length);
+        buffer.writeBytes(TYPE);
 
         Request request = (Request) decoder.decode(null, channel, buffer);
 
-        assertTrue(RequestType.PING == (RequestType) request.getType());
+        assertTrue(RequestType.RESPONSE_EXPECTED == (RequestType) request.getType());
     }
 
     @Test
@@ -80,8 +80,8 @@ public class RequestDecoderTest {
         String parmName = "parameter";
         String parmValue = "hello";
         ChannelBuffer buffer = ChannelBuffers.dynamicBuffer();
-        buffer.writeInt(PING.length);
-        buffer.writeBytes(PING);
+        buffer.writeInt(TYPE.length);
+        buffer.writeBytes(TYPE);
         buffer.writeInt(1);
         buffer.writeInt(parmName.getBytes().length);
         buffer.writeInt(parmValue.getBytes().length);

@@ -46,17 +46,21 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 
 class ConfigurationServerContext implements ConfigurationCommandContext {
 
     private final ServerBootstrap bootstrap;
     private final ChannelGroup channels;
+    private final BundleContext context;
 
-    ConfigurationServerContext() {
+    ConfigurationServerContext(BundleContext context) {
         bootstrap = createBootstrap();
         channels = createChannelGroup();
+        this.context = context;
     }
 
     @Override
@@ -93,7 +97,7 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
             ChannelPipeline pipeline = Channels.pipeline();
             pipeline.addLast("decoder", new RequestDecoder());
             pipeline.addLast("encoder", new ResponseEncoder());
-            pipeline.addLast("handler", new ServerHandler());
+            pipeline.addLast("handler", new ServerHandler(new ReceiverRegistry(context)));
             return pipeline;
         }
         

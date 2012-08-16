@@ -44,28 +44,28 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
+import com.redhat.thermostat.agent.command.ReceiverRegistry;
 
 public class Activator implements BundleActivator {
 
     private static final Logger logger = Logger.getLogger(Activator.class.getSimpleName());
 
-    private ConfigurationServerImpl confServer;
-    private ServiceRegistration registration;
-
-    public Activator() {
-        confServer = new ConfigurationServerImpl(new ConfigurationServerContext());
-    }
+    private ServiceRegistration confServerRegistration;
+    private ReceiverRegistry receivers;
 
     @Override
     public void start(BundleContext context) throws Exception {    
         logger.log(Level.INFO, "activating thermostat-agent-confserver");
-        registration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
+        receivers = new ReceiverRegistry(context);
+        receivers.registerReceiver(new PingReceiver());
+        ConfigurationServerImpl confServer = new ConfigurationServerImpl(new ConfigurationServerContext(context));
+        confServerRegistration = context.registerService(ConfigurationServer.class.getName(), confServer, null);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (registration != null) {
-            registration.unregister();
+        if (confServerRegistration != null) {
+            confServerRegistration.unregister();
         }
     }
 

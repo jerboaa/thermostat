@@ -118,7 +118,8 @@ public class PingCommand extends SimpleCommand {
         }
         int port = df.getStorage().getConfigListenPort(targetHostRef);
         InetSocketAddress target = new InetSocketAddress(targetHostRef.getHostName(), port);
-        Request ping = new Request(RequestType.PING, target);
+        Request ping = new Request(RequestType.RESPONSE_EXPECTED, target);
+        ping.setReceiver("com.redhat.thermostat.agent.command.internal.PingReceiver");
         final Semaphore responseBarrier = new Semaphore(0);
         ping.addListener(new PongListener(out, responseBarrier));
 

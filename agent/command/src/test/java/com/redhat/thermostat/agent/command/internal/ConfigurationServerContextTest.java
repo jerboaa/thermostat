@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.command.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.channel.ChannelHandler;
@@ -47,6 +48,7 @@ import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.agent.command.internal.ConfigurationServerContext;
 import com.redhat.thermostat.agent.command.internal.RequestDecoder;
@@ -59,7 +61,8 @@ public class ConfigurationServerContextTest {
 
     @Before
     public void setUp() {
-        ctx = new ConfigurationServerContext();
+        BundleContext bCtx = mock(BundleContext.class);
+        ctx = new ConfigurationServerContext(bCtx);
     }
 
     @Test
