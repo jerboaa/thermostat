@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Version: 0.4.0.qualifier
+Fragment-Host: com.redhat.thermostat.eclipse;bundle-version="0.4.0.qualifier"
+Bundle-Name: Eclipse client tests
+Bundle-SymbolicName: com.redhat.thermostat.eclipse.test
+Bundle-Vendor: Redhat Inc.
+Require-Bundle: org.eclipse.jdt.core,
+ org.junit;bundle-version="3.8.2"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Import-Package: org.mockito,
+ org.mockito.stubbing

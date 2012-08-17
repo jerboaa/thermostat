@@ -1,0 +1,5 @@
+The following Fedora packages required updates (OSGi metadata) in order
+for this fragment to work:
+- mockito
+- hamcrest
+- cglib

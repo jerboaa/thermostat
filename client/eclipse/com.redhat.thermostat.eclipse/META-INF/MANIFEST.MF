@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Thermostat Eclipse Client
+Bundle-Activator: com.redhat.thermostat.eclipse.Activator
+Bundle-SymbolicName: com.redhat.thermostat.eclipse;singleton:=true
+Bundle-Version: 0.4.0.qualifier
+Bundle-Vendor: Red Hat Inc.
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.eclipse.core.runtime;bundle-version="3.8.0",
+ org.eclipse.ui;bundle-version="3.103.0"
+Import-Package: com.mongodb,
+ com.redhat.thermostat.common,
+ com.redhat.thermostat.common.appctx,
+ com.redhat.thermostat.common.config,
+ com.redhat.thermostat.common.dao,
+ com.redhat.thermostat.common.model,
+ com.redhat.thermostat.common.storage
+Eclipse-ExtensibleAPI: true

@@ -36,17 +36,7 @@
 <project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <modelVersion>4.0.0</modelVersion>
-  
-  <parent>
-    <groupId>org.eclipse</groupId>
-    <artifactId>eclipse-parent</artifactId>
-    <version>3</version>
-  </parent>
-  
-  <prerequisites>
-    <maven>3.0</maven>
-  </prerequisites>
-  
+
   <groupId>com.redhat.thermostat.eclipse.parent</groupId>
   <artifactId>thermostat-eclipse-parent</artifactId>
   <version>0.4.0-SNAPSHOT</version>
@@ -65,7 +55,7 @@
     <tycho-extras-version>0.15.0</tycho-extras-version>
     <platform-version-name>juno</platform-version-name>
     <eclipse-site>http://download.eclipse.org/releases/${platform-version-name}</eclipse-site>
-    <orbit-site>http://download.eclipse.org/tools/orbit/downloads/drops/R20110523182458/repository/</orbit-site>
+    <orbit-site>http://download.eclipse.org/tools/orbit/downloads/drops/S20120726065500/repository/</orbit-site>
   </properties>
 
   <profiles>
@@ -100,6 +90,8 @@
   
   <modules>
     <module>com.redhat.thermostat.eclipse.boot</module>
+    <module>com.redhat.thermostat.eclipse</module>
+    <module>com.redhat.thermostat.eclipse.test</module>
   </modules>
 
   <repositories>
@@ -133,6 +125,8 @@
         <version>${tycho-version}</version>
         <configuration>
           <resolver>p2</resolver>
+          <!-- required for Thermostat core deps resolution -->
+          <pomDependencies>consider</pomDependencies>
         </configuration>
       </plugin>
       <plugin>
@@ -167,17 +161,24 @@
           <configuration>
             <encoding>UTF-8</encoding>
           </configuration>
-	    </plugin>
-		<plugin>
-			<groupId>org.eclipse.tycho</groupId>
-			<artifactId>tycho-surefire-plugin</artifactId>
-			<version>${tycho-version}</version>
-			<configuration>
-				<useUIHarness>true</useUIHarness>
-				<useUIThread>true</useUIThread>
-				<product>org.eclipse.sdk.ide</product>
-			</configuration>
-		</plugin>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-surefire-plugin</artifactId>
+          <version>${tycho-version}</version>
+          <configuration>
+            <useUIHarness>false</useUIHarness>
+            <useUIThread>flase</useUIThread>
+            <dependencies>
+              <dependency>
+                <type>p2-installable-unit</type>
+                <artifactId>org.eclipse.sdk.feature.group</artifactId>
+                <version>${sdk-version}</version>
+              </dependency>
+            </dependencies>
+            <product>org.eclipse.sdk.ide</product>
+          </configuration>
+        </plugin>
         <plugin>
           <!-- TODO remove workaround when
              https://issues.sonatype.org/browse/TYCHO-473

@@ -8,27 +8,18 @@
     <version>0.4.0-SNAPSHOT</version>
   </parent>
   <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-  <artifactId>com.redhat.thermostat.eclipse.boot</artifactId>
+  <artifactId>com.redhat.thermostat.eclipse</artifactId>
   <packaging>eclipse-plugin</packaging>
   <version>0.4.0-SNAPSHOT</version>
 
-  <name>Thermostat Eclipse Client Boot Package</name>
+  <name>Thermostat Eclipse Client</name>
 
-  <build>
-     <!-- workaround for https://issues.sonatype.org/browse/TYCHO-168 -->
-     <resources>
-      <resource>
-        <directory>src</directory>
-        <excludes>
-          <exclude>**/*.java</exclude>
-        </excludes>
-      </resource>
-    </resources>
-    <plugins>
-      <plugin>
-        <groupId>org.eclipse.tycho</groupId>
-        <artifactId>tycho-source-plugin</artifactId>
-      </plugin>
-    </plugins>
-  </build>
+  <dependencies>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-core</artifactId>
+      <version>0.4.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
 </project>
