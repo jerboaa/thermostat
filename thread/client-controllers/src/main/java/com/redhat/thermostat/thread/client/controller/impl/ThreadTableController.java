@@ -69,7 +69,7 @@ public class ThreadTableController implements CommonController {
     }
 
     @Override
-    public void initialise() {
+    public void initialize() {
         
         timer.setInitialDelay(0);
         timer.setDelay(1000);

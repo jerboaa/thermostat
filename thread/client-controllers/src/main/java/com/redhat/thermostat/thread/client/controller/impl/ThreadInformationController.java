@@ -195,11 +195,11 @@ public class ThreadInformationController implements VmInformationServiceControll
     private void initControllers() {
         CommonController capsController =
                 new VMThreadCapabilitiesController(view.createVMThreadCapabilitiesView(), collector);
-        capsController.initialise();
+        capsController.initialize();
         
         CommonController threadTableController =
                 new ThreadTableController(view.createThreadTableView(), collector,
                                           ApplicationContext.getInstance().getTimerFactory().createTimer());
-        threadTableController.initialise();
+        threadTableController.initialize();
     }
 }

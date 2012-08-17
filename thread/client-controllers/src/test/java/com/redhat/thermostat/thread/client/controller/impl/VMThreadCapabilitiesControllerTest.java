@@ -84,7 +84,7 @@ public class VMThreadCapabilitiesControllerTest {
         doNothing().when(vmThreadCapsView).addActionListener(viewArgumentCaptor.capture());
         
         VMThreadCapabilitiesController controller = new VMThreadCapabilitiesController(vmThreadCapsView, collector);
-        controller.initialise();
+        controller.initialize();
 
         actionListener = viewArgumentCaptor.getValue();
         actionListener.actionPerformed(new ActionEvent<>(vmThreadCapsView, VMThreadCapabilitiesView.Action.VISIBLE));

@@ -37,5 +37,5 @@
 package com.redhat.thermostat.thread.client.controller.impl;
 
 public interface CommonController {
-    void initialise();
+    void initialize();
 }

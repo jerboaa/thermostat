@@ -54,7 +54,7 @@ public class VMThreadCapabilitiesController implements CommonController {
     }
     
     @Override
-    public void initialise() {
+    public void initialize() {
         view.addActionListener(new ActionListener<Action>() {
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {

@@ -97,7 +97,7 @@ public class ThreadTableControllerTest {
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         
         ThreadTableController controller = new ThreadTableController(view, collector, timer);
-        controller.initialise();
+        controller.initialize();
 
         actionListener = viewArgumentCaptor.getValue();
         actionListener.actionPerformed(new ActionEvent<>(view, ThreadTableView.Action.VISIBLE));
