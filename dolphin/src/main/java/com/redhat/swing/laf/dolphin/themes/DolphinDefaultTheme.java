@@ -415,6 +415,16 @@ public class DolphinDefaultTheme extends DolphinTheme {
     }
     
     @Override
+    public int getOneTouchButtonSize() {
+        return 4;
+    }
+    
+    @Override
+    public int getOneTouchButtonOffset() {
+        return 2;
+    }
+    
+    @Override
     public void addCustomEntriesToTable(UIDefaults table) {
         super.addCustomEntriesToTable(table);
         

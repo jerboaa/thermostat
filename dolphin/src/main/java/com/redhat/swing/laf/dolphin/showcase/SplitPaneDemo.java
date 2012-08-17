@@ -59,6 +59,7 @@ public class SplitPaneDemo extends JFrame {
             public void run() {
                 try {
                     UIManager.setLookAndFeel(new DolphinLookAndFeel());
+                    //UIManager.setLookAndFeel(new javax.swing.plaf.metal.MetalLookAndFeel());
                     
                     SplitPaneDemo frame = new SplitPaneDemo();
                     frame.setVisible(true);
@@ -85,6 +86,7 @@ public class SplitPaneDemo extends JFrame {
         
         JSplitPane splitPane_1 = new JSplitPane();
         splitPane_1.setOrientation(JSplitPane.VERTICAL_SPLIT);
+        splitPane_1.setOneTouchExpandable(true);
         splitPane.setRightComponent(splitPane_1);
         
         JPanel panel = new JPanel();

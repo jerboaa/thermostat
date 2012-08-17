@@ -38,16 +38,17 @@ package com.redhat.swing.laf.dolphin.split;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.RoundRectangle2D;
 
+import javax.swing.JButton;
 import javax.swing.JSplitPane;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
 
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
+@SuppressWarnings("serial")
 public class DolphinSplitPaneDivider extends BasicSplitPaneDivider {
 
     private static final int MARKER_SIZE = 28;
@@ -70,7 +71,7 @@ public class DolphinSplitPaneDivider extends BasicSplitPaneDivider {
     
     @Override
     public void paint(Graphics g) {
-                
+     
         Graphics2D graphics = (Graphics2D) g.create();
         DolphinThemeUtils.setAntialiasing(graphics);
 
@@ -101,5 +102,15 @@ public class DolphinSplitPaneDivider extends BasicSplitPaneDivider {
         graphics.dispose();
         
         super.paint(g);
+    }
+    
+    @Override
+    protected JButton createLeftOneTouchButton() {
+        return super.createLeftOneTouchButton();
+    }
+    
+    @Override
+    protected JButton createRightOneTouchButton() {
+        return super.createRightOneTouchButton();
     }
 }

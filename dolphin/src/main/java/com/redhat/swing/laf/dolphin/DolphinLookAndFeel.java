@@ -150,7 +150,9 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "SplitPane.dividerSize", new Integer(7),
                 "SplitPaneDivider.border", new DolphinSplitPaneDividerBorder(),
                 "SplitPane.border", null,
-                                
+                "SplitPane.oneTouchButtonSize", theme.getOneTouchButtonSize(),
+                "SplitPane.oneTouchButtonOffset", theme.getOneTouchButtonOffset(),
+                
                 "TableHeader.cellBorder", theme.getTableCellBorder(),
                 "TableHeader.focusCellBorder", theme.getTableFocusCellBorder(),
                 "TableHeader.background", theme.getTableHeaderBackgroundColor(),

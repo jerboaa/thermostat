@@ -36,13 +36,10 @@
 
 package com.redhat.swing.laf.dolphin.split;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.LinearGradientPaint;
-import java.awt.RadialGradientPaint;
-import java.awt.geom.Point2D;
+import java.awt.Insets;
 
 import javax.swing.JScrollBar;
 import javax.swing.plaf.basic.BasicSplitPaneDivider;
@@ -52,6 +49,7 @@ import com.redhat.swing.laf.dolphin.borders.DolphinDebugBorder;
 import com.redhat.swing.laf.dolphin.themes.DolphinTheme;
 import com.redhat.swing.laf.dolphin.themes.DolphinThemeUtils;
 
+@SuppressWarnings("serial")
 public class DolphinSplitPaneDividerBorder extends DolphinDebugBorder {
 
     @Override
@@ -81,5 +79,10 @@ public class DolphinSplitPaneDividerBorder extends DolphinDebugBorder {
         }
         
         graphics.dispose();
+    }
+    
+    public Insets getBorderInsets(Component c) {
+        Insets insets = new Insets(1, 1, 1, 1);
+        return insets;
     }
 }
