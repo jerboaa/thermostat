@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.common.utils;
 
+import java.util.Dictionary;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -47,9 +49,19 @@ public class OSGIUtils {
         return instance;
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public <E extends Object> E getService(Class<E> clazz) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
         ServiceReference ref = ctx.getServiceReference(clazz.getName());
         return (E) ctx.getService(ref);
+    }
+    
+    public <E extends Object> void registerService(Class<? extends E> serviceClass, E service) {
+        registerService(serviceClass, service, null);
+    }
+        
+    public <E extends Object> void registerService(Class<? extends E> serviceClass, E service, Dictionary<String, ?> properties) {
+        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ctx.registerService(serviceClass.getName(), service, properties);
     }
 }

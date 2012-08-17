@@ -78,6 +78,7 @@ import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.storage.Connection.ConnectionType;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -283,6 +284,11 @@ public class Main {
         @Override
         public void changed(ConnectionStatus newStatus) {
             if (newStatus == ConnectionStatus.CONNECTED) {
+                
+                // register the storage, so other services can request it
+                Storage storage = ApplicationContext.getInstance().getDAOFactory().getStorage();
+                OSGIUtils.getInstance().registerService(Storage.class, storage);
+
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
                 if (retry) {
