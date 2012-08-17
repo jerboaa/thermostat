@@ -323,5 +323,28 @@
         <artifactId>thermostat-keyring</artifactId>
         <version>${project.version}</version>
     </dependency>
+    
+    <!--  thread plugin -->
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-thread-client-common</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-thread-client-controllers</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-thread-client-swing</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-thread-collector</artifactId>
+        <version>${project.version}</version>
+    </dependency>      
+  
   </dependencies>
 </project>

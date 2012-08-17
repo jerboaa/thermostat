@@ -55,6 +55,7 @@
             <Export-Package>
               com.redhat.thermostat.swing,
               com.redhat.thermostat.models,
+              com.redhat.thermostat.swing.models,
               com.redhat.thermostat.charts
             </Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

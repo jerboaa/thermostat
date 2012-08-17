@@ -58,7 +58,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
 public class MultipleServiceTracker {
 
     public interface Action {
-        public void doIt(Map<Object, Object> services);
+        public void doIt(Map<String, Object> services);
     }
 
     class InternalServiceTrackerCustomizer implements ServiceTrackerCustomizer {
@@ -103,12 +103,12 @@ public class MultipleServiceTracker {
             }
         }
 
-        private Object getServiceClassName(ServiceReference reference) {
+        private String getServiceClassName(ServiceReference reference) {
             return ((String[]) reference.getProperty(OBJECT_CLASS))[0];
         }
     }
 
-    private Map<Object, Object> services;
+    private Map<String, Object> services;
     private Collection<ServiceTracker> trackers;
     private Action action;
     private BundleContext context;
@@ -143,7 +143,7 @@ public class MultipleServiceTracker {
     }
 
     private boolean allServicesReady() {
-        for (Entry<Object, Object> entry: services.entrySet()) {
+        for (Entry<String, Object> entry: services.entrySet()) {
             if (entry.getValue() == null) {
                 return false;
             }

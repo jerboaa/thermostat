@@ -46,7 +46,6 @@ import com.redhat.thermostat.client.heap.HeapView.HeadDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.client.ui.UIComponent;

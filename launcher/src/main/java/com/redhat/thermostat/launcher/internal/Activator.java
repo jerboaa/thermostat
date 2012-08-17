@@ -60,7 +60,7 @@ public class Activator extends CommandLoadingBundleActivator {
             this.context = context;
         }
         @Override
-        public void doIt(Map<Object, Object> services) {
+        public void doIt(Map<String, Object> services) {
             
             ServiceReference reference = context.getServiceReference(OSGiRegistryService.class);
             OSGiRegistryService bundleService = (OSGiRegistryService) context.getService(reference);
