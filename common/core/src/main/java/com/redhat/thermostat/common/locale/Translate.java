@@ -39,19 +39,19 @@ package com.redhat.thermostat.common.locale;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
+
 public class Translate {
 
-    private static ResourceBundle resourceBundle = null;
-
-    static {
-        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
+    private ResourceBundle resourceBundle = null;
+    public Translate(String stringResources) {
+        resourceBundle = ResourceBundle.getBundle(stringResources);
     }
-
-    public static String localize(LocaleResources toTranslate) {
+    
+    public <T extends Enum<?>> String localize(T toTranslate) {
         return resourceBundle.getString(toTranslate.name());
     }
 
-    public static String localize(LocaleResources toTranslate, String... params) {
+    public <T extends Enum<?>> String localize(T toTranslate, String... params) {
         return MessageFormat.format(localize(toTranslate), (Object[]) params);
     }
 }

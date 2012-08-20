@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common;
 
-import static com.redhat.thermostat.common.locale.Translate.localize;
 import static org.junit.Assert.*;
 
 import java.util.Locale;
@@ -61,7 +60,7 @@ public class ApplicationInfoTest {
     @Test
     public void testProperties() {
         ApplicationInfo appInfo = new ApplicationInfo();
-        assertFalse(appInfo.getName().compareTo(localize(LocaleResources.MISSING_INFO)) == 0);
+        assertFalse(appInfo.getName().compareTo(LocaleResources.createLocalizer().localize(LocaleResources.MISSING_INFO)) == 0);
     }
 
     @After

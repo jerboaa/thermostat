@@ -46,8 +46,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.redhat.thermostat.common.locale.Translate.localize;
-
 public class TranslateTest {
 
     private Locale lang;
@@ -65,16 +63,18 @@ public class TranslateTest {
     
     @Test
     public void testLocalizeWithoutArguments() {
-        String testString = localize(LocaleResources.MISSING_INFO);
+        String testString = LocaleResources.createLocalizer().localize(LocaleResources.MISSING_INFO);
         Assert.assertEquals("Missing Information", testString);
     }
     
     @Test
-    public void testLocalizeWithArguments() {        
-        String testString = localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
+    public void testLocalizeWithArguments() {
+        Translate t = LocaleResources.createLocalizer();
+        
+        String testString = t.localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
         Assert.assertEquals("A monitoring and serviceability tool for OpenJDK",
                             testString);
-        testString = localize(LocaleResources.APPLICATION_INFO_LICENSE);
+        testString = t.localize(LocaleResources.APPLICATION_INFO_LICENSE);
         Assert.assertEquals("Licensed under GPLv2+ with Classpath exception",
                 testString);
     }

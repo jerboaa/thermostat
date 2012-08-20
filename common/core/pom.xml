@@ -92,6 +92,7 @@
             <Private-Package>
               com.redhat.thermostat.test,
               com.redhat.thermostat.tools,
+              com.redhat.thermostat.common.locale.impl
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

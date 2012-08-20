@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.common;
 
-import static com.redhat.thermostat.common.locale.Translate.localize;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -45,6 +43,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ApplicationInfo {
@@ -55,6 +54,8 @@ public class ApplicationInfo {
     
     private Properties appInfo;
 
+    private static final Translate t = LocaleResources.createLocalizer();
+    
     public ApplicationInfo() {
         appInfo = new Properties();
         // the properties file should be in the same package as this class
@@ -69,7 +70,7 @@ public class ApplicationInfo {
     }
 
     public String getName() {
-        return appInfo.getProperty("APP_NAME", localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_NAME", t.localize(LocaleResources.MISSING_INFO));
     }
 
     public Version getVersion() {
@@ -77,27 +78,27 @@ public class ApplicationInfo {
     }
 
     public String getDescription() {
-        return localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
+        return t.localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
     }
 
     public String getReleaseDate() {
-        return appInfo.getProperty("APP_RELEASE_DATE", localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_RELEASE_DATE", t.localize(LocaleResources.MISSING_INFO));
     }
 
     public String getCopyright() {
-        return appInfo.getProperty("APP_COPYRIGHT", localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_COPYRIGHT", t.localize(LocaleResources.MISSING_INFO));
     }
 
     public String getLicenseSummary() {
-        return localize(LocaleResources.APPLICATION_INFO_LICENSE);
+        return t.localize(LocaleResources.APPLICATION_INFO_LICENSE);
     }
 
     public String getEmail() {
-        return appInfo.getProperty("APP_EMAIL", localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_EMAIL", t.localize(LocaleResources.MISSING_INFO));
     }
 
     public String getWebsite() {
-        return appInfo.getProperty("APP_WEBSITE", localize(LocaleResources.MISSING_INFO));
+        return appInfo.getProperty("APP_WEBSITE", t.localize(LocaleResources.MISSING_INFO));
     }
 
 }

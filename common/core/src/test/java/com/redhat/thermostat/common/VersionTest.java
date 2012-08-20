@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common;
 
-import static com.redhat.thermostat.common.locale.Translate.localize;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -166,7 +165,7 @@ public class VersionTest {
     private String createFormat() {
         ApplicationInfo appInfo = new ApplicationInfo();
         String format = MessageFormat.format(
-                localize(LocaleResources.APPLICATION_VERSION_INFO),
+                LocaleResources.createLocalizer().localize(LocaleResources.APPLICATION_VERSION_INFO),
                 appInfo.getName())
                 + " " + Version.VERSION_NUMBER_FORMAT;
         return format;

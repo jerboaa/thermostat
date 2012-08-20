@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.launcher;
 
-import static com.redhat.thermostat.common.locale.Translate.localize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -73,6 +72,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -327,8 +327,9 @@ public class LauncherTest {
         int micro = 0;
         
         ApplicationInfo appInfo = new ApplicationInfo();
+        Translate t = LocaleResources.createLocalizer();
         String format = MessageFormat.format(
-                localize(LocaleResources.APPLICATION_VERSION_INFO),
+                t.localize(LocaleResources.APPLICATION_VERSION_INFO),
                 appInfo.getName())
                 + " " + Version.VERSION_NUMBER_FORMAT;
         

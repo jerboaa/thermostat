@@ -35,14 +35,13 @@
  */
 package com.redhat.thermostat.common;
 
-import static com.redhat.thermostat.common.locale.Translate.localize;
-
 import java.text.MessageFormat;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 import com.redhat.thermostat.common.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 
 /**
  * Utility class for Thermostat version info.
@@ -75,8 +74,9 @@ public class Version {
      */
     public String getVersionInfo() {
         ApplicationInfo appInfo = new ApplicationInfo();
+        Translate t = LocaleResources.createLocalizer();
         String format = MessageFormat.format(
-                localize(LocaleResources.APPLICATION_VERSION_INFO),
+                t.localize(LocaleResources.APPLICATION_VERSION_INFO),
                 appInfo.getName())
                 + " " + VERSION_NUMBER_FORMAT;
         return String.format(format, getMajor(), getMinor(), getMicro());

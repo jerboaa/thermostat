@@ -45,6 +45,10 @@ public enum LocaleResources {
     APPLICATION_VERSION_INFO,
     ;
 
-    static final String RESOURCE_BUNDLE =
+    public static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.common.locale.strings";
+    
+    public static Translate createLocalizer() {
+        return new Translate(RESOURCE_BUNDLE);
+    }
 }
