@@ -449,7 +449,8 @@ public class MainWindow extends JFrame implements MainView {
 
     private void setupPanels() {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-
+        splitPane.setOneTouchExpandable(true);
+        
         JPanel navigationPanel = new JPanel(new BorderLayout());
 
         navigationPanel.add(searchField, BorderLayout.PAGE_START);
