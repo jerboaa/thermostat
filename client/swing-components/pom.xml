@@ -52,6 +52,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.client.swing.components</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.swing,
               com.redhat.thermostat.models,

@@ -108,6 +108,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.thread.client.controller.osgi.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.thread.client.controller</Bundle-SymbolicName>
             <Private-Package>
               com.redhat.thermostat.thread.client.controller.osgi,
               com.redhat.thermostat.thread.client.controller.impl,

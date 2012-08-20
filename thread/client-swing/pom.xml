@@ -95,6 +95,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.thread.client.swing</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.thread.client.swing.osgi.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.thread.client.swing,

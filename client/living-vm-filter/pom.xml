@@ -29,6 +29,7 @@
           <instructions>
             <Private-Package>com.redhat.thermostat.client.filter.vm</Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.filter.vm.VMFilterActivator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.filter.livingvm</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

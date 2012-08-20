@@ -23,6 +23,7 @@
             <Export-Package>com.redhat.thermostat.service.process</Export-Package>
             <Bundle-Activator>com.redhat.thermostat.service.activator.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.process</Bundle-SymbolicName>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

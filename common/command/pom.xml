@@ -83,6 +83,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator />
+            <Bundle-SymbolicName>com.redhat.thermostat.common.command</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.common.command,
               com.redhat.thermostat.common.command.cli

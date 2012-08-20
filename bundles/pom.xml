@@ -99,6 +99,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.bundles.impl.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.bundles.core</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.bundles
             </Export-Package>

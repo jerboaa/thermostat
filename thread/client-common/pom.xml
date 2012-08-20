@@ -101,6 +101,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.thread.client.common</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.thread.client.common,
               com.redhat.thermostat.thread.client.common.locale,

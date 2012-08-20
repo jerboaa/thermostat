@@ -20,6 +20,7 @@
         <configuration>
           <instructions>
             <Bundle-Activator>com.redhat.thermostat.utils.keyring.activator.Activator</Bundle-Activator>
+	        <Bundle-SymbolicName>com.redhat.thermostat.keyring</Bundle-SymbolicName>
 	        <Private-Package>com.redhat.thermostat.utils.keyring.activator</Private-Package>
             <Export-Package>com.redhat.thermostat.utils.keyring</Export-Package>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>

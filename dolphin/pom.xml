@@ -50,6 +50,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Bundle-SymbolicName>com.redhat.thermostat.laf.dolphin</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Export-Package>
               com.redhat.swing.laf.dolphin,

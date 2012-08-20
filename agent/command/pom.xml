@@ -98,6 +98,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.agent.command.internal.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.agent.command</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.agent.command
             </Export-Package>

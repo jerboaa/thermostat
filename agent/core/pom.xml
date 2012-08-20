@@ -97,6 +97,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.agent.core</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.agent,
               com.redhat.thermostat.agent.config,

@@ -112,6 +112,7 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.tools.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.tools</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.tools,
               com.redhat.thermostat.tools.cli,

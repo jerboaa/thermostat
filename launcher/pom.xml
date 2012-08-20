@@ -61,6 +61,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.launcher</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.launcher.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.launcher,

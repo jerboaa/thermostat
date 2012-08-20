@@ -20,6 +20,7 @@
             <Private-Package>com.redhat.thermostat.client.vmclassstat</Private-Package>
             <Bundle-Activator>com.redhat.thermostat.client.vmclassstat.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-SymbolicName>com.redhat.thermostat.client.classstat</Bundle-SymbolicName>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

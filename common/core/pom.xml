@@ -75,6 +75,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Bundle-SymbolicName>com.redhat.thermostat.common.core</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Export-Package>
               com.redhat.thermostat.common.cli,
