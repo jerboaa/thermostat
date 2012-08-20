@@ -167,7 +167,7 @@
                 <mkdir dir="${project.build.directory}/agent/logs" />
                 <mkdir dir="${project.build.directory}/agent/run" />
                 <mkdir dir="${project.build.directory}/client" />
-                <mkdir dir="${project.build.directory}/osgi" />
+                <mkdir dir="${project.build.directory}/osgi-cache" />
                 <mkdir dir="${project.build.directory}/libs/native" />
                 
                 <!--  also copy the native libraries -->

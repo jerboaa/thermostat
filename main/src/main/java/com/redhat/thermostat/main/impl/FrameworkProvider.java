@@ -43,6 +43,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -51,10 +53,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 
-import org.osgi.framework.launch.FrameworkFactory;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
+import org.osgi.framework.launch.FrameworkFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.bundles.OSGiRegistryService;
@@ -70,6 +72,8 @@ public class FrameworkProvider {
 
     private boolean printOSGiInfo;
     private String thermostatHome;
+    // The framework cache location; Must not be shared between apps!
+    private Path osgiCacheStorage;
 
     public FrameworkProvider(Configuration config) {
         printOSGiInfo = config.getPrintOSGiInfo();
@@ -139,6 +143,11 @@ public class FrameworkProvider {
                     if (printOSGiInfo) {
                         System.out.println(DEBUG_PREFIX + "OSGi framework has shut down.");
                     }
+                    recursivelyDeleteDirectory(osgiCacheStorage.toFile());
+                    if (printOSGiInfo) {
+                        System.out.println(DEBUG_PREFIX + "Removed OSGi cache directory: "
+                                + osgiCacheStorage.toFile().getAbsolutePath());
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException("Error shutting down framework.", e);
                 }
@@ -147,15 +156,42 @@ public class FrameworkProvider {
 
     }
 
-    private Framework makeFramework() throws FileNotFoundException, IOException {
-        File thermostatBundleHome = new File(thermostatHome, "osgi");
+    private void recursivelyDeleteDirectory(File directory) {
+        for (File file: directory.listFiles()) {
+            if (file.isDirectory()) {
+                recursivelyDeleteDirectory(file);
+            }
+            file.delete();
+        }
+        directory.delete();
+    }
 
+    private Framework makeFramework() throws FileNotFoundException, IOException {
+        File osgiCacheDir = new File(thermostatHome, "osgi-cache");
+
+        // Create temporary directory which will be used as cache for OSGi bundles. See
+        // http://www.osgi.org/javadoc/r4v43/core/org/osgi/framework/Constants.html#FRAMEWORK_STORAGE
+        // for details about what this location is used for.
+        // 
+        // Agent, swing gui client application must not use the same location as this tricks the framework
+        // into thinking that some bundles are installed and loaded when that might not actually be the case.
+        // Note that we do not specify the org.osgi.framework.storage.clean property and the default is to NOT
+        // clean the cache, which is when we might run into trouble if this location is shared. This
+        // temp directory will be deleted on VM shutdown.
+        // 
+        // This fixes Thermostat BZ 1110.
+        osgiCacheStorage = Files.createTempDirectory(osgiCacheDir.toPath(), null);
+        if (printOSGiInfo) {
+            System.out.println(DEBUG_PREFIX + "OSGi cache location: "
+                    + osgiCacheStorage.toFile().getAbsolutePath());
+        }
+        
         ServiceLoader<FrameworkFactory> loader = ServiceLoader.load(FrameworkFactory.class,
                 getClass().getClassLoader());
         Map<String, String> bundleConfigurations = new HashMap<String, String>();
         String extraPackages = getOSGiPublicPackages();
         bundleConfigurations.put(Constants.FRAMEWORK_SYSTEMPACKAGES_EXTRA, extraPackages);
-        bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, thermostatBundleHome.getAbsolutePath());
+        bundleConfigurations.put(Constants.FRAMEWORK_STORAGE, osgiCacheStorage.toFile().getAbsolutePath());
         Iterator<FrameworkFactory> factories = loader.iterator();
         if (factories.hasNext()) {
             // we just want the first found

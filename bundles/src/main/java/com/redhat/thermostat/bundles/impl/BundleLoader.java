@@ -81,7 +81,9 @@ public class BundleLoader {
             if (printOSGiInfo) {
                 System.out.println("BundleLoader: starting bundle: \"" + bundle.getBundleId() + "\"");
             }
-            bundle.start();
+            // We don't want for the framework to set the auto-start bit. Thus, passing
+            // START_TRANSIENT explicitly
+            bundle.start(Bundle.START_TRANSIENT);
         }
     }
 
