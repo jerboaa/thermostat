@@ -2,10 +2,10 @@
 
 syntax: regexp
 # Ignore all {.classpath,.project,.settings/*} files except for folders in 
-# client/eclipse
+# eclipse
 # 
 # Using negative lookahead expression
-^(?!client/eclipse).*\.(settings|project|classpath)
+^(?!eclipse).*\.(settings|project|classpath)
 
 syntax: glob
 target/*
