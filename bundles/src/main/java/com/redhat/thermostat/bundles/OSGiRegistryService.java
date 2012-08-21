@@ -37,10 +37,8 @@
 package com.redhat.thermostat.bundles;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 
@@ -49,8 +47,6 @@ import com.redhat.thermostat.bundles.impl.BundleLoader;
 
 public abstract class OSGiRegistryService {
 
-    protected static List<String> preLoadedBundles = new ArrayList<>();
-
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
 
     public abstract void addBundlesFor(String commandName) throws BundleException, IOException;
@@ -58,10 +54,7 @@ public abstract class OSGiRegistryService {
     public static void preLoadBundles(Framework framework, List<String> bundleLocations,
             boolean printOSGiInfo) throws BundleException {
         BundleLoader loader = new BundleLoader(printOSGiInfo);
-        List<Bundle> loaded = loader.installAndStartBundles(framework, bundleLocations);
-        for (Bundle bundle : loaded) {
-            preLoadedBundles.add(bundle.getLocation());
-        }
+        loader.installAndStartBundles(framework, bundleLocations);
     }
 
 }

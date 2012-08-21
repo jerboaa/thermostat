@@ -43,9 +43,9 @@ import com.redhat.thermostat.common.ConfigurationException;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
@@ -54,19 +54,26 @@ import org.osgi.framework.launch.Framework;
 
 public class OSGiRegistry extends OSGiRegistryService {
 
-    private Collection<String> loadedBundles;
-    Configuration configuration;
+    private Map<String, Bundle> loaded;
+    private Configuration configuration;
     private String thermostatHome;
     private BundleProperties bundleProperties;
     private BundleLoader loader;
 
     OSGiRegistry(Configuration configuration) throws ConfigurationException, FileNotFoundException, IOException {
-        
-        loadedBundles = new HashSet<>(preLoadedBundles);
+        initLoadedBundles();
         thermostatHome = configuration.getThermostatHome();
         bundleProperties = new BundleProperties(thermostatHome);
         this.configuration = configuration;
         loader = new BundleLoader();
+    }
+
+    private void initLoadedBundles() {
+        loaded = new HashMap<>();
+        Framework framework = getFramework(this.getClass());
+        for (Bundle bundle: framework.getBundleContext().getBundles()) {
+            loaded.put(bundle.getLocation(), bundle);
+        }
     }
 
     @Override
@@ -84,14 +91,19 @@ public class OSGiRegistry extends OSGiRegistryService {
         List<String> requiredBundles = bundleProperties.getDependencyResourceNamesFor(commandName);
         List<String> bundlesToLoad = new ArrayList<>();
         for (String resource : requiredBundles) {
-            if (!loadedBundles.contains(resource)) {
+            if (!isBundleActive(framework, resource)) {
                 bundlesToLoad.add(resource);
             }
         }
         List<Bundle> successBundles = loader.installAndStartBundles(framework, bundlesToLoad);
         for (Bundle bundle : successBundles) {
-            loadedBundles.add(bundle.getLocation());
+            loaded.put(bundle.getLocation(), bundle);
         }
+    }
+
+    private boolean isBundleActive(Framework framework, String location) {
+        Bundle bundle = loaded.get(location);
+        return (bundle != null) && bundle.getState() == Bundle.ACTIVE;
     }
 
     private Framework getFramework(Class<?> cls) {
