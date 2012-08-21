@@ -33,53 +33,40 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.thread.client.swing.impl;
 
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.util.List;
+package com.redhat.thermostat.thread.client.common.locale;
 
-import javax.swing.DefaultListModel;
-import javax.swing.JList;
-import javax.swing.JPanel;
+import com.redhat.thermostat.common.locale.Translate;
 
-import com.redhat.thermostat.swing.models.NullSelectionModel;
+public enum LocaleResources {
 
-@SuppressWarnings("serial")
-class VMCapsSummaryPanel extends JPanel {
-
-    private DefaultListModel<String> listModel;
-
-    /**
-     * Create the panel.
-     */
-    public VMCapsSummaryPanel() {
-        setLayout(new GridLayout(0, 1, 0, 0));
-        setOpaque(false);
-        
-        listModel = new DefaultListModel<>();
-        
-        JPanel panel = new JPanel();
-        panel.setLayout(new GridLayout(0, 1, 0, 0));
-        panel.setOpaque(false);
-        
-        add(panel);
-        
-        JList<String> list = new JList<String>();
-        list.setPreferredSize(new Dimension(0, 0));
-        list.setOpaque(false);
-        list.setLayoutOrientation(JList.VERTICAL_WRAP);
-        list.setSelectionModel(new NullSelectionModel());
-        
-        list.setModel(listModel);
-        
-        panel.add(list);
-    }
+    NAME,
+    ID,
+    START,
+    STOP,
+    WAIT_COUNT,
+    BLOCK_COUNT,
+    RUNNING,
+    WAITING,
     
-    void addInfo(List<String> infos) {
-        listModel.removeAllElements();
-        for (String info : infos) {
-            listModel.addElement(info);
-        }
+    START_RECORDING,
+    RECORDING,
+    
+    VM_CAPABILITIES,
+    TABLE,
+    
+    LIVE_THREADS,
+    DAEMON_THREADS,
+    
+    THREAD_CONTROL_PANEL,
+    THREAD_DUMP,
+    
+    MISSING_INFO;
+
+    public static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.thread.client.common.locale.strings";
+    
+    public static Translate createLocalizer() {
+        return new Translate(RESOURCE_BUNDLE);
     }
 }

@@ -49,6 +49,8 @@ import javax.swing.table.DefaultTableModel;
 
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 
@@ -58,6 +60,8 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
     
     private JTable table;
     private ThreadTable tablePanel;
+    
+    private static final Translate t = LocaleResources.createLocalizer();
     
     public SwingThreadTableView() {
         tablePanel = new ThreadTable();
@@ -141,9 +145,15 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
     @SuppressWarnings("serial")
     private class ThreadViewTableModel extends DefaultTableModel {
 
-        // TODO: localize
         private String [] columns = {
-                "Name", "ID", "Start", "Stop", "Wait Count", "Blocked Count", "Running %", "Waiting %"//, "Heap", "CPU Time", "User CPU Time"
+                t.localize(LocaleResources.NAME),
+                t.localize(LocaleResources.ID),
+                t.localize(LocaleResources.START),
+                t.localize(LocaleResources.STOP),
+                t.localize(LocaleResources.WAIT_COUNT),
+                t.localize(LocaleResources.BLOCK_COUNT),
+                t.localize(LocaleResources.RUNNING),
+                t.localize(LocaleResources.WAITING), //, "Heap", "CPU Time", "User CPU Time"
         };
         
         private List<ThreadTableBean> infos;

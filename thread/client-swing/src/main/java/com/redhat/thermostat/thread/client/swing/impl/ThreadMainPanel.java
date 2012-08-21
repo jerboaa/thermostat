@@ -47,11 +47,15 @@ import javax.swing.JSplitPane;
 import javax.swing.JToggleButton;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.HeaderPanel;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
 @SuppressWarnings("serial")
 class ThreadMainPanel extends JPanel {
 
+    private static final Translate t = LocaleResources.createLocalizer();
+    
     private JToggleButton liveRecording;
     private JButton snapshot;
     private JSplitPane splitPane;
@@ -60,7 +64,7 @@ class ThreadMainPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         
         HeaderPanel headerPanel = new HeaderPanel();
-        headerPanel.setHeader("Thread Control Panel");
+        headerPanel.setHeader(t.localize(LocaleResources.THREAD_CONTROL_PANEL));
         
         JPanel content = new JPanel();
         headerPanel.setContent(content);
@@ -91,7 +95,7 @@ class ThreadMainPanel extends JPanel {
                     .addContainerGap())
         );
         
-        snapshot = new JButton("Thread Dump");
+        snapshot = new JButton(t.localize(LocaleResources.THREAD_DUMP));
         
         liveRecording = new JToggleButton();
         

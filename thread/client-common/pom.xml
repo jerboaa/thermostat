@@ -103,6 +103,7 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Export-Package>
               com.redhat.thermostat.thread.client.common,
+              com.redhat.thermostat.thread.client.common.locale,
               com.redhat.thermostat.thread.client.common.chart,
             </Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

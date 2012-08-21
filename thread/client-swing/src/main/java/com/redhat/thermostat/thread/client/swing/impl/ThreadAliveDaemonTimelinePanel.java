@@ -44,8 +44,14 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+
 @SuppressWarnings("serial")
 class ThreadAliveDaemonTimelinePanel extends JPanel {
+
+    private static final Translate t = LocaleResources.createLocalizer();
+    
     private JLabel liveThreads;
     private JLabel daemonThreads;
     private JPanel timelinePanel;
@@ -82,9 +88,9 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
                     .addGap(3))
         );
         
-        JLabel liveThreadsLabel = new JLabel("Live Threads:");
+        JLabel liveThreadsLabel = new JLabel(t.localize(LocaleResources.LIVE_THREADS) + ":");
         
-        JLabel daemonThreadsLabel = new JLabel("Daemon Threads:");
+        JLabel daemonThreadsLabel = new JLabel(t.localize(LocaleResources.DAEMON_THREADS) + ":");
         
         liveThreads = new JLabel("-");
         liveThreads.setHorizontalAlignment(SwingConstants.RIGHT);

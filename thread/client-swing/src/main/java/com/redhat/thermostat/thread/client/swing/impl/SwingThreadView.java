@@ -47,6 +47,7 @@ import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.ChartPanel;
 
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
@@ -54,6 +55,7 @@ import com.redhat.thermostat.thread.client.common.ThreadView;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
 
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
+import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
 public class SwingThreadView extends ThreadView implements SwingComponent {
     
@@ -63,6 +65,8 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     private SwingThreadTableView threadTable;
     private SwingVMThreadCapabilitiesView vmCapsView;
     
+    private static final Translate t = LocaleResources.createLocalizer();
+
     public SwingThreadView() {
         
         panel = new ThreadMainPanel();
@@ -83,17 +87,17 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             }
         });
         
-        panel.getLiveRecording().setText("Start Recording");
+        panel.getLiveRecording().setText(t.localize(LocaleResources.START_RECORDING));
         panel.getLiveRecording().addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 ThreadAction action = null;
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     action = ThreadAction.START_LIVE_RECORDING;
-                    panel.getLiveRecording().setText("Recording probes...");
+                    panel.getLiveRecording().setText(t.localize(LocaleResources.RECORDING));
                 } else {
                     action = ThreadAction.STOP_LIVE_RECORDING;
-                    panel.getLiveRecording().setText("Start Recording");
+                    panel.getLiveRecording().setText(t.localize(LocaleResources.START_RECORDING));
                 }
                 final ThreadAction toNotify = action;
                 SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
@@ -112,10 +116,10 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         
         vmCapsView = new SwingVMThreadCapabilitiesView();
         JTabbedPane pane = new JTabbedPane();
-        pane.addTab("Capabilites", vmCapsView.getUiComponent());
+        pane.addTab(t.localize(LocaleResources.VM_CAPABILITIES), vmCapsView.getUiComponent());
         
         threadTable = new SwingThreadTableView();
-        pane.addTab("Table", threadTable.getUiComponent());
+        pane.addTab(t.localize(LocaleResources.TABLE), threadTable.getUiComponent());
         
         panel.getSplitPane().setBottomComponent(pane);
     }
