@@ -104,7 +104,6 @@ public class StorageCommand extends BasicCommand {
         if (parser.isDryRun()) return;
         
         runner = createRunner();
-        
         try {
             switch (parser.getAction()) {
             case START:
@@ -117,7 +116,6 @@ public class StorageCommand extends BasicCommand {
                 break;
             }
             getNotifier().fireAction(ApplicationState.SUCCESS);
-            
         } catch (Exception e) {
             getNotifier().fireAction(ApplicationState.FAIL, e);
         }
@@ -179,11 +177,6 @@ public class StorageCommand extends BasicCommand {
         {
             throw new InvalidConfigurationException("database directories do not exist...");
         }
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
     }
 
     @Override

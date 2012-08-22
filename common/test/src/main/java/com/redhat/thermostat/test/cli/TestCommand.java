@@ -61,7 +61,6 @@ public class TestCommand implements Command {
 
     public static interface Handle {
         public void run(CommandContext ctx) throws CommandException;
-        public void stop();
     }
 
     public TestCommand(String name) {
@@ -77,18 +76,6 @@ public class TestCommand implements Command {
     public void run(CommandContext ctx) throws CommandException {
         if (handle != null) {
             handle.run(ctx);
-        }
-    }
-
-    @Override
-    public void enable() {
-        // TODO what do we do here?
-    }
-
-    @Override
-    public void disable() {
-        if (handle != null) {
-            handle.stop();
         }
     }
 

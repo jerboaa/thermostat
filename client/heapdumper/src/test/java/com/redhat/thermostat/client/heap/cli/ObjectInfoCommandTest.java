@@ -181,11 +181,6 @@ public class ObjectInfoCommandTest {
     }
 
     @Test
-    public void testDisable() {
-        cmd.disable(); // No side effects... hopefully :-)
-    }
-
-    @Test
     public void testSimpleObject() throws CommandException {
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();

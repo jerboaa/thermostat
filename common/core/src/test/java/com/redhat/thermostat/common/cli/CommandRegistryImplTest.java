@@ -131,9 +131,7 @@ public class CommandRegistryImplTest {
 
         commandRegistry.unregisterCommands();
 
-        verify(cmd1).disable();
         verify(cmd1Reg).unregister();
-        verify(cmd2).disable();
         verify(cmd2Reg).unregister();
 
         verifyNoMoreInteractions(bundleContext);

@@ -324,10 +324,4 @@ public class FindRootCommandTest {
             assertEquals("Object not found: fluff", ex.getMessage());
          }
     }
-
-    @Test
-    public void testDisable() {
-        cmd.disable(); // No side effects... hopefully :-)
-    }
-
 }

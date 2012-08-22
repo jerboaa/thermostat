@@ -43,7 +43,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,6 +63,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -73,6 +77,8 @@ import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -106,10 +112,6 @@ public class LauncherTest {
             Arguments args = ctx.getArguments();
             ctx.getConsole().getOutput().print(args.getArgument("arg1") + ", " + args.getArgument("arg2"));
         }
-
-        @Override
-        public void stop() { /* N0-OP */ }
-
     }
 
     private static class TestCmd2 implements TestCommand.Handle {
@@ -118,11 +120,6 @@ public class LauncherTest {
             Arguments args = ctx.getArguments();
             ctx.getConsole().getOutput().print(args.getArgument("arg4") + ": " + args.getArgument("arg3"));
         }
-
-        @Override
-        public void stop() {
-            /* NO-OP */
-        }
     }
 
     private TestCommandContextFactory  ctxFactory;
@@ -130,6 +127,7 @@ public class LauncherTest {
     private BundleContext bundleContext;
     private TestTimerFactory timerFactory;
     private OSGiRegistryService registry;
+    private ActionNotifier<ApplicationState> notifier;
 
     @Before
     public void setUp() {
@@ -158,7 +156,14 @@ public class LauncherTest {
         cmd3.setStorageRequired(true);
         cmd3.setDescription("description 3");
 
-        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(new HelpCommand(), cmd1, cmd2, cmd3));
+        BasicCommand basicCmd = mock(BasicCommand.class);
+        when(basicCmd.getName()).thenReturn("basic");
+        when(basicCmd.getDescription()).thenReturn("nothing that means anything");
+        when(basicCmd.isStorageRequired()).thenReturn(false);
+        notifier = mock(ActionNotifier.class);
+        when(basicCmd.getNotifier()).thenReturn(notifier);
+
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(new HelpCommand(), cmd1, cmd2, cmd3, basicCmd));
 
         registry = mock(OSGiRegistryService.class);
     }
@@ -197,6 +202,7 @@ public class LauncherTest {
     public void testMainNoArgs() {
         String expected = "list of commands:\n\n"
                         + " help          show help for a given command or help overview\n"
+                        + " basic         nothing that means anything\n"
                         + " test1         description 1\n"
                         + " test2         description 2\n"
                         + " test3         description 3\n";
@@ -215,6 +221,7 @@ public class LauncherTest {
         String expected = "unknown command '--help'\n"
             + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
+            + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
@@ -226,6 +233,7 @@ public class LauncherTest {
         String expected = "unknown command '-help'\n"
             + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
+            + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
@@ -237,6 +245,7 @@ public class LauncherTest {
         String expected = "unknown command 'foobarbaz'\n"
             + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
+            + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
@@ -248,6 +257,7 @@ public class LauncherTest {
         String expected = "unknown command 'foo'\n"
             + "list of commands:\n\n"
             + " help          show help for a given command or help overview\n"
+            + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
@@ -263,8 +273,6 @@ public class LauncherTest {
                 throw new CommandException("test error");
             }
 
-            @Override
-            public void stop() { /* NO-OP */ }
         });
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
@@ -354,5 +362,20 @@ public class LauncherTest {
         launcher.run();
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
+    }
+
+    @Test
+    public void verifyListenersAdded() {
+        ActionListener<ApplicationState> listener = mock(ActionListener.class);
+        Collection<ActionListener<ApplicationState>> listeners = new ArrayList<>();
+        listeners.add(listener);
+        String[] args = new String[] {"basic"};
+        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
+        Keyring keyring = mock(Keyring.class);
+        launcher.setPreferences(new ClientPreferences(keyring));
+
+        launcher.setArgs(args);
+        launcher.run(listeners);
+        verify(notifier).addActionListener(listener);
     }
 }

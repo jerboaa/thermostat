@@ -36,6 +36,11 @@
 
 package com.redhat.thermostat.launcher;
 
+import java.util.Collection;
+
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.tools.ApplicationState;
+
 /**
  * Launcher is the main entry point for all Thermostat commands.
  */
@@ -43,9 +48,17 @@ public interface Launcher {
 
     /**
      * Invoked in order to start a command, either when Thermostat starts, or within
-     * the thermostat shell.
+     * the thermostat shell.  Equivalent to calling run(null).
      */
     void run();
+
+    /**
+     * Invoked in order to start a command, either when Thermostat starts, or within
+     * the thermostat shell.  If the command being run happens to be a BasicCommand,
+     * and the argument is non-null, the listeners will be added to the command for
+     * life cycle notifications.  Otherwise, the argument is ignored.
+     */
+    void run(Collection<ActionListener<ApplicationState>> listeners);
 
     /**
      * Should be set before calling run()

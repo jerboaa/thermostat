@@ -39,16 +39,6 @@ package com.redhat.thermostat.common.cli;
 public abstract class SimpleCommand implements Command {
 
     @Override
-    public void enable() {
-        /* NO-OP */
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
-    }
-
-    @Override
     public boolean isStorageRequired() {
         return true;
     }

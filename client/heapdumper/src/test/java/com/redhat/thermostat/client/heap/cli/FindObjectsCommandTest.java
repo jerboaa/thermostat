@@ -232,9 +232,4 @@ public class FindObjectsCommandTest {
 
         assertEquals("Heap ID not found: " + INVALID_HEAP_ID + "\n", factory.getOutput());
     }
-
-    @Test
-    public void testDisable() {
-        cmd.disable(); // No side-effects. Hopefully...
-    }
 }

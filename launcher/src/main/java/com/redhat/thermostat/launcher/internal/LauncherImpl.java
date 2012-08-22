@@ -47,6 +47,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -60,6 +62,8 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.storage.ConnectionException;
+import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
@@ -91,6 +95,11 @@ public class LauncherImpl implements Launcher {
 
     @Override
     public synchronized void run() {
+        run(null);
+    }
+
+    @Override
+    public synchronized void run(Collection<ActionListener<ApplicationState>> listeners) {
         usageCount++;
         try {
             argsBarrier.acquire();
@@ -108,7 +117,7 @@ public class LauncherImpl implements Launcher {
                 Version coreVersion = new Version();
                 cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
             } else {
-                runCommandFromArguments();
+                runCommandFromArguments(listeners);
             }
         } finally {
             args = null;
@@ -163,22 +172,22 @@ public class LauncherImpl implements Launcher {
     }
 
     private void runHelpCommand() {
-        runCommand("help", new String[0]);
+        runCommand("help", new String[0], null);
     }
 
-    private void runCommandFromArguments() {
-        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length));
+    private void runCommandFromArguments(Collection<ActionListener<ApplicationState>> listeners) {
+        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners);
     }
 
-    private void runCommand(String cmdName, String[] cmdArgs) {
+    private void runCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners) {
         try {
-            parseArgsAndRunCommand(cmdName, cmdArgs);
+            parseArgsAndRunCommand(cmdName, cmdArgs, listeners);
         } catch (CommandException e) {
             cmdCtxFactory.getConsole().getError().println(e.getMessage());
         }
     }
 
-    private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs) throws CommandException {
+    private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners) throws CommandException {
 
         PrintStream out = cmdCtxFactory.getConsole().getOutput();
         try {
@@ -197,6 +206,13 @@ public class LauncherImpl implements Launcher {
             out.print(String.format(UNKNOWN_COMMAND_MESSAGE, cmdName));
             runHelpCommand();
             return;
+        }
+        if (listeners != null && cmd instanceof BasicCommand) {
+            BasicCommand basicCmd = (BasicCommand) cmd;
+            ActionNotifier<ApplicationState> notifier = basicCmd.getNotifier();
+            for (ActionListener<ApplicationState> listener : listeners) {
+                notifier.addActionListener(listener);
+            }
         }
         CommonCommandOptions commonOpts = new CommonCommandOptions();
         Collection<ArgumentSpec> acceptedOptions = commonOpts.getAcceptedOptionsFor(cmd);

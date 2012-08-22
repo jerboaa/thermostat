@@ -83,11 +83,6 @@ public class GUIClientCommand extends SimpleCommand implements OSGiContext {
     }
 
     @Override
-    public void disable() {
-        // TODO clientMain.shutdown();
-    }
-
-    @Override
     public String getName() {
         return "gui";
     }

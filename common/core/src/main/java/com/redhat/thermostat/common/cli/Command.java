@@ -61,23 +61,6 @@ public interface Command {
     public void run(CommandContext ctx) throws CommandException;
 
     /**
-     * Called when the command is first installed into the system. This is a
-     * good point to initiate one-time initialization actions.
-     * <p>
-     * Should be idempotent.
-     */
-    public void enable();
-
-    /**
-     * Called when the command is being removed from the system. The command
-     * should cancel any long-term action it has taken, such as any background
-     * tasks or threads it has spawned.
-     * <p>
-     * Should be idempotent.
-     */
-    public void disable();
-
-    /**
      * Returns a name for this command. This will be used by the user to select
      * this command.
      */

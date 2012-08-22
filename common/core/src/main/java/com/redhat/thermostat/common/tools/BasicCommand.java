@@ -68,16 +68,6 @@ public abstract class BasicCommand implements Command {
     }
 
     @Override
-    public void enable() {
-        /* NO-OP */
-    }
-
-    @Override
-    public void disable() {
-        /* NO-OP */
-    }
-
-    @Override
     public boolean isAvailableInShell() {
         return true;
     }

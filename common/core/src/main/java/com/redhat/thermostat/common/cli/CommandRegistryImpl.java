@@ -65,7 +65,6 @@ public class CommandRegistryImpl implements CommandRegistry {
         if (cmd instanceof OSGiContext) {
             ((OSGiContext) cmd).setBundleContext(context);
         }
-        cmd.enable();
         proxy.registerService(cmd, cmd.getName());
         myRegisteredCommands.add(cmd);
     }
@@ -79,9 +78,6 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     @Override
     public void unregisterCommands() {
-        for (Command command : myRegisteredCommands) {
-            command.disable();
-        }
         proxy.unregisterAll();
     }
 
