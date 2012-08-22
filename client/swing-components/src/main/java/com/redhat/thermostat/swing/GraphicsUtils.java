@@ -39,9 +39,13 @@ package com.redhat.thermostat.swing;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.RenderingHints;
+import java.awt.Shape;
+import java.awt.geom.RoundRectangle2D;
 
 import javax.swing.JComponent;
 
@@ -73,5 +77,14 @@ public class GraphicsUtils {
     
     public FontMetrics getFontMetrics(JComponent component, Font font) {
         return SwingUtilities2.getFontMetrics(component, font);
+    }
+    
+    public Shape getRoundShape(int width, int height) {
+        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, 4, 4);
+    }
+    
+    public void setGradientPaint(Graphics2D g, int x, int height, Color start, Color stop) {
+        Paint paint = new GradientPaint(x, 0, start, 0, height, stop);
+        g.setPaint(paint);
     }
 }
