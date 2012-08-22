@@ -49,11 +49,9 @@ import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.ChartPanel;
-
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadView;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
-
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
@@ -78,7 +76,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 
                 // TODO: allow controller to define this value based on last
                 // user setting
-                panel.getSplitPane().setDividerLocation(0.30);
+                panel.getSplitPane().setDividerLocation(0.80);
             }
             
             @Override
@@ -87,17 +85,20 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             }
         });
         
-        panel.getLiveRecording().setText(t.localize(LocaleResources.START_RECORDING));
-        panel.getLiveRecording().addItemListener(new ItemListener() {
+        timelinePanel = new ThreadAliveDaemonTimelinePanel();
+
+        timelinePanel.setToggleText(t.localize(LocaleResources.START_RECORDING) + ":");
+        timelinePanel.getRecordButton().addItemListener(new ItemListener()
+        {
             @Override
             public void itemStateChanged(ItemEvent e) {
                 ThreadAction action = null;
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     action = ThreadAction.START_LIVE_RECORDING;
-                    panel.getLiveRecording().setText(t.localize(LocaleResources.RECORDING));
+                    timelinePanel.setToggleText(t.localize(LocaleResources.STOP_RECORDING) + ":");
                 } else {
                     action = ThreadAction.STOP_LIVE_RECORDING;
-                    panel.getLiveRecording().setText(t.localize(LocaleResources.START_RECORDING));
+                    timelinePanel.setToggleText(t.localize(LocaleResources.START_RECORDING) + ":");
                 }
                 final ThreadAction toNotify = action;
                 SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
@@ -111,7 +112,6 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             }
         });
 
-        timelinePanel = new ThreadAliveDaemonTimelinePanel();
         panel.getSplitPane().setTopComponent(timelinePanel);
         
         vmCapsView = new SwingVMThreadCapabilitiesView();
@@ -134,7 +134,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                panel.getLiveRecording().setSelected(recording);
+                timelinePanel.getRecordButton().setSelected(recording);
             }
         });
     }

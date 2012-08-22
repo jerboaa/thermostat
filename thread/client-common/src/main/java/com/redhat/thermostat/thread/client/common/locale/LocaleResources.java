@@ -50,7 +50,7 @@ public enum LocaleResources {
     WAITING,
     
     START_RECORDING,
-    RECORDING,
+    STOP_RECORDING,
     
     VM_CAPABILITIES,
     TABLE,

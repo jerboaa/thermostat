@@ -37,15 +37,17 @@
 package com.redhat.thermostat.thread.client.swing.impl;
 
 import javax.swing.BoxLayout;
-import javax.swing.JPanel;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JToggleButton;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingConstants;
 
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.swing.ToggleButton;
 
 @SuppressWarnings("serial")
 class ThreadAliveDaemonTimelinePanel extends JPanel {
@@ -56,6 +58,10 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
     private JLabel daemonThreads;
     private JPanel timelinePanel;
 
+    private ToggleButton toggleButton;
+    
+    private JLabel lblNewLabel; 
+    
     /**
      * Create the panel.
      */
@@ -70,22 +76,16 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
         
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addGroup(groupLayout.createParallelGroup(Alignment.LEADING)
-                        .addComponent(runningPanel, GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE)
-                        .addComponent(timelinePanel, GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE))
-                    .addContainerGap())
+            groupLayout.createParallelGroup(Alignment.TRAILING)
+                .addComponent(runningPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 577, Short.MAX_VALUE)
+                .addComponent(timelinePanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 577, Short.MAX_VALUE)
         );
         groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.TRAILING)
-                .addGroup(Alignment.LEADING, groupLayout.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(runningPanel, GroupLayout.PREFERRED_SIZE, 55, GroupLayout.PREFERRED_SIZE)
+            groupLayout.createParallelGroup(Alignment.LEADING)
+                .addGroup(groupLayout.createSequentialGroup()
+                    .addComponent(runningPanel, GroupLayout.PREFERRED_SIZE, 41, GroupLayout.PREFERRED_SIZE)
                     .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(timelinePanel, GroupLayout.DEFAULT_SIZE, 233, Short.MAX_VALUE)
-                    .addGap(3))
+                    .addComponent(timelinePanel, GroupLayout.DEFAULT_SIZE, 254, Short.MAX_VALUE))
         );
         
         JLabel liveThreadsLabel = new JLabel(t.localize(LocaleResources.LIVE_THREADS) + ":");
@@ -97,31 +97,57 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
         
         daemonThreads = new JLabel("-");
         daemonThreads.setHorizontalAlignment(SwingConstants.RIGHT);
+        
+        JPanel panel = new JPanel();
         GroupLayout gl_runningPanel = new GroupLayout(runningPanel);
         gl_runningPanel.setHorizontalGroup(
             gl_runningPanel.createParallelGroup(Alignment.LEADING)
                 .addGroup(gl_runningPanel.createSequentialGroup()
-                    .addGroup(gl_runningPanel.createParallelGroup(Alignment.TRAILING, false)
-                        .addComponent(liveThreadsLabel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(daemonThreadsLabel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addGroup(gl_runningPanel.createParallelGroup(Alignment.LEADING)
+                        .addComponent(daemonThreadsLabel)
+                        .addComponent(liveThreadsLabel))
+                    .addGap(24)
                     .addGroup(gl_runningPanel.createParallelGroup(Alignment.LEADING, false)
                         .addComponent(daemonThreads, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                         .addComponent(liveThreads, GroupLayout.DEFAULT_SIZE, 85, Short.MAX_VALUE))
-                    .addContainerGap(221, Short.MAX_VALUE))
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(panel, GroupLayout.DEFAULT_SIZE, 331, Short.MAX_VALUE))
         );
         gl_runningPanel.setVerticalGroup(
-            gl_runningPanel.createParallelGroup(Alignment.LEADING)
+            gl_runningPanel.createParallelGroup(Alignment.TRAILING)
                 .addGroup(gl_runningPanel.createSequentialGroup()
                     .addGroup(gl_runningPanel.createParallelGroup(Alignment.BASELINE)
                         .addComponent(liveThreadsLabel)
                         .addComponent(liveThreads))
                     .addPreferredGap(ComponentPlacement.RELATED)
                     .addGroup(gl_runningPanel.createParallelGroup(Alignment.BASELINE)
-                        .addComponent(daemonThreadsLabel)
-                        .addComponent(daemonThreads))
-                    .addContainerGap(15, Short.MAX_VALUE))
+                        .addComponent(daemonThreads)
+                        .addComponent(daemonThreadsLabel))
+                    .addContainerGap(GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addComponent(panel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 48, Short.MAX_VALUE)
         );
+        
+        toggleButton = new ToggleButton();
+        
+        lblNewLabel = new JLabel("New label");
+        GroupLayout gl_panel = new GroupLayout(panel);
+        gl_panel.setHorizontalGroup(
+            gl_panel.createParallelGroup(Alignment.TRAILING)
+                .addGroup(gl_panel.createSequentialGroup()
+                    .addContainerGap(209, Short.MAX_VALUE)
+                    .addComponent(lblNewLabel)
+                    .addPreferredGap(ComponentPlacement.RELATED)
+                    .addComponent(toggleButton, GroupLayout.PREFERRED_SIZE, GroupLayout.DEFAULT_SIZE, GroupLayout.PREFERRED_SIZE))
+        );
+        gl_panel.setVerticalGroup(
+            gl_panel.createParallelGroup(Alignment.LEADING)
+                .addGroup(gl_panel.createSequentialGroup()
+                    .addGroup(gl_panel.createParallelGroup(Alignment.TRAILING, false)
+                        .addComponent(lblNewLabel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(toggleButton, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addContainerGap(24, Short.MAX_VALUE))
+        );
+        panel.setLayout(gl_panel);
         runningPanel.setLayout(gl_runningPanel);
         setLayout(groupLayout);
 
@@ -137,5 +163,13 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
     
     public JPanel getTimelinePanel() {
         return timelinePanel;
+    }
+    
+    public ToggleButton getRecordButton() {
+        return toggleButton;
+    }
+    
+    public void setToggleText(String text) {
+        lblNewLabel.setText(text);
     }
 }

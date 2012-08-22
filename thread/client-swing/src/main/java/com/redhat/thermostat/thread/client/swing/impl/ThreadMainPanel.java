@@ -39,13 +39,8 @@ package com.redhat.thermostat.thread.client.swing.impl;
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.JButton;
-import javax.swing.JList;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JToggleButton;
-import javax.swing.LayoutStyle.ComponentPlacement;
 
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.HeaderPanel;
@@ -55,9 +50,6 @@ import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 class ThreadMainPanel extends JPanel {
 
     private static final Translate t = LocaleResources.createLocalizer();
-    
-    private JToggleButton liveRecording;
-    private JButton snapshot;
     private JSplitPane splitPane;
     
     public ThreadMainPanel() {
@@ -69,8 +61,6 @@ class ThreadMainPanel extends JPanel {
         JPanel content = new JPanel();
         headerPanel.setContent(content);
         
-        JPanel controlPanel = new JPanel();
-        
         splitPane = new JSplitPane();
         splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
         splitPane.setOneTouchExpandable(true);
@@ -78,61 +68,24 @@ class ThreadMainPanel extends JPanel {
         GroupLayout gl_content = new GroupLayout(content);
         gl_content.setHorizontalGroup(
             gl_content.createParallelGroup(Alignment.TRAILING)
-                .addGroup(gl_content.createSequentialGroup()
+                .addGroup(Alignment.LEADING, gl_content.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 363, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(controlPanel, GroupLayout.PREFERRED_SIZE, 260, GroupLayout.PREFERRED_SIZE)
+                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE)
                     .addContainerGap())
         );
         gl_content.setVerticalGroup(
-            gl_content.createParallelGroup(Alignment.LEADING)
-                .addGroup(Alignment.TRAILING, gl_content.createSequentialGroup()
+            gl_content.createParallelGroup(Alignment.TRAILING)
+                .addGroup(Alignment.LEADING, gl_content.createSequentialGroup()
                     .addContainerGap()
-                    .addGroup(gl_content.createParallelGroup(Alignment.TRAILING)
-                        .addComponent(splitPane, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
-                        .addComponent(controlPanel, Alignment.LEADING, GroupLayout.DEFAULT_SIZE, 323, Short.MAX_VALUE))
+                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
                     .addContainerGap())
         );
-        
-        snapshot = new JButton(t.localize(LocaleResources.THREAD_DUMP));
-        
-        liveRecording = new JToggleButton();
-        
-        JScrollPane scrollPane = new JScrollPane();
-        GroupLayout gl_controlPanel = new GroupLayout(controlPanel);
-        gl_controlPanel.setHorizontalGroup(
-            gl_controlPanel.createParallelGroup(Alignment.LEADING)
-                .addComponent(liveRecording, GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
-                .addComponent(snapshot, GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
-                .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 191, Short.MAX_VALUE)
-        );
-        gl_controlPanel.setVerticalGroup(
-            gl_controlPanel.createParallelGroup(Alignment.LEADING)
-                .addGroup(gl_controlPanel.createSequentialGroup()
-                    .addComponent(liveRecording)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(snapshot)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(scrollPane, GroupLayout.DEFAULT_SIZE, 251, Short.MAX_VALUE))
-        );
-        
-        JList<String> list = new JList<>();
-        scrollPane.setViewportView(list);
-        controlPanel.setLayout(gl_controlPanel);
         
         content.setLayout(gl_content);
         
         add(headerPanel);
     }
     
-    JToggleButton getLiveRecording() {
-        return liveRecording;
-    }
-    
-    JButton getSnapshot() {
-        return snapshot;
-    }
     public JSplitPane getSplitPane() {
         return splitPane;
     }
