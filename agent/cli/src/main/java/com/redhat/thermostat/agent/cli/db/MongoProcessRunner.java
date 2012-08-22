@@ -173,11 +173,7 @@ public class MongoProcessRunner {
         commands.add(configuration.getPidFile().getCanonicalPath());
 
         commands.add("--port");
-        if (configuration.isLocal()) {
-            commands.add(Long.toString(configuration.getLocalPort()));
-        } else {
-            commands.add(Long.toString(configuration.getClusterPort()));
-        }
+        commands.add(Long.toString(configuration.getPort()));
         
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = -1;

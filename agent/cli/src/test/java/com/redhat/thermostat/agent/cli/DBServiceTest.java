@@ -73,12 +73,9 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 
 public class DBServiceTest {
     
-    private static final String LOCAL = "27518";
-    private static final String CLUSTER = "27517";
-    
+    private static final String PORT = "27518";
     private static final String BIND = "127.0.0.1";
-    
-    private static final String URL = "mongodb://127.0.0.1";
+    private static final String PROTOCOL = "mongodb";
     private static final String DB = "storage/db";
 
     private String tmpDir;
@@ -105,9 +102,8 @@ public class DBServiceTest {
             Properties props = new Properties();
             
             props.setProperty(DBConfig.BIND.name(), BIND);
-            props.setProperty(DBConfig.LOCAL.name(), LOCAL);
-            props.setProperty(DBConfig.CLUSTER.name(), CLUSTER);
-            props.setProperty(DBConfig.URL.name(), URL);
+            props.setProperty(DBConfig.PORT.name(), PORT);
+            props.setProperty(DBConfig.PROTOCOL.name(), PROTOCOL);
 
             props.store(new FileOutputStream(tmpConfigs), "thermostat test properties");
             
@@ -137,9 +133,8 @@ public class DBServiceTest {
         DBStartupConfiguration conf = service.getConfiguration();
         
         Assert.assertEquals(tmpDir + DB, conf.getDBPath().getPath());
-        Assert.assertEquals(Integer.parseInt(LOCAL), conf.getLocalPort());
-        Assert.assertEquals(Integer.parseInt(CLUSTER), conf.getClusterPort());
-        Assert.assertEquals(URL, conf.getUrl());
+        Assert.assertEquals(Integer.parseInt(PORT), conf.getPort());
+        Assert.assertEquals(PROTOCOL, conf.getProtocol());
     }
     
     private StorageCommand prepareService(boolean startSuccess) throws IOException,
@@ -265,8 +260,7 @@ public class DBServiceTest {
         StorageCommand dbService = new StorageCommand();
         Collection<ArgumentSpec> args = dbService.getAcceptedArguments();
         assertNotNull(args);
-        assertEquals(5, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("cluster", "c", "launch the db in cluster mode, if not specified, local mode is the default", false, false)));
+        assertEquals(4, args.size());
         assertTrue(args.contains(new SimpleArgumentSpec("dryRun", "d", "run the service in dry run mode", false, false)));
         assertTrue(args.contains(new SimpleArgumentSpec("start", "start the database")));
         assertTrue(args.contains(new SimpleArgumentSpec("stop", "stop the database")));

@@ -133,27 +133,19 @@ public class StorageCommand extends BasicCommand {
             throw new InvalidConfigurationException(e);
         }
         
-        if (properties.containsKey(DBConfig.LOCAL.name())) {
-            String port = (String) properties.get(DBConfig.LOCAL.name());
+        if (properties.containsKey(DBConfig.PORT.name())) {
+            String port = (String) properties.get(DBConfig.PORT.name());
             int localPort = Integer.parseInt(port);
-            configuration.setLocalPort(localPort);
+            configuration.setPort(localPort);
         } else {
-            throw new InvalidConfigurationException(DBConfig.LOCAL + " property missing");
+            throw new InvalidConfigurationException(DBConfig.PORT + " property missing");
         }
         
-        if (properties.containsKey(DBConfig.CLUSTER.name())) {
-            String port = (String) properties.get(DBConfig.CLUSTER.name());
-            int localPort = Integer.parseInt(port);
-            configuration.setClusterPort(localPort);
+        if (properties.containsKey(DBConfig.PROTOCOL.name())) {
+            String url = (String) properties.get(DBConfig.PROTOCOL.name());
+            configuration.setProtocol(url);
         } else {
-            throw new InvalidConfigurationException(DBConfig.CLUSTER + " property missing");
-        }
-        
-        if (properties.containsKey(DBConfig.URL.name())) {
-            String url = (String) properties.get(DBConfig.URL.name());
-            configuration.setUrl(url);
-        } else {
-            throw new InvalidConfigurationException(DBConfig.URL + " property missing");
+            throw new InvalidConfigurationException(DBConfig.PROTOCOL + " property missing");
         }
         
         if (properties.containsKey(DBConfig.BIND.name())) {

@@ -44,7 +44,6 @@ import com.redhat.thermostat.agent.cli.StorageCommand;
 public enum DBConfig {
 
     BIND,
-    LOCAL,
-    CLUSTER,
-    URL,
+    PORT,
+    PROTOCOL,
 }

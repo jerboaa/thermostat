@@ -49,16 +49,13 @@ public class DBStartupConfiguration implements StartupConfiguration {
     private File pidFile;
         
     private long localPort;
-    private long clusterPort;
     
-    private String url;
+    private String protocol;
     
     private String dbConnectionString;
     
     private String ip;
-    
-    private boolean local;
-    
+        
     public DBStartupConfiguration() throws InvalidConfigurationException {
         dbPath = ConfigUtils.getStorageDirectory();
         logFile = ConfigUtils.getStorageLogFile();
@@ -77,28 +74,20 @@ public class DBStartupConfiguration implements StartupConfiguration {
         return pidFile;
     }
    
-    public void setLocalPort(long localPort) {
+    public void setPort(long localPort) {
         this.localPort = localPort;
     }
     
-    public long getLocalPort() {
+    public long getPort() {
         return localPort;
     }
     
-    public long getClusterPort() {
-        return clusterPort;
+    public void setProtocol(String protocol) {
+        this.protocol = protocol;
     }
     
-    public void setClusterPort(long clusterPort) {
-        this.clusterPort = clusterPort;
-    }
-    
-    public void setUrl(String url) {
-        this.url = url;
-    }
-    
-    public String getUrl() {
-        return url;
+    public String getProtocol() {
+        return protocol;
     }
     
     void setDBConnectionString(String dbConnectionString) {
@@ -116,13 +105,5 @@ public class DBStartupConfiguration implements StartupConfiguration {
     
     public String getBindIP() {
         return ip;
-    }
-    
-    void setLocal(boolean local) {
-        this.local = local;
-    }
-    
-    public boolean isLocal() {
-        return local;
     }
 }

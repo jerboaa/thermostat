@@ -85,14 +85,10 @@ public class DBOptionParser implements ThermostatOptionParser {
         }
         
         // leave at the end, since it depends on the previous settings
-        String url = configuration.getUrl();
-        long port = configuration.getLocalPort();
-        configuration.setLocal(true);
-        if (args.hasArgument(DBArgs.CLUSTER.option)) {
-            port = configuration.getClusterPort();
-            configuration.setLocal(false);
-        }
-        configuration.setDBConnectionString(url + ":" + port);
+        String urlPrefix = configuration.getProtocol();
+        String address = configuration.getBindIP();
+        long port = configuration.getPort();
+        configuration.setDBConnectionString(urlPrefix + "://" + address + ":" + port);
     }
 
     public boolean isDryRun() {
@@ -104,8 +100,6 @@ public class DBOptionParser implements ThermostatOptionParser {
     }
 
     static enum DBArgs {
-                        
-        CLUSTER("cluster", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_CLUSTER_DESCRIPTION), ApplicationState.NONE),
                 
         DRY("dryRun", Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_DRYRUN_DESCRIPTION), ApplicationState.NONE),
         
@@ -132,11 +126,10 @@ public class DBOptionParser implements ThermostatOptionParser {
     }
 
     public static Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec cluster = new SimpleArgumentSpec(DBArgs.CLUSTER.option, "c", DBArgs.CLUSTER.description, false, false);
         ArgumentSpec dryRun = new SimpleArgumentSpec(DBArgs.DRY.option, "d", DBArgs.DRY.description, false, false);
         ArgumentSpec start = new SimpleArgumentSpec(DBArgs.START.option, DBArgs.START.description);
         ArgumentSpec stop = new SimpleArgumentSpec(DBArgs.STOP.option, DBArgs.STOP.description);
         ArgumentSpec quiet = new SimpleArgumentSpec(DBArgs.QUIET.option, "q", DBArgs.QUIET.description, false, false);
-        return Arrays.asList(cluster, dryRun, start, stop, quiet);
+        return Arrays.asList(dryRun, start, stop, quiet);
     }
 }
