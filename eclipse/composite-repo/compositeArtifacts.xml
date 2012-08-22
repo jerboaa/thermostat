@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<?compositeMetadataRepository version='1.0.0'?>
+<repository name='Thermostat Eclipse Composite p2 repository'
+    type='org.eclipse.equinox.internal.p2.artifact.repository.CompositeArtifactRepository' version='1.0.0'>
+ <children size='3'>
+    <child location='thermostat-eclipse'/>
+    <!-- Thermostat core bundles with p2 metadata -->
+    <child location='thermostat-core-p2'/>
+    <!-- Eclipse Orbit repo for mongodb and lucene -->
+    <child location='http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/' />
+  </children>
+</repository>

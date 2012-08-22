@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+
+ Copyright 2012 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses />.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>thermostat-eclipse-parent</artifactId>
+    <groupId>com.redhat.thermostat.eclipse.parent</groupId>
+    <version>0.4.0-SNAPSHOT</version>
+  </parent>
+  <groupId>com.redhat.thermostat.eclipse.parent</groupId>
+  <artifactId>com.redhat.thermostat.eclipse.core-p2-repo</artifactId>
+  <version>0.4.0-SNAPSHOT</version>
+
+  <name>Thermostat Core Bundles p2 Repository</name>
+
+  <build>
+    <plugins>
+      <!-- Configuration for the PublishFeaturesAndBundlesMojoTest -->
+      <plugin>
+        <groupId>org.eclipse.tycho.extras</groupId>
+        <artifactId>tycho-p2-extras-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <executions>
+          <execution>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>publish-features-and-bundles</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <compress>true</compress>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-bundles-for-publishing</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy</goal>
+            </goals>
+            <configuration>
+              <artifactItems>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-main</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-bundles</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-tools</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-launcher</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-client-core</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-client-command</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-client-vmclassstat</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-osgi-memory-stats-panel</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-osgi-living-vm-filter</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-agent-core</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-agent-cli</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-agent-command</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-common-core</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                  <groupId>com.redhat.thermostat</groupId>
+                  <artifactId>thermostat-common-command</artifactId>
+                  <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-osgi-process-handler</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-client-killvm</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-client-heapdumper</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-laf</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-swing-components</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-keyring</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                
+                <!--  thread plugin -->
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-thread-client-common</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-thread-client-controllers</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-thread-client-swing</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-thread-collector</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>      
+              </artifactItems>
+              <outputDirectory>${project.basedir}/target/source/plugins</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <packaging>pom</packaging>
+</project>

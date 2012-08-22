@@ -55,7 +55,7 @@
     <tycho-extras-version>0.15.0</tycho-extras-version>
     <platform-version-name>juno</platform-version-name>
     <eclipse-site>http://download.eclipse.org/releases/${platform-version-name}</eclipse-site>
-    <orbit-site>http://download.eclipse.org/tools/orbit/downloads/drops/S20120726065500/repository/</orbit-site>
+    <orbit-site>http://download.eclipse.org/tools/orbit/downloads/drops/R20120526062928/repository/</orbit-site>
   </properties>
 
   <profiles>
@@ -92,6 +92,10 @@
     <module>com.redhat.thermostat.eclipse.boot</module>
     <module>com.redhat.thermostat.eclipse</module>
     <module>com.redhat.thermostat.eclipse.test</module>
+    <module>com.redhat.thermostat.eclipse.feature</module>
+    <module>com.redhat.thermostat.eclipse.p2-repo</module>
+    <module>core-p2-repository</module>
+    <module>composite-repo</module>
   </modules>
 
   <repositories>
