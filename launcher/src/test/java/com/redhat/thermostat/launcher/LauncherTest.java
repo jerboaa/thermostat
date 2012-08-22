@@ -62,7 +62,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationInfo;
@@ -126,7 +126,7 @@ public class LauncherTest {
     private AppContextSetup appContextSetup;
     private BundleContext bundleContext;
     private TestTimerFactory timerFactory;
-    private OSGiRegistryService registry;
+    private OSGiRegistry registry;
     private ActionNotifier<ApplicationState> notifier;
 
     @Before
@@ -165,7 +165,7 @@ public class LauncherTest {
 
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(new HelpCommand(), cmd1, cmd2, cmd3, basicCmd));
 
-        registry = mock(OSGiRegistryService.class);
+        registry = mock(OSGiRegistry.class);
     }
 
     private void setupCommandContextFactory() {

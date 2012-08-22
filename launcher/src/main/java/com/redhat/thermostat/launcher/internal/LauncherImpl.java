@@ -46,7 +46,7 @@ import java.util.logging.Level;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 
-import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.TimerFactory;
@@ -84,10 +84,10 @@ public class LauncherImpl implements Launcher {
     private final Semaphore argsBarrier = new Semaphore(0);
 
     private BundleContext context;
-    private OSGiRegistryService registry;
+    private OSGiRegistry registry;
     
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory,
-            OSGiRegistryService registry) {
+            OSGiRegistry registry) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;

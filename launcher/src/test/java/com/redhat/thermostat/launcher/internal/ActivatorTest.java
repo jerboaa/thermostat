@@ -60,7 +60,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
@@ -76,7 +76,7 @@ public class ActivatorTest {
     private MultipleServiceTracker tracker;
     private ServiceReference registryServiceReference, helpCommandReference;
     private ServiceRegistration launcherServiceRegistration, helpCommandRegistration;
-    private OSGiRegistryService registryService;
+    private OSGiRegistry registryService;
     private Command helpCommand;
 
     @Before
@@ -85,8 +85,8 @@ public class ActivatorTest {
 
         registryServiceReference = mock(ServiceReference.class);
         launcherServiceRegistration = mock(ServiceRegistration.class);
-        registryService = mock(OSGiRegistryService.class);
-        when(context.getServiceReference(eq(OSGiRegistryService.class))).thenReturn(registryServiceReference);
+        registryService = mock(OSGiRegistry.class);
+        when(context.getServiceReference(eq(OSGiRegistry.class))).thenReturn(registryServiceReference);
         when(context.getService(eq(registryServiceReference))).thenReturn(registryService);
         when(context.registerService(eq(Launcher.class.getName()), any(), (Dictionary) isNull())).
                 thenReturn(launcherServiceRegistration);
@@ -103,7 +103,7 @@ public class ActivatorTest {
         tracker = mock(MultipleServiceTracker.class);
         whenNew(MultipleServiceTracker.class).
                 withParameterTypes(BundleContext.class, Class[].class, Action.class).
-                withArguments(eq(context), eq(new Class[] {OSGiRegistryService.class, Keyring.class}),
+                withArguments(eq(context), eq(new Class[] {OSGiRegistry.class, Keyring.class}),
                         isA(Action.class)).thenReturn(tracker);
     }
 
@@ -119,7 +119,7 @@ public class ActivatorTest {
 
         ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
         verifyNew(MultipleServiceTracker.class).withArguments(eq(context),
-                eq(new Class[] {OSGiRegistryService.class, Keyring.class}),
+                eq(new Class[] {OSGiRegistry.class, Keyring.class}),
                 actionCaptor.capture());
         Action action = actionCaptor.getValue();
 

@@ -36,9 +36,34 @@
 
 package com.redhat.thermostat.bundles;
 
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
+
+import java.util.ArrayList;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.osgi.framework.launch.Framework;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
+
+import com.redhat.thermostat.bundles.impl.BundleLoader;
+
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(OSGiRegistry.class)
 public class OSGiRegistryTest {
 
-    // TODO find a test for the new registry.
-    // Most of what this used to test is now in BundlePropertiesTest.
+    @Test
+    public void testPreLoadBundles() throws Exception {
+        Framework framework = mock(Framework.class);
+        ArrayList<String> bundleLocations = new ArrayList<>();
+        BundleLoader loader = mock(BundleLoader.class);
+        whenNew(BundleLoader.class).withParameterTypes(Boolean.TYPE).
+                withArguments(any()).thenReturn(loader);
 
+        OSGiRegistry.preLoadBundles(framework, bundleLocations, true);
+        verify(loader).installAndStartBundles(framework, bundleLocations);
+    }
 }

@@ -45,7 +45,7 @@ import org.osgi.framework.launch.Framework;
 import com.redhat.thermostat.bundles.impl.BundleLoader;
 
 
-public abstract class OSGiRegistryService {
+public abstract class OSGiRegistry {
 
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
 

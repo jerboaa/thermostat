@@ -114,4 +114,7 @@
     </plugins>
   </build>
 
+  <properties>
+    <argLine>-XX:-UseSplitVerifier</argLine>
+  </properties>
 </project>

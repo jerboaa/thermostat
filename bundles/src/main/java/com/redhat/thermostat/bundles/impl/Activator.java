@@ -40,7 +40,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.Configuration;
 
 public class Activator implements BundleActivator {
@@ -49,8 +49,8 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-        OSGiRegistry bundleRegistry = new OSGiRegistry(new Configuration());
-        reg = context.registerService(OSGiRegistryService.class.getName(), bundleRegistry, null);
+        OSGiRegistryImpl bundleRegistry = new OSGiRegistryImpl(new Configuration());
+        reg = context.registerService(OSGiRegistry.class.getName(), bundleRegistry, null);
     }
 
     @Override

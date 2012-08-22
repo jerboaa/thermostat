@@ -58,7 +58,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.bundles.impl.OSGiRegistry;
+import com.redhat.thermostat.bundles.impl.OSGiRegistryImpl;
 import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
@@ -76,8 +76,8 @@ public class ThermostatTest {
     @Before
     public void setUp() throws Exception {
 
-        final OSGiRegistry osgiRegistry = mock(OSGiRegistry.class);
-        PowerMockito.whenNew(OSGiRegistry.class).withArguments(any(Configuration.class)).thenReturn(osgiRegistry);
+        final OSGiRegistryImpl osgiRegistry = mock(OSGiRegistryImpl.class);
+        PowerMockito.whenNew(OSGiRegistryImpl.class).withArguments(any(Configuration.class)).thenReturn(osgiRegistry);
 
         tempDir = Files.createTempDirectory("test");
         tempDir.toFile().deleteOnExit();

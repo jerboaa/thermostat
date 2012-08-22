@@ -59,7 +59,7 @@ import org.osgi.framework.launch.Framework;
 import org.osgi.framework.launch.FrameworkFactory;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.ConfigurationException;
 import com.redhat.thermostat.launcher.Launcher;
@@ -221,11 +221,11 @@ public class FrameworkProvider {
                 locations.add(location);
             }
         }
-        OSGiRegistryService.preLoadBundles(framework, locations, printOSGiInfo);
+        OSGiRegistry.preLoadBundles(framework, locations, printOSGiInfo);
     }
 
     private void setLoaderVerbosity(Framework framework) throws InterruptedException {
-        Object loader = getService(framework, OSGiRegistryService.class.getName());
+        Object loader = getService(framework, OSGiRegistry.class.getName());
         callVoidReflectedMethod(loader, "setPrintOSGiInfo", printOSGiInfo, Boolean.TYPE);
     }
 

@@ -42,7 +42,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.bundles.OSGiRegistryService;
+import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.CommandLoadingBundleActivator;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -62,8 +62,8 @@ public class Activator extends CommandLoadingBundleActivator {
         @Override
         public void doIt(Map<String, Object> services) {
             
-            ServiceReference reference = context.getServiceReference(OSGiRegistryService.class);
-            OSGiRegistryService bundleService = (OSGiRegistryService) context.getService(reference);
+            ServiceReference reference = context.getServiceReference(OSGiRegistry.class);
+            OSGiRegistry bundleService = (OSGiRegistry) context.getService(reference);
             LauncherImpl launcher = new LauncherImpl(context,
                     new CommandContextFactory(context), bundleService);
             launcherServiceRegistration = context.registerService(Launcher.class.getName(), launcher, null);
@@ -78,7 +78,7 @@ public class Activator extends CommandLoadingBundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-        tracker = new MultipleServiceTracker(context, new Class[] {OSGiRegistryService.class, Keyring.class}, new RegisterLauncherAction(context));
+        tracker = new MultipleServiceTracker(context, new Class[] {OSGiRegistry.class, Keyring.class}, new RegisterLauncherAction(context));
         tracker.open();
     }
 
