@@ -256,7 +256,7 @@ public class MongoStorage extends Storage {
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_STOP_TIME, agentInfo.getStopTime());
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ALIVE, agentInfo.isAlive());
-        result.put(StorageConstants.KEY_AGENT_CONFIG_LISTEN_PORT, agentInfo.getConfigListenPort());
+        result.put(StorageConstants.KEY_AGENT_CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
         
         BasicDBObject backends = new BasicDBObject();
         for (BackendInformation backend : agentInfo.getBackends()) {
@@ -391,20 +391,20 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public int getConfigListenPort(HostRef ref) {
-        return getConfigListenPort(ref.getAgentId());
+    public String getConfigListenAddress(HostRef ref) {
+        return getConfigListenAddress(ref.getAgentId());
     }
 
-    private int getConfigListenPort(String id) {
-        int port = -1;
+    private String getConfigListenAddress(String id) {
+        String address = null;
         DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
         BasicDBObject query = new BasicDBObject(KEY_AGENT_ID, id);
         DBObject config = configCollection.findOne(query);
-        Object value = config.get(StorageConstants.KEY_AGENT_CONFIG_LISTEN_PORT);
-        if (value instanceof Integer) {
-            port = (int) value;
+        Object value = config.get(StorageConstants.KEY_AGENT_CONFIG_LISTEN_ADDRESS);
+        if (value instanceof String) {
+            address = (String) value;
         }
-        return port;
+        return address;
     }
 
     @Override

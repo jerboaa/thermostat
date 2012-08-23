@@ -87,7 +87,7 @@ public abstract class Storage {
      */
     public abstract String getBackendConfig(String backendName, String configurationKey);
 
-    public abstract int getConfigListenPort(HostRef ref);
+    public abstract String getConfigListenAddress(HostRef ref);
 
     public abstract void saveFile(String filename, InputStream data);
 

@@ -43,5 +43,5 @@ public enum AgentProperties {
     DEBUG_CONSOLE,
     DB_URL,
     SAVE_ON_EXIT,
-    CONFIG_LISTEN_PORT,
+    CONFIG_LISTEN_ADDRESS,
 }

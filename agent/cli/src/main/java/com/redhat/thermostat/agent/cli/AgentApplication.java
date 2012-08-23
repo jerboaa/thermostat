@@ -139,7 +139,7 @@ public final class AgentApplication extends BasicCommand {
         logger.fine("Connecting to storage...");
 
         final ConfigurationServer configServer = OSGIUtils.getInstance().getService(ConfigurationServer.class);
-        configServer.startListening(configuration.getConfigListenPort());
+        configServer.startListening(configuration.getConfigListenAddress());
 
         BackendRegistry backendRegistry = null;
         try {

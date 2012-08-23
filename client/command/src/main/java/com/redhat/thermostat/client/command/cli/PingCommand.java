@@ -116,8 +116,10 @@ public class PingCommand extends SimpleCommand {
             printCustomMessageWithUsage(out, "Invalid host ID or agent no longer running.  See \'help list-vms to obtain a valid host ID.");
             return;
         }
-        int port = df.getStorage().getConfigListenPort(targetHostRef);
-        InetSocketAddress target = new InetSocketAddress(targetHostRef.getHostName(), port);
+        String address = df.getStorage().getConfigListenAddress(targetHostRef);
+        
+        String [] host = address.split(":");
+        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request ping = new Request(RequestType.RESPONSE_EXPECTED, target);
         ping.setReceiver("com.redhat.thermostat.agent.command.internal.PingReceiver");
         final Semaphore responseBarrier = new Semaphore(0);

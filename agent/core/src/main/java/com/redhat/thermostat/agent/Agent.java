@@ -121,7 +121,7 @@ public class Agent {
             agentInfo.addBackend(backendInfo);
         }
         agentInfo.setAlive(true);
-        agentInfo.setConfigListenPort(config.getConfigListenPort());
+        agentInfo.setConfigListenAddress(config.getConfigListenAddress());
         return agentInfo;
     }
 

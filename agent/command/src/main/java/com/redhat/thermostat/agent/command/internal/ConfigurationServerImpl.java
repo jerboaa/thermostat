@@ -44,7 +44,6 @@ import com.redhat.thermostat.agent.command.ConfigurationServer;
 
 class ConfigurationServerImpl implements ConfigurationServer {
 
-    private static final String HOST = "127.0.0.1";
     private final ConfigurationServerContext ctx;
 
     ConfigurationServerImpl(ConfigurationServerContext ctx) {
@@ -52,11 +51,13 @@ class ConfigurationServerImpl implements ConfigurationServer {
     }
 
     @Override
-    public void startListening(int configListenPort) {
+    public void startListening(String address) {
         ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
 
+        String [] host = address.split(":");
+        
         // Bind and start to accept incoming connections.
-        bootstrap.bind(new InetSocketAddress(HOST, configListenPort));
+        bootstrap.bind(new InetSocketAddress(host[0], Integer.parseInt(host[1])));
     }
 
     @Override

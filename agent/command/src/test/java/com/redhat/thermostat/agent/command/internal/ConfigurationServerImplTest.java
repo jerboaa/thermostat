@@ -72,12 +72,13 @@ public class ConfigurationServerImplTest {
 
     @Test
     public void testStartListening() {
-        InetSocketAddress addr = new InetSocketAddress("127.0.0.1", 123);
         ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
-        server.startListening(addr.getPort());
+        server.startListening("127.0.0.1:123");
 
         ArgumentCaptor<InetSocketAddress> argument = ArgumentCaptor.forClass(InetSocketAddress.class);
         verify(bootstrap).bind(argument.capture());
+        
+        InetSocketAddress addr = new InetSocketAddress("127.0.0.1", 123);
         assertEquals(addr, argument.getValue());
     }
 

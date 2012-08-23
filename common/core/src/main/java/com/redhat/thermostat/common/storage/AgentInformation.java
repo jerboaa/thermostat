@@ -51,7 +51,7 @@ public class AgentInformation {
     private long stopTime;
 
     private boolean alive;
-    private int configListenPort;
+    private String address;
 
     private List<BackendInformation> backends = new ArrayList<BackendInformation>();
     
@@ -87,11 +87,11 @@ public class AgentInformation {
         backends.add(backend);
     }
 
-    public int getConfigListenPort() {
-        return configListenPort;
+    public String getConfigListenAddress() {
+        return address;
     }
 
-    public void setConfigListenPort(int configListenPort) {
-        this.configListenPort = configListenPort;
+    public void setConfigListenAddress(String address) {
+        this.address = address;
     }
 }

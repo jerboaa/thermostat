@@ -87,10 +87,12 @@ public class AgentConfigsUtils {
             configuration.setPurge(!Boolean.parseBoolean(purge));
         }
 
-        configuration.setConfigListenPort(12000); // Needs some default value.
-        if (properties.containsKey(AgentProperties.CONFIG_LISTEN_PORT.name())) {
-            String port = properties.getProperty(AgentProperties.CONFIG_LISTEN_PORT.name());
-            configuration.setConfigListenPort(Integer.parseInt(port));
+        // TODO: we could avoid this, which means the agent doesn't want to
+        // accept any connection
+        configuration.setConfigListenAddress("127.0.0.1:12000");
+        if (properties.containsKey(AgentProperties.CONFIG_LISTEN_ADDRESS.name())) {
+            String address = properties.getProperty(AgentProperties.CONFIG_LISTEN_ADDRESS.name());
+            configuration.setConfigListenAddress(address);
         }
     }
     
