@@ -73,6 +73,11 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-hostname</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-tools</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -104,6 +109,7 @@
               com.redhat.thermostat.backend,
             </Export-Package>
             <Private-Package>
+              com.redhat.thermostat.utils.hostname,
               com.redhat.thermostat.backend.sample,
               com.redhat.thermostat.backend.system,
             </Private-Package>
@@ -112,7 +118,70 @@
           </instructions>
         </configuration>
       </plugin>
+      
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <argLine>-Djava.library.path=${project.build.directory}/</argLine>
+          </configuration>
+      </plugin>
+      
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <executions>  
+          <execution>
+            <phase>compile</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+          </execution>  
+        </executions>
+        <configuration>
+          <executable>make</executable>
+          <arguments>
+            <argument>all</argument>
+          </arguments>
+          <systemProperties>
+            <systemProperty>
+              <key>JAVA_HOME</key>
+              <value>${java.home}</value>
+            </systemProperty>
+          </systemProperties>
+        </configuration>
+      </plugin>
     </plugins>
+    <pluginManagement>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <versionRange>[1.2.1,)</versionRange>
+                    <goals>
+                      <goal>exec</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore></ignore>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>   
   </build>
 
 </project>

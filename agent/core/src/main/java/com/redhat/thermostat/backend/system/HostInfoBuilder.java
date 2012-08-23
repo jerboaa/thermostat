@@ -46,6 +46,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.utils.hostname.HostName;
 
 public class HostInfoBuilder {
 
@@ -150,15 +151,27 @@ public class HostInfoBuilder {
     }
 
     String getHostName() {
+        String hostname = null;
+        
         try {
             InetAddress localAddress = null;
             localAddress = InetAddress.getLocalHost();
-            return getHostName(localAddress);
+            hostname = getHostName(localAddress);
         } catch (UnknownHostException uhe) {
             logger.log(Level.WARNING, "unable to get hostname", uhe);
         }
-
-        return Constants.AGENT_LOCAL_HOSTNAME;
+        
+        // if fails, try to get hostname without dns lookup
+        if (hostname == null) {
+            hostname = HostName.getLocalHostName();
+        }
+        
+        // still null, use localhost
+        if (hostname == null) {
+            hostname = Constants.AGENT_LOCAL_HOSTNAME;
+        }
+        
+        return hostname;
     }
 
     String getHostName(InetAddress localAddress) {

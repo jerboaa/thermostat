@@ -173,7 +173,9 @@
                 <!--  also copy the native libraries -->
                 <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper.so"
                       todir="${project.build.directory}/libs/native" />
-                
+                <copy file="${main.basedir}/agent/core/target/libHostNameWrapper.so"
+                      todir="${project.build.directory}/libs/native" />
+                      
               </target>
             </configuration>
             <goals>
@@ -323,7 +325,7 @@
         <artifactId>thermostat-keyring</artifactId>
         <version>${project.version}</version>
     </dependency>
-    
+
     <!--  thread plugin -->
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
