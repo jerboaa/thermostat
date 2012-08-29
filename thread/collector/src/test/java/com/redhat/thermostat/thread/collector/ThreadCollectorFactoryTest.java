@@ -53,20 +53,9 @@ public class ThreadCollectorFactoryTest {
     public void testThreadCollectorFactory() {
         ThreadDao threadDao = mock(ThreadDao.class);
         VmRef reference = mock(VmRef.class);
-        
-        ScheduledExecutorService threadPool = mock(ScheduledExecutorService.class);
-        
-        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl(threadDao, threadPool);
+                
+        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl(threadDao);
         ThreadCollector collector = factory.getCollector(reference);
         assertNotNull(collector);
-        
-        // ask again, it must be the same instance as before
-        ThreadCollector collector2 = factory.getCollector(reference);
-        assertSame(collector, collector2);
-        
-        // and now of course it must be different
-        VmRef reference2 = mock(VmRef.class);
-        ThreadCollector collector3 = factory.getCollector(reference2);
-        assertNotSame(collector, collector3);
     }
 }

@@ -36,9 +36,6 @@
 
 package com.redhat.thermostat.thread.collector.osgi;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -52,11 +49,11 @@ import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
 
 public class Activator implements BundleActivator {
     
-    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(24);
     private ThreadCollectorFactoryImpl collectorFactory;
     
     @Override
     public void start(final BundleContext context) throws Exception {
+        
         @SuppressWarnings({ "rawtypes", "unchecked" })
         ServiceTracker tracker = new ServiceTracker(context, Storage.class.getName(), null) {
             @Override
@@ -65,10 +62,11 @@ public class Activator implements BundleActivator {
                 Storage storage = (Storage) context.getService(reference);
                 
                 ThreadDao threadDao = new ThreadDaoImpl(storage);
-                collectorFactory = new ThreadCollectorFactoryImpl(threadDao, executor);
+                collectorFactory = new ThreadCollectorFactoryImpl(threadDao);
 
                 context.registerService(ThreadCollectorFactory.class.getName(), collectorFactory, null);
-                
+                context.registerService(ThreadDao.class.getName(), threadDao, null);
+
                 return super.addingService(reference);
             }
         };
@@ -77,11 +75,5 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (collectorFactory != null) {
-            collectorFactory.shutdown();
-        }
-        if (executor != null) {
-            executor.shutdown();
-        }
     }
 }

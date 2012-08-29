@@ -36,98 +36,71 @@
 
 package com.redhat.thermostat.thread.collector.impl;
 
-import java.io.IOException;
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
-import java.util.ArrayList;
+import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.CountDownLatch;
 
-import javax.management.MalformedObjectNameException;
-
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.thread.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.ThreadSummary;
 import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnector;
+import com.redhat.thermostat.thread.harvester.HarvesterCommand;
+import com.redhat.thermostat.thread.harvester.ThreadHarvester;
 
-@SuppressWarnings("restriction")
 public class ThreadMXBeanCollector implements ThreadCollector {
 
     private ThreadDao threadDao;
     private VmRef ref;
-    private MXBeanConnector connector;
 
-    private MXBeanConnection connection;
-    private ThreadMXBean collectorBean;
-    
-    private boolean isConnected;
-    private ScheduledExecutorService threadPool;
-    
-    private ScheduledFuture<?> harvester;
-    
-    public ThreadMXBeanCollector(ThreadDao threadDao, VmRef ref, MXBeanConnector connector, ScheduledExecutorService threadPool) {
+    public ThreadMXBeanCollector(ThreadDao threadDao, VmRef ref) {
         this.threadDao = threadDao;
         this.ref = ref;
-        this.connector = connector;
-        this.threadPool = threadPool;
+    }
+
+    Request createRequest() {
+        HostRef targetHostRef = ref.getAgent();
+        
+        // todo
+        String address = threadDao.getStorage().getConfigListenAddress(targetHostRef);
+        String [] host = address.split(":");
+        
+        InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
+        Request harvester = new Request(RequestType.RESPONSE_EXPECTED, target);
+
+        harvester.setReceiver(ThreadHarvester.class.getName());
+        
+        return harvester;
+    }
+    
+    @Override
+    public void startHarvester() {
+        
+        Request harvester = createRequest();
+        harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
+        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+        harvester.setParameter(HarvesterCommand.AGENT_ID.name(), ref.getAgent().getAgentId());
+
+        RequestQueue queue = getRequestQueue();
+        queue.putRequest(harvester);
     }
 
     @Override
-    public synchronized void startHarvester() {
-        if (isConnected) return;
+    public void stopHarvester() {
         
-        if (!connector.isAttached()) {
-            try {
-                connector.attach();
-            } catch (Exception ignore) {
-                ignore.printStackTrace();
-            }
-        }
-        
-        try {
-            connection = connector.connect();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        isConnected = true;
-        
-        harvester = threadPool.scheduleAtFixedRate(new Harvester(), 0, 1, TimeUnit.SECONDS);
-    }
-    
-    private class Harvester implements Runnable {
-        @Override
-        public void run() {
-            harvestData();
-        }
-    }
-    
-    @Override
-    public synchronized void stopHarvester() {
-        if (!isConnected) return;
-        
-        harvester.cancel(false);
-        
-        try {
-            connection.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        
-        if (connector.isAttached()) {
-            try {
-                connector.close();
-            } catch (Exception ignore) {
-                ignore.printStackTrace();
-            }
-        }
-        
-        isConnected = false;
+        Request harvester = createRequest();
+        harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.STOP.name());
+        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+
+        RequestQueue queue = getRequestQueue();
+        queue.putRequest(harvester);
     }
     
     @Override
@@ -160,127 +133,39 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     public List<com.redhat.thermostat.thread.collector.ThreadInfo> getThreadInfo(long since) {
         return threadDao.loadThreadInfo(ref, since);
     }
-    
-    public synchronized void harvestData() {
-        try {
-            
-            long timestamp = System.currentTimeMillis();
-            
-            ThreadMXSummary summary = new ThreadMXSummary();
-            
-            collectorBean = getDataCollectorBean(connection);
-            
-            summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-            summary.setDaemonThreads(collectorBean.getDaemonThreadCount());
-            summary.setTimestamp(timestamp);
-            
-            threadDao.saveSummary(ref, summary);
-            
-            long [] ids = collectorBean.getAllThreadIds();
-            long[] allocatedBytes = null;
-            
-            // now the details for the threads
-            if (collectorBean instanceof com.sun.management.ThreadMXBean) {
-                com.sun.management.ThreadMXBean sunBean = (com.sun.management.ThreadMXBean) collectorBean;
-                boolean wasEnabled = false;
-                if (sunBean.isThreadAllocatedMemorySupported()) {
-                    wasEnabled = sunBean.isThreadAllocatedMemoryEnabled();
-                    sunBean.setThreadAllocatedMemoryEnabled(true);
-                    allocatedBytes = sunBean.getThreadAllocatedBytes(ids);
-                    sunBean.setThreadAllocatedMemoryEnabled(wasEnabled);
-                }
-            }
 
-            ThreadInfo[] threadInfos = collectorBean.getThreadInfo(ids, true, true);
-            
-            for (int i = 0; i < ids.length; i++) {
-                ThreadMXInfo info = new ThreadMXInfo();
-                ThreadInfo beanInfo = threadInfos[i];
-
-                info.setTimeStamp(timestamp);
-
-                info.setName(beanInfo.getThreadName());
-                info.setID(beanInfo.getThreadId());
-                info.setState(beanInfo.getThreadState());
-                info.setStackTrace(beanInfo.getStackTrace());
-
-                info.setCPUTime(collectorBean.getThreadCpuTime(info.getThreadID()));
-                info.setUserTime(collectorBean.getThreadUserTime(info.getThreadID()));
-                
-                info.setBlockedCount(beanInfo.getBlockedCount());
-                info.setWaitedCount(beanInfo.getWaitedCount());
-                
-                if (allocatedBytes != null) {
-                    info.setAllocatedBytes(allocatedBytes[i]);
-                }
-
-                threadDao.saveThreadInfo(ref, info);
-            }
-            
-        } catch (MalformedObjectNameException e) {
-            e.printStackTrace();
-        }
-    }
-    
     @Override
-    public synchronized VMThreadCapabilities getVMThreadCapabilities() {
+    public VMThreadCapabilities getVMThreadCapabilities() {
         
         VMThreadCapabilities caps = threadDao.loadCapabilities(ref);
         if (caps == null) {
-            if (!connector.isAttached()) {
-                try {
-                    connector.attach();
-                } catch (Exception ignore) {
-                    ignore.printStackTrace();
-                }
-            }
+            Request harvester = createRequest();
+            harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
+            harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+            harvester.setParameter(HarvesterCommand.AGENT_ID.name(), ref.getAgent().getAgentId());
             
-            // query caps to the vm, then save for later
-            try (MXBeanConnection connection = connector.connect()) {
-                             
-                ThreadMXBean bean = getDataCollectorBean(connection);
-                VMThreadMXCapabilities _caps = new VMThreadMXCapabilities();
-                
-                if (bean.isThreadCpuTimeSupported()) _caps.addFeature(ThreadDao.CPU_TIME);
-                if (bean.isThreadContentionMonitoringSupported()) _caps.addFeature(ThreadDao.CONTENTION_MONITOR);
-                
-                if (bean instanceof com.sun.management.ThreadMXBean) {
-                    com.sun.management.ThreadMXBean sunBean = (com.sun.management.ThreadMXBean) bean;
-                    if (sunBean.isThreadAllocatedMemorySupported())
-                        _caps.addFeature(ThreadDao.THREAD_ALLOCATED_MEMORY);
+            final CountDownLatch latch = new CountDownLatch(1);
+            harvester.addListener(new RequestResponseListener() {
+                @Override
+                public void fireComplete(Request request, Response response) {
+                    latch.countDown();
                 }
-                
-                caps = _caps;
-                
-                threadDao.saveCapabilities(ref, caps);
-                
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            });
 
-            if (connector.isAttached()) {
-                try {
-                    connector.close();
-                } catch (Exception ignore) {
-                    ignore.printStackTrace();
-                }
+            RequestQueue queue = getRequestQueue();
+            queue.putRequest(harvester);
+        
+            try {
+                latch.await();
+                caps = threadDao.loadCapabilities(ref);
+            } catch (InterruptedException ignore) {
+                caps = new VMThreadMXCapabilities();
             }
         }
-        
         return caps;
     }
     
-    private ThreadMXBean getDataCollectorBean(MXBeanConnection connection) throws MalformedObjectNameException {
-        ThreadMXBean bean = null;
-        try {
-            bean = connection.createProxy(ManagementFactory.THREAD_MXBEAN_NAME,
-                                          com.sun.management.ThreadMXBean.class);
-        } catch (MalformedObjectNameException ignore) {}
-        
-        if (bean == null) {
-            bean = connection.createProxy(ManagementFactory.THREAD_MXBEAN_NAME,
-                                          ThreadMXBean.class);
-        }
-        return bean;
+    RequestQueue getRequestQueue() {
+        return OSGIUtils.getInstance().getService(RequestQueue.class); 
     }
 }

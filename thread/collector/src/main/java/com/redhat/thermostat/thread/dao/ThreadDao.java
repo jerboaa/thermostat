@@ -41,6 +41,7 @@ import java.util.List;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.thread.collector.ThreadInfo;
 import com.redhat.thermostat.thread.collector.ThreadSummary;
 import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
@@ -62,7 +63,7 @@ public interface ThreadDao {
 
 
     VMThreadCapabilities loadCapabilities(VmRef ref);
-    void saveCapabilities(VmRef ref, VMThreadCapabilities caps);
+    void saveCapabilities(String vmId, String agentId, VMThreadCapabilities caps);
 
     static final String LIVE_THREADS = "thread-living";
     static final Key<Long> LIVE_THREADS_KEY = new Key<Long>(LIVE_THREADS, false);
@@ -74,7 +75,7 @@ public interface ThreadDao {
                          Key.TIMESTAMP,
                          LIVE_THREADS_KEY, DAEMON_THREADS_KEY);
     
-    void saveSummary(VmRef vm, ThreadSummary summary);
+    void saveSummary(String vmId, String agentId, ThreadSummary summary);
     ThreadSummary loadLastestSummary(VmRef ref);
     List<ThreadSummary> loadSummary(VmRef ref, long since);
 
@@ -104,6 +105,8 @@ public interface ThreadDao {
                          THREAD_USER_TIME_KEY, THREAD_BLOCKED_COUNT_KEY,
                          THREAD_WAIT_COUNT_KEY, THREAD_STACK_TRACE_ID_KEY);
     
-    void saveThreadInfo(VmRef ref, ThreadInfo info);
+    void saveThreadInfo(String vmId, String agentId, ThreadInfo info);
     List<ThreadInfo> loadThreadInfo(VmRef ref, long since);
+    
+    Storage getStorage();
 }

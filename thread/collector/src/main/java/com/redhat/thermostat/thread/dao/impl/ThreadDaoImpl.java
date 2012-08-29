@@ -84,8 +84,8 @@ public class ThreadDaoImpl implements ThreadDao {
     }
     
     @Override
-    public void saveCapabilities(VmRef vm, VMThreadCapabilities caps) {
-        Chunk chunk = prepareChunk(THREAD_CAPABILITIES, true, vm);
+    public void saveCapabilities(String vmId, String agentId, VMThreadCapabilities caps) {
+        Chunk chunk = prepareChunk(THREAD_CAPABILITIES, true, vmId, agentId);
         
         chunk.put(CONTENTION_MONITOR_KEY, caps.supportContentionMonitor());
         chunk.put(CPU_TIME_KEY, caps.supportCPUTime());
@@ -95,8 +95,8 @@ public class ThreadDaoImpl implements ThreadDao {
     }
     
     @Override
-    public void saveSummary(VmRef vm, ThreadSummary summary) {
-        Chunk chunk = prepareChunk(THREAD_SUMMARY, false, vm);
+    public void saveSummary(String vmId, String agentId, ThreadSummary summary) {
+        Chunk chunk = prepareChunk(THREAD_SUMMARY, false, vmId, agentId);
         
         chunk.put(LIVE_THREADS_KEY, summary.currentLiveThreads());
         chunk.put(DAEMON_THREADS_KEY, summary.currentDaemonThreads());
@@ -145,8 +145,8 @@ public class ThreadDaoImpl implements ThreadDao {
     }
     
     @Override
-    public void saveThreadInfo(VmRef ref, ThreadInfo info) {
-        Chunk chunk = prepareChunk(THREAD_INFO, false, ref);
+    public void saveThreadInfo(String vmId, String agentId, ThreadInfo info) {
+        Chunk chunk = prepareChunk(THREAD_INFO, false, vmId, agentId);
         
         chunk.put(Key.TIMESTAMP, info.getTimeStamp());
 
@@ -191,10 +191,19 @@ public class ThreadDaoImpl implements ThreadDao {
         return result;
     }
     
-    private Chunk prepareChunk(Category category, boolean replace, VmRef vm) {
+    private Chunk prepareChunk(Category category, boolean replace, String vmId, String agentId) {
         Chunk chunk = new Chunk(category, replace);
-        chunk.put(Key.AGENT_ID, vm.getAgent().getAgentId());
-        chunk.put(Key.VM_ID, vm.getId());
+        chunk.put(Key.AGENT_ID, agentId);
+        chunk.put(Key.VM_ID, Integer.valueOf(vmId));
         return chunk;
+    }
+    
+    private Chunk prepareChunk(Category category, boolean replace, VmRef vm) {
+        return prepareChunk(category, replace, vm.getIdString(), vm.getAgent().getAgentId());
+    }
+    
+    @Override
+    public Storage getStorage() {
+        return storage;
     }
 }

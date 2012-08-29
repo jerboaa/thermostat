@@ -61,7 +61,9 @@ public class ThreadDaoImplTest {
     public void testCreateConnectionKey() {
         Storage storage = mock(Storage.class);
         
+        @SuppressWarnings("unused")
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        
         verify(storage).createConnectionKey(ThreadDao.THREAD_CAPABILITIES);
         verify(storage).createConnectionKey(ThreadDao.THREAD_INFO);
         verify(storage).createConnectionKey(ThreadDao.THREAD_SUMMARY);
@@ -102,14 +104,6 @@ public class ThreadDaoImplTest {
     public void testSaveVMCapabilities() {
         Storage storage = mock(Storage.class);
         
-        VmRef ref = mock(VmRef.class);
-        when(ref.getId()).thenReturn(42);
-        
-        HostRef agent = mock(HostRef.class);
-        when(agent.getAgentId()).thenReturn("0xcafe");
-
-        when(ref.getAgent()).thenReturn(agent);
-
         Chunk answer = mock(Chunk.class);
         when(answer.get(ThreadDao.CONTENTION_MONITOR_KEY)).thenReturn(false);
         when(answer.get(ThreadDao.CPU_TIME_KEY)).thenReturn(true);
@@ -120,7 +114,7 @@ public class ThreadDaoImplTest {
         when(caps.supportThreadAllocatedMemory()).thenReturn(true);
         
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        dao.saveCapabilities(ref, caps);
+        dao.saveCapabilities("42", "0xcafe", caps);
 
         ArgumentCaptor<Chunk> queryCaptor = ArgumentCaptor.forClass(Chunk.class);
         verify(storage).putChunk(queryCaptor.capture());

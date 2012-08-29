@@ -34,23 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector.impl;
+package com.redhat.thermostat.thread.harvester.osgi;
 
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.ThreadCollectorFactory;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+
+import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.harvester.ThreadHarvester;
 
-public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
-
-    private ThreadDao threadDao;
+public class Activator implements BundleActivator {
     
-    public ThreadCollectorFactoryImpl(ThreadDao threadDao) {
-        this.threadDao = threadDao;
-    }
+    private ScheduledExecutorService executor = Executors.newScheduledThreadPool(24);
     
     @Override
-    public synchronized ThreadCollector getCollector(VmRef reference) {
-        return new ThreadMXBeanCollector(threadDao, reference);
+    public void start(final BundleContext context) throws Exception {
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        ServiceTracker tracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                ThreadDao threadDao = (ThreadDao) context.getService(reference);
+
+                ThreadHarvester harvester = new ThreadHarvester(executor, threadDao);
+  
+                ReceiverRegistry registry = new ReceiverRegistry(context);
+                registry.registerReceiver(harvester);
+                
+                return super.addingService(reference);
+            }
+        };
+        tracker.open();
+    }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        if (executor != null) {
+            executor.shutdown();
+        }        
     }
 }

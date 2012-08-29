@@ -54,20 +54,25 @@ public class MXBeanConnector implements Closeable {
     private static final String CONNECTOR_ADDRESS_PROPERTY = "com.sun.management.jmxremote.localConnectorAddress";
     private String connectorAddress;
     
-    private VmRef reference;
     private VirtualMachine vm;
     
     private boolean attached;
     
-    public MXBeanConnector(VmRef reference) {
+    private String reference;
+    
+    public MXBeanConnector(String reference) {
         this.reference = reference;
+    }
+    
+    public MXBeanConnector(VmRef reference) {
+        this.reference = reference.getStringID();
     }
     
     public synchronized void attach() throws Exception {
         if (attached)
             throw new IOException("Already attached");
         
-        vm = VirtualMachine.attach(reference.getStringID());
+        vm = VirtualMachine.attach(reference);
         attached = true;
         
         Properties props = vm.getAgentProperties();
