@@ -46,8 +46,8 @@ import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.controller.impl.ThreadInformationService;
-import com.redhat.thermostat.thread.collector.ThreadCollectorFactory;
 
 public class Activator implements BundleActivator {
 

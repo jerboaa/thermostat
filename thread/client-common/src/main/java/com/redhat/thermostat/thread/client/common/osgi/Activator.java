@@ -34,11 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector;
+package com.redhat.thermostat.thread.client.common.osgi;
 
-import com.redhat.thermostat.common.dao.VmRef;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-public interface ThreadCollectorFactory {
+import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.common.collector.impl.ThreadCollectorFactoryImpl;
+import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
 
-    ThreadCollector getCollector(VmRef reference);
+public class Activator implements BundleActivator {
+    
+    private ThreadCollectorFactoryImpl collectorFactory;
+    
+    @Override
+    public void start(final BundleContext context) throws Exception {
+        
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        ServiceTracker tracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                
+                ThreadDao threadDao = (ThreadDao) context.getService(reference);
+                
+                collectorFactory = new ThreadCollectorFactoryImpl(threadDao);
+
+                context.registerService(ThreadCollectorFactory.class.getName(), collectorFactory, null);
+
+                return super.addingService(reference);
+            }
+        };
+        tracker.open();
+    }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+    }
 }

@@ -58,9 +58,9 @@ import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.ThreadView.ThreadAction;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 
-import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 

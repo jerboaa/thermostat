@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector.impl;
+package com.redhat.thermostat.thread.client.common.collector.impl;
 
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -48,8 +48,8 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
-import com.redhat.thermostat.thread.collector.ThreadCollector;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;

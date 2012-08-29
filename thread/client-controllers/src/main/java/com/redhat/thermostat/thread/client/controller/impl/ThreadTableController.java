@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
-import com.redhat.thermostat.thread.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public class ThreadTableController implements CommonController {

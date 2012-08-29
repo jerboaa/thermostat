@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector.impl;
+package com.redhat.thermostat.thread.client.common.collector.impl;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
@@ -56,8 +56,9 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.collector.impl.ThreadMXBeanCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
-import com.redhat.thermostat.thread.collector.ThreadCollector;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 

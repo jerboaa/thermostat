@@ -102,11 +102,17 @@
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.thread.client.common</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.thread.client.common.osgi.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.thread.client.common,
               com.redhat.thermostat.thread.client.common.locale,
               com.redhat.thermostat.thread.client.common.chart,
+              com.redhat.thermostat.thread.client.common.collector,
             </Export-Package>
+            <Private-Package>
+              com.redhat.thermostat.thread.client.common.collector.impl,
+              com.redhat.thermostat.thread.client.common.osgi,
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

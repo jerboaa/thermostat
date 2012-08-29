@@ -34,39 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.controller.impl;
+package com.redhat.thermostat.thread.client.common.collector;
 
-import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import java.util.List;
 
-public class ThreadInformationService implements VmInformationService {
+import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
-    private VmFilter filter = new AlwaysMatchFilter();
-    private ApplicationService service;
-    private ThreadCollectorFactory collectorFactory;
-    private ThreadViewProvider viewFactory;
+public interface ThreadCollector {
     
-    public ThreadInformationService(ApplicationService appService, ThreadCollectorFactory collectorFactory,
-                                    ThreadViewProvider viewFactory)
-    {
-        this.service = appService;
-        this.collectorFactory = collectorFactory;
-        this.viewFactory = viewFactory;
-    }
+    VMThreadCapabilities getVMThreadCapabilities();
     
-    @Override
-    public VmFilter getFilter() {
-        return filter;
-    }
+    void startHarvester();
+    void stopHarvester();
 
-    @Override
-    public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new ThreadInformationController(ref, service, collectorFactory, viewFactory);
-    }
+    ThreadSummary getLatestThreadSummary();
+    List<ThreadSummary> getThreadSummary(long since);
+    List<ThreadSummary> getThreadSummary();
+    
+    /**
+     * Return a list of {@link ThreadInfoData}, sorted in descending order their by
+     * {@link ThreadInfoData#getTimeStamp()}, whose elements are at most
+     * "{@code since}" old.
+     */
+    List<ThreadInfoData> getThreadInfo(long since);
+
+    /**
+     * Return a list of all the {@link ThreadInfoData} collected, sorted in
+     * descending order their by {@link ThreadInfoData#getTimeStamp()}.
+     */
+    List<ThreadInfoData> getThreadInfo();
 }

@@ -34,35 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector;
+package com.redhat.thermostat.thread.client.common.collector;
 
-import java.util.List;
+import com.redhat.thermostat.common.dao.VmRef;
 
-import com.redhat.thermostat.thread.model.ThreadInfoData;
-import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+public interface ThreadCollectorFactory {
 
-public interface ThreadCollector {
-    
-    VMThreadCapabilities getVMThreadCapabilities();
-    
-    void startHarvester();
-    void stopHarvester();
-
-    ThreadSummary getLatestThreadSummary();
-    List<ThreadSummary> getThreadSummary(long since);
-    List<ThreadSummary> getThreadSummary();
-    
-    /**
-     * Return a list of {@link ThreadInfoData}, sorted in descending order their by
-     * {@link ThreadInfoData#getTimeStamp()}, whose elements are at most
-     * "{@code since}" old.
-     */
-    List<ThreadInfoData> getThreadInfo(long since);
-
-    /**
-     * Return a list of all the {@link ThreadInfoData} collected, sorted in
-     * descending order their by {@link ThreadInfoData#getTimeStamp()}.
-     */
-    List<ThreadInfoData> getThreadInfo();
+    ThreadCollector getCollector(VmRef reference);
 }

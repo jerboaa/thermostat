@@ -105,7 +105,7 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.thread.collector.osgi.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.thread.common.osgi.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.thread.collector</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.thread.collector,
@@ -113,8 +113,7 @@
               com.redhat.thermostat.thread.model,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.thread.collector.osgi,
-              com.redhat.thermostat.thread.collector.impl,
+              com.redhat.thermostat.thread.common.osgi,
               com.redhat.thermostat.thread.dao.impl,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

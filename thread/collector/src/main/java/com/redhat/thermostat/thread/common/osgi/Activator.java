@@ -34,28 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector;
+package com.redhat.thermostat.thread.common.osgi;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-import java.util.concurrent.ScheduledExecutorService;
-
-import org.junit.Test;
-
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.collector.impl.ThreadCollectorFactoryImpl;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
 
-public class ThreadCollectorFactoryTest {
+public class Activator implements BundleActivator {
 
-    @Test
-    public void testThreadCollectorFactory() {
-        ThreadDao threadDao = mock(ThreadDao.class);
-        VmRef reference = mock(VmRef.class);
-                
-        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl(threadDao);
-        ThreadCollector collector = factory.getCollector(reference);
-        assertNotNull(collector);
+    @SuppressWarnings("rawtypes")
+    private ServiceRegistration reg;
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+
+
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        ServiceTracker tracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                ThreadDao threadDao = new ThreadDaoImpl(storage);
+                reg = context.registerService(ThreadDao.class.getName(), threadDao, null);
+                return super.addingService(reference);
+            }
+        };
+        tracker.open();
     }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        if (reg != null) {
+            reg.unregister();
+        }
+    }
+
 }

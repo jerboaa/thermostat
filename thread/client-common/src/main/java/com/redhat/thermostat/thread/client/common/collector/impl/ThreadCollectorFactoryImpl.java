@@ -34,11 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector.impl;
+package com.redhat.thermostat.thread.client.common.collector.impl;
 
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
 public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
