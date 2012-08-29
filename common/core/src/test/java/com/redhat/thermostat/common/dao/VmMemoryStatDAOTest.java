@@ -116,8 +116,8 @@ public class VmMemoryStatDAOTest {
 
         assertEquals("vm-memory-stats", VmMemoryStatDAO.vmMemoryStatsCategory.getName());
         keys = VmMemoryStatDAO.vmMemoryStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", false)));
-        assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
+        assertTrue(keys.contains(new Key<>("agent-id", true)));
+        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<String>("eden.gen", false)));
         assertTrue(keys.contains(new Key<String>("eden.collector", false)));
@@ -234,7 +234,7 @@ public class VmMemoryStatDAOTest {
 
         assertEquals(VmMemoryStatDAO.vmMemoryStatsCategory, chunk.getCategory());
         assertEquals((Long) 1l, chunk.get(new Key<Long>("timestamp", false)));
-        assertEquals((Integer) 2, chunk.get(new Key<Integer>("vm-id", false)));
+        assertEquals((Integer) 2, chunk.get(new Key<Integer>("vm-id", true)));
         assertEquals("new", chunk.get(new Key<String>("eden.gen", false)));
         assertEquals("new", chunk.get(new Key<String>("eden.collector", false)));
         assertEquals((Long) 0l, chunk.get(new Key<Long>("eden.used", false)));

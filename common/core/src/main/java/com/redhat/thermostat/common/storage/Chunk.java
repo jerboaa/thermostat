@@ -100,4 +100,9 @@ public class Chunk {
         return Objects.equals(this.category, other.category) && Objects.equals(this.values, other.values);
     }
 
+    @Override
+    public String toString() {
+        return "Chunk: " + category.getName() + values.toString();
+    }
+
 }

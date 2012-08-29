@@ -70,8 +70,8 @@ public class VmGcStatDAOTest {
     public void testCategory() {
         assertEquals("vm-gc-stats", VmGcStatDAO.vmGcStatCategory.getName());
         Collection<Key<?>> keys = VmGcStatDAO.vmGcStatCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", false)));
-        assertTrue(keys.contains(new Key<Integer>("vm-id", false)));
+        assertTrue(keys.contains(new Key<>("agent-id", true)));
+        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
         assertTrue(keys.contains(new Key<Long>("timestamp", false)));
         assertTrue(keys.contains(new Key<String>("collector", false)));
         assertTrue(keys.contains(new Key<Long>("runtime-count", false)));

@@ -141,7 +141,7 @@ public class MongoStorage extends Storage {
                 BasicDBObject nested = nestedParts.get(entryParts[0]);
                 if (nested == null) {
                     if (isKey) {
-                        throwMissingKey(key.getName());
+                        throwMissingKey(key.getName(), chunk);
                     }
                     nested = new BasicDBObject();
                     nestedParts.put(entryParts[0], nested);
@@ -156,11 +156,12 @@ public class MongoStorage extends Storage {
                     replaceKeyNested.append(entryParts[1], replaceKeyNested);
                 }
             } else {
+                /* we dont modify agent id, and it's already used as key in updateKey */
                 if (!key.equals(Key.AGENT_ID)) {
                     String mongoKey = key.getName();
                     Object value = chunk.get(key);
                     if ((value == null) && isKey) {
-                        throwMissingKey(key.getName());
+                        throwMissingKey(key.getName(), chunk);
                     }
                     toInsert.append(mongoKey, value);
                     if (replace && isKey) {
@@ -197,7 +198,7 @@ public class MongoStorage extends Storage {
                 BasicDBObject nested = nestedParts.get(entryParts[0]);
                 if (nested == null) {
                     if (isKey) {
-                        throwMissingKey(key.getName());
+                        throwMissingKey(key.getName(), chunk);
                     }
                 } else {
                     if (isKey) {
@@ -213,16 +214,19 @@ public class MongoStorage extends Storage {
                 }
             } else {
                 String mongoKey = key.getName();
-                Object value = chunk.get(key);
-                if (value == null) {
-                    if (isKey) {
-                        throwMissingKey(key.getName());
-                    }
-                } else {
-                    if (isKey) {
-                        updateKey.append(mongoKey, value);
+                /* we dont modify agent id, and it's already used as key in updateKey */
+                if (!key.equals(Key.AGENT_ID)) {
+                    Object value = chunk.get(key);
+                    if (value == null) {
+                        if (isKey) {
+                            throwMissingKey(key.getName(), chunk);
+                        }
                     } else {
-                        toUpdate.append(SET_MODIFIER, new BasicDBObject(mongoKey, value));
+                        if (isKey) {
+                            updateKey.append(mongoKey, value);
+                        } else {
+                            toUpdate.append(SET_MODIFIER, new BasicDBObject(mongoKey, value));
+                        }
                     }
                 }
             }
@@ -236,8 +240,8 @@ public class MongoStorage extends Storage {
         coll.update(updateKey, toUpdate);
     }
 
-    private void throwMissingKey(String keyName) {
-        throw new IllegalArgumentException("Attempt to insert chunk with incomplete partial key.  Missing: " + keyName);
+    private void throwMissingKey(String keyName, Chunk chunk) {
+        throw new IllegalArgumentException("Attempt to insert chunk with incomplete partial key.  Missing: '" + keyName + "' in " + chunk);
     }
 
     private DBCollection getCachedCollection(String collName) {

@@ -187,8 +187,8 @@ public class HeapDAOTest {
         Collection<Key<?>> keys = category.getKeys();
         assertEquals(6, keys.size());
         assertTrue(keys.contains(new Key<>("_id", false)));
-        assertTrue(keys.contains(new Key<>("agent-id", false)));
-        assertTrue(keys.contains(new Key<>("vm-id", false)));
+        assertTrue(keys.contains(new Key<>("agent-id", true)));
+        assertTrue(keys.contains(new Key<>("vm-id", true)));
         assertTrue(keys.contains(new Key<>("timestamp", false)));
         assertTrue(keys.contains(new Key<>("heap-dump-id", false)));
         assertTrue(keys.contains(new Key<>("histogram-id", false)));

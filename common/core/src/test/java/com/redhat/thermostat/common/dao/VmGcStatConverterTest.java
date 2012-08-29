@@ -60,7 +60,7 @@ public class VmGcStatConverterTest {
         assertNotNull(chunk);
         assertEquals("vm-gc-stats", chunk.getCategory().getName());
         assertEquals(TIMESTAMP, chunk.get(new Key<Long>("timestamp", false)));
-        assertEquals(VM_ID, chunk.get(new Key<Integer>("vm-id", false)));
+        assertEquals(VM_ID, chunk.get(new Key<Integer>("vm-id", true)));
         assertEquals(COLLECTOR, chunk.get(new Key<String>("collector", false)));
         assertEquals(RUN_COUNT, chunk.get(new Key<Long>("runtime-count", false)));
         assertEquals(WALL_TIME, chunk.get(new Key<Long>("wall-time", false)));
