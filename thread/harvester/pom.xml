@@ -92,6 +92,8 @@
             <Bundle-Activator>com.redhat.thermostat.thread.harvester.osgi.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.thread.harvester</Bundle-SymbolicName>
             <Private-Package>
+              com.redhat.thermostat.thread.harvester,
+              com.redhat.thermostat.thread.harvester.management,
               com.redhat.thermostat.thread.harvester.osgi,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

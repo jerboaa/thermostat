@@ -61,12 +61,12 @@ import javax.management.MalformedObjectNameException;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.thread.collector.impl.ThreadMXInfo;
-import com.redhat.thermostat.thread.collector.impl.ThreadMXSummary;
-import com.redhat.thermostat.thread.collector.impl.VMThreadMXCapabilities;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnector;
+import com.redhat.thermostat.thread.harvester.management.MXBeanConnection;
+import com.redhat.thermostat.thread.harvester.management.MXBeanConnector;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class HarvesterTest {
 
@@ -294,14 +294,14 @@ public class HarvesterTest {
 
         ArgumentCaptor<String> vmCapture = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> agentCapture = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<ThreadMXSummary> summaryCapture = ArgumentCaptor.forClass(ThreadMXSummary.class);
+        ArgumentCaptor<ThreadSummary> summaryCapture = ArgumentCaptor.forClass(ThreadSummary.class);
 
         ThreadDao dao = mock(ThreadDao.class);
         doNothing().when(dao).saveSummary(vmCapture.capture(), agentCapture.capture(), summaryCapture.capture());
         
         ArgumentCaptor<String> vmCapture2 = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> agentCapture2 = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<ThreadMXInfo> threadInfoCapture = ArgumentCaptor.forClass(ThreadMXInfo.class);        
+        ArgumentCaptor<ThreadInfoData> threadInfoCapture = ArgumentCaptor.forClass(ThreadInfoData.class);        
         doNothing().when(dao).saveThreadInfo(vmCapture2.capture(), agentCapture2.capture(), threadInfoCapture.capture());
 
         final ThreadMXBean collectorBean = mock(ThreadMXBean.class);
@@ -327,10 +327,10 @@ public class HarvesterTest {
         
         verify(collectorBean).getThreadInfo(ids, true, true);
         
-        verify(dao).saveSummary(anyString(), anyString(), any(ThreadMXSummary.class));
+        verify(dao).saveSummary(anyString(), anyString(), any(ThreadSummary.class));
         
         // once for each thread info
-        verify(dao, times(2)).saveThreadInfo(anyString(), anyString(), any(ThreadMXInfo.class));
+        verify(dao, times(2)).saveThreadInfo(anyString(), anyString(), any(ThreadInfoData.class));
         
         assertEquals(42, summaryCapture.getValue().currentLiveThreads());
         assertEquals("42", vmCapture.getValue());
@@ -343,7 +343,7 @@ public class HarvesterTest {
         assertEquals("0xcafe", agentCapture2.getAllValues().get(0));
         assertEquals("0xcafe", agentCapture2.getAllValues().get(1));
         
-        List<ThreadMXInfo> threadInfos = threadInfoCapture.getAllValues();
+        List<ThreadInfoData> threadInfos = threadInfoCapture.getAllValues();
         assertEquals(2, threadInfos.size());
         
         assertEquals("fluff1", threadInfos.get(0).getName());
@@ -363,7 +363,7 @@ public class HarvesterTest {
 
         ArgumentCaptor<String> vmCapture = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<String> agentCapture = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<VMThreadMXCapabilities> capsCapture = ArgumentCaptor.forClass(VMThreadMXCapabilities.class);
+        ArgumentCaptor<VMThreadCapabilities> capsCapture = ArgumentCaptor.forClass(VMThreadCapabilities.class);
 
         ThreadDao dao = mock(ThreadDao.class);
         doNothing().when(dao).saveCapabilities(vmCapture.capture(), agentCapture.capture(), capsCapture.capture());
@@ -387,7 +387,7 @@ public class HarvesterTest {
         harvester.saveVmCaps();
         assertTrue(getDataCollectorBeanCalled[0]);
         
-        verify(dao, times(1)).saveCapabilities(anyString(), anyString(), any(VMThreadMXCapabilities.class));
+        verify(dao, times(1)).saveCapabilities(anyString(), anyString(), any(VMThreadCapabilities.class));
         assertEquals("42", vmCapture.getValue());
         assertEquals("0xcafe", agentCapture.getValue());
 

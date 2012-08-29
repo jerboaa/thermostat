@@ -34,14 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector.impl;
+package com.redhat.thermostat.thread.model;
 
 import java.lang.Thread.State;
 import java.util.Arrays;
 
-import com.redhat.thermostat.thread.collector.ThreadInfo;
+import com.redhat.thermostat.common.model.TimeStampedPojo;
 
-public class ThreadMXInfo implements ThreadInfo {
+
+public class ThreadInfoData implements TimeStampedPojo {
 
     private StackTraceElement[] stackTrace;
     private long threadID;
@@ -59,8 +60,7 @@ public class ThreadMXInfo implements ThreadInfo {
     public void setStackTrace(StackTraceElement[] stackTrace) {
         this.stackTrace = stackTrace;
     }
-    
-    @Override
+
     public StackTraceElement[] getStackTrace() {
         return stackTrace;
     }
@@ -93,27 +93,22 @@ public class ThreadMXInfo implements ThreadInfo {
         this.allocatedBytes = allocatedBytes;
     }
 
-    @Override
     public String getName() {
         return name;
     }
-    
-    @Override
+
     public long getAllocatedBytes() {
         return allocatedBytes;
     }
-    
-    @Override
+
     public long getThreadID() {
         return threadID;
     }
-    
-    @Override
+
     public State getState() {
         return threadState;
     }
-    
-    @Override
+
     public long getTimeStamp() {
         return timestamp;
     }
@@ -137,28 +132,23 @@ public class ThreadMXInfo implements ThreadInfo {
     public void setWaitedCount(long waitedCount) {
         this.waitedCount = waitedCount;
     }
-    
-    @Override
+
     public long getBlockedCount() {
         return blockedCount;
     }
-    
-    @Override
+
     public long getWaitedCount() {
         return waitedCount;
     }
-    
-    @Override
+
     public long getCpuTime() {
         return threadCpuTime;
     }
-    
-    @Override
+
     public long getUserTime() {
         return threadUserTime;
     }
 
-    @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
@@ -175,7 +165,7 @@ public class ThreadMXInfo implements ThreadInfo {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        ThreadMXInfo other = (ThreadMXInfo) obj;
+        ThreadInfoData other = (ThreadInfoData) obj;
         if (name == null) {
             if (other.name != null)
                 return false;

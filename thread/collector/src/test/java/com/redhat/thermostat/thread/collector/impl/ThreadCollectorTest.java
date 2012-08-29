@@ -56,10 +56,10 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.harvester.HarvesterCommand;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadCollectorTest {
 

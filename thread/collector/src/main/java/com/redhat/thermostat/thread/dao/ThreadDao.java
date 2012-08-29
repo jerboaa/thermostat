@@ -42,9 +42,9 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.thread.collector.ThreadInfo;
-import com.redhat.thermostat.thread.collector.ThreadSummary;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public interface ThreadDao {
 
@@ -105,8 +105,8 @@ public interface ThreadDao {
                          THREAD_USER_TIME_KEY, THREAD_BLOCKED_COUNT_KEY,
                          THREAD_WAIT_COUNT_KEY, THREAD_STACK_TRACE_ID_KEY);
     
-    void saveThreadInfo(String vmId, String agentId, ThreadInfo info);
-    List<ThreadInfo> loadThreadInfo(VmRef ref, long since);
+    void saveThreadInfo(String vmId, String agentId, ThreadInfoData info);
+    List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
     
     Storage getStorage();
 }

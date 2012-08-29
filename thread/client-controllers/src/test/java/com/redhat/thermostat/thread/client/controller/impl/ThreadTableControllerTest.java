@@ -55,7 +55,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.ThreadInfo;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public class ThreadTableControllerTest {
 

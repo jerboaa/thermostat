@@ -52,8 +52,8 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadDaoImplTest {
 

@@ -34,15 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector;
+package com.redhat.thermostat.thread.model;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public interface VMThreadCapabilities {
+import com.redhat.thermostat.thread.dao.ThreadDao;
 
-    boolean supportCPUTime();
-    boolean supportContentionMonitor();
-    boolean supportThreadAllocatedMemory();
+public class VMThreadCapabilities {
     
-    List<String> getSupportedFeaturesList();
+    private Set<String> features = new HashSet<>();
+
+    public boolean supportCPUTime() {
+        return features.contains(ThreadDao.CPU_TIME);
+    }
+
+    public boolean supportContentionMonitor() {
+        return features.contains(ThreadDao.CONTENTION_MONITOR);
+    }
+
+    public String toString() {
+        return "[supportCPU: " + supportCPUTime() + ", supportContention: " + supportContentionMonitor() +
+               ", supportThreadAllocatedMemory: " + supportThreadAllocatedMemory() + "]";
+    }
+
+    public boolean supportThreadAllocatedMemory() {
+        return features.contains(ThreadDao.THREAD_ALLOCATED_MEMORY);
+    }
+
+    public List<String> getSupportedFeaturesList() {
+        return new ArrayList<>(features);
+    }
+    
+    public void addFeature(String feature) {
+        features.add(feature);
+    }
 }

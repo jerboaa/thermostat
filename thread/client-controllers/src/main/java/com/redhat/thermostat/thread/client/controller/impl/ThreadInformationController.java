@@ -61,8 +61,8 @@ import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDiffer
 
 import com.redhat.thermostat.thread.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.collector.ThreadSummary;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadInformationController implements VmInformationServiceController {
 

@@ -46,13 +46,12 @@ import java.util.concurrent.TimeUnit;
 
 import javax.management.MalformedObjectNameException;
 
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.collector.impl.ThreadMXInfo;
-import com.redhat.thermostat.thread.collector.impl.ThreadMXSummary;
-import com.redhat.thermostat.thread.collector.impl.VMThreadMXCapabilities;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.utils.management.MXBeanConnection;
-import com.redhat.thermostat.utils.management.MXBeanConnector;
+import com.redhat.thermostat.thread.harvester.management.MXBeanConnection;
+import com.redhat.thermostat.thread.harvester.management.MXBeanConnector;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 @SuppressWarnings("restriction")
 class Harvester {
@@ -145,7 +144,7 @@ class Harvester {
       try {
           long timestamp = System.currentTimeMillis();
           
-          ThreadMXSummary summary = new ThreadMXSummary();
+          ThreadSummary summary = new ThreadSummary();
           
           collectorBean = getDataCollectorBean(connection);
           
@@ -173,7 +172,7 @@ class Harvester {
           ThreadInfo[] threadInfos = collectorBean.getThreadInfo(ids, true, true);
           
           for (int i = 0; i < ids.length; i++) {
-              ThreadMXInfo info = new ThreadMXInfo();
+              ThreadInfoData info = new ThreadInfoData();
               ThreadInfo beanInfo = threadInfos[i];
 
               info.setTimeStamp(timestamp);
@@ -223,7 +222,7 @@ class Harvester {
         try (MXBeanConnection connection = connector.connect()) {
 
             ThreadMXBean bean = getDataCollectorBean(connection);
-            VMThreadMXCapabilities caps = new VMThreadMXCapabilities();
+            VMThreadCapabilities caps = new VMThreadCapabilities();
 
             if (bean.isThreadCpuTimeSupported())
                 caps.addFeature(ThreadDao.CPU_TIME);

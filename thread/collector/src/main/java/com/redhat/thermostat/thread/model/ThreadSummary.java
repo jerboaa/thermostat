@@ -34,34 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.utils.management;
+package com.redhat.thermostat.thread.model;
 
-import java.io.Closeable;
-import java.io.IOException;
+import com.redhat.thermostat.common.model.TimeStampedPojo;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
 
-public class MXBeanConnection implements Closeable {
+public class ThreadSummary implements TimeStampedPojo {
 
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
+    private long currentLiveThreads;
+    private long daemonThreads;
     
-    MXBeanConnection(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
+    private long timestamp;
+
+    public long currentLiveThreads() {
+        return currentLiveThreads;
     }
     
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
+    public void setCurrentLiveThreads(long currentLiveThreads) {
+        this.currentLiveThreads = currentLiveThreads;
+    }
+
+    public long currentDaemonThreads() {
+        return daemonThreads;
+    }
+    
+    public void setDaemonThreads(long daemonThreads) {
+        this.daemonThreads = daemonThreads;
+    }
+
+    public long getTimeStamp() {
+        return timestamp;
+    }
+    
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
     }
     
     @Override
-    public void close() throws IOException {
-        connection.close();
+    public String toString() {
+        return "[timestamp: " + timestamp + ", currentLiveThreads: " +
+               currentLiveThreads + ", daemonThreads: " + daemonThreads + "]";
     }
 }

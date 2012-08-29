@@ -51,7 +51,7 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.ThreadInfo;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public class ThreadTableController implements CommonController {
     
@@ -99,7 +99,7 @@ public class ThreadTableController implements CommonController {
     private class ThreadTableControllerAction implements Runnable {
         @Override
         public void run() {
-            List<ThreadInfo> infos = collector.getThreadInfo();
+            List<ThreadInfoData> infos = collector.getThreadInfo();
             if(infos.size() > 0) {
                 
                 long lastPollTimestamp = infos.get(0).getTimeStamp();
@@ -110,11 +110,11 @@ public class ThreadTableController implements CommonController {
                 // first, get a map of all threads with the respective info
                 // the list will contain an ordered-by-timestamp list
                 // with the known history for each thread
-                Map<ThreadInfo, List<ThreadInfo>> stats = new HashMap<>();
-                for (ThreadInfo info : infos) {
-                    List<ThreadInfo> beanList = stats.get(info);
+                Map<ThreadInfoData, List<ThreadInfoData>> stats = new HashMap<>();
+                for (ThreadInfoData info : infos) {
+                    List<ThreadInfoData> beanList = stats.get(info);
                     if (beanList == null) {
-                        beanList = new ArrayList<ThreadInfo>();
+                        beanList = new ArrayList<ThreadInfoData>();
                         stats.put(info, beanList);
                     }                    
                     beanList.add(info);
@@ -123,7 +123,7 @@ public class ThreadTableController implements CommonController {
                 List<ThreadTableBean> tableBeans = new ArrayList<>();
                 
                 // now we have the list, we can do all the analysis we need
-                for (ThreadInfo key : stats.keySet()) {
+                for (ThreadInfoData key : stats.keySet()) {
                     ThreadTableBean bean = new ThreadTableBean();
                     
                     bean.setName(key.getName());
@@ -133,7 +133,7 @@ public class ThreadTableController implements CommonController {
                     bean.setBlockedCount(key.getBlockedCount());
                     
                     // get start time and stop time, if any
-                    List<ThreadInfo> beanList = stats.get(key);
+                    List<ThreadInfoData> beanList = stats.get(key);
                     long last = beanList.get(0).getTimeStamp();
                     long first = beanList.get(beanList.size() - 1).getTimeStamp();
                     
@@ -146,7 +146,7 @@ public class ThreadTableController implements CommonController {
                     // time for some stats
                     double running = 0;
                     double waiting = 0;
-                    for (ThreadInfo info : beanList) {
+                    for (ThreadInfoData info : beanList) {
                         State state = info.getState();
                         switch (state) {
                         case RUNNABLE:

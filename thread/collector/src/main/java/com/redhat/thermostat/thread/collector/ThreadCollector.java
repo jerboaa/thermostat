@@ -38,6 +38,10 @@ package com.redhat.thermostat.thread.collector;
 
 import java.util.List;
 
+import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+
 public interface ThreadCollector {
     
     VMThreadCapabilities getVMThreadCapabilities();
@@ -50,15 +54,15 @@ public interface ThreadCollector {
     List<ThreadSummary> getThreadSummary();
     
     /**
-     * Return a list of {@link ThreadInfo}, sorted in descending order their by
-     * {@link ThreadInfo#getTimeStamp()}, whose elements are at most
+     * Return a list of {@link ThreadInfoData}, sorted in descending order their by
+     * {@link ThreadInfoData#getTimeStamp()}, whose elements are at most
      * "{@code since}" old.
      */
-    List<ThreadInfo> getThreadInfo(long since);
+    List<ThreadInfoData> getThreadInfo(long since);
 
     /**
-     * Return a list of all the {@link ThreadInfo} collected, sorted in
-     * descending order their by {@link ThreadInfo#getTimeStamp()}.
+     * Return a list of all the {@link ThreadInfoData} collected, sorted in
+     * descending order their by {@link ThreadInfoData#getTimeStamp()}.
      */
-    List<ThreadInfo> getThreadInfo();
+    List<ThreadInfoData> getThreadInfo();
 }

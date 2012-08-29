@@ -45,13 +45,10 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.thread.collector.ThreadInfo;
-import com.redhat.thermostat.thread.collector.ThreadSummary;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
-import com.redhat.thermostat.thread.collector.impl.ThreadMXInfo;
-import com.redhat.thermostat.thread.collector.impl.ThreadMXSummary;
-import com.redhat.thermostat.thread.collector.impl.VMThreadMXCapabilities;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadDaoImpl implements ThreadDao {
 
@@ -66,7 +63,7 @@ public class ThreadDaoImpl implements ThreadDao {
     @Override
     public VMThreadCapabilities loadCapabilities(VmRef vm) {
         
-        VMThreadMXCapabilities caps = null;
+        VMThreadCapabilities caps = null;
         
         Chunk query = new Chunk(THREAD_CAPABILITIES, false);
         query.put(Key.VM_ID, vm.getId());
@@ -74,7 +71,7 @@ public class ThreadDaoImpl implements ThreadDao {
         
         Chunk found = storage.find(query);
         if (found != null) {
-            caps = new VMThreadMXCapabilities();
+            caps = new VMThreadCapabilities();
             if (found.get(CONTENTION_MONITOR_KEY)) caps.addFeature(CONTENTION_MONITOR);
             if (found.get(CPU_TIME_KEY)) caps.addFeature(CPU_TIME);
             if (found.get(THREAD_ALLOCATED_MEMORY_KEY)) caps.addFeature(THREAD_ALLOCATED_MEMORY);
@@ -107,13 +104,13 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public ThreadSummary loadLastestSummary(VmRef ref) {
-        ThreadMXSummary summary = null;
+        ThreadSummary summary = null;
 
         Chunk query = prepareChunk(THREAD_SUMMARY, false, ref);
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
         if (cursor.hasNext()) {
             Chunk found = cursor.next();
-            summary = new ThreadMXSummary();
+            summary = new ThreadSummary();
             summary.setTimestamp(found.get(Key.TIMESTAMP));
             summary.setCurrentLiveThreads(found.get(LIVE_THREADS_KEY));
             summary.setDaemonThreads(found.get(DAEMON_THREADS_KEY));
@@ -132,7 +129,7 @@ public class ThreadDaoImpl implements ThreadDao {
 
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
         while (cursor.hasNext()) {
-            ThreadMXSummary summary = new ThreadMXSummary();
+            ThreadSummary summary = new ThreadSummary();
             
             Chunk found = cursor.next();
             summary.setTimestamp(found.get(Key.TIMESTAMP));
@@ -145,7 +142,7 @@ public class ThreadDaoImpl implements ThreadDao {
     }
     
     @Override
-    public void saveThreadInfo(String vmId, String agentId, ThreadInfo info) {
+    public void saveThreadInfo(String vmId, String agentId, ThreadInfoData info) {
         Chunk chunk = prepareChunk(THREAD_INFO, false, vmId, agentId);
         
         chunk.put(Key.TIMESTAMP, info.getTimeStamp());
@@ -163,15 +160,15 @@ public class ThreadDaoImpl implements ThreadDao {
     }
 
     @Override
-    public List<ThreadInfo> loadThreadInfo(VmRef ref, long since) {
-        List<ThreadInfo> result = new ArrayList<>();
+    public List<ThreadInfoData> loadThreadInfo(VmRef ref, long since) {
+        List<ThreadInfoData> result = new ArrayList<>();
         
         Chunk query = prepareChunk(THREAD_INFO, false, ref);
         query.put(Key.WHERE, "this.timestamp > " + since);
         
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
         while (cursor.hasNext()) {
-            ThreadMXInfo info = new ThreadMXInfo();
+            ThreadInfoData info = new ThreadInfoData();
             
             Chunk found = cursor.next();
             info.setTimeStamp(found.get(Key.TIMESTAMP));

@@ -48,12 +48,12 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.ThreadSummary;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.harvester.HarvesterCommand;
-import com.redhat.thermostat.thread.harvester.ThreadHarvester;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
 
@@ -75,7 +75,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         Request harvester = new Request(RequestType.RESPONSE_EXPECTED, target);
 
-        harvester.setReceiver(ThreadHarvester.class.getName());
+        harvester.setReceiver(HarvesterCommand.RECEIVER);
         
         return harvester;
     }
@@ -108,7 +108,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         ThreadSummary summary = threadDao.loadLastestSummary(ref);
         if (summary == null) {
             // default to all 0
-            summary = new ThreadMXSummary();
+            summary = new ThreadSummary();
         }
         return summary;
     }
@@ -125,12 +125,12 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
     
     @Override
-    public List<com.redhat.thermostat.thread.collector.ThreadInfo> getThreadInfo() {
+    public List<ThreadInfoData> getThreadInfo() {
         return getThreadInfo(0);
     }
     
     @Override
-    public List<com.redhat.thermostat.thread.collector.ThreadInfo> getThreadInfo(long since) {
+    public List<ThreadInfoData> getThreadInfo(long since) {
         return threadDao.loadThreadInfo(ref, since);
     }
 
@@ -159,7 +159,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
                 latch.await();
                 caps = threadDao.loadCapabilities(ref);
             } catch (InterruptedException ignore) {
-                caps = new VMThreadMXCapabilities();
+                caps = new VMThreadCapabilities();
             }
         }
         return caps;

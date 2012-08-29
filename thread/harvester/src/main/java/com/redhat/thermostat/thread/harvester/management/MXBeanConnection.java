@@ -34,38 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector;
+package com.redhat.thermostat.thread.harvester.management;
 
-import com.redhat.thermostat.common.model.TimeStampedPojo;
+import java.io.Closeable;
+import java.io.IOException;
 
-public interface ThreadSummary extends TimeStampedPojo {
+import javax.management.JMX;
+import javax.management.MBeanServerConnection;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.remote.JMXConnector;
 
-    /**
-     * Represents the number of living {@link Thread}s, including daemon
-     * {@link Thread}s, currently running.
-     * 
-     * <br /><br />
-     * 
-     * A {@link Thread} is alive if it has been created, started and is not
-     * dead.
-     * 
-     * @see Thread#isAlive()
-     * @see Thread.State
-     */
-    long currentLiveThreads();
+public class MXBeanConnection implements Closeable {
+
+    private JMXConnector connection;
+    private MBeanServerConnection mbsc;
     
-    /**
-     * Represents the number of living {@link Thread}s which are also daemon
-     * {@link Thread}s, currently running.
-     * 
-     * <br /><br />
-     * 
-     * A {@link Thread} is alive if it has been created, started and is not
-     * dead.
-     * 
-     * @see #currentLiveThreads()
-     * @see Thread#isAlive()
-     * @see Thread.State
-     */
-    long currentDaemonThreads();
+    MXBeanConnection(JMXConnector connection, MBeanServerConnection mbsc) {
+        this.connection = connection;
+        this.mbsc = mbsc;
+    }
+    
+    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
+        ObjectName objectName = new ObjectName(name);
+        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
+    }
+    
+    @Override
+    public void close() throws IOException {
+        connection.close();
+    }
 }
