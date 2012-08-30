@@ -63,6 +63,7 @@
     <module>core</module>
     <module>command</module>
     <module>heapdumper</module>
+    <module>killvm</module>
   </modules>
 
 </project>

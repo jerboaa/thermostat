@@ -18,9 +18,10 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.client.killvm.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.client.killvm.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.client.killvm</Bundle-SymbolicName>
-            <Private-Package>com.redhat.thermostat.client.killvm</Private-Package>
+            <Export-Package>com.redhat.thermostat.client.killvm.locale</Export-Package>
+            <Private-Package>com.redhat.thermostat.client.killvm.internal</Private-Package>
           </instructions>
           <!-- Do not autogenerate uses clauses in Manifests -->
           <_nouses>true</_nouses>
@@ -37,6 +38,16 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -67,6 +78,16 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-command</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
