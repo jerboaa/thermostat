@@ -43,6 +43,8 @@ import java.lang.management.ThreadMXBean;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.management.MalformedObjectNameException;
 
@@ -55,6 +57,8 @@ import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 @SuppressWarnings("restriction")
 class Harvester {
+    
+    private static final Logger logger = Logger.getLogger(Harvester.class.getSimpleName());
     
     private boolean isConnected;
     private ScheduledExecutorService threadPool;
@@ -76,52 +80,66 @@ class Harvester {
         this.threadPool = threadPool;
     }
     
-    synchronized void start() {
-        if (isConnected) return;
-              
+    synchronized boolean start() {
+        if (isConnected) {
+            return true;
+        }
+
         if (!connector.isAttached()) {
             try {
                 connector.attach();
-            } catch (Exception ignore) {
-                ignore.printStackTrace();
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, "can't attach", ex);
+                return false;
             }
         }
       
         try {
             connection = connector.connect();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "can't connect", ex);
+            return false;
         }
-        isConnected = true;
         
+        isConnected = true;
         harvester = threadPool.scheduleAtFixedRate(new HarvesterAction(), 0, 1, TimeUnit.SECONDS);
+        
+        return isConnected;
     }
     
     boolean isConnected() {
         return isConnected;
     }
     
-    synchronized void stop() {
-        if (!isConnected)
-            return;
+    synchronized boolean stop() {
+        if (!isConnected) {
+            return true;
+        }
         
         harvester.cancel(false);
+        isConnected = false;
 
+        boolean stillConnected = false;
         try {
             connection.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            logger.log(Level.SEVERE, "can't close connection", ex);
+            stillConnected = true;
         }
 
         if (connector.isAttached()) {
             try {
                 connector.close();
-            } catch (Exception ignore) {
-                ignore.printStackTrace();
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, "can't detach", ex);
+                if (stillConnected) {
+                    isConnected = true;
+                }
+                return false;
             }
         }
 
-        isConnected = false;
+        return true;
     }
     
     ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
@@ -161,12 +179,14 @@ class Harvester {
           if (collectorBean instanceof com.sun.management.ThreadMXBean) {
               com.sun.management.ThreadMXBean sunBean = (com.sun.management.ThreadMXBean) collectorBean;
               boolean wasEnabled = false;
-              if (sunBean.isThreadAllocatedMemorySupported()) {
-                  wasEnabled = sunBean.isThreadAllocatedMemoryEnabled();
-                  sunBean.setThreadAllocatedMemoryEnabled(true);
-                  allocatedBytes = sunBean.getThreadAllocatedBytes(ids);
-                  sunBean.setThreadAllocatedMemoryEnabled(wasEnabled);
-              }
+              try {
+                  if (sunBean.isThreadAllocatedMemorySupported()) {
+                      wasEnabled = sunBean.isThreadAllocatedMemoryEnabled();
+                      sunBean.setThreadAllocatedMemoryEnabled(true);
+                      allocatedBytes = sunBean.getThreadAllocatedBytes(ids);
+                      sunBean.setThreadAllocatedMemoryEnabled(wasEnabled);
+                  }
+              } catch (Exception ignore) {}
           }
 
           ThreadInfo[] threadInfos = collectorBean.getThreadInfo(ids, true, true);
@@ -207,15 +227,19 @@ class Harvester {
         }
     }
     
-    synchronized void saveVmCaps() {
+    synchronized boolean saveVmCaps() {
         
         boolean closeAfter = false;
         if (!connector.isAttached()) {
             closeAfter = true; 
             try {
                 connector.attach();
-            } catch (Exception ignore) {
-                ignore.printStackTrace();
+            } catch (Exception ex) {
+                logger.log(Level.SEVERE, "can't attach", ex);
+                if (closeAfter) {
+                    closeConnection();
+                }
+                return false;
             }
         }
 
@@ -231,22 +255,33 @@ class Harvester {
 
             if (bean instanceof com.sun.management.ThreadMXBean) {
                 com.sun.management.ThreadMXBean sunBean = (com.sun.management.ThreadMXBean) bean;
-                if (sunBean.isThreadAllocatedMemorySupported())
-                    caps.addFeature(ThreadDao.THREAD_ALLOCATED_MEMORY);
+                
+                try {
+                    if (sunBean.isThreadAllocatedMemorySupported()) {
+                        caps.addFeature(ThreadDao.THREAD_ALLOCATED_MEMORY);
+                    }
+                } catch (Exception ignore) {};
             }
 
             threadDao.saveCapabilities(vmId, agentId, caps);
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
+            return false;
         }
 
         if (closeAfter) {
-            try {
-                connector.close();
-            } catch (Exception ignore) {
-                ignore.printStackTrace();
-            }
+            closeConnection();
+        }
+        
+        return true;
+    }
+    
+    private void closeConnection() {
+        try {
+            connector.close();
+        } catch (Exception ex) {
+            logger.log(Level.SEVERE, "can't close connection to vm", ex);
         }
     }
 }

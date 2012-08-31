@@ -61,7 +61,9 @@ public class VMThreadCapabilitiesController implements CommonController {
                 switch (actionEvent.getActionId()) {
                 case VISIBLE:
                     VMThreadCapabilities caps = collector.getVMThreadCapabilities();
-                    view.setVMThreadCapabilities(caps);
+                    if (caps != null) {
+                        view.setVMThreadCapabilities(caps);
+                    }
                     break;
 
                 default:

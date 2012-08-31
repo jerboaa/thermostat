@@ -64,48 +64,55 @@ public class ThreadHarvester implements RequestReceiver {
     @Override
     public Response receive(Request request) {
         
+        boolean result = false;
+        
         String command = request.getParameter(HarvesterCommand.class.getName());
         switch (HarvesterCommand.valueOf(command)) {
         case START: {
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
             String agentId = request.getParameter(HarvesterCommand.AGENT_ID.name());
-            startHarvester(vmId, agentId);
+            result = startHarvester(vmId, agentId);
             break;
         }   
         case STOP: {
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
-            stopHarvester(vmId);
+            result = stopHarvester(vmId);
             break;
         }
         case VM_CAPS: {
             // this is blocking
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
             String agentId = request.getParameter(HarvesterCommand.AGENT_ID.name());
-            saveVmCaps(vmId, agentId);
+            result = saveVmCaps(vmId, agentId);
             break;
         }
         default:
             break;
         }
         
-        return new Response(ResponseType.OK);
+        if (result) {
+            return new Response(ResponseType.OK);            
+        } else {
+            return new Response(ResponseType.ERROR);
+        }
     }
     
-    private void startHarvester(String vmId, String agentId) {
+    private boolean startHarvester(String vmId, String agentId) {
         Harvester harvester = getHarvester(vmId, agentId);
-        harvester.start();
+        return harvester.start();
     }
     
-    private void saveVmCaps(String vmId, String agentId) {
+    private boolean saveVmCaps(String vmId, String agentId) {
         Harvester harvester = getHarvester(vmId, agentId);
-        harvester.saveVmCaps();
+        return harvester.saveVmCaps();
     }
     
-    private void stopHarvester(String vmId) {
+    private boolean stopHarvester(String vmId) {
         Harvester harvester = connectors.get(vmId);
         if (harvester != null) {
-            harvester.stop();
+            return harvester.stop();
         }
+        return true;
     }
     
     Harvester getHarvester(String vmId, String agentId) {
