@@ -43,7 +43,7 @@ import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 
 public class ThreadInformationService implements VmInformationService {
 

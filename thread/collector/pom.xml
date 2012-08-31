@@ -66,6 +66,16 @@
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     
     <dependency>
       <groupId>org.osgi</groupId>
@@ -95,17 +105,16 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.thread.collector.osgi.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.thread.common.osgi.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.thread.collector</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.thread.collector,
               com.redhat.thermostat.thread.dao,
+              com.redhat.thermostat.thread.model,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.thread.collector.osgi,
-              com.redhat.thermostat.thread.collector.impl,
+              com.redhat.thermostat.thread.common.osgi,
               com.redhat.thermostat.thread.dao.impl,
-              com.redhat.thermostat.utils.management,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

@@ -64,6 +64,7 @@ import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -106,7 +107,7 @@ public final class AgentApplication extends BasicCommand {
         final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
         StorageProvider connProv = new MongoStorageProvider(configuration);
-        DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        final DAOFactory daoFactory = new MongoDAOFactory(connProv);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
@@ -123,7 +124,9 @@ public final class AgentApplication extends BasicCommand {
                     logger.fine("Connecting to storage.");
                     break;
                 case CONNECTED:
-                    logger.fine("Connected to storage.");
+                    logger.fine("Connected to storage, registering storage as service");
+                    Storage storage = daoFactory.getStorage();
+                    OSGIUtils.getInstance().registerService(Storage.class, storage);
                     break;
                 case FAILED_TO_CONNECT:
                     logger.warning("Could not connect to storage.");

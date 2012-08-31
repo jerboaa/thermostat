@@ -40,6 +40,7 @@ import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
@@ -65,6 +66,8 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     
     private static final Translate t = LocaleResources.createLocalizer();
 
+    private boolean skipNotification = false;
+    
     public SwingThreadView() {
         
         panel = new ThreadMainPanel();
@@ -92,6 +95,9 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         {
             @Override
             public void itemStateChanged(ItemEvent e) {
+                
+                if (skipNotification) return;
+                
                 ThreadAction action = null;
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     action = ThreadAction.START_LIVE_RECORDING;
@@ -130,11 +136,13 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     }
     
     @Override
-    public void setRecording(final boolean recording) {
+    public void setRecording(final boolean recording, final boolean notify) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                if (!notify) skipNotification = true;
                 timelinePanel.getRecordButton().setSelected(recording);
+                if (!notify) skipNotification = false;
             }
         });
     }
@@ -149,8 +157,13 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         });
     }
     
-    public void setLiveThreads(String liveThreads) {
-        timelinePanel.getLiveThreads().setText(liveThreads);
+    public void setLiveThreads(final String liveThreads) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                timelinePanel.getLiveThreads().setText(liveThreads);
+            }
+        });
     };
     
     @Override
@@ -178,5 +191,15 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     @Override
     public ThreadTableView createThreadTableView() {
         return threadTable;
+    }
+    
+    @Override
+    public void displayWarning(final String warning) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JOptionPane.showMessageDialog(panel.getParent(), warning, "", JOptionPane.WARNING_MESSAGE);
+            }
+        });
     }
 }

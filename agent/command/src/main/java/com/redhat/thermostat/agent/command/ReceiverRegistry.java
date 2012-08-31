@@ -60,3 +60,4 @@ public class ReceiverRegistry {
         proxy.unregisterAll();
     }
 }
+

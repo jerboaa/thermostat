@@ -44,7 +44,7 @@ import javax.swing.SwingWorker;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class SwingVMThreadCapabilitiesView extends VMThreadCapabilitiesView implements SwingComponent {
 

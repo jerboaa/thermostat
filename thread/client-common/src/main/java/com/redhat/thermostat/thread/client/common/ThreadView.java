@@ -62,7 +62,7 @@ public abstract class ThreadView extends BasicView implements UIComponent {
         notifier.removeActionListener(listener);
     }
     
-    public abstract void setRecording(boolean recording);
+    public abstract void setRecording(boolean recording, boolean notify);
     
     public abstract void setDaemonThreads(String daemonThreads);
     public abstract void setLiveThreads(String liveThreads);
@@ -70,4 +70,6 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     
     public abstract VMThreadCapabilitiesView createVMThreadCapabilitiesView();
     public abstract ThreadTableView createThreadTableView();
+    
+    public abstract void displayWarning(String warning);
 }

@@ -109,7 +109,7 @@ public class VmInfoDAOTest {
     public void testCategory() {
         assertEquals("vm-info", VmInfoDAO.vmInfoCategory.getName());
         Collection<Key<?>> keys = VmInfoDAO.vmInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", false)));
+        assertTrue(keys.contains(new Key<>("agent-id", true)));
         assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
         assertTrue(keys.contains(new Key<Integer>("vm-pid", false)));
         assertTrue(keys.contains(new Key<String>("runtime-version", false)));

@@ -50,8 +50,8 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
-import com.redhat.thermostat.thread.collector.ThreadCollector;
-import com.redhat.thermostat.thread.collector.VMThreadCapabilities;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class VMThreadCapabilitiesControllerTest {
 

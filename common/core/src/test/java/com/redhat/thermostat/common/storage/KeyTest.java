@@ -130,4 +130,14 @@ public class KeyTest {
         String string1 = key1.toString();
         assertEquals(string1, "Key: key1");
     }
+
+    @Test
+    public void verifyAgentIdIsPartialkey() {
+        assertTrue(Key.AGENT_ID.isPartialCategoryKey());
+    }
+
+    @Test
+    public void verifyVmIdIsPartialkey() {
+        assertTrue(Key.VM_ID.isPartialCategoryKey());
+    }
 }
