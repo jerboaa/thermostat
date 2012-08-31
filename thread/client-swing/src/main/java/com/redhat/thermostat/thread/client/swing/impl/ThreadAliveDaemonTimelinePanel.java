@@ -128,8 +128,11 @@ class ThreadAliveDaemonTimelinePanel extends JPanel {
         );
         
         toggleButton = new ToggleButton();
+        toggleButton.setName("recordButton");
         
         lblNewLabel = new JLabel("New label");
+        lblNewLabel.setName("recordButtonText");
+        
         GroupLayout gl_panel = new GroupLayout(panel);
         gl_panel.setHorizontalGroup(
             gl_panel.createParallelGroup(Alignment.TRAILING)

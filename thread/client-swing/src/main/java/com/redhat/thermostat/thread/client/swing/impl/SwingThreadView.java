@@ -108,9 +108,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                
-                if (skipNotification) return;
-                
+                                
                 ThreadAction action = null;
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     action = ThreadAction.START_LIVE_RECORDING;
@@ -119,6 +117,9 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                     action = ThreadAction.STOP_LIVE_RECORDING;
                     timelinePanel.setToggleText(t.localize(LocaleResources.START_RECORDING) + ":");
                 }
+                
+                if (skipNotification) return;
+                
                 final ThreadAction toNotify = action;
                 SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
                     @Override
