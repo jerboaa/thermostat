@@ -81,26 +81,103 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     }
     
     @Override
-    public void startHarvester() {
+    public boolean startHarvester() {
         
         Request harvester = createRequest();
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
         harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
         harvester.setParameter(HarvesterCommand.AGENT_ID.name(), ref.getAgent().getAgentId());
-
-        RequestQueue queue = getRequestQueue();
+        
+        final CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] result = new boolean[1];
+        
+        harvester.addListener(new RequestResponseListener() {
+            @Override
+            public void fireComplete(Request request, Response response) {
+                switch (response.getType()) {
+                case OK:
+                    result[0] = true;
+                    break;
+                default:
+                    break;
+                }
+                latch.countDown();
+            }
+        });
+        
+        RequestQueue queue = getRequestQueue();        
         queue.putRequest(harvester);
+
+        try {
+            latch.await();
+        } catch (InterruptedException ignore) {}
+        
+        return result[0];
     }
 
     @Override
-    public void stopHarvester() {
+    public boolean stopHarvester() {
         
         Request harvester = createRequest();
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.STOP.name());
         harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
 
+        final CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] result = new boolean[1];
+
+        harvester.addListener(new RequestResponseListener() {
+            @Override
+            public void fireComplete(Request request, Response response) {
+                switch (response.getType()) {
+                case OK:
+                    result[0] = true;
+                    break;
+                default:
+                    break;
+                }
+                latch.countDown();
+            }
+        });
+        
         RequestQueue queue = getRequestQueue();
         queue.putRequest(harvester);
+
+        try {
+            latch.await();
+        } catch (InterruptedException ignore) {}
+        return result[0];
+    }
+    
+    @Override
+    public boolean isHarvesterCollecting() {
+        Request harvester = createRequest();
+        harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.IS_COLLECTING.name());
+        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
+
+        final CountDownLatch latch = new CountDownLatch(1);        
+        final boolean[] result = new boolean[1];
+
+        harvester.addListener(new RequestResponseListener() {
+            @Override
+            public void fireComplete(Request request, Response response) {
+                switch (response.getType()) {
+                case OK:
+                    result[0] = true;
+                    break;
+                default:
+                    break;
+                }
+                latch.countDown();
+            }
+        });
+        
+        RequestQueue queue = getRequestQueue();
+        queue.putRequest(harvester);
+
+        try {
+            latch.await();
+        } catch (InterruptedException ignore) {}
+        return result[0];
     }
     
     @Override

@@ -5,6 +5,7 @@ public enum HarvesterCommand {
     START,
     STOP,
     VM_CAPS,
+    IS_COLLECTING,
     
     AGENT_ID,
     VM_ID;

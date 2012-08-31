@@ -86,7 +86,14 @@ public class ThreadHarvester implements RequestReceiver {
             result = saveVmCaps(vmId, agentId);
             break;
         }
+        case IS_COLLECTING: {
+            // this is blocking too
+            String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
+            // FIXME: this need to be replaced when we support response parameters
+            return isCollecting(vmId) ? new Response(ResponseType.OK) : new Response(ResponseType.NOK);
+        }        
         default:
+            result = false;
             break;
         }
         
@@ -95,6 +102,14 @@ public class ThreadHarvester implements RequestReceiver {
         } else {
             return new Response(ResponseType.ERROR);
         }
+    }
+    
+    private boolean isCollecting(String vmId) {
+        Harvester harvester = connectors.get(vmId);
+        if (harvester == null) {
+            return false;
+        }
+        return harvester.isConnected();
     }
     
     private boolean startHarvester(String vmId, String agentId) {

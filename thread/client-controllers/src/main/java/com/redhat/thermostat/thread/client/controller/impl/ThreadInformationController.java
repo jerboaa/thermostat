@@ -75,16 +75,12 @@ public class ThreadInformationController implements VmInformationServiceControll
     private Timer timer;
     private ApplicationCache cache;
     
-    String CACHE_RECORDING_KEY = "thread-live-recording-";
-
     private LivingDaemonThreadDifferenceChart model;
-    
+        
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        ThreadCollectorFactory collectorFactory, 
                                        ThreadViewProvider viewFactory)
-    {
-        CACHE_RECORDING_KEY = CACHE_RECORDING_KEY + ref.getStringID();
-        
+    {        
         this.appService = appService;
         cache = appService.getApplicationCache();
 
@@ -115,7 +111,7 @@ public class ThreadInformationController implements VmInformationServiceControll
                     timer.stop();
                     break;
                 
-                case VISIBLE:                    
+                case VISIBLE:
                     timer.start();
                     break;
 
@@ -125,17 +121,13 @@ public class ThreadInformationController implements VmInformationServiceControll
             }
         });
         
-        view.setRecording(isRecording());
+        view.setRecording(isRecording(), false);
         view.addThreadActionListener(new ThreadActionListener());
     }
     
     private boolean isRecording() {
-        Boolean isRecording = (Boolean) cache.getAttribute(CACHE_RECORDING_KEY);
-        return (isRecording != null && isRecording); 
-    }
-    
-    private void setRecording(boolean recording) {
-        cache.addAttribute(CACHE_RECORDING_KEY, recording);
+        
+        return collector.isHarvesterCollecting();
     }
     
     @Override
@@ -174,15 +166,24 @@ public class ThreadInformationController implements VmInformationServiceControll
 
         @Override
         public void actionPerformed(ActionEvent<ThreadAction> actionEvent) {
+
+            boolean result = false;
+            
             switch (actionEvent.getActionId()) {
             case START_LIVE_RECORDING:
-                collector.startHarvester();
-                setRecording(true);
+                result = collector.startHarvester();
+                if (!result) {
+                    view.displayWarning("Cannot enable Thread recording");
+                    view.setRecording(false, false);
+                }
                 break;
             
             case STOP_LIVE_RECORDING:
-                collector.stopHarvester();
-                setRecording(false);
+                result = collector.stopHarvester();
+                if (!result) {
+                    view.displayWarning("Cannot disable Thread recording");
+                    view.setRecording(true, false);
+                }
                 break;
                 
             default:

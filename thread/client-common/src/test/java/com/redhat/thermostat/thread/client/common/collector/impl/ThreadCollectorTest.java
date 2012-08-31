@@ -54,6 +54,8 @@ import org.mockito.stubbing.Answer;
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
@@ -164,6 +166,26 @@ public class ThreadCollectorTest {
         when(reference.getIdString()).thenReturn("00101010");
         when(reference.getAgent()).thenReturn(agent);
         
+        final Response response = mock(Response.class);
+        when(response.getType()).thenReturn(ResponseType.OK);
+        
+        final ArgumentCaptor<RequestResponseListener> captor = ArgumentCaptor.forClass(RequestResponseListener.class);
+        doNothing().when(request).addListener(captor.capture());
+        
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Request req = (Request) invocation.getArguments()[0];
+                assertSame(request, req);
+                
+                RequestResponseListener listener = captor.getValue();
+                listener.fireComplete(request, response);
+                
+                return null;
+            }
+
+        }).when(requestQueue).putRequest(request);
+        
         ThreadCollector collector = new ThreadMXBeanCollector(threadDao, reference) {
             @Override
             Request createRequest() {
@@ -174,6 +196,7 @@ public class ThreadCollectorTest {
                 return requestQueue;
             }
         };
+        
         collector.startHarvester();
         
         verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
@@ -192,6 +215,26 @@ public class ThreadCollectorTest {
         ThreadDao threadDao = mock(ThreadDao.class);
         VmRef reference = mock(VmRef.class);
         when(reference.getIdString()).thenReturn("00101010");
+        
+        final Response response = mock(Response.class);
+        when(response.getType()).thenReturn(ResponseType.OK);
+        
+        final ArgumentCaptor<RequestResponseListener> captor = ArgumentCaptor.forClass(RequestResponseListener.class);
+        doNothing().when(request).addListener(captor.capture());
+        
+        doAnswer(new Answer<Void>() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                Request req = (Request) invocation.getArguments()[0];
+                assertSame(request, req);
+                
+                RequestResponseListener listener = captor.getValue();
+                listener.fireComplete(request, response);
+                
+                return null;
+            }
+
+        }).when(requestQueue).putRequest(request);
         
         ThreadCollector collector = new ThreadMXBeanCollector(threadDao, reference) {
             @Override

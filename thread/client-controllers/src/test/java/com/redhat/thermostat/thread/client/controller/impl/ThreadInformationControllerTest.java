@@ -42,6 +42,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.times;
 
 import org.junit.After;
 import org.junit.Before;
@@ -74,7 +75,7 @@ public class ThreadInformationControllerTest {
     private ThreadInformationController controller;
     
     private ApplicationService appService;
-    
+        
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -125,13 +126,15 @@ public class ThreadInformationControllerTest {
         
         VmRef ref = mock(VmRef.class);
         
-        ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class); 
+        ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
+        ThreadCollector collector = mock(ThreadCollector.class);
+        when(collectorFactory.getCollector(ref)).thenReturn(collector);
         
         controller = new ThreadInformationController(ref, appService, collectorFactory, viewFactory);
     }
     
     @Test
-    public void liveRecodingKeySet() {
+    public void verifyLiveRecording() {
         
         ActionListener<ThreadView.ThreadAction> threadActionListener;
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -139,35 +142,39 @@ public class ThreadInformationControllerTest {
         
         VmRef ref = mock(VmRef.class);
         when(ref.getStringID()).thenReturn("42");
-        ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
-        
+                
         ThreadCollector collector = mock(ThreadCollector.class);
+        when(collector.isHarvesterCollecting()).thenReturn(false).thenReturn(true);
+        when(collector.startHarvester()).thenReturn(true);
+        when(collector.stopHarvester()).thenReturn(true).thenReturn(false);
+
+        ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
         when(collectorFactory.getCollector(ref)).thenReturn(collector);
         
         ApplicationCache cache = mock(ApplicationCache.class);
         appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
-        when(cache.getAttribute(anyString())).thenReturn(false).thenReturn(true);
         
         controller = new ThreadInformationController(ref, appService, collectorFactory, viewFactory);
-        assertEquals("thread-live-recording-42", controller.CACHE_RECORDING_KEY);
         
-        verify(cache).getAttribute("thread-live-recording-42");
-        verify(view).setRecording(false);
+        verify(collector).isHarvesterCollecting();
+        verify(view, times(1)).setRecording(false, false);
         
         threadActionListener = viewArgumentCaptor.getValue();
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.START_LIVE_RECORDING));
         
-        verify(cache).addAttribute("thread-live-recording-42", true);
+        verify(view, times(1)).setRecording(false, false);
         verify(collector).startHarvester();
         
         threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
-        verify(cache).addAttribute("thread-live-recording-42", false);
-        verify(collector).stopHarvester();        
         
-        // check that the value indeed persist across sessions
-        controller = new ThreadInformationController(ref, appService, collectorFactory, viewFactory);
-        verify(view).setRecording(true);
+        verify(collector).stopHarvester();        
+        verify(view, times(1)).setRecording(false, false);
+        
+        threadActionListener.actionPerformed(new ActionEvent<>(view, ThreadView.ThreadAction.STOP_LIVE_RECORDING));
+        
+        verify(collector, times(2)).stopHarvester();        
+        verify(view, times(1)).setRecording(true, false);
     }
     
     @Test

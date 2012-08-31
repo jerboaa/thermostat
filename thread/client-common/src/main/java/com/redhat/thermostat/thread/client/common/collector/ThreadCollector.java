@@ -46,9 +46,10 @@ public interface ThreadCollector {
     
     VMThreadCapabilities getVMThreadCapabilities();
     
-    void startHarvester();
-    void stopHarvester();
-
+    boolean startHarvester();
+    boolean stopHarvester();
+    boolean isHarvesterCollecting();
+    
     ThreadSummary getLatestThreadSummary();
     List<ThreadSummary> getThreadSummary(long since);
     List<ThreadSummary> getThreadSummary();
