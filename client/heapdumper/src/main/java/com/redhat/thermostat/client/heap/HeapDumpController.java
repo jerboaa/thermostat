@@ -38,16 +38,17 @@ package com.redhat.thermostat.client.heap;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.heap.HeapView.HeadDumperAction;
+import com.redhat.thermostat.client.heap.HeapView.HeapDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -79,6 +80,10 @@ public class HeapDumpController implements VmInformationServiceController {
     private ApplicationService appService;
 
     public HeapDumpController(final VmRef ref, final ApplicationService appService) {
+        this(ref, appService, new HeapDumperCommand());
+    }
+
+    HeapDumpController(final VmRef ref, final ApplicationService appService, final HeapDumperCommand command) {
         
         this.appService = appService;
         this.ref = ref;
@@ -134,22 +139,18 @@ public class HeapDumpController implements VmInformationServiceController {
                 }
             }
         });
-        
-        final HeapDumperCommand command = new HeapDumperCommand();
-        view.addDumperListener(new ActionListener<HeapView.HeadDumperAction>() {
+
+        view.addDumperListener(new ActionListener<HeapView.HeapDumperAction>() {
             @Override
-            public void actionPerformed(ActionEvent<HeadDumperAction> actionEvent) {
+            public void actionPerformed(ActionEvent<HeapDumperAction> actionEvent) {
                 HeapDump dump = null;
                 switch (actionEvent.getActionId()) {
                 case DUMP_REQUESTED:
-                    dump = command.execute(ref);
-                    view.addHeapDump(dump);
-                    
-                    // also, only if it's the fist dump, we jump there
-                    // it doesn't disrupt the workflow if it's the first dump
-                    if (appService.getApplicationCache().getAttribute(ref) == null) {
-                        analyseDump(dump);
-                    }
+                    command.execute(ref, new Runnable() {
+                        public void run() {
+                            view.notifyHeapDumpComplete();
+                        }
+                    });
                     
                     break;
                 
@@ -192,9 +193,18 @@ public class HeapDumpController implements VmInformationServiceController {
     }
 
     class HeapOverviewDataCollector implements Runnable {
+        private void checkForHeapDumps() {
+            Collection<HeapInfo> heapInfos = heapDAO.getAllHeapInfo(ref);
+            List<HeapDump> heapDumps = new ArrayList<HeapDump>(heapInfos.size());
+            for (HeapInfo heapInfo : heapInfos) {
+                heapDumps.add(new HeapDump(heapInfo, heapDAO));
+            }
+            view.updateHeapDumpList(heapDumps);
+        }
+
         @Override
         public void run() {
-            
+            checkForHeapDumps();
             List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
             for (VmMemoryStat memoryStats: vmInfo) {
                 long used = 0l;

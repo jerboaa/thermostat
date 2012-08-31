@@ -39,14 +39,16 @@ package com.redhat.thermostat.client.heap.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.isA;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.client.heap.cli.DumpHeapCommand;
-import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -66,6 +68,16 @@ public class DumpHeapCommandTest {
     @Test
     public void verifyAcuallyCallsWorker() throws CommandException {
         HeapDumperCommand impl = mock(HeapDumperCommand.class);
+        final ArgumentCaptor<Runnable> arg = ArgumentCaptor.forClass(Runnable.class);
+        doAnswer(new Answer<Void>() {
+
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                arg.getValue().run();
+                return null;
+            }
+        }).when(impl).execute(any(VmRef.class), arg.capture());
+
         DumpHeapCommand command = new DumpHeapCommand(impl);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
@@ -76,7 +88,7 @@ public class DumpHeapCommandTest {
 
         command.run(factory.createContext(args));
 
-        verify(impl).execute(isA(VmRef.class));
+        verify(impl).execute(isA(VmRef.class), any(Runnable.class));
         assertEquals("Done\n", factory.getOutput());
     }
 

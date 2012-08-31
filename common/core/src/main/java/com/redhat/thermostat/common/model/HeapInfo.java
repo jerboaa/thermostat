@@ -38,23 +38,21 @@ package com.redhat.thermostat.common.model;
 
 import java.util.Objects;
 
-import com.redhat.thermostat.common.dao.VmRef;
-
 public class HeapInfo {
 
-    private VmRef vm;
+    private int vmId;
     private long timestamp;
     private String heapId;
     private String heapDumpId;
     private String histogramId;
 
-    public HeapInfo(VmRef vm, long timestamp) {
-        this.vm = vm;
+    public HeapInfo(int vmId, long timestamp) {
+        this.vmId = vmId;
         this.timestamp = timestamp;
     }
 
-    public VmRef getVm() {
-        return vm;
+    public int getVmId() {
+        return vmId;
     }
 
     public long getTimestamp() {
@@ -83,13 +81,13 @@ public class HeapInfo {
             return false;
         }
         HeapInfo other = (HeapInfo) o;
-        return Objects.equals(vm, other.vm) && Objects.equals(heapDumpId, other.heapDumpId)
+        return vmId == other.vmId && Objects.equals(heapDumpId, other.heapDumpId)
                && Objects.equals(histogramId, other.histogramId) && timestamp == other.timestamp;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(vm, heapDumpId, histogramId, timestamp);
+        return Objects.hash(vmId, heapDumpId, histogramId, timestamp);
     }
 
     public String getHistogramId() {

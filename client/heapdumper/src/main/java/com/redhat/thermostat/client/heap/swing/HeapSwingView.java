@@ -37,8 +37,10 @@
 package com.redhat.thermostat.client.heap.swing;
 
 import java.awt.Component;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
@@ -75,19 +77,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 
                 stats.disableHeapDumperControl();
                 
-                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        heapDumperNotifier.fireAction(HeadDumperAction.DUMP_REQUESTED);
-                        return null;
-                    }
-                    
-                    @Override
-                    protected void done() {
-                        stats.enableHeapDumperControl();
-                    }
-                };
-                worker.execute();
+                heapDumperNotifier.fireAction(HeapDumperAction.DUMP_REQUESTED);
             }
         });
         
@@ -95,7 +85,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             @Override
             public void valueChanged(ListSelectionEvent arg0) {
                 HeapDump dump = stats.getSelectedHeapDump();
-                heapDumperNotifier.fireAction(HeadDumperAction.ANALYSE, dump);
+                heapDumperNotifier.fireAction(HeapDumperAction.ANALYSE, dump);
             }
         });
         
@@ -193,5 +183,25 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     @Override
     public Component getUiComponent() {
         return visiblePane;
+    }
+
+    @Override
+    public void notifyHeapDumpComplete() {
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stats.enableHeapDumperControl();
+            }
+        });
+    }
+
+    @Override
+    public void updateHeapDumpList(final List<HeapDump> heapDumps) {
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stats.updateHeapDumpList(heapDumps);
+            }
+        });
     }
 }

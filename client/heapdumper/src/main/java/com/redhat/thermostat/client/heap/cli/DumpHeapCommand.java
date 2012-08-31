@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.heap.cli;
 
 import java.util.Collection;
+import java.util.concurrent.Semaphore;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
@@ -87,9 +88,22 @@ public class DumpHeapCommand extends SimpleCommand {
     public void run(CommandContext ctx) throws CommandException {
         HostVMArguments args = new HostVMArguments(ctx.getArguments());
 
-        HeapDump hd = implementation.execute(args.getVM());
-        ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
-        ctx.getConsole().getOutput().print("\n");
+        final Semaphore s = new Semaphore(0);
+        Runnable r = new Runnable() {
+            
+            @Override
+            public void run() {
+                s.release();
+            }
+        };
+        implementation.execute(args.getVM(), r);
+        try {
+            s.acquire();
+            ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
+            ctx.getConsole().getOutput().print("\n");
+        } catch (InterruptedException ex) {
+            // Nothing to do here, just return ASAP.
+        }
     }
 
 }

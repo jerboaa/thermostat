@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.heap;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -46,14 +47,15 @@ import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.Collection;
-
-import javax.swing.JComponent;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.heap.HeapView.HeapDumperAction;
+import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
 import com.redhat.thermostat.client.osgi.service.ApplicationCache;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
@@ -67,6 +69,7 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
@@ -74,17 +77,20 @@ import com.redhat.thermostat.common.model.HeapInfo;
 public class HeapDumpControllerTest {
 
     private ActionListener<HeapView.Action> actionListener;
-    private ActionListener<HeapView.HeadDumperAction> heapDumperListener;
+    private ActionListener<HeapView.HeapDumperAction> heapDumperListener;
     
     private Timer timer;
     
-    private HeapDAO heapDao;
+    private HeapDAO heapDAO;
+    private VmMemoryStatDAO vmDAO;
     private HeapView view;
     private HeapDumpDetailsView detailsView;
     
     private HeapDumpController controller;
+    private HeapDumperCommand heapDumperCommand;
     private ApplicationService appService;
-    
+    private ArgumentCaptor<Runnable> timerActionCaptor;
+
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -94,9 +100,11 @@ public class HeapDumpControllerTest {
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
         when(daoFactory.getVmClassStatsDAO()).thenReturn(vmClassStatDAO);
         
-        heapDao = mock(HeapDAO.class);
-        when(daoFactory.getHeapDAO()).thenReturn(heapDao);
-        
+        heapDAO = mock(HeapDAO.class);
+        when(daoFactory.getHeapDAO()).thenReturn(heapDAO);
+        vmDAO = mock(VmMemoryStatDAO.class);
+        when(daoFactory.getVmMemoryStatDAO()).thenReturn(vmDAO);
+
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         setUpTimers();
@@ -105,7 +113,7 @@ public class HeapDumpControllerTest {
     
     private void setUpTimers() {
         timer = mock(Timer.class);
-        ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
+        timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(timerActionCaptor.capture());
 
         TimerFactory timerFactory = mock(TimerFactory.class);
@@ -148,10 +156,19 @@ public class HeapDumpControllerTest {
         ApplicationCache cache = mock(ApplicationCache.class);
         appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
-        VmRef ref = mock(VmRef.class); 
-        controller = new HeapDumpController(ref, appService);
+        VmRef ref = mock(VmRef.class);
+        heapDumperCommand = mock(HeapDumperCommand.class);
+        controller = new HeapDumpController(ref, appService, heapDumperCommand);
     }
     
+    @After
+    public void tearDown() {
+    	controller = null;
+    	vmDAO = null;
+    	heapDAO = null;
+        ApplicationContextUtil.resetApplicationContext();
+    }
+
     @Test
     public void testTimerStartOnViewVisible() {
         
@@ -173,7 +190,7 @@ public class HeapDumpControllerTest {
     @Test
     public void testNotAddHeapDumpsAtStartupWhenNoDumps() {
                 
-        when(heapDao.getAllHeapInfo(any(VmRef.class))).thenReturn(new ArrayList<HeapInfo>());
+        when(heapDAO.getAllHeapInfo(any(VmRef.class))).thenReturn(new ArrayList<HeapInfo>());
         
         createController();
         
@@ -188,8 +205,8 @@ public class HeapDumpControllerTest {
         infos.add(info1);
         infos.add(info2);
         
-        when(heapDao.getAllHeapInfo(any(VmRef.class))).thenReturn(infos);
-        
+        when(heapDAO.getAllHeapInfo(any(VmRef.class))).thenReturn(infos);
+
         createController();
         
         verify(view, times(2)).addHeapDump(any(HeapDump.class));
@@ -208,7 +225,7 @@ public class HeapDumpControllerTest {
         infos.add(info1);
         infos.add(info2);
         
-        when(heapDao.getAllHeapInfo(any(VmRef.class))).thenReturn(infos);
+        when(heapDAO.getAllHeapInfo(any(VmRef.class))).thenReturn(infos);
         
         ApplicationCache cache = mock(ApplicationCache.class);
         when(cache.getAttribute(any(VmRef.class))).thenReturn(dump);
@@ -224,14 +241,14 @@ public class HeapDumpControllerTest {
     
     @Test
     public void testNotOpenDumpCalledWhenNoPreviousDump() {
-                
+
         HeapInfo info1 = mock(HeapInfo.class);        
         HeapInfo info2 = mock(HeapInfo.class);
         Collection<HeapInfo> infos = new ArrayList<HeapInfo>();
         infos.add(info1);
         infos.add(info2);
         
-        when(heapDao.getAllHeapInfo(any(VmRef.class))).thenReturn(infos);
+        when(heapDAO.getAllHeapInfo(any(VmRef.class))).thenReturn(infos);
         
         ApplicationCache cache = mock(ApplicationCache.class);
         when(cache.getAttribute(any(VmRef.class))).thenReturn(null);
@@ -243,9 +260,41 @@ public class HeapDumpControllerTest {
         
         verify(view, times(0)).openDumpView();
     }
+
+    @Test
+    public void testRequestHeapDump() {
+
+        setUpListeners();
+
+        heapDumperListener.actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.DUMP_REQUESTED));
+
+        ArgumentCaptor<Runnable> heapDumpCompleteAction = ArgumentCaptor.forClass(Runnable.class);
+        verify(heapDumperCommand).execute(any(VmRef.class), heapDumpCompleteAction.capture());
+        heapDumpCompleteAction.getValue().run();
+        verify(view).notifyHeapDumpComplete();
+
+    }
+ 
+    @SuppressWarnings("unchecked")
+	@Test
+    public void testTimerChecksForNewHeapDumps() {
+
+        HeapInfo info1 = mock(HeapInfo.class);
+        HeapInfo info2 = mock(HeapInfo.class);
+        Collection<HeapInfo> infos = new ArrayList<HeapInfo>();
+        infos.add(info1);
+        infos.add(info2);
         
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
+        when(heapDAO.getAllHeapInfo(any(VmRef.class))).thenReturn(infos);
+
+        createController();
+
+        timerActionCaptor.getValue().run();
+
+        @SuppressWarnings("rawtypes")
+		ArgumentCaptor<List> heapDumps = ArgumentCaptor.forClass(List.class);
+        verify(view).updateHeapDumpList(heapDumps.capture());
+        assertTrue(heapDumps.getValue().contains(new HeapDump(info1, heapDAO)));
+        assertTrue(heapDumps.getValue().contains(new HeapDump(info2, heapDAO)));
     }
 }

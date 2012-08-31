@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.heap;
 
+import java.util.List;
+
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
@@ -44,22 +46,22 @@ import com.redhat.thermostat.common.heap.HeapDump;
 
 public abstract class HeapView extends BasicView {
     
-    public enum HeadDumperAction {
+    public enum HeapDumperAction {
         DUMP_REQUESTED,
         ANALYSE,
         REQUEST_ABORTED
     }
    
-    protected final ActionNotifier<HeadDumperAction> heapDumperNotifier;
+    protected final ActionNotifier<HeapDumperAction> heapDumperNotifier;
     protected HeapView() {
-        heapDumperNotifier = new ActionNotifier<HeadDumperAction>(this);
+        heapDumperNotifier = new ActionNotifier<HeapDumperAction>(this);
     }
     
-    public void addDumperListener(ActionListener<HeadDumperAction> listener) {
+    public void addDumperListener(ActionListener<HeapDumperAction> listener) {
         heapDumperNotifier.addActionListener(listener);
     }
     
-    public void removeDumperListener(ActionListener<HeadDumperAction> listener) {
+    public void removeDumperListener(ActionListener<HeapDumperAction> listener) {
         heapDumperNotifier.removeActionListener(listener);
     }
 
@@ -69,4 +71,7 @@ public abstract class HeapView extends BasicView {
     
     abstract public void openDumpView();
     abstract public void setChildView(BasicView childView);
+    public abstract void notifyHeapDumpComplete();
+
+    public abstract void updateHeapDumpList(List<HeapDump> heapDumps);
 }

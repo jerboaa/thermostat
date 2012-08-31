@@ -43,7 +43,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -51,6 +50,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
@@ -78,7 +79,7 @@ public class HeapDAOTest {
     private HeapDAO dao;
     private Storage storage;
     private HeapInfo heapInfo;
-    private InputStream heapDumpData;
+    private File heapDumpData;
     private ObjectHistogram histogram;
     private InputStream histogramData;
 
@@ -87,11 +88,13 @@ public class HeapDAOTest {
         storage = mock(Storage.class);
         dao = new HeapDAOImpl(storage);
         
-        HostRef host = new HostRef("987", "test-host");
-        VmRef vm = new VmRef(host, 123, "test-vm");
-        heapInfo = new HeapInfo(vm, 12345);
+        heapInfo = new HeapInfo(123, 12345);
+        heapInfo.setHeapId("987-123-12345");
         byte[] data = new byte[] { 1, 2, 3 };
-        heapDumpData = new ByteArrayInputStream(data);
+        heapDumpData = File.createTempFile("test", "test");
+        FileOutputStream out = new FileOutputStream(heapDumpData);
+        out.write(data);
+        out.close();
         histogramData = createHistogramData();
 
         // Setup for reading data from DB.
@@ -118,12 +121,11 @@ public class HeapDAOTest {
         when(storage.findAll(findAllQuery)).thenReturn(cursor);
 
         // Setup for reading heapdump data.
-        when(storage.loadFile("test-heap")).thenReturn(heapDumpData);
+        when(storage.loadFile("test-heap")).thenReturn(new ByteArrayInputStream(data));
         when(storage.loadFile("test-histo")).thenReturn(histogramData);
 
         // Prepare queries for read-back of _id in putHeapInfo() tests.
         Chunk heap1query = new Chunk(HeapDAO.heapInfoCategory, false);
-        heap1query.put(Key.AGENT_ID, "987");
         heap1query.put(Key.VM_ID, 123);
         heap1query.put(Key.TIMESTAMP, 12345l);
         heap1query.put(HeapDAO.heapDumpIdKey, "heapdump-987-123-12345");
@@ -133,7 +135,6 @@ public class HeapDAOTest {
         when(storage.find(heap1query)).thenReturn(heap1);
 
         Chunk heap2query = new Chunk(HeapDAO.heapInfoCategory, false);
-        heap2query.put(Key.AGENT_ID, "987");
         heap2query.put(Key.VM_ID, 123);
         heap2query.put(Key.TIMESTAMP, 12345l);
         Chunk heap2 = new Chunk(HeapDAO.heapInfoCategory, false);
@@ -173,6 +174,7 @@ public class HeapDAOTest {
     public void tearDown() {
         histogramData = null;
         histogram = null;
+        heapDumpData.delete();
         heapDumpData = null;
         heapInfo = null;
         dao = null;
@@ -199,13 +201,18 @@ public class HeapDAOTest {
         dao.putHeapInfo(heapInfo, heapDumpData, histogram);
 
         Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
-        expectedChunk.put(Key.AGENT_ID, "987");
         expectedChunk.put(Key.VM_ID, 123);
         expectedChunk.put(Key.TIMESTAMP, 12345L);
         expectedChunk.put(HeapDAO.heapDumpIdKey, "heapdump-987-123-12345");
         expectedChunk.put(HeapDAO.histogramIdKey, "histogram-987-123-12345");
         verify(storage).putChunk(expectedChunk);
-        verify(storage).saveFile(eq("heapdump-987-123-12345"), same(heapDumpData));
+        ArgumentCaptor<InputStream> data = ArgumentCaptor.forClass(InputStream.class);
+        verify(storage).saveFile(eq("heapdump-987-123-12345"), data.capture());
+        InputStream in = data.getValue();
+        assertEquals(1, in.read());
+        assertEquals(2, in.read());
+        assertEquals(3, in.read());
+        assertEquals(-1, in.read());
         assertEquals("id1", heapInfo.getHeapId());
         ArgumentCaptor<InputStream> histoStream = ArgumentCaptor.forClass(InputStream.class);
         verify(storage).saveFile(eq("histogram-987-123-12345"), histoStream.capture());
@@ -220,11 +227,10 @@ public class HeapDAOTest {
     }
 
     @Test
-    public void testPutHeapInfoWithoutDump() {
+    public void testPutHeapInfoWithoutDump() throws IOException {
         dao.putHeapInfo(heapInfo, null, null);
 
         Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
-        expectedChunk.put(Key.AGENT_ID, "987");
         expectedChunk.put(Key.VM_ID, 123);
         expectedChunk.put(Key.TIMESTAMP, 12345L);
 
@@ -244,11 +250,11 @@ public class HeapDAOTest {
         VmRef vm = new VmRef(host, 234, "test-vm");
         Collection<HeapInfo> heapInfos = dao.getAllHeapInfo(vm);
         
-        HeapInfo info1 = new HeapInfo(vm, 12345);
+        HeapInfo info1 = new HeapInfo(234, 12345);
         info1.setHeapDumpId("test1");
         info1.setHistogramId("histotest1");
         
-        HeapInfo info2 = new HeapInfo(vm, 23456);
+        HeapInfo info2 = new HeapInfo(234, 23456);
         info2.setHeapDumpId("test2");
         info2.setHistogramId("histotest2");
         

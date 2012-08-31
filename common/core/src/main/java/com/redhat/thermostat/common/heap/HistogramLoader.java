@@ -46,18 +46,12 @@ import com.sun.tools.hat.internal.parser.Reader;
 
 public class HistogramLoader {
 
-    private String filename;
-
-    public HistogramLoader(String filename) {
-        this.filename = filename;
-    }
-
-    public ObjectHistogram load() throws IOException {
-        Snapshot snapshot = loadHeapdump();
+    public ObjectHistogram load(String filename) throws IOException {
+        Snapshot snapshot = loadHeapdump(filename);
         return computeHistogram(snapshot);
     }
 
-    private Snapshot loadHeapdump() throws IOException {
+    private Snapshot loadHeapdump(String filename) throws IOException {
         File heapdump = new File(filename);
         Snapshot snapshot = Reader.readFile(heapdump.getAbsolutePath(), true, 0);
         snapshot.resolve(true);

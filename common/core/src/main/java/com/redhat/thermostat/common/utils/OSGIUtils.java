@@ -44,11 +44,17 @@ import org.osgi.framework.ServiceReference;
 
 public class OSGIUtils {
     
-    private final static OSGIUtils instance = new OSGIUtils();
+	// TODO: Maybe we should stick this singleton into an ApplicationContext?
+    private static OSGIUtils instance = new OSGIUtils();
     public static OSGIUtils getInstance() {
         return instance;
     }
-    
+
+    // This is only here to be used by test code.
+    public static void setInstance(OSGIUtils utils) {
+    	instance = utils;
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public <E extends Object> E getService(Class<E> clazz) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();

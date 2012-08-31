@@ -34,44 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+package com.redhat.thermostat.agent.heapdumper.internal;
 
-import org.junit.Before;
-import org.junit.Test;
+import java.io.IOException;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+class JMapHeapDumper {
 
-public class HeapInfoTest {
+    private static final Logger log = Logger.getLogger(JMapHeapDumper.class.getName());
 
-    private HeapInfo heapInfo;
-
-    @Before
-    public void setUp() {
-        heapInfo = new HeapInfo(321, 12345);
-    }
-
-    @Test
-    public void testProperties() {
-        assertEquals(321, heapInfo.getVmId());
-        assertEquals(12345, heapInfo.getTimestamp());
-    }
-
-    @Test
-    public void testHeapDumpId() {
-        assertNull(heapInfo.getHeapDumpId());
-        heapInfo.setHeapDumpId("test");
-        assertEquals("test", heapInfo.getHeapDumpId());
-    }
-
-    @Test
-    public void testHistogramId() {
-        assertNull(heapInfo.getHistogramId());
-        heapInfo.setHistogramId("test");
-        assertEquals("test", heapInfo.getHistogramId());
+    void dumpHeap(String vmId, String filename) throws HeapDumpException {
+        try {
+            Process proc = Runtime.getRuntime().exec(
+                    new String[] { "jmap", "-dump:format=b,file=" + filename, vmId });
+            proc.waitFor();
+            log.info("Heap dump written to: " + filename);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (IOException ex) {
+            throw new HeapDumpException(ex);
+        }
     }
 }

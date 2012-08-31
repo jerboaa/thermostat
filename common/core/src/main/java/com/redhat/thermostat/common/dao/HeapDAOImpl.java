@@ -38,6 +38,8 @@ package com.redhat.thermostat.common.dao;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -46,8 +48,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import org.bson.types.ObjectId;
 
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
@@ -69,14 +69,13 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     @Override
-    public void putHeapInfo(HeapInfo heapInfo, InputStream heapDumpData, ObjectHistogram histogramData) {
-        VmRef vm = heapInfo.getVm();
+    public void putHeapInfo(HeapInfo heapInfo, File heapDumpData, ObjectHistogram histogramData) throws IOException {
+        int vmId = heapInfo.getVmId();
         Chunk chunk = new Chunk(heapInfoCategory, false);
 
-        chunk.put(Key.AGENT_ID, vm.getAgent().getStringID());
-        chunk.put(Key.VM_ID, vm.getId());
+        chunk.put(Key.VM_ID, vmId);
         chunk.put(Key.TIMESTAMP, heapInfo.getTimestamp());
-        String id = vm.getAgent().getStringID() + "-" + vm.getId() + "-" + heapInfo.getTimestamp();
+        String id = heapInfo.getHeapId();
         String heapDumpId = "heapdump-" + id;
         String histogramId = "histogram-" + id;
         if (heapDumpData != null) {
@@ -89,7 +88,7 @@ class HeapDAOImpl implements HeapDAO {
         }
         storage.putChunk(chunk);
         if (heapDumpData != null) {
-            storage.saveFile(heapDumpId, heapDumpData);
+            storage.saveFile(heapDumpId, new FileInputStream(heapDumpData));
         }
         if (histogramData != null) {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -123,7 +122,8 @@ class HeapDAOImpl implements HeapDAO {
     }
 
     private HeapInfo convertChunkToHeapInfo(VmRef vm, Chunk chunk) {
-        HeapInfo info = new HeapInfo(vm, chunk.get(Key.TIMESTAMP));
+        int vmId = chunk.get(Key.VM_ID);
+        HeapInfo info = new HeapInfo(vmId, chunk.get(Key.TIMESTAMP));
         info.setHeapId(chunk.get(Key.ID));
         info.setHeapDumpId(chunk.get(HeapDAO.heapDumpIdKey));
         info.setHistogramId(chunk.get(HeapDAO.histogramIdKey));

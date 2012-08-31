@@ -126,6 +126,19 @@
     </dependency>
     
     <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-heapdumper</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>
     </dependency>

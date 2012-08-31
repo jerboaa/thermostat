@@ -34,44 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+package com.redhat.thermostat.agent.heapdumper.internal;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.agent.command.ReceiverRegistry;
 
-public class HeapInfoTest {
+public class Activator implements BundleActivator {
 
-    private HeapInfo heapInfo;
+    private ReceiverRegistry receivers;
 
-    @Before
-    public void setUp() {
-        heapInfo = new HeapInfo(321, 12345);
+    @Override
+    public void start(BundleContext context) throws Exception {
+        receivers = new ReceiverRegistry(context);
+        receivers.registerReceiver(new HeapDumpReceiver());
     }
 
-    @Test
-    public void testProperties() {
-        assertEquals(321, heapInfo.getVmId());
-        assertEquals(12345, heapInfo.getTimestamp());
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        receivers.unregisterReceivers();
     }
 
-    @Test
-    public void testHeapDumpId() {
-        assertNull(heapInfo.getHeapDumpId());
-        heapInfo.setHeapDumpId("test");
-        assertEquals("test", heapInfo.getHeapDumpId());
-    }
-
-    @Test
-    public void testHistogramId() {
-        assertNull(heapInfo.getHistogramId());
-        heapInfo.setHistogramId("test");
-        assertEquals("test", heapInfo.getHistogramId());
-    }
 }

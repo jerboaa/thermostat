@@ -96,10 +96,6 @@ public class HeapDump {
         this.heapDAO = heapDAO;
     }
 
-    public String getName() {
-        return heapInfo.getVm().getName();
-    }
-
     public long getTimestamp() {
         return heapInfo.getTimestamp();
     }
@@ -223,4 +219,11 @@ public class HeapDump {
         return snapshot.findThing(id);
     }
 
+    public boolean equals(Object o) {
+        return o instanceof HeapDump && ((HeapDump) o).heapInfo.equals(heapInfo);
+    }
+
+    public int hashCode() {
+        return heapInfo.hashCode();
+    }
 }

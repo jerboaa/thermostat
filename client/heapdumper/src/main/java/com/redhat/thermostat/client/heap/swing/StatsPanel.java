@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.heap.swing;
 
 import java.awt.event.ActionListener;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultListModel;
@@ -99,9 +100,11 @@ public class StatsPanel extends JPanel {
         max.setHorizontalAlignment(SwingConstants.RIGHT);
         
         heapDumpButton = new JButton("Heap Dump");
-        
+        heapDumpButton.setName("heapDumpButton");
+
         JScrollPane dumpListScrollPane = new JScrollPane();
         dumpList = new JList<>();
+        dumpList.setName("heapDumpList");
         listModel = new DefaultListModel<>();
         dumpList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         dumpList.setModel(listModel);
@@ -145,9 +148,6 @@ public class StatsPanel extends JPanel {
         setLayout(groupLayout);
 
         dumpListScrollPane.setViewportView(dumpList);
-
-        // initially invisible
-        dumpList.setVisible(false);
     }
     
     void setChartPanel(JPanel panel) {
@@ -186,19 +186,25 @@ public class StatsPanel extends JPanel {
     public void addDump(HeapDump dump) {
         
         listModel.addElement(dump);
-        if (!dumpList.isVisible()) {
-            dumpList.setVisible(true);
-        }
     }
 
     public void clearDumpList() {
         listModel.clear();
-        if (dumpList.isVisible()) {
-            dumpList.setVisible(false);
-        }
     }
     
     public HeapDump getSelectedHeapDump() {
         return dumpList.getSelectedValue();
+    }
+
+    public void updateHeapDumpList(List<HeapDump> heapDumps) {
+        int numItemsBefore = listModel.getSize();
+        for (HeapDump heapDump : heapDumps) {
+            if (! listModel.contains(heapDump)) {
+                listModel.addElement(heapDump);
+            }
+        }
+        if (numItemsBefore == 0 && listModel.getSize() > 0) {
+            dumpList.repaint();
+        }
     }
 }

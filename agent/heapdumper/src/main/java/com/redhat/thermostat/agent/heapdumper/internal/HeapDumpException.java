@@ -34,44 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+package com.redhat.thermostat.agent.heapdumper.internal;
 
-import org.junit.Before;
-import org.junit.Test;
+@SuppressWarnings("serial")
+public class HeapDumpException extends Exception {
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
-
-public class HeapInfoTest {
-
-    private HeapInfo heapInfo;
-
-    @Before
-    public void setUp() {
-        heapInfo = new HeapInfo(321, 12345);
+    public HeapDumpException() {
+        super();
     }
 
-    @Test
-    public void testProperties() {
-        assertEquals(321, heapInfo.getVmId());
-        assertEquals(12345, heapInfo.getTimestamp());
+    public HeapDumpException(String message) {
+        super(message);
     }
 
-    @Test
-    public void testHeapDumpId() {
-        assertNull(heapInfo.getHeapDumpId());
-        heapInfo.setHeapDumpId("test");
-        assertEquals("test", heapInfo.getHeapDumpId());
+    public HeapDumpException(Throwable cause) {
+        super(cause);
     }
 
-    @Test
-    public void testHistogramId() {
-        assertNull(heapInfo.getHistogramId());
-        heapInfo.setHistogramId("test");
-        assertEquals("test", heapInfo.getHistogramId());
+    public HeapDumpException(String message, Throwable cause) {
+        super(message, cause);
     }
+
 }

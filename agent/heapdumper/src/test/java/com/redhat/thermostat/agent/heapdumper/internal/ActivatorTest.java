@@ -34,44 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+package com.redhat.thermostat.agent.heapdumper.internal;
 
-import org.junit.Before;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.util.Dictionary;
+
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.agent.command.RequestReceiver;
 
-public class HeapInfoTest {
-
-    private HeapInfo heapInfo;
-
-    @Before
-    public void setUp() {
-        heapInfo = new HeapInfo(321, 12345);
-    }
+public class ActivatorTest {
 
     @Test
-    public void testProperties() {
-        assertEquals(321, heapInfo.getVmId());
-        assertEquals(12345, heapInfo.getTimestamp());
+    public void testStartStop() throws Exception {
+        BundleContext ctx = mock(BundleContext.class);
+        ServiceRegistration serviceReg = mock(ServiceRegistration.class);
+        when(ctx.registerService(anyString(), any(), any(Dictionary.class))).thenReturn(serviceReg);
+        Activator activator = new Activator();
+        activator.start(ctx);
+        verify(ctx).registerService(eq(RequestReceiver.class.getName()), isA(HeapDumpReceiver.class), any(Dictionary.class));
+        activator.stop(ctx);
+        verify(serviceReg).unregister();
     }
 
-    @Test
-    public void testHeapDumpId() {
-        assertNull(heapInfo.getHeapDumpId());
-        heapInfo.setHeapDumpId("test");
-        assertEquals("test", heapInfo.getHeapDumpId());
-    }
-
-    @Test
-    public void testHistogramId() {
-        assertNull(heapInfo.getHistogramId());
-        heapInfo.setHistogramId("test");
-        assertEquals("test", heapInfo.getHistogramId());
-    }
 }
