@@ -39,13 +39,17 @@ package com.redhat.thermostat.thread.client.swing.impl;
 import java.awt.Component;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.locale.Translate;
@@ -57,6 +61,8 @@ import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDiffer
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
 public class SwingThreadView extends ThreadView implements SwingComponent {
+    
+    private String DIVIDER_LOCATION_KEY;
     
     private ThreadMainPanel panel;
     private ThreadAliveDaemonTimelinePanel timelinePanel;
@@ -76,15 +82,22 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             @Override
             public void componentShown(Component component) {
                 SwingThreadView.this.notify(Action.VISIBLE);
-                
-                // TODO: allow controller to define this value based on last
-                // user setting
-                panel.getSplitPane().setDividerLocation(0.80);
+                restoreDivider();
             }
             
             @Override
             public void componentHidden(Component component) {
                 SwingThreadView.this.notify(Action.HIDDEN);
+            }
+        });
+        
+        panel.getSplitPane().addPropertyChangeListener(JSplitPane.DIVIDER_LOCATION_PROPERTY,
+                                                       new PropertyChangeListener()
+        {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                JSplitPane sourceSplitPane = (JSplitPane) evt.getSource();
+                saveDivider(sourceSplitPane.getDividerLocation());
             }
         });
         
@@ -133,6 +146,12 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     @Override
     public Component getUiComponent() {
         return panel;
+    }
+    
+    @Override
+    public void setApplicationService(ApplicationService appService, String uniqueId) {
+        super.setApplicationService(appService, uniqueId);
+        DIVIDER_LOCATION_KEY = "divider." + uniqueId;
     }
     
     @Override
@@ -201,5 +220,22 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 JOptionPane.showMessageDialog(panel.getParent(), warning, "", JOptionPane.WARNING_MESSAGE);
             }
         });
+    }
+    
+    private void restoreDivider() {
+        int location = (int) ((double) (panel.getSplitPane().getHeight() - panel.getSplitPane().getDividerSize()) * 0.80);
+        if (appService != null) {
+            Object _location = appService.getApplicationCache().getAttribute(DIVIDER_LOCATION_KEY);
+            if (_location != null) {
+                location = (Integer) _location;
+            }
+        }
+        panel.getSplitPane().setDividerLocation(location);
+    }
+    
+    private void saveDivider(int location) {
+        if (appService != null) {
+            appService.getApplicationCache().addAttribute(DIVIDER_LOCATION_KEY, location);
+        }
     }
 }

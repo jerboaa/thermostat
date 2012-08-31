@@ -57,6 +57,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadView;
@@ -125,6 +126,9 @@ public class ThreadInformationControllerTest {
         when(appService.getApplicationCache()).thenReturn(cache);
         
         VmRef ref = mock(VmRef.class);
+        HostRef agent = mock(HostRef.class);
+        when(ref.getAgent()).thenReturn(agent);
+        when(agent.getAgentId()).thenReturn("0xcafe");
         
         ThreadCollectorFactory collectorFactory = mock(ThreadCollectorFactory.class);
         ThreadCollector collector = mock(ThreadCollector.class);
@@ -142,7 +146,10 @@ public class ThreadInformationControllerTest {
         
         VmRef ref = mock(VmRef.class);
         when(ref.getStringID()).thenReturn("42");
-                
+        HostRef agent = mock(HostRef.class);
+        when(ref.getAgent()).thenReturn(agent);
+        when(agent.getAgentId()).thenReturn("0xcafe");
+        
         ThreadCollector collector = mock(ThreadCollector.class);
         when(collector.isHarvesterCollecting()).thenReturn(false).thenReturn(true);
         when(collector.startHarvester()).thenReturn(true);
@@ -154,7 +161,7 @@ public class ThreadInformationControllerTest {
         ApplicationCache cache = mock(ApplicationCache.class);
         appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
-        
+                
         controller = new ThreadInformationController(ref, appService, collectorFactory, viewFactory);
         
         verify(collector).isHarvesterCollecting();

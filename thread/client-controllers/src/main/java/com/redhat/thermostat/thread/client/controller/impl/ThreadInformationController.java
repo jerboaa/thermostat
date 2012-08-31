@@ -70,21 +70,18 @@ public class ThreadInformationController implements VmInformationServiceControll
     
     private ThreadView view;
     private ThreadCollector collector;
-    private ApplicationService appService;
     
     private Timer timer;
-    private ApplicationCache cache;
     
     private LivingDaemonThreadDifferenceChart model;
         
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        ThreadCollectorFactory collectorFactory, 
                                        ThreadViewProvider viewFactory)
-    {        
-        this.appService = appService;
-        cache = appService.getApplicationCache();
-
+    {
         view = viewFactory.createView();
+        view.setApplicationService(appService, ref.getIdString() + "-" + ref.getAgent().getAgentId());
+        
         collector = collectorFactory.getCollector(ref);
         
         initControllers();

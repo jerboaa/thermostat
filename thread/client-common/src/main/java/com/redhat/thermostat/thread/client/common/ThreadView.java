@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.client.common;
 
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
@@ -48,6 +49,9 @@ public abstract class ThreadView extends BasicView implements UIComponent {
         START_LIVE_RECORDING,
         STOP_LIVE_RECORDING
     };
+    
+    protected ApplicationService appService;
+    protected String uniqueId;
     
     protected final ActionNotifier<ThreadAction> notifier;
     public ThreadView() {
@@ -72,4 +76,9 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     public abstract ThreadTableView createThreadTableView();
     
     public abstract void displayWarning(String warning);
+
+    public void setApplicationService(ApplicationService appService, String uniqueId) {
+        this.appService = appService;
+        this.uniqueId = uniqueId;
+    }
 }
