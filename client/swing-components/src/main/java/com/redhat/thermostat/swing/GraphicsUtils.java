@@ -75,6 +75,11 @@ public class GraphicsUtils {
         SwingUtilities2.drawString(component, graphics, string, x, y);
     }
     
+    public void drawString(JComponent component, Graphics2D graphics, String string, Color foreground, int x, int y) {
+        graphics.setColor(foreground);
+        SwingUtilities2.drawString(component, graphics, string, x, y);
+    }
+    
     public FontMetrics getFontMetrics(JComponent component, Font font) {
         return SwingUtilities2.getFontMetrics(component, font);
     }
