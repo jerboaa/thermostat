@@ -110,6 +110,7 @@ import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.swing.EdtHelper;
+import com.redhat.thermostat.swing.StatusBar;
 
 public class MainWindow extends JFrame implements MainView {
 
@@ -318,6 +319,7 @@ public class MainWindow extends JFrame implements MainView {
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
     private JPopupMenu vmContextMenu;
+    private StatusBar statusBar;
     
     private final DefaultMutableTreeNode publishedRoot =
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
@@ -367,6 +369,9 @@ public class MainWindow extends JFrame implements MainView {
         
         //agentVmTree.setLargeModel(true);
         agentVmTree.setRowHeight(25);
+        
+        statusBar = new StatusBar();
+        getContentPane().add(statusBar, BorderLayout.SOUTH);
         
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(shutdownAction);
@@ -466,7 +471,7 @@ public class MainWindow extends JFrame implements MainView {
         registerContextActionListener(agentVmTree);
         
         JScrollPane treeScrollPane = new JScrollPane(agentVmTree);
-
+        
         navigationPanel.add(treeScrollPane);
 
         JPanel detailsPanel = createDetailsPanel();
@@ -477,7 +482,7 @@ public class MainWindow extends JFrame implements MainView {
         splitPane.add(navigationPanel);
         splitPane.add(detailsPanel);
 
-        add(splitPane);
+        getContentPane().add(splitPane);
     }
 
     private void registerContextActionListener(JTree agentVmTree2) {
@@ -713,6 +718,16 @@ public class MainWindow extends JFrame implements MainView {
         dispose();
     }
 
+    @Override
+    public void setStatusBarPrimaryStatus(final String primaryStatus) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                statusBar.setPrimaryStatus(primaryStatus);
+            }
+        });
+    }
+    
     @Override
     public void setSubView(final BasicView view) {
         if (view instanceof SwingComponent) {

@@ -398,11 +398,14 @@ public class MainWindowControllerImpl implements MainWindowController {
             HostRef hostRef = (HostRef) ref;
             HostInformationController hostController = facadeFactory.getHostController(hostRef);
             view.setSubView(hostController.getView());
+            view.setStatusBarPrimaryStatus("host: " + hostRef.getHostName() + ", id: " + hostRef.getAgentId());
         } else if (ref instanceof VmRef) {
             VmRef vmRef = (VmRef) ref;
             VmInformationController vmInformation =
                     vmInfoControllerProvider.getVmInfoController(vmRef);
             view.setSubView(vmInformation.getView());
+            view.setStatusBarPrimaryStatus("vm: " + vmRef.getName() + ", pid: " + vmRef.getStringID() +
+                                           ", host: " + vmRef.getAgent().getHostName());
         } else {
             throw new IllegalArgumentException("unknown type of ref");
         }

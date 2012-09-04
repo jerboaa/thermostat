@@ -398,6 +398,12 @@ public class MainWindowControllerImplTest {
     public void verifyOpenSameHostVMTab() {
 
         VmRef vmRef = mock(VmRef.class);
+        when(vmRef.getName()).thenReturn("testvm");
+        when(vmRef.getIdString()).thenReturn("testvmid");
+        HostRef ref = mock(HostRef.class);
+        when(ref.getAgentId()).thenReturn("agentId");
+        when(vmRef.getAgent()).thenReturn(ref);
+        
         when(view.getSelectedHostOrVm()).thenReturn(vmRef);
 
         VmInformationController vmInformationController = mock(VmInformationController.class);
@@ -427,11 +433,21 @@ public class MainWindowControllerImplTest {
     
     @Test
     public void verifyOpenSameHostVMTab2() {
-
+        
         VmRef vmRef1 = mock(VmRef.class);
         VmRef vmRef2 = mock(VmRef.class);
         when(view.getSelectedHostOrVm()).thenReturn(vmRef1).thenReturn(vmRef1).thenReturn(vmRef2).thenReturn(vmRef1);
 
+        when(vmRef1.getName()).thenReturn("testvm");
+        when(vmRef1.getIdString()).thenReturn("testvmid");
+        HostRef ref = mock(HostRef.class);
+        when(ref.getAgentId()).thenReturn("agentId");
+        when(vmRef1.getAgent()).thenReturn(ref);
+        
+        when(vmRef2.getName()).thenReturn("testvm");
+        when(vmRef2.getIdString()).thenReturn("testvmid");
+        when(vmRef2.getAgent()).thenReturn(ref);
+        
         VmInformationController vmInformationController1 = mock(VmInformationController.class);
         VmInformationController vmInformationController2 = mock(VmInformationController.class);
         

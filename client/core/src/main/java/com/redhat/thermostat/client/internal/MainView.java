@@ -84,6 +84,8 @@ public interface MainView {
 
     void setSubView(BasicView view);
 
+    void setStatusBarPrimaryStatus(String primaryStatus);
+    
     /**
      * Adds a menu item to the window. Assumes the menu path is valid (has a
      * non-zero length) and doesn't collide with existing menus.
