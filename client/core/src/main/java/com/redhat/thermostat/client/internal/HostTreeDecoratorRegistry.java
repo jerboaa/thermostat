@@ -34,43 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.utils;
+package com.redhat.thermostat.client.internal;
 
-import static org.junit.Assert.assertArrayEquals;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Random;
+import com.redhat.thermostat.client.osgi.service.HostDecorator;
 
-import org.junit.Test;
+class HostTreeDecoratorRegistry extends ThermostatExtensionRegistry<HostDecorator> {
 
-public class StreamUtilsTest {
+    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + HostDecorator.class.getName() + ")";
 
-    @Test
-    public void testCopyStreams() throws IOException {
-        String text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ipsum.";
-
-        ByteArrayInputStream bis = new ByteArrayInputStream(text.getBytes(Charset.forName("UTF-8")));
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-
-        StreamUtils.copyStream(new BufferedInputStream(bis), new BufferedOutputStream(bos));
-
-        assertArrayEquals(text.getBytes(Charset.forName("UTF-8")), bos.toByteArray());
-    }
-
-    @Test
-    public void testReadAll() throws IOException {
-        Random r = new Random();
-        final int ONE_MEGABYTE = 1024 * 1024;
-        byte[] inputData = new byte[ONE_MEGABYTE];
-        r.nextBytes(inputData);
-
-        byte[] read = StreamUtils.readAll(new ByteArrayInputStream(inputData));
-
-        assertArrayEquals(inputData, read);
+    public HostTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
+        super(context, FILTER, HostDecorator.class);
     }
 }

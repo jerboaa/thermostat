@@ -44,8 +44,10 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.internal.GUIClientCommand;
+import com.redhat.thermostat.client.internal.HostIconDecorator;
 import com.redhat.thermostat.client.internal.Main;
 import com.redhat.thermostat.client.internal.UiFacadeFactoryImpl;
+import com.redhat.thermostat.client.osgi.service.HostDecorator;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
@@ -61,6 +63,9 @@ public class ThermostatActivator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         
+        HostDecorator hostDecorator = new HostIconDecorator();
+        context.registerService(HostDecorator.class.getName(), hostDecorator, null);
+
         ServiceTracker tracker = new ServiceTracker(context, Keyring.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {

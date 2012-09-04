@@ -112,7 +112,8 @@ public class MainWindowControllerImplTest {
 
     private HostFilterRegistry hostFilterRegistry;
     private VmFilterRegistry vmFilterRegistry;
-    private VMTreeDecoratorRegistry decorators;
+    private HostTreeDecoratorRegistry hostDecoratorRegistry;
+    private VMTreeDecoratorRegistry vmDecoratorRegistry;
     private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menus;
     
@@ -152,12 +153,14 @@ public class MainWindowControllerImplTest {
         RegistryFactory registryFactory = mock(RegistryFactory.class);
         hostFilterRegistry = mock(HostFilterRegistry.class);
         vmFilterRegistry = mock(VmFilterRegistry.class);
-        decorators = mock(VMTreeDecoratorRegistry.class);
+        hostDecoratorRegistry = mock(HostTreeDecoratorRegistry.class);
+        vmDecoratorRegistry = mock(VMTreeDecoratorRegistry.class);
         vmInfoRegistry = mock(VMInformationRegistry.class);
         menus = mock(MenuRegistry.class);
 
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
-        when(registryFactory.createVMTreeDecoratorRegistry()).thenReturn(decorators);
+        when(registryFactory.createHostTreeDecoratorRegistry()).thenReturn(hostDecoratorRegistry);
+        when(registryFactory.createVMTreeDecoratorRegistry()).thenReturn(vmDecoratorRegistry);
         when(registryFactory.createHostFilterRegistry()).thenReturn(hostFilterRegistry);
         when(registryFactory.createVmFilterRegistry()).thenReturn(vmFilterRegistry);
         when(registryFactory.createVMInformationRegistry()).thenReturn(vmInfoRegistry);
@@ -169,7 +172,7 @@ public class MainWindowControllerImplTest {
         doNothing().when(vmFilterRegistry).addActionListener(grabVmFiltersListener.capture());
 
         ArgumentCaptor<ActionListener> grabDecoratorsListener = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(decorators).addActionListener(grabDecoratorsListener.capture());
+        doNothing().when(vmDecoratorRegistry).addActionListener(grabDecoratorsListener.capture());
         
         ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
@@ -242,7 +245,7 @@ public class MainWindowControllerImplTest {
         assertEquals(0, currentDecoratros.size());
         
         ActionEvent<ThermostatExtensionRegistry.Action> event =
-                new ActionEvent<ThermostatExtensionRegistry.Action>(decorators,
+                new ActionEvent<ThermostatExtensionRegistry.Action>(vmDecoratorRegistry,
                         ThermostatExtensionRegistry.Action.SERVICE_ADDED);
         
         VmDecorator payload = mock(VmDecorator.class);

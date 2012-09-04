@@ -94,6 +94,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     private final CopyOnWriteArrayList<HostFilter> hostFilters = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<VmFilter> vmFilters = new CopyOnWriteArrayList<>();
 
+    private final CopyOnWriteArrayList<HostDecorator> hostTreeDecorators = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<VmDecorator> vmTreeDecorators = new CopyOnWriteArrayList<>();
 
     private Timer backgroundUpdater;
@@ -140,8 +141,10 @@ public class MainWindowControllerImpl implements MainWindowController {
     private ActionListener<ThermostatExtensionRegistry.Action> hostFilterListener = new UpdateListAndTree<>(HostFilter.class, hostFilters);
     private ActionListener<ThermostatExtensionRegistry.Action> vmFilterListener = new UpdateListAndTree<>(VmFilter.class, vmFilters);
 
-    private VMTreeDecoratorRegistry decoratorRegistry;
+    private HostTreeDecoratorRegistry hostDecoratorRegistry;
+    private VMTreeDecoratorRegistry vmDecoratorRegistry;
 
+    private ActionListener<ThermostatExtensionRegistry.Action> hostDecoratorListener = new UpdateListAndTree<>(HostDecorator.class, hostTreeDecorators);
     private ActionListener<ThermostatExtensionRegistry.Action> vmDecoratorListener = new UpdateListAndTree<>(VmDecorator.class, vmTreeDecorators);
 
     private VMInformationRegistry vmInfoRegistry;
@@ -164,7 +167,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         try {
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
             hostFilterRegistry = registryFactory.createHostFilterRegistry();
-            decoratorRegistry = registryFactory.createVMTreeDecoratorRegistry();
+            hostDecoratorRegistry = registryFactory.createHostTreeDecoratorRegistry();
+            vmDecoratorRegistry = registryFactory.createVMTreeDecoratorRegistry();
             menuRegistry = registryFactory.createMenuRegistry();
             vmInfoRegistry = registryFactory.createVMInformationRegistry();
             
@@ -193,20 +197,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         updateView();
 
-        menuRegistry.addActionListener(menuListener);
-        menuRegistry.start();
-
-        hostFilterRegistry.addActionListener(hostFilterListener);
-        hostFilterRegistry.start();
-
-        vmFilterRegistry.addActionListener(vmFilterListener);
-        vmFilterRegistry.start();
-
-        decoratorRegistry.addActionListener(vmDecoratorListener);
-        decoratorRegistry.start();
-        
-        vmInfoRegistry.addActionListener(vmInfoRegistryListener);
-        vmInfoRegistry.start();
+        installListenersAndStartRegistries();
     }
 
     /**
@@ -261,7 +252,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     public void doUpdateTreeAsync() {
         HostsVMsLoader loader = new DefaultHostsVMsLoader(hostsDAO, vmsDAO, !showHistory);
-        view.updateTree(hostFilters, vmFilters, Collections.<HostDecorator>emptyList(), vmTreeDecorators, loader);
+        view.updateTree(hostFilters, vmFilters, hostTreeDecorators, vmTreeDecorators, loader);
     }
 
     private void initView(MainView mainView) {
@@ -315,13 +306,57 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void shutdownApplication() {
-        menuRegistry.removeActionListener(menuListener);
-        menuListener = null;
-        menuRegistry.stop();
+        uninstallListenersAndStopRegistries();
 
         view.hideMainWindow();
         ApplicationContext.getInstance().getTimerFactory().shutdown();
         shutdownOSGiFramework();
+    }
+
+    private void installListenersAndStartRegistries() {
+        menuRegistry.addActionListener(menuListener);
+        menuRegistry.start();
+
+        hostFilterRegistry.addActionListener(hostFilterListener);
+        hostFilterRegistry.start();
+
+        vmFilterRegistry.addActionListener(vmFilterListener);
+        vmFilterRegistry.start();
+
+        hostDecoratorRegistry.addActionListener(hostDecoratorListener);
+        hostDecoratorRegistry.start();
+
+        vmDecoratorRegistry.addActionListener(vmDecoratorListener);
+        vmDecoratorRegistry.start();
+
+        vmInfoRegistry.addActionListener(vmInfoRegistryListener);
+        vmInfoRegistry.start();
+    }
+
+    private void uninstallListenersAndStopRegistries() {
+        menuRegistry.removeActionListener(menuListener);
+        menuListener = null;
+        menuRegistry.stop();
+
+        hostFilterRegistry.removeActionListener(hostFilterListener);
+        hostFilterListener = null;
+        hostFilterRegistry.stop();
+
+        vmFilterRegistry.removeActionListener(vmFilterListener);
+        vmFilterListener = null;
+        vmFilterRegistry.stop();
+
+        hostDecoratorRegistry.removeActionListener(hostDecoratorListener);
+        hostDecoratorListener = null;
+        hostDecoratorRegistry.stop();
+
+        vmDecoratorRegistry.removeActionListener(vmDecoratorListener);
+        vmDecoratorListener = null;
+        vmDecoratorRegistry.stop();
+
+        vmInfoRegistry.removeActionListener(vmInfoRegistryListener);
+        vmInfoRegistryListener = null;
+        vmInfoRegistry.stop();
     }
 
     private void shutdownOSGiFramework() {
@@ -426,7 +461,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
             Object payload = actionEvent.getPayload();
             if (!extensionClass.isInstance(payload)) {
-                throw new IllegalArgumentException("invalid payload type");
+                throw new IllegalArgumentException("unexpected payload type. expected a " + extensionClass.getName() + " but got " + payload.getClass().getName());
             }
 
             T filter = (T) payload;

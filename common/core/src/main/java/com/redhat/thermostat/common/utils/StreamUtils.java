@@ -38,7 +38,9 @@ package com.redhat.thermostat.common.utils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class StreamUtils {
 
@@ -51,5 +53,17 @@ public class StreamUtils {
             out.write(buffer, 0, read);
         }
         out.flush();
+    }
+
+    public static byte[] readAll(InputStream in) throws IOException {
+        final int TEMPORARY_BUFFER_SIZE = 1024;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        byte[] buffer = new byte[TEMPORARY_BUFFER_SIZE];
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            baos.write(buffer, 0, read);
+        }
+
+        return baos.toByteArray();
     }
 }

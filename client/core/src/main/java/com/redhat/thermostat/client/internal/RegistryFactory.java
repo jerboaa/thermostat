@@ -45,6 +45,10 @@ class RegistryFactory {
     RegistryFactory(BundleContext context) {
         this.context = context;
     }
+
+    HostTreeDecoratorRegistry createHostTreeDecoratorRegistry() throws InvalidSyntaxException {
+        return new HostTreeDecoratorRegistry(context);
+    }
     
     VMTreeDecoratorRegistry createVMTreeDecoratorRegistry() throws InvalidSyntaxException {
         return new VMTreeDecoratorRegistry(context);

@@ -51,6 +51,7 @@ public class IconResource {
     public static final IconResource MISSING_ICON = null;
 
     public static final IconResource JAVA_APPLICATION = new IconResource("duke.png");
+    public static final IconResource HOST = new IconResource(ICON_PREFIX + "16x16/devices/computer.png");
     
     public static final IconResource ERROR = new IconResource(ICON_PREFIX + "48x48/status/dialog-error.png");
     public static final IconResource QUESTION = new IconResource(ICON_PREFIX + "48x48/status/dialog-question.png");

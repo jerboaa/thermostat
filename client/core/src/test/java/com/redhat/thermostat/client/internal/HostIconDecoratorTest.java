@@ -34,43 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.utils;
+package com.redhat.thermostat.client.internal;
 
-import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import org.junit.Test;
 
-public class StreamUtilsTest {
+import com.redhat.thermostat.client.osgi.service.HostFilter;
+import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.common.dao.HostRef;
+
+public class HostIconDecoratorTest {
 
     @Test
-    public void testCopyStreams() throws IOException {
-        String text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ipsum.";
+    public void verifyFilter() {
+        HostIconDecorator decorator = new HostIconDecorator();
 
-        ByteArrayInputStream bis = new ByteArrayInputStream(text.getBytes(Charset.forName("UTF-8")));
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        HostFilter filter = decorator.getFilter();
+        HostRef aHost = mock(HostRef.class);
 
-        StreamUtils.copyStream(new BufferedInputStream(bis), new BufferedOutputStream(bos));
-
-        assertArrayEquals(text.getBytes(Charset.forName("UTF-8")), bos.toByteArray());
+        assertTrue(filter.matches(aHost));
     }
 
     @Test
-    public void testReadAll() throws IOException {
-        Random r = new Random();
-        final int ONE_MEGABYTE = 1024 * 1024;
-        byte[] inputData = new byte[ONE_MEGABYTE];
-        r.nextBytes(inputData);
+    public void verifyHostDecoratorDoesNotModifyLabel() {
+        HostIconDecorator iconDecorator = new HostIconDecorator();
 
-        byte[] read = StreamUtils.readAll(new ByteArrayInputStream(inputData));
+        Decorator decorator = iconDecorator.getDecorator();
 
-        assertArrayEquals(inputData, read);
+        String INPUT = "testfoobarbaz";
+
+        assertEquals(INPUT, decorator.getLabel(INPUT));
+    }
+
+    @Test
+    public void verifyHostDecoratorHasAnIcon() throws IOException {
+        HostIconDecorator iconDecorator = new HostIconDecorator();
+
+        Decorator decorator = iconDecorator.getDecorator();
+
+        BufferedImage icon = ImageIO.read(new ByteArrayInputStream(decorator.getIconDescriptor().getData().array()));
+
+        assertNotNull(icon);
     }
 }
