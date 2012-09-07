@@ -34,27 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.swing;
+package com.redhat.thermostat.thread.client.common;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import javax.swing.JPanel;
+import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.ui.IconDescriptor;
 
-import com.redhat.thermostat.charts.Chart;
-
-@SuppressWarnings("serial")
-public class ChartPanel extends JPanel {
-
-    private Chart chart;
+public abstract class ThreadDetailsView extends BasicView {
     
-    public ChartPanel(Chart chart) {
-        this.chart = chart;
+    private static final Logger logger = Logger.getLogger(ThreadDetailsView.class.getSimpleName());
+    
+    public IconDescriptor getEmptyDetailsIcon() {
+        try {
+            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(), "com/redhat/thermostat/thread/client/common/monitor.png");
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Can't load emptyDetailsIcon", e);
+        }
+        return null;
     }
     
-    @Override
-    protected void paintComponent(Graphics g) {
-        BufferedImage image = chart.getChart(getWidth(), getHeight(), getBackground());
-        g.drawImage(image, 0, 0, null);
-    }
+    public abstract void setDetails(ThreadTableBean thread);
 }

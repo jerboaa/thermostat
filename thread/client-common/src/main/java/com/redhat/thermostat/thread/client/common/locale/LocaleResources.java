@@ -48,12 +48,15 @@ public enum LocaleResources {
     BLOCK_COUNT,
     RUNNING,
     WAITING,
+    SLEEPING,
+    MONITOR,
     
     START_RECORDING,
     STOP_RECORDING,
     
     VM_CAPABILITIES,
     TABLE,
+    DETAILS,
     
     LIVE_THREADS,
     DAEMON_THREADS,
@@ -61,7 +64,8 @@ public enum LocaleResources {
     THREAD_CONTROL_PANEL,
     THREAD_DUMP,
     
-    MISSING_INFO;
+    MISSING_INFO,
+    THREAD_DETAILS_EMTPY;
 
     public static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.thread.client.common.locale.strings";

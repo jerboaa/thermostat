@@ -36,58 +36,56 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
-import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.JPanel;
-import javax.swing.JSplitPane;
+import java.awt.Component;
 
+import javax.swing.JPanel;
+
+import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.HeaderPanel;
+import com.redhat.thermostat.swing.ChartPanel;
+import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
-@SuppressWarnings("serial")
-class ThreadMainPanel extends JPanel {
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
 
+public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
+
+    private JPanel details;
     private static final Translate t = LocaleResources.createLocalizer();
-    private JSplitPane splitPane;
-    
-    public ThreadMainPanel() {
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+
+    SwingThreadDetailsView() {
+        details = new JPanel();
+        details.setLayout(new BorderLayout(0, 0));
         
-        HeaderPanel headerPanel = new HeaderPanel();
-        headerPanel.setHeader(t.localize(LocaleResources.THREAD_CONTROL_PANEL));
-        
-        JPanel content = new JPanel();
-        headerPanel.setContent(content);
-        
-        splitPane = new JSplitPane();
-        splitPane.setName("threadMainPanelSplitPane");
-        splitPane.setOrientation(JSplitPane.VERTICAL_SPLIT);
-        splitPane.setOneTouchExpandable(true);
-        
-        GroupLayout gl_content = new GroupLayout(content);
-        gl_content.setHorizontalGroup(
-            gl_content.createParallelGroup(Alignment.TRAILING)
-                .addGroup(Alignment.LEADING, gl_content.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE)
-                    .addContainerGap())
-        );
-        gl_content.setVerticalGroup(
-            gl_content.createParallelGroup(Alignment.TRAILING)
-                .addGroup(Alignment.LEADING, gl_content.createSequentialGroup()
-                    .addContainerGap()
-                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
-                    .addContainerGap())
-        );
-        
-        content.setLayout(gl_content);
-        
-        add(headerPanel);
+        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
+        lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
+        details.add(lblNewLabel);
     }
     
-    public JSplitPane getSplitPane() {
-        return splitPane;
+    @Override
+    public Component getUiComponent() {
+        return details;
+    }
+
+    @Override
+    public void setDetails(ThreadTableBean thread) {
+        details.removeAll();
+        
+        ThreadDetailsChart threadChart = new ThreadDetailsChart();
+        
+        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread));
+        threadChart.add(threadSummary);
+        
+        details.add(threadChart);
+        details.repaint();
     }
 }

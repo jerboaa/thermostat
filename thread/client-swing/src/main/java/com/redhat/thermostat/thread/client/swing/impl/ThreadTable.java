@@ -41,6 +41,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 
+@SuppressWarnings("serial")
 public class ThreadTable extends JPanel {
     
     private JScrollPane scrollPane;

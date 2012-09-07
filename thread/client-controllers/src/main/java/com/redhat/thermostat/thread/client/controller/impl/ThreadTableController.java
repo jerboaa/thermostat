@@ -146,6 +146,8 @@ public class ThreadTableController implements CommonController {
                     // time for some stats
                     double running = 0;
                     double waiting = 0;
+                    double monitor = 0;
+                    double sleeping = 0;
                     for (ThreadInfoData info : beanList) {
                         State state = info.getState();
                         switch (state) {
@@ -154,10 +156,13 @@ public class ThreadTableController implements CommonController {
                             break;
                         case NEW:
                         case TERMINATED:
-                            System.err.println("yeah!");
                             break;
                         case BLOCKED:
+                            monitor++;
+                            break;
                         case TIMED_WAITING:
+                            sleeping++;
+                            break;
                         case WAITING:
                             waiting++;
                         default:
@@ -165,12 +170,18 @@ public class ThreadTableController implements CommonController {
                         }
                     }
                     int polls = beanList.size();
-                    double runningPercent = (running/polls) * 100;
-                    double waitingPercent = (waiting/polls) * 100;
+                    double percent = (running/polls) * 100;
+                    bean.setRunningPercent(percent);
+
+                    percent = (waiting/polls) * 100;
+                    bean.setWaitingPercent(percent);
                     
-                    bean.setRunningPercent(runningPercent);
-                    bean.setWaitingPercent(waitingPercent);
-                    
+                    percent = (monitor/polls) * 100;
+                    bean.setMonitorPercent(percent);
+
+                    percent = (sleeping/polls) * 100;
+                    bean.setSleepingPercent(percent);
+
                     tableBeans.add(bean);
                 }
                 

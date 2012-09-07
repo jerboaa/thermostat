@@ -38,11 +38,7 @@ package com.redhat.thermostat.thread.client.controller.impl;
 
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -55,7 +51,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public class ThreadTableControllerTest {
 

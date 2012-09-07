@@ -54,6 +54,8 @@ import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.ChartPanel;
+import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadView;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
@@ -67,12 +69,17 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     private ThreadMainPanel panel;
     private ThreadAliveDaemonTimelinePanel timelinePanel;
     
-    private SwingThreadTableView threadTable;
+    private SwingThreadTableView threadTableView;
     private SwingVMThreadCapabilitiesView vmCapsView;
+    private SwingThreadDetailsView threadDetailsView;
+    
+    private JTabbedPane pane;
     
     private static final Translate t = LocaleResources.createLocalizer();
 
     private boolean skipNotification = false;
+    
+    private int threadDetailsPaneID = 0;
     
     public SwingThreadView() {
         
@@ -135,11 +142,17 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         panel.getSplitPane().setTopComponent(timelinePanel);
         
         vmCapsView = new SwingVMThreadCapabilitiesView();
-        JTabbedPane pane = new JTabbedPane();
+        pane = new JTabbedPane();
+        pane.setName("tabbedPane");
+        
         pane.addTab(t.localize(LocaleResources.VM_CAPABILITIES), vmCapsView.getUiComponent());
         
-        threadTable = new SwingThreadTableView();
-        pane.addTab(t.localize(LocaleResources.TABLE), threadTable.getUiComponent());
+        threadTableView = new SwingThreadTableView();
+        pane.addTab(t.localize(LocaleResources.TABLE), threadTableView.getUiComponent());
+        
+        threadDetailsView = new SwingThreadDetailsView();
+        pane.addTab(t.localize(LocaleResources.DETAILS), threadDetailsView.getUiComponent());
+        threadDetailsPaneID = 2;
         
         panel.getSplitPane().setBottomComponent(pane);
     }
@@ -210,7 +223,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     
     @Override
     public ThreadTableView createThreadTableView() {
-        return threadTable;
+        return threadTableView;
     }
     
     @Override
@@ -238,5 +251,16 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         if (appService != null) {
             appService.getApplicationCache().addAttribute(DIVIDER_LOCATION_KEY, location);
         }
+    }
+    
+    @Override
+    public void displayThreadDetails(final ThreadTableBean thread) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                pane.setSelectedIndex(threadDetailsPaneID);
+                threadDetailsView.setDetails(thread);
+            }
+        });
     }
 }

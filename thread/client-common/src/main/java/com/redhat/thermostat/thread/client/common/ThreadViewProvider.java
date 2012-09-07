@@ -37,7 +37,6 @@
 package com.redhat.thermostat.thread.client.common;
 
 import com.redhat.thermostat.client.osgi.service.ViewProvider;
-import com.redhat.thermostat.client.ui.UIComponent;
 
 public interface ThreadViewProvider extends ViewProvider {
     

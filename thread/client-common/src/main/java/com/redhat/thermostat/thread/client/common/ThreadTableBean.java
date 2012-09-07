@@ -47,9 +47,11 @@ public class ThreadTableBean {
     private long start;
     private long waitedCount;
     private long blockedCount;
-    
+
     private double runningPercent;
     private double waitingPercent;
+    private double monitorPercent;
+    private double sleepingPercent;
     
     public long getId() {
         return id;
@@ -144,5 +146,21 @@ public class ThreadTableBean {
    
     public void setRunningPercent(double runningPercent) {
         this.runningPercent = runningPercent;
+    }
+    
+    public void setMonitorPercent(double monitorPercent) {
+        this.monitorPercent = monitorPercent;
+    }
+    
+    public double getMonitorPercent() {
+        return monitorPercent;
+    }
+    
+    public void setSleepingPercent(double sleepingPercent) {
+        this.sleepingPercent = sleepingPercent;
+    }
+    
+    public double getSleepingPercent() {
+        return sleepingPercent;
     }
 }

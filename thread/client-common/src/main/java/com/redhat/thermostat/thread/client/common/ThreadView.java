@@ -81,4 +81,6 @@ public abstract class ThreadView extends BasicView implements UIComponent {
         this.appService = appService;
         this.uniqueId = uniqueId;
     }
+
+    public abstract void displayThreadDetails(ThreadTableBean thread);
 }

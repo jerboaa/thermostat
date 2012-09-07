@@ -36,13 +36,11 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import static org.junit.Assert.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.times;
 
 import org.junit.After;
 import org.junit.Before;
@@ -59,7 +57,9 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.ThreadTableView.ThreadSelectionAction;
 import com.redhat.thermostat.thread.client.common.ThreadView;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
@@ -71,12 +71,16 @@ public class ThreadInformationControllerTest {
     private Timer timer;
     private ThreadView view;
     private ActionListener<ThreadView.Action> actionListener;
-        
+    private ActionListener<ThreadTableView.ThreadSelectionAction> threadTableActionListener;
+
     private ThreadViewProvider viewFactory;
     private ThreadInformationController controller;
     
     private ApplicationService appService;
-        
+
+    private ThreadTableView threadTableView;
+    private VMThreadCapabilitiesView threadCapsView;
+    
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -90,15 +94,15 @@ public class ThreadInformationControllerTest {
     }
 
     private void setUpView() {
-        VMThreadCapabilitiesView commonController1 = mock(VMThreadCapabilitiesView.class);
-        ThreadTableView commonController2 = mock(ThreadTableView.class);
+        threadCapsView = mock(VMThreadCapabilitiesView.class);
+        threadTableView = mock(ThreadTableView.class);
 
         view = mock(ThreadView.class);
         viewFactory = mock(ThreadViewProvider.class);
         when(viewFactory.createView()).thenReturn(view);
         
-        when(view.createVMThreadCapabilitiesView()).thenReturn(commonController1);
-        when(view.createThreadTableView()).thenReturn(commonController2);
+        when(view.createVMThreadCapabilitiesView()).thenReturn(threadCapsView);
+        when(view.createThreadTableView()).thenReturn(threadTableView);
     }
     
     private void setUpTimers() {
@@ -112,12 +116,16 @@ public class ThreadInformationControllerTest {
     }
     
     private void setUpListeners() {        
-        ArgumentCaptor<ActionListener> viewArgumentCaptor1 = ArgumentCaptor.forClass(ActionListener.class);
-        doNothing().when(view).addActionListener(viewArgumentCaptor1.capture());
+        ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
+        
+        ArgumentCaptor<ActionListener> threadTableViewCaptor = ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(threadTableView).addThreadSelectionActionListener(threadTableViewCaptor.capture());
         
         createController();
         
-        actionListener = viewArgumentCaptor1.getValue();
+        actionListener = viewArgumentCaptor.getValue();
+        threadTableActionListener = threadTableViewCaptor.getValue();
     }
     
     private void createController() {
@@ -135,6 +143,15 @@ public class ThreadInformationControllerTest {
         when(collectorFactory.getCollector(ref)).thenReturn(collector);
         
         controller = new ThreadInformationController(ref, appService, collectorFactory, viewFactory);
+    }
+    
+    @Test
+    public void verifyViewCreateSubViewCalled() {
+        
+        createController();
+        
+        verify(view).createThreadTableView();
+        verify(view).createVMThreadCapabilitiesView();
     }
     
     @Test
@@ -198,5 +215,19 @@ public class ThreadInformationControllerTest {
         
         actionListener.actionPerformed(new ActionEvent<>(view, ThreadView.Action.HIDDEN));
         verify(timer).stop();
+    }
+    
+    @Test
+    public void verifyTableViewLinksToDetailsView() {
+        setUpListeners();
+
+        ThreadTableBean bean = mock(ThreadTableBean.class);
+
+        ActionEvent<ThreadSelectionAction> event =
+                new ActionEvent<>(threadTableView, ThreadSelectionAction.SHOW_THREAD_DETAILS);
+        event.setPayload(bean);
+        
+        threadTableActionListener.actionPerformed(event);
+        verify(view).displayThreadDetails(bean);
     }
 }

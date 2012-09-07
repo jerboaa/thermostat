@@ -34,27 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.swing;
+package com.redhat.thermostat.thread.client.common.chart;
 
-import java.awt.Graphics;
-import java.awt.image.BufferedImage;
+import java.awt.Color;
 
-import javax.swing.JPanel;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PiePlot3D;
+import org.jfree.data.general.DefaultPieDataset;
 
 import com.redhat.thermostat.charts.Chart;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 
-@SuppressWarnings("serial")
-public class ChartPanel extends JPanel {
-
-    private Chart chart;
+public class ThreadDeatailsPieChart extends Chart {
     
-    public ChartPanel(Chart chart) {
-        this.chart = chart;
+    private ThreadTableBean thread;
+    
+    public ThreadDeatailsPieChart(ThreadTableBean thread) {
+        this.thread = thread;
     }
     
     @Override
-    protected void paintComponent(Graphics g) {
-        BufferedImage image = chart.getChart(getWidth(), getHeight(), getBackground());
-        g.drawImage(image, 0, 0, null);
+    protected JFreeChart createChart(int width, int height, Color bgColor) {
+        
+        DefaultPieDataset dataset = new DefaultPieDataset();
+        
+        dataset.setValue("Running", thread.getRunningPercent());
+        dataset.setValue("Waiting", thread.getWaitingPercent());
+        dataset.setValue("Monitor", thread.getMonitorPercent());
+        dataset.setValue("Sleeping", thread.getSleepingPercent());
+        
+        JFreeChart chart = ChartFactory.createPieChart3D(
+                thread.getName(),       // chart title
+                dataset,                // data
+                true,                   // include legend
+                true,
+                false
+            );
+
+        chart.setAntiAlias(true);
+        
+        PiePlot3D plot = (PiePlot3D) chart.getPlot();
+        plot.setBackgroundPaint(bgColor);
+        
+        plot.setStartAngle(290);
+        plot.setForegroundAlpha(0.5f);
+        
+        
+        return chart;
     }
 }

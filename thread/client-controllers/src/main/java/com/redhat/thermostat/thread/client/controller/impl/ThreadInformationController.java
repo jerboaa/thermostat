@@ -41,10 +41,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationCache;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -53,16 +52,16 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+import com.redhat.thermostat.thread.client.common.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.ThreadTableView.ThreadSelectionAction;
 import com.redhat.thermostat.thread.client.common.ThreadView;
-import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.ThreadView.ThreadAction;
+import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-
 import com.redhat.thermostat.thread.model.ThreadSummary;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadInformationController implements VmInformationServiceController {
 
@@ -190,13 +189,22 @@ public class ThreadInformationController implements VmInformationServiceControll
         }
     }
     
+    private class ThreadSelectionActionListener implements ActionListener<ThreadSelectionAction> {
+        @Override
+        public void actionPerformed(ActionEvent<ThreadSelectionAction> actionEvent) {
+            view.displayThreadDetails((ThreadTableBean) actionEvent.getPayload());
+        }
+    }
+    
     private void initControllers() {
         CommonController capsController =
                 new VMThreadCapabilitiesController(view.createVMThreadCapabilitiesView(), collector);
         capsController.initialize();
         
+        ThreadTableView threadTableView = view.createThreadTableView();
+        threadTableView.addThreadSelectionActionListener(new ThreadSelectionActionListener());
         CommonController threadTableController =
-                new ThreadTableController(view.createThreadTableView(), collector,
+                new ThreadTableController(threadTableView, collector,
                                           ApplicationContext.getInstance().getTimerFactory().createTimer());
         threadTableController.initialize();
     }

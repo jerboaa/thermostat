@@ -37,12 +37,15 @@
 package com.redhat.thermostat.thread.client.swing.impl;
 
 import java.awt.Component;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
@@ -78,6 +81,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         });
         
         table = new JTable(new ThreadViewTableModel(new ArrayList<ThreadTableBean>()));
+        table.setName("threadBeansTable");
         table.getModel().addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(TableModelEvent e) {
@@ -100,6 +104,27 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         table.setFillsViewportHeight(true);
         table.setAutoCreateRowSorter(true);
         tablePanel.setTable(table);
+        
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    ThreadViewTableModel model = (ThreadViewTableModel) table.getModel();
+                    int selectedRow = table.getSelectedRow();
+                    if (selectedRow != -1) {
+                        selectedRow = table.convertRowIndexToModel(selectedRow);
+                        final ThreadTableBean bean = model.infos.get(selectedRow);
+                        SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
+                            protected Void doInBackground() throws Exception {
+                                threadTableNotifier.fireAction(ThreadSelectionAction.SHOW_THREAD_DETAILS, bean);
+                                return null;
+                            }
+                        };
+                        worker.execute();
+                    }
+                }
+            }
+        });
     }
     
     @Override
@@ -153,7 +178,9 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                 t.localize(LocaleResources.WAIT_COUNT),
                 t.localize(LocaleResources.BLOCK_COUNT),
                 t.localize(LocaleResources.RUNNING),
-                t.localize(LocaleResources.WAITING), //, "Heap", "CPU Time", "User CPU Time"
+                t.localize(LocaleResources.WAITING),
+                t.localize(LocaleResources.SLEEPING),
+                t.localize(LocaleResources.MONITOR), //, "Heap", "CPU Time", "User CPU Time"
         };
         
         private List<ThreadTableBean> infos;
@@ -233,7 +260,13 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                 break;
             case 7:
                 result = info.getWaitingPercent();
-                break;                
+                break;
+            case 8:
+                result = info.getSleepingPercent();
+                break;
+            case 9:
+                result = info.getMonitorPercent();
+                break;
              default:
                  result = "n/a";
                  break;
