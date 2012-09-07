@@ -44,10 +44,13 @@ import com.redhat.thermostat.common.storage.AgentInformation;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 
 class HostInfoDAOImpl implements HostInfoDAO {
     private Storage storage;
+
     private HostInfoConverter converter;
 
     public HostInfoDAOImpl(Storage storage) {
@@ -57,8 +60,9 @@ class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public HostInfo getHostInfo(HostRef ref) {
-        Chunk query = new Chunk(hostInfoCategory, false);
-        query.put(Key.AGENT_ID, ref.getAgentId());
+        Query query = storage.createQuery()
+                .from(hostInfoCategory)
+                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
         Chunk result = storage.find(query);
         return result == null ? null : converter.fromChunk(result);
     }
@@ -70,10 +74,11 @@ class HostInfoDAOImpl implements HostInfoDAO {
     
     @Override
     public Collection<HostRef> getHosts() {
-        return getHosts(new Chunk(hostInfoCategory, false));
+        Query allHosts = storage.createQuery().from(hostInfoCategory);
+        return getHosts(allHosts);
     }
     
-    private Collection<HostRef> getHosts(Chunk filter) {
+    private Collection<HostRef> getHosts(Query filter) {
         Collection<HostRef> hosts = new ArrayList<HostRef>();
         
         Cursor hostsCursor = storage.findAll(filter);
@@ -91,14 +96,17 @@ class HostInfoDAOImpl implements HostInfoDAO {
         
         Collection<HostRef> hosts = new ArrayList<HostRef>();
         
-        Chunk agents = new Chunk(AgentInformation.AGENT_INFO_CATEGORY, false);
-        agents.put(AgentInformation.AGENT_ALIVE_KEY, true);
-        Cursor agentCursor = storage.findAll(agents);
+        Query aliveAgents = storage.createQuery()
+                .from(AgentInformation.AGENT_INFO_CATEGORY)
+                .where(AgentInformation.AGENT_ALIVE_KEY, Criteria.EQUALS, true);
+
+        Cursor agentCursor = storage.findAll(aliveAgents);
         while(agentCursor.hasNext()) {
             Chunk chunk = agentCursor.next();
             
-            Chunk filter = new Chunk(hostInfoCategory, false);
-            filter.put(Key.AGENT_ID, chunk.get(Key.AGENT_ID));
+            Query filter = storage.createQuery()
+                    .from(hostInfoCategory)
+                    .where(Key.AGENT_ID, Criteria.EQUALS, chunk.get(Key.AGENT_ID));
             
             hosts.addAll(getHosts(filter));
         }

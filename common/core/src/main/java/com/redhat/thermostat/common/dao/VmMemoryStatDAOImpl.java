@@ -41,10 +41,11 @@ import java.util.List;
 import java.util.Map;
 
 import com.redhat.thermostat.common.model.VmMemoryStat;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
@@ -60,9 +61,10 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        Chunk query = new Chunk(vmMemoryStatsCategory, false);
-        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(Key.VM_ID, ref.getId());
+        Query query = storage.createQuery()
+                .from(vmMemoryStatsCategory)
+                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
+                .where(Key.VM_ID, Criteria.EQUALS, ref.getId());
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
         if (cursor.hasNext()) {
             return converter.fromChunk(cursor.next());

@@ -37,8 +37,6 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -50,7 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -60,7 +57,10 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.test.MockQuery;
 
 public class VmInfoDAOTest {
 
@@ -78,7 +78,6 @@ public class VmInfoDAOTest {
     private Map<String, String> props;
     private Map<String, String> env;
     private List<String> libs;
-    private VmInfoDAO dao;
 
     @Before
     public void setUp() {
@@ -96,13 +95,6 @@ public class VmInfoDAOTest {
         props = new HashMap<>();
         env = new HashMap<>();
         libs = new ArrayList<>();
-        Storage storage = setupStorageForSingleVM();
-        dao = new VmInfoDAOImpl(storage);
-    }
-
-    @After
-    public void tearDown() {
-        dao = null;
     }
 
     @Test
@@ -148,7 +140,9 @@ public class VmInfoDAOTest {
         chunk.put(VmInfoDAO.librariesKey, libs);
 
         Storage storage = mock(Storage.class);
-        when(storage.find(any(Chunk.class))).thenReturn(chunk);
+        Query query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
+        when(storage.find(query)).thenReturn(chunk);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -181,6 +175,8 @@ public class VmInfoDAOTest {
     public void testGetVmInfoUnknownVM() {
 
         Storage storage = mock(Storage.class);
+        Query query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -199,37 +195,10 @@ public class VmInfoDAOTest {
 
     }
 
-    private Storage setupStorageForSingleVM() {
-        Chunk query1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        query1.put(Key.AGENT_ID, "123");
-
-        Chunk query2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        query2.put(Key.AGENT_ID, "456");
-
-        Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        vm1.put(VmInfoDAO.vmIdKey, 123);
-        vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
-
-        Chunk vm2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        vm2.put(VmInfoDAO.vmIdKey, 456);
-        vm2.put(VmInfoDAO.mainClassKey, "mainClass2");
-
-        Cursor singleVMCursor = mock(Cursor.class);
-        when(singleVMCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(singleVMCursor.next()).thenReturn(vm1);
-
-        Cursor multiVMsCursor = mock(Cursor.class);
-        when(multiVMsCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(multiVMsCursor.next()).thenReturn(vm1).thenReturn(vm2);
-
-        Storage storage = mock(Storage.class);
-        when(storage.findAll(query1)).thenReturn(singleVMCursor);
-        when(storage.findAll(query2)).thenReturn(multiVMsCursor);
-        return storage;
-    }
-
     @Test
     public void testSingleVM() {
+        Storage storage = setupStorageForSingleVM();
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
         HostRef host = new HostRef("123", "fluffhost");
 
         Collection<VmRef> vms = dao.getVMs(host);
@@ -237,14 +206,59 @@ public class VmInfoDAOTest {
         assertCollection(vms, new VmRef(host, 123, "mainClass1"));
     }
 
+    private Storage setupStorageForSingleVM() {
+      Query expectedQuery = new MockQuery()
+          .from(VmInfoDAO.vmInfoCategory)
+          .where(Key.AGENT_ID, Criteria.EQUALS, "123");
+
+      Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
+      vm1.put(VmInfoDAO.vmIdKey, 123);
+      vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
+
+      Cursor singleVMCursor = mock(Cursor.class);
+      when(singleVMCursor.hasNext()).thenReturn(true).thenReturn(false);
+      when(singleVMCursor.next()).thenReturn(vm1);
+
+      Storage storage = mock(Storage.class);
+      when(storage.createQuery()).thenReturn(new MockQuery());
+      when(storage.findAll(expectedQuery)).thenReturn(singleVMCursor);
+      return storage;
+  }
+
     @Test
     public void testMultiVMs() {
+        Storage storage = setupStorageForMultiVM();
+        VmInfoDAO dao = new VmInfoDAOImpl(storage);
+
         HostRef host = new HostRef("456", "fluffhost");
 
         Collection<VmRef> vms = dao.getVMs(host);
 
         assertCollection(vms, new VmRef(host, 123, "mainClass1"), new VmRef(host, 456, "mainClass2"));
     }
+
+    private Storage setupStorageForMultiVM() {
+      Query expectedQuery = new MockQuery()
+          .from(VmInfoDAO.vmInfoCategory)
+          .where(Key.AGENT_ID, Criteria.EQUALS, "456");
+
+      Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
+      vm1.put(VmInfoDAO.vmIdKey, 123);
+      vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
+
+      Chunk vm2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
+      vm2.put(VmInfoDAO.vmIdKey, 456);
+      vm2.put(VmInfoDAO.mainClassKey, "mainClass2");
+
+      Cursor multiVMsCursor = mock(Cursor.class);
+      when(multiVMsCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+      when(multiVMsCursor.next()).thenReturn(vm1).thenReturn(vm2);
+
+      Storage storage = mock(Storage.class);
+      when(storage.createQuery()).thenReturn(new MockQuery());
+      when(storage.findAll(expectedQuery)).thenReturn(multiVMsCursor);
+      return storage;
+  }
 
     private void assertCollection(Collection<VmRef> vms, VmRef... expectedVMs) {
         assertEquals(expectedVMs.length, vms.size());

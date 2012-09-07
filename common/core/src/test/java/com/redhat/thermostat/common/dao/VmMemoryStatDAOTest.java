@@ -51,8 +51,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
@@ -60,8 +58,11 @@ import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Cursor.SortDirection;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.test.MockQuery;
 
 public class VmMemoryStatDAOTest {
 
@@ -71,7 +72,7 @@ public class VmMemoryStatDAOTest {
     private Storage storage;
     private VmRef vmRef;
 
-    private Chunk query;
+    private MockQuery query;
     private Cursor cursor;
 
     @Before
@@ -86,16 +87,12 @@ public class VmMemoryStatDAOTest {
         when(vmRef.getId()).thenReturn(VM_ID);
 
         storage = mock(Storage.class);
+        query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
 
         cursor = mock(Cursor.class);
-        when(storage.findAll(any(Chunk.class))).thenAnswer(new Answer<Cursor>() {
-            @Override
-            public Cursor answer(InvocationOnMock invocation) throws Throwable {
-                query = (Chunk) invocation.getArguments()[0];
-                return cursor;
-            }
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
 
-        });
         when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
         when(cursor.limit(any(Integer.class))).thenReturn(cursor);
         when(cursor.hasNext()).thenReturn(false);
@@ -162,7 +159,7 @@ public class VmMemoryStatDAOTest {
 
         verifyQuery();
 
-        assertEquals("this.timestamp > 123", query.get(Key.WHERE));
+        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l));
     }
 
     private void verifyQuery() {
@@ -171,8 +168,8 @@ public class VmMemoryStatDAOTest {
         ArgumentCaptor<SortDirection> sortDirection = ArgumentCaptor.forClass(SortDirection.class);
         verify(cursor).sort(sortKey.capture(), sortDirection.capture());
 
-        assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
-        assertEquals((Integer)VM_ID, query.get(Key.VM_ID));
+        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_ID));
 
         assertTrue(sortKey.getValue().equals(Key.TIMESTAMP));
         assertTrue(sortDirection.getValue().equals(SortDirection.DESCENDING));
@@ -184,7 +181,8 @@ public class VmMemoryStatDAOTest {
         when(cursor.next()).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        when(storage.createQuery()).thenReturn(new MockQuery());
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
 
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         VmMemoryStat latest = impl.getLatestMemoryStat(vmRef);

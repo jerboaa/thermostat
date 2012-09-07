@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -56,6 +57,7 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.test.MockQuery;
 
 public class NetworkInterfaceInfoDAOTest {
 
@@ -90,7 +92,9 @@ public class NetworkInterfaceInfoDAOTest {
         when(cursor.next()).thenReturn(chunk);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        MockQuery query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
+        when(storage.findAll(query)).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -98,9 +102,7 @@ public class NetworkInterfaceInfoDAOTest {
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
         List<NetworkInterfaceInfo> netInfo = dao.getNetworkInterfaces(hostRef);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).findAll(arg.capture());
-        assertNull(arg.getValue().get(new Key<String>("$where", false)));
+        assertFalse(query.hasWhereClauseFor(Key.TIMESTAMP));
 
         assertEquals(1, netInfo.size());
 

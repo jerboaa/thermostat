@@ -39,4 +39,5 @@ package com.redhat.thermostat.common.storage;
 public interface StorageProvider {
 
     Storage createStorage();
+
 }

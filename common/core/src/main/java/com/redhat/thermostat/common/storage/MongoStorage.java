@@ -255,6 +255,14 @@ public class MongoStorage extends Storage {
         return coll;
     }
 
+    // TODO: This method is only temporary to enable tests, until we come up with a better design,
+    // in particular, the collection should be stored in the category itself. It must not be called
+    // from production code.
+    void mapCategoryToDBCollection(Category category, DBCollection coll) {
+        collectionCache.put(category.getName(), coll);
+    }
+
+
     private DBObject createConfigDBObject(AgentInformation agentInfo) {
         BasicDBObject result = getAgentQueryKeyFromGlobalAgent();
         result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
@@ -312,29 +320,34 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public Cursor findAll(Chunk query) {
-        Category cat = query.getCategory();
-        DBCollection coll = getCachedCollection(cat.getName());
-        ChunkConverter converter = new ChunkConverter();
-        DBObject obj = converter.chunkToDBObject(query);
-        DBCursor dbCursor = coll.find(obj);
-        return new MongoCursor(dbCursor, query.getCategory());
-    }
-
-    // TODO: This method is only temporary to enable tests, until we come up with a better design,
-    // in particular, the collection should be stored in the category itself. It must not be called
-    // from production code.
-    void mapCategoryToDBCollection(Category category, DBCollection coll) {
-        collectionCache.put(category.getName(), coll);
+    public Query createQuery() {
+        return new MongoQuery();
     }
 
     @Override
-    public Chunk find(Chunk query) {
-        Category cat = query.getCategory();
-        DBCollection coll = getCachedCollection(cat.getName());
+    public Cursor findAll(Query query) {
+        MongoQuery mongoQuery =  checkAndCastQuery(query);
+        DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
+        DBCursor dbCursor = coll.find(mongoQuery.getGeneratedQuery());
+        return new MongoCursor(dbCursor, mongoQuery.getCategory());
+    }
+
+    @Override
+    public Chunk find(Query query) {
+        MongoQuery mongoQuery = checkAndCastQuery(query);
+        DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
+        DBObject dbResult = coll.findOne(mongoQuery.getGeneratedQuery());
         ChunkConverter converter = new ChunkConverter();
-        DBObject dbResult = coll.findOne(converter.chunkToDBObject(query));
-        return dbResult == null ? null : converter.dbObjectToChunk(dbResult, cat);
+        return dbResult == null ? null : converter.dbObjectToChunk(dbResult, mongoQuery.getCategory());
+    }
+
+    private MongoQuery checkAndCastQuery(Query query) {
+        if (!(query instanceof MongoQuery)) {
+            throw new IllegalArgumentException("MongoStorage can only handle MongoQuery");
+        }
+
+        return (MongoQuery) query;
+
     }
     
     @Override

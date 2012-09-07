@@ -44,6 +44,8 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
@@ -65,9 +67,10 @@ public class ThreadDaoImpl implements ThreadDao {
         
         VMThreadCapabilities caps = null;
         
-        Chunk query = new Chunk(THREAD_CAPABILITIES, false);
-        query.put(Key.VM_ID, vm.getId());
-        query.put(Key.AGENT_ID, vm.getAgent().getAgentId());
+        Query query = storage.createQuery()
+                .from(THREAD_CAPABILITIES)
+                .where(Key.VM_ID, Query.Criteria.EQUALS, vm.getId())
+                .where(Key.AGENT_ID, Query.Criteria.EQUALS, vm.getAgent().getAgentId());
         
         Chunk found = storage.find(query);
         if (found != null) {
@@ -106,7 +109,7 @@ public class ThreadDaoImpl implements ThreadDao {
     public ThreadSummary loadLastestSummary(VmRef ref) {
         ThreadSummary summary = null;
 
-        Chunk query = prepareChunk(THREAD_SUMMARY, false, ref);
+        Query query = prepareQuery(THREAD_SUMMARY, ref);
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
         if (cursor.hasNext()) {
             Chunk found = cursor.next();
@@ -124,8 +127,8 @@ public class ThreadDaoImpl implements ThreadDao {
         
         List<ThreadSummary> result = new ArrayList<>();
         
-        Chunk query = prepareChunk(THREAD_SUMMARY, false, ref);
-        query.put(Key.WHERE, "this.timestamp > " + since);
+        Query query = prepareQuery(THREAD_SUMMARY, ref);
+        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
 
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
         while (cursor.hasNext()) {
@@ -163,8 +166,8 @@ public class ThreadDaoImpl implements ThreadDao {
     public List<ThreadInfoData> loadThreadInfo(VmRef ref, long since) {
         List<ThreadInfoData> result = new ArrayList<>();
         
-        Chunk query = prepareChunk(THREAD_INFO, false, ref);
-        query.put(Key.WHERE, "this.timestamp > " + since);
+        Query query = prepareQuery(THREAD_INFO, ref)
+                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
         
         Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
         while (cursor.hasNext()) {
@@ -197,6 +200,18 @@ public class ThreadDaoImpl implements ThreadDao {
     
     private Chunk prepareChunk(Category category, boolean replace, VmRef vm) {
         return prepareChunk(category, replace, vm.getIdString(), vm.getAgent().getAgentId());
+    }
+
+    private Query prepareQuery(Category category, VmRef vm) {
+        return prepareQuery(category, vm.getIdString(), vm.getAgent().getAgentId());
+    }
+
+    private Query prepareQuery(Category category, String vmId, String agentId) {
+        Query query = storage.createQuery()
+                .from(category)
+                .where(Key.AGENT_ID, Query.Criteria.EQUALS, agentId)
+                .where(Key.VM_ID, Query.Criteria.EQUALS, Integer.valueOf(vmId));
+        return query;
     }
     
     @Override

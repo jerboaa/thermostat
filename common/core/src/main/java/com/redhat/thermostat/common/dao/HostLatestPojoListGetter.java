@@ -46,8 +46,10 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Cursor.SortDirection;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 
 class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoListGetter<T> {
 
@@ -74,11 +76,11 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
 
     @Override
     public List<T> getLatest() {
-        Chunk query = buildQuery();
+        Query query = buildQuery();
         return getLatest(query);
     }
 
-    private List<T> getLatest(Chunk query) {
+    private List<T> getLatest(Query query) {
         // TODO if multiple threads will be using this utility class, there may be some issues
         // with the updateTimes
         Long lastUpdate = lastUpdateTimes.get(ref);
@@ -94,14 +96,13 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
         return result;
     }
 
-    protected Chunk buildQuery() {
-        Chunk query = new Chunk(cat, false);
-        query.put(Key.AGENT_ID, ref.getAgentId());
+    protected Query buildQuery() {
+        Query query = storage.createQuery()
+                .from(cat)
+                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
         Long lastUpdate = lastUpdateTimes.get(ref);
         if (lastUpdate != null) {
-            // TODO once we have an index and the 'column' is of type long, use
-            // a query which can utilize an index. this one doesn't
-            query.put(Key.WHERE, "this.timestamp > " + lastUpdate);
+            query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, lastUpdate);
         } else {
             lastUpdateTimes.put(ref, Long.MIN_VALUE);
         }

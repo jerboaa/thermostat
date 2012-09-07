@@ -47,13 +47,17 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.test.MockQuery;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -107,49 +111,53 @@ public class VmLatestPojoListGetterTest {
     @Test
     public void testBuildQuery() {
         Storage storage = mock(Storage.class);
+        MockQuery query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
+
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
-        Chunk query = getter.buildQuery();
+        query = (MockQuery) getter.buildQuery();
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
-        assertEquals(2, query.getKeys().size());
-        assertTrue(query.getKeys().contains(Key.AGENT_ID));
-        assertTrue(query.getKeys().contains(Key.VM_ID));
-        assertFalse(query.getKeys().contains(Key.WHERE));
-        assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
-        assertEquals((Integer) VM_PID, query.get(Key.VM_ID));
+        assertEquals(2, query.getWhereClausesCount());
+        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_PID));
     }
 
     @Test
     public void testBuildQueryWithSince() {
         Storage storage = mock(Storage.class);
+        MockQuery query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
+
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef, 123);
-        Chunk query = getter.buildQuery();
+        query = (MockQuery) getter.buildQuery();
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
-        assertEquals(3, query.getKeys().size());
-        assertTrue(query.getKeys().contains(Key.AGENT_ID));
-        assertTrue(query.getKeys().contains(Key.VM_ID));
-        assertEquals("this.timestamp > 123" , query.get(Key.WHERE));
-        assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
-        assertEquals((Integer) VM_PID, query.get(Key.VM_ID));
+        assertEquals(3, query.getWhereClausesCount());
+        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_PID));
+        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l));
     }
 
     @Test
     public void testBuildQueryPopulatesUpdateTimes() {
         Storage storage = mock(Storage.class);
+        MockQuery ignored = new MockQuery();
+        MockQuery query = new MockQuery();
+        when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
+
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
         getter.buildQuery(); // Ignore first return value.
-        Chunk query = getter.buildQuery();
+        query = (MockQuery) getter.buildQuery();
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
-        assertEquals(3, query.getKeys().size());
-        assertTrue(query.getKeys().contains(Key.AGENT_ID));
-        assertTrue(query.getKeys().contains(Key.VM_ID));
-        assertTrue(query.getKeys().contains(Key.WHERE));
-        assertEquals("this.timestamp > " + Long.MIN_VALUE, query.get(Key.WHERE));
+        assertEquals(3, query.getWhereClausesCount());
+        assertTrue(query.hasWhereClauseFor(Key.AGENT_ID));
+        assertTrue(query.hasWhereClauseFor(Key.VM_ID));
+        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
     }
 
     @Test
@@ -159,7 +167,8 @@ public class VmLatestPojoListGetterTest {
         when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        when(storage.createQuery()).thenReturn(new MockQuery());
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
 
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
 
@@ -186,21 +195,20 @@ public class VmLatestPojoListGetterTest {
         when(cursor2.next()).thenReturn(result3);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor1);
+        MockQuery firstQuery = new MockQuery();
+        MockQuery secondQuery = new MockQuery();
+        when(storage.createQuery()).thenReturn(firstQuery).thenReturn(secondQuery);
+
+        when(storage.findAll(any(Query.class))).thenReturn(cursor1);
 
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
         getter.getLatest();
         getter.getLatest();
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage, times(2)).findAll(arg.capture());
-        List<Chunk> queries = arg.getAllValues();
+        verify(storage, times(2)).findAll(isA(Query.class));
 
-        assertEquals(2, queries.size());
-        Chunk query = queries.get(1);
-        assertNotNull(query);
-        assertEquals(AGENT_ID, query.get(Key.AGENT_ID));
-        assertEquals((Integer) VM_PID, query.get(Key.VM_ID));
-        assertEquals("this.timestamp > " + t2, query.get(Key.WHERE));
+        assertTrue(secondQuery.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        assertTrue(secondQuery.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_PID));
+        assertTrue(secondQuery.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, t2));
     }
 }

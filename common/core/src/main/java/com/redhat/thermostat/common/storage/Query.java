@@ -34,32 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
-import com.redhat.thermostat.common.model.TimeStampedPojo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Query.Criteria;
-import com.redhat.thermostat.common.storage.Storage;
+public interface Query {
 
-class VmLatestPojoListGetter<T extends TimeStampedPojo> extends HostLatestPojoListGetter<T> {
-
-    private VmRef vmRef;
-
-    VmLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, VmRef ref) {
-        this(storage, cat, converter, ref, 0);
+    enum Criteria {
+        EQUALS,
+        NOT_EQUAL_TO,
+        GREATER_THAN,
+        GREATER_THAN_OR_EQUAL_TO,
+        LESS_THAN,
+        LESS_THAN_OR_EQUAL_TO,
     }
 
-    VmLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, VmRef ref, long since) {
-        super(storage, cat, converter, ref.getAgent(), since);
-        vmRef = ref;
-    }
+    Query from(Category category);
 
-    @Override
-    protected Query buildQuery() {
-        Query query = super.buildQuery();
-        query.where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());
-        return query;
-    }
+    <T> Query where(Key<T> key, Criteria criteria, T value);
+
 }

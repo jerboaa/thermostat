@@ -61,6 +61,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
@@ -69,7 +71,10 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.test.MockQuery;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
@@ -86,6 +91,13 @@ public class HeapDAOTest {
     @Before
     public void setUp() throws IOException {
         storage = mock(Storage.class);
+        when(storage.createQuery()).then(new Answer<Query>() {
+            @Override
+            public Query answer(InvocationOnMock invocation) throws Throwable {
+                return new MockQuery();
+            }
+        });
+
         dao = new HeapDAOImpl(storage);
         
         heapInfo = new HeapInfo(123, 12345);
@@ -98,9 +110,11 @@ public class HeapDAOTest {
         histogramData = createHistogramData();
 
         // Setup for reading data from DB.
-        Chunk findAllQuery = new Chunk(HeapDAO.heapInfoCategory, false);
-        findAllQuery.put(Key.AGENT_ID, "123");
-        findAllQuery.put(Key.VM_ID, 234);
+        MockQuery findAllQuery = new MockQuery()
+            .from(HeapDAO.heapInfoCategory)
+            .where(Key.AGENT_ID, Criteria.EQUALS, "123")
+            .where(Key.VM_ID, Criteria.EQUALS, 234);
+
         Cursor cursor = mock(Cursor.class);
         Chunk info1 = new Chunk(HeapDAO.heapInfoCategory, false);
         info1.put(Key.AGENT_ID, "123");
@@ -124,19 +138,24 @@ public class HeapDAOTest {
         when(storage.loadFile("test-heap")).thenReturn(new ByteArrayInputStream(data));
         when(storage.loadFile("test-histo")).thenReturn(histogramData);
 
+        // We dont check for AGENT_ID. That's enforced/added/checked by Storage
+
         // Prepare queries for read-back of _id in putHeapInfo() tests.
-        Chunk heap1query = new Chunk(HeapDAO.heapInfoCategory, false);
-        heap1query.put(Key.VM_ID, 123);
-        heap1query.put(Key.TIMESTAMP, 12345l);
-        heap1query.put(HeapDAO.heapDumpIdKey, "heapdump-987-123-12345");
-        heap1query.put(HeapDAO.histogramIdKey, "histogram-987-123-12345");
+        MockQuery heap1query = new MockQuery()
+            .from(HeapDAO.heapInfoCategory)
+            .where(Key.VM_ID, Criteria.EQUALS, 123)
+            .where(Key.TIMESTAMP, Criteria.EQUALS, 12345l)
+            .where(HeapDAO.heapDumpIdKey, Criteria.EQUALS, "heapdump-987-123-12345")
+            .where(HeapDAO.histogramIdKey, Criteria.EQUALS, "histogram-987-123-12345");
         Chunk heap1 = new Chunk(HeapDAO.heapInfoCategory, false);
         heap1.put(Key.ID, "id1");
         when(storage.find(heap1query)).thenReturn(heap1);
 
-        Chunk heap2query = new Chunk(HeapDAO.heapInfoCategory, false);
-        heap2query.put(Key.VM_ID, 123);
-        heap2query.put(Key.TIMESTAMP, 12345l);
+        MockQuery heap2query = new MockQuery()
+            .from(HeapDAO.heapInfoCategory)
+            .where(Key.VM_ID, Criteria.EQUALS, 123)
+            .where(Key.TIMESTAMP, Criteria.EQUALS, 12345l);
+
         Chunk heap2 = new Chunk(HeapDAO.heapInfoCategory, false);
         heap2.put(Key.ID, "id2");
         when(storage.find(heap2query)).thenReturn(heap2);
@@ -286,7 +305,8 @@ public class HeapDAOTest {
     @Test
     public void testInvalidHeapId() throws IOException {
         storage = mock(Storage.class);
-        when(storage.find(isA(Chunk.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
+        when(storage.createQuery()).thenReturn(new MockQuery());
+        when(storage.find(isA(Query.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
         dao = new HeapDAOImpl(storage);
         heapInfo = dao.getHeapInfo("some-random-heap-id");
         assertTrue(heapInfo == null);

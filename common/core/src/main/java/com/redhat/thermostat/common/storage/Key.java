@@ -46,7 +46,6 @@ public class Key<T> {
     public static final Key<Long> TIMESTAMP = new Key<>("timestamp", false);
     public static final Key<String> AGENT_ID = new Key<>("agent-id", true);
     public static final Key<Integer> VM_ID = new Key<>("vm-id", true);
-    public static final Key<String> WHERE = new Key<>("$where", false);
     public static final Key<String> ID = new Key<>("_id", false);
 
     private String name;

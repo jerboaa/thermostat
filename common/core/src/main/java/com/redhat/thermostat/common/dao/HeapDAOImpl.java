@@ -55,13 +55,15 @@ import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 
 class HeapDAOImpl implements HeapDAO {
 
     private static final Logger log = Logger.getLogger(HeapDAOImpl.class.getName());
 
-    private Storage storage;
+    private final Storage storage;
 
     HeapDAOImpl(Storage storage) {
         this.storage = storage;
@@ -72,6 +74,8 @@ class HeapDAOImpl implements HeapDAO {
     public void putHeapInfo(HeapInfo heapInfo, File heapDumpData, ObjectHistogram histogramData) throws IOException {
         int vmId = heapInfo.getVmId();
         Chunk chunk = new Chunk(heapInfoCategory, false);
+
+        // We dont add a Key.AGENT_ID here explicitly. Storage takes care of that.
 
         chunk.put(Key.VM_ID, vmId);
         chunk.put(Key.TIMESTAMP, heapInfo.getTimestamp());
@@ -103,16 +107,27 @@ class HeapDAOImpl implements HeapDAO {
             }
         }
 
-        Chunk entry = storage.find(chunk);
+        Query justInsertedHeap = storage.createQuery()
+                .from(heapInfoCategory)
+                .where(Key.VM_ID, Criteria.EQUALS, vmId)
+                .where(Key.TIMESTAMP, Criteria.EQUALS, heapInfo.getTimestamp());
+        if (heapDumpData != null) {
+            justInsertedHeap.where(heapDumpIdKey, Criteria.EQUALS, heapDumpId);
+        }
+        if (histogramData != null) {
+            justInsertedHeap.where(histogramIdKey, Criteria.EQUALS, histogramId);
+        }
+
+        Chunk entry = storage.find(justInsertedHeap);
         heapInfo.setHeapId(entry.get(Key.ID));
     }
 
     @Override
     public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
-
-        Chunk query = new Chunk(heapInfoCategory, false);
-        query.put(Key.AGENT_ID, vm.getAgent().getAgentId());
-        query.put(Key.VM_ID, vm.getId());
+        Query query = storage.createQuery()
+                .from(heapInfoCategory)
+                .where(Key.AGENT_ID, Criteria.EQUALS, vm.getAgent().getAgentId())
+                .where(Key.VM_ID, Criteria.EQUALS, vm.getId());
         Cursor cursor = storage.findAll(query);
         Collection<HeapInfo> heapInfos = new ArrayList<>();
         while (cursor.hasNext()) {
@@ -149,8 +164,9 @@ class HeapDAOImpl implements HeapDAO {
 
     @Override
     public HeapInfo getHeapInfo(String heapId) {
-        Chunk query = new Chunk(heapInfoCategory, false);
-        query.put(Key.ID, heapId);
+        Query query = storage.createQuery()
+                .from(heapInfoCategory)
+                .where(Key.ID, Criteria.EQUALS, heapId);
         Chunk found = null;
         try {
             found = storage.find(query);

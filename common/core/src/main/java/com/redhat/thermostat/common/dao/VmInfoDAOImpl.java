@@ -44,7 +44,9 @@ import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 
 class VmInfoDAOImpl implements VmInfoDAO {
 
@@ -58,10 +60,11 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public VmInfo getVmInfo(VmRef ref) {
-        Chunk query = new Chunk(vmInfoCategory, false);
-        query.put(Key.AGENT_ID, ref.getAgent().getAgentId());
-        query.put(vmIdKey, ref.getId());
-        Chunk result = storage.find(query);
+        Query findMatchingVm = storage.createQuery()
+                .from(vmInfoCategory)
+                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
+                .where(vmIdKey, Criteria.EQUALS, ref.getId());
+        Chunk result = storage.find(findMatchingVm);
         if (result == null) {
             throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
         }
@@ -71,14 +74,15 @@ class VmInfoDAOImpl implements VmInfoDAO {
     @Override
     public Collection<VmRef> getVMs(HostRef host) {
 
-        Chunk query = buildQuery(host);
+        Query query = buildQuery(host);
         Cursor cursor = storage.findAll(query);
         return buildVMsFromQuery(cursor, host);
     }
 
-    private Chunk buildQuery(HostRef host) {
-        Chunk query = new Chunk(vmInfoCategory, false);
-        query.put(Key.AGENT_ID, host.getAgentId());
+    private Query buildQuery(HostRef host) {
+        Query query = storage.createQuery()
+                .from(vmInfoCategory)
+                .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
         return query;
     }
 

@@ -44,6 +44,8 @@ import java.util.Collection;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -57,7 +59,9 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.test.MockQuery;
 
 public class HostInfoDAOTest {
 
@@ -94,7 +98,8 @@ public class HostInfoDAOTest {
         chunk.put(HostInfoDAO.hostMemoryTotalKey, MEMORY_TOTAL);
 
         Storage storage = mock(Storage.class);
-        when(storage.find(any(Chunk.class))).thenReturn(chunk);
+        when(storage.createQuery()).thenReturn(new MockQuery());
+        when(storage.find(any(Query.class))).thenReturn(chunk);
 
         HostInfo info = new HostInfoDAOImpl(storage).getHostInfo(new HostRef("some uid", HOST_NAME));
         assertNotNull(info);
@@ -129,8 +134,14 @@ public class HostInfoDAOTest {
         when(cursor.next()).thenReturn(hostConfig);
 
         Storage storage = mock(Storage.class);
+        when(storage.createQuery()).then(new Answer<Query>() {
+            @Override
+            public Query answer(InvocationOnMock invocation) throws Throwable {
+                return new MockQuery();
+            }
+        });
         when(storage.findAllFromCategory(HostInfoDAO.hostInfoCategory)).thenReturn(cursor);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
         
         return storage;
     }
@@ -166,8 +177,14 @@ public class HostInfoDAOTest {
         when(cursor.next()).thenReturn(hostConfig1).thenReturn(hostConfig2).thenReturn(hostConfig3);
 
         Storage storage = mock(Storage.class);
+        when(storage.createQuery()).then(new Answer<Query>() {
+            @Override
+            public Query answer(InvocationOnMock invocation) throws Throwable {
+                return new MockQuery();
+            }
+        });
         when(storage.findAllFromCategory(HostInfoDAO.hostInfoCategory)).thenReturn(cursor);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
         
         return storage;
     }
@@ -211,7 +228,7 @@ public class HostInfoDAOTest {
         // cursor 3 from the above storage should not be used
         assertEquals(1, hosts.size());
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
-        verify(storage, times(2)).findAll(any(Chunk.class));
+        verify(storage, times(2)).findAll(any(Query.class));
     }
     
     private Storage setupStorageForSingleAliveHost() {
@@ -247,7 +264,13 @@ public class HostInfoDAOTest {
         // storage
         
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor1).thenReturn(cursor2).thenReturn(cursor3);
+        when(storage.createQuery()).then(new Answer<Query>() {
+            @Override
+            public Query answer(InvocationOnMock invocation) throws Throwable {
+                return new MockQuery();
+            }
+        });
+        when(storage.findAll(any(Query.class))).thenReturn(cursor1).thenReturn(cursor2).thenReturn(cursor3);
         
         return storage;
     }
@@ -264,7 +287,7 @@ public class HostInfoDAOTest {
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
         assertTrue(hosts.contains(new HostRef("456", "fluffhost2")));
         assertTrue(hosts.contains(new HostRef("678", "fluffhost3")));
-        verify(storage, times(4)).findAll(any(Chunk.class));
+        verify(storage, times(4)).findAll(any(Query.class));
     }
     
     private Storage setupStorageForSingleAliveHost3() {
@@ -316,7 +339,13 @@ public class HostInfoDAOTest {
         // storage
         
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor1).
+        when(storage.createQuery()).then(new Answer<Query>() {
+            @Override
+            public Query answer(InvocationOnMock invocation) throws Throwable {
+                return new MockQuery();
+            }
+        });
+        when(storage.findAll(any(Query.class))).thenReturn(cursor1).
                                                 thenReturn(cursor2).
                                                 thenReturn(cursor3).
                                                 thenReturn(cursor4);

@@ -43,7 +43,9 @@ import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 
 class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
@@ -57,10 +59,11 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
-        Chunk query = new Chunk(networkInfoCategory, false);
-        query.put(Key.AGENT_ID, ref.getAgentId());
+        Query allHostNetworkInterfaces = storage.createQuery()
+                .from(networkInfoCategory)
+                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
 
-        Cursor cursor = storage.findAll(query);
+        Cursor cursor = storage.findAll(allHostNetworkInterfaces);
         List<NetworkInterfaceInfo> result = new ArrayList<>();
         while (cursor.hasNext()) {
             Chunk chunk = cursor.next();

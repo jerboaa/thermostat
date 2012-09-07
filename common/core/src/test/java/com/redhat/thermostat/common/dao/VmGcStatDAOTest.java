@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -51,12 +52,17 @@ import java.util.List;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.test.MockQuery;
 
 public class VmGcStatDAOTest {
 
@@ -94,7 +100,8 @@ public class VmGcStatDAOTest {
         when(cursor.next()).thenReturn(chunk);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        when(storage.createQuery()).thenReturn(new MockQuery());
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -107,9 +114,9 @@ public class VmGcStatDAOTest {
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
         verify(storage).findAll(arg.capture());
-        assertNull(arg.getValue().get(new Key<String>("$where", false)));
+        assertFalse(arg.getValue().hasWhereClauseFor(Key.TIMESTAMP));
 
         assertEquals(1, vmGcStats.size());
         VmGcStat stat = vmGcStats.get(0);
@@ -135,7 +142,14 @@ public class VmGcStatDAOTest {
         when(cursor.next()).thenReturn(chunk);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+
+        when(storage.createQuery()).then(new Answer<MockQuery>() {
+            @Override
+            public MockQuery answer(InvocationOnMock invocation) throws Throwable {
+                return new MockQuery();
+            }
+        });
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -148,9 +162,10 @@ public class VmGcStatDAOTest {
         dao.getLatestVmGcStats(vmRef);
 
         dao.getLatestVmGcStats(vmRef);
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
+        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
         verify(storage, times(2)).findAll(arg.capture());
-        assertEquals("this.timestamp > 456", arg.getValue().get(new Key<String>("$where", false)));
+        MockQuery query = arg.getValue();
+        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 456l));
     }
 
     @Test

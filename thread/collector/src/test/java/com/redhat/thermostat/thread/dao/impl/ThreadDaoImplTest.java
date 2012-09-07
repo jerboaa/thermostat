@@ -51,7 +51,10 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
@@ -71,7 +74,9 @@ public class ThreadDaoImplTest {
     
     @Test
     public void testLoadVMCapabilities() {
+        MockQuery query = new MockQuery();
         Storage storage = mock(Storage.class);
+        when(storage.createQuery()).thenReturn(query);
         VmRef ref = mock(VmRef.class);
         when(ref.getId()).thenReturn(42);
         
@@ -85,15 +90,13 @@ public class ThreadDaoImplTest {
         when(answer.get(ThreadDao.CPU_TIME_KEY)).thenReturn(true);
         when(answer.get(ThreadDao.THREAD_ALLOCATED_MEMORY_KEY)).thenReturn(true);
         
-        ArgumentCaptor<Chunk> queryCaptor = ArgumentCaptor.forClass(Chunk.class);
-        when(storage.find(queryCaptor.capture())).thenReturn(answer);
+        when(storage.find(query)).thenReturn(answer);
         
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VMThreadCapabilities caps = dao.loadCapabilities(ref);
 
-        Chunk query = queryCaptor.getValue();
-        assertEquals(42, (int) query.get(Key.VM_ID));
-        assertEquals("0xcafe", query.get(Key.AGENT_ID));
+        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, 42));
+        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, "0xcafe"));
         
         assertFalse(caps.supportContentionMonitor());
         assertTrue(caps.supportCPUTime());

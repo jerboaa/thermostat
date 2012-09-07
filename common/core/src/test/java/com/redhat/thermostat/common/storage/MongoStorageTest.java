@@ -75,6 +75,7 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ DBCollection.class, DB.class, Mongo.class, MongoStorage.class, MongoConnection.class })
@@ -94,7 +95,7 @@ public class MongoStorageTest {
     private DB db;
     private DBCollection testCollection, emptyTestCollection, mockedCollection;
 
-    private MongoStorage makeStorage() throws Exception {
+    private MongoStorage makeStorage() {
         MongoStorage storage = new MongoStorage(conf);
         storage.mapCategoryToDBCollection(testCategory, testCollection);
         storage.mapCategoryToDBCollection(emptyTestCategory, emptyTestCollection);
@@ -161,11 +162,25 @@ public class MongoStorageTest {
         assertNotNull(connKey);
     }
 
-    @Test 
+    @Test (expected=IllegalArgumentException.class)
+    public void verifyFindOnlyAcceptsMongoQuery() {
+        MongoStorage storage = makeStorage();
+        Query query = mock(Query.class);
+        storage.find(query);
+    }
+
+    @Test (expected=IllegalArgumentException.class)
+    public void veirfyFindAllOnlyAcceptsMongoQuery() {
+        MongoStorage storage = makeStorage();
+        Query query = mock(Query.class);
+        storage.findAll(query);
+    }
+
+    @Test
     public void verifyFindAllReturnsCursor() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Chunk query = new Chunk(testCategory, false);
+        Query query = storage.createQuery().from(testCategory);
         Cursor cursor = storage.findAll(query);
         assertNotNull(cursor);
     }
@@ -174,8 +189,7 @@ public class MongoStorageTest {
     public void verifyFindReturnsChunk() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Chunk query = new Chunk(testCategory, false);
-        query.put(key1, "test1");
+        Query query = storage.createQuery().from(testCategory).where(key1, Criteria.EQUALS, "test1");
         Chunk result = storage.find(query);
         assertNotNull(result);
     }
@@ -184,7 +198,7 @@ public class MongoStorageTest {
     public void verifyFindAllCallsDBCollectionFind() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Chunk query = new Chunk(testCategory, false);
+        Query query = storage.createQuery().from(testCategory);
         storage.findAll(query);
         verify(testCollection).find(any(DBObject.class));
     }
@@ -193,7 +207,7 @@ public class MongoStorageTest {
     public void verifyFindCallsDBCollectionFindOne() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Chunk query = new Chunk(testCategory, false);
+        Query query = storage.createQuery().from(testCategory);
         storage.find(query);
         verify(testCollection).findOne(any(DBObject.class));
     }
@@ -202,60 +216,37 @@ public class MongoStorageTest {
     public void verifyFindAllCallsDBCollectionFindWithCorrectQuery() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Chunk query = new Chunk(testCategory, false);
-        query.put(key1, "test");
+
+        MongoQuery query = mock(MongoQuery.class);
+        DBObject generatedQuery = mock(DBObject.class);
+        when(query.getGeneratedQuery()).thenReturn(generatedQuery);
+        when(query.getCollectionName()).thenReturn(testCategory.getName());
+        when(query.getCategory()).thenReturn(testCategory);
+        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
+
         storage.findAll(query);
 
-        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).find(findArg.capture());
-
-        DBObject arg = findArg.getValue();
-        assertEquals(1, arg.keySet().size());
-        assertTrue(arg.keySet().contains("key1"));
-        assertEquals("test", arg.get("key1"));
+        assertSame(generatedQuery, findArg.getValue());
     }
 
     @Test
     public void verifyFindCallsDBCollectionFindOneWithCorrectQuery() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Chunk query = new Chunk(testCategory, false);
-        query.put(key1, "test");
+
+        MongoQuery query = mock(MongoQuery.class);
+        DBObject generatedQuery = mock(DBObject.class);
+        when(query.getGeneratedQuery()).thenReturn(generatedQuery);
+        when(query.getCollectionName()).thenReturn(testCategory.getName());
+        when(query.getCategory()).thenReturn(testCategory);
+
+        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
+
         storage.find(query);
 
-        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).findOne(findArg.capture());
-
-        DBObject arg = findArg.getValue();
-        assertEquals(1, arg.keySet().size());
-        assertTrue(arg.keySet().contains("key1"));
-        assertEquals("test", arg.get("key1"));
-    }
-
-    @Test
-    public void verifyFindAllWithMultiKeys() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
-        MongoStorage storage = makeStorage();
-        storage.findAll(multiKeyQuery);
-
-        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).find(findArg.capture());
-
-        DBObject arg = findArg.getValue();
-        assertArrayEquals(new String[]{ "key5", "key4", "key3", "key2", "key1" }, arg.keySet().toArray());
-    }
-
-    @Test
-    public void verifyFindWithMultiKeys() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
-        MongoStorage storage = makeStorage();
-        storage.find(multiKeyQuery);
-
-        ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).findOne(findArg.capture());
-
-        DBObject arg = findArg.getValue();
-        assertArrayEquals(new String[]{ "key5", "key4", "key3", "key2", "key1" }, arg.keySet().toArray());
+        assertSame(generatedQuery, findArg.getValue());
     }
 
     @Test
@@ -263,9 +254,8 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing mock and converters
-        Chunk query = new Chunk(testCategory, false);
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
-        query.put(key5, "test1");
+        MongoQuery query = new MongoQuery().from(testCategory);
 
         Chunk result = storage.find(query);
 
@@ -280,9 +270,8 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing MongoCursor
-        Chunk query = new Chunk(testCategory, false);
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
-        query.put(key5, "test1");
+        MongoQuery query = new MongoQuery().from(testCategory);
 
         Cursor cursor = storage.findAll(query);
 

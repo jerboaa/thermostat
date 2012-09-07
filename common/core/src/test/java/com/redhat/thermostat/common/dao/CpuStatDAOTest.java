@@ -38,9 +38,12 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -58,8 +61,10 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.ArrayUtils;
+import com.redhat.thermostat.test.MockQuery;
 
 public class CpuStatDAOTest {
 
@@ -79,6 +84,7 @@ public class CpuStatDAOTest {
 
         Cursor cursor = mock(Cursor.class);
         Storage storage = mock(Storage.class);
+        MockQuery query = new MockQuery();
         HostRef hostRef = mock(HostRef.class);
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
@@ -90,14 +96,13 @@ public class CpuStatDAOTest {
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(chunk);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        when(storage.createQuery()).thenReturn(query);
+        when(storage.findAll(query)).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
         List<CpuStat> cpuStats = dao.getLatestCpuStats(hostRef);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).findAll(arg.capture());
-        assertNull(arg.getValue().get(new Key<String>("$where", false)));
+        assertFalse(query.hasWhereClauseFor(Key.TIMESTAMP));
 
         assertEquals(1, cpuStats.size());
         CpuStat stat = cpuStats.get(0);
@@ -111,6 +116,7 @@ public class CpuStatDAOTest {
 
         Cursor cursor = mock(Cursor.class);
         Storage storage = mock(Storage.class);
+        MockQuery query = new MockQuery();
         HostRef hostRef = mock(HostRef.class);
 
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
@@ -119,18 +125,18 @@ public class CpuStatDAOTest {
         chunk.put(Key.TIMESTAMP, 1234L);
         chunk.put(CpuStatDAO.cpuLoadKey, Arrays.asList(5.0));
 
-
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(chunk);
-        when(storage.findAll(any(Chunk.class))).thenReturn(cursor);
+        when(storage.createQuery()).thenReturn(query);
+        when(storage.findAll(any(Query.class))).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
         dao.getLatestCpuStats(hostRef);
         dao.getLatestCpuStats(hostRef);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage, times(2)).findAll(arg.capture());
-        assertEquals("this.timestamp > 1234", arg.getValue().get(Key.WHERE));
+        verify(storage, times(2)).findAll(query);
+
+        query.hasWhereClauseFor(Key.TIMESTAMP);
     }
 
     @Test

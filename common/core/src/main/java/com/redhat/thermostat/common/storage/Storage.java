@@ -67,9 +67,9 @@ public abstract class Storage {
      */
     public abstract void purge();
     
-    public abstract Cursor findAll(Chunk query);
+    public abstract Cursor findAll(Query query);
 
-    public abstract Chunk find(Chunk query);
+    public abstract Chunk find(Query query);
 
     public abstract Cursor findAllFromCategory(Category category);
     
@@ -92,5 +92,7 @@ public abstract class Storage {
     public abstract void saveFile(String filename, InputStream data);
 
     public abstract InputStream loadFile(String filename);
+
+    public abstract Query createQuery();
 
 }
