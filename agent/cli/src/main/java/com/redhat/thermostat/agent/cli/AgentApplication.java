@@ -59,7 +59,10 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -125,8 +128,7 @@ public final class AgentApplication extends BasicCommand {
                     break;
                 case CONNECTED:
                     logger.fine("Connected to storage, registering storage as service");
-                    Storage storage = daoFactory.getStorage();
-                    OSGIUtils.getInstance().registerService(Storage.class, storage);
+                    registerDAOsAndStorageAsOSGiServices(daoFactory);
                     break;
                 case FAILED_TO_CONNECT:
                     logger.warning("Could not connect to storage.");
@@ -185,6 +187,21 @@ public final class AgentApplication extends BasicCommand {
         }
     }
     
+    private void registerDAOsAndStorageAsOSGiServices(DAOFactory daoFactory) {
+        OSGIUtils registerer = OSGIUtils.getInstance();
+
+        registerer.registerService(Storage.class, daoFactory.getStorage());
+
+        /*
+         * only register DAOs that don't maintain state;
+         * the dao instances will be shared across multiple unrelated classes
+         * and any state maintained will quickly lead to bugs
+         */
+        registerer.registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
+        registerer.registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
+        registerer.registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());
+    }
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
         try {

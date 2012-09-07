@@ -49,6 +49,8 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
@@ -70,7 +72,7 @@ public class ThreadHarvesterTest {
             thenReturn("42").
             thenReturn("0xcafe");
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, dao) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
             @Override
             Harvester getHarvester(String vmId, String agentId) {
                 
@@ -81,6 +83,7 @@ public class ThreadHarvesterTest {
                 return harverster;
             }
         };
+        threadHarvester.setThreadDao(dao);
         threadHarvester.receive(request);
         
         List<String> values = captor.getAllValues();
@@ -109,9 +112,10 @@ public class ThreadHarvesterTest {
             thenReturn(HarvesterCommand.STOP.name()).
             thenReturn("42");
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, dao) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
             { connectors.put("42", harverster); }
         };
+        threadHarvester.setThreadDao(dao);
         threadHarvester.receive(request);
         
         List<String> values = captor.getAllValues();
@@ -139,7 +143,7 @@ public class ThreadHarvesterTest {
             thenReturn("42").
             thenReturn("0xcafe");
         
-        ThreadHarvester threadHarvester = new ThreadHarvester(executor, dao) {
+        ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
             @Override
             Harvester getHarvester(String vmId, String agentId) {
                 
@@ -150,6 +154,7 @@ public class ThreadHarvesterTest {
                 return harverster;
             }
         };
+        threadHarvester.setThreadDao(dao);
         threadHarvester.receive(request);
         
         List<String> values = captor.getAllValues();
@@ -163,4 +168,14 @@ public class ThreadHarvesterTest {
         
         verify(harverster).saveVmCaps();
     }    
+
+    @Test
+    public void testRecieveWithoutDaosFails() {
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+
+        ThreadHarvester harvester = new ThreadHarvester(executor);
+        Response response = harvester.receive(mock(Request.class));
+
+        assertEquals(ResponseType.ERROR, response.getType());
+    }
 }

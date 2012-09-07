@@ -72,7 +72,10 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -286,8 +289,11 @@ public class Main {
             if (newStatus == ConnectionStatus.CONNECTED) {
                 
                 // register the storage, so other services can request it
-                Storage storage = ApplicationContext.getInstance().getDAOFactory().getStorage();
+                DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
+                Storage storage = daoFactory.getStorage();
                 OSGIUtils.getInstance().registerService(Storage.class, storage);
+
+                registerDAOsAsOSGiServices(daoFactory);
 
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
@@ -306,6 +312,17 @@ public class Main {
         }
     }
     
+    private void registerDAOsAsOSGiServices(DAOFactory daoFactory) {
+        /*
+         * only register DAOs that don't maintain state;
+         * the dao instances will be shared across multiple unrelated classes
+         * and any state maintained will quickly lead to bugs
+         */
+        OSGIUtils.getInstance().registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
+        OSGIUtils.getInstance().registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
+        OSGIUtils.getInstance().registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());
+    }
+
     private void showMainWindow() {
         SwingUtilities.invokeLater(new ShowMainWindow());
     }

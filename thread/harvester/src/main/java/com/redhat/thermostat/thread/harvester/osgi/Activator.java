@@ -51,28 +51,42 @@ import com.redhat.thermostat.thread.harvester.ThreadHarvester;
 public class Activator implements BundleActivator {
     
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(24);
+
+    private ServiceTracker threadDaoTracker;
+
+    private ReceiverRegistry registry;
+    private ThreadHarvester harvester;
     
     @Override
     public void start(final BundleContext context) throws Exception {
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        ServiceTracker tracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
+
+        harvester = new ThreadHarvester(executor);
+
+        registry = new ReceiverRegistry(context);
+        registry.registerReceiver(harvester);
+
+        threadDaoTracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
                 ThreadDao threadDao = (ThreadDao) context.getService(reference);
-
-                ThreadHarvester harvester = new ThreadHarvester(executor, threadDao);
-  
-                ReceiverRegistry registry = new ReceiverRegistry(context);
-                registry.registerReceiver(harvester);
-                
+                harvester.setThreadDao(threadDao);
                 return super.addingService(reference);
             }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                harvester.setThreadDao(null);
+                context.ungetService(reference);
+                super.removedService(reference, service);
+            }
         };
-        tracker.open();
+        threadDaoTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        threadDaoTracker.close();
+
         if (executor != null) {
             executor.shutdown();
         }        

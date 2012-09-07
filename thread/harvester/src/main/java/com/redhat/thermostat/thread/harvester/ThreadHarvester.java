@@ -37,7 +37,9 @@
 package com.redhat.thermostat.thread.harvester;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.ScheduledExecutorService;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
@@ -55,14 +57,23 @@ public class ThreadHarvester implements RequestReceiver {
 
     private ThreadDao dao;
     
-    public ThreadHarvester(ScheduledExecutorService executor, ThreadDao dao) {
+    public ThreadHarvester(ScheduledExecutorService executor) {
         this.executor = executor;
         connectors = new HashMap<>();
+    }
+
+    public void setThreadDao(ThreadDao dao) {
+        // a new ThreadDao has appeared, stop everything using the old implementation
+        removeAllHarvesters();
         this.dao = dao;
+        // TODO maybe bring back the old stuff using the new ThreadDao?
     }
     
     @Override
     public Response receive(Request request) {
+        if (!allRequirementsAvailable()) {
+            return new Response(ResponseType.ERROR);
+        }
         
         boolean result = false;
         
@@ -139,4 +150,18 @@ public class ThreadHarvester implements RequestReceiver {
         
         return harvester;
     }
+
+    private void removeAllHarvesters() {
+        Iterator<Entry<String, Harvester>> iter = connectors.entrySet().iterator();
+        while (iter.hasNext()) {
+            Entry<String, Harvester> entry = iter.next();
+            entry.getValue().stop();
+            iter.remove();
+        }
+    }
+
+    private boolean allRequirementsAvailable() {
+        return dao != null;
+    }
+
 }
