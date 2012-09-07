@@ -58,6 +58,7 @@ import javax.swing.text.JTextComponent;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.time.FixedMillisecond;
 import org.jfree.data.time.RegularTimePeriod;
@@ -66,11 +67,12 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.internal.ui.swing.WrapLayout;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.common.utils.DisplayableValues;
+import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
-public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
+public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     private JPanel visiblePanel;
 
@@ -196,7 +198,9 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
                 for (DiscreteTimeData<? extends Number> timeData: copy) {
                     RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
                     if (series.getDataItem(period) == null) {
-                        series.add(new FixedMillisecond(timeData.getTimeInMillis()), timeData.getData(), false);
+                        Long sizeInBytes = (Long) timeData.getData();
+                        Double sizeInMegaBytes = DisplayableValues.Scale.convertTo(Scale.MiB, sizeInBytes);
+                        series.add(new FixedMillisecond(timeData.getTimeInMillis()), sizeInMegaBytes, false);
                     }
                 }
                 series.fireSeriesChanged();
@@ -286,7 +290,7 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 localize(LocaleResources.HOST_MEMORY_CHART_TITLE), // Title
                 localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
-                localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL), // y-axis Label
+                localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Scale.MiB.name()), // y-axis Label
                 memoryCollection, // Dataset
                 false, // Show Legend
                 false, // Use tooltips
@@ -297,9 +301,11 @@ public class HostMemoryPanel extends  HostMemoryView implements SwingComponent {
         chart.getPlot().setBackgroundImageAlpha(0.0f);
         chart.getPlot().setOutlinePaint(new Color(0,0,0,0));
 
+        NumberAxis rangeAxis = (NumberAxis) chart.getXYPlot().getRangeAxis();
+        rangeAxis.setAutoRangeMinimumSize(100);
+
         return chart;
     }
-
 
     private void fireShowHideHandlers(boolean show, String tag) {
         for (GraphVisibilityChangeListener listener: listeners) {
