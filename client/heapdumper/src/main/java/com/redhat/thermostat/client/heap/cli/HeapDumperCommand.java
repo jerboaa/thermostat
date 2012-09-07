@@ -73,7 +73,7 @@ public class HeapDumperCommand {
 
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
         HostRef targetHostRef = reference.getAgent();
-        String address = df.getStorage().getConfigListenAddress(targetHostRef);
+        String address = df.getAgentInfoDAO().getAgentInformation(targetHostRef).getConfigListenAddress();
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));

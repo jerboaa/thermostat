@@ -34,16 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.model;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class BackendInformation {
 
     private String name;
     private String description;
+    private boolean isActive;
     private boolean observeNewJvm;
     private List<Integer> pids;
     private Map<String, String> configuration = new HashMap<String,String>();
@@ -76,8 +78,45 @@ public class BackendInformation {
         return pids;
     }
 
+    public void setPids(List<Integer> pids) {
+        this.pids = pids;
+    }
+
     public Map<String, String> getConfiguration() {
         return configuration;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        this.isActive = active;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof BackendInformation)) {
+            return false;
+        }
+        BackendInformation other = (BackendInformation) obj;
+        return Objects.equals(this.name, other.name) &&
+                Objects.equals(this.description, other.description) &&
+                Objects.equals(this.configuration, other.configuration) &&
+                Objects.equals(this.isActive, other.isActive) &&
+                Objects.equals(this.observeNewJvm, other.observeNewJvm) &&
+                Objects.equals(this.pids, other.pids);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, description, configuration, isActive, observeNewJvm, pids);
     }
 
 }

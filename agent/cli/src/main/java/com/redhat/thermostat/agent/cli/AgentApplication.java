@@ -58,6 +58,8 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.BackendInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
@@ -197,6 +199,8 @@ public final class AgentApplication extends BasicCommand {
          * the dao instances will be shared across multiple unrelated classes
          * and any state maintained will quickly lead to bugs
          */
+        registerer.registerService(AgentInfoDAO.class, daoFactory.getAgentInfoDAO());
+        registerer.registerService(BackendInfoDAO.class, daoFactory.getBackendInfoDAO());
         registerer.registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
         registerer.registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
         registerer.registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());

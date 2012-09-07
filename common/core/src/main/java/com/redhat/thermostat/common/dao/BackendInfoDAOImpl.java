@@ -34,33 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector.impl;
+package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.dao.ThreadDao;
+import java.util.ArrayList;
+import java.util.List;
 
-public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
+import com.redhat.thermostat.common.model.BackendInformation;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 
-    private AgentInfoDAO agentDao;
-    private ThreadDao threadDao;
-    
-    public void setAgentDao(AgentInfoDAO agentDao) {
-        this.agentDao = agentDao;
+public class BackendInfoDAOImpl implements BackendInfoDAO {
+
+    private final BackendInfoConverter converter = new BackendInfoConverter();
+    private final Storage storage;
+
+    public BackendInfoDAOImpl(Storage storage) {
+        this.storage = storage;
+        storage.createConnectionKey(CATEGORY);
     }
 
-    public void setThreadDao(ThreadDao threadDao) {
-        this.threadDao = threadDao;
-    }
-    
     @Override
-    public synchronized ThreadCollector getCollector(VmRef reference) {
-        // TODO set the values when the agent/thread dao changes
-        ThreadMXBeanCollector result = new ThreadMXBeanCollector(reference);
-        result.setAgentInfoDao(agentDao);
-        result.setThreadDao(threadDao);
-        return result;
+    public List<BackendInformation> getBackendInformation(HostRef host) {
+        Query query = storage.createQuery()
+                .from(CATEGORY)
+                .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
+
+        List<BackendInformation> results = new ArrayList<>();
+        Cursor cursor = storage.findAll(query);
+        while (cursor.hasNext()) {
+            Chunk backendInfoPart = cursor.next();
+            results.add(converter.fromChunk(backendInfoPart));
+        }
+        return results;
     }
+
+    @Override
+    public void addBackendInformation(BackendInformation info) {
+        Chunk chunk = converter.toChunk(info);
+        storage.putChunk(chunk);
+    }
+
+    @Override
+    public void removeBackendInformation(BackendInformation info) {
+        Chunk toRemove = converter.toChunk(info);
+        storage.removeChunk(toRemove);
+    }
+
 }

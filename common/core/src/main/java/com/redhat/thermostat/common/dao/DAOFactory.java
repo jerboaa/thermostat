@@ -46,6 +46,10 @@ public interface DAOFactory {
 
     public Connection getConnection();
 
+    public AgentInfoDAO getAgentInfoDAO();
+
+    public BackendInfoDAO getBackendInfoDAO();
+
     public HostInfoDAO getHostInfoDAO();
 
     public CpuStatDAO getCpuStatDAO();

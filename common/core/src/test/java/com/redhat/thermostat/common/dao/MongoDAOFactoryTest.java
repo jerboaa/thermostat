@@ -76,6 +76,18 @@ public class MongoDAOFactoryTest {
     }
 
     @Test
+    public void testGetAgentInfoDAO() {
+        AgentInfoDAO dao = daoFactory.getAgentInfoDAO();
+        assertNotNull(dao);
+    }
+
+    @Test
+    public void testGetBackendInfoDAO() {
+        BackendInfoDAO dao = daoFactory.getBackendInfoDAO();
+        assertNotNull(dao);
+    }
+
+    @Test
     public void testGetVmClassStatsDAO() {
         VmClassStatDAO dao = daoFactory.getVmClassStatsDAO();
         assertNotNull(dao);

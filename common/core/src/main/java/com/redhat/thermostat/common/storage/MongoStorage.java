@@ -42,20 +42,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
 
-import org.bson.BSONObject;
-
-import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.mongodb.WriteConcern;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 
@@ -244,6 +239,21 @@ public class MongoStorage extends Storage {
         throw new IllegalArgumentException("Attempt to insert chunk with incomplete partial key.  Missing: '" + keyName + "' in " + chunk);
     }
 
+    @Override
+    public void removeChunk(Chunk query) {
+        Category category = query.getCategory();
+        DBCollection coll = getCachedCollection(category.getName());
+
+        BasicDBObject toRemove = getAgentQueryKeyFromChunkOrGlobalAgent(query);
+        for (Key<?> key : category.getKeys()) {
+            if (key.isPartialCategoryKey()) {
+                toRemove.put(key.getName(), query.get(key));
+            }
+        }
+
+        coll.remove(toRemove);
+    }
+
     private DBCollection getCachedCollection(String collName) {
         DBCollection coll = collectionCache.get(collName);
         if (coll == null && db.collectionExists(collName)) {
@@ -262,42 +272,6 @@ public class MongoStorage extends Storage {
         collectionCache.put(category.getName(), coll);
     }
 
-
-    private DBObject createConfigDBObject(AgentInformation agentInfo) {
-        BasicDBObject result = getAgentQueryKeyFromGlobalAgent();
-        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_START_TIME, agentInfo.getStartTime());
-        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_STOP_TIME, agentInfo.getStopTime());
-        result.put(StorageConstants.KEY_AGENT_CONFIG_AGENT_ALIVE, agentInfo.isAlive());
-        result.put(StorageConstants.KEY_AGENT_CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
-        
-        BasicDBObject backends = new BasicDBObject();
-        for (BackendInformation backend : agentInfo.getBackends()) {
-            backends.put(backend.getName(), createBackendConfigDBObject(backend));
-        }
-        result.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS, backends);
-        
-        return result;
-    }
-
-    private DBObject createBackendConfigDBObject(BackendInformation backend) {
-        BasicDBObject result = new BasicDBObject();
-        Map<String, String> configMap = backend.getConfiguration();
-        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NAME, backend.getName());
-        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_DESC, backend.getDescription());
-        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_ACTIVE, createBackendActiveDBObject(backend));
-        for (Entry<String, String> entry: configMap.entrySet()) {
-            result.append(entry.getKey(), entry.getValue());
-        }
-        return result;
-    }
-
-    private DBObject createBackendActiveDBObject(BackendInformation backend) {
-        BasicDBObject result = new BasicDBObject();
-        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_NEW, backend.isObserveNewJvm());
-        result.append(StorageConstants.KEY_AGENT_CONFIG_BACKEND_PIDS, new BasicDBList());
-        // TODO check which processes are already being listened to.
-        return result;
-    }
 
     @Override
     public void purge() {
@@ -364,64 +338,6 @@ public class MongoStorage extends Storage {
             return coll.getCount();
         }
         return 0L;
-    }
-
-    // TODO these methods below belong in some DAO.
-    @Override
-    public void addAgentInformation(AgentInformation agentInfo) {
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        DBObject toInsert = createConfigDBObject(agentInfo);
-        /* cast required to disambiguate between putAll(BSONObject) and putAll(Map) */
-        toInsert.putAll((BSONObject) getAgentQueryKeyFromGlobalAgent());
-        configCollection.insert(toInsert, WriteConcern.SAFE);
-    }
-    
-    @Override
-    public void updateAgentInformation(AgentInformation agentInfo) {
-        BasicDBObject queryObject = getAgentQueryKeyFromGlobalAgent();
-
-        DBObject updated = createConfigDBObject(agentInfo);
-        updated.putAll((BSONObject) queryObject);
-
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        configCollection.update(queryObject, updated);
-    }
-
-    @Override
-    public void removeAgentInformation() {
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        BasicDBObject toRemove = getAgentQueryKeyFromGlobalAgent();
-        configCollection.remove(toRemove, WriteConcern.NORMAL);
-    }
-
-    @Override
-    public String getBackendConfig(String backendName, String configurationKey) {
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        BasicDBObject query = getAgentQueryKeyFromGlobalAgent();
-        query.put(StorageConstants.KEY_AGENT_CONFIG_BACKENDS + "." + backendName, new BasicDBObject("$exists", true));
-        DBObject config = configCollection.findOne(query);
-        Object value = config.get(configurationKey);
-        if (value instanceof String) {
-            return (String) value;
-        }
-        return null;
-    }
-
-    @Override
-    public String getConfigListenAddress(HostRef ref) {
-        return getConfigListenAddress(ref.getAgentId());
-    }
-
-    private String getConfigListenAddress(String id) {
-        String address = null;
-        DBCollection configCollection = db.getCollection(StorageConstants.CATEGORY_AGENT_CONFIG);
-        BasicDBObject query = new BasicDBObject(KEY_AGENT_ID, id);
-        DBObject config = configCollection.findOne(query);
-        Object value = config.get(StorageConstants.KEY_AGENT_CONFIG_LISTEN_ADDRESS);
-        if (value instanceof String) {
-            address = (String) value;
-        }
-        return address;
     }
 
     @Override

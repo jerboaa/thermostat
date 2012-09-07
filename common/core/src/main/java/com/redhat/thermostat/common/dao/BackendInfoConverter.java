@@ -34,21 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import static org.junit.Assert.assertNotNull;
+import java.util.Arrays;
+import java.util.List;
 
-import java.util.Map;
+import com.redhat.thermostat.common.model.BackendInformation;
+import com.redhat.thermostat.common.storage.Chunk;
 
-import org.junit.Test;
+public class BackendInfoConverter {
 
-public class BackendInformationTest {
+    public Chunk toChunk(BackendInformation backendInfo) {
+        Chunk chunk = new Chunk(BackendInfoDAO.CATEGORY, false);
 
-    @Test
-    public void testConfigurationNotNull() {
-        BackendInformation backendInfo = new BackendInformation();
-        Map<String,String> config = backendInfo.getConfiguration();
-        assertNotNull(config);
+        chunk.put(BackendInfoDAO.BACKEND_NAME, backendInfo.getName());
+        chunk.put(BackendInfoDAO.BACKEND_DESCRIPTION, backendInfo.getDescription());
+        chunk.put(BackendInfoDAO.IS_ACTIVE, backendInfo.isActive());
+        List<Integer> pids = backendInfo.getPids();
+        chunk.put(BackendInfoDAO.PIDS_TO_MONITOR, pids);
+        chunk.put(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES, backendInfo.isObserveNewJvm());
+
+        return chunk;
     }
 
+    public BackendInformation fromChunk(Chunk parseFrom) {
+        if (!parseFrom.getCategory().equals(BackendInfoDAO.CATEGORY)) {
+            throw new IllegalArgumentException("chunk not a " + BackendInfoDAO.CATEGORY);
+        }
+
+        BackendInformation info = new BackendInformation();
+
+        info.setName(parseFrom.get(BackendInfoDAO.BACKEND_NAME));
+        info.setDescription(parseFrom.get(BackendInfoDAO.BACKEND_DESCRIPTION));
+        info.setActive(parseFrom.get(BackendInfoDAO.IS_ACTIVE));
+        info.setPids(parseFrom.get(BackendInfoDAO.PIDS_TO_MONITOR));
+        info.setObserveNewJvm(parseFrom.get(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES));
+
+        return info;
+    }
 }

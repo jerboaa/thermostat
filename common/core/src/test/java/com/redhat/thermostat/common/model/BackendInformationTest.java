@@ -34,33 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector.impl;
+package com.redhat.thermostat.common.model;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.dao.ThreadDao;
+import static org.junit.Assert.assertNotNull;
 
-public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
+import java.util.Map;
 
-    private AgentInfoDAO agentDao;
-    private ThreadDao threadDao;
-    
-    public void setAgentDao(AgentInfoDAO agentDao) {
-        this.agentDao = agentDao;
+import org.junit.Test;
+
+public class BackendInformationTest {
+
+    @Test
+    public void testConfigurationNotNull() {
+        BackendInformation backendInfo = new BackendInformation();
+        Map<String,String> config = backendInfo.getConfiguration();
+        assertNotNull(config);
     }
 
-    public void setThreadDao(ThreadDao threadDao) {
-        this.threadDao = threadDao;
-    }
-    
-    @Override
-    public synchronized ThreadCollector getCollector(VmRef reference) {
-        // TODO set the values when the agent/thread dao changes
-        ThreadMXBeanCollector result = new ThreadMXBeanCollector(reference);
-        result.setAgentInfoDao(agentDao);
-        result.setThreadDao(threadDao);
-        return result;
-    }
 }

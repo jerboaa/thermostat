@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -57,19 +58,26 @@ import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
 
+    private AgentInfoDAO agentDao;
     private ThreadDao threadDao;
     private VmRef ref;
 
-    public ThreadMXBeanCollector(ThreadDao threadDao, VmRef ref) {
-        this.threadDao = threadDao;
+    public ThreadMXBeanCollector(VmRef ref) {
         this.ref = ref;
+    }
+
+    public void setThreadDao(ThreadDao threadDao) {
+        this.threadDao = threadDao;
+    }
+
+    public void setAgentInfoDao(AgentInfoDAO agentDao) {
+        this.agentDao = agentDao;
     }
 
     Request createRequest() {
         HostRef targetHostRef = ref.getAgent();
         
-        // todo
-        String address = threadDao.getStorage().getConfigListenAddress(targetHostRef);
+        String address = agentDao.getAgentInformation(targetHostRef).getConfigListenAddress();
         String [] host = address.split(":");
         
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));

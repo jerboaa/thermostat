@@ -34,64 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.redhat.thermostat.common.model.AgentInformation;
+import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 
-public class AgentInformation {
+public class AgentInfoConverter {
 
-    public static final Category AGENT_INFO_CATEGORY =
-            new Category(StorageConstants.CATEGORY_AGENT_CONFIG, Key.AGENT_ID);
+    public Chunk toChunk(AgentInformation agentInfo) {
+        Chunk agentChunk = new Chunk(AgentInfoDAO.CATEGORY, true);
 
-    public static final Key<Boolean> AGENT_ALIVE_KEY = new Key<>("alive", false);
-    
-    private long startTime;
-    private long stopTime;
+        agentChunk.put(Key.AGENT_ID, agentInfo.getAgentId());
+        agentChunk.put(AgentInfoDAO.START_TIME_KEY, agentInfo.getStartTime());
+        agentChunk.put(AgentInfoDAO.STOP_TIME_KEY, agentInfo.getStopTime());
+        agentChunk.put(AgentInfoDAO.ALIVE_KEY, agentInfo.isAlive());
+        agentChunk.put(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
 
-    private boolean alive;
-    private String address;
-
-    private List<BackendInformation> backends = new ArrayList<BackendInformation>();
-    
-    public long getStartTime() {
-        return startTime;
+        return agentChunk;
     }
 
-    public void setStartTime(long startTime) {
-        this.startTime = startTime;
-    }
+    public AgentInformation fromChunk(Chunk agentChunk) {
+        AgentInformation agentInfo = new AgentInformation();
 
-    public void setStopTime(long stopTime) {
-        this.stopTime = stopTime;
-    }
-    
-    public long getStopTime() {
-        return stopTime;
-    }
-    
-    public List<BackendInformation> getBackends() {
-        return Collections.unmodifiableList(backends);
-    }
+        agentInfo.setAgentId(agentChunk.get(Key.AGENT_ID));
+        agentInfo.setStartTime(agentChunk.get(AgentInfoDAO.START_TIME_KEY));
+        agentInfo.setStopTime(agentChunk.get(AgentInfoDAO.STOP_TIME_KEY));
+        agentInfo.setAlive(agentChunk.get(AgentInfoDAO.ALIVE_KEY));
+        agentInfo.setConfigListenAddress(agentChunk.get(AgentInfoDAO.CONFIG_LISTEN_ADDRESS));
 
-    public boolean isAlive() {
-        return alive;
-    }
-    
-    public void setAlive(boolean alive) {
-        this.alive = alive;
-    }
-    
-    public void addBackend(BackendInformation backend) {
-        backends.add(backend);
-    }
-
-    public String getConfigListenAddress() {
-        return address;
-    }
-
-    public void setConfigListenAddress(String address) {
-        this.address = address;
+        return agentInfo;
     }
 }

@@ -59,9 +59,11 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
@@ -82,10 +84,15 @@ public class HeapDumperCommandTest {
         OSGIUtils.setInstance(osgiUtils);
 
         HostRef host = mock(HostRef.class);
-        Storage storage = mock(Storage.class);
-        when(storage.getConfigListenAddress(host)).thenReturn("test:123");
+
+        AgentInformation agentInfo = mock(AgentInformation.class);
+        when(agentInfo.getConfigListenAddress()).thenReturn("test:123");
+
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        when(agentInfoDao.getAgentInformation(host)).thenReturn(agentInfo);
+
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getStorage()).thenReturn(storage);
+        when(daoFactory.getAgentInfoDAO()).thenReturn(agentInfoDao);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         cmd = new HeapDumperCommand();

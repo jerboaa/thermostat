@@ -34,33 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector.impl;
+package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.dao.ThreadDao;
+import java.util.List;
 
-public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
+import com.redhat.thermostat.common.model.BackendInformation;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
 
-    private AgentInfoDAO agentDao;
-    private ThreadDao threadDao;
-    
-    public void setAgentDao(AgentInfoDAO agentDao) {
-        this.agentDao = agentDao;
-    }
+public interface BackendInfoDAO {
 
-    public void setThreadDao(ThreadDao threadDao) {
-        this.threadDao = threadDao;
-    }
-    
-    @Override
-    public synchronized ThreadCollector getCollector(VmRef reference) {
-        // TODO set the values when the agent/thread dao changes
-        ThreadMXBeanCollector result = new ThreadMXBeanCollector(reference);
-        result.setAgentInfoDao(agentDao);
-        result.setThreadDao(threadDao);
-        return result;
-    }
+    static final Key<String> BACKEND_NAME = new Key<>("name", true);
+    static final Key<String> BACKEND_DESCRIPTION = new Key<>("description", false);
+    static final Key<Boolean> IS_ACTIVE = new Key<>("active", false);
+    static final Key<Boolean> SHOULD_MONITOR_NEW_PROCESSES = new Key<>("new", false);
+    static final Key<List<Integer>> PIDS_TO_MONITOR = new Key<>("pids", false);
+
+    static final Category CATEGORY = new Category("backend-info",
+            Key.AGENT_ID,
+            BACKEND_NAME,
+            BACKEND_DESCRIPTION,
+            IS_ACTIVE,
+            SHOULD_MONITOR_NEW_PROCESSES,
+            PIDS_TO_MONITOR);
+
+    List<BackendInformation> getBackendInformation(HostRef host);
+
+    void addBackendInformation(BackendInformation info);
+
+    void removeBackendInformation(BackendInformation info);
+
 }

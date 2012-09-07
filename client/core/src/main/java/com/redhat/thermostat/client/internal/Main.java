@@ -71,6 +71,8 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.BackendInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
@@ -318,6 +320,8 @@ public class Main {
          * the dao instances will be shared across multiple unrelated classes
          * and any state maintained will quickly lead to bugs
          */
+        OSGIUtils.getInstance().registerService(AgentInfoDAO.class, daoFactory.getAgentInfoDAO());
+        OSGIUtils.getInstance().registerService(BackendInfoDAO.class, daoFactory.getBackendInfoDAO());
         OSGIUtils.getInstance().registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
         OSGIUtils.getInstance().registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
         OSGIUtils.getInstance().registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());

@@ -116,7 +116,7 @@ public class PingCommand extends SimpleCommand {
             printCustomMessageWithUsage(out, "Invalid host ID or agent no longer running.  See \'help list-vms to obtain a valid host ID.");
             return;
         }
-        String address = df.getStorage().getConfigListenAddress(targetHostRef);
+        String address = df.getAgentInfoDAO().getAgentInformation(targetHostRef).getConfigListenAddress();
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));

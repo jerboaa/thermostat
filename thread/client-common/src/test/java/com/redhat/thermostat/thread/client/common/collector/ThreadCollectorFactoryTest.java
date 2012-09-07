@@ -39,13 +39,10 @@ package com.redhat.thermostat.thread.client.common.collector;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 
-import java.util.concurrent.ScheduledExecutorService;
-
 import org.junit.Test;
 
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.common.collector.impl.ThreadCollectorFactoryImpl;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
@@ -53,10 +50,22 @@ public class ThreadCollectorFactoryTest {
 
     @Test
     public void testThreadCollectorFactory() {
+        VmRef reference = mock(VmRef.class);
+
+        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl();
+        ThreadCollector collector = factory.getCollector(reference);
+        assertNotNull(collector);
+    }
+
+    @Test
+    public void testThreadCollectorFactoryWithAgentAndThreadDaos() {
+        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         ThreadDao threadDao = mock(ThreadDao.class);
         VmRef reference = mock(VmRef.class);
-                
-        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl(threadDao);
+
+        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl();
+        factory.setAgentDao(agentDao);
+        factory.setThreadDao(threadDao);
         ThreadCollector collector = factory.getCollector(reference);
         assertNotNull(collector);
     }

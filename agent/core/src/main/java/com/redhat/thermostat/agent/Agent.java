@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -43,9 +45,11 @@ import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.BackendInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.storage.AgentInformation;
-import com.redhat.thermostat.common.storage.BackendInformation;
+import com.redhat.thermostat.common.model.AgentInformation;
+import com.redhat.thermostat.common.model.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -62,7 +66,11 @@ public class Agent {
 
     private AgentInformation agentInfo;
     
+    private List<BackendInformation> backendInfos;
+
     private Storage storage;
+    private AgentInfoDAO agentDao;
+    private BackendInfoDAO backendDao;
     private boolean started = false;
 
     public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daos) {
@@ -75,6 +83,8 @@ public class Agent {
         this.config = config;
         this.storage = daos.getStorage();
         this.storage.setAgentId(agentId);
+        this.agentDao = daos.getAgentInfoDAO();
+        this.backendDao = daos.getBackendInfoDAO();
     }
 
     private void startBackends() throws LaunchException {
@@ -103,7 +113,12 @@ public class Agent {
         if (!started) {
             startBackends();
             agentInfo = createAgentInformation();
-            storage.addAgentInformation(agentInfo);
+            agentDao.addAgentInformation(agentInfo);
+
+            backendInfos = createBackendInformation();
+            for (BackendInformation backendInfo : backendInfos) {
+                backendDao.addBackendInformation(backendInfo);
+            }
             started = true;
         } else {
             logger.warning("Attempt to start agent when already started.");
@@ -113,36 +128,62 @@ public class Agent {
     private AgentInformation createAgentInformation() {
         AgentInformation agentInfo = new AgentInformation();
         agentInfo.setStartTime(config.getStartTime());
+        agentInfo.setAlive(true);
+        agentInfo.setConfigListenAddress(config.getConfigListenAddress());
+        return agentInfo;
+    }
+
+    private List<BackendInformation> createBackendInformation() {
+        List<BackendInformation> results = new ArrayList<>();
+
         for (Backend backend : backendRegistry.getAll()) {
             BackendInformation backendInfo = new BackendInformation();
             backendInfo.setName(backend.getName());
             backendInfo.setDescription(backend.getDescription());
             backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
-            agentInfo.addBackend(backendInfo);
+            backendInfo.setActive(true);
+            backendInfo.setPids(new ArrayList<Integer>());
+
+            results.add(backendInfo);
+
         }
-        agentInfo.setAlive(true);
-        agentInfo.setConfigListenAddress(config.getConfigListenAddress());
-        return agentInfo;
+        return results;
     }
 
     public synchronized void stop() {
         if (started) {
 
             stopBackends();
+            removeBackendInformation();
             if (config.purge()) {
-                System.out.println("purging database");
-                logger.info("purging database");
-                storage.removeAgentInformation();
-                storage.purge();
+                removeAllAgentRelatedInformation();
             } else {
-                agentInfo.setStopTime(System.currentTimeMillis());
-                agentInfo.setAlive(false);
-                storage.updateAgentInformation(agentInfo);
+                updateAgentStatusToStopped();
             }
+
             started = false;
         } else {
             logger.warning("Attempt to stop agent which is not active");
         }
+    }
+
+    private void removeBackendInformation() {
+        for (BackendInformation info : backendInfos) {
+            backendDao.removeBackendInformation(info);
+        }
+    }
+
+    private void removeAllAgentRelatedInformation() {
+        System.out.println("purging database");
+        logger.info("purging database");
+        agentDao.removeAgentInformation(agentInfo);
+        storage.purge();
+    }
+
+    private void updateAgentStatusToStopped() {
+        agentInfo.setStopTime(System.currentTimeMillis());
+        agentInfo.setAlive(false);
+        agentDao.updateAgentInformation(agentInfo);
     }
 
     public UUID getId() {

@@ -78,7 +78,7 @@ public class KillVMAction implements VMContextAction {
 
     @Override
     public void execute(VmRef reference) {
-        String address = dao.getStorage().getConfigListenAddress(reference.getAgent());
+        String address = dao.getAgentInfoDAO().getAgentInformation(reference.getAgent()).getConfigListenAddress();
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));

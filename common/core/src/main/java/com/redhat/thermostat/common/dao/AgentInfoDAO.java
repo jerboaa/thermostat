@@ -34,33 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector.impl;
+package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.dao.ThreadDao;
+import java.util.List;
 
-public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
+import com.redhat.thermostat.common.model.AgentInformation;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
 
-    private AgentInfoDAO agentDao;
-    private ThreadDao threadDao;
-    
-    public void setAgentDao(AgentInfoDAO agentDao) {
-        this.agentDao = agentDao;
-    }
+public interface AgentInfoDAO extends Countable {
 
-    public void setThreadDao(ThreadDao threadDao) {
-        this.threadDao = threadDao;
-    }
-    
-    @Override
-    public synchronized ThreadCollector getCollector(VmRef reference) {
-        // TODO set the values when the agent/thread dao changes
-        ThreadMXBeanCollector result = new ThreadMXBeanCollector(reference);
-        result.setAgentInfoDao(agentDao);
-        result.setThreadDao(threadDao);
-        return result;
-    }
+    static final Key<Long> START_TIME_KEY = new Key<>("start-time", false);
+    static final Key<Long> STOP_TIME_KEY = new Key<>("stop-time", false);
+    static final Key<Boolean> ALIVE_KEY = new Key<>("alive", false);
+    static final Key<String> CONFIG_LISTEN_ADDRESS = new Key<>("config-listen-address", false);
+
+    static final Category CATEGORY = new Category("agent-config",
+            Key.AGENT_ID,
+            START_TIME_KEY,
+            STOP_TIME_KEY,
+            ALIVE_KEY,
+            CONFIG_LISTEN_ADDRESS);
+
+    List<AgentInformation> getAllAgentInformation();
+
+    List<AgentInformation> getAliveAgents();
+
+    AgentInformation getAgentInformation(HostRef agentRef);
+
+    void addAgentInformation(AgentInformation agentInfo);
+
+    void updateAgentInformation(AgentInformation agentInfo);
+
+    void removeAgentInformation(AgentInformation agentInfo);
+
 }

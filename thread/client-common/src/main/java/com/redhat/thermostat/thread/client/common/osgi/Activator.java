@@ -41,37 +41,61 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.common.collector.impl.ThreadCollectorFactoryImpl;
 import com.redhat.thermostat.thread.dao.ThreadDao;
-import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
 
 public class Activator implements BundleActivator {
     
     private ThreadCollectorFactoryImpl collectorFactory;
+    private ServiceTracker agentInfoDaoTracker;
+    private ServiceTracker threadDaoTracker;
     
     @Override
     public void start(final BundleContext context) throws Exception {
         
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        ServiceTracker tracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
+        collectorFactory = new ThreadCollectorFactoryImpl();
+        context.registerService(ThreadCollectorFactory.class.getName(), collectorFactory, null);
+
+        agentInfoDaoTracker = new ServiceTracker(context, AgentInfoDAO.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                
-                ThreadDao threadDao = (ThreadDao) context.getService(reference);
-                
-                collectorFactory = new ThreadCollectorFactoryImpl(threadDao);
-
-                context.registerService(ThreadCollectorFactory.class.getName(), collectorFactory, null);
-
+                AgentInfoDAO agentDao = (AgentInfoDAO) context.getService(reference);
+                collectorFactory.setAgentDao(agentDao);
                 return super.addingService(reference);
             }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                collectorFactory.setAgentDao(null);
+                context.ungetService(reference);
+                super.removedService(reference, service);
+            }
         };
-        tracker.open();
+        agentInfoDaoTracker.open();
+
+        threadDaoTracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                ThreadDao threadDao = (ThreadDao) context.getService(reference);
+                collectorFactory.setThreadDao(threadDao);
+                return super.addingService(reference);
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                collectorFactory.setThreadDao(null);
+                context.ungetService(reference);
+                super.removedService(reference, service);
+            }
+        };
+        threadDaoTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        agentInfoDaoTracker.close();
+        threadDaoTracker.close();
     }
 }

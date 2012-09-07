@@ -38,12 +38,17 @@ package com.redhat.thermostat.thread.client.common.collector;
 
 import java.util.List;
 
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public interface ThreadCollector {
     
+    void setAgentInfoDao(AgentInfoDAO agentDao);
+    void setThreadDao(ThreadDao threadDao);
+
     VMThreadCapabilities getVMThreadCapabilities();
     
     boolean startHarvester();

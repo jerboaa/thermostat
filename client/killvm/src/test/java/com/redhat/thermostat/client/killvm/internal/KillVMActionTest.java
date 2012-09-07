@@ -61,10 +61,12 @@ import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -112,7 +114,15 @@ public class KillVMActionTest {
         HostRef hostref = mock(HostRef.class);
         when(ref.getAgent()).thenReturn(hostref);
         String agentAddress = "127.0.0.1:8888";
-        when(storage.getConfigListenAddress(hostref)).thenReturn(agentAddress);
+
+        AgentInformation agentInfo = mock(AgentInformation.class);
+        when(agentInfo.getConfigListenAddress()).thenReturn(agentAddress);
+
+        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
+        when(agentDao.getAgentInformation(hostref)).thenReturn(agentInfo);
+
+        when(factory.getAgentInfoDAO()).thenReturn(agentDao);
+
         final Request req = mock(Request.class);
         KillVMAction action = new KillVMAction() {
             @Override

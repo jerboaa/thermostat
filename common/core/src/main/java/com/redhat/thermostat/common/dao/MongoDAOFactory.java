@@ -54,9 +54,19 @@ public class MongoDAOFactory implements DAOFactory {
     }
 
     @Override
+    public AgentInfoDAO getAgentInfoDAO() {
+        return new AgentInfoDAOImpl(storage);
+    }
+
+    @Override
+    public BackendInfoDAO getBackendInfoDAO() {
+        return new BackendInfoDAOImpl(storage);
+    }
+
+    @Override
     public HostInfoDAO getHostInfoDAO() {
         ensureStorageConnected();
-        return new HostInfoDAOImpl(storage);
+        return new HostInfoDAOImpl(storage, new AgentInfoDAOImpl(storage));
     }
 
     @Override
@@ -89,6 +99,7 @@ public class MongoDAOFactory implements DAOFactory {
         return new VmCpuStatDAOImpl(storage);
     }
 
+    @Override
     public VmMemoryStatDAO getVmMemoryStatDAO() {
         ensureStorageConnected();
         return new VmMemoryStatDAOImpl(storage);

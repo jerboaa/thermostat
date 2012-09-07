@@ -39,9 +39,6 @@ package com.redhat.thermostat.common.storage;
 import java.io.InputStream;
 import java.util.UUID;
 
-import com.redhat.thermostat.common.dao.HostRef;
-
-
 public abstract class Storage {
 
     public abstract void setAgentId(UUID id);
@@ -62,6 +59,8 @@ public abstract class Storage {
 
     public abstract void updateChunk(Chunk chunk);
 
+    public abstract void removeChunk(Chunk chunk);
+
     /**
      * Drop all data related to the currently running agent.
      */
@@ -74,20 +73,6 @@ public abstract class Storage {
     public abstract Cursor findAllFromCategory(Category category);
     
     public abstract long getCount(Category category);
-
-    // TODO these will move to appropriate DAO
-    public abstract void addAgentInformation(AgentInformation agentInfo);
-
-    public abstract void removeAgentInformation();
-
-    public abstract void updateAgentInformation(AgentInformation agentInfo);
-
-    /**
-     * @return {@code null} if the value is invalid or missing
-     */
-    public abstract String getBackendConfig(String backendName, String configurationKey);
-
-    public abstract String getConfigListenAddress(HostRef ref);
 
     public abstract void saveFile(String filename, InputStream data);
 
