@@ -125,7 +125,7 @@ public class HeaderPanel extends JPanel {
             
             Paint gradient = new GradientPaint(0, 0, Color.WHITE, 0, getHeight(), getBackground());
             graphics.setPaint(gradient);
-            graphics.fillRect(0, 0, getWidth() - 1, getHeight() - 1);
+            graphics.fillRect(0, 0, getWidth(), getHeight());
             
             if (header != null) {
                 int currentHeight = getHeight();
@@ -134,7 +134,6 @@ public class HeaderPanel extends JPanel {
                 int height = graphicsUtils.getFontMetrics(this, font).getAscent()/2 + currentHeight/2 - 1;
                 graphicsUtils.drawStringWithShadow(this, graphics, header, getForeground(), 6, height);
             }
-            
             graphics.dispose();
         }
     }

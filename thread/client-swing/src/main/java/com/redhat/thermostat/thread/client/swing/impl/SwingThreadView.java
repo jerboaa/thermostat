@@ -54,7 +54,6 @@ import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.ChartPanel;
-import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadView;
