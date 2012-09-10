@@ -40,6 +40,7 @@ import java.awt.Color;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.data.general.DefaultPieDataset;
 
@@ -79,7 +80,11 @@ public class ThreadDeatailsPieChart extends Chart {
         
         plot.setStartAngle(290);
         plot.setForegroundAlpha(0.5f);
+
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0} - {2}"));
+        plot.setBackgroundPaint(bgColor);
         
+        plot.setInteriorGap(0.0);
         
         return chart;
     }
