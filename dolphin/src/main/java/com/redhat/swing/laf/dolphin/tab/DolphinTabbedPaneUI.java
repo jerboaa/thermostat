@@ -154,7 +154,6 @@ public class DolphinTabbedPaneUI extends MetalTabbedPaneUI {
                                               int w, int h)
     {
         if (tabPlacement == LEFT) {
-            System.err.println("LEFT");
             super.paintContentBorderLeftEdge(g, tabPlacement, selectedIndex,
                                              x, y, w, h);
         }
@@ -183,6 +182,11 @@ public class DolphinTabbedPaneUI extends MetalTabbedPaneUI {
         if (tabPlacement == BOTTOM) {
             super.paintContentBorderBottomEdge(g, tabPlacement, selectedIndex,
                                                x, y, w, h);
+        } else {
+            Graphics2D graphics = (Graphics2D) g.create();
+            DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
+            graphics.setColor(theme.getTabBottomHedgeColor());
+            graphics.drawLine(x, y + h - 1, x + w - 1, y + h - 1);
         }
     }
     

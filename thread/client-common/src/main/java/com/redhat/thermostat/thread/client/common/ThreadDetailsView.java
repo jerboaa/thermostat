@@ -49,7 +49,8 @@ public abstract class ThreadDetailsView extends BasicView {
     
     public IconDescriptor getEmptyDetailsIcon() {
         try {
-            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(), "com/redhat/thermostat/thread/client/common/monitor.png");
+            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(),
+                                                        "com/redhat/thermostat/thread/client/common/monitor.png");
         } catch (IOException e) {
             logger.log(Level.WARNING, "Can't load emptyDetailsIcon", e);
         }
