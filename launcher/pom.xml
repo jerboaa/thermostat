@@ -121,7 +121,4 @@
     </dependency>
   </dependencies>
 
-  <properties>
-    <argLine>-XX:-UseSplitVerifier</argLine>
-  </properties> 
 </project>
