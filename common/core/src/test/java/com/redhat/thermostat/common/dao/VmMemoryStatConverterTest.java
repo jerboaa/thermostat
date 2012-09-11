@@ -87,8 +87,8 @@ public class VmMemoryStatConverterTest {
         Chunk chunk = new VmMemoryStatConverter().toChunk(stat);
 
         assertNotNull(chunk);
-        assertEquals((Long) 1l, chunk.get(new Key<Long>("timestamp", false)));
-        assertEquals((Integer) 2, chunk.get(new Key<Integer>("vm-id", true)));
+        assertEquals((Long) 1l, chunk.get(new Key<Long>("timeStamp", false)));
+        assertEquals((Integer) 2, chunk.get(new Key<Integer>("vmId", true)));
         assertEquals("new", chunk.get(new Key<String>("eden.gen", false)));
         assertEquals("new", chunk.get(new Key<String>("eden.collector", false)));
         assertEquals((Long) 0l, chunk.get(new Key<Long>("eden.used", false)));

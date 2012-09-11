@@ -40,10 +40,14 @@ import java.lang.Thread.State;
 import java.util.Arrays;
 
 import com.redhat.thermostat.common.model.TimeStampedPojo;
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 
 
+@Entity
 public class ThreadInfoData implements TimeStampedPojo {
 
+    private int vmId;
     private StackTraceElement[] stackTrace;
     private long threadID;
     private State threadState;
@@ -56,7 +60,7 @@ public class ThreadInfoData implements TimeStampedPojo {
     private long waitedCount;
     
     private long timestamp;
-    
+
     public void setStackTrace(StackTraceElement[] stackTrace) {
         this.stackTrace = stackTrace;
     }
@@ -77,75 +81,101 @@ public class ThreadInfoData implements TimeStampedPojo {
                 + "]";
     }
 
-    public void setName(String threadName) {
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
+    public int getVmId() {
+        return vmId;
+    }
+
+    @Persist
+    public void setThreadName(String threadName) {
         this.name = threadName;
     }
 
-    public void setID(long threadID) {
+    @Persist
+    public void setThreadId(long threadID) {
         this.threadID = threadID;
     }
 
-    public void setState(State threadState) {
+    public void setThreadState(State threadState) {
         this.threadState = threadState;
     }
 
+    @Persist
     public void setAllocatedBytes(long allocatedBytes) {
         this.allocatedBytes = allocatedBytes;
     }
 
-    public String getName() {
+    @Persist
+    public String getThreadName() {
         return name;
     }
 
+    @Persist
     public long getAllocatedBytes() {
         return allocatedBytes;
     }
 
-    public long getThreadID() {
+    @Persist
+    public long getThreadId() {
         return threadID;
     }
 
-    public State getState() {
+    public State getThreadState() {
         return threadState;
     }
 
+    @Persist
     public long getTimeStamp() {
         return timestamp;
     }
     
+    @Persist
     public void setTimeStamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
-    public void setCPUTime(long threadCpuTime) {
+    @Persist
+    public void setThreadCpuTime(long threadCpuTime) {
         this.threadCpuTime = threadCpuTime;
     }
 
-    public void setUserTime(long threadUserTime) {
+    @Persist
+    public void setThreadUserTime(long threadUserTime) {
        this.threadUserTime = threadUserTime;
     }
 
-    public void setBlockedCount(long blockedCount) {
+    @Persist
+    public void setThreadBlockedCount(long blockedCount) {
         this.blockedCount = blockedCount;
     }
 
-    public void setWaitedCount(long waitedCount) {
+    @Persist
+    public void setThreadWaitCount(long waitedCount) {
         this.waitedCount = waitedCount;
     }
 
-    public long getBlockedCount() {
+    @Persist
+    public long getThreadBlockedCount() {
         return blockedCount;
     }
 
-    public long getWaitedCount() {
+    @Persist
+    public long getThreadWaitCount() {
         return waitedCount;
     }
 
-    public long getCpuTime() {
+    @Persist
+    public long getThreadCpuTime() {
         return threadCpuTime;
     }
 
-    public long getUserTime() {
+    @Persist
+    public long getThreadUserTime() {
         return threadUserTime;
     }
 

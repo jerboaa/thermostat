@@ -51,7 +51,7 @@ public class CpuStatConverterTest {
 
     @Test
     public void testToChunk() {
-        CpuStat stat = new CpuStat(10, new double[]{ 5, 10, 15} );
+        CpuStat stat = new CpuStat(10, ArrayUtils.toDoubleList(new double[]{ 5, 10, 15} ));
         Chunk chunk = new CpuStatConverter().toChunk(stat);
         assertNotNull(chunk);
         assertEquals("cpu-stats", chunk.getCategory().getName());
@@ -68,6 +68,6 @@ public class CpuStatConverterTest {
         CpuStat stat = new CpuStatConverter().fromChunk(chunk);
         assertNotNull(stat);
         assertEquals(10L, stat.getTimeStamp());
-        assertArrayEquals(new double[] {5.0, 10.0, 15.0} , stat.getPerProcessorUsage(), 0.001);
+        assertArrayEquals(new double[] {5.0, 10.0, 15.0} , ArrayUtils.toPrimitiveDoubleArray(stat.getPerProcessorUsage()), 0.001);
     }
 }

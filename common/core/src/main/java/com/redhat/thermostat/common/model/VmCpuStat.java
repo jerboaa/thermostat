@@ -36,32 +36,59 @@
 
 package com.redhat.thermostat.common.model;
 
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
 public class VmCpuStat implements TimeStampedPojo {
 
-    private final long timestamp;
-    private final int vmId;
-    private final double cpuLoad;
+    private long timeStamp;
+    private int vmId;
+    private double cpuLoad;
 
-    public VmCpuStat(long timestamp, int vmId, double cpuLoad) {
-        this.timestamp = timestamp;
+    public VmCpuStat() {
+        super();
+    }
+
+    public VmCpuStat(long timeStamp, int vmId, double cpuLoad) {
+        this.timeStamp = timeStamp;
         this.vmId = vmId;
         this.cpuLoad = cpuLoad;
     }
 
     @Override
+    @Persist
     public long getTimeStamp() {
-        return timestamp;
+        return timeStamp;
     }
 
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    @Persist
     public int getVmId() {
         return vmId;
+    }
+
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
     }
 
     /**
      * The cpu load in percent (as in 100.0 for 100%). This value should be
      * normalized to be in the range [0, 100]
      */
+    @Persist
     public double getCpuLoad() {
         return cpuLoad;
     }
+
+    @Persist
+    public void setCpuLoad(double cpuLoad) {
+        this.cpuLoad = cpuLoad;
+    }
+
 }

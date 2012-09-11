@@ -48,7 +48,6 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.BackendInformation;
 import com.redhat.thermostat.common.storage.Category;
@@ -106,11 +105,7 @@ public class BackendInfoDAOTest {
 
         dao.addBackendInformation(backendInfo1);
 
-        ArgumentCaptor<Chunk> chunkCaptor = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(chunkCaptor.capture());
-
-        BackendInformation inserted = converter.fromChunk(chunkCaptor.getValue());
-        assertEquals(backendInfo1, inserted);
+        verify(storage).putPojo(BackendInfoDAO.CATEGORY, false, backendInfo1);
     }
 
     @Test

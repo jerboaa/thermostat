@@ -40,13 +40,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
@@ -105,7 +104,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public void addAgentInformation(AgentInformation agentInfo) {
-        storage.putChunk(converter.toChunk(agentInfo));
+        storage.putPojo(AgentInfoDAO.CATEGORY, true, agentInfo);
     }
 
     @Override

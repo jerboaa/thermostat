@@ -48,9 +48,9 @@ public interface MemoryStatDAO extends Countable {
     static Key<Long> memoryFreeKey = new Key<>("free", false);
     static Key<Long> memoryBuffersKey = new Key<>("buffers", false);
     static Key<Long> memoryCachedKey = new Key<>("cached", false);
-    static Key<Long> memorySwapTotalKey = new Key<>("swap-total", false);
-    static Key<Long> memorySwapFreeKey = new Key<>("swap-free", false);
-    static Key<Long> memoryCommitLimitKey = new Key<>("commit-limit", false);
+    static Key<Long> memorySwapTotalKey = new Key<>("swapTotal", false);
+    static Key<Long> memorySwapFreeKey = new Key<>("swapFree", false);
+    static Key<Long> memoryCommitLimitKey = new Key<>("commitLimit", false);
 
     static final Category memoryStatCategory = new Category("memory-stats",
             Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,

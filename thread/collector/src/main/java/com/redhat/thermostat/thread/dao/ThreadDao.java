@@ -51,23 +51,24 @@ public interface ThreadDao {
     static final String CPU_TIME = "thread-cpu-time";
     static final String CONTENTION_MONITOR = "thread-contention-monitor";
     static final String THREAD_ALLOCATED_MEMORY = "thread-allocated-memory";
+    static final String SUPPORTED_FEATURES_LIST = "supportedFeaturesList";
 
     static final Key<Boolean> CPU_TIME_KEY = new Key<Boolean>(CPU_TIME, false);
     static final Key<Boolean> CONTENTION_MONITOR_KEY = new Key<Boolean>(CONTENTION_MONITOR, false);
     static final Key<Boolean> THREAD_ALLOCATED_MEMORY_KEY = new Key<Boolean>(THREAD_ALLOCATED_MEMORY, false);
+    static final Key<List<String>> SUPPORTED_FEATURES_LIST_KEY = new Key<List<String>>(SUPPORTED_FEATURES_LIST, false);
 
     static final Category THREAD_CAPABILITIES =
             new Category("vm-thread-capabilities", Key.AGENT_ID, Key.VM_ID,
-                         CPU_TIME_KEY, CONTENTION_MONITOR_KEY,
-                         THREAD_ALLOCATED_MEMORY_KEY);
+                         SUPPORTED_FEATURES_LIST_KEY);
 
 
     VMThreadCapabilities loadCapabilities(VmRef ref);
-    void saveCapabilities(String vmId, String agentId, VMThreadCapabilities caps);
+    void saveCapabilities(VMThreadCapabilities caps);
 
-    static final String LIVE_THREADS = "thread-living";
+    static final String LIVE_THREADS = "currentLiveThreads";
     static final Key<Long> LIVE_THREADS_KEY = new Key<Long>(LIVE_THREADS, false);
-    static final String DAEMON_THREADS = "thread-daemons";
+    static final String DAEMON_THREADS = "currentDaemonThreads";
     static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>(DAEMON_THREADS, false);
     
     static final Category THREAD_SUMMARY =
@@ -75,37 +76,33 @@ public interface ThreadDao {
                          Key.TIMESTAMP,
                          LIVE_THREADS_KEY, DAEMON_THREADS_KEY);
     
-    void saveSummary(String vmId, String agentId, ThreadSummary summary);
+    void saveSummary(ThreadSummary summary);
     ThreadSummary loadLastestSummary(VmRef ref);
     List<ThreadSummary> loadSummary(VmRef ref, long since);
 
-    static final String THREAD_STATE = "thread-state";
+    static final String THREAD_STATE = "threadState";
     static final Key<String> THREAD_STATE_KEY = new Key<String>(THREAD_STATE, false);
-    static final String THREAD_ID = "thread-id";
+    static final String THREAD_ID = "threadId";
     static final Key<Long> THREAD_ID_KEY = new Key<Long>(THREAD_ID, false);
-    static final String THREAD_NAME = "thread-name";
+    static final String THREAD_NAME = "threadName";
     static final Key<String> THREAD_NAME_KEY = new Key<String>(THREAD_NAME, false);
-    static final String THREAD_HEAP = "thread-id";
-    static final Key<Long> THREAD_HEAP_KEY = new Key<Long>(THREAD_HEAP, false);
-    static final String THREAD_CPU_TIME = "thread-cpu-time";
+    static final String THREAD_CPU_TIME = "threadCpuTime";
     static final Key<Long> THREAD_CPU_TIME_KEY = new Key<Long>(THREAD_CPU_TIME, false);
-    static final String THREAD_USER_TIME = "thread-user-time";
+    static final String THREAD_USER_TIME = "threadUserTime";
     static final Key<Long> THREAD_USER_TIME_KEY = new Key<Long>(THREAD_USER_TIME, false);
-    static final String THREAD_BLOCKED_COUNT = "thread-blocked-count";
+    static final String THREAD_BLOCKED_COUNT = "threadBlockedCount";
     static final Key<Long> THREAD_BLOCKED_COUNT_KEY = new Key<Long>(THREAD_BLOCKED_COUNT, false);
-    static final String THREAD_WAIT_COUNT = "thread-wait-count";
+    static final String THREAD_WAIT_COUNT = "threadWaitCount";
     static final Key<Long> THREAD_WAIT_COUNT_KEY = new Key<Long>(THREAD_WAIT_COUNT, false);
-    static final String THREAD_STACK_TRACE_ID = "thread-stacktrace-id";
-    static final Key<Long> THREAD_STACK_TRACE_ID_KEY = new Key<Long>(THREAD_STACK_TRACE_ID, false);
             
     static final Category THREAD_INFO =
             new Category("vm-thread-info", Key.AGENT_ID, Key.VM_ID,
                          Key.TIMESTAMP, THREAD_NAME_KEY, THREAD_ID_KEY,
-                         THREAD_STATE_KEY, THREAD_HEAP_KEY, THREAD_CPU_TIME_KEY,
+                         THREAD_CPU_TIME_KEY,
                          THREAD_USER_TIME_KEY, THREAD_BLOCKED_COUNT_KEY,
-                         THREAD_WAIT_COUNT_KEY, THREAD_STACK_TRACE_ID_KEY);
+                         THREAD_WAIT_COUNT_KEY);
     
-    void saveThreadInfo(String vmId, String agentId, ThreadInfoData info);
+    void saveThreadInfo(ThreadInfoData info);
     List<ThreadInfoData> loadThreadInfo(VmRef ref, long since);
     
     Storage getStorage();

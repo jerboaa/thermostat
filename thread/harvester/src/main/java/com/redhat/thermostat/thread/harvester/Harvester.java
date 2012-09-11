@@ -70,13 +70,11 @@ class Harvester {
     private ThreadMXBean collectorBean;
     private ThreadDao threadDao;
     private String vmId;
-    private String agentId;
     
-    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId, String agentId) {
+    Harvester(ThreadDao threadDao, ScheduledExecutorService threadPool, String vmId) {
         this.connector = new MXBeanConnector(vmId);
         this.threadDao = threadDao;
         this.vmId = vmId;
-        this.agentId = agentId;
         this.threadPool = threadPool;
     }
     
@@ -167,10 +165,10 @@ class Harvester {
           collectorBean = getDataCollectorBean(connection);
           
           summary.setCurrentLiveThreads(collectorBean.getThreadCount());
-          summary.setDaemonThreads(collectorBean.getDaemonThreadCount());
-          summary.setTimestamp(timestamp);
-          
-          threadDao.saveSummary(vmId, agentId, summary);
+          summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
+          summary.setTimeStamp(timestamp);
+          summary.setVmId(Integer.parseInt(vmId));
+          threadDao.saveSummary(summary);
           
           long [] ids = collectorBean.getAllThreadIds();
           long[] allocatedBytes = null;
@@ -197,22 +195,23 @@ class Harvester {
 
               info.setTimeStamp(timestamp);
 
-              info.setName(beanInfo.getThreadName());
-              info.setID(beanInfo.getThreadId());
-              info.setState(beanInfo.getThreadState());
+              info.setThreadName(beanInfo.getThreadName());
+              info.setThreadId(beanInfo.getThreadId());
+              info.setThreadState(beanInfo.getThreadState());
               info.setStackTrace(beanInfo.getStackTrace());
 
-              info.setCPUTime(collectorBean.getThreadCpuTime(info.getThreadID()));
-              info.setUserTime(collectorBean.getThreadUserTime(info.getThreadID()));
+              info.setThreadCpuTime(collectorBean.getThreadCpuTime(info.getThreadId()));
+              info.setThreadUserTime(collectorBean.getThreadUserTime(info.getThreadId()));
               
-              info.setBlockedCount(beanInfo.getBlockedCount());
-              info.setWaitedCount(beanInfo.getWaitedCount());
+              info.setThreadBlockedCount(beanInfo.getBlockedCount());
+              info.setThreadWaitCount(beanInfo.getWaitedCount());
               
               if (allocatedBytes != null) {
                   info.setAllocatedBytes(allocatedBytes[i]);
               }
 
-              threadDao.saveThreadInfo(vmId, agentId, info);
+              info.setVmId(Integer.parseInt(vmId));
+              threadDao.saveThreadInfo(info);
           }
           
       } catch (MalformedObjectNameException e) {
@@ -262,8 +261,8 @@ class Harvester {
                     }
                 } catch (Exception ignore) {};
             }
-
-            threadDao.saveCapabilities(vmId, agentId, caps);
+            caps.setVmId(Integer.parseInt(vmId));
+            threadDao.saveCapabilities(caps);
 
         } catch (Exception ex) {
             logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);

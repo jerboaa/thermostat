@@ -38,39 +38,75 @@ package com.redhat.thermostat.common.model;
 
 import java.util.Objects;
 
-public class HeapInfo {
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 
+@Entity
+public class HeapInfo implements TimeStampedPojo {
+
+    private String agentId;
     private int vmId;
-    private long timestamp;
+    private long timeStamp;
+
     private String heapId;
     private String heapDumpId;
     private String histogramId;
 
-    public HeapInfo(int vmId, long timestamp) {
-        this.vmId = vmId;
-        this.timestamp = timestamp;
+    public HeapInfo() {
+        this(-1, -1);
     }
 
+    public HeapInfo(int vmId, long timestamp) {
+        this.vmId = vmId;
+        this.timeStamp = timestamp;
+    }
+
+    @Persist
+    public String getAgentId() {
+        return agentId;
+    }
+
+    @Persist
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
+    }
+
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
     public int getVmId() {
         return vmId;
     }
 
-    public long getTimestamp() {
-        return timestamp;
+    @Persist
+    public long getTimeStamp() {
+        return timeStamp;
     }
 
+    @Persist
+    public void setTimeStamp(long timestamp) {
+        this.timeStamp = timestamp;
+    }
+
+    @Persist
     public void setHeapId(String heapId) {
         this.heapId = heapId;
     }
 
+    @Persist
     public String getHeapId() {
         return heapId;
     }
 
+    @Persist
     public void setHeapDumpId(String heapDumpId) {
         this.heapDumpId = heapDumpId;
     }
 
+    @Persist
     public String getHeapDumpId() {
         return heapDumpId;
     }
@@ -82,18 +118,20 @@ public class HeapInfo {
         }
         HeapInfo other = (HeapInfo) o;
         return vmId == other.vmId && Objects.equals(heapDumpId, other.heapDumpId)
-               && Objects.equals(histogramId, other.histogramId) && timestamp == other.timestamp;
+               && Objects.equals(histogramId, other.histogramId) && timeStamp == other.timeStamp;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(vmId, heapDumpId, histogramId, timestamp);
+        return Objects.hash(vmId, heapDumpId, histogramId, timeStamp);
     }
 
+    @Persist
     public String getHistogramId() {
         return histogramId;
     }
 
+    @Persist
     public void setHistogramId(String histogramId) {
         this.histogramId = histogramId;
     }

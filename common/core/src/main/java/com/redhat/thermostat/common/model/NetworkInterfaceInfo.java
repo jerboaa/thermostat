@@ -36,11 +36,19 @@
 
 package com.redhat.thermostat.common.model;
 
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
 public class NetworkInterfaceInfo implements Pojo {
 
     private String iFace;
     private String ip4Addr;
     private String ip6Addr;
+
+    public NetworkInterfaceInfo() {
+        super();
+    }
 
     public NetworkInterfaceInfo(String iFace) {
         this.iFace = iFace;
@@ -48,14 +56,22 @@ public class NetworkInterfaceInfo implements Pojo {
         this.ip6Addr = null;
     }
 
+    @Persist
     public String getInterfaceName() {
         return iFace;
     }
 
+    @Persist
+    public void setInterfaceName(String iFace) {
+        this.iFace = iFace;
+    }
+
+    @Persist
     public String getIp4Addr() {
         return ip4Addr;
     }
 
+    @Persist
     public void setIp4Addr(String newAddr) {
         ip4Addr = newAddr;
     }
@@ -64,10 +80,12 @@ public class NetworkInterfaceInfo implements Pojo {
         ip4Addr = null;
     }
 
+    @Persist
     public String getIp6Addr() {
         return ip6Addr;
     }
 
+    @Persist
     public void setIp6Addr(String newAddr) {
         ip6Addr = newAddr;
     }

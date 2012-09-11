@@ -36,36 +36,68 @@
 
 package com.redhat.thermostat.common.model;
 
+import com.redhat.thermostat.common.storage.Entity;
+
+@Entity
 public class VmGcStat implements TimeStampedPojo {
 
-    private final long timestamp;
-    private final int vmId;
-    private final String collectorName;
-    private final long runCount;
-    private final long wallTime;
+    private long timeStamp;
+    private int vmId;
+    private String collectorName;
+    private long runCount;
+    private long wallTime;
+
+    public VmGcStat() {
+        super();
+    }
 
     public VmGcStat(int vmId, long timestamp, String collectorName, long runCount, long wallTime) {
-        this.timestamp = timestamp;
+        this.timeStamp = timestamp;
         this.vmId = vmId;
         this.collectorName = collectorName;
         this.runCount = runCount;
         this.wallTime = wallTime;
     }
+
     public int getVmId() {
         return vmId;
     }
+
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
     public String getCollectorName() {
         return collectorName;
     }
+
+    public void setCollectorName(String collectorName) {
+        this.collectorName = collectorName;
+    }
+
     public long getRunCount() {
         return runCount;
     }
+
+    public void setRunCount(long runCount) {
+        this.runCount = runCount;
+    }
+
     public long getWallTime() {
         return wallTime;
     }
 
+    public void setWallTime(long wallTime) {
+        this.wallTime = wallTime;
+    }
+
     @Override
     public long getTimeStamp() {
-        return timestamp;
+        return timeStamp;
     }
+
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
 }

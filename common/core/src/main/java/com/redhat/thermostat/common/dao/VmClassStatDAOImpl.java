@@ -67,6 +67,6 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
 
     @Override
     public void putVmClassStat(VmClassStat stat) {
-        storage.putChunk(converter.toChunk(stat));
+        storage.putPojo(vmClassStatsCategory, false, stat);
     }
 }

@@ -37,10 +37,9 @@
 package com.redhat.thermostat.backend.system;
 
 import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +52,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.model.CpuStat;
+import com.redhat.thermostat.common.utils.ArrayUtils;
 
 public class CpuStatBuilderTest {
 
@@ -105,7 +105,7 @@ public class CpuStatBuilderTest {
         CpuStat stat = builder.build();
 
         verify(dataSource, times(2)).getStatReader();
-        assertArrayEquals(new double[] {100, 100}, stat.getPerProcessorUsage(), 0.01);
+        assertArrayEquals(new double[] {100, 100}, ArrayUtils.toPrimitiveDoubleArray(stat.getPerProcessorUsage()), 0.01);
     }
 
 }

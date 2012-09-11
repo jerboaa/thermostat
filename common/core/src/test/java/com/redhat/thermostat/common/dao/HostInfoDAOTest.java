@@ -37,22 +37,21 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.Collection;
 
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.HostInfo;
@@ -87,13 +86,13 @@ public class HostInfoDAOTest {
     public void testCategory() {
         assertEquals("host-info", HostInfoDAO.hostInfoCategory.getName());
         Collection<Key<?>> keys = HostInfoDAO.hostInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
+        assertTrue(keys.contains(new Key<>("agentId", true)));
         assertTrue(keys.contains(new Key<String>("hostname", true)));
-        assertTrue(keys.contains(new Key<String>("os_name", false)));
-        assertTrue(keys.contains(new Key<String>("os_kernel", false)));
-        assertTrue(keys.contains(new Key<String>("cpu_model", false)));
-        assertTrue(keys.contains(new Key<Integer>("cpu_num", false)));
-        assertTrue(keys.contains(new Key<Long>("memory_total", false)));
+        assertTrue(keys.contains(new Key<String>("osName", false)));
+        assertTrue(keys.contains(new Key<String>("osKernel", false)));
+        assertTrue(keys.contains(new Key<String>("cpuModel", false)));
+        assertTrue(keys.contains(new Key<Integer>("cpuCount", false)));
+        assertTrue(keys.contains(new Key<Long>("totalMemory", false)));
         assertEquals(7, keys.size());
     }
 
@@ -110,20 +109,12 @@ public class HostInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.find(any(Query.class))).thenReturn(chunk);
-
+        HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
+        when(storage.findPojo(any(Query.class), same(HostInfo.class))).thenReturn(info);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
 
-        HostInfo info = new HostInfoDAOImpl(storage, agentInfoDao)
-            .getHostInfo(new HostRef("some uid", HOST_NAME));
-
-        assertNotNull(info);
-        assertEquals(HOST_NAME, info.getHostname());
-        assertEquals(OS_NAME, info.getOsName());
-        assertEquals(OS_KERNEL, info.getOsKernel());
-        assertEquals(CPU_MODEL, info.getCpuModel());
-        assertEquals(CPU_NUM, info.getCpuCount());
-        assertEquals(MEMORY_TOTAL, info.getTotalMemory());
+        HostInfo result = new HostInfoDAOImpl(storage, agentInfoDao).getHostInfo(new HostRef("some uid", HOST_NAME));
+        assertSame(result, info);
     }
 
     @Test
@@ -215,17 +206,7 @@ public class HostInfoDAOTest {
         HostInfoDAO dao = new HostInfoDAOImpl(storage, agentInfo);
         dao.putHostInfo(info);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(arg.capture());
-        Chunk chunk = arg.getValue();
-
-        assertEquals(HostInfoDAO.hostInfoCategory, chunk.getCategory());
-        assertEquals(HOST_NAME, chunk.get(HostInfoDAO.hostNameKey));
-        assertEquals(OS_NAME, chunk.get(HostInfoDAO.osNameKey));
-        assertEquals(OS_KERNEL, chunk.get(HostInfoDAO.osKernelKey));
-        assertEquals(CPU_MODEL, chunk.get(HostInfoDAO.cpuModelKey));
-        assertEquals((Integer) CPU_NUM, chunk.get(HostInfoDAO.cpuCountKey));
-        assertEquals((Long) MEMORY_TOTAL, chunk.get(HostInfoDAO.hostMemoryTotalKey));
+        verify(storage).putPojo(HostInfoDAO.hostInfoCategory, false, info);
     }
 
     @Test

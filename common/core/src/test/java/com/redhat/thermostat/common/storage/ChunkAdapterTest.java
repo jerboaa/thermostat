@@ -57,6 +57,7 @@ public class ChunkAdapterTest {
         private List<String> listData;
         private long longData;
         private String stringData;
+        private NestedData nestedData;
 
         @Persist
         public long[] getArrayData() {
@@ -92,6 +93,23 @@ public class ChunkAdapterTest {
             return stringData;
         }
 
+        public NestedData getNestedData() {
+            return nestedData;
+        }
+
+        public void setNestedData(NestedData nestedData) {
+            this.nestedData = nestedData;
+        }
+    }
+
+    public static class NestedData {
+        private String data;
+        public void setData(String data) {
+            this.data = data;
+        }
+        public String getData() {
+            return data;
+        }
     }
 
     // the expected keys for each 'property' in the SomeData bean
@@ -99,6 +117,7 @@ public class ChunkAdapterTest {
     private static final Key<List<String>> listData = new Key<>("listData", false);
     private static final Key<Long> longData = new Key<>("longData", false);
     private static final Key<String> stringData = new Key<>("stringData", false);
+    private static final Key<String> nestedData = new Key<>("nestedData.data", false);
 
     @Test
     public void verifyAdapaterCanBeUsedInPlaceOfChunk() {
@@ -282,4 +301,19 @@ public class ChunkAdapterTest {
         new ChunkAdapter(new DataWithCustomAttributeNameMismatch());
     }
 
+    @Test
+    public void verifyGetAndPutNestedValue() {
+        NestedData nested = new NestedData();
+        nested.setData("stringData");
+        SomeData testObject = new SomeData();
+        testObject.setNestedData(nested);
+        Chunk chunk = new ChunkAdapter(testObject);
+
+        assertEquals("stringData", chunk.get(nestedData));
+
+        chunk.put(nestedData, "some-new-data");
+
+        assertEquals("some-new-data", chunk.get(nestedData));
+        assertEquals("some-new-data", testObject.getNestedData().getData());
+    }
 }

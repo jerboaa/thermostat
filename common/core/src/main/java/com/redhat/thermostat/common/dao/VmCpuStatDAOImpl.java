@@ -67,6 +67,6 @@ class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     @Override
     public void putVmCpuStat(VmCpuStat stat) {
-        storage.putChunk(converter.toChunk(stat));
+        storage.putPojo(vmCpuStatCategory, false, stat);
     }
 }

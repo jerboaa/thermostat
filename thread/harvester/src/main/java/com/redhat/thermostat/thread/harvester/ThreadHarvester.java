@@ -81,8 +81,7 @@ public class ThreadHarvester implements RequestReceiver {
         switch (HarvesterCommand.valueOf(command)) {
         case START: {
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
-            String agentId = request.getParameter(HarvesterCommand.AGENT_ID.name());
-            result = startHarvester(vmId, agentId);
+            result = startHarvester(vmId);
             break;
         }   
         case STOP: {
@@ -93,8 +92,7 @@ public class ThreadHarvester implements RequestReceiver {
         case VM_CAPS: {
             // this is blocking
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
-            String agentId = request.getParameter(HarvesterCommand.AGENT_ID.name());
-            result = saveVmCaps(vmId, agentId);
+            result = saveVmCaps(vmId);
             break;
         }
         case IS_COLLECTING: {
@@ -123,13 +121,13 @@ public class ThreadHarvester implements RequestReceiver {
         return harvester.isConnected();
     }
     
-    private boolean startHarvester(String vmId, String agentId) {
-        Harvester harvester = getHarvester(vmId, agentId);
+    private boolean startHarvester(String vmId) {
+        Harvester harvester = getHarvester(vmId);
         return harvester.start();
     }
     
-    private boolean saveVmCaps(String vmId, String agentId) {
-        Harvester harvester = getHarvester(vmId, agentId);
+    private boolean saveVmCaps(String vmId) {
+        Harvester harvester = getHarvester(vmId);
         return harvester.saveVmCaps();
     }
     
@@ -141,10 +139,10 @@ public class ThreadHarvester implements RequestReceiver {
         return true;
     }
     
-    Harvester getHarvester(String vmId, String agentId) {
+    Harvester getHarvester(String vmId) {
         Harvester harvester = connectors.get(vmId);
         if (harvester == null) {
-            harvester = new Harvester(dao, executor, vmId, agentId);
+            harvester = new Harvester(dao, executor, vmId);
             connectors.put(vmId, harvester);
         }
         

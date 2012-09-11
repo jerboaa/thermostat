@@ -41,7 +41,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class BackendInformation {
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
+public class BackendInformation implements Pojo {
 
     private String name;
     private String description;
@@ -50,34 +54,42 @@ public class BackendInformation {
     private List<Integer> pids;
     private Map<String, String> configuration = new HashMap<String,String>();
 
+    @Persist
     public String getName() {
         return name;
     }
 
+    @Persist
     public void setName(String name) {
         this.name = name;
     }
 
+    @Persist
     public String getDescription() {
         return description;
     }
 
+    @Persist
     public void setDescription(String description) {
         this.description = description;
     }
 
+    @Persist
     public boolean isObserveNewJvm() {
         return observeNewJvm;
     }
 
+    @Persist
     public void setObserveNewJvm(boolean observeNewJvm) {
         this.observeNewJvm = observeNewJvm;
     }
 
+    @Persist
     public List<Integer> getPids() {
         return pids;
     }
 
+    @Persist
     public void setPids(List<Integer> pids) {
         this.pids = pids;
     }
@@ -86,10 +98,12 @@ public class BackendInformation {
         return configuration;
     }
 
+    @Persist
     public boolean isActive() {
         return isActive;
     }
 
+    @Persist
     public void setActive(boolean active) {
         this.isActive = active;
     }

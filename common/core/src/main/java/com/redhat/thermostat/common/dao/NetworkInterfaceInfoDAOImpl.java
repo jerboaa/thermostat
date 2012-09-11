@@ -75,7 +75,7 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        storage.putChunk(converter.toChunk(info));
+        storage.putPojo(networkInfoCategory, true, info);
     }
 
 }

@@ -51,6 +51,10 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.dao.Converter;
+import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
+import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 
@@ -61,7 +65,6 @@ import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
  */
 public class MongoStorage extends Storage {
 
-    public static final String KEY_AGENT_ID = "agent-id";
     public static final String SET_MODIFIER = "$set";
 
     private MongoConnection conn;
@@ -70,7 +73,10 @@ public class MongoStorage extends Storage {
 
     private UUID agentId = null;
 
+    private Map<Class<?>, Converter<?>> converters;
+
     public MongoStorage(StartupConfiguration conf) {
+        setupConverters();
         conn = new MongoConnection(conf);
         conn.addListener(new ConnectionListener() {
             @Override
@@ -87,6 +93,11 @@ public class MongoStorage extends Storage {
         });
     }
 
+    private void setupConverters() {
+        converters = new HashMap<>();
+        addConverter(VmMemoryStat.class, new VmMemoryStatConverter());
+    }
+
     @Override
     public Connection getConnection() {
         return conn;
@@ -97,9 +108,14 @@ public class MongoStorage extends Storage {
         this.agentId = agentId;
     }
 
+    @Override
+    public String getAgentId() {
+        return agentId.toString();
+    }
+
     private BasicDBObject getAgentQueryKeyFromGlobalAgent() {
         if (agentId != null) {
-            return new BasicDBObject(KEY_AGENT_ID, agentId.toString());
+            return new BasicDBObject(Key.AGENT_ID.getName(), agentId.toString());
         } else {
             return null;
         }
@@ -110,14 +126,14 @@ public class MongoStorage extends Storage {
         if (queryKey != null) {
             return queryKey;
         } else if (chunk.get(Key.AGENT_ID) != null) {
-            return new BasicDBObject(KEY_AGENT_ID, chunk.get(Key.AGENT_ID));
+            return new BasicDBObject(Key.AGENT_ID.getName(), chunk.get(Key.AGENT_ID));
         } else {
             return null;
         }
     }
 
-    @Override
-    public void putChunk(Chunk chunk) {
+    // TODO: Make this private, and change the testcase to test putPojo() instead.
+    void putChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         BasicDBObject toInsert = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
@@ -356,5 +372,21 @@ public class MongoStorage extends Storage {
         } else {
             return file.getInputStream();
         }
+    }
+
+    public void putPojo(Category category, boolean replace, Pojo pojo) {
+        Converter customConverter = converters.get(pojo.getClass());
+        Chunk chunk;
+        if (customConverter != null) {
+            chunk = customConverter.toChunk(pojo);
+        } else {
+            chunk = new ChunkAdapter(pojo, category, replace);
+        }
+        putChunk(chunk);
+    }
+
+
+    void addConverter(Class<?> type, Converter<?> converter) {
+        converters.put(type, converter);
     }
 }

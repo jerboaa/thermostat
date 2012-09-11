@@ -49,10 +49,11 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface HeapDAO {
 
-    static final Key<String> heapDumpIdKey = new Key<String>("heap-dump-id", false);
-    static final Key<String> histogramIdKey = new Key<String>("histogram-id", false);
+    static final Key<String> heapIdKey = new Key<String>("heapId", false);
+    static final Key<String> heapDumpIdKey = new Key<String>("heapDumpId", false);
+    static final Key<String> histogramIdKey = new Key<String>("histogramId", false);
 
-    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.ID, Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapDumpIdKey, histogramIdKey);
+    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapIdKey, heapDumpIdKey, histogramIdKey);
 
     void putHeapInfo(HeapInfo heapInfo, File heapDumpFile, ObjectHistogram histogramData) throws IOException;
 

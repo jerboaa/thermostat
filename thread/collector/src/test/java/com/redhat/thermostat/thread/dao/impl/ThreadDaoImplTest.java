@@ -39,10 +39,11 @@ package com.redhat.thermostat.thread.dao.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.Arrays;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -86,9 +87,7 @@ public class ThreadDaoImplTest {
         when(ref.getAgent()).thenReturn(agent);
         
         Chunk answer = mock(Chunk.class);
-        when(answer.get(ThreadDao.CONTENTION_MONITOR_KEY)).thenReturn(false);
-        when(answer.get(ThreadDao.CPU_TIME_KEY)).thenReturn(true);
-        when(answer.get(ThreadDao.THREAD_ALLOCATED_MEMORY_KEY)).thenReturn(true);
+        when(answer.get(ThreadDao.SUPPORTED_FEATURES_LIST_KEY)).thenReturn(Arrays.asList(ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY));
         
         when(storage.find(query)).thenReturn(answer);
         
@@ -115,18 +114,11 @@ public class ThreadDaoImplTest {
         when(caps.supportContentionMonitor()).thenReturn(true);
         when(caps.supportCPUTime()).thenReturn(true);
         when(caps.supportThreadAllocatedMemory()).thenReturn(true);
-        
+        when(caps.getVmId()).thenReturn(42);
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
-        dao.saveCapabilities("42", "0xcafe", caps);
+        dao.saveCapabilities(caps);
 
-        ArgumentCaptor<Chunk> queryCaptor = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(queryCaptor.capture());
+        verify(storage).putPojo(ThreadDao.THREAD_CAPABILITIES, true, caps);
 
-        Chunk query = queryCaptor.getValue();
-        assertEquals(42, (int) query.get(Key.VM_ID));
-        assertEquals("0xcafe", query.get(Key.AGENT_ID));
-        assertTrue((boolean) query.get(ThreadDao.CONTENTION_MONITOR_KEY));
-        assertTrue((boolean) query.get(ThreadDao.CPU_TIME_KEY));
-        assertTrue((boolean) query.get(ThreadDao.THREAD_ALLOCATED_MEMORY_KEY));
     }
 }

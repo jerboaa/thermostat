@@ -44,7 +44,7 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface CpuStatDAO extends Countable {
 
-    static Key<List<Double>> cpuLoadKey = new Key<>("processor-usage", false);
+    static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage", false);
 
     static final Category cpuStatCategory = new Category("cpu-stats",
             Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);

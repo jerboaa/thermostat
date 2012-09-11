@@ -41,11 +41,27 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
-public class VMThreadCapabilities {
+@Entity
+public class VMThreadCapabilities implements Pojo {
     
     private Set<String> features = new HashSet<>();
+
+    private int vmId;
+
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
+    public int getVmId() {
+        return vmId;
+    }
 
     public boolean supportCPUTime() {
         return features.contains(ThreadDao.CPU_TIME);
@@ -64,10 +80,16 @@ public class VMThreadCapabilities {
         return features.contains(ThreadDao.THREAD_ALLOCATED_MEMORY);
     }
 
+    @Persist
     public List<String> getSupportedFeaturesList() {
         return new ArrayList<>(features);
     }
-    
+
+    @Persist
+    public void setSupportedFeaturesList(List<String> featuresList) {
+        features = new HashSet<>(featuresList);
+    }
+
     public void addFeature(String feature) {
         features.add(feature);
     }

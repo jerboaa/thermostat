@@ -38,12 +38,8 @@ package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.isA;
-import static org.mockito.Mockito.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Matchers.argThat;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -57,10 +53,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.ArgumentMatcher;
-import org.mockito.Matchers;
 
-import com.redhat.thermostat.client.heap.cli.ListHeapDumpsCommand;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
@@ -145,7 +138,7 @@ public class ListHeapDumpsCommandTest {
         HeapInfo heapInfo = mock(HeapInfo.class);
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
-        when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
+        when(heapInfo.getTimeStamp()).thenReturn(timestamp.getTimeInMillis());
         when(heapInfo.getHeapId()).thenReturn("0001");
 
         HeapDAO heapDao = mock(HeapDAO.class);
@@ -190,7 +183,7 @@ public class ListHeapDumpsCommandTest {
         HeapInfo heapInfo = mock(HeapInfo.class);
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
-        when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
+        when(heapInfo.getTimeStamp()).thenReturn(timestamp.getTimeInMillis());
         when(heapInfo.getHeapId()).thenReturn("0001");
 
         HeapDAO heapDao = mock(HeapDAO.class);
@@ -241,7 +234,7 @@ public class ListHeapDumpsCommandTest {
         HeapInfo heapInfo = mock(HeapInfo.class);
         Calendar timestamp = Calendar.getInstance();
         timestamp.set(2012, 5, 7, 15, 32, 0);
-        when(heapInfo.getTimestamp()).thenReturn(timestamp.getTimeInMillis());
+        when(heapInfo.getTimeStamp()).thenReturn(timestamp.getTimeInMillis());
         when(heapInfo.getHeapDumpId()).thenReturn("0001");
 
         HeapDAO heapDao = mock(HeapDAO.class);

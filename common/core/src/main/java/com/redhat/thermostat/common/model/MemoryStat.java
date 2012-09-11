@@ -36,18 +36,27 @@
 
 package com.redhat.thermostat.common.model;
 
-public class MemoryStat implements TimeStampedPojo {
-    private final long timestamp;
-    private final long total;
-    private final long free;
-    private final long buffers;
-    private final long cached;
-    private final long swapTotal;
-    private final long swapFree;
-    private final long commitLimit;
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 
-    public MemoryStat(long timestamp, long total, long free, long buffers, long cached, long swapTotal, long swapFree, long commitLimit) {
-        this.timestamp = timestamp;
+@Entity
+public class MemoryStat implements TimeStampedPojo {
+
+    private long timeStamp;
+    private long total;
+    private long free;
+    private long buffers;
+    private long cached;
+    private long swapTotal;
+    private long swapFree;
+    private long commitLimit;
+
+    public MemoryStat() {
+        super();
+    }
+
+    public MemoryStat(long timeStamp, long total, long free, long buffers, long cached, long swapTotal, long swapFree, long commitLimit) {
+        this.timeStamp = timeStamp;
         this.total = total;
         this.free = free;
         this.buffers = buffers;
@@ -58,36 +67,84 @@ public class MemoryStat implements TimeStampedPojo {
     }
 
     @Override
+    @Persist
     public long getTimeStamp() {
-        return timestamp;
+        return timeStamp;
     }
 
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
+    }
+
+    @Persist
     public long getTotal() {
         return total;
     }
 
+    @Persist
+    public void setTotal(long total) {
+        this.total = total;
+    }
+
+    @Persist
     public long getFree() {
         return free;
     }
 
+    @Persist
+    public void setFree(long free) {
+        this.free = free;
+    }
+
+    @Persist
     public long getBuffers() {
         return buffers;
     }
 
+    @Persist
+    public void setBuffers(long buffers) {
+        this.buffers = buffers;
+    }
+
+    @Persist
     public long getCached() {
         return cached;
     }
 
+    @Persist
+    public void setCached(long cached) {
+        this.cached = cached;
+    }
+
+    @Persist
     public long getSwapTotal() {
         return swapTotal;
     }
 
+    @Persist
+    public void setSwapTotal(long swapTotal) {
+        this.swapTotal = swapTotal;
+    }
+
+    @Persist
     public long getSwapFree() {
         return swapFree;
     }
 
+    @Persist
+    public void setSwapFree(long swapFree) {
+        this.swapFree = swapFree;
+    }
+
+    @Persist
     public long getCommitLimit() {
         return commitLimit;
+    }
+
+    @Persist
+    public void setCommitLimit(long commitLimit) {
+        this.commitLimit = commitLimit;
     }
 
 }

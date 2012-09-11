@@ -46,24 +46,23 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface VmInfoDAO extends Countable {
 
-    static final Key<Integer> vmIdKey = new Key<>("vm-id", true);
-    static final Key<Integer> vmPidKey = new Key<>("vm-pid", false);
-    static final Key<String> runtimeVersionKey = new Key<>("runtime-version", false);
-    static final Key<String> javaHomeKey = new Key<>("java-home", false);
-    static final Key<String> mainClassKey = new Key<>("main-class", false);
-    static final Key<String> commandLineKey = new Key<>("command-line", false);
-    static final Key<String> vmArgumentsKey = new Key<>("vm-arguments", false);
-    static final Key<String> vmNameKey = new Key<>("vm-name", false);
-    static final Key<String> vmInfoKey = new Key<>("vm-info", false);
-    static final Key<String> vmVersionKey = new Key<>("vm-version", false);
+    static final Key<Integer> vmPidKey = new Key<>("vmPid", false);
+    static final Key<String> runtimeVersionKey = new Key<>("javaVersion", false);
+    static final Key<String> javaHomeKey = new Key<>("javaHome", false);
+    static final Key<String> mainClassKey = new Key<>("mainClass", false);
+    static final Key<String> commandLineKey = new Key<>("javaCommandLine", false);
+    static final Key<String> vmArgumentsKey = new Key<>("vmArguments", false);
+    static final Key<String> vmNameKey = new Key<>("vmName", false);
+    static final Key<String> vmInfoKey = new Key<>("vmInfo", false);
+    static final Key<String> vmVersionKey = new Key<>("vmVersion", false);
     static final Key<Map<String, String>> propertiesKey = new Key<>("properties", false);
     static final Key<Map<String, String>> environmentKey = new Key<>("environment", false);
-    static final Key<List<String>> librariesKey = new Key<>("libraries", false);
-    static final Key<Long> startTimeKey = new Key<>("start-time", false);
-    static final Key<Long> stopTimeKey = new Key<>("stop-time", false);
+    static final Key<List<String>> librariesKey = new Key<>("loadedNativeLibraries", false);
+    static final Key<Long> startTimeKey = new Key<>("startTimeStamp", false);
+    static final Key<Long> stopTimeKey = new Key<>("stopTimeStamp", false);
 
     static final Category vmInfoCategory = new Category("vm-info",
-            Key.AGENT_ID, vmIdKey, vmPidKey, runtimeVersionKey, javaHomeKey,
+            Key.AGENT_ID, Key.VM_ID, vmPidKey, runtimeVersionKey, javaHomeKey,
             mainClassKey, commandLineKey,
             vmArgumentsKey, vmNameKey, vmInfoKey, vmVersionKey,
             propertiesKey, environmentKey, librariesKey,

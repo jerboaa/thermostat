@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.Arrays;
 import java.util.List;
 
 import com.redhat.thermostat.common.model.BackendInformation;

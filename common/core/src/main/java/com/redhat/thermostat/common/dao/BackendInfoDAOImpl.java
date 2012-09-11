@@ -74,8 +74,7 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public void addBackendInformation(BackendInformation info) {
-        Chunk chunk = converter.toChunk(info);
-        storage.putChunk(chunk);
+        storage.putPojo(BackendInfoDAO.CATEGORY, false, info);
     }
 
     @Override

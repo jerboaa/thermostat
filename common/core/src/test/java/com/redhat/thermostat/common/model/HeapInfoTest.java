@@ -38,13 +38,9 @@ package com.redhat.thermostat.common.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
 
 import org.junit.Before;
 import org.junit.Test;
-
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 
 public class HeapInfoTest {
 
@@ -53,12 +49,14 @@ public class HeapInfoTest {
     @Before
     public void setUp() {
         heapInfo = new HeapInfo(321, 12345);
+        heapInfo.setAgentId("test-agent");
     }
 
     @Test
     public void testProperties() {
+        assertEquals("test-agent", heapInfo.getAgentId());
         assertEquals(321, heapInfo.getVmId());
-        assertEquals(12345, heapInfo.getTimestamp());
+        assertEquals(12345, heapInfo.getTimeStamp());
     }
 
     @Test

@@ -36,6 +36,10 @@
 
 package com.redhat.thermostat.common.model;
 
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
 public class VmClassStat implements TimeStampedPojo {
 
     private int vmId;
@@ -48,16 +52,34 @@ public class VmClassStat implements TimeStampedPojo {
         this.loadedClasses = loadedClasses;
     }
 
+    @Persist
     public int getVmId() {
         return vmId;
     }
 
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
     @Override
     public long getTimeStamp() {
         return timestamp;
     }
 
+    @Persist
+    public void setTimeStamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    @Persist
     public long getLoadedClasses() {
         return loadedClasses;
+    }
+
+    @Persist
+    public void setLoadedClasses(long loadedClasses) {
+        this.loadedClasses = loadedClasses;
     }
 }

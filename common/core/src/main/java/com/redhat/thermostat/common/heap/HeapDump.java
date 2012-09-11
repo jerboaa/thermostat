@@ -97,7 +97,7 @@ public class HeapDump {
     }
 
     public long getTimestamp() {
-        return heapInfo.getTimestamp();
+        return heapInfo.getTimeStamp();
     }
 
     @Override

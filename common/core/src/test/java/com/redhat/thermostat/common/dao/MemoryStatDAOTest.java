@@ -38,14 +38,13 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import static org.mockito.Mockito.any;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -80,15 +79,15 @@ public class MemoryStatDAOTest {
     public void testCategory() {
         assertEquals("memory-stats", MemoryStatDAO.memoryStatCategory.getName());
         Collection<Key<?>> keys = MemoryStatDAO.memoryStatCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
-        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
+        assertTrue(keys.contains(new Key<>("agentId", true)));
+        assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
         assertTrue(keys.contains(new Key<Long>("total", false)));
         assertTrue(keys.contains(new Key<Long>("free", false)));
         assertTrue(keys.contains(new Key<Long>("buffers", false)));
         assertTrue(keys.contains(new Key<Long>("cached", false)));
-        assertTrue(keys.contains(new Key<Long>("swap-total", false)));
-        assertTrue(keys.contains(new Key<Long>("swap-free", false)));
-        assertTrue(keys.contains(new Key<Long>("commit-limit", false)));
+        assertTrue(keys.contains(new Key<Long>("swapTotal", false)));
+        assertTrue(keys.contains(new Key<Long>("swapFree", false)));
+        assertTrue(keys.contains(new Key<Long>("commitLimit", false)));
         assertEquals(9, keys.size());
 
     }
@@ -181,25 +180,13 @@ public class MemoryStatDAOTest {
     }
 
     @Test
-    public void testPutHostInfo() {
+    public void testPutMemoryStat() {
         Storage storage = mock(Storage.class);
         MemoryStat stat = new MemoryStat(TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         dao.putMemoryStat(stat);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(arg.capture());
-        Chunk chunk = arg.getValue();
-
-        assertEquals(MemoryStatDAO.memoryStatCategory, chunk.getCategory());
-        assertEquals((Long) TIMESTAMP, chunk.get(Key.TIMESTAMP));
-        assertEquals((Long) TOTAL, chunk.get(MemoryStatDAO.memoryTotalKey));
-        assertEquals((Long) FREE, chunk.get(MemoryStatDAO.memoryFreeKey));
-        assertEquals((Long) BUFFERS, chunk.get(MemoryStatDAO.memoryBuffersKey));
-        assertEquals((Long) CACHED, chunk.get(MemoryStatDAO.memoryCachedKey));
-        assertEquals((Long) SWAP_TOTAL, chunk.get(MemoryStatDAO.memorySwapTotalKey));
-        assertEquals((Long) SWAP_FREE, chunk.get(MemoryStatDAO.memorySwapFreeKey));
-        assertEquals((Long) COMMIT_LIMIT, chunk.get(MemoryStatDAO.memoryCommitLimitKey));
+        verify(storage).putPojo(MemoryStatDAO.memoryStatCategory, false, stat);
     }
 
     @Test

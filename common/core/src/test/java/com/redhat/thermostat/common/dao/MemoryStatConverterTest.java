@@ -57,9 +57,9 @@ public class MemoryStatConverterTest {
         assertEquals((Long) 2l, chunk.get(new Key<Long>("free", false)));
         assertEquals((Long) 3l, chunk.get(new Key<Long>("buffers", false)));
         assertEquals((Long) 4l, chunk.get(new Key<Long>("cached", false)));
-        assertEquals((Long) 5l, chunk.get(new Key<Long>("swap-total", false)));
-        assertEquals((Long) 6l, chunk.get(new Key<Long>("swap-free", false)));
-        assertEquals((Long) 7l, chunk.get(new Key<Long>("commit-limit", false)));
+        assertEquals((Long) 5l, chunk.get(new Key<Long>("swapTotal", false)));
+        assertEquals((Long) 6l, chunk.get(new Key<Long>("swapFree", false)));
+        assertEquals((Long) 7l, chunk.get(new Key<Long>("commitLimit", false)));
     }
 
     @Test

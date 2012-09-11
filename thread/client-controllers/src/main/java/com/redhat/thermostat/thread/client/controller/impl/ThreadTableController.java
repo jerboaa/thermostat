@@ -126,11 +126,11 @@ public class ThreadTableController implements CommonController {
                 for (ThreadInfoData key : stats.keySet()) {
                     ThreadTableBean bean = new ThreadTableBean();
                     
-                    bean.setName(key.getName());
-                    bean.setId(key.getThreadID());
+                    bean.setName(key.getThreadName());
+                    bean.setId(key.getThreadId());
                     
-                    bean.setWaitedCount(key.getWaitedCount());
-                    bean.setBlockedCount(key.getBlockedCount());
+                    bean.setWaitedCount(key.getThreadWaitCount());
+                    bean.setBlockedCount(key.getThreadBlockedCount());
                     
                     // get start time and stop time, if any
                     List<ThreadInfoData> beanList = stats.get(key);
@@ -149,7 +149,7 @@ public class ThreadTableController implements CommonController {
                     double monitor = 0;
                     double sleeping = 0;
                     for (ThreadInfoData info : beanList) {
-                        State state = info.getState();
+                        State state = info.getThreadState();
                         switch (state) {
                         case RUNNABLE:
                             running++;

@@ -91,6 +91,7 @@ public class HeapDAOTest {
     @Before
     public void setUp() throws IOException {
         storage = mock(Storage.class);
+        when(storage.getAgentId()).thenReturn("test");
         when(storage.createQuery()).then(new Answer<Query>() {
             @Override
             public Query answer(InvocationOnMock invocation) throws Throwable {
@@ -101,7 +102,6 @@ public class HeapDAOTest {
         dao = new HeapDAOImpl(storage);
         
         heapInfo = new HeapInfo(123, 12345);
-        heapInfo.setHeapId("987-123-12345");
         byte[] data = new byte[] { 1, 2, 3 };
         heapDumpData = File.createTempFile("test", "test");
         FileOutputStream out = new FileOutputStream(heapDumpData);
@@ -139,26 +139,6 @@ public class HeapDAOTest {
         when(storage.loadFile("test-histo")).thenReturn(histogramData);
 
         // We dont check for AGENT_ID. That's enforced/added/checked by Storage
-
-        // Prepare queries for read-back of _id in putHeapInfo() tests.
-        MockQuery heap1query = new MockQuery()
-            .from(HeapDAO.heapInfoCategory)
-            .where(Key.VM_ID, Criteria.EQUALS, 123)
-            .where(Key.TIMESTAMP, Criteria.EQUALS, 12345l)
-            .where(HeapDAO.heapDumpIdKey, Criteria.EQUALS, "heapdump-987-123-12345")
-            .where(HeapDAO.histogramIdKey, Criteria.EQUALS, "histogram-987-123-12345");
-        Chunk heap1 = new Chunk(HeapDAO.heapInfoCategory, false);
-        heap1.put(Key.ID, "id1");
-        when(storage.find(heap1query)).thenReturn(heap1);
-
-        MockQuery heap2query = new MockQuery()
-            .from(HeapDAO.heapInfoCategory)
-            .where(Key.VM_ID, Criteria.EQUALS, 123)
-            .where(Key.TIMESTAMP, Criteria.EQUALS, 12345l);
-
-        Chunk heap2 = new Chunk(HeapDAO.heapInfoCategory, false);
-        heap2.put(Key.ID, "id2");
-        when(storage.find(heap2query)).thenReturn(heap2);
 
     }
 
@@ -207,34 +187,30 @@ public class HeapDAOTest {
         assertEquals("vm-heap-info", category.getName());
         Collection<Key<?>> keys = category.getKeys();
         assertEquals(6, keys.size());
-        assertTrue(keys.contains(new Key<>("_id", false)));
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
-        assertTrue(keys.contains(new Key<>("vm-id", true)));
-        assertTrue(keys.contains(new Key<>("timestamp", false)));
-        assertTrue(keys.contains(new Key<>("heap-dump-id", false)));
-        assertTrue(keys.contains(new Key<>("histogram-id", false)));
+        assertTrue(keys.contains(new Key<>("agentId", true)));
+        assertTrue(keys.contains(new Key<>("vmId", true)));
+        assertTrue(keys.contains(new Key<>("timeStamp", false)));
+        assertTrue(keys.contains(new Key<>("heapId", false)));
+        assertTrue(keys.contains(new Key<>("heapDumpId", false)));
+        assertTrue(keys.contains(new Key<>("histogramId", false)));
     }
 
     @Test
     public void testPutHeapInfo() throws IOException {
         dao.putHeapInfo(heapInfo, heapDumpData, histogram);
 
-        Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
-        expectedChunk.put(Key.VM_ID, 123);
-        expectedChunk.put(Key.TIMESTAMP, 12345L);
-        expectedChunk.put(HeapDAO.heapDumpIdKey, "heapdump-987-123-12345");
-        expectedChunk.put(HeapDAO.histogramIdKey, "histogram-987-123-12345");
-        verify(storage).putChunk(expectedChunk);
+        verify(storage).putPojo(HeapDAO.heapInfoCategory, false, heapInfo);
+
         ArgumentCaptor<InputStream> data = ArgumentCaptor.forClass(InputStream.class);
-        verify(storage).saveFile(eq("heapdump-987-123-12345"), data.capture());
+        verify(storage).saveFile(eq("heapdump-test-123-12345"), data.capture());
         InputStream in = data.getValue();
         assertEquals(1, in.read());
         assertEquals(2, in.read());
         assertEquals(3, in.read());
         assertEquals(-1, in.read());
-        assertEquals("id1", heapInfo.getHeapId());
+        assertEquals("test-123-12345", heapInfo.getHeapId());
         ArgumentCaptor<InputStream> histoStream = ArgumentCaptor.forClass(InputStream.class);
-        verify(storage).saveFile(eq("histogram-987-123-12345"), histoStream.capture());
+        verify(storage).saveFile(eq("histogram-test-123-12345"), histoStream.capture());
         InputStream histoActual = histoStream.getValue();
         int expected;
         int actual;
@@ -249,13 +225,10 @@ public class HeapDAOTest {
     public void testPutHeapInfoWithoutDump() throws IOException {
         dao.putHeapInfo(heapInfo, null, null);
 
-        Chunk expectedChunk = new Chunk(HeapDAO.heapInfoCategory, false);
-        expectedChunk.put(Key.VM_ID, 123);
-        expectedChunk.put(Key.TIMESTAMP, 12345L);
+        verify(storage).putPojo(HeapDAO.heapInfoCategory, false, heapInfo);
 
-        verify(storage).putChunk(expectedChunk);
         verify(storage, never()).saveFile(anyString(), any(InputStream.class));
-        assertEquals("id2", heapInfo.getHeapId());
+        assertEquals("test-123-12345", heapInfo.getHeapId());
     }
 
     @Test

@@ -74,11 +74,10 @@ public class ThreadHarvesterTest {
         
         ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
             @Override
-            Harvester getHarvester(String vmId, String agentId) {
+            Harvester getHarvester(String vmId) {
                 
                 getHarvesterCalled[0] = true;
                 assertEquals("42", vmId);
-                assertEquals("0xcafe", agentId);
                 
                 return harverster;
             }
@@ -87,11 +86,10 @@ public class ThreadHarvesterTest {
         threadHarvester.receive(request);
         
         List<String> values = captor.getAllValues();
-        assertEquals(3, values.size());
+        assertEquals(2, values.size());
         
         assertEquals(HarvesterCommand.class.getName(), values.get(0));
         assertEquals(HarvesterCommand.VM_ID.name(), values.get(1));
-        assertEquals(HarvesterCommand.AGENT_ID.name(), values.get(2));
         
         assertTrue(getHarvesterCalled[0]);
         
@@ -145,11 +143,10 @@ public class ThreadHarvesterTest {
         
         ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
             @Override
-            Harvester getHarvester(String vmId, String agentId) {
+            Harvester getHarvester(String vmId) {
                 
                 getHarvesterCalled[0] = true;
                 assertEquals("42", vmId);
-                assertEquals("0xcafe", agentId);
                 
                 return harverster;
             }
@@ -158,11 +155,10 @@ public class ThreadHarvesterTest {
         threadHarvester.receive(request);
         
         List<String> values = captor.getAllValues();
-        assertEquals(3, values.size());
+        assertEquals(2, values.size());
         
         assertEquals(HarvesterCommand.class.getName(), values.get(0));
         assertEquals(HarvesterCommand.VM_ID.name(), values.get(1));
-        assertEquals(HarvesterCommand.AGENT_ID.name(), values.get(2));
         
         assertTrue(getHarvesterCalled[0]);
         

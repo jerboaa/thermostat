@@ -131,12 +131,12 @@ public class HostCpuController {
         List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats(ref);
         List<List<DiscreteTimeData<Double>>> results = new ArrayList<>();
         for (CpuStat stat : cpuStats) {
-            double[] data = stat.getPerProcessorUsage();
-            for (int i = 0 ; i < data.length; i++) {
+            List<Double> data = stat.getPerProcessorUsage();
+            for (int i = 0 ; i < data.size(); i++) {
                 if (results.size() == i) {
                     results.add(new ArrayList<DiscreteTimeData<Double>>());
                 }
-                results.get(i).add(new DiscreteTimeData<Double>(stat.getTimeStamp(), stat.getPerProcessorUsage()[i]));
+                results.get(i).add(new DiscreteTimeData<Double>(stat.getTimeStamp(), data.get(i)));
             }
         }
 

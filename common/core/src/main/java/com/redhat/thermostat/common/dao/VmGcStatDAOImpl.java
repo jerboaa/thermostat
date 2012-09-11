@@ -67,7 +67,7 @@ class VmGcStatDAOImpl implements VmGcStatDAO {
 
     @Override
     public void putVmGcStat(VmGcStat stat) {
-        storage.putChunk(converter.toChunk(stat));
+        storage.putPojo(vmGcStatCategory, false, stat);
     }
 
 }

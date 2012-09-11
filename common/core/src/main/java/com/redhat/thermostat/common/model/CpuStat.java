@@ -36,24 +36,42 @@
 
 package com.redhat.thermostat.common.model;
 
+import java.util.List;
+
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
 public class CpuStat implements TimeStampedPojo {
 
     public static final double INVALID_LOAD = Double.MIN_VALUE;
 
-    private final long timeStamp;
-    private final double[] perProcessorUsage;
+    private long timeStamp;
+    private List<Double> perProcessorUsage;
 
-    public CpuStat(long timestamp, double[] perProcessorUsage) {
+    public CpuStat(long timestamp, List<Double> perProcessorUsage) {
         this.timeStamp = timestamp;
         this.perProcessorUsage = perProcessorUsage;
     }
 
-    public double[] getPerProcessorUsage() {
+    @Persist
+    public List<Double> getPerProcessorUsage() {
         return perProcessorUsage;
     }
 
+    @Persist
+    public void setPerProcessorUsage(List<Double> perProcessorUsage) {
+        this.perProcessorUsage = perProcessorUsage;
+    }
+
+    @Persist
     @Override
     public long getTimeStamp() {
         return timeStamp;
+    }
+
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }

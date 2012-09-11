@@ -36,13 +36,23 @@
 
 package com.redhat.thermostat.common.dao;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Category;
@@ -50,21 +60,10 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.utils.ArrayUtils;
 import com.redhat.thermostat.test.MockQuery;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class HostLatestPojoListGetterTest {
     private static final String AGENT_ID = "agentid";
@@ -182,10 +181,10 @@ public class HostLatestPojoListGetterTest {
         assertEquals(2, stats.size());
         CpuStat stat1 = stats.get(0);
         assertEquals(t1, stat1.getTimeStamp());
-        assertArrayEquals(new double[] {load5_1, load10_1, load15_1}, stat1.getPerProcessorUsage(), 0.001);
+        assertArrayEquals(new double[] {load5_1, load10_1, load15_1}, ArrayUtils.toPrimitiveDoubleArray(stat1.getPerProcessorUsage()), 0.001);
         CpuStat stat2 = stats.get(1);
         assertEquals(t2, stat2.getTimeStamp());
-        assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, stat2.getPerProcessorUsage(), 0.001);
+        assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, ArrayUtils.toPrimitiveDoubleArray(stat2.getPerProcessorUsage()), 0.001);
     }
 
     @Test

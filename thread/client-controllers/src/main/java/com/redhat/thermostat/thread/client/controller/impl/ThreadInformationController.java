@@ -143,15 +143,15 @@ public class ThreadInformationController implements VmInformationServiceControll
             // load the very latest thread summary
             ThreadSummary latestSummary = collector.getLatestThreadSummary();
             if (latestSummary.getTimeStamp() != 0) {
-                view.setLiveThreads(Long.toString(latestSummary.currentLiveThreads()));
-                view.setDaemonThreads(Long.toString(latestSummary.currentDaemonThreads()));
+                view.setLiveThreads(Long.toString(latestSummary.getCurrentLiveThreads()));
+                view.setDaemonThreads(Long.toString(latestSummary.getCurrentDaemonThreads()));
             }
             
             long lastHour = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
             List<ThreadSummary> summaries = collector.getThreadSummary(lastHour);
             if (summaries.size() != 0) {
                 for (ThreadSummary summary : summaries) {
-                    model.addData(summary.getTimeStamp(), summary.currentLiveThreads(), summary.currentDaemonThreads());
+                    model.addData(summary.getTimeStamp(), summary.getCurrentLiveThreads(), summary.getCurrentDaemonThreads());
                 }
                 view.updateLivingDaemonTimeline(model);
             }

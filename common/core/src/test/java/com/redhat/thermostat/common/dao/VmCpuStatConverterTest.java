@@ -58,8 +58,8 @@ public class VmCpuStatConverterTest {
         assertNotNull(chunk);
         assertEquals("vm-cpu-stats", chunk.getCategory().getName());
         assertEquals((Long)TIMESTAMP, chunk.get(Key.TIMESTAMP));
-        assertEquals((Integer) VM_ID, chunk.get(new Key<Long>("vm-id", true)));
-        assertEquals(PROCESSOR_USAGE, chunk.get(new Key<Double>("processor-usage", false)), 0.001);
+        assertEquals((Integer) VM_ID, chunk.get(new Key<Long>("vmId", true)));
+        assertEquals(PROCESSOR_USAGE, chunk.get(new Key<Double>("cpuLoad", false)), 0.001);
 
     }
 

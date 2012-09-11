@@ -86,10 +86,10 @@ public class VmCpuStatDAOTest {
     public void testCategory() {
         assertEquals("vm-cpu-stats", VmCpuStatDAO.vmCpuStatCategory.getName());
         Collection<Key<?>> keys = VmCpuStatDAO.vmCpuStatCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
-        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
-        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
-        assertTrue(keys.contains(new Key<Integer>("processor-usage", false)));
+        assertTrue(keys.contains(new Key<>("agentId", true)));
+        assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
+        assertTrue(keys.contains(new Key<Integer>("vmId", true)));
+        assertTrue(keys.contains(new Key<Integer>("cpuLoad", false)));
         assertEquals(4, keys.size());
     }
 
@@ -170,13 +170,7 @@ public class VmCpuStatDAOTest {
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         dao.putVmCpuStat(stat);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(arg.capture());
-        Chunk chunk = arg.getValue();
+        verify(storage).putPojo(VmCpuStatDAO.vmCpuStatCategory, false, stat);
 
-        assertEquals(VmCpuStatDAO.vmCpuStatCategory, chunk.getCategory());
-        assertEquals(TIMESTAMP, chunk.get(Key.TIMESTAMP));
-        assertEquals(VM_ID, chunk.get(Key.VM_ID));
-        assertEquals(CPU_LOAD, chunk.get(VmCpuStatDAO.vmCpuLoadKey));
     }
 }

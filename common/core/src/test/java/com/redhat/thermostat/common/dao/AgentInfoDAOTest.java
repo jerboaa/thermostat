@@ -83,11 +83,11 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyKeyNames() {
-        assertEquals("agent-id", Key.AGENT_ID.getName());
+        assertEquals("agentId", Key.AGENT_ID.getName());
         assertEquals("alive", AgentInfoDAO.ALIVE_KEY.getName());
-        assertEquals("start-time", AgentInfoDAO.START_TIME_KEY.getName());
-        assertEquals("stop-time", AgentInfoDAO.STOP_TIME_KEY.getName());
-        assertEquals("config-listen-address", AgentInfoDAO.CONFIG_LISTEN_ADDRESS.getName());
+        assertEquals("startTime", AgentInfoDAO.START_TIME_KEY.getName());
+        assertEquals("stopTime", AgentInfoDAO.STOP_TIME_KEY.getName());
+        assertEquals("configListenAddress", AgentInfoDAO.CONFIG_LISTEN_ADDRESS.getName());
     }
 
     @Test
@@ -187,13 +187,8 @@ public class AgentInfoDAOTest {
 
         dao.addAgentInformation(agentInfo1);
 
-        ArgumentCaptor<Chunk> chunkCaptor = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(chunkCaptor.capture());
+        verify(storage).putPojo(AgentInfoDAO.CATEGORY, true, agentInfo1);
 
-        Chunk insertedChunk = chunkCaptor.getValue();
-        Chunk expectedChunk = agentChunk1;
-
-        assertEquals(expectedChunk, insertedChunk);
     }
 
     @Test

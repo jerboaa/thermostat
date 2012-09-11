@@ -7,7 +7,6 @@ public enum HarvesterCommand {
     VM_CAPS,
     IS_COLLECTING,
     
-    AGENT_ID,
     VM_ID;
 
     public static final String RECEIVER = "com.redhat.thermostat.thread.harvester.ThreadHarvester";

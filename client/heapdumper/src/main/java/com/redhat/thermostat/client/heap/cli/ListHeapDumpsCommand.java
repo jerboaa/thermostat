@@ -121,7 +121,7 @@ public class ListHeapDumpsCommand extends SimpleCommand {
             renderer.printLine(hostRef.getStringID(),
                                vmRef.getStringID(),
                                info.getHeapId(),
-                               new Date(info.getTimestamp()).toString());
+                               new Date(info.getTimeStamp()).toString());
         }
     }
 

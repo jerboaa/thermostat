@@ -45,11 +45,11 @@ import com.redhat.thermostat.common.storage.Key;
 public interface HostInfoDAO extends Countable {
 
     static Key<String> hostNameKey = new Key<>("hostname", true);
-    static Key<String> osNameKey = new Key<>("os_name", false);
-    static Key<String> osKernelKey = new Key<>("os_kernel", false);
-    static Key<Integer> cpuCountKey = new Key<>("cpu_num", false);
-    static Key<String> cpuModelKey = new Key<>("cpu_model", false);
-    static Key<Long> hostMemoryTotalKey = new Key<>("memory_total", false);
+    static Key<String> osNameKey = new Key<>("osName", false);
+    static Key<String> osKernelKey = new Key<>("osKernel", false);
+    static Key<Integer> cpuCountKey = new Key<>("cpuCount", false);
+    static Key<String> cpuModelKey = new Key<>("cpuModel", false);
+    static Key<Long> hostMemoryTotalKey = new Key<>("totalMemory", false);
 
     static final Category hostInfoCategory = new Category("host-info",
             Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,

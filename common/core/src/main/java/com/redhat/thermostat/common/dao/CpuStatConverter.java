@@ -41,7 +41,6 @@ import java.util.List;
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.utils.ArrayUtils;
 
 public class CpuStatConverter implements Converter<CpuStat> {
 
@@ -49,7 +48,7 @@ public class CpuStatConverter implements Converter<CpuStat> {
     public Chunk toChunk(CpuStat cpuStat) {
         Chunk chunk = new Chunk(CpuStatDAO.cpuStatCategory, false);
         chunk.put(Key.TIMESTAMP, cpuStat.getTimeStamp());
-        List<Double> objectArray = ArrayUtils.toDoubleList(cpuStat.getPerProcessorUsage());
+        List<Double> objectArray = cpuStat.getPerProcessorUsage();
         chunk.put(CpuStatDAO.cpuLoadKey, objectArray);
         return chunk;
     }
@@ -58,7 +57,6 @@ public class CpuStatConverter implements Converter<CpuStat> {
     public CpuStat fromChunk(Chunk chunk) {
         long timestamp = chunk.get(Key.TIMESTAMP);
         List<Double> loads = chunk.get(CpuStatDAO.cpuLoadKey);
-        double[] load = ArrayUtils.toPrimitiveDoubleArray(loads);
-        return new CpuStat(timestamp, load);
+        return new CpuStat(timestamp, loads);
     }
 }

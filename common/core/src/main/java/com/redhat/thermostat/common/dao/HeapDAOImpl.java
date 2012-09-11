@@ -72,25 +72,19 @@ class HeapDAOImpl implements HeapDAO {
 
     @Override
     public void putHeapInfo(HeapInfo heapInfo, File heapDumpData, ObjectHistogram histogramData) throws IOException {
-        int vmId = heapInfo.getVmId();
-        Chunk chunk = new Chunk(heapInfoCategory, false);
-
-        // We dont add a Key.AGENT_ID here explicitly. Storage takes care of that.
-
-        chunk.put(Key.VM_ID, vmId);
-        chunk.put(Key.TIMESTAMP, heapInfo.getTimestamp());
-        String id = heapInfo.getHeapId();
-        String heapDumpId = "heapdump-" + id;
-        String histogramId = "histogram-" + id;
+        heapInfo.setAgentId(storage.getAgentId());
+        String heapId = heapInfo.getAgentId() + "-" + heapInfo.getVmId() + "-" + heapInfo.getTimeStamp();
+        System.err.println("assigning heapId: " + heapId);
+        heapInfo.setHeapId(heapId);
+        String heapDumpId = "heapdump-" + heapId;
+        String histogramId = "histogram-" + heapId;
         if (heapDumpData != null) {
-            chunk.put(heapDumpIdKey, heapDumpId);
             heapInfo.setHeapDumpId(heapDumpId);
         }
         if (histogramData != null) {
-            chunk.put(histogramIdKey, histogramId);
             heapInfo.setHistogramId(histogramId);
         }
-        storage.putChunk(chunk);
+        storage.putPojo(heapInfoCategory, false, heapInfo);
         if (heapDumpData != null) {
             storage.saveFile(heapDumpId, new FileInputStream(heapDumpData));
         }
@@ -106,20 +100,6 @@ class HeapDAOImpl implements HeapDAO {
                 log.log(Level.SEVERE, "Unexpected error while writing histogram", e);
             }
         }
-
-        Query justInsertedHeap = storage.createQuery()
-                .from(heapInfoCategory)
-                .where(Key.VM_ID, Criteria.EQUALS, vmId)
-                .where(Key.TIMESTAMP, Criteria.EQUALS, heapInfo.getTimestamp());
-        if (heapDumpData != null) {
-            justInsertedHeap.where(heapDumpIdKey, Criteria.EQUALS, heapDumpId);
-        }
-        if (histogramData != null) {
-            justInsertedHeap.where(histogramIdKey, Criteria.EQUALS, histogramId);
-        }
-
-        Chunk entry = storage.find(justInsertedHeap);
-        heapInfo.setHeapId(entry.get(Key.ID));
     }
 
     @Override
@@ -138,8 +118,10 @@ class HeapDAOImpl implements HeapDAO {
 
     private HeapInfo convertChunkToHeapInfo(VmRef vm, Chunk chunk) {
         int vmId = chunk.get(Key.VM_ID);
+        String agentId = chunk.get(Key.AGENT_ID);
         HeapInfo info = new HeapInfo(vmId, chunk.get(Key.TIMESTAMP));
-        info.setHeapId(chunk.get(Key.ID));
+        info.setAgentId(agentId);
+        info.setHeapId(chunk.get(HeapDAO.heapIdKey));
         info.setHeapDumpId(chunk.get(HeapDAO.heapDumpIdKey));
         info.setHistogramId(chunk.get(HeapDAO.histogramIdKey));
         return info;
@@ -166,7 +148,7 @@ class HeapDAOImpl implements HeapDAO {
     public HeapInfo getHeapInfo(String heapId) {
         Query query = storage.createQuery()
                 .from(heapInfoCategory)
-                .where(Key.ID, Criteria.EQUALS, heapId);
+                .where(heapIdKey, Criteria.EQUALS, heapId);
         Chunk found = null;
         try {
             found = storage.find(query);

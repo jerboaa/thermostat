@@ -56,9 +56,9 @@ public class NetworkInterfaceInfoConverterTest {
         Chunk chunk = new NetworkInterfaceInfoConverter().toChunk(info);
 
         assertEquals("network-info", chunk.getCategory().getName());
-        assertEquals("eth0", chunk.get(new Key<String>("iface", true)));
-        assertEquals("4", chunk.get(new Key<String>("ipv4addr", false)));
-        assertEquals("6", chunk.get(new Key<String>("ipv6addr", false)));
+        assertEquals("eth0", chunk.get(new Key<String>("interfaceName", true)));
+        assertEquals("4", chunk.get(new Key<String>("ip4Addr", false)));
+        assertEquals("6", chunk.get(new Key<String>("ip6Addr", false)));
 
     }
 

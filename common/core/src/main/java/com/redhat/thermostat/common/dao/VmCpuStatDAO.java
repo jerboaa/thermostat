@@ -44,7 +44,7 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface VmCpuStatDAO {
 
-    static final Key<Double> vmCpuLoadKey = new Key<>("processor-usage", false);
+    static final Key<Double> vmCpuLoadKey = new Key<>("cpuLoad", false);
 
     static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey);

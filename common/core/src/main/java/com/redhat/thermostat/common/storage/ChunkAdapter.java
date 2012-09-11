@@ -54,12 +54,19 @@ public class ChunkAdapter extends Chunk {
     private final Object adaptee;
 
     public ChunkAdapter(Object obj) {
-        super();
-
-        checkForAnnotation(obj);
+        this(obj, null, false);
         Set<Key<?>> keys = identifyKeys(obj);
         category = createCategory(obj, keys);
+    }
+
+    public ChunkAdapter(Object obj, Category category, boolean replace) {
+        super(category, replace);
+        checkForAnnotation(obj);
         adaptee = obj;
+    }
+
+    public Object getAdaptee() {
+        return adaptee;
     }
 
     private void checkForAnnotation(Object toCheck) {

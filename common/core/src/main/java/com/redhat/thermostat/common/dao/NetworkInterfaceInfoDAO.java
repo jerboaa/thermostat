@@ -44,12 +44,12 @@ import com.redhat.thermostat.common.storage.Key;
 
 public interface NetworkInterfaceInfoDAO {
 
-    static Key<String> ifaceKey = new Key<>("iface", true);
-    static Key<String> ip4AddrKey = new Key<>("ipv4addr", false);
-    static Key<String> ip6AddrKey = new Key<>("ipv6addr", false);
+    static Key<String> ifaceKey = new Key<>("interfaceName", true);
+    static Key<String> ip4AddrKey = new Key<>("ip4Addr", false);
+    static Key<String> ip6AddrKey = new Key<>("ip6Addr", false);
 
     static final Category networkInfoCategory = new Category("network-info",
-            Key.AGENT_ID, Key.TIMESTAMP, ifaceKey, ip4AddrKey, ip6AddrKey);
+            Key.AGENT_ID, ifaceKey, ip4AddrKey, ip6AddrKey);
 
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref);
 

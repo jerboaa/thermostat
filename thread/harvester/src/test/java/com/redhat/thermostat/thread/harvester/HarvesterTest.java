@@ -37,17 +37,16 @@
 package com.redhat.thermostat.thread.harvester;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.anyString;
-import static org.mockito.Mockito.doNothing;
-
-import static org.junit.Assert.*;
 
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
@@ -86,7 +85,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "42", "0xcafe") {
+        Harvester harvester = new Harvester(dao, executor, "42") {
             { connector = mockedConnector; }
             @Override
             synchronized void harvestData() {
@@ -132,7 +131,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(arg0.capture(), arg1.capture(), arg2.capture(), arg3.capture())).thenReturn(null);
         
-        Harvester harvester = new Harvester(dao, executor, "42", "0xcafe") {
+        Harvester harvester = new Harvester(dao, executor, "42") {
             { connector = mockedConnector; }
             @Override
             synchronized void harvestData() {
@@ -179,7 +178,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "42", "0xcafe")
+        Harvester harvester = new Harvester(dao, executor, "42")
         {{ connector = mockedConnector; }};
         
         harvester.start();
@@ -220,7 +219,7 @@ public class HarvesterTest {
         
         when(executor.scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class))).thenReturn(future);
         
-        Harvester harvester = new Harvester(dao, executor, "42", "0xcafe")
+        Harvester harvester = new Harvester(dao, executor, "42")
         {{ connector = mockedConnector; }};
         
         harvester.start();
@@ -255,7 +254,7 @@ public class HarvesterTest {
         when(mockedConnector.connect()).thenReturn(connection);
         when(mockedConnector.isAttached()).thenReturn(true);
         
-        Harvester harvester = new Harvester(dao, executor, "42", "0xcafe")
+        Harvester harvester = new Harvester(dao, executor, "42")
         {{ connector = mockedConnector; }};
         
         verify(executor, times(0)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
@@ -292,17 +291,13 @@ public class HarvesterTest {
                 
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
 
-        ArgumentCaptor<String> vmCapture = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> agentCapture = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<ThreadSummary> summaryCapture = ArgumentCaptor.forClass(ThreadSummary.class);
 
         ThreadDao dao = mock(ThreadDao.class);
-        doNothing().when(dao).saveSummary(vmCapture.capture(), agentCapture.capture(), summaryCapture.capture());
-        
-        ArgumentCaptor<String> vmCapture2 = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> agentCapture2 = ArgumentCaptor.forClass(String.class);
+        doNothing().when(dao).saveSummary(summaryCapture.capture());
+
         ArgumentCaptor<ThreadInfoData> threadInfoCapture = ArgumentCaptor.forClass(ThreadInfoData.class);        
-        doNothing().when(dao).saveThreadInfo(vmCapture2.capture(), agentCapture2.capture(), threadInfoCapture.capture());
+        doNothing().when(dao).saveThreadInfo(threadInfoCapture.capture());
 
         final ThreadMXBean collectorBean = mock(ThreadMXBean.class);
 
@@ -312,7 +307,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "42", "0xcafe") {
+        Harvester harvester = new Harvester(dao, executor, "42") {
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
                     throws MalformedObjectNameException {
@@ -327,27 +322,22 @@ public class HarvesterTest {
         
         verify(collectorBean).getThreadInfo(ids, true, true);
         
-        verify(dao).saveSummary(anyString(), anyString(), any(ThreadSummary.class));
+        verify(dao).saveSummary(any(ThreadSummary.class));
         
         // once for each thread info
-        verify(dao, times(2)).saveThreadInfo(anyString(), anyString(), any(ThreadInfoData.class));
+        verify(dao, times(2)).saveThreadInfo(any(ThreadInfoData.class));
         
-        assertEquals(42, summaryCapture.getValue().currentLiveThreads());
-        assertEquals("42", vmCapture.getValue());
-        assertEquals("0xcafe", agentCapture.getValue());
+        assertEquals(42, summaryCapture.getValue().getCurrentLiveThreads());
+        assertEquals(42, summaryCapture.getValue().getVmId());
         
-        assertEquals(42, summaryCapture.getValue().currentLiveThreads());
-        assertEquals("42", vmCapture2.getAllValues().get(0));
-        assertEquals("42", vmCapture2.getAllValues().get(1));
+        assertEquals(42, summaryCapture.getValue().getCurrentLiveThreads());
+        assertEquals(42, summaryCapture.getValue().getVmId());
 
-        assertEquals("0xcafe", agentCapture2.getAllValues().get(0));
-        assertEquals("0xcafe", agentCapture2.getAllValues().get(1));
-        
         List<ThreadInfoData> threadInfos = threadInfoCapture.getAllValues();
         assertEquals(2, threadInfos.size());
         
-        assertEquals("fluff1", threadInfos.get(0).getName());
-        assertEquals("fluff2", threadInfos.get(1).getName());
+        assertEquals("fluff1", threadInfos.get(0).getThreadName());
+        assertEquals("fluff2", threadInfos.get(1).getThreadName());
         
         verify(collectorBean, times(1)).getThreadCpuTime(1l);
         verify(collectorBean, times(1)).getThreadCpuTime(2l);
@@ -361,12 +351,10 @@ public class HarvesterTest {
         
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
 
-        ArgumentCaptor<String> vmCapture = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<String> agentCapture = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<VMThreadCapabilities> capsCapture = ArgumentCaptor.forClass(VMThreadCapabilities.class);
 
         ThreadDao dao = mock(ThreadDao.class);
-        doNothing().when(dao).saveCapabilities(vmCapture.capture(), agentCapture.capture(), capsCapture.capture());
+        doNothing().when(dao).saveCapabilities(capsCapture.capture());
       
         final ThreadMXBean collectorBean = mock(ThreadMXBean.class);
         when(collectorBean.isThreadCpuTimeSupported()).thenReturn(true);
@@ -374,7 +362,7 @@ public class HarvesterTest {
 
         final boolean [] getDataCollectorBeanCalled = new boolean[1];
         
-        Harvester harvester = new Harvester(dao, executor, "42", "0xcafe") {
+        Harvester harvester = new Harvester(dao, executor, "42") {
             { connector = mockedConnector; }
             @Override
             ThreadMXBean getDataCollectorBean(MXBeanConnection connection)
@@ -387,9 +375,8 @@ public class HarvesterTest {
         harvester.saveVmCaps();
         assertTrue(getDataCollectorBeanCalled[0]);
         
-        verify(dao, times(1)).saveCapabilities(anyString(), anyString(), any(VMThreadCapabilities.class));
-        assertEquals("42", vmCapture.getValue());
-        assertEquals("0xcafe", agentCapture.getValue());
+        verify(dao, times(1)).saveCapabilities(any(VMThreadCapabilities.class));
+        assertEquals(42, capsCapture.getValue().getVmId());
 
         List<String> features = capsCapture.getValue().getSupportedFeaturesList();
         assertEquals(2, features.size());

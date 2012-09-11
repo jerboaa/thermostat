@@ -63,7 +63,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
         Query findMatchingVm = storage.createQuery()
                 .from(vmInfoCategory)
                 .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
-                .where(vmIdKey, Criteria.EQUALS, ref.getId());
+                .where(Key.VM_ID, Criteria.EQUALS, ref.getId());
         Chunk result = storage.find(findMatchingVm);
         if (result == null) {
             throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
@@ -98,7 +98,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
     }
 
     private VmRef buildVmRefFromChunk(Chunk vmChunk, HostRef host) {
-        Integer id = vmChunk.get(vmIdKey);
+        Integer id = vmChunk.get(Key.VM_ID);
         // TODO can we do better than the main class?
         String mainClass = vmChunk.get(mainClassKey);
         VmRef ref = new VmRef(host, id, mainClass);
@@ -112,7 +112,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmInfo(VmInfo info) {
-        storage.putChunk(converter.toChunk(info));
+        storage.putPojo(vmInfoCategory, true, info);
     }
 
     @Override
@@ -122,7 +122,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     private Chunk makeStoppedChunk(int vmId, long stopTimeStamp) {
         Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        chunk.put(VmInfoDAO.vmIdKey, vmId);
+        chunk.put(Key.VM_ID, vmId);
         chunk.put(VmInfoDAO.stopTimeKey, stopTimeStamp);
         return chunk;
     }

@@ -38,7 +38,6 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -73,9 +72,9 @@ public class VmClassStatDAOTest {
     public void testCategory() {
         assertEquals("vm-class-stats", VmClassStatDAO.vmClassStatsCategory.getName());
         Collection<Key<?>> keys = VmClassStatDAO.vmClassStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
-        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
-        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
+        assertTrue(keys.contains(new Key<>("agentId", true)));
+        assertTrue(keys.contains(new Key<Integer>("vmId", true)));
+        assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
         assertTrue(keys.contains(new Key<Long>("loadedClasses", false)));
         assertEquals(4, keys.size());
 
@@ -172,13 +171,6 @@ public class VmClassStatDAOTest {
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         dao.putVmClassStat(stat);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(arg.capture());
-        Chunk chunk = arg.getValue();
-
-        assertEquals(VmClassStatDAO.vmClassStatsCategory, chunk.getCategory());
-        assertEquals(TIMESTAMP, chunk.get(Key.TIMESTAMP));
-        assertEquals(VM_ID, chunk.get(Key.VM_ID));
-        assertEquals(LOADED_CLASSES, chunk.get(VmClassStatDAO.loadedClassesKey));
+        verify(storage).putPojo(VmClassStatDAO.vmClassStatsCategory, false, stat);
     }
 }

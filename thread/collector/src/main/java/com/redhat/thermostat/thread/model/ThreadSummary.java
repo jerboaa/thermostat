@@ -37,36 +37,56 @@
 package com.redhat.thermostat.thread.model;
 
 import com.redhat.thermostat.common.model.TimeStampedPojo;
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 
 
+@Entity
 public class ThreadSummary implements TimeStampedPojo {
 
+    private int vmId;
     private long currentLiveThreads;
     private long daemonThreads;
     
     private long timestamp;
 
-    public long currentLiveThreads() {
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
+    public int getVmId() {
+        return vmId;
+    }
+
+    @Persist
+    public long getCurrentLiveThreads() {
         return currentLiveThreads;
     }
     
+    @Persist
     public void setCurrentLiveThreads(long currentLiveThreads) {
         this.currentLiveThreads = currentLiveThreads;
     }
 
-    public long currentDaemonThreads() {
+    @Persist
+    public long getCurrentDaemonThreads() {
         return daemonThreads;
     }
     
-    public void setDaemonThreads(long daemonThreads) {
+    @Persist
+    public void setCurrentDaemonThreads(long daemonThreads) {
         this.daemonThreads = daemonThreads;
     }
 
+    @Persist
     public long getTimeStamp() {
         return timestamp;
     }
-    
-    public void setTimestamp(long timestamp) {
+
+    @Persist
+    public void setTimeStamp(long timestamp) {
         this.timestamp = timestamp;
     }
     

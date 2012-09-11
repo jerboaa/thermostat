@@ -43,9 +43,9 @@ package com.redhat.thermostat.common.storage;
 public class Key<T> {
 
     // Keys used by most Categories.
-    public static final Key<Long> TIMESTAMP = new Key<>("timestamp", false);
-    public static final Key<String> AGENT_ID = new Key<>("agent-id", true);
-    public static final Key<Integer> VM_ID = new Key<>("vm-id", true);
+    public static final Key<Long> TIMESTAMP = new Key<>("timeStamp", false);
+    public static final Key<String> AGENT_ID = new Key<>("agentId", true);
+    public static final Key<Integer> VM_ID = new Key<>("vmId", true);
     public static final Key<String> ID = new Key<>("_id", false);
 
     private String name;

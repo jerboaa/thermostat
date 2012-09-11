@@ -46,9 +46,10 @@ import java.util.Set;
  * that exists behind the storage layer.
  */
 public class Chunk {
-    private final boolean replace;
+    protected final boolean replace;
 
     protected Category category;
+
     private Map<Key<?>, Object> values = new LinkedHashMap<Key<?>, Object>();
 
     protected Chunk() {

@@ -53,12 +53,10 @@ class HostInfoDAOImpl implements HostInfoDAO {
     private Storage storage;
     private AgentInfoDAO agentInfoDao;
 
-    private HostInfoConverter converter;
 
     public HostInfoDAOImpl(Storage storage, AgentInfoDAO agentInfo) {
         this.storage = storage;
         this.agentInfoDao = agentInfo;
-        converter = new HostInfoConverter();
     }
 
     @Override
@@ -66,15 +64,15 @@ class HostInfoDAOImpl implements HostInfoDAO {
         Query query = storage.createQuery()
                 .from(hostInfoCategory)
                 .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
-        Chunk result = storage.find(query);
-        return result == null ? null : converter.fromChunk(result);
+        HostInfo result = storage.findPojo(query, HostInfo.class);
+        return result;
     }
 
     @Override
     public void putHostInfo(HostInfo info) {
-        storage.putChunk(converter.toChunk(info));
+        storage.putPojo(hostInfoCategory, false, info);
     }
-    
+
     @Override
     public Collection<HostRef> getHosts() {
         Query allHosts = storage.createQuery().from(hostInfoCategory);

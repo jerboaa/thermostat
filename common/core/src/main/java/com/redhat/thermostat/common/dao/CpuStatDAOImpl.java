@@ -67,7 +67,7 @@ class CpuStatDAOImpl implements CpuStatDAO {
 
     @Override
     public void putCpuStat(CpuStat stat) {
-        storage.putChunk(converter.toChunk(stat));
+        storage.putPojo(cpuStatCategory, false, stat);
     }
 
     @Override

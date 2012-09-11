@@ -94,7 +94,6 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         Request harvester = createRequest();
         harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
         harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
-        harvester.setParameter(HarvesterCommand.AGENT_ID.name(), ref.getAgent().getAgentId());
         
         final CountDownLatch latch = new CountDownLatch(1);
         final boolean[] result = new boolean[1];
@@ -227,7 +226,6 @@ public class ThreadMXBeanCollector implements ThreadCollector {
             Request harvester = createRequest();
             harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
             harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
-            harvester.setParameter(HarvesterCommand.AGENT_ID.name(), ref.getAgent().getAgentId());
             
             final CountDownLatch latch = new CountDownLatch(1);
             harvester.addListener(new RequestResponseListener() {

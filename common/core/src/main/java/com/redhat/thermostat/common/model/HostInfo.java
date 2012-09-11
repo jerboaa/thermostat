@@ -36,14 +36,22 @@
 
 package com.redhat.thermostat.common.model;
 
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
 public class HostInfo implements Pojo {
 
-    private final String hostname;
-    private final String osName;
-    private final String osKernel;
-    private final String cpuModel;
-    private final int cpuCount;
-    private final long totalMemory;
+    private String hostname;
+    private String osName;
+    private String osKernel;
+    private String cpuModel;
+    private int cpuCount;
+    private long totalMemory;
+
+    public HostInfo() {
+        this(null, null, null, null, -1, -1);
+    }
 
     public HostInfo(String hostname, String osName, String osKernel, String cpuModel, int cpuCount, long totalMemory) {
         this.hostname = hostname;
@@ -54,22 +62,57 @@ public class HostInfo implements Pojo {
         this.totalMemory = totalMemory;
     }
 
+    @Persist
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+
+    @Persist
+    public void setOsName(String osName) {
+        this.osName = osName;
+    }
+
+    @Persist
+    public void setOsKernel(String osKernel) {
+        this.osKernel = osKernel;
+    }
+
+    @Persist
+    public void setCpuModel(String cpuModel) {
+        this.cpuModel = cpuModel;
+    }
+
+    @Persist
+    public void setCpuCount(int cpuCount) {
+        this.cpuCount = cpuCount;
+    }
+
+    @Persist
+    public void setTotalMemory(long totalMemory) {
+        this.totalMemory = totalMemory;
+    }
+
+    @Persist
     public String getHostname() {
         return hostname;
     }
 
+    @Persist
     public String getOsName() {
         return osName;
     }
 
+    @Persist
     public String getOsKernel() {
         return osKernel;
     }
 
+    @Persist
     public String getCpuModel() {
         return cpuModel;
     }
 
+    @Persist
     public int getCpuCount() {
         return cpuCount;
     }
@@ -77,6 +120,7 @@ public class HostInfo implements Pojo {
     /**
      * Total memory in bytes
      */
+    @Persist
     public long getTotalMemory() {
         return totalMemory;
     }

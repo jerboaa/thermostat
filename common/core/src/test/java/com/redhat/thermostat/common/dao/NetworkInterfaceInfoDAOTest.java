@@ -71,12 +71,11 @@ public class NetworkInterfaceInfoDAOTest {
 
         assertEquals("network-info", NetworkInterfaceInfoDAO.networkInfoCategory.getName());
         keys = NetworkInterfaceInfoDAO.networkInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
-        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
-        assertTrue(keys.contains(new Key<String>("iface", true)));
-        assertTrue(keys.contains(new Key<String>("ipv4addr", false)));
-        assertTrue(keys.contains(new Key<String>("ipv6addr", false)));
-        assertEquals(5, keys.size());
+        assertTrue(keys.contains(new Key<>("agentId", true)));
+        assertTrue(keys.contains(new Key<String>("interfaceName", true)));
+        assertTrue(keys.contains(new Key<String>("ip4Addr", false)));
+        assertTrue(keys.contains(new Key<String>("ip6Addr", false)));
+        assertEquals(4, keys.size());
     }
 
     @Test
@@ -122,13 +121,6 @@ public class NetworkInterfaceInfoDAOTest {
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
         dao.putNetworkInterfaceInfo(info);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(arg.capture());
-        Chunk chunk = arg.getValue();
-
-        assertEquals(NetworkInterfaceInfoDAO.networkInfoCategory, chunk.getCategory());
-        assertEquals(INTERFACE_NAME, chunk.get(NetworkInterfaceInfoDAO.ifaceKey));
-        assertEquals(IPV4_ADDR, chunk.get(NetworkInterfaceInfoDAO.ip4AddrKey));
-        assertEquals(IPV6_ADDR, chunk.get(NetworkInterfaceInfoDAO.ip6AddrKey));
+        verify(storage).putPojo(NetworkInterfaceInfoDAO.networkInfoCategory, true, info);
     }
 }

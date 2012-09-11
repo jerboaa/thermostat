@@ -362,7 +362,7 @@ public class MongoStorageTest {
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
-        assertEquals("123", val.get("agent-id"));
+        assertEquals("123", val.get("agentId"));
     }
 
     @Test
@@ -376,7 +376,7 @@ public class MongoStorageTest {
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
-        assertEquals(new UUID(1, 2).toString(), val.get("agent-id"));
+        assertEquals(new UUID(1, 2).toString(), val.get("agentId"));
     }
 
     @Test

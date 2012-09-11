@@ -101,29 +101,29 @@ public class VmInfoDAOTest {
     public void testCategory() {
         assertEquals("vm-info", VmInfoDAO.vmInfoCategory.getName());
         Collection<Key<?>> keys = VmInfoDAO.vmInfoCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
-        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
-        assertTrue(keys.contains(new Key<Integer>("vm-pid", false)));
-        assertTrue(keys.contains(new Key<String>("runtime-version", false)));
-        assertTrue(keys.contains(new Key<String>("java-home", false)));
-        assertTrue(keys.contains(new Key<String>("main-class", false)));
-        assertTrue(keys.contains(new Key<String>("command-line", false)));
-        assertTrue(keys.contains(new Key<String>("vm-arguments", false)));
-        assertTrue(keys.contains(new Key<String>("vm-name", false)));
-        assertTrue(keys.contains(new Key<String>("vm-info", false)));
-        assertTrue(keys.contains(new Key<String>("vm-version", false)));
+        assertTrue(keys.contains(new Key<>("agentId", true)));
+        assertTrue(keys.contains(new Key<Integer>("vmId", true)));
+        assertTrue(keys.contains(new Key<Integer>("vmPid", false)));
+        assertTrue(keys.contains(new Key<String>("javaVersion", false)));
+        assertTrue(keys.contains(new Key<String>("javaHome", false)));
+        assertTrue(keys.contains(new Key<String>("mainClass", false)));
+        assertTrue(keys.contains(new Key<String>("javaCommandLine", false)));
+        assertTrue(keys.contains(new Key<String>("vmArguments", false)));
+        assertTrue(keys.contains(new Key<String>("vmName", false)));
+        assertTrue(keys.contains(new Key<String>("vmInfo", false)));
+        assertTrue(keys.contains(new Key<String>("vmVersion", false)));
         assertTrue(keys.contains(new Key<Map<String, String>>("properties", false)));
         assertTrue(keys.contains(new Key<Map<String, String>>("environment", false)));
-        assertTrue(keys.contains(new Key<List<String>>("libraries", false)));
-        assertTrue(keys.contains(new Key<Long>("start-time", false)));
-        assertTrue(keys.contains(new Key<Long>("stop-time", false)));
+        assertTrue(keys.contains(new Key<List<String>>("loadedNativeLibraries", false)));
+        assertTrue(keys.contains(new Key<Long>("startTimeStamp", false)));
+        assertTrue(keys.contains(new Key<Long>("stopTimeStamp", false)));
         assertEquals(16, keys.size());
     }
 
     @Test
     public void testGetVmInfo() {
         Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, true);
-        chunk.put(VmInfoDAO.vmIdKey, vmId);
+        chunk.put(Key.VM_ID, vmId);
         chunk.put(VmInfoDAO.vmPidKey, vmId);
         chunk.put(VmInfoDAO.startTimeKey, startTime);
         chunk.put(VmInfoDAO.stopTimeKey, stopTime);
@@ -212,7 +212,7 @@ public class VmInfoDAOTest {
           .where(Key.AGENT_ID, Criteria.EQUALS, "123");
 
       Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-      vm1.put(VmInfoDAO.vmIdKey, 123);
+      vm1.put(Key.VM_ID, 123);
       vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
 
       Cursor singleVMCursor = mock(Cursor.class);
@@ -243,11 +243,11 @@ public class VmInfoDAOTest {
           .where(Key.AGENT_ID, Criteria.EQUALS, "456");
 
       Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-      vm1.put(VmInfoDAO.vmIdKey, 123);
+      vm1.put(Key.VM_ID, 123);
       vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
 
       Chunk vm2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-      vm2.put(VmInfoDAO.vmIdKey, 456);
+      vm2.put(Key.VM_ID, 456);
       vm2.put(VmInfoDAO.mainClassKey, "mainClass2");
 
       Cursor multiVMsCursor = mock(Cursor.class);
@@ -286,25 +286,7 @@ public class VmInfoDAOTest {
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmInfo(info);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(arg.capture());
-        Chunk chunk = arg.getValue();
-
-        assertEquals(VmInfoDAO.vmInfoCategory, chunk.getCategory());
-        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
-        assertEquals((Long) startTime, chunk.get(VmInfoDAO.startTimeKey));
-        assertEquals((Long) stopTime, chunk.get(VmInfoDAO.stopTimeKey));
-        assertEquals(jVersion, chunk.get(VmInfoDAO.runtimeVersionKey));
-        assertEquals(jHome, chunk.get(VmInfoDAO.javaHomeKey));
-        assertEquals(mainClass, chunk.get(VmInfoDAO.mainClassKey));
-        assertEquals(commandLine, chunk.get(VmInfoDAO.commandLineKey));
-        assertEquals(vmName, chunk.get(VmInfoDAO.vmNameKey));
-        assertEquals(vmInfo, chunk.get(VmInfoDAO.vmInfoKey));
-        assertEquals(vmVersion, chunk.get(VmInfoDAO.vmVersionKey));
-        assertEquals(vmArgs, chunk.get(VmInfoDAO.vmArgumentsKey));
-        assertEquals(props, chunk.get(VmInfoDAO.propertiesKey));
-        assertEquals(env, chunk.get(VmInfoDAO.environmentKey));
-        assertEquals(libs, chunk.get(VmInfoDAO.librariesKey));
+        verify(storage).putPojo(VmInfoDAO.vmInfoCategory, true, info);
     }
 
     @Test
@@ -318,7 +300,7 @@ public class VmInfoDAOTest {
         Chunk chunk = arg.getValue();
 
         assertEquals(VmInfoDAO.vmInfoCategory, chunk.getCategory());
-        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
+        assertEquals((Integer) vmId, chunk.get(Key.VM_ID));
         assertEquals((Long) stopTime, chunk.get(VmInfoDAO.stopTimeKey));
     }
 }

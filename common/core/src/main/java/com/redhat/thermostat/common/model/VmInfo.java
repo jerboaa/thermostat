@@ -40,6 +40,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
 public class VmInfo implements Pojo {
 
     private int vmPid = 0;
@@ -82,68 +86,147 @@ public class VmInfo implements Pojo {
         this.loadedNativeLibraries = loadedNativeLibraries;
     }
 
+    @Persist
     public int getVmId() {
         return vmPid;
     }
 
+    @Persist
     public int getVmPid() {
         return vmPid;
     }
 
+    @Persist
     public long getStartTimeStamp() {
         return startTime;
     }
 
+    @Persist
+    public void setStartTimeStamp(long startTime) {
+        this.startTime = startTime;
+    }
+
+    @Persist
     public long getStopTimeStamp() {
         return stopTime;
     }
 
+    @Persist
+    public void setStopTimeStamp(long stopTime) {
+        this.stopTime = stopTime;
+    }
+
+    @Persist
     public String getJavaVersion() {
         return javaVersion;
     }
 
+    @Persist
+    public void setJavaVersion(String javaVersion) {
+        this.javaVersion = javaVersion;
+    }
+
+    @Persist
     public String getJavaHome() {
         return javaHome;
     }
 
+    @Persist
+    public void setJavaHome(String javaHome) {
+        this.javaHome = javaHome;
+    }
+
+    @Persist
     public String getMainClass() {
         return mainClass;
     }
 
+    @Persist
+    public void setMainClass(String mainClass) {
+        this.mainClass = mainClass;
+    }
+
+    @Persist
     public String getJavaCommandLine() {
         return javaCommandLine;
     }
 
+    @Persist
+    public void setJavaCommandLine(String javaCommandLine) {
+        this.javaCommandLine = javaCommandLine;
+    }
+
+    @Persist
     public String getVmName() {
         return vmName;
     }
 
+    @Persist
+    public void setVmName(String vmName) {
+        this.vmName = vmName;
+    }
+
+    @Persist
     public String getVmArguments() {
         return vmArguments;
     }
 
+    @Persist
+    public void setVmArguments(String vmArguments) {
+        this.vmArguments = vmArguments;
+    }
+
+    @Persist
     public String getVmInfo() {
         return vmInfo;
     }
 
+    @Persist
+    public void setVmInfo(String vmInfo) {
+        this.vmInfo = vmInfo;
+    }
+
+    @Persist
     public String getVmVersion() {
         return vmVersion;
+    }
+
+    @Persist
+    public void setVmVersion(String vmVersion) {
+        this.vmVersion = vmVersion;
     }
 
     public boolean isAlive() {
         return getStartTimeStamp() > getStopTimeStamp();
     }
     
+    @Persist
     public Map<String, String> getProperties() {
         return properties;
     }
 
+    @Persist
+    public void setProperties(Map<String, String> properties) {
+        this.properties = properties;
+    }
+
+    @Persist
     public Map<String, String> getEnvironment() {
         return environment;
     }
 
+    @Persist
+    public void setEnvironment(Map<String, String> environment) {
+        this.environment = environment;
+    }
+
+    @Persist
     public List<String> getLoadedNativeLibraries() {
         return loadedNativeLibraries;
     }
 
+    @Persist
+    public void setLoadedNativeLibraries(List<String> loadedNativeLibraries) {
+        this.loadedNativeLibraries = loadedNativeLibraries;
+    }
 }

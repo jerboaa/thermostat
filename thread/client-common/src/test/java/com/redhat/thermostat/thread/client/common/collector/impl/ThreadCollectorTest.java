@@ -121,7 +121,6 @@ public class ThreadCollectorTest {
 
         verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
         verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
-        verify(request).setParameter(HarvesterCommand.AGENT_ID.name(), "42");
         
         verify(requestQueue).putRequest(request);
         
@@ -212,7 +211,6 @@ public class ThreadCollectorTest {
         
         verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
         verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
-        verify(request).setParameter(HarvesterCommand.AGENT_ID.name(), "42");
         
         verify(requestQueue).putRequest(request);
     }

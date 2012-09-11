@@ -48,6 +48,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Chunk;
+import com.redhat.thermostat.common.storage.Key;
 
 public class VmInfoConverterTest {
 
@@ -94,8 +95,7 @@ public class VmInfoConverterTest {
         Chunk chunk = new VmInfoConverter().toChunk(info);
 
         assertNotNull(chunk);
-        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
-        assertEquals((Integer) vmId, chunk.get(VmInfoDAO.vmIdKey));
+        assertEquals((Integer) vmId, chunk.get(Key.VM_ID));
         assertEquals((Long) startTime, chunk.get(VmInfoDAO.startTimeKey));
         assertEquals((Long) stopTime, chunk.get(VmInfoDAO.stopTimeKey));
         assertEquals(jVersion, chunk.get(VmInfoDAO.runtimeVersionKey));
@@ -114,7 +114,7 @@ public class VmInfoConverterTest {
     public void testChunkToVmInfo() {
         Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, true);
 
-        chunk.put(VmInfoDAO.vmIdKey, vmId);
+        chunk.put(Key.VM_ID, vmId);
         chunk.put(VmInfoDAO.vmPidKey, vmId);
         chunk.put(VmInfoDAO.startTimeKey, startTime);
         chunk.put(VmInfoDAO.stopTimeKey, stopTime);

@@ -113,9 +113,9 @@ public class VmMemoryStatDAOTest {
 
         assertEquals("vm-memory-stats", VmMemoryStatDAO.vmMemoryStatsCategory.getName());
         keys = VmMemoryStatDAO.vmMemoryStatsCategory.getKeys();
-        assertTrue(keys.contains(new Key<>("agent-id", true)));
-        assertTrue(keys.contains(new Key<Integer>("vm-id", true)));
-        assertTrue(keys.contains(new Key<Long>("timestamp", false)));
+        assertTrue(keys.contains(new Key<>("agentId", true)));
+        assertTrue(keys.contains(new Key<Integer>("vmId", true)));
+        assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
         assertTrue(keys.contains(new Key<String>("eden.gen", false)));
         assertTrue(keys.contains(new Key<String>("eden.collector", false)));
         assertTrue(keys.contains(new Key<Long>("eden.capacity", false)));
@@ -226,37 +226,6 @@ public class VmMemoryStatDAOTest {
         VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(storage);
         dao.putVmMemoryStat(stat);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).putChunk(arg.capture());
-        Chunk chunk = arg.getValue();
-
-        assertEquals(VmMemoryStatDAO.vmMemoryStatsCategory, chunk.getCategory());
-        assertEquals((Long) 1l, chunk.get(new Key<Long>("timestamp", false)));
-        assertEquals((Integer) 2, chunk.get(new Key<Integer>("vm-id", true)));
-        assertEquals("new", chunk.get(new Key<String>("eden.gen", false)));
-        assertEquals("new", chunk.get(new Key<String>("eden.collector", false)));
-        assertEquals((Long) 0l, chunk.get(new Key<Long>("eden.used", false)));
-        assertEquals((Long) 1l, chunk.get(new Key<Long>("eden.capacity", false)));
-        assertEquals((Long) 2l, chunk.get(new Key<Long>("eden.max-capacity", false)));
-        assertEquals("new", chunk.get(new Key<String>("s0.gen", false)));
-        assertEquals("new", chunk.get(new Key<String>("s0.collector", false)));
-        assertEquals((Long) 3l, chunk.get(new Key<Long>("s0.used", false)));
-        assertEquals((Long) 4l, chunk.get(new Key<Long>("s0.capacity", false)));
-        assertEquals((Long) 5l, chunk.get(new Key<Long>("s0.max-capacity", false)));
-        assertEquals("new", chunk.get(new Key<String>("s1.gen", false)));
-        assertEquals("new", chunk.get(new Key<String>("s1.collector", false)));
-        assertEquals((Long) 6l, chunk.get(new Key<Long>("s1.used", false)));
-        assertEquals((Long) 7l, chunk.get(new Key<Long>("s1.capacity", false)));
-        assertEquals((Long) 8l, chunk.get(new Key<Long>("s1.max-capacity", false)));
-        assertEquals("old", chunk.get(new Key<String>("old.gen", false)));
-        assertEquals("old", chunk.get(new Key<String>("old.collector", false)));
-        assertEquals((Long) 9l, chunk.get(new Key<Long>("old.used", false)));
-        assertEquals((Long) 10l, chunk.get(new Key<Long>("old.capacity", false)));
-        assertEquals((Long) 11l, chunk.get(new Key<Long>("old.max-capacity", false)));
-        assertEquals("perm", chunk.get(new Key<String>("perm.gen", false)));
-        assertEquals("perm", chunk.get(new Key<String>("perm.collector", false)));
-        assertEquals((Long) 12l, chunk.get(new Key<Long>("perm.used", false)));
-        assertEquals((Long) 13l, chunk.get(new Key<Long>("perm.capacity", false)));
-        assertEquals((Long) 14l, chunk.get(new Key<Long>("perm.max-capacity", false)));
+        verify(storage).putPojo(VmMemoryStatDAO.vmMemoryStatsCategory, false, stat);
     }
 }

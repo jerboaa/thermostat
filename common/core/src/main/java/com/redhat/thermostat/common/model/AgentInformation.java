@@ -37,11 +37,14 @@
 package com.redhat.thermostat.common.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
-public class AgentInformation {
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
+
+@Entity
+public class AgentInformation implements Pojo {
 
     private String agentId;
     private long startTime;
@@ -52,42 +55,52 @@ public class AgentInformation {
 
     private List<BackendInformation> backends = new ArrayList<BackendInformation>();
 
+    @Persist
     public String getAgentId() {
         return agentId;
     }
 
+    @Persist
     public void setAgentId(String agentId) {
         this.agentId = agentId;
     }
 
+    @Persist
     public long getStartTime() {
         return startTime;
     }
 
+    @Persist
     public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
 
+    @Persist
     public void setStopTime(long stopTime) {
         this.stopTime = stopTime;
     }
     
+    @Persist
     public long getStopTime() {
         return stopTime;
     }
 
+    @Persist
     public boolean isAlive() {
         return alive;
     }
     
+    @Persist
     public void setAlive(boolean alive) {
         this.alive = alive;
     }
 
+    @Persist
     public String getConfigListenAddress() {
         return address;
     }
 
+    @Persist
     public void setConfigListenAddress(String address) {
         this.address = address;
     }

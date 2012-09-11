@@ -47,7 +47,7 @@ public interface BackendInfoDAO {
     static final Key<String> BACKEND_NAME = new Key<>("name", true);
     static final Key<String> BACKEND_DESCRIPTION = new Key<>("description", false);
     static final Key<Boolean> IS_ACTIVE = new Key<>("active", false);
-    static final Key<Boolean> SHOULD_MONITOR_NEW_PROCESSES = new Key<>("new", false);
+    static final Key<Boolean> SHOULD_MONITOR_NEW_PROCESSES = new Key<>("observeNewJvm", false);
     static final Key<List<Integer>> PIDS_TO_MONITOR = new Key<>("pids", false);
 
     static final Category CATEGORY = new Category("backend-info",

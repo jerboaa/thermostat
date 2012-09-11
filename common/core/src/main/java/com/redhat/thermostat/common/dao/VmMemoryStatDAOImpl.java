@@ -74,7 +74,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public void putVmMemoryStat(VmMemoryStat stat) {
-        storage.putChunk(converter.toChunk(stat));
+        storage.putPojo(vmMemoryStatsCategory, false, stat);
     }
 
     @Override
