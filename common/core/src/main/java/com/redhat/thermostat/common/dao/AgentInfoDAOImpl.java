@@ -98,8 +98,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
                 .from(CATEGORY)
                 .where(Key.AGENT_ID, Criteria.EQUALS, agentRef.getAgentId());
 
-        Chunk agentInfo = storage.find(query);
-        return agentInfo == null ? null : converter.fromChunk(agentInfo);
+        return storage.findPojo(query, AgentInformation.class);
     }
 
     @Override

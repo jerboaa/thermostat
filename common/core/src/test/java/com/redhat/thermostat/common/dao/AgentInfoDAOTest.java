@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -168,7 +169,7 @@ public class AgentInfoDAOTest {
         Storage storage = mock(Storage.class);
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
-        when(storage.find(query)).thenReturn(agentChunk1);
+        when(storage.findPojo(query, AgentInformation.class)).thenReturn(agentInfo1);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         AgentInformation computed = dao.getAgentInformation(agentRef);
@@ -177,7 +178,7 @@ public class AgentInfoDAOTest {
         assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, agentInfo1.getAgentId()));
 
         AgentInformation expected = agentInfo1;
-        assertEquals(expected, computed);
+        assertSame(expected, computed);
     }
 
     @Test

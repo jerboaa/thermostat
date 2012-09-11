@@ -45,17 +45,15 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 
 class VmInfoDAOImpl implements VmInfoDAO {
 
     private Storage storage;
-    private VmInfoConverter converter;
 
     VmInfoDAOImpl(Storage storage) {
         this.storage = storage;
-        this.converter = new VmInfoConverter();
     }
 
     @Override
@@ -64,11 +62,11 @@ class VmInfoDAOImpl implements VmInfoDAO {
                 .from(vmInfoCategory)
                 .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
                 .where(Key.VM_ID, Criteria.EQUALS, ref.getId());
-        Chunk result = storage.find(findMatchingVm);
+        VmInfo result = storage.findPojo(findMatchingVm, VmInfo.class);
         if (result == null) {
             throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
         }
-        return converter.fromChunk(result);
+        return result;
     }
 
     @Override

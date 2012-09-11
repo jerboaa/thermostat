@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.storage;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Map.Entry;
 import java.util.UUID;
 
@@ -95,7 +96,7 @@ public class MongoStorage extends Storage {
 
     private void setupConverters() {
         converters = new HashMap<>();
-        addConverter(VmMemoryStat.class, new VmMemoryStatConverter());
+        converters.put(VmMemoryStat.class, new VmMemoryStatConverter());
     }
 
     @Override
@@ -323,7 +324,30 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public Chunk find(Query query) {
+    public <T> T findPojo(Query query, Class<T> resultClass) {
+        Chunk resultChunk = find(query);
+        if (resultChunk == null) {
+            return null;
+        }
+        try {
+            Object pojo = resultClass.newInstance();
+            ChunkAdapter chunk = new ChunkAdapter(pojo);
+            Set<Key<?>> keys = resultChunk.getKeys();
+            for (Key key : keys) {
+                if (key == null) {
+                    System.err.println("WARNING: null key in result: " + resultChunk);
+                    continue;
+                 }
+                 chunk.put(key, resultChunk.get(key));
+            }
+            return (T) chunk.getAdaptee();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // TODO: Make this private, and change the testcase to test putPojo() instead.
+    Chunk find(Query query) {
         MongoQuery mongoQuery = checkAndCastQuery(query);
         DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
         DBObject dbResult = coll.findOne(mongoQuery.getGeneratedQuery());
@@ -374,6 +398,7 @@ public class MongoStorage extends Storage {
         }
     }
 
+    @Override
     public void putPojo(Category category, boolean replace, Pojo pojo) {
         Converter customConverter = converters.get(pojo.getClass());
         Chunk chunk;
@@ -385,8 +410,4 @@ public class MongoStorage extends Storage {
         putChunk(chunk);
     }
 
-
-    void addConverter(Class<?> type, Converter<?> converter) {
-        converters.put(type, converter);
-    }
 }

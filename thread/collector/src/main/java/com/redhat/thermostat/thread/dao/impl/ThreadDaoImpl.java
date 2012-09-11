@@ -64,21 +64,19 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public VMThreadCapabilities loadCapabilities(VmRef vm) {
-        
-        VMThreadCapabilities caps = null;
-        
+        try {
         Query query = storage.createQuery()
                 .from(THREAD_CAPABILITIES)
                 .where(Key.VM_ID, Query.Criteria.EQUALS, vm.getId())
                 .where(Key.AGENT_ID, Query.Criteria.EQUALS, vm.getAgent().getAgentId());
         
-        Chunk found = storage.find(query);
-        if (found != null) {
-            caps = new VMThreadCapabilities();
-            caps.setSupportedFeaturesList(found.get(SUPPORTED_FEATURES_LIST_KEY));
-        }
-        
+        VMThreadCapabilities caps = storage.findPojo(query, VMThreadCapabilities.class);
         return caps;
+        } catch (Throwable t) {
+            t.printStackTrace();
+            System.exit(0);
+            return null;
+        }
     }
     
     @Override
@@ -164,17 +162,6 @@ public class ThreadDaoImpl implements ThreadDao {
         return result;
     }
     
-    private Chunk prepareChunk(Category category, boolean replace, String vmId, String agentId) {
-        Chunk chunk = new Chunk(category, replace);
-        chunk.put(Key.AGENT_ID, agentId);
-        chunk.put(Key.VM_ID, Integer.valueOf(vmId));
-        return chunk;
-    }
-    
-    private Chunk prepareChunk(Category category, boolean replace, VmRef vm) {
-        return prepareChunk(category, replace, vm.getIdString(), vm.getAgent().getAgentId());
-    }
-
     private Query prepareQuery(Category category, VmRef vm) {
         return prepareQuery(category, vm.getIdString(), vm.getAgent().getAgentId());
     }

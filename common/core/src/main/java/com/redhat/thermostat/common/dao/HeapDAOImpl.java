@@ -149,9 +149,9 @@ class HeapDAOImpl implements HeapDAO {
         Query query = storage.createQuery()
                 .from(heapInfoCategory)
                 .where(heapIdKey, Criteria.EQUALS, heapId);
-        Chunk found = null;
+        HeapInfo found = null;
         try {
-            found = storage.find(query);
+            found = storage.findPojo(query, HeapInfo.class);
         } catch (IllegalArgumentException iae) {
             /*
              * if the heap id is not found, we get a nice
@@ -162,11 +162,7 @@ class HeapDAOImpl implements HeapDAO {
                 throw iae;
             }
         }
-        if (found == null) {
-            return null;
-        } else {
-            return convertChunkToHeapInfo(null, found);
-        }
+        return found;
     }
 
     @Override

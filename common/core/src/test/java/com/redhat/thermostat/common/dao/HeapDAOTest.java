@@ -279,7 +279,7 @@ public class HeapDAOTest {
     public void testInvalidHeapId() throws IOException {
         storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.find(isA(Query.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
+        when(storage.findPojo(any(Query.class), any(Class.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
         dao = new HeapDAOImpl(storage);
         heapInfo = dao.getHeapInfo("some-random-heap-id");
         assertTrue(heapInfo == null);

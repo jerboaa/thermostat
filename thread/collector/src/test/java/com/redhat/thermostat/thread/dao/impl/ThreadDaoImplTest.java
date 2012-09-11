@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -46,15 +45,13 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -89,7 +86,9 @@ public class ThreadDaoImplTest {
         Chunk answer = mock(Chunk.class);
         when(answer.get(ThreadDao.SUPPORTED_FEATURES_LIST_KEY)).thenReturn(Arrays.asList(ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY));
         
-        when(storage.find(query)).thenReturn(answer);
+        VMThreadCapabilities expected = new VMThreadCapabilities();
+        expected.setSupportedFeaturesList(Arrays.asList(ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY));
+        when(storage.findPojo(query, VMThreadCapabilities.class)).thenReturn(expected);
         
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VMThreadCapabilities caps = dao.loadCapabilities(ref);

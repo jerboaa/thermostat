@@ -142,7 +142,8 @@ public class VmInfoDAOTest {
         Storage storage = mock(Storage.class);
         Query query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
-        when(storage.find(query)).thenReturn(chunk);
+        VmInfo expected = new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs);
+        when(storage.findPojo(query, VmInfo.class)).thenReturn(expected);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -153,22 +154,7 @@ public class VmInfoDAOTest {
 
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         VmInfo info = dao.getVmInfo(vmRef);
-
-        assertNotNull(info);
-        assertEquals((Integer) vmId, (Integer) info.getVmId());
-        assertEquals((Integer) vmId, (Integer) info.getVmPid());
-        assertEquals((Long) startTime, (Long) info.getStartTimeStamp());
-        assertEquals((Long) stopTime, (Long) info.getStopTimeStamp());
-        assertEquals(jVersion, info.getJavaVersion());
-        assertEquals(jHome, info.getJavaHome());
-        assertEquals(mainClass, info.getMainClass());
-        assertEquals(commandLine, info.getJavaCommandLine());
-        assertEquals(vmName, info.getVmName());
-        assertEquals(vmInfo, info.getVmInfo());
-        assertEquals(vmVersion, info.getVmVersion());
-        assertEquals(vmArgs, info.getVmArguments());
-
-        // FIXME test environment, properties and loaded native libraries later
+        assertEquals(expected, info);
     }
 
     @Test

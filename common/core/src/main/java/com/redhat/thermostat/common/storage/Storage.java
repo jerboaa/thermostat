@@ -37,7 +37,6 @@
 package com.redhat.thermostat.common.storage;
 
 import java.io.InputStream;
-import java.util.Set;
 import java.util.UUID;
 
 import com.redhat.thermostat.common.model.Pojo;
@@ -73,27 +72,7 @@ public abstract class Storage {
     
     public abstract Cursor findAll(Query query);
 
-    public abstract Chunk find(Query query);
-
-    // TODO: Move implementation to MongoStorage and remve find(Query) and make this abstract.
-    public <T> T findPojo(Query query, Class<T> resultClass) {
-        Chunk resultChunk = find(query);
-        try {
-            Object pojo = resultClass.newInstance();
-            ChunkAdapter chunk = new ChunkAdapter(pojo);
-            Set<Key<?>> keys = resultChunk.getKeys();
-            for (Key key : keys) {
-                if (key == null) {
-                    System.err.println("WARNING: null key in result: " + resultChunk);
-                    continue;
-                 }
-                 chunk.put(key, resultChunk.get(key));
-            }
-            return (T) chunk.getAdaptee();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    public abstract <T> T findPojo(Query query, Class<T> resultClass);
 
     public abstract Cursor findAllFromCategory(Category category);
     
