@@ -157,7 +157,9 @@ public class HostOverviewControllerTest {
 
         verify(view).setOsKernel(eq(KERNEL_NAME));
         verify(view).setOsName(eq(OS_NAME));
-        verify(view).setTotalMemory(eq(String.valueOf(TOTAL_MEMORY)));
+
+        final String UNITS = " B";
+        verify(view).setTotalMemory(eq(String.valueOf(TOTAL_MEMORY + UNITS)));
     }
 
     @Test

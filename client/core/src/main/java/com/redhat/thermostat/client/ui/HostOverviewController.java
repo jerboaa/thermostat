@@ -59,6 +59,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class HostOverviewController {
@@ -96,7 +97,10 @@ public class HostOverviewController {
                 view.setOsKernel(hostInfo.getOsKernel());
                 view.setCpuModel(hostInfo.getCpuModel());
                 view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
-                view.setTotalMemory(String.valueOf(hostInfo.getTotalMemory()));
+
+                String[] parts = DisplayableValues.bytes(hostInfo.getTotalMemory());
+                String readableTotalMemory = localize(LocaleResources.NUMBER_AND_UNIT, parts[0], parts[1]);
+                view.setTotalMemory(readableTotalMemory);
 
                 List<NetworkInterfaceInfo> networkInfo = networkInfoDAO.getNetworkInterfaces(ref);
 
