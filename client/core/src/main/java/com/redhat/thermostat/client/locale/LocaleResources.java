@@ -78,6 +78,8 @@ public enum LocaleResources {
     HOURS,
     DAYS,
 
+    NUMBER_AND_UNIT,
+
     SEARCH_HINT,
 
     CHART_DURATION_SELECTOR_LABEL,

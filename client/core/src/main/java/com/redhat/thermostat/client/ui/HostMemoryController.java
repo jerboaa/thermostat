@@ -59,6 +59,7 @@ import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.model.MemoryType;
+import com.redhat.thermostat.common.utils.DisplayableValues;
 
 public class HostMemoryController {
 
@@ -107,7 +108,9 @@ public class HostMemoryController {
         backgroundUpdateTimer.setAction(new Runnable() {
             @Override
             public void run() {
-                view.setTotalMemory(String.valueOf(hostInfoDAO.getHostInfo(ref).getTotalMemory()));
+                long memorySize = hostInfoDAO.getHostInfo(ref).getTotalMemory();
+                String[] memorySizeParts = DisplayableValues.bytes(memorySize);
+                view.setTotalMemory(localize(LocaleResources.NUMBER_AND_UNIT, memorySizeParts[0], memorySizeParts[1]));
                 doMemoryChartUpdate();
             }
         });

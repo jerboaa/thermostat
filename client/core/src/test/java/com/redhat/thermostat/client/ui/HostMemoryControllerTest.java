@@ -76,7 +76,8 @@ public class HostMemoryControllerTest {
     @SuppressWarnings("unchecked") // any(List.class)
     @Test
     public void testUpdate() {
-        HostInfo hostInfo = new HostInfo("someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, 1024);
+        final long TOTAL_MEMORY = 512;
+        HostInfo hostInfo = new HostInfo("someHost", "someOS", "linux_0.0.1", "lreally_fast_cpu", 2, TOTAL_MEMORY);
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
@@ -118,7 +119,7 @@ public class HostMemoryControllerTest {
         verify(timer).start();
         timerActionCaptor.getValue().run();
 
-        verify(view, times(1)).setTotalMemory(any(String.class));
+        verify(view, times(1)).setTotalMemory(eq(TOTAL_MEMORY + " B"));
         verify(view, times(6)).addMemoryData(any(String.class), any(List.class));
 
         l.actionPerformed(new ActionEvent<>(view, HostMemoryView.Action.HIDDEN));
