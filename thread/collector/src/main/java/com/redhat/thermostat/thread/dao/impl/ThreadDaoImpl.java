@@ -149,7 +149,7 @@ public class ThreadDaoImpl implements ThreadDao {
             
             info.setThreadId(found.get(THREAD_ID_KEY));
             info.setThreadName(found.get(THREAD_NAME_KEY));
-            info.setThreadState(Thread.State.valueOf(found.get(THREAD_STATE_KEY)));
+            info.setThreadState(found.get(THREAD_STATE_KEY));
 
             info.setThreadBlockedCount(found.get(THREAD_BLOCKED_COUNT_KEY));
             info.setThreadWaitCount(found.get(THREAD_WAIT_COUNT_KEY));

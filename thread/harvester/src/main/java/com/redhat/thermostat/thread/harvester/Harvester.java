@@ -197,7 +197,7 @@ class Harvester {
 
               info.setThreadName(beanInfo.getThreadName());
               info.setThreadId(beanInfo.getThreadId());
-              info.setThreadState(beanInfo.getThreadState());
+              info.setState(beanInfo.getThreadState());
               info.setStackTrace(beanInfo.getStackTrace());
 
               info.setThreadCpuTime(collectorBean.getThreadCpuTime(info.getThreadId()));

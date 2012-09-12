@@ -94,10 +94,11 @@ public interface ThreadDao {
     static final Key<Long> THREAD_BLOCKED_COUNT_KEY = new Key<Long>(THREAD_BLOCKED_COUNT, false);
     static final String THREAD_WAIT_COUNT = "threadWaitCount";
     static final Key<Long> THREAD_WAIT_COUNT_KEY = new Key<Long>(THREAD_WAIT_COUNT, false);
-            
+    
     static final Category THREAD_INFO =
             new Category("vm-thread-info", Key.AGENT_ID, Key.VM_ID,
                          Key.TIMESTAMP, THREAD_NAME_KEY, THREAD_ID_KEY,
+                         THREAD_STATE_KEY,
                          THREAD_CPU_TIME_KEY,
                          THREAD_USER_TIME_KEY, THREAD_BLOCKED_COUNT_KEY,
                          THREAD_WAIT_COUNT_KEY);
