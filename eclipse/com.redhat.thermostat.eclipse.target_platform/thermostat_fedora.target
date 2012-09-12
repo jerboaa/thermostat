@@ -1,19 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="Thermostat Eclipse (Fedora)" sequenceNumber="3">
+<?pde version="3.8"?><target name="Thermostat Eclipse (Fedora)" sequenceNumber="7">
 <locations>
-<location path="/usr/share/java" type="Directory"/>
 <location path="/usr/share/java/hamcrest" type="Directory"/>
-<location id="org.eclipse.cvs" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.e4.rcp" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.emf.common" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.emf.ecore" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.equinox.p2.core.feature" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.equinox.p2.extras.feature" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.equinox.p2.rcp.feature" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.equinox.p2.user.ui" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.help" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.platform" path="${eclipse_home}" type="Feature"/>
-<location id="org.eclipse.rcp" path="${eclipse_home}" type="Feature"/>
+<location path="/usr/share/java" type="Directory"/>
+<location path="${eclipse_home}/plugins" type="Profile"/>
 <location path="/usr/share/java/objectweb-asm" type="Directory"/>
 </locations>
 <targetJRE path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
