@@ -95,6 +95,11 @@
     <module>com.redhat.thermostat.eclipse.feature</module>
     <module>com.redhat.thermostat.eclipse.p2-repo</module>
     <module>core-p2-repository</module>
+    <module>test-deps-bundle-wrapping</module>
+    <!-- Adds p2 metadata and creates repo for plain (wrapped)
+         Java OSGi bundles so they can be found for building and
+         running tycho tests -->
+    <module>test-deps-p2-repository</module>
     <module>composite-repo</module>
   </modules>
 
@@ -108,6 +113,11 @@
       <id>orbit</id>
       <layout>p2</layout>
       <url>${orbit-site}</url>
+    </repository>
+    <repository>
+      <id>local_eclipse_test_deps</id>
+      <layout>p2</layout>
+      <url>file://${basedir}/../eclipse-test-deps-repo/target/repository/</url>
     </repository>
     <repository>
       <id>maven.eclipse.org</id>
@@ -155,9 +165,28 @@
           </execution>
         </executions>
       </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-surefire-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <executions>
+          <execution>
+            <id>run-tests-during-package</id>
+            <phase>package</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
     <pluginManagement>
       <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.3.7</version>
+        </plugin>
         <plugin>
           <groupId>org.eclipse.tycho</groupId>
           <artifactId>tycho-compiler-plugin</artifactId>
@@ -171,7 +200,7 @@
           <artifactId>tycho-surefire-plugin</artifactId>
           <version>${tycho-version}</version>
           <configuration>
-            <useUIHarness>false</useUIHarness>
+            <useUIHarness>true</useUIHarness>
             <useUIThread>flase</useUIThread>
             <dependencies>
               <dependency>
