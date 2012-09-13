@@ -1,7 +1,7 @@
-# perhaps rm -rf ~/.m2
+# perhaps set -Dmaven.repo.local=/desired/path
+# for all of mvn commands below.
 cd path/to/thermostat/home
 mvn clean install
-cd eclipse/test-deps-bundle-wrapping
-mvn clean install
-cd ..
-mvn clean package
+mvn -f eclipse/test-deps-bundle-wrapping/pom.xml clean install
+mvn -f eclipse/test-deps-p2-repository/pom.xml clean package
+mvn -f eclipse/pom.xml clean package
