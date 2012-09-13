@@ -41,7 +41,6 @@ import java.util.List;
 
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
@@ -94,13 +93,9 @@ public class ThreadDaoImpl implements ThreadDao {
         ThreadSummary summary = null;
 
         Query query = prepareQuery(THREAD_SUMMARY, ref);
-        Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
+        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
         if (cursor.hasNext()) {
-            Chunk found = cursor.next();
-            summary = new ThreadSummary();
-            summary.setTimeStamp(found.get(Key.TIMESTAMP));
-            summary.setCurrentLiveThreads(found.get(LIVE_THREADS_KEY));
-            summary.setCurrentDaemonThreads(found.get(DAEMON_THREADS_KEY));
+            summary = cursor.next();
         }
         
         return summary;
@@ -114,14 +109,9 @@ public class ThreadDaoImpl implements ThreadDao {
         Query query = prepareQuery(THREAD_SUMMARY, ref);
         query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
 
-        Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
+        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
         while (cursor.hasNext()) {
-            ThreadSummary summary = new ThreadSummary();
-            
-            Chunk found = cursor.next();
-            summary.setTimeStamp(found.get(Key.TIMESTAMP));
-            summary.setCurrentLiveThreads(found.get(LIVE_THREADS_KEY));
-            summary.setCurrentDaemonThreads(found.get(DAEMON_THREADS_KEY));
+            ThreadSummary summary = cursor.next();
             result.add(summary);
         }
         
@@ -140,22 +130,9 @@ public class ThreadDaoImpl implements ThreadDao {
         Query query = prepareQuery(THREAD_INFO, ref)
                 .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
         
-        Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
+        Cursor<ThreadInfoData> cursor = storage.findAllPojos(query, ThreadInfoData.class).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
         while (cursor.hasNext()) {
-            ThreadInfoData info = new ThreadInfoData();
-            
-            Chunk found = cursor.next();
-            info.setTimeStamp(found.get(Key.TIMESTAMP));
-            
-            info.setThreadId(found.get(THREAD_ID_KEY));
-            info.setThreadName(found.get(THREAD_NAME_KEY));
-            info.setThreadState(Thread.State.valueOf(found.get(THREAD_STATE_KEY)));
-
-            info.setThreadBlockedCount(found.get(THREAD_BLOCKED_COUNT_KEY));
-            info.setThreadWaitCount(found.get(THREAD_WAIT_COUNT_KEY));
-            info.setThreadCpuTime(found.get(THREAD_CPU_TIME_KEY));
-            info.setThreadUserTime(found.get(THREAD_USER_TIME_KEY));
-
+            ThreadInfoData info = cursor.next();
             result.add(info);
         }
         

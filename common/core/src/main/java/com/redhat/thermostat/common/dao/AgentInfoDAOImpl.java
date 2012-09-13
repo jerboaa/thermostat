@@ -64,13 +64,13 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Cursor agentCursor = storage.findAllFromCategory(CATEGORY);
+        Cursor<AgentInformation> agentCursor = storage.findAllPojosFromCategory(CATEGORY, AgentInformation.class);
 
         List<AgentInformation> results = new ArrayList<>();
 
         while (agentCursor.hasNext()) {
-            Chunk agentChunk = agentCursor.next();
-            results.add(converter.fromChunk(agentChunk));
+            AgentInformation agentInfo = agentCursor.next();
+            results.add(agentInfo);
         }
         return results;
     }
@@ -81,13 +81,13 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
                 .from(CATEGORY)
                 .where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
 
-        Cursor agentCursor = storage.findAll(query);
+        Cursor<AgentInformation> agentCursor = storage.findAllPojos(query, AgentInformation.class);
 
         List<AgentInformation> results = new ArrayList<>();
 
         while (agentCursor.hasNext()) {
-            Chunk agentChunk = agentCursor.next();
-            results.add(converter.fromChunk(agentChunk));
+            AgentInformation agentInfo = agentCursor.next();
+            results.add(agentInfo);
         }
         return results;
     }
@@ -110,7 +110,6 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
     public void removeAgentInformation(AgentInformation agentInfo) {
         Chunk chunk = new Chunk(CATEGORY, true);
         chunk.put(Key.AGENT_ID, agentInfo.getAgentId());
-
         storage.removeChunk(chunk);
     }
 

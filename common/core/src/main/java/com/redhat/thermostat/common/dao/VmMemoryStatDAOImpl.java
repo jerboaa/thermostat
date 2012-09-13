@@ -44,19 +44,17 @@ import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private final Storage storage;
-    private final VmMemoryStatConverter converter;
 
     private Map<VmRef, VmLatestPojoListGetter<VmMemoryStat>> getters = new HashMap<>();
 
     VmMemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
-        converter = new VmMemoryStatConverter();
     }
 
     @Override
@@ -65,9 +63,9 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
                 .from(vmMemoryStatsCategory)
                 .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
                 .where(Key.VM_ID, Criteria.EQUALS, ref.getId());
-        Cursor cursor = storage.findAll(query).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
+        Cursor<VmMemoryStat> cursor = storage.findAllPojos(query, VmMemoryStat.class).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
         if (cursor.hasNext()) {
-            return converter.fromChunk(cursor.next());
+            return cursor.next();
         }
         return null;
     }
@@ -81,7 +79,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref) {
         VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, converter, ref);
+            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, ref, VmMemoryStat.class);
             getters.put(ref, getter);
         }
         return getter.getLatest();
@@ -91,7 +89,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
         VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, converter, ref, since);
+            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, ref, VmMemoryStat.class, since);
             getters.put(ref, getter);
         }
         return getter.getLatest();

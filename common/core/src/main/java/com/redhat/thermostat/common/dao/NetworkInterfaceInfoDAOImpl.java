@@ -40,21 +40,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 
 class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     private Storage storage;
-    private NetworkInterfaceInfoConverter converter;
 
     NetworkInterfaceInfoDAOImpl(Storage storage) {
         this.storage = storage;
-        converter = new NetworkInterfaceInfoConverter();
     }
 
     @Override
@@ -63,11 +60,10 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
                 .from(networkInfoCategory)
                 .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
 
-        Cursor cursor = storage.findAll(allHostNetworkInterfaces);
+        Cursor<NetworkInterfaceInfo> cursor = storage.findAllPojos(allHostNetworkInterfaces, NetworkInterfaceInfo.class);
         List<NetworkInterfaceInfo> result = new ArrayList<>();
         while (cursor.hasNext()) {
-            Chunk chunk = cursor.next();
-            NetworkInterfaceInfo stat = converter.fromChunk(chunk);
+            NetworkInterfaceInfo stat = cursor.next();
             result.add(stat);
         }
         return result;

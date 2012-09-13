@@ -64,10 +64,10 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
                 .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
 
         List<BackendInformation> results = new ArrayList<>();
-        Cursor cursor = storage.findAll(query);
+        Cursor<BackendInformation> cursor = storage.findAllPojos(query, BackendInformation.class);
         while (cursor.hasNext()) {
-            Chunk backendInfoPart = cursor.next();
-            results.add(converter.fromChunk(backendInfoPart));
+            BackendInformation backendInfo = cursor.next();
+            results.add(backendInfo);
         }
         return results;
     }

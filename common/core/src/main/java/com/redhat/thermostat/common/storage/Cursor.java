@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.common.storage;
 
-public interface Cursor {
+import com.redhat.thermostat.common.model.Pojo;
+
+public interface Cursor<T extends Pojo> {
 
     public enum SortDirection {
         ASCENDING(1),
@@ -55,9 +57,9 @@ public interface Cursor {
 
     boolean hasNext();
 
-    Chunk next();
+    T next();
 
-    Cursor sort(Key<?> orderBy, SortDirection direction);
+    Cursor<T> sort(Key<?> orderBy, SortDirection direction);
 
-    Cursor limit(int i);
+    Cursor<T> limit(int i);
 }

@@ -42,12 +42,11 @@ import java.util.List;
 
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 
 class HostInfoDAOImpl implements HostInfoDAO {
     private Storage storage;
@@ -98,11 +97,11 @@ class HostInfoDAOImpl implements HostInfoDAO {
     private Collection<HostRef> getHosts(Query filter) {
         Collection<HostRef> hosts = new ArrayList<HostRef>();
         
-        Cursor hostsCursor = storage.findAll(filter);
+        Cursor<HostInfo> hostsCursor = storage.findAllPojos(filter, HostInfo.class);
         while(hostsCursor.hasNext()) {
-            Chunk hostChunk = hostsCursor.next();
-            String agentId = hostChunk.get(Key.AGENT_ID);
-            String hostName = hostChunk.get(hostNameKey);
+            HostInfo host = hostsCursor.next();
+            String agentId = host.getAgentId();
+            String hostName = host.getHostname();
             hosts.add(new HostRef(agentId, hostName));
         }
         return hosts;

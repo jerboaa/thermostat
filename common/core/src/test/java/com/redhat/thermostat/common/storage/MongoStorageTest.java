@@ -75,11 +75,61 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ DBCollection.class, DB.class, Mongo.class, MongoStorage.class, MongoConnection.class })
 public class MongoStorageTest {
+
+    @Entity
+    public static class TestClass implements Pojo {
+        private String key1;
+        private String key2;
+        private String key3;
+        private String key4;
+        private String key5;
+        @Persist
+        public String getKey1() {
+            return key1;
+        }
+        @Persist
+        public void setKey1(String key1) {
+            this.key1 = key1;
+        }
+        @Persist
+        public String getKey2() {
+            return key2;
+        }
+        @Persist
+        public void setKey2(String key2) {
+            this.key2 = key2;
+        }
+        @Persist
+        public String getKey3() {
+            return key3;
+        }
+        @Persist
+        public void setKey3(String key3) {
+            this.key3 = key3;
+        }
+        @Persist
+        public String getKey4() {
+            return key4;
+        }
+        @Persist
+        public void setKey4(String key4) {
+            this.key4 = key4;
+        }
+        @Persist
+        public String getKey5() {
+            return key5;
+        }
+        @Persist
+        public void setKey5(String key5) {
+            this.key5 = key5;
+        }
+    }
 
     private static final Key<String> key1 = new Key<>("key1", false);
     private static final Key<String> key2 = new Key<>("key2", false);
@@ -170,10 +220,10 @@ public class MongoStorageTest {
     }
 
     @Test (expected=IllegalArgumentException.class)
-    public void veirfyFindAllOnlyAcceptsMongoQuery() {
+    public void verifyFindAllOnlyAcceptsMongoQuery() {
         MongoStorage storage = makeStorage();
         Query query = mock(Query.class);
-        storage.findAll(query);
+        storage.findAllPojos(query, TestClass.class);
     }
 
     @Test
@@ -181,7 +231,7 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery().from(testCategory);
-        Cursor cursor = storage.findAll(query);
+        Cursor<TestClass> cursor = storage.findAllPojos(query, TestClass.class);
         assertNotNull(cursor);
     }
 
@@ -199,7 +249,7 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery().from(testCategory);
-        storage.findAll(query);
+        storage.findAllPojos(query, TestClass.class);
         verify(testCollection).find(any(DBObject.class));
     }
 
@@ -224,7 +274,7 @@ public class MongoStorageTest {
         when(query.getCategory()).thenReturn(testCategory);
         ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
 
-        storage.findAll(query);
+        storage.findAllPojos(query, TestClass.class);
 
         verify(testCollection).find(findArg.capture());
         assertSame(generatedQuery, findArg.getValue());
@@ -273,7 +323,7 @@ public class MongoStorageTest {
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
         MongoQuery query = new MongoQuery().from(testCategory);
 
-        Cursor cursor = storage.findAll(query);
+        Cursor<TestClass> cursor = storage.findAllPojos(query, TestClass.class);
 
         verifyDefaultCursor(cursor);
     }
@@ -282,7 +332,7 @@ public class MongoStorageTest {
     public void verifyFindAllFromCategoryCallsDBCollectionFindAll() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        storage.findAllFromCategory(testCategory);
+        storage.findAllPojosFromCategory(testCategory, TestClass.class);
         verify(testCollection).find();
     }
 
@@ -290,7 +340,7 @@ public class MongoStorageTest {
     public void verifyFindAllFromCategoryReturnsCorrectCursor() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Cursor cursor = storage.findAllFromCategory(testCategory);
+        Cursor<TestClass> cursor = storage.findAllPojosFromCategory(testCategory, TestClass.class);
 
         verifyDefaultCursor(cursor);
     }
@@ -320,18 +370,16 @@ public class MongoStorageTest {
         assertEquals(0, count);
     }
 
-    private void verifyDefaultCursor(Cursor cursor) {
+    private void verifyDefaultCursor(Cursor<TestClass> cursor) {
         assertTrue(cursor.hasNext());
-        Chunk chunk1 = cursor.next();
-        assertArrayEquals(new Key<?>[]{key1, key2}, chunk1.getKeys().toArray());
-        assertEquals("test1", chunk1.get(key1));
-        assertEquals("test2", chunk1.get(key2));
+        TestClass obj1 = cursor.next();
+        assertEquals("test1", obj1.getKey1());
+        assertEquals("test2", obj1.getKey2());
 
         assertTrue(cursor.hasNext());
-        Chunk chunk2 = cursor.next();
-        assertArrayEquals(new Key<?>[]{key3, key4}, chunk2.getKeys().toArray());
-        assertEquals("test3", chunk2.get(key3));
-        assertEquals("test4", chunk2.get(key4));
+        TestClass obj2 = cursor.next();
+        assertEquals("test3", obj2.getKey3());
+        assertEquals("test4", obj2.getKey4());
 
         assertFalse(cursor.hasNext());
         assertNull(cursor.next());

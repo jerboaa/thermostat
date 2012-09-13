@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.isA;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -53,8 +53,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.model.VmClassStat;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
@@ -81,29 +81,15 @@ public class VmLatestPojoListGetterTest {
 
     private HostRef hostRef;
     private VmRef vmRef;
-    private Converter<VmClassStat> converter;
-    private Chunk result1, result2, result3;
+    private VmClassStat result1, result2, result3;
 
     @Before
     public void setUp() {
         hostRef = new HostRef(AGENT_ID, HOSTNAME);
         vmRef = new VmRef(hostRef, VM_PID, MAIN_CLASS);
-        converter = new VmClassStatConverter();
-        result1 = new Chunk(cat, false);
-        result1.put(Key.AGENT_ID, AGENT_ID);
-        result1.put(Key.VM_ID, VM_PID);
-        result1.put(Key.TIMESTAMP, t1);
-        result1.put(VmClassStatDAO.loadedClassesKey, lc1);
-        result2 = new Chunk(cat, false);
-        result2.put(Key.AGENT_ID, AGENT_ID);
-        result2.put(Key.VM_ID, VM_PID);
-        result2.put(Key.TIMESTAMP, t2);
-        result2.put(VmClassStatDAO.loadedClassesKey, lc2);
-        result3 = new Chunk(cat, false);
-        result3.put(Key.AGENT_ID, AGENT_ID);
-        result3.put(Key.VM_ID, VM_PID);
-        result3.put(Key.TIMESTAMP, t3);
-        result3.put(VmClassStatDAO.loadedClassesKey, lc3);
+        result1 = new VmClassStat(VM_PID, t1, lc1);
+        result2 = new VmClassStat(VM_PID, t2, lc2);
+        result3 = new VmClassStat(VM_PID, t3, lc3);
     }
 
     @Test
@@ -112,7 +98,7 @@ public class VmLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
         query = (MockQuery) getter.buildQuery();
 
         assertNotNull(query);
@@ -128,7 +114,7 @@ public class VmLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef, 123);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class, 123);
         query = (MockQuery) getter.buildQuery();
 
         assertNotNull(query);
@@ -146,7 +132,7 @@ public class VmLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
         getter.buildQuery(); // Ignore first return value.
         query = (MockQuery) getter.buildQuery();
 
@@ -160,15 +146,17 @@ public class VmLatestPojoListGetterTest {
 
     @Test
     public void testGetLatest() {
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmClassStat> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.findAll(any(Query.class))).thenReturn(cursor);
+        when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
 
         List<VmClassStat> stats = getter.getLatest();
 
@@ -184,11 +172,14 @@ public class VmLatestPojoListGetterTest {
 
     @Test
     public void testGetLatestMultipleCalls() {
-        Cursor cursor1 = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmClassStat> cursor1 = mock(Cursor.class);
         when(cursor1.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor1.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
+        when(cursor1.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor1);
 
-        Cursor cursor2 = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmClassStat> cursor2 = mock(Cursor.class);
         when(cursor2.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor2.next()).thenReturn(result3);
 
@@ -197,13 +188,13 @@ public class VmLatestPojoListGetterTest {
         MockQuery secondQuery = new MockQuery();
         when(storage.createQuery()).thenReturn(firstQuery).thenReturn(secondQuery);
 
-        when(storage.findAll(any(Query.class))).thenReturn(cursor1);
+        when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor1);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, converter, vmRef);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
         getter.getLatest();
         getter.getLatest();
 
-        verify(storage, times(2)).findAll(isA(Query.class));
+        verify(storage, times(2)).findAllPojos(any(Query.class), same(VmClassStat.class));
 
         assertTrue(secondQuery.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
         assertTrue(secondQuery.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_PID));

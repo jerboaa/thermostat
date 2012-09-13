@@ -47,8 +47,6 @@ class MemoryStatDAOImpl implements MemoryStatDAO {
 
     private Storage storage;
 
-    private Converter<MemoryStat> converter = new MemoryStatConverter();
-
     private Map<HostRef, HostLatestPojoListGetter<MemoryStat>> getters = new HashMap<>();
 
     MemoryStatDAOImpl(Storage storage) {
@@ -59,7 +57,7 @@ class MemoryStatDAOImpl implements MemoryStatDAO {
     public List<MemoryStat> getLatestMemoryStats(HostRef ref) {
         HostLatestPojoListGetter<MemoryStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new HostLatestPojoListGetter<MemoryStat>(storage, memoryStatCategory, converter, ref);
+            getter = new HostLatestPojoListGetter<MemoryStat>(storage, memoryStatCategory, ref, MemoryStat.class);
             getters.put(ref, getter);
         }
         return getter.getLatest();

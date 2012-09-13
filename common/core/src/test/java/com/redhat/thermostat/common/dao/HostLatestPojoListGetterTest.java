@@ -41,7 +41,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.isA;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -56,10 +57,10 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.ArrayUtils;
@@ -90,25 +91,14 @@ public class HostLatestPojoListGetterTest {
     private static Double load15_3 = 13.0;
 
     private HostRef ref;
-    private Converter<CpuStat> converter;
-    private Chunk result1, result2, result3;
+    private CpuStat result1, result2, result3;
 
     @Before
     public void setUp() {
         ref = new HostRef(AGENT_ID, HOSTNAME);
-        converter = new CpuStatConverter();
-        result1 = new Chunk(cat, false);
-        result1.put(Key.AGENT_ID, AGENT_ID);
-        result1.put(Key.TIMESTAMP, t1);
-        result1.put(CpuStatDAO.cpuLoadKey, Arrays.asList(load5_1, load10_1, load15_1));
-        result2 = new Chunk(cat, false);
-        result2.put(Key.AGENT_ID, AGENT_ID);
-        result2.put(Key.TIMESTAMP, t2);
-        result2.put(CpuStatDAO.cpuLoadKey, Arrays.asList(load5_2, load10_2, load15_2));
-        result3 = new Chunk(cat, false);
-        result3.put(Key.AGENT_ID, AGENT_ID);
-        result3.put(Key.TIMESTAMP, t3);
-        result3.put(CpuStatDAO.cpuLoadKey, Arrays.asList(load5_3, load10_3, load15_3));
+        result1 = new CpuStat(t1, Arrays.asList(load5_1, load10_1, load15_1));
+        result2 = new CpuStat(t2, Arrays.asList(load5_2, load10_2, load15_2));
+        result3 = new CpuStat(t3, Arrays.asList(load5_3, load10_3, load15_3));
     }
 
     @Test
@@ -117,7 +107,7 @@ public class HostLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when (storage.createQuery()).thenReturn(query);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, converter, ref);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
         query = (MockQuery) getter.buildQuery();
 
         assertNotNull(query);
@@ -133,7 +123,7 @@ public class HostLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when (storage.createQuery()).thenReturn(query);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, converter, ref, 123);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class, 123);
         query = (MockQuery) getter.buildQuery();
 
         assertNotNull(query);
@@ -150,7 +140,7 @@ public class HostLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, converter, ref);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
         ignored = (MockQuery) getter.buildQuery(); // Ignore first return value.
 
         query = (MockQuery) getter.buildQuery();
@@ -164,16 +154,18 @@ public class HostLatestPojoListGetterTest {
 
     @Test
     public void testGetLatest() {
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<CpuStat> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
         Query query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
-        when(storage.findAll(query)).thenReturn(cursor);
+        when(storage.findAllPojos(query, CpuStat.class)).thenReturn(cursor);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, converter, ref);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
 
         List<CpuStat> stats = getter.getLatest();
 
@@ -189,26 +181,30 @@ public class HostLatestPojoListGetterTest {
 
     @Test
     public void testGetLatestMultipleCalls() {
-        Cursor cursor1 = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<CpuStat> cursor1 = mock(Cursor.class);
         when(cursor1.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor1.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
+        when(cursor1.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor1);
 
-        Cursor cursor2 = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<CpuStat> cursor2 = mock(Cursor.class);
         when(cursor2.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor2.next()).thenReturn(result3);
+        when(cursor2.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor2);
 
         Storage storage = mock(Storage.class);
         MockQuery firstQuery = new MockQuery();
         MockQuery secondQuery = new MockQuery();
         when(storage.createQuery()).thenReturn(firstQuery).thenReturn(secondQuery);
 
-        when(storage.findAll(isA(Query.class))).thenReturn(cursor1);
+        when(storage.findAllPojos(any(Query.class), same(CpuStat.class))).thenReturn(cursor1);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, converter, ref);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
         getter.getLatest();
         getter.getLatest();
 
-        verify(storage, times(2)).findAll(isA(Query.class));
+        verify(storage, times(2)).findAllPojos(any(Query.class), same(CpuStat.class));
 
         assertTrue(secondQuery.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
         assertTrue(secondQuery.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, t2));
@@ -217,7 +213,6 @@ public class HostLatestPojoListGetterTest {
     @After
     public void tearDown() {
         ref = null;
-        converter = null;
         result1 = null;
         result2 = null;
         result3 = null;

@@ -60,13 +60,11 @@ import com.redhat.thermostat.test.MockQuery;
 
 public class BackendInfoDAOTest {
 
-    private BackendInfoConverter converter;
     private BackendInformation backendInfo1;
-    private Chunk backendChunk1;
+    private BackendInformation backend1;
 
     @Before
     public void setUp() {
-        converter = new BackendInfoConverter();
 
         backendInfo1 = new BackendInformation();
 
@@ -76,7 +74,13 @@ public class BackendInfoDAOTest {
         backendInfo1.setObserveNewJvm(true);
         backendInfo1.setPids(Arrays.asList(new Integer[] { -1, 0, 1}));
 
-        backendChunk1 = converter.toChunk(backendInfo1);
+        backend1 = new BackendInformation();
+        backend1.setName("backend-name");
+        backend1.setDescription("description");
+        backend1.setActive(true);
+        backend1.setObserveNewJvm(true);
+        backend1.setPids(Arrays.asList(new Integer[] { -1, 0, 1}));
+        
     }
 
     @Test
@@ -114,14 +118,15 @@ public class BackendInfoDAOTest {
         HostRef agentref = mock(HostRef.class);
         when(agentref.getAgentId()).thenReturn(AGENT_ID);
 
-        Cursor backendCursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<BackendInformation> backendCursor = mock(Cursor.class);
         when(backendCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(backendCursor.next()).thenReturn(backendChunk1).thenReturn(null);
+        when(backendCursor.next()).thenReturn(backend1).thenReturn(null);
 
         MockQuery query = new MockQuery();
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(query);
-        when(storage.findAll(query)).thenReturn(backendCursor);
+        when(storage.findAllPojos(query, BackendInformation.class)).thenReturn(backendCursor);
 
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
@@ -141,7 +146,13 @@ public class BackendInfoDAOTest {
 
         dao.removeBackendInformation(backendInfo1);
 
-        verify(storage).removeChunk(backendChunk1);
+        Chunk backend1 = new Chunk(BackendInfoDAO.CATEGORY, true);
+        backend1.put(BackendInfoDAO.BACKEND_NAME, "backend-name");
+        backend1.put(BackendInfoDAO.BACKEND_DESCRIPTION, "description");
+        backend1.put(BackendInfoDAO.IS_ACTIVE, true);
+        backend1.put(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES, true);
+        backend1.put(BackendInfoDAO.PIDS_TO_MONITOR, Arrays.asList(new Integer[] { -1, 0, 1}));
+        verify(storage).removeChunk(backend1);
     }
 
 }

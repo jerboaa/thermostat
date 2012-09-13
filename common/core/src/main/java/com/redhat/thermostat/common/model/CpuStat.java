@@ -49,6 +49,10 @@ public class CpuStat implements TimeStampedPojo {
     private long timeStamp;
     private List<Double> perProcessorUsage;
 
+    public CpuStat() {
+        this(-1, null);
+    }
+
     public CpuStat(long timestamp, List<Double> perProcessorUsage) {
         this.timeStamp = timestamp;
         this.perProcessorUsage = perProcessorUsage;

@@ -43,32 +43,30 @@ import java.util.Map;
 
 import com.redhat.thermostat.common.model.TimeStampedPojo;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 
 class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoListGetter<T> {
 
     private Storage storage;
     private Category cat;
-    private Converter<T> converter;
     private HostRef ref;
-
+    private Class<T> resultClass;
     private Map<HostRef, Long> lastUpdateTimes = new HashMap<>();
 
-    HostLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, HostRef ref) {
-        this(storage, cat, converter, ref, 0);
+    HostLatestPojoListGetter(Storage storage, Category cat, HostRef ref, Class<T> resultClass) {
+        this(storage, cat, ref, resultClass, 0);
     }
 
-    HostLatestPojoListGetter(Storage storage, Category cat, Converter<T> converter, HostRef ref, long since) {
+    HostLatestPojoListGetter(Storage storage, Category cat, HostRef ref, Class<T> resultClass, long since) {
         this.storage = storage;
         this.cat = cat;
-        this.converter = converter;
         this.ref = ref;
+        this.resultClass = resultClass;
         if (since > 0) {
             lastUpdateTimes.put(ref, since);
         }
@@ -84,12 +82,11 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
         // TODO if multiple threads will be using this utility class, there may be some issues
         // with the updateTimes
         Long lastUpdate = lastUpdateTimes.get(ref);
-        Cursor cursor = storage.findAll(query);
-        cursor.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
+        Cursor<T> cursor = storage.findAllPojos(query, resultClass);
+        cursor = cursor.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
-            Chunk chunk = cursor.next();
-            T pojo = converter.fromChunk(chunk);
+            T pojo = cursor.next();
             result.add(pojo);
             lastUpdateTimes.put(ref, Math.max(pojo.getTimeStamp(), lastUpdate));
         }

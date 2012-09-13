@@ -42,6 +42,7 @@ import com.redhat.thermostat.common.storage.Persist;
 @Entity
 public class HostInfo implements Pojo {
 
+    private String agentId;
     private String hostname;
     private String osName;
     private String osKernel;
@@ -60,6 +61,16 @@ public class HostInfo implements Pojo {
         this.cpuModel = cpuModel;
         this.cpuCount = cpuCount;
         this.totalMemory = totalMemory;
+    }
+
+    @Persist
+    public String getAgentId() {
+        return agentId;
+    }
+
+    @Persist
+    public void setAgentId(String agentId) {
+        this.agentId = agentId;
     }
 
     @Persist

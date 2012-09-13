@@ -69,12 +69,12 @@ public abstract class Storage {
      * Drop all data related to the currently running agent.
      */
     public abstract void purge();
-    
-    public abstract Cursor findAll(Query query);
 
-    public abstract <T> T findPojo(Query query, Class<T> resultClass);
+    public abstract <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass);
 
-    public abstract Cursor findAllFromCategory(Category category);
+    public abstract <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
+
+    public abstract <T extends Pojo> Cursor<T> findAllPojosFromCategory(Category category, Class<T> resultClass);
     
     public abstract long getCount(Category category);
 

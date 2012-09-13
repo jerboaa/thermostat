@@ -39,7 +39,6 @@ package com.redhat.thermostat.common.storage;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 import java.util.UUID;
 
@@ -316,34 +315,20 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public Cursor findAll(Query query) {
+    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
         MongoQuery mongoQuery =  checkAndCastQuery(query);
         DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
         DBCursor dbCursor = coll.find(mongoQuery.getGeneratedQuery());
-        return new MongoCursor(dbCursor, mongoQuery.getCategory());
+        return new MongoCursor<T>(dbCursor, mongoQuery.getCategory(), resultClass, converters);
     }
 
     @Override
-    public <T> T findPojo(Query query, Class<T> resultClass) {
+    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) {
         Chunk resultChunk = find(query);
         if (resultChunk == null) {
             return null;
         }
-        try {
-            Object pojo = resultClass.newInstance();
-            ChunkAdapter chunk = new ChunkAdapter(pojo);
-            Set<Key<?>> keys = resultChunk.getKeys();
-            for (Key key : keys) {
-                if (key == null) {
-                    System.err.println("WARNING: null key in result: " + resultChunk);
-                    continue;
-                 }
-                 chunk.put(key, resultChunk.get(key));
-            }
-            return (T) chunk.getAdaptee();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        return ChunkToPojoConverter.convertChunkToPojo(resultChunk, resultClass, converters);
     }
 
     // TODO: Make this private, and change the testcase to test putPojo() instead.
@@ -365,10 +350,10 @@ public class MongoStorage extends Storage {
     }
     
     @Override
-    public Cursor findAllFromCategory(Category category) {
+    public <T extends Pojo> Cursor<T> findAllPojosFromCategory(Category category, Class<T> resultClass) {
         DBCollection coll = getCachedCollection(category.getName());
         DBCursor dbCursor = coll.find();
-        return new MongoCursor(dbCursor, category);
+        return new MongoCursor<T>(dbCursor, category, resultClass, converters);
     }
 
     @Override

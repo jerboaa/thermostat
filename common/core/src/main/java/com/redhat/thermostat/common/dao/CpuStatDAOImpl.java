@@ -47,8 +47,6 @@ class CpuStatDAOImpl implements CpuStatDAO {
 
     private Storage storage;
 
-    private Converter<CpuStat> converter = new CpuStatConverter();;
-
     private Map<HostRef, HostLatestPojoListGetter<CpuStat>> getters = new HashMap<>();
 
     CpuStatDAOImpl(Storage storage) {
@@ -59,7 +57,7 @@ class CpuStatDAOImpl implements CpuStatDAO {
     public List<CpuStat> getLatestCpuStats(HostRef ref) {
         HostLatestPojoListGetter<CpuStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new HostLatestPojoListGetter<CpuStat>(storage, cpuStatCategory, converter, ref);
+            getter = new HostLatestPojoListGetter<CpuStat>(storage, cpuStatCategory, ref, CpuStat.class);
             getters.put(ref, getter);
         }
         return getter.getLatest();

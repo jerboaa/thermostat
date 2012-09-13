@@ -47,8 +47,6 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
 
     private Storage storage;
 
-    private Converter<VmClassStat> converter = new VmClassStatConverter();
-
     private Map<VmRef, VmLatestPojoListGetter<VmClassStat>> getters = new HashMap<>();
 
     VmClassStatDAOImpl(Storage storage) {
@@ -59,7 +57,7 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
     public List<VmClassStat> getLatestClassStats(VmRef ref) {
         VmLatestPojoListGetter<VmClassStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmClassStat>(storage, vmClassStatsCategory, converter, ref);
+            getter = new VmLatestPojoListGetter<VmClassStat>(storage, vmClassStatsCategory, ref, VmClassStat.class);
             getters.put(ref, getter);
         }
         return getter.getLatest();

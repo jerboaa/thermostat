@@ -46,6 +46,10 @@ public class VmClassStat implements TimeStampedPojo {
     private long timestamp;
     private long loadedClasses;
 
+    public VmClassStat() {
+        this(-1, -1, -1);
+    }
+
     public VmClassStat(int vmId, long timestamp, long loadedClasses) {
         this.vmId = vmId;
         this.timestamp = timestamp;

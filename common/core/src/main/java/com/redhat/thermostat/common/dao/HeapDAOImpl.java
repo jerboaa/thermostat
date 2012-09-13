@@ -52,7 +52,6 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
@@ -108,23 +107,12 @@ class HeapDAOImpl implements HeapDAO {
                 .from(heapInfoCategory)
                 .where(Key.AGENT_ID, Criteria.EQUALS, vm.getAgent().getAgentId())
                 .where(Key.VM_ID, Criteria.EQUALS, vm.getId());
-        Cursor cursor = storage.findAll(query);
+        Cursor<HeapInfo> cursor = storage.findAllPojos(query, HeapInfo.class);
         Collection<HeapInfo> heapInfos = new ArrayList<>();
         while (cursor.hasNext()) {
-            heapInfos.add(convertChunkToHeapInfo(vm, cursor.next()));
+            heapInfos.add(cursor.next());
         }
         return heapInfos;
-    }
-
-    private HeapInfo convertChunkToHeapInfo(VmRef vm, Chunk chunk) {
-        int vmId = chunk.get(Key.VM_ID);
-        String agentId = chunk.get(Key.AGENT_ID);
-        HeapInfo info = new HeapInfo(vmId, chunk.get(Key.TIMESTAMP));
-        info.setAgentId(agentId);
-        info.setHeapId(chunk.get(HeapDAO.heapIdKey));
-        info.setHeapDumpId(chunk.get(HeapDAO.heapDumpIdKey));
-        info.setHistogramId(chunk.get(HeapDAO.histogramIdKey));
-        return info;
     }
 
     @Override

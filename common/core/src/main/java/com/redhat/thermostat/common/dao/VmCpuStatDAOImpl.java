@@ -47,8 +47,6 @@ class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     private final Storage storage;
 
-    private Converter<VmCpuStat> converter = new VmCpuStatConverter();
-
     private Map<VmRef, VmLatestPojoListGetter<VmCpuStat>> getters = new HashMap<>();
 
     VmCpuStatDAOImpl(Storage storage) {
@@ -59,7 +57,7 @@ class VmCpuStatDAOImpl implements VmCpuStatDAO {
     public List<VmCpuStat> getLatestVmCpuStats(VmRef ref) {
         VmLatestPojoListGetter<VmCpuStat> getter = getters.get(ref);
         if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmCpuStat>(storage, vmCpuStatCategory, converter, ref);
+            getter = new VmLatestPojoListGetter<VmCpuStat>(storage, vmCpuStatCategory, ref, VmCpuStat.class);
             getters.put(ref, getter);
         }
         return getter.getLatest();

@@ -36,18 +36,26 @@
 
 package com.redhat.thermostat.common.storage;
 
+import java.util.Map;
+
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.common.dao.Converter;
+import com.redhat.thermostat.common.model.Pojo;
 
-class MongoCursor implements Cursor {
+class MongoCursor<T extends Pojo> implements Cursor<T> {
 
     private DBCursor cursor;
     private Category category;
+    private Class<T> resultClass;
+    private Map<Class<?>, Converter<?>> converters;
 
-    MongoCursor(DBCursor cursor, Category category) {
+    MongoCursor(DBCursor cursor, Category category, Class<T> resultClass, Map<Class<?>, Converter<?>> converters) {
         this.cursor = cursor;
         this.category = category;
+        this.resultClass = resultClass;
+        this.converters = converters;
     }
 
     @Override
@@ -56,17 +64,18 @@ class MongoCursor implements Cursor {
     }
 
     @Override
-    public Chunk next() {
+    public T next() {
         DBObject next = cursor.next();
         if (next == null) {
             return null;
         }
         ChunkConverter converter = new ChunkConverter();
-        return converter.dbObjectToChunk(next, category);
+        Chunk resultChunk = converter.dbObjectToChunk(next, category);
+        return ChunkToPojoConverter.convertChunkToPojo(resultChunk, resultClass, converters);
     }
 
     @Override
-    public Cursor sort(Key<?> orderBy, SortDirection direction) {
+    public Cursor<T> sort(Key<?> orderBy, SortDirection direction) {
         if (!category.getKeys().contains(orderBy)) {
             throw new IllegalArgumentException("Key not present in this Cursor's category.");
         }   /* TODO: There are other possible error conditions.  Once there is API to configure
@@ -75,13 +84,13 @@ class MongoCursor implements Cursor {
              */
         DBObject dbOrderBy = new BasicDBObject(orderBy.getName(), direction.getValue());
         DBCursor sorted = cursor.sort(dbOrderBy);
-        return new MongoCursor(sorted, category);
+        return new MongoCursor<T>(sorted, category, resultClass, converters);
     }
 
     @Override
-    public Cursor limit(int i) {
+    public Cursor<T> limit(int i) {
         DBCursor limited = cursor.limit(i);
-        return new MongoCursor(limited, category);
+        return new MongoCursor<T>(limited, category, resultClass, converters);
     }
 
 }

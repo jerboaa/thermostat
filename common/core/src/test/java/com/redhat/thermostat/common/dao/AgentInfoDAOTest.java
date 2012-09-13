@@ -51,18 +51,19 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.AgentInformation;
+import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.MockQuery;
 
 public class AgentInfoDAOTest {
 
     private AgentInformation agentInfo1;
-    private Chunk agentChunk1;
+    private AgentInformation agent1;
 
     @Before
     public void setUp() {
@@ -73,7 +74,12 @@ public class AgentInfoDAOTest {
         agentInfo1.setStartTime(100);
         agentInfo1.setStopTime(10);
 
-        agentChunk1 = new AgentInfoConverter().toChunk(agentInfo1);
+        agent1 = new AgentInformation();
+        agent1.setAgentId("1234");
+        agent1.setAlive(true);
+        agent1.setConfigListenAddress("foobar:666");
+        agent1.setStartTime(100);
+        agent1.setStopTime(10);
     }
 
     @Test
@@ -104,12 +110,13 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyGetAllAgentInformationWithOneAgentInStorage() {
-        Cursor agentCursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<AgentInformation> agentCursor = mock(Cursor.class);
         when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(agentChunk1).thenReturn(null);
+        when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAllFromCategory(AgentInfoDAO.CATEGORY)).thenReturn(agentCursor);
+        when(storage.findAllPojosFromCategory(AgentInfoDAO.CATEGORY, AgentInformation.class)).thenReturn(agentCursor);
 
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
@@ -124,14 +131,15 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyGetAliveAgent() {
-        Cursor agentCursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<AgentInformation> agentCursor = mock(Cursor.class);
         when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(agentCursor.next()).thenReturn(agentChunk1).thenReturn(null);
+        when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
         MockQuery query = new MockQuery();
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(query);
-        when(storage.findAll(query)).thenReturn(agentCursor);
+        when(storage.findAllPojos(query, AgentInformation.class)).thenReturn(agentCursor);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
         List<AgentInformation> aliveAgents = dao.getAliveAgents();
@@ -199,13 +207,18 @@ public class AgentInfoDAOTest {
 
         dao.updateAgentInformation(agentInfo1);
 
-        ArgumentCaptor<Chunk> chunkCaptor = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).updateChunk(chunkCaptor.capture());
+        ArgumentCaptor<Chunk> pojoCaptor = ArgumentCaptor.forClass(Chunk.class);
+        verify(storage).updateChunk(pojoCaptor.capture());
 
-        Chunk updatedChunk = chunkCaptor.getValue();
-        Chunk expectedChunk = agentChunk1;
+        Chunk updatedValue = pojoCaptor.getValue();
 
-        assertEquals(expectedChunk, updatedChunk);
+        Chunk expected = new Chunk(AgentInfoDAO.CATEGORY, true);
+        expected.put(Key.AGENT_ID, "1234");
+        expected.put(AgentInfoDAO.ALIVE_KEY, true);
+        expected.put(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, "foobar:666");
+        expected.put(AgentInfoDAO.START_TIME_KEY, 100L);
+        expected.put(AgentInfoDAO.STOP_TIME_KEY, 10L);
+        assertEquals(expected, updatedValue);
     }
 
     @Test

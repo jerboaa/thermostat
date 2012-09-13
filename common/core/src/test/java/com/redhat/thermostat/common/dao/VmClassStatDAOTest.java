@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,10 +55,10 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.MockQuery;
@@ -83,11 +84,13 @@ public class VmClassStatDAOTest {
     @Test
     public void testGetLatestClassStatsBasic() {
 
-        Chunk chunk = getChunk();
+        VmClassStat vmClassStat = getClassStat();
 
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmClassStat> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(chunk);
+        when(cursor.next()).thenReturn(vmClassStat);
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).then(new Answer<Query>() {
@@ -96,7 +99,7 @@ public class VmClassStatDAOTest {
                 return new MockQuery();
             }
         });
-        when(storage.findAll(any(Query.class))).thenReturn(cursor);
+        when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -110,7 +113,7 @@ public class VmClassStatDAOTest {
         List<VmClassStat> vmClassStats = dao.getLatestClassStats(vmRef);
 
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage).findAll(arg.capture());
+        verify(storage).findAllPojos(arg.capture(), same(VmClassStat.class));
         assertFalse(arg.getValue().hasWhereClauseFor(Key.TIMESTAMP));
 
         assertEquals(1, vmClassStats.size());
@@ -123,11 +126,14 @@ public class VmClassStatDAOTest {
     @Test
     public void testGetLatestClassStatsTwice() {
 
-        Chunk chunk = getChunk();
+        VmClassStat vmClassStat = getClassStat();
 
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmClassStat> cursor = mock(Cursor.class);
+
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(chunk);
+        when(cursor.next()).thenReturn(vmClassStat);
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).then(new Answer<Query>() {
@@ -136,7 +142,7 @@ public class VmClassStatDAOTest {
                 return new MockQuery();
             }
         });
-        when(storage.findAll(any(Query.class))).thenReturn(cursor);
+        when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -151,16 +157,12 @@ public class VmClassStatDAOTest {
 
         dao.getLatestClassStats(vmRef);
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage, times(2)).findAll(arg.capture());
+        verify(storage, times(2)).findAllPojos(arg.capture(), same(VmClassStat.class));
         assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 1234l));
     }
 
-    private Chunk getChunk() {
-        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(Key.VM_ID, VM_ID);
-        chunk.put(VmClassStatDAO.loadedClassesKey, LOADED_CLASSES);
-        return chunk;
+    private VmClassStat getClassStat() {
+        return new VmClassStat(VM_ID, TIMESTAMP, LOADED_CLASSES);
     }
 
     @Test

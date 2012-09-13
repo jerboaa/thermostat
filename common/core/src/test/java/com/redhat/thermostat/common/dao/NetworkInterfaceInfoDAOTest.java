@@ -38,10 +38,7 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,10 +47,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Storage;
@@ -81,19 +76,19 @@ public class NetworkInterfaceInfoDAOTest {
     @Test
     public void testGetNetworkInterfaces() {
 
-        Chunk chunk = new Chunk(NetworkInterfaceInfoDAO.networkInfoCategory, false);
-        chunk.put(NetworkInterfaceInfoDAO.ifaceKey, INTERFACE_NAME);
-        chunk.put(NetworkInterfaceInfoDAO.ip4AddrKey, IPV4_ADDR);
-        chunk.put(NetworkInterfaceInfoDAO.ip6AddrKey, IPV6_ADDR);
+        NetworkInterfaceInfo niInfo = new NetworkInterfaceInfo(INTERFACE_NAME);
+        niInfo.setIp4Addr(IPV4_ADDR);
+        niInfo.setIp6Addr(IPV6_ADDR);
 
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<NetworkInterfaceInfo> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(chunk);
+        when(cursor.next()).thenReturn(niInfo);
 
         Storage storage = mock(Storage.class);
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
-        when(storage.findAll(query)).thenReturn(cursor);
+        when(storage.findAllPojos(query, NetworkInterfaceInfo.class)).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");

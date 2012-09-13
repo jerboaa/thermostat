@@ -34,28 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.storage;
 
-import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Key;
+import java.util.Map;
+import java.util.Set;
 
-public class VmClassStatConverter implements Converter<VmClassStat> {
+import com.redhat.thermostat.common.dao.Converter;
+import com.redhat.thermostat.common.model.Pojo;
 
-    @Override
-    public Chunk toChunk(VmClassStat vmClassStat) {
-        Chunk chunk = new Chunk(VmClassStatDAO.vmClassStatsCategory, false);
-        chunk.put(Key.VM_ID, vmClassStat.getVmId());
-        chunk.put(Key.TIMESTAMP, vmClassStat.getTimeStamp());
-        chunk.put(VmClassStatDAO.loadedClassesKey, vmClassStat.getLoadedClasses());
-        return chunk;
-    }
+class ChunkToPojoConverter {
 
-    @Override
-    public VmClassStat fromChunk(Chunk chunk) {
-        long timestamp = chunk.get(Key.TIMESTAMP);
-        long loadedClasses = chunk.get(VmClassStatDAO.loadedClassesKey);
-        int vmId = chunk.get(Key.VM_ID);
-        return new VmClassStat(vmId, timestamp, loadedClasses);
+    static <T extends Pojo> T convertChunkToPojo(Chunk resultChunk, Class<T> resultClass, Map<Class<?>, Converter<?>> converters) {
+        try {
+            if (converters != null) {
+                Converter<?> converter = converters.get(resultClass);
+                if (converter != null) {
+                    return (T) converter.fromChunk(resultChunk);
+                }
+            }
+            Pojo pojo = resultClass.newInstance();
+            ChunkAdapter chunk = new ChunkAdapter(pojo, resultChunk.getCategory(), resultChunk.getReplace());
+            Set<Key<?>> keys = resultChunk.getKeys();
+            for (Key key : keys) {
+                if (key == null) {
+                    continue;
+                }
+                chunk.put(key, resultChunk.get(key));
+            }
+            return (T) chunk.getAdaptee();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

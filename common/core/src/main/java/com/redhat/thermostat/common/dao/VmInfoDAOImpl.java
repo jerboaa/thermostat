@@ -73,7 +73,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
     public Collection<VmRef> getVMs(HostRef host) {
 
         Query query = buildQuery(host);
-        Cursor cursor = storage.findAll(query);
+        Cursor<VmInfo> cursor = storage.findAllPojos(query, VmInfo.class);
         return buildVMsFromQuery(cursor, host);
     }
 
@@ -84,21 +84,21 @@ class VmInfoDAOImpl implements VmInfoDAO {
         return query;
     }
 
-    private Collection<VmRef> buildVMsFromQuery(Cursor cursor, HostRef host) {
+    private Collection<VmRef> buildVMsFromQuery(Cursor<VmInfo> cursor, HostRef host) {
         List<VmRef> vmRefs = new ArrayList<VmRef>();
         while (cursor.hasNext()) {
-            Chunk vmChunk = cursor.next();
-            VmRef vm = buildVmRefFromChunk(vmChunk, host);
+            VmInfo vmInfo = cursor.next();
+            VmRef vm = buildVmRefFromChunk(vmInfo, host);
             vmRefs.add(vm);
         }
 
         return vmRefs;
     }
 
-    private VmRef buildVmRefFromChunk(Chunk vmChunk, HostRef host) {
-        Integer id = vmChunk.get(Key.VM_ID);
+    private VmRef buildVmRefFromChunk(VmInfo vmInfo, HostRef host) {
+        Integer id = vmInfo.getVmId();
         // TODO can we do better than the main class?
-        String mainClass = vmChunk.get(mainClassKey);
+        String mainClass = vmInfo.getMainClass();
         VmRef ref = new VmRef(host, id, mainClass);
         return ref;
     }

@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -68,12 +68,11 @@ import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.MockQuery;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -115,24 +114,21 @@ public class HeapDAOTest {
             .where(Key.AGENT_ID, Criteria.EQUALS, "123")
             .where(Key.VM_ID, Criteria.EQUALS, 234);
 
-        Cursor cursor = mock(Cursor.class);
-        Chunk info1 = new Chunk(HeapDAO.heapInfoCategory, false);
-        info1.put(Key.AGENT_ID, "123");
-        info1.put(Key.VM_ID, 234);
-        info1.put(Key.TIMESTAMP, 12345l);
-        info1.put(HeapDAO.heapDumpIdKey, "test1");
-        info1.put(HeapDAO.histogramIdKey, "histotest1");
-        
-        Chunk info2 = new Chunk(HeapDAO.heapInfoCategory, false);
-        info2.put(Key.AGENT_ID, "123");
-        info2.put(Key.VM_ID, 234);
-        info2.put(Key.TIMESTAMP, 23456l);
-        info2.put(HeapDAO.heapDumpIdKey, "test2");
-        info2.put(HeapDAO.histogramIdKey, "histotest2");
-        
+        @SuppressWarnings("unchecked")
+        Cursor<HeapInfo> cursor = mock(Cursor.class);
+        HeapInfo info1 = new HeapInfo(234, 12345L);
+        info1.setAgentId("123");
+        info1.setHeapDumpId("test1");
+        info1.setHistogramId("histotest1");
+
+        HeapInfo info2 = new HeapInfo(234, 23456L);
+        info2.setAgentId("123");
+        info2.setHeapDumpId("test2");
+        info2.setHistogramId("histotest2");
+
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(info1).thenReturn(info2).thenReturn(null);
-        when(storage.findAll(findAllQuery)).thenReturn(cursor);
+        when(storage.findAllPojos(findAllQuery, HeapInfo.class)).thenReturn(cursor);
 
         // Setup for reading heapdump data.
         when(storage.loadFile("test-heap")).thenReturn(new ByteArrayInputStream(data));
@@ -279,7 +275,7 @@ public class HeapDAOTest {
     public void testInvalidHeapId() throws IOException {
         storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.findPojo(any(Query.class), any(Class.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
+        when(storage.findPojo(any(Query.class), same(HeapInfo.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
         dao = new HeapDAOImpl(storage);
         heapInfo = dao.getHeapInfo("some-random-heap-id");
         assertTrue(heapInfo == null);

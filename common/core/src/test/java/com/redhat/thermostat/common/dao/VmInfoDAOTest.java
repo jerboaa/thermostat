@@ -197,17 +197,18 @@ public class VmInfoDAOTest {
           .from(VmInfoDAO.vmInfoCategory)
           .where(Key.AGENT_ID, Criteria.EQUALS, "123");
 
-      Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-      vm1.put(Key.VM_ID, 123);
-      vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
+      VmInfo vm1 = new VmInfo();
+      vm1.setVmPid(123);
+      vm1.setMainClass("mainClass1");
 
-      Cursor singleVMCursor = mock(Cursor.class);
+      @SuppressWarnings("unchecked")
+      Cursor<VmInfo> singleVMCursor = mock(Cursor.class);
       when(singleVMCursor.hasNext()).thenReturn(true).thenReturn(false);
       when(singleVMCursor.next()).thenReturn(vm1);
 
       Storage storage = mock(Storage.class);
       when(storage.createQuery()).thenReturn(new MockQuery());
-      when(storage.findAll(expectedQuery)).thenReturn(singleVMCursor);
+      when(storage.findAllPojos(expectedQuery, VmInfo.class)).thenReturn(singleVMCursor);
       return storage;
   }
 
@@ -228,21 +229,22 @@ public class VmInfoDAOTest {
           .from(VmInfoDAO.vmInfoCategory)
           .where(Key.AGENT_ID, Criteria.EQUALS, "456");
 
-      Chunk vm1 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-      vm1.put(Key.VM_ID, 123);
-      vm1.put(VmInfoDAO.mainClassKey, "mainClass1");
+      VmInfo vm1 = new VmInfo();
+      vm1.setVmPid(123);
+      vm1.setMainClass("mainClass1");
 
-      Chunk vm2 = new Chunk(VmInfoDAO.vmInfoCategory, false);
-      vm2.put(Key.VM_ID, 456);
-      vm2.put(VmInfoDAO.mainClassKey, "mainClass2");
+      VmInfo vm2 = new VmInfo();
+      vm2.setVmPid(456);
+      vm2.setMainClass("mainClass2");
 
-      Cursor multiVMsCursor = mock(Cursor.class);
+      @SuppressWarnings("unchecked")
+      Cursor<VmInfo> multiVMsCursor = mock(Cursor.class);
       when(multiVMsCursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
       when(multiVMsCursor.next()).thenReturn(vm1).thenReturn(vm2);
 
       Storage storage = mock(Storage.class);
       when(storage.createQuery()).thenReturn(new MockQuery());
-      when(storage.findAll(expectedQuery)).thenReturn(multiVMsCursor);
+      when(storage.findAllPojos(expectedQuery, VmInfo.class)).thenReturn(multiVMsCursor);
       return storage;
   }
 

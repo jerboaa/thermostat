@@ -38,14 +38,13 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
 
 import java.util.Collection;
 import java.util.List;
@@ -56,12 +55,12 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.model.VmGcStat;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.MockQuery;
 
 public class VmGcStatDAOTest {
@@ -88,20 +87,17 @@ public class VmGcStatDAOTest {
     @Test
     public void testGetLatestVmGcStatsBasic() {
 
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
-        chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(Key.VM_ID, VM_ID);
-        chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);
-        chunk.put(VmGcStatDAO.runCountKey, RUN_COUNT);
-        chunk.put(VmGcStatDAO.wallTimeKey, WALL_TIME);
+        VmGcStat vmGcStat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
 
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmGcStat> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(chunk);
+        when(cursor.next()).thenReturn(vmGcStat);
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.findAll(any(Query.class))).thenReturn(cursor);
+        when(storage.findAllPojos(any(Query.class), same(VmGcStat.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -115,7 +111,7 @@ public class VmGcStatDAOTest {
         List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef);
 
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage).findAll(arg.capture());
+        verify(storage).findAllPojos(arg.capture(), same(VmGcStat.class));
         assertFalse(arg.getValue().hasWhereClauseFor(Key.TIMESTAMP));
 
         assertEquals(1, vmGcStats.size());
@@ -130,17 +126,13 @@ public class VmGcStatDAOTest {
     @Test
     public void testGetLatestVmGcStatsTwice() {
 
-        Chunk chunk = new Chunk(VmGcStatDAO.vmGcStatCategory, false);
-        chunk.put(Key.TIMESTAMP, TIMESTAMP);
-        chunk.put(Key.VM_ID, VM_ID);
-        chunk.put(VmGcStatDAO.collectorKey, COLLECTOR);
-        chunk.put(VmGcStatDAO.runCountKey, RUN_COUNT);
-        chunk.put(VmGcStatDAO.wallTimeKey, WALL_TIME);
+        VmGcStat vmGcStat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
 
-        Cursor cursor = mock(Cursor.class);
+        @SuppressWarnings("unchecked")
+        Cursor<VmGcStat> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(chunk);
-
+        when(cursor.next()).thenReturn(vmGcStat);
+        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
         Storage storage = mock(Storage.class);
 
         when(storage.createQuery()).then(new Answer<MockQuery>() {
@@ -149,7 +141,7 @@ public class VmGcStatDAOTest {
                 return new MockQuery();
             }
         });
-        when(storage.findAll(any(Query.class))).thenReturn(cursor);
+        when(storage.findAllPojos(any(Query.class), same(VmGcStat.class))).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -163,7 +155,7 @@ public class VmGcStatDAOTest {
 
         dao.getLatestVmGcStats(vmRef);
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage, times(2)).findAll(arg.capture());
+        verify(storage, times(2)).findAllPojos(arg.capture(), same(VmGcStat.class));
         MockQuery query = arg.getValue();
         assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 456l));
     }
