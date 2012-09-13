@@ -279,14 +279,16 @@ public class HarvesterTest {
         ThreadInfo info1 = mock(ThreadInfo.class);
         when(info1.getThreadName()).thenReturn("fluff1");
         when(info1.getThreadId()).thenReturn(1l);
-
+        when(info1.getThreadState()).thenReturn(Thread.State.RUNNABLE);
+        
         ThreadInfo info2 = mock(ThreadInfo.class);
         when(info2.getThreadName()).thenReturn("fluff2");
         when(info2.getThreadId()).thenReturn(2l);
+        when(info2.getThreadState()).thenReturn(Thread.State.BLOCKED);
 
         ThreadInfo[] infos = new ThreadInfo[] {
             info1,
-            info2     
+            info2
         };
                 
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
@@ -339,6 +341,11 @@ public class HarvesterTest {
         assertEquals("fluff1", threadInfos.get(0).getThreadName());
         assertEquals("fluff2", threadInfos.get(1).getThreadName());
         
+        assertEquals("RUNNABLE", threadInfos.get(0).getThreadState());
+        assertEquals("BLOCKED", threadInfos.get(1).getThreadState());
+        assertEquals(Thread.State.RUNNABLE, threadInfos.get(0).getState());
+        assertEquals(Thread.State.BLOCKED, threadInfos.get(1).getState());
+
         verify(collectorBean, times(1)).getThreadCpuTime(1l);
         verify(collectorBean, times(1)).getThreadCpuTime(2l);
     }

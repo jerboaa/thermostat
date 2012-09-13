@@ -100,9 +100,14 @@ public class ThreadInfoData implements TimeStampedPojo {
     public void setThreadId(long threadID) {
         this.threadID = threadID;
     }
-
-    public void setThreadState(State threadState) {
+    
+    public void setState(State threadState) {
         this.threadState = threadState;
+    }
+
+    @Persist
+    public void setThreadState(String threadStateString) {
+        this.threadState = Thread.State.valueOf(threadStateString);
     }
 
     @Persist
@@ -125,10 +130,15 @@ public class ThreadInfoData implements TimeStampedPojo {
         return threadID;
     }
 
-    public State getThreadState() {
+    public State getState() {
         return threadState;
     }
 
+    @Persist
+    public String getThreadState() {
+        return threadState.name();
+    }
+    
     @Persist
     public long getTimeStamp() {
         return timestamp;

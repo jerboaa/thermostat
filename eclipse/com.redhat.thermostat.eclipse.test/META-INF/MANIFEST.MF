@@ -1,12 +1,22 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Version: 0.4.0.qualifier
-Fragment-Host: com.redhat.thermostat.eclipse;bundle-version="0.4.0.qualifier"
 Bundle-Name: Eclipse client tests
-Bundle-SymbolicName: com.redhat.thermostat.eclipse.test
+Bundle-Activator: com.redhat.thermostat.eclipse.test.Activator
+Bundle-SymbolicName: com.redhat.thermostat.eclipse.test;singleton:=true
 Bundle-Vendor: Redhat Inc.
-Require-Bundle: org.eclipse.jdt.core,
- org.junit;bundle-version="3.8.2"
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.junit;bundle-version="4.10.0",
+ com.redhat.thermostat.bundles.org.hamcrest.core;resolution:=optional,
+ com.redhat.thermostat.bundles.org.objenesis;resolution:=optional,
+ com.redhat.thermostat.bundles.org.mockito.mockito-core;resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Import-Package: org.mockito,
+Import-Package: com.redhat.thermostat.common,
+ com.redhat.thermostat.common.dao,
+ com.redhat.thermostat.eclipse.model,
+ org.eclipse.core.resources,
+ org.eclipse.ui.ide,
+ org.mockito,
  org.mockito.stubbing
+Export-Package: com.redhat.thermostat.eclipse.test.model

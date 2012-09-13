@@ -1,0 +1,7 @@
+# perhaps rm -rf ~/.m2
+cd path/to/thermostat/home
+mvn clean install
+cd eclipse/test-deps-bundle-wrapping
+mvn clean install
+cd ..
+mvn clean package

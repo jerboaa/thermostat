@@ -149,7 +149,7 @@ public class ThreadTableController implements CommonController {
                     double monitor = 0;
                     double sleeping = 0;
                     for (ThreadInfoData info : beanList) {
-                        State state = info.getThreadState();
+                        State state = info.getState();
                         switch (state) {
                         case RUNNABLE:
                             running++;

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.model;
+package com.redhat.thermostat.eclipse.test.model;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -53,6 +53,8 @@ import org.junit.Test;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.eclipse.model.HostsVmsTreeContentProvider;
+import com.redhat.thermostat.eclipse.model.HostsVmsTreeRoot;
 
 public class HostVmsTreeContentProviderTest {
 

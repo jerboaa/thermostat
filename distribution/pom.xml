@@ -132,6 +132,11 @@
                     <include>bundles.properties</include>
                   </includes>
                 </resource>
+                <resource>
+                  <directory>tools</directory>
+                  <targetPath>tools</targetPath>
+                  <filtering>true</filtering>
+                </resource>
               </resources>
             </configuration>
           </execution>
@@ -148,6 +153,7 @@
             <configuration>
               <target>
                 <chmod file="${project.build.directory}/bin/*" perm="755" />
+                <chmod file="${project.build.directory}/tools/*" perm="755" />
               </target>
             </configuration>
             <goals>

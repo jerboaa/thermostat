@@ -34,55 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.test.model;
+package com.redhat.thermostat.eclipse.test;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.BundleContext;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+/**
+ * The activator class controls the plug-in life cycle
+ */
+public class Activator extends AbstractUIPlugin {
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.eclipse.model.HostsVmsLabelProvider;
-import com.redhat.thermostat.eclipse.model.HostsVmsTreeRoot;
+    // The plug-in ID
+    public static final String PLUGIN_ID = "com.redhat.thermostat.eclipse.test"; //$NON-NLS-1$
 
-public class HostsVmsLabelProviderTest {
+    // The shared instance
+    private static Activator plugin;
 
-    private HostsVmsLabelProvider labelProvider;
-    
-    @Before
-    public void setUp() {
-        labelProvider = new HostsVmsLabelProvider();
+    /**
+     * The constructor
+     */
+    public Activator() {
     }
-    
-    @After
-    public void tearDown() {
-        labelProvider = null;
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext
+     * )
+     */
+    public void start(BundleContext context) throws Exception {
+        super.start(context);
+        plugin = this;
     }
-    
-    @Test
-    public void canGetLabels() {
-        String hostName = "host1";
-        HostRef host = mock(HostRef.class);
-        when(host.getHostName()).thenReturn(hostName);
-        assertEquals(hostName, labelProvider.getText(host));
-        String vmName = "vm1";
-        VmRef vm = mock(VmRef.class);
-        when(vm.getName()).thenReturn(vmName);
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext
+     * )
+     */
+    public void stop(BundleContext context) throws Exception {
+        plugin = null;
+        super.stop(context);
     }
-    
-    @Test(expected = RuntimeException.class)
-    public void getLabelthrowsException() {
-        labelProvider.getText(new HostsVmsTreeRoot());
+
+    /**
+     * Returns the shared instance
+     * 
+     * @return the shared instance
+     */
+    public static Activator getDefault() {
+        return plugin;
     }
-    
-    @Test
-    public void canGetImage() {
-        assertNull(labelProvider.getImage(mock(HostRef.class)));
-        assertNull(labelProvider.getImage(mock(VmRef.class)));
-    }
+
 }
