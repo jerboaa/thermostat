@@ -117,7 +117,7 @@
     <repository>
       <id>local_eclipse_test_deps</id>
       <layout>p2</layout>
-      <url>file://${basedir}/../eclipse-test-deps-repo/target/repository/</url>
+      <url>file://${basedir}/../test-deps-p2-repository/target/repository/</url>
     </repository>
     <repository>
       <id>maven.eclipse.org</id>
