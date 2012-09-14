@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.ui;
 
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -85,7 +86,7 @@ public class HostMemoryControllerTest {
         List<MemoryStat> memoryStats = new LinkedList<>();
         memoryStats.add(memoryStat);
         MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
-        when(memoryStatDAO.getLatestMemoryStats(any(HostRef.class))).thenReturn(memoryStats);
+        when(memoryStatDAO.getLatestMemoryStats(any(HostRef.class), anyLong())).thenReturn(memoryStats);
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
         when(daoFactory.getHostInfoDAO()).thenReturn(hostInfoDAO);

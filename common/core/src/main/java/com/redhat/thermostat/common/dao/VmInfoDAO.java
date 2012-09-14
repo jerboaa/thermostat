@@ -74,5 +74,5 @@ public interface VmInfoDAO extends Countable {
 
     public void putVmInfo(VmInfo info);
 
-    public void putVmStoppedTime(int vmId, long timestamp);
+    public void putVmStoppedTime(int vmId, long since);
 }

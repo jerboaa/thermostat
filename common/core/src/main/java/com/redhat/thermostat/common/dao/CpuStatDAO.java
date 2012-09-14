@@ -49,7 +49,7 @@ public interface CpuStatDAO extends Countable {
     static final Category cpuStatCategory = new Category("cpu-stats",
             Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
 
-    List<CpuStat> getLatestCpuStats(HostRef ref);
+    List<CpuStat> getLatestCpuStats(HostRef ref, long since);
 
     void putCpuStat(CpuStat stat);
 

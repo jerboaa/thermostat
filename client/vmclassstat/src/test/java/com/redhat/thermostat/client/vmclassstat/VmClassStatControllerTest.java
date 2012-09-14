@@ -37,7 +37,7 @@
 package com.redhat.thermostat.client.vmclassstat;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -53,7 +53,6 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
@@ -72,7 +71,7 @@ public class VmClassStatControllerTest {
         stats.add(stat1);
 
         VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
-        when(vmClassStatDAO.getLatestClassStats(any(VmRef.class))).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
+        when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), anyInt())).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
         when(daoFactory.getVmClassStatsDAO()).thenReturn(vmClassStatDAO);

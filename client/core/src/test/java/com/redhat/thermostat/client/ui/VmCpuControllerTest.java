@@ -80,7 +80,7 @@ public class VmCpuControllerTest {
         stats.add(stat1);
 
         VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
-        when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class))).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
+        when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
         when(daoFactory.getVmCpuStatDAO()).thenReturn(vmCpuStatDAO);

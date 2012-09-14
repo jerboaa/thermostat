@@ -59,6 +59,7 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.ArrayUtils;
 import com.redhat.thermostat.test.MockQuery;
@@ -98,9 +99,9 @@ public class CpuStatDAOTest {
         when(storage.findAllPojos(query, CpuStat.class)).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
-        List<CpuStat> cpuStats = dao.getLatestCpuStats(hostRef);
+        List<CpuStat> cpuStats = dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
-        assertFalse(query.hasWhereClauseFor(Key.TIMESTAMP));
+        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
 
         assertEquals(1, cpuStats.size());
         CpuStat stat = cpuStats.get(0);
@@ -130,8 +131,8 @@ public class CpuStatDAOTest {
         when(storage.findAllPojos(any(Query.class), same(CpuStat.class))).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
-        dao.getLatestCpuStats(hostRef);
-        dao.getLatestCpuStats(hostRef);
+        dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
+        dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
         verify(storage, times(2)).findAllPojos(query, CpuStat.class);
 

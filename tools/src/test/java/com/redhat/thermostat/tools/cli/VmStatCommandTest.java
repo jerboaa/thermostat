@@ -146,7 +146,7 @@ public class VmStatCommandTest {
         VmCpuStat cpustat2 = new VmCpuStat(3, vmId, 70);
         List<VmCpuStat> cpuStats = Arrays.asList(cpustat1, cpustat2);
         List<VmCpuStat> cpuStats2 = Collections.emptyList();
-        when(vmCpuStatDAO.getLatestVmCpuStats(vm)).thenReturn(cpuStats).thenReturn(cpuStats2);
+        when(vmCpuStatDAO.getLatestVmCpuStats(vm, Long.MIN_VALUE)).thenReturn(cpuStats).thenReturn(cpuStats2);
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getVmCpuStatDAO()).thenReturn(vmCpuStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
@@ -208,7 +208,10 @@ public class VmStatCommandTest {
         VmMemoryStat memStat4 = new VmMemoryStat(4, vmId, gens4);
 
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
-        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm)).thenReturn(Arrays.asList(memStat1, memStat2, memStat3)).thenReturn(Arrays.asList(memStat4));
+        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm, Long.MIN_VALUE))
+            .thenReturn(Arrays.asList(memStat1, memStat2, memStat3));
+
+        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm, memStat3.getTimeStamp())).thenReturn(Arrays.asList(memStat4));
 
         when(daoFactory.getVmMemoryStatDAO()).thenReturn(vmMemoryStatDAO);
     }
@@ -279,7 +282,9 @@ public class VmStatCommandTest {
         assertEquals(1, timerFactory.getInitialDelay());
         assertEquals(TimeUnit.SECONDS, timerFactory.getTimeUnit());
         assertEquals(Timer.SchedulingType.FIXED_RATE, timerFactory.getSchedulingType());
-                timerFactory.getAction().run();
+
+        timerFactory.getAction().run();
+
         expected = "TIME        %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
                    "12:00:00 AM      1 B        1 B        1 B        1 B\n" +
                    "12:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +

@@ -68,6 +68,7 @@ public class HostCpuController {
     private final HostRef ref;
 
     private int chartsAdded = 0;
+    private long lastSeenTimeStamp = Long.MIN_VALUE;
 
     public HostCpuController(HostRef ref) {
         this.ref = ref;
@@ -128,7 +129,7 @@ public class HostCpuController {
     }
 
     private void doCpuChartUpdate() {
-        List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats(ref);
+        List<CpuStat> cpuStats = cpuStatDAO.getLatestCpuStats(ref, lastSeenTimeStamp);
         List<List<DiscreteTimeData<Double>>> results = new ArrayList<>();
         for (CpuStat stat : cpuStats) {
             List<Double> data = stat.getPerProcessorUsage();
@@ -137,6 +138,7 @@ public class HostCpuController {
                     results.add(new ArrayList<DiscreteTimeData<Double>>());
                 }
                 results.get(i).add(new DiscreteTimeData<Double>(stat.getTimeStamp(), data.get(i)));
+                lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
             }
         }
 

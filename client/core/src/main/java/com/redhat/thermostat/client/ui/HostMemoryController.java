@@ -72,6 +72,8 @@ public class HostMemoryController {
     private final Timer backgroundUpdateTimer;
     private final GraphVisibilityChangeListener listener = new ShowHideGraph();
 
+    private long lastSeenTimeStamp = Long.MIN_VALUE;
+
     public HostMemoryController(final HostRef ref) {
         this.ref = ref;
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
@@ -147,7 +149,7 @@ public class HostMemoryController {
         List<DiscreteTimeData<? extends Number>> swapTotal = new LinkedList<>();
         List<DiscreteTimeData<? extends Number>> swapFree = new LinkedList<>();
 
-        for (MemoryStat stat : memoryStatDAO.getLatestMemoryStats(ref)) {
+        for (MemoryStat stat : memoryStatDAO.getLatestMemoryStats(ref, lastSeenTimeStamp)) {
             long timeStamp = stat.getTimeStamp();
             memFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getFree()));
             memTotal.add(new DiscreteTimeData<Long>(timeStamp, stat.getTotal()));
@@ -155,6 +157,7 @@ public class HostMemoryController {
             buf.add(new DiscreteTimeData<Long>(timeStamp, stat.getBuffers()));
             swapTotal.add(new DiscreteTimeData<Long>(timeStamp, stat.getSwapTotal()));
             swapFree.add(new DiscreteTimeData<Long>(timeStamp, stat.getSwapFree()));
+            lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
         }
 
         view.addMemoryData(MemoryType.MEMORY_FREE.name(), memFree);

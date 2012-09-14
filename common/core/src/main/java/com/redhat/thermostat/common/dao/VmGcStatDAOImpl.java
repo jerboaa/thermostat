@@ -54,13 +54,13 @@ class VmGcStatDAOImpl implements VmGcStatDAO {
     }
 
     @Override
-    public List<VmGcStat> getLatestVmGcStats(VmRef ref) {
+    public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since) {
         VmLatestPojoListGetter<VmGcStat> getter = getters.get(ref);
         if (getter == null) {
             getter = new VmLatestPojoListGetter<VmGcStat>(storage, vmGcStatCategory, ref, VmGcStat.class);
             getters.put(ref, getter);
         }
-        return getter.getLatest();
+        return getter.getLatest(since);
     }
 
     @Override

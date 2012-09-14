@@ -108,23 +108,7 @@ public class HostLatestPojoListGetterTest {
         when (storage.createQuery()).thenReturn(query);
 
         HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
-        query = (MockQuery) getter.buildQuery();
-
-        assertNotNull(query);
-        assertEquals(cat, query.getCategory());
-        assertEquals(1, query.getWhereClausesCount());
-        assertFalse(query.hasWhereClauseFor(Key.TIMESTAMP));
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
-    }
-
-    @Test
-    public void testBuildQueryWithSince() {
-        Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
-        when (storage.createQuery()).thenReturn(query);
-
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class, 123);
-        query = (MockQuery) getter.buildQuery();
+        query = (MockQuery) getter.buildQuery(123);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -141,9 +125,9 @@ public class HostLatestPojoListGetterTest {
         when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
 
         HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
-        ignored = (MockQuery) getter.buildQuery(); // Ignore first return value.
+        ignored = (MockQuery) getter.buildQuery(Long.MIN_VALUE); // Ignore first return value.
 
-        query = (MockQuery) getter.buildQuery();
+        query = (MockQuery) getter.buildQuery(Long.MIN_VALUE);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -161,13 +145,16 @@ public class HostLatestPojoListGetterTest {
         when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
-        Query query = new MockQuery();
+        MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
         when(storage.findAllPojos(query, CpuStat.class)).thenReturn(cursor);
 
         HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
 
-        List<CpuStat> stats = getter.getLatest();
+        List<CpuStat> stats = getter.getLatest(Long.MIN_VALUE);
+
+        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
 
         assertNotNull(stats);
         assertEquals(2, stats.size());
@@ -177,37 +164,6 @@ public class HostLatestPojoListGetterTest {
         CpuStat stat2 = stats.get(1);
         assertEquals(t2, stat2.getTimeStamp());
         assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, ArrayUtils.toPrimitiveDoubleArray(stat2.getPerProcessorUsage()), 0.001);
-    }
-
-    @Test
-    public void testGetLatestMultipleCalls() {
-        @SuppressWarnings("unchecked")
-        Cursor<CpuStat> cursor1 = mock(Cursor.class);
-        when(cursor1.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(cursor1.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
-        when(cursor1.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor1);
-
-        @SuppressWarnings("unchecked")
-        Cursor<CpuStat> cursor2 = mock(Cursor.class);
-        when(cursor2.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor2.next()).thenReturn(result3);
-        when(cursor2.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor2);
-
-        Storage storage = mock(Storage.class);
-        MockQuery firstQuery = new MockQuery();
-        MockQuery secondQuery = new MockQuery();
-        when(storage.createQuery()).thenReturn(firstQuery).thenReturn(secondQuery);
-
-        when(storage.findAllPojos(any(Query.class), same(CpuStat.class))).thenReturn(cursor1);
-
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
-        getter.getLatest();
-        getter.getLatest();
-
-        verify(storage, times(2)).findAllPojos(any(Query.class), same(CpuStat.class));
-
-        assertTrue(secondQuery.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
-        assertTrue(secondQuery.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, t2));
     }
 
     @After

@@ -108,11 +108,11 @@ public class VmGcStatDAOTest {
 
 
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
-        List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef);
+        List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef, Long.MIN_VALUE);
 
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
         verify(storage).findAllPojos(arg.capture(), same(VmGcStat.class));
-        assertFalse(arg.getValue().hasWhereClauseFor(Key.TIMESTAMP));
+        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
 
         assertEquals(1, vmGcStats.size());
         VmGcStat stat = vmGcStats.get(0);
@@ -121,43 +121,6 @@ public class VmGcStatDAOTest {
         assertEquals(COLLECTOR, stat.getCollectorName());
         assertEquals(RUN_COUNT, (Long) stat.getRunCount());
         assertEquals(WALL_TIME, (Long) stat.getWallTime());
-    }
-
-    @Test
-    public void testGetLatestVmGcStatsTwice() {
-
-        VmGcStat vmGcStat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
-
-        @SuppressWarnings("unchecked")
-        Cursor<VmGcStat> cursor = mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(vmGcStat);
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
-        Storage storage = mock(Storage.class);
-
-        when(storage.createQuery()).then(new Answer<MockQuery>() {
-            @Override
-            public MockQuery answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(VmGcStat.class))).thenReturn(cursor);
-
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn("system");
-
-        VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(321);
-
-        VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
-        dao.getLatestVmGcStats(vmRef);
-
-        dao.getLatestVmGcStats(vmRef);
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage, times(2)).findAllPojos(arg.capture(), same(VmGcStat.class));
-        MockQuery query = arg.getValue();
-        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 456l));
     }
 
     @Test

@@ -56,7 +56,7 @@ public interface MemoryStatDAO extends Countable {
             Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
             memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
 
-    public List<MemoryStat> getLatestMemoryStats(HostRef ref);
+    public List<MemoryStat> getLatestMemoryStats(HostRef ref, long since);
 
     void putMemoryStat(MemoryStat stat);
 }

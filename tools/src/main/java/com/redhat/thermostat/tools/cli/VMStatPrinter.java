@@ -40,14 +40,19 @@ import java.io.PrintStream;
 import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.model.TimeStampedPojo;
+import com.redhat.thermostat.common.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator;
 import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
@@ -60,7 +65,6 @@ class VMStatPrinter {
     private static final String CPU_PERCENT = Translate.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT);
     private static final String TIME = Translate.localize(LocaleResources.COLUMN_HEADER_TIME);
 
-
     private VmRef vm;
     private VmCpuStatDAO vmCpuStatDAO;
     private VmMemoryStatDAO vmMemoryStatDAO;
@@ -68,6 +72,9 @@ class VMStatPrinter {
     private TimeStampedPojoCorrelator correlator = new TimeStampedPojoCorrelator(2);
     private TableRenderer table;
     private int numSpaces;
+
+    private long lastCpuStatTimeStamp = Long.MIN_VALUE;
+    private long lastMemoryStatTimeStamp = Long.MIN_VALUE;
 
     VMStatPrinter(VmRef vm, VmCpuStatDAO vmCpuStatDAO, VmMemoryStatDAO vmMemoryStatDAO, PrintStream out) {
         this.vm = vm;
@@ -77,17 +84,33 @@ class VMStatPrinter {
     }
 
     void printStats() {
-        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm);
-        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm);
+        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm, lastCpuStatTimeStamp);
+        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm, lastMemoryStatTimeStamp);
+
+        lastCpuStatTimeStamp = getLatestTimeStamp(lastCpuStatTimeStamp, cpuStats);
+        lastMemoryStatTimeStamp = getLatestTimeStamp(lastMemoryStatTimeStamp, memStats);
+
         printStats(cpuStats, memStats);
     }
 
     void printUpdatedStats() {
         correlator.clear();
-        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm);
-        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm);
+        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm, lastCpuStatTimeStamp);
+        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm, lastMemoryStatTimeStamp);
+
+        lastCpuStatTimeStamp = getLatestTimeStamp(lastCpuStatTimeStamp, cpuStats);
+        lastMemoryStatTimeStamp = getLatestTimeStamp(lastMemoryStatTimeStamp, memStats);
+
         correlate(cpuStats, memStats);
         printUpdatedStatsImpl();
+    }
+
+    private long getLatestTimeStamp(long currentTimeStamp, List<? extends TimeStampedPojo> list) {
+        try {
+            return Math.max(currentTimeStamp, Collections.max(list, new TimeStampedPojoComparator<>()).getTimeStamp());
+        } catch (NoSuchElementException listIsEmpty) {
+            return currentTimeStamp;
+        }
     }
 
     private void printStats(List<VmCpuStat> cpuStats, List<VmMemoryStat> memStats) {
@@ -189,6 +212,5 @@ class VMStatPrinter {
         }
         table.render(out);
     }
-
 
 }

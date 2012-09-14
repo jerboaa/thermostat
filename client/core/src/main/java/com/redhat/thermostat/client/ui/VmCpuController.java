@@ -60,6 +60,8 @@ class VmCpuController {
 
     private final Timer timer;
 
+    private long lastSeenTimeStamp = Long.MIN_VALUE;
+
     public VmCpuController(VmRef ref) {
         this.ref = ref;
         dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO();
@@ -100,12 +102,13 @@ class VmCpuController {
     }
 
     private void doUpdateVmCpuCharts() {
-        List<VmCpuStat> stats = dao.getLatestVmCpuStats(ref);
+        List<VmCpuStat> stats = dao.getLatestVmCpuStats(ref, lastSeenTimeStamp);
         List<DiscreteTimeData<? extends Number>> toDisplay = new ArrayList<>(stats.size());
         for (VmCpuStat stat: stats) {
             DiscreteTimeData<? extends Number> data =
                     new DiscreteTimeData<Number>(stat.getTimeStamp(), stat.getCpuLoad());
             toDisplay.add(data);
+            lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
         }
 
         view.addData(toDisplay);

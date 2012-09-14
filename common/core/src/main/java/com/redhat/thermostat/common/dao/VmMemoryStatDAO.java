@@ -94,7 +94,6 @@ public interface VmMemoryStatDAO {
 
     public VmMemoryStat getLatestMemoryStat(VmRef ref);
 
-    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef vm);
     public List<VmMemoryStat> getLatestVmMemoryStats(VmRef vm, long since);
 
     public void putVmMemoryStat(VmMemoryStat stat);

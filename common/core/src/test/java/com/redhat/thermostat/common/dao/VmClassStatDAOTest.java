@@ -37,12 +37,10 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -78,7 +76,6 @@ public class VmClassStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
         assertTrue(keys.contains(new Key<Long>("loadedClasses", false)));
         assertEquals(4, keys.size());
-
     }
 
     @Test
@@ -108,57 +105,18 @@ public class VmClassStatDAOTest {
         when(vmRef.getAgent()).thenReturn(hostRef);
         when(vmRef.getId()).thenReturn(321);
 
-
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
-        List<VmClassStat> vmClassStats = dao.getLatestClassStats(vmRef);
+        List<VmClassStat> vmClassStats = dao.getLatestClassStats(vmRef, Long.MIN_VALUE);
 
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
         verify(storage).findAllPojos(arg.capture(), same(VmClassStat.class));
-        assertFalse(arg.getValue().hasWhereClauseFor(Key.TIMESTAMP));
+        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
 
         assertEquals(1, vmClassStats.size());
         VmClassStat stat = vmClassStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
         assertEquals(LOADED_CLASSES, (Long) stat.getLoadedClasses());
         assertEquals(VM_ID, (Integer) stat.getVmId());
-    }
-
-    @Test
-    public void testGetLatestClassStatsTwice() {
-
-        VmClassStat vmClassStat = getClassStat();
-
-        @SuppressWarnings("unchecked")
-        Cursor<VmClassStat> cursor = mock(Cursor.class);
-
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(vmClassStat);
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
-
-        Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor);
-
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn("system");
-
-        VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(321);
-
-
-        VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
-        dao.getLatestClassStats(vmRef);
-
-        dao.getLatestClassStats(vmRef);
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage, times(2)).findAllPojos(arg.capture(), same(VmClassStat.class));
-        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 1234l));
     }
 
     private VmClassStat getClassStat() {

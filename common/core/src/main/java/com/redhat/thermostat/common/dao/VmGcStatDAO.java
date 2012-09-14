@@ -53,7 +53,7 @@ public interface VmGcStatDAO {
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,
             runCountKey, wallTimeKey);
 
-    public List<VmGcStat> getLatestVmGcStats(VmRef ref);
+    public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since);
 
     public void putVmGcStat(VmGcStat stat);
 }

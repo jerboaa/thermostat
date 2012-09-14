@@ -99,23 +99,7 @@ public class VmLatestPojoListGetterTest {
         when(storage.createQuery()).thenReturn(query);
 
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
-        query = (MockQuery) getter.buildQuery();
-
-        assertNotNull(query);
-        assertEquals(cat, query.getCategory());
-        assertEquals(2, query.getWhereClausesCount());
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
-        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_PID));
-    }
-
-    @Test
-    public void testBuildQueryWithSince() {
-        Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
-
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class, 123);
-        query = (MockQuery) getter.buildQuery();
+        query = (MockQuery) getter.buildQuery(123l);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -133,8 +117,8 @@ public class VmLatestPojoListGetterTest {
         when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
 
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
-        getter.buildQuery(); // Ignore first return value.
-        query = (MockQuery) getter.buildQuery();
+        getter.buildQuery(Long.MIN_VALUE); // Ignore first return value.
+        query = (MockQuery) getter.buildQuery(Long.MIN_VALUE);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -153,12 +137,19 @@ public class VmLatestPojoListGetterTest {
         when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(new MockQuery());
+        MockQuery query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
         when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor);
 
         VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
 
-        List<VmClassStat> stats = getter.getLatest();
+        List<VmClassStat> stats = getter.getLatest(t2);
+
+        verify(storage).findAllPojos(any(Query.class), same(VmClassStat.class));
+
+        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_PID));
+        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, t2));
 
         assertNotNull(stats);
         assertEquals(2, stats.size());
@@ -170,34 +161,4 @@ public class VmLatestPojoListGetterTest {
         assertEquals(lc2, stat2.getLoadedClasses());
     }
 
-    @Test
-    public void testGetLatestMultipleCalls() {
-        @SuppressWarnings("unchecked")
-        Cursor<VmClassStat> cursor1 = mock(Cursor.class);
-        when(cursor1.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(cursor1.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
-        when(cursor1.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor1);
-
-        @SuppressWarnings("unchecked")
-        Cursor<VmClassStat> cursor2 = mock(Cursor.class);
-        when(cursor2.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor2.next()).thenReturn(result3);
-
-        Storage storage = mock(Storage.class);
-        MockQuery firstQuery = new MockQuery();
-        MockQuery secondQuery = new MockQuery();
-        when(storage.createQuery()).thenReturn(firstQuery).thenReturn(secondQuery);
-
-        when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor1);
-
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
-        getter.getLatest();
-        getter.getLatest();
-
-        verify(storage, times(2)).findAllPojos(any(Query.class), same(VmClassStat.class));
-
-        assertTrue(secondQuery.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
-        assertTrue(secondQuery.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_PID));
-        assertTrue(secondQuery.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, t2));
-    }
 }

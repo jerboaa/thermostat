@@ -76,22 +76,13 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     }
 
     @Override
-    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref) {
+    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
         VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
         if (getter == null) {
             getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, ref, VmMemoryStat.class);
             getters.put(ref, getter);
         }
-        return getter.getLatest();
+        return getter.getLatest(since);
     }
 
-    @Override
-    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
-        VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
-        if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, ref, VmMemoryStat.class, since);
-            getters.put(ref, getter);
-        }
-        return getter.getLatest();
-    }
 }

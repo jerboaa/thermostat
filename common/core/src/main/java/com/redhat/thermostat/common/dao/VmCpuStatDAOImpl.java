@@ -54,13 +54,13 @@ class VmCpuStatDAOImpl implements VmCpuStatDAO {
     }
 
     @Override
-    public List<VmCpuStat> getLatestVmCpuStats(VmRef ref) {
+    public List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since) {
         VmLatestPojoListGetter<VmCpuStat> getter = getters.get(ref);
         if (getter == null) {
             getter = new VmLatestPojoListGetter<VmCpuStat>(storage, vmCpuStatCategory, ref, VmCpuStat.class);
             getters.put(ref, getter);
         }
-        return getter.getLatest();
+        return getter.getLatest(since);
     }
 
     @Override

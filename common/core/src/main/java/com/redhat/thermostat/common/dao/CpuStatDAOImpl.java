@@ -54,13 +54,13 @@ class CpuStatDAOImpl implements CpuStatDAO {
     }
 
     @Override
-    public List<CpuStat> getLatestCpuStats(HostRef ref) {
+    public List<CpuStat> getLatestCpuStats(HostRef ref, long lastTimeStamp) {
         HostLatestPojoListGetter<CpuStat> getter = getters.get(ref);
         if (getter == null) {
             getter = new HostLatestPojoListGetter<CpuStat>(storage, cpuStatCategory, ref, CpuStat.class);
             getters.put(ref, getter);
         }
-        return getter.getLatest();
+        return getter.getLatest(lastTimeStamp);
     }
 
     @Override

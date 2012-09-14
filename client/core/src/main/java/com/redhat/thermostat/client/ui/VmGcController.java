@@ -40,7 +40,6 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +49,6 @@ import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -63,6 +61,7 @@ import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.IntervalTimeData;
+import com.redhat.thermostat.common.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
@@ -81,12 +80,7 @@ class VmGcController {
 
     private final Timer timer;
 
-    private final Comparator<VmGcStat> vmGcStatComparator = new Comparator<VmGcStat>() {
-        @Override
-        public int compare(VmGcStat o1, VmGcStat o2) {
-            return Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
-        }
-    };
+    private long lastSeenTimeStamp = Long.MIN_VALUE;
 
     public VmGcController(VmRef ref) {
         this.ref = ref;
@@ -146,8 +140,8 @@ class VmGcController {
 
     private void doUpdateCollectorData() {
         Map<String, List<IntervalTimeData<Double>>> dataToAdd = new HashMap<>();
-        List<VmGcStat> sortedList = gcDao.getLatestVmGcStats(ref);
-        Collections.sort(sortedList, vmGcStatComparator);
+        List<VmGcStat> sortedList = gcDao.getLatestVmGcStats(ref, lastSeenTimeStamp);
+        Collections.sort(sortedList, new TimeStampedPojoComparator<>());
 
         for (VmGcStat stat : sortedList) {
             String collector = stat.getCollectorName();
@@ -161,6 +155,7 @@ class VmGcController {
                     System.out.println("new gc collector value is older than previous value");
                 }
                 VmGcStat last = lastValueSeen.get(collector);
+                lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
                 long diffInMicro = (stat.getWallTime() - last.getWallTime());
                 double diffInMillis = diffInMicro / 1000.0;
                 // TODO there is not much point in adding data when diff is 0,
@@ -171,7 +166,6 @@ class VmGcController {
                 // }
             }
             lastValueSeen.put(collector, stat);
-
         }
         for (Map.Entry<String, List<IntervalTimeData<Double>>> entry : dataToAdd.entrySet()) {
             String name = entry.getKey();

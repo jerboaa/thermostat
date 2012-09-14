@@ -37,13 +37,10 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -116,52 +113,17 @@ public class VmCpuStatDAOTest {
 
 
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
-        List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats(vmRef);
+        List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats(vmRef, Long.MIN_VALUE);
 
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
         verify(storage).findAllPojos(arg.capture(), same(VmCpuStat.class));
-        assertFalse(arg.getValue().hasWhereClauseFor(Key.TIMESTAMP));
+        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
 
         assertEquals(1, vmCpuStats.size());
         VmCpuStat stat = vmCpuStats.get(0);
         assertEquals(TIMESTAMP, (Long) stat.getTimeStamp());
         assertEquals(CPU_LOAD, stat.getCpuLoad(), 0.001);
         assertEquals(VM_ID, (Integer) stat.getVmId());
-    }
-
-    @Test
-    public void testGetLatestCpuStatsTwice() {
-
-        @SuppressWarnings("unchecked")
-        Cursor<VmCpuStat> cursor = mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(cpuStat);
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
-        when(cursor.limit(anyInt())).thenReturn(cursor);
-
-        Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(VmCpuStat.class))).thenReturn(cursor);
-
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn("system");
-
-        VmRef vmRef = mock(VmRef.class);
-        when(vmRef.getAgent()).thenReturn(hostRef);
-        when(vmRef.getId()).thenReturn(321);
-
-        VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
-        dao.getLatestVmCpuStats(vmRef);
-
-        dao.getLatestVmCpuStats(vmRef);
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage, times(2)).findAllPojos(arg.capture(), same(VmCpuStat.class));
-        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 1234l));
     }
 
     @Test

@@ -37,9 +37,7 @@
 package com.redhat.thermostat.common.dao;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.common.model.TimeStampedPojo;
 import com.redhat.thermostat.common.storage.Category;
@@ -56,53 +54,36 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
     private Category cat;
     private HostRef ref;
     private Class<T> resultClass;
-    private Map<HostRef, Long> lastUpdateTimes = new HashMap<>();
 
     HostLatestPojoListGetter(Storage storage, Category cat, HostRef ref, Class<T> resultClass) {
-        this(storage, cat, ref, resultClass, 0);
-    }
-
-    HostLatestPojoListGetter(Storage storage, Category cat, HostRef ref, Class<T> resultClass, long since) {
         this.storage = storage;
         this.cat = cat;
         this.ref = ref;
         this.resultClass = resultClass;
-        if (since > 0) {
-            lastUpdateTimes.put(ref, since);
-        }
     }
 
     @Override
-    public List<T> getLatest() {
-        Query query = buildQuery();
+    public List<T> getLatest(long since) {
+        Query query = buildQuery(since);
         return getLatest(query);
     }
 
     private List<T> getLatest(Query query) {
-        // TODO if multiple threads will be using this utility class, there may be some issues
-        // with the updateTimes
-        Long lastUpdate = lastUpdateTimes.get(ref);
         Cursor<T> cursor = storage.findAllPojos(query, resultClass);
         cursor = cursor.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
             T pojo = cursor.next();
             result.add(pojo);
-            lastUpdateTimes.put(ref, Math.max(pojo.getTimeStamp(), lastUpdate));
         }
         return result;
     }
 
-    protected Query buildQuery() {
+    protected Query buildQuery(long since) {
         Query query = storage.createQuery()
                 .from(cat)
                 .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
-        Long lastUpdate = lastUpdateTimes.get(ref);
-        if (lastUpdate != null) {
-            query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, lastUpdate);
-        } else {
-            lastUpdateTimes.put(ref, Long.MIN_VALUE);
-        }
+        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
         return query;
     }
 }

@@ -106,7 +106,7 @@ public class VmGcControllerTest {
 
         // Setup DAO
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
-        when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class))).thenReturn(stats);
+        when(vmGcStatDAO.getLatestVmGcStats(isA(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         when(vmMemoryStatDAO.getLatestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
 

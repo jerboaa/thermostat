@@ -48,17 +48,13 @@ class VmLatestPojoListGetter<T extends TimeStampedPojo> extends HostLatestPojoLi
     private VmRef vmRef;
 
     VmLatestPojoListGetter(Storage storage, Category cat, VmRef ref, Class<T> resultClass) {
-        this(storage, cat, ref, resultClass, 0);
-    }
-
-    VmLatestPojoListGetter(Storage storage, Category cat, VmRef ref, Class<T> resultClass, long since) {
-        super(storage, cat, ref.getAgent(), resultClass, since);
+        super(storage, cat, ref.getAgent(), resultClass);
         vmRef = ref;
     }
 
     @Override
-    protected Query buildQuery() {
-        Query query = super.buildQuery();
+    protected Query buildQuery(long since) {
+        Query query = super.buildQuery(since);
         query.where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());
         return query;
     }

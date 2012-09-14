@@ -34,12 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common.model;
 
-import java.util.List;
+import java.util.Comparator;
 
-import com.redhat.thermostat.common.model.Pojo;
-
-interface LatestPojoListGetter<T extends Pojo> {
-    List<T> getLatest(long lastUpdateTimeStamp);
+public final class TimeStampedPojoComparator<T extends TimeStampedPojo> implements Comparator<T> {
+    public int compare(T o1, T o2) {
+        return Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
+    }
 }

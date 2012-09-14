@@ -61,20 +61,24 @@ class VmClassStatController implements VmInformationServiceController {
     private class UpdateChartData implements Runnable {
         @Override
         public void run() {
-            List<VmClassStat> latestClassStats = dao.getLatestClassStats(ref);
+            long timeStamp = lastSeenTimeStamp;
+            List<VmClassStat> latestClassStats = dao.getLatestClassStats(ref, timeStamp);
             List<DiscreteTimeData<Long>> timeData = new ArrayList<>();
             for (VmClassStat stat : latestClassStats) {
                 timeData.add(new DiscreteTimeData<Long>(stat.getTimeStamp(), stat.getLoadedClasses()));
+                timeStamp = Math.max(timeStamp, stat.getTimeStamp());
             }
             classesView.addClassCount(timeData);
+            lastSeenTimeStamp = timeStamp;
         }
-
     }
 
     private final VmClassStatView classesView;
     private final VmRef ref;
     private final VmClassStatDAO dao;
     private final Timer timer;
+
+    private volatile long lastSeenTimeStamp = Long.MIN_VALUE;
 
     public VmClassStatController(VmRef ref, VmClassStatViewProvider viewProvider) {
         this.ref = ref;

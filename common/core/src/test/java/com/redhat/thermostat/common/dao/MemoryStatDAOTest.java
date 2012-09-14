@@ -37,12 +37,10 @@
 package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -65,7 +63,6 @@ import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.MockQuery;
 
 public class MemoryStatDAOTest {
-
 
     private static long TIMESTAMP = 1;
     private static long TOTAL = 2;
@@ -90,7 +87,6 @@ public class MemoryStatDAOTest {
         assertTrue(keys.contains(new Key<Long>("swapFree", false)));
         assertTrue(keys.contains(new Key<Long>("commitLimit", false)));
         assertEquals(9, keys.size());
-
     }
 
     @Test
@@ -117,11 +113,11 @@ public class MemoryStatDAOTest {
         when(hostRef.getAgentId()).thenReturn("system");
 
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
-        List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef);
+        List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef, Long.MIN_VALUE);
 
         ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
         verify(storage).findAllPojos(arg.capture(), same(MemoryStat.class));
-        assertFalse(arg.getValue().hasWhereClauseFor(Key.TIMESTAMP));
+        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
 
         assertEquals(1, memoryStats.size());
         MemoryStat stat = memoryStats.get(0);
@@ -134,38 +130,6 @@ public class MemoryStatDAOTest {
         assertEquals(SWAP_TOTAL, stat.getSwapTotal());
         assertEquals(SWAP_FREE, stat.getSwapFree());
         assertEquals(COMMIT_LIMIT, stat.getCommitLimit());
-    }
-
-    @Test
-    public void testGetLatestMemoryStatsTwice() {
-
-        MemoryStat memStat = new MemoryStat(TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
-
-        @SuppressWarnings("unchecked")
-        Cursor<MemoryStat> cursor = mock(Cursor.class);
-        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
-        when(cursor.next()).thenReturn(memStat);
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
-
-        Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(MemoryStat.class))).thenReturn(cursor);
-
-        HostRef hostRef = mock(HostRef.class);
-        when(hostRef.getAgentId()).thenReturn("system");
-
-        MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
-        dao.getLatestMemoryStats(hostRef);
-        dao.getLatestMemoryStats(hostRef);
-
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage, times(2)).findAllPojos(arg.capture(), same(MemoryStat.class));
-        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 1l));
     }
 
     @Test
