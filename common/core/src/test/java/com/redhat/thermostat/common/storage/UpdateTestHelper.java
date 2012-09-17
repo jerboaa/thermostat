@@ -34,35 +34,21 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.storage.Chunk;
-import com.redhat.thermostat.common.storage.Key;
+package com.redhat.thermostat.common.storage;
 
-public class AgentInfoConverter {
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-    public Chunk toChunk(AgentInformation agentInfo) {
-        Chunk agentChunk = new Chunk(AgentInfoDAO.CATEGORY, true);
+public class UpdateTestHelper {
 
-        agentChunk.put(Key.AGENT_ID, agentInfo.getAgentId());
-        agentChunk.put(AgentInfoDAO.START_TIME_KEY, agentInfo.getStartTime());
-        agentChunk.put(AgentInfoDAO.STOP_TIME_KEY, agentInfo.getStopTime());
-        agentChunk.put(AgentInfoDAO.ALIVE_KEY, agentInfo.isAlive());
-        agentChunk.put(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
-
-        return agentChunk;
-    }
-
-    public AgentInformation fromChunk(Chunk agentChunk) {
-        AgentInformation agentInfo = new AgentInformation();
-
-        agentInfo.setAgentId(agentChunk.get(Key.AGENT_ID));
-        agentInfo.setStartTime(agentChunk.get(AgentInfoDAO.START_TIME_KEY));
-        agentInfo.setStopTime(agentChunk.get(AgentInfoDAO.STOP_TIME_KEY));
-        agentInfo.setAlive(agentChunk.get(AgentInfoDAO.ALIVE_KEY));
-        agentInfo.setConfigListenAddress(agentChunk.get(AgentInfoDAO.CONFIG_LISTEN_ADDRESS));
-
-        return agentInfo;
+    @SuppressWarnings("unchecked")
+    public static Update createMockUpdate() {
+        Update mockUpdate = mock(Update.class);
+        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
+        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
+        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
+        return mockUpdate;
     }
 }

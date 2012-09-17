@@ -34,54 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
+
 package com.redhat.thermostat.common.storage;
 
-import java.io.InputStream;
-import java.util.UUID;
+public interface Update {
 
-import com.redhat.thermostat.common.model.Pojo;
-
-public abstract class Storage {
-
-    public abstract void setAgentId(UUID id);
-
-    public abstract String getAgentId();
-
-    public final void registerCategory(Category category) {
-        if (category.hasBeenRegistered()) {
-            throw new IllegalStateException("Category may only be associated with one backend.");
-        }
-        ConnectionKey connKey = createConnectionKey(category);
-        category.setConnectionKey(connKey);
-    }
-
-    public abstract Connection getConnection();
-
-    public abstract ConnectionKey createConnectionKey(Category category);
-
-    public abstract void putPojo(Category category, boolean replace, Pojo pojo);
-
-    public abstract void updatePojo(Update update);
-
-    public abstract void removeChunk(Chunk chunk);
-
-    /**
-     * Drop all data related to the currently running agent.
-     */
-    public abstract void purge();
-
-    public abstract <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass);
-
-    public abstract <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
-
-    public abstract <T extends Pojo> Cursor<T> findAllPojosFromCategory(Category category, Class<T> resultClass);
-    
-    public abstract long getCount(Category category);
-
-    public abstract void saveFile(String filename, InputStream data);
-
-    public abstract InputStream loadFile(String filename);
-
-    public abstract Query createQuery();
-    public abstract Update createUpdate();
+    Update from(Category category);
+    <T> Update where(Key<T> key, T value);
+    <T> Update set(Key<T> key, T value);
 }

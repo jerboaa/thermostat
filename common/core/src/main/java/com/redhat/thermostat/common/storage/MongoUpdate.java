@@ -34,54 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
+
 package com.redhat.thermostat.common.storage;
 
-import java.io.InputStream;
-import java.util.UUID;
+// TODO: For now we utilize the Chunk based conversion, and rely on MongoStorage to
+// actually resolve the $set fields. Eventually, we want to convert to DBObject
+// directly, and take advantage of improved semantics of this class.
+class MongoUpdate implements Update {
 
-import com.redhat.thermostat.common.model.Pojo;
+    private Chunk updateChunk;
 
-public abstract class Storage {
-
-    public abstract void setAgentId(UUID id);
-
-    public abstract String getAgentId();
-
-    public final void registerCategory(Category category) {
-        if (category.hasBeenRegistered()) {
-            throw new IllegalStateException("Category may only be associated with one backend.");
+    @Override
+    public Update from(Category category) {
+        if (updateChunk != null) {
+            throw new IllegalStateException();
         }
-        ConnectionKey connKey = createConnectionKey(category);
-        category.setConnectionKey(connKey);
+        updateChunk = new Chunk(category, false);
+        return this;
     }
 
-    public abstract Connection getConnection();
+    @Override
+    public <T> Update where(Key<T> key, T value) {
+        if (updateChunk == null) {
+            throw new IllegalStateException();
+        }
+        updateChunk.put(key, value);
+        return this;
+    }
 
-    public abstract ConnectionKey createConnectionKey(Category category);
+    @Override
+    public <T> Update set(Key<T> key, T value) {
+        if (updateChunk == null) {
+            throw new IllegalStateException();
+        }
+        updateChunk.put(key, value);
+        return this;
+    }
 
-    public abstract void putPojo(Category category, boolean replace, Pojo pojo);
+    Chunk getChunk() {
+        return updateChunk;
+    }
 
-    public abstract void updatePojo(Update update);
-
-    public abstract void removeChunk(Chunk chunk);
-
-    /**
-     * Drop all data related to the currently running agent.
-     */
-    public abstract void purge();
-
-    public abstract <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass);
-
-    public abstract <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
-
-    public abstract <T extends Pojo> Cursor<T> findAllPojosFromCategory(Category category, Class<T> resultClass);
-    
-    public abstract long getCount(Category category);
-
-    public abstract void saveFile(String filename, InputStream data);
-
-    public abstract InputStream loadFile(String filename);
-
-    public abstract Query createQuery();
-    public abstract Update createUpdate();
 }

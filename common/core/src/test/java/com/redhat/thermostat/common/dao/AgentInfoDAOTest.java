@@ -39,8 +39,10 @@ package com.redhat.thermostat.common.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -51,13 +53,14 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.UpdateTestHelper;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.test.MockQuery;
 
 public class AgentInfoDAOTest {
@@ -202,23 +205,23 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyUpdateAgentInformation() {
+
+        Update mockUpdate = UpdateTestHelper.createMockUpdate();
         Storage storage = mock(Storage.class);
+        when(storage.createUpdate()).thenReturn(mockUpdate);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.updateAgentInformation(agentInfo1);
 
-        ArgumentCaptor<Chunk> pojoCaptor = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).updateChunk(pojoCaptor.capture());
+        verify(mockUpdate).from(AgentInfoDAO.CATEGORY);
+        verify(mockUpdate).where(Key.AGENT_ID, "1234");
+        verify(mockUpdate).set(AgentInfoDAO.START_TIME_KEY, 100L);
+        verify(mockUpdate).set(AgentInfoDAO.STOP_TIME_KEY, 10L);
+        verify(mockUpdate).set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, "foobar:666");
+        verify(mockUpdate).set(AgentInfoDAO.ALIVE_KEY, true);
+        verifyNoMoreInteractions(mockUpdate);
+        verify(storage).updatePojo(mockUpdate);
 
-        Chunk updatedValue = pojoCaptor.getValue();
-
-        Chunk expected = new Chunk(AgentInfoDAO.CATEGORY, true);
-        expected.put(Key.AGENT_ID, "1234");
-        expected.put(AgentInfoDAO.ALIVE_KEY, true);
-        expected.put(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, "foobar:666");
-        expected.put(AgentInfoDAO.START_TIME_KEY, 100L);
-        expected.put(AgentInfoDAO.STOP_TIME_KEY, 10L);
-        assertEquals(expected, updatedValue);
     }
 
     @Test

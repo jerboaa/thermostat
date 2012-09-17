@@ -93,7 +93,7 @@ public class VmInfo implements Pojo {
 
     @Persist
     public void setVmId(int vmId) {
-        this.vmPid = vmPid;
+        this.vmPid = vmId;
     }
 
     @Persist

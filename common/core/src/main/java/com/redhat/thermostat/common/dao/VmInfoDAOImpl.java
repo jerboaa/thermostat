@@ -41,12 +41,12 @@ import java.util.Collection;
 import java.util.List;
 
 import com.redhat.thermostat.common.model.VmInfo;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Update;
 
 class VmInfoDAOImpl implements VmInfoDAO {
 
@@ -115,13 +115,10 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmStoppedTime(int vmId, long timestamp) {
-        storage.updateChunk(makeStoppedChunk(vmId, timestamp));
+        Update update = storage.createUpdate().from(vmInfoCategory)
+                                              .where(Key.VM_ID, vmId)
+                                              .set(VmInfoDAO.stopTimeKey, timestamp);
+        storage.updatePojo(update);
     }
 
-    private Chunk makeStoppedChunk(int vmId, long stopTimeStamp) {
-        Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, false);
-        chunk.put(Key.VM_ID, vmId);
-        chunk.put(VmInfoDAO.stopTimeKey, stopTimeStamp);
-        return chunk;
-    }
 }

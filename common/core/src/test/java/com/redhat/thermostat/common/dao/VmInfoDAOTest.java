@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.common.dao;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -50,7 +53,6 @@ import java.util.Map;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Category;
@@ -60,6 +62,8 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Update;
+import com.redhat.thermostat.common.storage.UpdateTestHelper;
 import com.redhat.thermostat.test.MockQuery;
 
 public class VmInfoDAOTest {
@@ -279,16 +283,16 @@ public class VmInfoDAOTest {
 
     @Test
     public void testPutVmStoppedTime() {
+        Update mockUpdate = UpdateTestHelper.createMockUpdate();
         Storage storage = mock(Storage.class);
+        when(storage.createUpdate()).thenReturn(mockUpdate);
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmStoppedTime(vmId, stopTime);
 
-        ArgumentCaptor<Chunk> arg = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).updateChunk(arg.capture());
-        Chunk chunk = arg.getValue();
-
-        assertEquals(VmInfoDAO.vmInfoCategory, chunk.getCategory());
-        assertEquals((Integer) vmId, chunk.get(Key.VM_ID));
-        assertEquals((Long) stopTime, chunk.get(VmInfoDAO.stopTimeKey));
+        verify(mockUpdate).from(VmInfoDAO.vmInfoCategory);
+        verify(mockUpdate).where(Key.VM_ID, 1);
+        verify(mockUpdate).set(VmInfoDAO.stopTimeKey, 3L);
+        verifyNoMoreInteractions(mockUpdate);
+        verify(storage).updatePojo(mockUpdate);
     }
 }

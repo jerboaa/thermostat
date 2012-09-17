@@ -195,11 +195,19 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public void updateChunk(Chunk chunk) {
+    public void updatePojo(Update update) {
+        assert update instanceof MongoUpdate;
+        MongoUpdate mongoUpdate = (MongoUpdate) update;
+        Chunk chunk = mongoUpdate.getChunk();
+        updateChunk(chunk);
+    }
+
+    void updateChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
         DBCollection coll = getCachedCollection(cat.getName());
         BasicDBObject toUpdate = new BasicDBObject();
         BasicDBObject updateKey = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
+        BasicDBObject setObj = null;
         Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
         Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
         for (Key<?> key : cat.getKeys()) {
@@ -220,7 +228,11 @@ public class MongoStorage extends Storage {
                         }
                         updateKeyNested.append(entryParts[1], updateKeyNested);
                     } else {
-                        nested.append(SET_MODIFIER, new BasicDBObject(entryParts[1], chunk.get(key)));
+                        if (setObj == null) {
+                            setObj = new BasicDBObject();
+                            nested.append(SET_MODIFIER, setObj);
+                        }
+                        setObj.append(entryParts[1], chunk.get(key));
                     }
                 }
             } else {
@@ -236,7 +248,11 @@ public class MongoStorage extends Storage {
                         if (isKey) {
                             updateKey.append(mongoKey, value);
                         } else {
-                            toUpdate.append(SET_MODIFIER, new BasicDBObject(mongoKey, value));
+                            if (setObj == null) {
+                                setObj = new BasicDBObject();
+                                toUpdate.append(SET_MODIFIER, setObj);
+                            }
+                            setObj.append(mongoKey, value);
                         }
                     }
                 }
@@ -315,6 +331,11 @@ public class MongoStorage extends Storage {
     }
 
     @Override
+    public Update createUpdate() {
+        return new MongoUpdate();
+    }
+
+    @Override
     public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
         MongoQuery mongoQuery =  checkAndCastQuery(query);
         DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
@@ -385,6 +406,12 @@ public class MongoStorage extends Storage {
 
     @Override
     public void putPojo(Category category, boolean replace, Pojo pojo) {
+        Chunk chunk = convertPojoToChunk(category, replace, pojo);
+        putChunk(chunk);
+    }
+
+    private Chunk convertPojoToChunk(Category category, boolean replace,
+            Pojo pojo) {
         Converter customConverter = converters.get(pojo.getClass());
         Chunk chunk;
         if (customConverter != null) {
@@ -392,7 +419,7 @@ public class MongoStorage extends Storage {
         } else {
             chunk = new ChunkAdapter(pojo, category, replace);
         }
-        putChunk(chunk);
+        return chunk;
     }
 
 }

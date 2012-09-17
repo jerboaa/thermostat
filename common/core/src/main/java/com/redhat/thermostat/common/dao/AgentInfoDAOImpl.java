@@ -46,11 +46,11 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Update;
 
 public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     private final Storage storage;
-    private final AgentInfoConverter converter = new AgentInfoConverter();
 
     public AgentInfoDAOImpl(Storage storage) {
         this.storage = storage;
@@ -115,7 +115,12 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
-        storage.updateChunk(converter.toChunk(agentInfo));
+        Update update = storage.createUpdate().from(CATEGORY).where(Key.AGENT_ID, agentInfo.getAgentId())
+                                .set(START_TIME_KEY, agentInfo.getStartTime())
+                                .set(STOP_TIME_KEY, agentInfo.getStopTime())
+                                .set(ALIVE_KEY, agentInfo.isAlive())
+                                .set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
+        storage.updatePojo(update);
     }
 
 }

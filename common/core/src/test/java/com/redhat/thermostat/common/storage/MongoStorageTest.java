@@ -444,4 +444,42 @@ public class MongoStorageTest {
         actual = storage.loadFile("doesnotexist");
         assertNull(actual);
     }
+
+    @Test
+    public void verifySimpleUpdate() {
+        MongoStorage storage = makeStorage();
+        Update update = storage.createUpdate().from(testCategory).where(Key.AGENT_ID, "test1").set(key2, "test2");
+        storage.updatePojo(update);
+
+        ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
+        ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
+        
+        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture());
+        DBObject query = queryCaptor.getValue();
+        assertTrue(query.containsField(Key.AGENT_ID.getName()));
+        assertEquals("test1", query.get(Key.AGENT_ID.getName()));
+    }
+
+    @Test
+    public void verifyMultiFieldUpdate() {
+        MongoStorage storage = makeStorage();
+        Update update = storage.createUpdate().from(testCategory).where(Key.AGENT_ID, "test1").set(key2, "test2").set(key3, "test3");
+        storage.updatePojo(update);
+
+        ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
+        ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
+        
+        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture());
+        DBObject query = queryCaptor.getValue();
+        assertTrue(query.containsField(Key.AGENT_ID.getName()));
+        assertEquals("test1", query.get(Key.AGENT_ID.getName()));
+        DBObject value = valueCaptor.getValue();
+        assertTrue(value.containsField("$set"));
+        DBObject values = (DBObject) value.get("$set");
+        assertTrue(values.containsField("key2"));
+        assertEquals("test2", values.get("key2"));
+        assertTrue(values.containsField("key3"));
+        assertEquals("test3", values.get("key3"));
+    }
+
 }
