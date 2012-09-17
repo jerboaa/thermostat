@@ -63,7 +63,7 @@ import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
-import com.redhat.thermostat.common.storage.UpdateTestHelper;
+import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.test.MockQuery;
 
 public class VmInfoDAOTest {
@@ -283,7 +283,7 @@ public class VmInfoDAOTest {
 
     @Test
     public void testPutVmStoppedTime() {
-        Update mockUpdate = UpdateTestHelper.createMockUpdate();
+        Update mockUpdate = QueryTestHelper.createMockUpdate();
         Storage storage = mock(Storage.class);
         when(storage.createUpdate()).thenReturn(mockUpdate);
         VmInfoDAO dao = new VmInfoDAOImpl(storage);

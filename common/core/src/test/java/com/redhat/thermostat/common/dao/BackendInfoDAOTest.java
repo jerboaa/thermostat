@@ -40,7 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,6 +48,7 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InOrder;
 
 import com.redhat.thermostat.common.model.BackendInformation;
 import com.redhat.thermostat.common.storage.Category;
@@ -55,7 +56,9 @@ import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.test.MockQuery;
 
 public class BackendInfoDAOTest {
@@ -140,19 +143,17 @@ public class BackendInfoDAOTest {
 
     @Test
     public void verifyRemoveBackendInformation() {
+        Remove remove = QueryTestHelper.createMockRemove();
         Storage storage = mock(Storage.class);
-
+        when(storage.createRemove()).thenReturn(remove);
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         dao.removeBackendInformation(backendInfo1);
 
-        Chunk backend1 = new Chunk(BackendInfoDAO.CATEGORY, true);
-        backend1.put(BackendInfoDAO.BACKEND_NAME, "backend-name");
-        backend1.put(BackendInfoDAO.BACKEND_DESCRIPTION, "description");
-        backend1.put(BackendInfoDAO.IS_ACTIVE, true);
-        backend1.put(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES, true);
-        backend1.put(BackendInfoDAO.PIDS_TO_MONITOR, Arrays.asList(new Integer[] { -1, 0, 1}));
-        verify(storage).removeChunk(backend1);
+        verify(storage).removePojo(remove);
+        InOrder inOrder = inOrder(remove);
+        inOrder.verify(remove).from(BackendInfoDAO.CATEGORY);
+        inOrder.verify(remove).where(BackendInfoDAO.BACKEND_NAME, "backend-name");
     }
 
 }

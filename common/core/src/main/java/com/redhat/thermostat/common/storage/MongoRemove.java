@@ -34,41 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
 
-import java.util.List;
+package com.redhat.thermostat.common.storage;
 
-import com.redhat.thermostat.common.model.BackendInformation;
-import com.redhat.thermostat.common.storage.Chunk;
+class MongoRemove implements Remove {
 
-public class BackendInfoConverter {
+    private Chunk query;
 
-    public Chunk toChunk(BackendInformation backendInfo) {
-        Chunk chunk = new Chunk(BackendInfoDAO.CATEGORY, false);
-
-        chunk.put(BackendInfoDAO.BACKEND_NAME, backendInfo.getName());
-        chunk.put(BackendInfoDAO.BACKEND_DESCRIPTION, backendInfo.getDescription());
-        chunk.put(BackendInfoDAO.IS_ACTIVE, backendInfo.isActive());
-        List<Integer> pids = backendInfo.getPids();
-        chunk.put(BackendInfoDAO.PIDS_TO_MONITOR, pids);
-        chunk.put(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES, backendInfo.isObserveNewJvm());
-
-        return chunk;
-    }
-
-    public BackendInformation fromChunk(Chunk parseFrom) {
-        if (!parseFrom.getCategory().equals(BackendInfoDAO.CATEGORY)) {
-            throw new IllegalArgumentException("chunk not a " + BackendInfoDAO.CATEGORY);
+    @Override
+    public Remove from(Category category) {
+        if (query != null) {
+            throw new IllegalStateException();
         }
-
-        BackendInformation info = new BackendInformation();
-
-        info.setName(parseFrom.get(BackendInfoDAO.BACKEND_NAME));
-        info.setDescription(parseFrom.get(BackendInfoDAO.BACKEND_DESCRIPTION));
-        info.setActive(parseFrom.get(BackendInfoDAO.IS_ACTIVE));
-        info.setPids(parseFrom.get(BackendInfoDAO.PIDS_TO_MONITOR));
-        info.setObserveNewJvm(parseFrom.get(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES));
-
-        return info;
+        query = new Chunk(category, false);
+        return this;
     }
+
+    @Override
+    public <T> Remove where(Key<T> key, T value) {
+        if (query == null) {
+            throw new IllegalStateException();
+        }
+        query.put(key, value);
+        return this;
+    }
+
+    Chunk getChunk() {
+        return query;
+    }
+
 }

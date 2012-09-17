@@ -39,7 +39,6 @@ package com.redhat.thermostat.common.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -57,10 +56,11 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.UpdateTestHelper;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
+import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.test.MockQuery;
 
 public class AgentInfoDAOTest {
@@ -206,7 +206,7 @@ public class AgentInfoDAOTest {
     @Test
     public void verifyUpdateAgentInformation() {
 
-        Update mockUpdate = UpdateTestHelper.createMockUpdate();
+        Update mockUpdate = QueryTestHelper.createMockUpdate();
         Storage storage = mock(Storage.class);
         when(storage.createUpdate()).thenReturn(mockUpdate);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
@@ -226,19 +226,16 @@ public class AgentInfoDAOTest {
 
     @Test
     public void verifyRemoveAgentInformation() {
+        Remove mockRemove = QueryTestHelper.createMockRemove();
         Storage storage = mock(Storage.class);
+        when(storage.createRemove()).thenReturn(mockRemove);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.removeAgentInformation(agentInfo1);
 
-        ArgumentCaptor<Chunk> queryCaptor = ArgumentCaptor.forClass(Chunk.class);
-        verify(storage).removeChunk(queryCaptor.capture());
-
-        Chunk removeQuery = queryCaptor.getValue();
-        Chunk expectedQuery = new Chunk(AgentInfoDAO.CATEGORY, true);
-        expectedQuery.put(Key.AGENT_ID, agentInfo1.getAgentId());
-
-        assertEquals(expectedQuery, removeQuery);
+        verify(storage).removePojo(mockRemove);
+        verify(mockRemove).from(AgentInfoDAO.CATEGORY);
+        verify(mockRemove).where(Key.AGENT_ID, "1234");
     }
 
 }

@@ -63,7 +63,7 @@ public abstract class Storage {
 
     public abstract void updatePojo(Update update);
 
-    public abstract void removeChunk(Chunk chunk);
+    public abstract void removePojo(Remove remove);
 
     /**
      * Drop all data related to the currently running agent.
@@ -84,4 +84,5 @@ public abstract class Storage {
 
     public abstract Query createQuery();
     public abstract Update createUpdate();
+    public abstract Remove createRemove();
 }

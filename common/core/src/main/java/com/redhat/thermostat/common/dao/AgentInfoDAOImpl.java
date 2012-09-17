@@ -40,11 +40,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
 
@@ -108,9 +108,8 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public void removeAgentInformation(AgentInformation agentInfo) {
-        Chunk chunk = new Chunk(CATEGORY, true);
-        chunk.put(Key.AGENT_ID, agentInfo.getAgentId());
-        storage.removeChunk(chunk);
+        Remove remove = storage.createRemove().from(CATEGORY).where(Key.AGENT_ID, agentInfo.getAgentId());
+        storage.removePojo(remove);
     }
 
     @Override

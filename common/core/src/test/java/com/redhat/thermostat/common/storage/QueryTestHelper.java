@@ -41,7 +41,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class UpdateTestHelper {
+public class QueryTestHelper {
 
     @SuppressWarnings("unchecked")
     public static Update createMockUpdate() {
@@ -50,5 +50,13 @@ public class UpdateTestHelper {
         when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
         when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
         return mockUpdate;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static Remove createMockRemove() {
+        Remove mockRemove = mock(Remove.class);
+        when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
+        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
+        return mockRemove;
     }
 }

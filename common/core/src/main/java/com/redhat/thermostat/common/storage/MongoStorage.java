@@ -272,7 +272,10 @@ public class MongoStorage extends Storage {
     }
 
     @Override
-    public void removeChunk(Chunk query) {
+    public void removePojo(Remove remove) {
+        assert (remove instanceof MongoRemove);
+        MongoRemove mongoRemove = (MongoRemove) remove;
+        Chunk query = mongoRemove.getChunk();
         Category category = query.getCategory();
         DBCollection coll = getCachedCollection(category.getName());
 
@@ -333,6 +336,11 @@ public class MongoStorage extends Storage {
     @Override
     public Update createUpdate() {
         return new MongoUpdate();
+    }
+
+    @Override
+    public Remove createRemove() {
+        return new MongoRemove();
     }
 
     @Override

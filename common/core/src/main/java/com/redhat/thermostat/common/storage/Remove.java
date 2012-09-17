@@ -34,52 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
 
-import java.util.ArrayList;
-import java.util.List;
+package com.redhat.thermostat.common.storage;
 
-import com.redhat.thermostat.common.model.BackendInformation;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Query.Criteria;
-import com.redhat.thermostat.common.storage.Remove;
-import com.redhat.thermostat.common.storage.Storage;
 
-public class BackendInfoDAOImpl implements BackendInfoDAO {
+public interface Remove {
 
-    private final Storage storage;
+    Remove from(Category category);
 
-    public BackendInfoDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.createConnectionKey(CATEGORY);
-    }
-
-    @Override
-    public List<BackendInformation> getBackendInformation(HostRef host) {
-        Query query = storage.createQuery()
-                .from(CATEGORY)
-                .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
-
-        List<BackendInformation> results = new ArrayList<>();
-        Cursor<BackendInformation> cursor = storage.findAllPojos(query, BackendInformation.class);
-        while (cursor.hasNext()) {
-            BackendInformation backendInfo = cursor.next();
-            results.add(backendInfo);
-        }
-        return results;
-    }
-
-    @Override
-    public void addBackendInformation(BackendInformation info) {
-        storage.putPojo(BackendInfoDAO.CATEGORY, false, info);
-    }
-
-    @Override
-    public void removeBackendInformation(BackendInformation info) {
-        Remove remove = storage.createRemove().from(CATEGORY).where(BACKEND_NAME, info.getName());
-        storage.removePojo(remove);
-    }
+    <T> Remove where(Key<T> key, T value);
 
 }
