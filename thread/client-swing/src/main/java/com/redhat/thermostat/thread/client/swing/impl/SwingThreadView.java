@@ -207,7 +207,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 JPanel pane = timelinePanel.getTimelinePanel();
                 pane.removeAll();
                 
-                ChartPanel charts = new ChartPanel(model);
+                ChartPanel charts = new ChartPanel(model.createChart(pane.getWidth(), pane.getBackground()));
                 pane.add(charts);
                 pane.revalidate();
                 pane.repaint();

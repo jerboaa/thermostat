@@ -41,20 +41,31 @@ import java.awt.image.BufferedImage;
 
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.charts.Chart;
+import org.jfree.chart.ChartRenderingInfo;
+import org.jfree.chart.JFreeChart;
 
 @SuppressWarnings("serial")
 public class ChartPanel extends JPanel {
 
-    private Chart chart;
+    private JFreeChart chart;
+    private ChartRenderingInfo info;
     
-    public ChartPanel(Chart chart) {
+    public ChartPanel(JFreeChart chart) {
         this.chart = chart;
+    }
+    
+    public ChartPanel(JFreeChart chart, ChartRenderingInfo info) {
+        this.chart = chart;
+        this.info = info;
     }
     
     @Override
     protected void paintComponent(Graphics g) {
-        BufferedImage image = chart.getChart(getWidth(), getHeight(), getBackground());
+        BufferedImage image = chart.createBufferedImage(getWidth(), getHeight(), info);
         g.drawImage(image, 0, 0, null);
+    }
+    
+    public ChartRenderingInfo getChartRenderingInfo() {
+        return info;
     }
 }

@@ -47,7 +47,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.TickUnits;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYDifferenceRenderer;
@@ -56,10 +55,7 @@ import org.jfree.data.time.Millisecond;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.charts.BytesTickUnit;
-import com.redhat.thermostat.charts.Chart;
-
-public class LivingDaemonThreadDifferenceChart extends Chart {
+public class LivingDaemonThreadDifferenceChart {
     
     private static final ColorUIResource MAIN_BAR_BASE_COLOR = new ColorUIResource(0x4A90D9);
 
@@ -85,8 +81,7 @@ public class LivingDaemonThreadDifferenceChart extends Chart {
         used.setDescription(secondarySeries);
     }
     
-    @Override
-    protected JFreeChart createChart(int width, int height, Color bgColor) {
+    public JFreeChart createChart(int height, Color bgColor) {
 
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         
@@ -116,12 +111,13 @@ public class LivingDaemonThreadDifferenceChart extends Chart {
         plot.setDomainPannable(true);
         XYDifferenceRenderer r = new XYDifferenceRenderer(paint, paint2, false);
         r.setRoundXCoordinates(true);
+        
         plot.setDomainCrosshairLockedOnData(true);
         plot.setRangeCrosshairLockedOnData(true);
         plot.setDomainCrosshairVisible(true);
         plot.setRangeCrosshairVisible(true);
         plot.setRenderer(r);
-
+        
         ValueAxis domainAxis = new DateAxis(xAxis);
         domainAxis.setLowerMargin(0.0);
         domainAxis.setUpperMargin(0.0);

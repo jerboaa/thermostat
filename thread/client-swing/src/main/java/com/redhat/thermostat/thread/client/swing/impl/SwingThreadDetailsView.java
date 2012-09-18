@@ -82,7 +82,7 @@ public class SwingThreadDetailsView extends ThreadDetailsView implements SwingCo
         
         ThreadDetailsChart threadChart = new ThreadDetailsChart();
         
-        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread));
+        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread).createChart());
         threadChart.add(threadSummary);
         
         details.add(threadChart);

@@ -57,9 +57,8 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.charts.BytesTickUnit;
-import com.redhat.thermostat.charts.Chart;
 
-public class OverviewChart extends Chart {
+public class OverviewChart {
         
     private static final ColorUIResource MAIN_BAR_BASE_COLOR = new ColorUIResource(0x4A90D9);
 
@@ -84,8 +83,7 @@ public class OverviewChart extends Chart {
         used.setDescription(secondarySeries);
     }
     
-    @Override
-    protected JFreeChart createChart(int width, int height, Color bgColor) {
+    public JFreeChart createChart(int height, Color bgColor) {
 
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         

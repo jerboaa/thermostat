@@ -36,18 +36,15 @@
 
 package com.redhat.thermostat.thread.client.common.chart;
 
-import java.awt.Color;
-
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot3D;
 import org.jfree.data.general.DefaultPieDataset;
 
-import com.redhat.thermostat.charts.Chart;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 
-public class ThreadDeatailsPieChart extends Chart {
+public class ThreadDeatailsPieChart {
     
     private ThreadTableBean thread;
     
@@ -55,8 +52,7 @@ public class ThreadDeatailsPieChart extends Chart {
         this.thread = thread;
     }
     
-    @Override
-    protected JFreeChart createChart(int width, int height, Color bgColor) {
+    public JFreeChart createChart() {
         
         DefaultPieDataset dataset = new DefaultPieDataset();
         
@@ -76,13 +72,11 @@ public class ThreadDeatailsPieChart extends Chart {
         chart.setAntiAlias(true);
         
         PiePlot3D plot = (PiePlot3D) chart.getPlot();
-        plot.setBackgroundPaint(bgColor);
         
         plot.setStartAngle(290);
         plot.setForegroundAlpha(0.5f);
 
         plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0} - {2}"));
-        plot.setBackgroundPaint(bgColor);
         
         plot.setInteriorGap(0.0);
         
