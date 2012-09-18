@@ -1,3 +1,16 @@
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+
+import java.util.List;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.web.common.Qualifier;
+import com.redhat.thermostat.web.common.RESTQuery;
+
 /*
  * Copyright 2012 Red Hat, Inc.
  *
@@ -34,39 +47,22 @@
  * to do so, delete this exception statement from your version.
  */
 
+public class RESTQueryTest {
 
-package com.redhat.thermostat.common.storage;
+    @Test
+    public void test() {
+        RESTQuery query = new RESTQuery();
+        Key<String> key1 = new Key<>("testkey", true);
+        Category category = new Category("test", key1);
+        query.from(category).where(key1, Criteria.EQUALS, "fluff");
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+        List<Qualifier<?>> qualifiers = query.getQualifiers();
+        assertEquals(1, qualifiers.size());
+        Qualifier<?> qualifier = qualifiers.get(0);
+        assertEquals(key1, qualifier.getKey());
+        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
+        assertEquals("fluff", qualifier.getValue());
 
-import com.redhat.thermostat.common.storage.Query.Criteria;
-
-public class QueryTestHelper {
-
-    @SuppressWarnings("unchecked")
-    public static Update createMockUpdate() {
-        Update mockUpdate = mock(Update.class);
-        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
-        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
-        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
-        return mockUpdate;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Remove createMockRemove() {
-        Remove mockRemove = mock(Remove.class);
-        when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
-        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
-        return mockRemove;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Query createMockQuery() {
-        Query mockQuery = mock(Query.class);
-        when(mockQuery.from(any(Category.class))).thenReturn(mockQuery);
-        when(mockQuery.where(any(Key.class), any(Criteria.class), any())).thenReturn(mockQuery);
-        return mockQuery;
+        assertSame(category, query.getCategory());
     }
 }

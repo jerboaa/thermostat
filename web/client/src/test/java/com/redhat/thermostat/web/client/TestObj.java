@@ -35,38 +35,20 @@
  */
 
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.web.client;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.redhat.thermostat.common.model.Pojo;
 
-import com.redhat.thermostat.common.storage.Query.Criteria;
+public class TestObj implements Pojo {
 
-public class QueryTestHelper {
+    
+    private String property1;
 
-    @SuppressWarnings("unchecked")
-    public static Update createMockUpdate() {
-        Update mockUpdate = mock(Update.class);
-        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
-        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
-        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
-        return mockUpdate;
+    public void setProperty1(String property1) {
+        this.property1 = property1;
     }
 
-    @SuppressWarnings("unchecked")
-    public static Remove createMockRemove() {
-        Remove mockRemove = mock(Remove.class);
-        when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
-        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
-        return mockRemove;
-    }
-
-    @SuppressWarnings("unchecked")
-    public static Query createMockQuery() {
-        Query mockQuery = mock(Query.class);
-        when(mockQuery.from(any(Category.class))).thenReturn(mockQuery);
-        when(mockQuery.where(any(Key.class), any(Criteria.class), any())).thenReturn(mockQuery);
-        return mockQuery;
+    public String getProperty1() {
+        return property1;
     }
 }

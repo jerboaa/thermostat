@@ -35,38 +35,58 @@
  */
 
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.web.common;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 
-public class QueryTestHelper {
+public class RESTQuery implements Query {
 
-    @SuppressWarnings("unchecked")
-    public static Update createMockUpdate() {
-        Update mockUpdate = mock(Update.class);
-        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
-        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
-        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
-        return mockUpdate;
+    private Category category;
+    private List<Qualifier<?>> qualifiers;
+    private String resultClassName;
+
+    public RESTQuery() {
+        qualifiers = new ArrayList<>();
     }
 
-    @SuppressWarnings("unchecked")
-    public static Remove createMockRemove() {
-        Remove mockRemove = mock(Remove.class);
-        when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
-        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
-        return mockRemove;
+    @Override
+    public Query from(Category category) {
+        this.category = category;
+        return this;
     }
 
-    @SuppressWarnings("unchecked")
-    public static Query createMockQuery() {
-        Query mockQuery = mock(Query.class);
-        when(mockQuery.from(any(Category.class))).thenReturn(mockQuery);
-        when(mockQuery.where(any(Key.class), any(Criteria.class), any())).thenReturn(mockQuery);
-        return mockQuery;
+    @Override
+    public <T> Query where(Key<T> key, Criteria criteria, T value) {
+        qualifiers.add(new Qualifier<>(key, criteria, value));
+        return this;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public List<Qualifier<?>> getQualifiers() {
+        return qualifiers;
+    }
+
+    public void setQualifiers(List<Qualifier<?>> qualifiers) {
+        this.qualifiers = qualifiers;
+    }
+
+    public String getResultClassName() {
+        return resultClassName;
+    }
+
+    public void setResultClassName(String resultClassName) {
+        this.resultClassName = resultClassName;
     }
 }

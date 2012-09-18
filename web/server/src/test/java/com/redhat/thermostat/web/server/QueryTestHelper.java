@@ -35,13 +35,18 @@
  */
 
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.web.server;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Remove;
+import com.redhat.thermostat.common.storage.Update;
 
 public class QueryTestHelper {
 

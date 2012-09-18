@@ -35,38 +35,43 @@
  */
 
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.web.common;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 
-public class QueryTestHelper {
+public class Qualifier<T> {
+    private Key<T> key;
+    private Criteria criteria;
+    private T value;
 
-    @SuppressWarnings("unchecked")
-    public static Update createMockUpdate() {
-        Update mockUpdate = mock(Update.class);
-        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
-        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
-        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
-        return mockUpdate;
+    public Qualifier() {
+        this(null, null, null);
     }
 
-    @SuppressWarnings("unchecked")
-    public static Remove createMockRemove() {
-        Remove mockRemove = mock(Remove.class);
-        when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
-        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
-        return mockRemove;
+    public Qualifier(Key<T> key, Criteria criteria, T value) {
+        this.key = key;
+        this.criteria = criteria;
+        this.value = value;
     }
 
-    @SuppressWarnings("unchecked")
-    public static Query createMockQuery() {
-        Query mockQuery = mock(Query.class);
-        when(mockQuery.from(any(Category.class))).thenReturn(mockQuery);
-        when(mockQuery.where(any(Key.class), any(Criteria.class), any())).thenReturn(mockQuery);
-        return mockQuery;
+    public Key<T> getKey() {
+        return key;
     }
+    public void setKey(Key<T> key) {
+        this.key = key;
+    }
+    public Criteria getCriteria() {
+        return criteria;
+    }
+    public void setCriteria(Criteria criteria) {
+        this.criteria = criteria;
+    }
+    public T getValue() {
+        return value;
+    }
+    public void setValue(T value) {
+        this.value = value;
+    }
+    
 }

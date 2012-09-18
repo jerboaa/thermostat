@@ -109,6 +109,7 @@
     <module>unix-process-handler</module>
     <module>keyring</module>
     <module>thread</module>
+    <module>web</module>
   </modules>
 
   <build>

@@ -55,10 +55,10 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.test.MockQuery;
 
 public class BackendInfoDAOTest {
