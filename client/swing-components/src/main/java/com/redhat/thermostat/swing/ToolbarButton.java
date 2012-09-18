@@ -34,25 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.charts;
+package com.redhat.thermostat.swing;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
+import javax.swing.AbstractButton;
 
-import org.jfree.chart.JFreeChart;
-
-public abstract class Chart {
-    
-    public BufferedImage getChart(int width, int height, Color bgColor) {
-        JFreeChart chart = createChart(width, height, bgColor);
-        
-        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        chart.draw((Graphics2D) image.getGraphics(), new Rectangle2D.Double(0, 0, width, height), null);
-        
-        return image;
-    }
-    
-    protected abstract JFreeChart createChart(int width, int height, Color bgColor);
+public interface ToolbarButton {
+    AbstractButton getToolbarButton();
 }

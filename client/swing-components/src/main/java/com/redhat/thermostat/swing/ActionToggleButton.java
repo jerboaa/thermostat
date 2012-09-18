@@ -34,52 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.chart;
+package com.redhat.thermostat.swing;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.plot.PiePlot3D;
-import org.jfree.data.general.DefaultPieDataset;
+import javax.swing.AbstractButton;
+import javax.swing.Icon;
+import javax.swing.JToggleButton;
 
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-
-public class ThreadDeatailsPieChart {
+@SuppressWarnings("serial")
+public class ActionToggleButton extends JToggleButton implements ToolbarButton {
+    private AbstractButton realButton;
     
-    private ThreadTableBean thread;
-    
-    public ThreadDeatailsPieChart(ThreadTableBean thread) {
-        this.thread = thread;
+    public ActionToggleButton(final Icon icon) {
+        super(icon);
+        
+        realButton = new JToggleButton() {
+            @Override
+            public int getWidth() {
+                return icon.getIconWidth() + 4;
+            }
+            
+            @Override
+            public int getHeight() {
+                return icon.getIconHeight() + 4;
+            }
+        };
+        setUI(new ActionButtonUI(realButton));
+        
+        setSize(realButton.getWidth(), realButton.getHeight());
+        setContentAreaFilled(false);
+        
+        setPreferredSize(getSize());
+        setMinimumSize(getSize());
+        setMaximumSize(getSize());
+        
+        realButton.setModel(getModel());
+
+        setBorderPainted(false);
     }
     
-    public JFreeChart createChart() {
-        
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        
-        dataset.setValue("Running", thread.getRunningPercent());
-        dataset.setValue("Waiting", thread.getWaitingPercent());
-        dataset.setValue("Monitor", thread.getMonitorPercent());
-        dataset.setValue("Sleeping", thread.getSleepingPercent());
-        
-        JFreeChart chart = ChartFactory.createPieChart3D(
-                thread.getName(),       // chart title
-                dataset,                // data
-                true,                   // include legend
-                true,
-                false
-            );
-
-        chart.setAntiAlias(true);
-        
-        PiePlot3D plot = (PiePlot3D) chart.getPlot();
-        
-        plot.setStartAngle(290);
-        plot.setForegroundAlpha(0.5f);
-
-        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0} - {2}"));
-        
-        plot.setInteriorGap(0.0);
-        
-        return chart;
-    }
+    @Override
+    public AbstractButton getToolbarButton() {
+        return this;
+    }    
 }

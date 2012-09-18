@@ -108,20 +108,19 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         });
         
         timelinePanel = new ThreadAliveDaemonTimelinePanel();
-
-        timelinePanel.setToggleText(t.localize(LocaleResources.START_RECORDING) + ":");
-        timelinePanel.getRecordButton().addItemListener(new ItemListener()
+        panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING));
+        panel.getToggleButton().addItemListener(new ItemListener()
         {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                                
-                ThreadAction action = null;
+                
+                ThreadAction action = null;                
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     action = ThreadAction.START_LIVE_RECORDING;
-                    timelinePanel.setToggleText(t.localize(LocaleResources.STOP_RECORDING) + ":");
+                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.STOP_RECORDING));
                 } else {
                     action = ThreadAction.STOP_LIVE_RECORDING;
-                    timelinePanel.setToggleText(t.localize(LocaleResources.START_RECORDING) + ":");
+                    panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING));
                 }
                 
                 if (skipNotification) return;
@@ -173,7 +172,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             @Override
             public void run() {
                 if (!notify) skipNotification = true;
-                timelinePanel.getRecordButton().setSelected(recording);
+                panel.getToggleButton().setSelected(recording);
                 if (!notify) skipNotification = false;
             }
         });
@@ -207,7 +206,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 JPanel pane = timelinePanel.getTimelinePanel();
                 pane.removeAll();
                 
-                ChartPanel charts = new ChartPanel(model);
+                ChartPanel charts = new ChartPanel(model.createChart(pane.getWidth(), pane.getBackground()));
                 pane.add(charts);
                 pane.revalidate();
                 pane.repaint();

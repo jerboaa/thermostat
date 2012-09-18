@@ -38,33 +38,38 @@ package com.redhat.thermostat.client.ui;
 
 import java.util.Map;
 
+import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
 
-public interface AgentConfigurationView extends View {
+public abstract class AgentInformationDisplayView extends BasicView {
 
     enum ConfigurationAction {
         SWITCH_AGENT,
-        CLOSE_ACCEPT,
-        CLOSE_CANCEL,
+        SHOW_BACKEND_DESCRIPTION,
+        CLOSE,
     }
 
-    void showDialog();
+    public abstract void showDialog();
 
-    void hideDialog();
+    public abstract void hideDialog();
 
-    void addActionListener(ActionListener<ConfigurationAction> listener);
+    public abstract void addConfigurationListener(ActionListener<ConfigurationAction> listener);
 
-    void removeActionListener(ActionListener<ConfigurationAction> listener);
+    public abstract void removeConfigurationListener(ActionListener<ConfigurationAction> listener);
 
-    void addAgent(String agentName);
+    public abstract void addAgent(String agentName);
 
-    String getSelectedAgent();
+    public abstract String getSelectedAgent();
 
-    void clearAllAgents();
+    public abstract void clearAllAgents();
 
-    void setBackendStatus(Map<String,Boolean> agentConfiguration);
+    public abstract void setSelectedAgentName(String agentName);
+    public abstract void setSelectedAgentId(String agentId);
+    public abstract void setSelectedAgentCommandAddress(String address);
+    public abstract void setSelectedAgentStartTime(String startTime);
+    public abstract void setSelectedAgentStopTime(String stopTime);
 
-    Map<String,Boolean> getBackendStatus();
+    public abstract void setSelectedAgentBackendStatus(Map<String, String> agentConfiguration);
+    public abstract void setSelectedAgentBackendDescription(String description);
 
 }

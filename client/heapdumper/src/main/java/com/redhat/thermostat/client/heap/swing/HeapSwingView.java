@@ -122,7 +122,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
             @Override
             public void run() {
 
-                ChartPanel charts = new ChartPanel(model);
+                ChartPanel charts = new ChartPanel(model.createChart(stats.getWidth(), stats.getBackground()));
                 stats.setChartPanel(charts);
                 
                 stats.setMax(capacity);

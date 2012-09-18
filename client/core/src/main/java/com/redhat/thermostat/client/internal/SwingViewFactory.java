@@ -41,8 +41,8 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.client.ui.AgentConfigurationFrame;
-import com.redhat.thermostat.client.ui.AgentConfigurationView;
+import com.redhat.thermostat.client.ui.AgentInformationDisplayFrame;
+import com.redhat.thermostat.client.ui.AgentInformationDisplayView;
 import com.redhat.thermostat.client.ui.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostCpuPanel;
@@ -73,7 +73,7 @@ public class SwingViewFactory extends DefaultViewFactory implements ViewFactory 
     private static final Logger logger = LoggingUtils.getLogger(SwingViewFactory.class);
 
     public SwingViewFactory() {
-        setViewClass(AgentConfigurationView.class, AgentConfigurationFrame.class);
+        setViewClass(AgentInformationDisplayView.class, AgentInformationDisplayFrame.class);
         setViewClass(ClientConfigurationView.class, ClientConfigurationSwing.class);
 
         setViewClass(SummaryView.class, SummaryPanel.class);

@@ -45,7 +45,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.internal.SwingViewFactory;
-import com.redhat.thermostat.client.ui.AgentConfigurationView;
+import com.redhat.thermostat.client.ui.AgentInformationDisplayView;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostCpuView;
 import com.redhat.thermostat.client.ui.HostMemoryView;
@@ -63,7 +63,7 @@ public class SwingViewFactoryTest {
 
         List<Class<? extends View>> knownViewClasses = new ArrayList<>();
 
-        knownViewClasses.add(AgentConfigurationView.class);
+        knownViewClasses.add(AgentInformationDisplayView.class);
         knownViewClasses.add(ClientConfigurationView.class);
         knownViewClasses.add(HostCpuView.class);
         knownViewClasses.add(HostMemoryView.class);

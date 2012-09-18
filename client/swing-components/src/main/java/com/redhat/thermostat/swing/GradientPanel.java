@@ -34,52 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.chart;
+package com.redhat.thermostat.swing;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.plot.PiePlot3D;
-import org.jfree.data.general.DefaultPieDataset;
+import java.awt.Color;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
 
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+import javax.swing.JPanel;
 
-public class ThreadDeatailsPieChart {
+
+@SuppressWarnings("serial")
+public class GradientPanel extends JPanel {
+
+    private Color top;
+    private Color bottom;
     
-    private ThreadTableBean thread;
-    
-    public ThreadDeatailsPieChart(ThreadTableBean thread) {
-        this.thread = thread;
+    public GradientPanel(Color top, Color bottom) {
+        this.top = top;
+        this.bottom = bottom;
     }
     
-    public JFreeChart createChart() {
+    @Override
+    protected void paintComponent(Graphics g) {
         
-        DefaultPieDataset dataset = new DefaultPieDataset();
+        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
         
-        dataset.setValue("Running", thread.getRunningPercent());
-        dataset.setValue("Waiting", thread.getWaitingPercent());
-        dataset.setValue("Monitor", thread.getMonitorPercent());
-        dataset.setValue("Sleeping", thread.getSleepingPercent());
-        
-        JFreeChart chart = ChartFactory.createPieChart3D(
-                thread.getName(),       // chart title
-                dataset,                // data
-                true,                   // include legend
-                true,
-                false
-            );
-
-        chart.setAntiAlias(true);
-        
-        PiePlot3D plot = (PiePlot3D) chart.getPlot();
-        
-        plot.setStartAngle(290);
-        plot.setForegroundAlpha(0.5f);
-
-        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0} - {2}"));
-        
-        plot.setInteriorGap(0.0);
-        
-        return chart;
+        Paint gradient = new GradientPaint(0, 0, top, 0, getHeight(), bottom);
+        graphics.setPaint(gradient);
+        graphics.fillRect(0, 0, getWidth(), getHeight());
+        graphics.dispose();
     }
 }

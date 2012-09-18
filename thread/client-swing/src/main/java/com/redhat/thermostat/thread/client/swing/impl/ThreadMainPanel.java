@@ -38,12 +38,15 @@ package com.redhat.thermostat.thread.client.swing.impl;
 
 import javax.swing.BoxLayout;
 import javax.swing.GroupLayout;
+import javax.swing.ImageIcon;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.swing.ActionToggleButton;
 import com.redhat.thermostat.swing.HeaderPanel;
+import com.redhat.thermostat.thread.client.common.IconResources;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 
 @SuppressWarnings("serial")
@@ -51,6 +54,8 @@ class ThreadMainPanel extends JPanel {
 
     private static final Translate t = LocaleResources.createLocalizer();
     private JSplitPane splitPane;
+    
+    private ActionToggleButton toggleButton;
     
     public ThreadMainPanel() {
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
@@ -60,6 +65,10 @@ class ThreadMainPanel extends JPanel {
         
         JPanel content = new JPanel();
         headerPanel.setContent(content);
+        
+        toggleButton = new ActionToggleButton(new ImageIcon(IconResources.getRecordIcon().getData().array()));
+        toggleButton.setName("recordButton");
+        headerPanel.addToolBarButton(toggleButton);
         
         splitPane = new JSplitPane();
         splitPane.setName("threadMainPanelSplitPane");
@@ -89,5 +98,9 @@ class ThreadMainPanel extends JPanel {
     
     public JSplitPane getSplitPane() {
         return splitPane;
+    }
+    
+    public ActionToggleButton getToggleButton() {
+        return toggleButton;
     }
 }

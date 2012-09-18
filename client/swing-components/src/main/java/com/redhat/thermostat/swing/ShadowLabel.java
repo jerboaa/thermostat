@@ -34,52 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.chart;
+package com.redhat.thermostat.swing;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.plot.PiePlot3D;
-import org.jfree.data.general.DefaultPieDataset;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.plaf.metal.MetalLabelUI;
 
-public class ThreadDeatailsPieChart {
-    
-    private ThreadTableBean thread;
-    
-    public ThreadDeatailsPieChart(ThreadTableBean thread) {
-        this.thread = thread;
+@SuppressWarnings("serial")
+public class ShadowLabel extends JLabel {
+
+    public ShadowLabel(String text, Icon icon) {
+        super(text);
+        this.setIcon(icon);
+        setUI(new ShadowLabelUI());
     }
     
-    public JFreeChart createChart() {
-        
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        
-        dataset.setValue("Running", thread.getRunningPercent());
-        dataset.setValue("Waiting", thread.getWaitingPercent());
-        dataset.setValue("Monitor", thread.getMonitorPercent());
-        dataset.setValue("Sleeping", thread.getSleepingPercent());
-        
-        JFreeChart chart = ChartFactory.createPieChart3D(
-                thread.getName(),       // chart title
-                dataset,                // data
-                true,                   // include legend
-                true,
-                false
-            );
+    public ShadowLabel(String text) {
+        this(text, null);
+    }
 
-        chart.setAntiAlias(true);
+    private class ShadowLabelUI extends MetalLabelUI {
         
-        PiePlot3D plot = (PiePlot3D) chart.getPlot();
-        
-        plot.setStartAngle(290);
-        plot.setForegroundAlpha(0.5f);
-
-        plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0} - {2}"));
-        
-        plot.setInteriorGap(0.0);
-        
-        return chart;
+        @Override
+        protected void paintEnabledText(JLabel l, Graphics g, String s, int textX, int textY) {
+            GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
+            Graphics2D graphics = graphicsUtils.createAAGraphics(g);
+            graphicsUtils.drawStringWithShadow(l, graphics, s, getForeground(), textX, textY);
+        }
     }
 }

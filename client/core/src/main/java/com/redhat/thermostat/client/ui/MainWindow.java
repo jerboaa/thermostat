@@ -405,16 +405,6 @@ public class MainWindow extends JFrame implements MainView {
         JMenu editMenu = new JMenu(localize(LocaleResources.MENU_EDIT));
         mainMenuBar.add(editMenu);
 
-        JMenuItem configureAgentMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_AGENT));
-        configureAgentMenuItem.setName("showAgentConfig");
-        configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                fireViewAction(Action.SHOW_AGENT_CONFIG);
-            }
-        });
-        editMenu.add(configureAgentMenuItem);
-
         JMenuItem configureClientMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_CLIENT));
         configureClientMenuItem.setName("showClientConfig");
         configureClientMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -435,8 +425,20 @@ public class MainWindow extends JFrame implements MainView {
                 fireViewAction(Action.SWITCH_HISTORY_MODE);
             }
         });
-
         editMenu.add(historyModeMenuItem);
+
+        JMenu viewMenu = new JMenu(localize(LocaleResources.MENU_VIEW));
+        mainMenuBar.add(viewMenu);
+        JMenuItem configureAgentMenuItem = new JMenuItem(localize(LocaleResources.MENU_VIEW_AGENTS));
+        configureAgentMenuItem.setName("showAgentConfig");
+        configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                fireViewAction(Action.SHOW_AGENT_CONFIG);
+            }
+        });
+        viewMenu.add(configureAgentMenuItem);
+
         JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);

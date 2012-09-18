@@ -36,25 +36,13 @@
 
 package com.redhat.thermostat.thread.client.common;
 
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 
 public abstract class ThreadDetailsView extends BasicView {
-    
-    private static final Logger logger = Logger.getLogger(ThreadDetailsView.class.getSimpleName());
-    
+        
     public IconDescriptor getEmptyDetailsIcon() {
-        try {
-            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(),
-                                                        "com/redhat/thermostat/thread/client/common/monitor.png");
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Can't load emptyDetailsIcon", e);
-        }
-        return null;
+        return IconResources.getMonitorIcon();
     }
     
     public abstract void setDetails(ThreadTableBean thread);

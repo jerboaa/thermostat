@@ -34,30 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.thread.client.common;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class AgentConfigurationSource {
+import com.redhat.thermostat.client.ui.IconDescriptor;
 
-    // FIXME fix this properly
+public class IconResources {
 
-    public List<String> getKnownAgents() {
-        return Arrays.asList(new String[] { "Agent Smith", "Agent Jones", "Agent Brown" });
+    private static final Logger logger = Logger.getLogger(IconResources.class.getSimpleName());
+
+    private static IconDescriptor monitor;
+    private static IconDescriptor record;
+
+    public static IconDescriptor getMonitorIcon() {
+        if (monitor == null) {
+            monitor = loadIcon("com/redhat/thermostat/thread/client/common/monitor.png");
+        }
+        return monitor;
     }
-
-    public Map<String, Boolean> getAgentBackends(String agentName) {
-        Map<String, Boolean> fake = new HashMap<>();
-        fake.put("Monitor New JVMs", true);
-        fake.put("Use up all my CPU Cycles", false);
-        return fake;
+    
+    public static IconDescriptor getRecordIcon() {
+        if (record == null) {
+            record = loadIcon("com/redhat/thermostat/thread/client/common/gtk-media-record.png");
+        }
+        return record;
     }
-
-    public void updateAgentConfig(String agentName, Map<String, Boolean> newBackendStatus) {
-        // TODO Auto-generated method stub
+    
+    private static IconDescriptor loadIcon(String name) {
+        try {
+            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(), name);
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Can't load " + name, e);
+        }
+        return null;
     }
-
 }

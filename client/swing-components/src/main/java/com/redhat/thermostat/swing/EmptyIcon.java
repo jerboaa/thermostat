@@ -34,58 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.swing;
 
 import java.awt.Component;
+import java.awt.Graphics;
 
-import javax.swing.JPanel;
-
-import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ChartPanel;
-import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
-
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
 
-public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
+@SuppressWarnings("serial")
+public class EmptyIcon extends ImageIcon  {
 
-    private JPanel details;
-    private static final Translate t = LocaleResources.createLocalizer();
-
-    SwingThreadDetailsView() {
-        details = new JPanel();
-        details.setLayout(new BorderLayout(0, 0));
-        
-        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
-        lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
-        details.add(lblNewLabel);
+    private int width;
+    private int height;
+    
+    public EmptyIcon() {
+        this(16, 16);
+    }
+    
+    public EmptyIcon(int width, int height) {
+        this.width = width;
+        this.height = height;
     }
     
     @Override
-    public Component getUiComponent() {
-        return details;
+    public int getIconHeight() {
+        return height;
     }
-
+    
     @Override
-    public void setDetails(ThreadTableBean thread) {
-        details.removeAll();
-        
-        ThreadDetailsChart threadChart = new ThreadDetailsChart();
-        
-        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread).createChart());
-        threadChart.add(threadSummary);
-        
-        details.add(threadChart);
-        details.repaint();
+    public int getIconWidth() {
+        return width;
+    }
+    
+    @Override
+    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+        // no-op
     }
 }

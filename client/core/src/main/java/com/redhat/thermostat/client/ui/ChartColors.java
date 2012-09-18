@@ -38,15 +38,17 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Color;
 
+import com.redhat.thermostat.swing.Palette;
+
 public class ChartColors {
-    private static final Color[] SERIES_COLORS = {
-        new Color(192,80,77),
-        new Color(79,129,189),
-        new Color(155,187,89),
-        new Color(128,100,162),
-        new Color(75,172,198),
-        new Color(128,128,128),
-        new Color(247,150,70),
+    private static final Palette[] SERIES_COLORS = {
+        Palette.PALE_RED,
+        Palette.SKY_BLUE,
+        Palette.TUNDRA_GREEN,
+        Palette.POMP_AND_POWER_VIOLET,
+        Palette.DIRTY_CYAN,
+        Palette.EARL_GRAY,
+        Palette.GRANITA_ORANGE,
     };
 
     private ChartColors() {
@@ -54,6 +56,6 @@ public class ChartColors {
     }
 
     public static Color getColor(int index) {
-        return SERIES_COLORS[index % SERIES_COLORS.length];
+        return SERIES_COLORS[index % SERIES_COLORS.length].getColor();
     }
 }
