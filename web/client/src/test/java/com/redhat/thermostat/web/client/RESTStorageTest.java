@@ -61,6 +61,8 @@ import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.test.FreePortFinder;
+import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
 
@@ -68,13 +70,24 @@ public class RESTStorageTest {
 
     private Server server;
 
+    private int port;
+
     private String requestBody;
 
     private String responseBody;
 
     @Before
     public void setUp() throws Exception {
-        server = new Server(8080);
+        port = FreePortFinder.findFreePort(new TryPort() {
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port);
+            }
+        });
+    }
+
+    private void startServer(int port) throws Exception {
+        server = new Server(port);
         server.setHandler(new AbstractHandler() {
             
             @Override
@@ -114,7 +127,7 @@ public class RESTStorageTest {
     @Test
     public void testFindPojo() {
         RESTStorage storage = new RESTStorage();
-        storage.setEndpoint("http://localhost:8080/");
+        storage.setEndpoint("http://localhost:" + port + "/");
 
         TestObj obj = new TestObj();
         obj.setProperty1("fluffor");

@@ -55,6 +55,8 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.test.FreePortFinder;
+import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.client.RESTStorage;
 import com.redhat.thermostat.web.common.StorageWrapper;
 
@@ -78,7 +80,7 @@ public class RESTStorageTest {
     }
 
     private Server server;
-
+    private int port;
     private Storage mockStorage;
 
     @Before
@@ -86,7 +88,17 @@ public class RESTStorageTest {
         mockStorage = mock(Storage.class);
         StorageWrapper.setStorage(mockStorage);
 
-        server = new Server(8080);
+        port = FreePortFinder.findFreePort(new TryPort() {
+            
+            @Override
+            public void tryPort(int port) throws Exception {
+                startServer(port);
+            }
+        });
+    }
+
+    private void startServer(int port) throws Exception {
+        server = new Server(port);
         server.setHandler(new WebAppContext("src/main/webapp", "/"));
         server.start();
     }
@@ -109,7 +121,7 @@ public class RESTStorageTest {
         when(mockStorage.createQuery()).thenReturn(mockQuery);
 
         RESTStorage restStorage = new RESTStorage();
-        restStorage.setEndpoint("http://localhost:8080/storage");
+        restStorage.setEndpoint("http://localhost:" + port + "/storage");
         Query query = restStorage.createQuery();
         Key<String> key1 = new Key<>("key1", true);
         Key<Integer> key2 = new Key<>("key2", false);
