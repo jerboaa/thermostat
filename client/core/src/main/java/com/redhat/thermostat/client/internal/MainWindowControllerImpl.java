@@ -57,9 +57,9 @@ import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.client.ui.AgentConfigurationController;
-import com.redhat.thermostat.client.ui.AgentConfigurationModel;
-import com.redhat.thermostat.client.ui.AgentConfigurationView;
+import com.redhat.thermostat.client.ui.AgentInformationDisplayController;
+import com.redhat.thermostat.client.ui.AgentInformationDisplayModel;
+import com.redhat.thermostat.client.ui.AgentInformationDisplayView;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostInformationController;
@@ -403,10 +403,9 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void showAgentConfiguration() {
-        AgentConfigurationSource agentPrefs = new AgentConfigurationSource();
-        AgentConfigurationModel model = new AgentConfigurationModel(agentPrefs);
-        AgentConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(AgentConfigurationView.class);
-        AgentConfigurationController controller = new AgentConfigurationController(model, view);
+        AgentInformationDisplayModel model = new AgentInformationDisplayModel();
+        AgentInformationDisplayView view = ApplicationContext.getInstance().getViewFactory().getView(AgentInformationDisplayView.class);
+        AgentInformationDisplayController controller = new AgentInformationDisplayController(model, view);
         controller.showView();
     }
 

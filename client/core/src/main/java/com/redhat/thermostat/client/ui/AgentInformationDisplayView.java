@@ -34,30 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.client.ui;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-public class AgentConfigurationSource {
+import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.common.ActionListener;
 
-    // FIXME fix this properly
+public abstract class AgentInformationDisplayView extends BasicView {
 
-    public List<String> getKnownAgents() {
-        return Arrays.asList(new String[] { "Agent Smith", "Agent Jones", "Agent Brown" });
+    enum ConfigurationAction {
+        SWITCH_AGENT,
+        SHOW_BACKEND_DESCRIPTION,
+        CLOSE,
     }
 
-    public Map<String, Boolean> getAgentBackends(String agentName) {
-        Map<String, Boolean> fake = new HashMap<>();
-        fake.put("Monitor New JVMs", true);
-        fake.put("Use up all my CPU Cycles", false);
-        return fake;
-    }
+    public abstract void showDialog();
 
-    public void updateAgentConfig(String agentName, Map<String, Boolean> newBackendStatus) {
-        // TODO Auto-generated method stub
-    }
+    public abstract void hideDialog();
+
+    public abstract void addConfigurationListener(ActionListener<ConfigurationAction> listener);
+
+    public abstract void removeConfigurationListener(ActionListener<ConfigurationAction> listener);
+
+    public abstract void addAgent(String agentName);
+
+    public abstract String getSelectedAgent();
+
+    public abstract void clearAllAgents();
+
+    public abstract void setSelectedAgentName(String agentName);
+    public abstract void setSelectedAgentId(String agentId);
+    public abstract void setSelectedAgentCommandAddress(String address);
+    public abstract void setSelectedAgentStartTime(String startTime);
+    public abstract void setSelectedAgentStopTime(String stopTime);
+
+    public abstract void setSelectedAgentBackendStatus(Map<String, String> agentConfiguration);
+    public abstract void setSelectedAgentBackendDescription(String description);
 
 }
