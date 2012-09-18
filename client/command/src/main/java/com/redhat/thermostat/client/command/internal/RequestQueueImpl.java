@@ -45,6 +45,9 @@ import org.jboss.netty.channel.ChannelFuture;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 
 class RequestQueueImpl implements RequestQueue {
 
@@ -103,9 +106,17 @@ class RequestQueueImpl implements RequestQueue {
                 }
                 ChannelFuture f = ((ClientBootstrap) ctx.getBootstrap()).connect(request.getTarget());
                 f.awaitUninterruptibly();
-                Channel c = f.getChannel();
-                c.getPipeline().addLast("responseHandler", new ResponseHandler(request));
-                c.write(request);
+                if (f.isSuccess()) {
+                	Channel c = f.getChannel();
+                	c.getPipeline().addLast("responseHandler", new ResponseHandler(request));
+                	c.write(request);
+                } else {
+                	Response response  = new Response(ResponseType.ERROR);
+                	// TODO add more information once Response supports parameters.
+                	for (RequestResponseListener listener : request.getListeners()) {
+                		listener.fireComplete(request, response);
+                	}
+                }
             }
         }
     }

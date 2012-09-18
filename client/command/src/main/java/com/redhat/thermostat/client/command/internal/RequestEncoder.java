@@ -41,6 +41,7 @@ import java.util.Collection;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 
 import com.redhat.thermostat.common.command.EncodingHelper;
@@ -76,4 +77,10 @@ class RequestEncoder extends MessageEncoder {
         Channels.write(ctx, e.getFuture(), buf);
     }
 
+    // This must be implemented, even though we are simply passing on the exception.  If
+    // not implemented, this exception ends up going uncaught which causes problems.
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+    	Channels.fireExceptionCaught(ctx, e.getCause());
+    }
 }
