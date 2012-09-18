@@ -34,16 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.swing;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.ui.IconDescriptor;
+import java.awt.Color;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
 
-public abstract class ThreadDetailsView extends BasicView {
-        
-    public IconDescriptor getEmptyDetailsIcon() {
-        return IconResources.getMonitorIcon();
+import javax.swing.JPanel;
+
+
+@SuppressWarnings("serial")
+public class GradientPanel extends JPanel {
+
+    private Color top;
+    private Color bottom;
+    
+    public GradientPanel(Color top, Color bottom) {
+        this.top = top;
+        this.bottom = bottom;
     }
     
-    public abstract void setDetails(ThreadTableBean thread);
+    @Override
+    protected void paintComponent(Graphics g) {
+        
+        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+        
+        Paint gradient = new GradientPaint(0, 0, top, 0, getHeight(), bottom);
+        graphics.setPaint(gradient);
+        graphics.fillRect(0, 0, getWidth(), getHeight());
+        graphics.dispose();
+    }
 }

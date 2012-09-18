@@ -123,23 +123,22 @@ public class SwingThreadViewTest {
         frameFixture.show();
         
         JToggleButtonFixture togglefixture = frameFixture.toggleButton("recordButton");
-        JLabelFixture toggleTest = frameFixture.label("recordButtonText");
         
-        toggleTest.requireText(t.localize(LocaleResources.START_RECORDING) + ":");
+        togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING));
         
         togglefixture.click();
 
-        toggleTest.requireText(t.localize(LocaleResources.STOP_RECORDING) + ":");
+        togglefixture.requireToolTip(t.localize(LocaleResources.STOP_RECORDING));
         
         // now try "programmatically"
         
         view.setRecording(true, true);
         
-        toggleTest.requireText(t.localize(LocaleResources.STOP_RECORDING) + ":");
+        togglefixture.requireToolTip(t.localize(LocaleResources.STOP_RECORDING));
     
         view.setRecording(false, false);
         
-        toggleTest.requireText(t.localize(LocaleResources.START_RECORDING) + ":");
+        togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING));
     }
 
     @GUITest

@@ -36,14 +36,39 @@
 
 package com.redhat.thermostat.thread.client.common;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import com.redhat.thermostat.client.ui.IconDescriptor;
 
-public abstract class ThreadDetailsView extends BasicView {
-        
-    public IconDescriptor getEmptyDetailsIcon() {
-        return IconResources.getMonitorIcon();
+public class IconResources {
+
+    private static final Logger logger = Logger.getLogger(IconResources.class.getSimpleName());
+
+    private static IconDescriptor monitor;
+    private static IconDescriptor record;
+
+    public static IconDescriptor getMonitorIcon() {
+        if (monitor == null) {
+            monitor = loadIcon("com/redhat/thermostat/thread/client/common/monitor.png");
+        }
+        return monitor;
     }
     
-    public abstract void setDetails(ThreadTableBean thread);
+    public static IconDescriptor getRecordIcon() {
+        if (record == null) {
+            record = loadIcon("com/redhat/thermostat/thread/client/common/gtk-media-record.png");
+        }
+        return record;
+    }
+    
+    private static IconDescriptor loadIcon(String name) {
+        try {
+            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(), name);
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Can't load " + name, e);
+        }
+        return null;
+    }
 }

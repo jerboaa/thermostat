@@ -34,16 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.swing;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.ui.IconDescriptor;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-public abstract class ThreadDetailsView extends BasicView {
-        
-    public IconDescriptor getEmptyDetailsIcon() {
-        return IconResources.getMonitorIcon();
+import javax.swing.Icon;
+import javax.swing.JLabel;
+import javax.swing.plaf.metal.MetalLabelUI;
+
+@SuppressWarnings("serial")
+public class ShadowLabel extends JLabel {
+
+    public ShadowLabel(String text, Icon icon) {
+        super(text);
+        this.setIcon(icon);
+        setUI(new ShadowLabelUI());
     }
     
-    public abstract void setDetails(ThreadTableBean thread);
+    public ShadowLabel(String text) {
+        this(text, null);
+    }
+
+    private class ShadowLabelUI extends MetalLabelUI {
+        
+        @Override
+        protected void paintEnabledText(JLabel l, Graphics g, String s, int textX, int textY) {
+            GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
+            Graphics2D graphics = graphicsUtils.createAAGraphics(g);
+            graphicsUtils.drawStringWithShadow(l, graphics, s, getForeground(), textX, textY);
+        }
+    }
 }

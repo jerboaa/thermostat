@@ -34,16 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.swing;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.ui.IconDescriptor;
+import java.awt.Component;
+import java.awt.Graphics;
 
-public abstract class ThreadDetailsView extends BasicView {
-        
-    public IconDescriptor getEmptyDetailsIcon() {
-        return IconResources.getMonitorIcon();
+import javax.swing.ImageIcon;
+
+@SuppressWarnings("serial")
+public class EmptyIcon extends ImageIcon  {
+
+    private int width;
+    private int height;
+    
+    public EmptyIcon() {
+        this(16, 16);
     }
     
-    public abstract void setDetails(ThreadTableBean thread);
+    public EmptyIcon(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+    
+    @Override
+    public int getIconHeight() {
+        return height;
+    }
+    
+    @Override
+    public int getIconWidth() {
+        return width;
+    }
+    
+    @Override
+    public synchronized void paintIcon(Component c, Graphics g, int x, int y) {
+        // no-op
+    }
 }

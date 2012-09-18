@@ -90,13 +90,12 @@ public class DolphinButtonUI extends MetalButtonUI {
         DolphinTheme theme = DolphinThemeUtils.getCurrentTheme();
         
         Graphics2D graphics = (Graphics2D) g.create();
-        
-        graphics.clearRect(0, 0, c.getWidth(), c.getHeight());
-        DolphinThemeUtils.setAntialiasing(graphics);
 
         AbstractButton button = (AbstractButton) c;
         ButtonModel model = button.getModel();
         
+        DolphinThemeUtils.setAntialiasing(graphics);
+
         Color topGradient = null;
         Color bottomGradient = null;
         if (!c.isEnabled()) {
@@ -111,17 +110,22 @@ public class DolphinButtonUI extends MetalButtonUI {
                 bottomGradient = theme.getButtonGradientBottomColor();
             }
         }
-        
-        Paint paint = new GradientPaint(0, 0, topGradient, 0, c.getHeight(),
-                                        bottomGradient);
-        graphics.setPaint(paint);
 
-        Shape shape = DolphinThemeUtils.getRoundShape(c.getWidth(), c.getHeight());
+        if (button.isOpaque()) {
+            graphics.clearRect(0, 0, c.getWidth(), c.getHeight());
+        }
         
-        graphics.fill(shape);
+        if (button.isContentAreaFilled() && button.isOpaque()) {
+            Paint paint = new GradientPaint(0, 0, topGradient, 0, c.getHeight(),
+                    bottomGradient);
+            graphics.setPaint(paint);
+            Shape shape = DolphinThemeUtils.getRoundShape(c.getWidth(), c.getHeight());
+            graphics.fill(shape);
+        }
+
         graphics.dispose();
         
-        super.paint(g, c);        
+        super.paint(g, c);
     }
     
     @Override

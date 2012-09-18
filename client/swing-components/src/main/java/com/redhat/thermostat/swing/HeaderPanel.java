@@ -36,69 +36,62 @@
 
 package com.redhat.thermostat.swing;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Font;
-import java.awt.GradientPaint;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Paint;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.BoxLayout;
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 
 /**
  * A component that host a panel with a nicely rendered header.
  */
+@SuppressWarnings("serial")
 public class HeaderPanel extends JPanel {
-
-    private GraphicsUtils graphicsUtils;
     
     private String header;
-    private boolean open;
     
     private JPanel contentPanel;
-        
+    private JLabel headerLabel;
+    private JPanel headerPanel;
+    private JPanel controlPanel;
+    
     public HeaderPanel() {
-        this(null);
+        this("");
     }
     
     public HeaderPanel(String header) {
-        this(header, 30);
-    }
-    
-    public HeaderPanel(String header, int headerHeight) {
         
         this.header = header;
-        graphicsUtils = GraphicsUtils.getInstance();
         
-        this.open = true;
+        setLayout(new BorderLayout(0, 0));
+
+        headerLabel = new ShadowLabel(header, new EmptyIcon(5, 5));
+        headerPanel = new GradientPanel(Color.WHITE, getBackground());
+        headerPanel.setPreferredSize(new Dimension(HeaderPanel.this.getWidth(), 40));
         
-        JPanel headerPanel = new TopPanel();
+        headerPanel.setLayout(new BorderLayout(0, 0));
+        headerPanel.add(headerLabel, BorderLayout.WEST);
+        add(headerPanel, BorderLayout.NORTH);
+        
+        controlPanel = new JPanel();
+        controlPanel.setOpaque(false);
+        controlPanel.setLayout(new FlowLayout(FlowLayout.RIGHT, 2, 10));
+        
+        headerPanel.add(controlPanel, BorderLayout.EAST);
         
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
         
-        GroupLayout groupLayout = new GroupLayout(this);
-        groupLayout.setHorizontalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addComponent(headerPanel, GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE)
-                .addComponent(contentPanel, GroupLayout.DEFAULT_SIZE, 450, Short.MAX_VALUE)
-        );
-        groupLayout.setVerticalGroup(
-            groupLayout.createParallelGroup(Alignment.LEADING)
-                .addGroup(groupLayout.createSequentialGroup()
-                    .addComponent(headerPanel, GroupLayout.PREFERRED_SIZE, headerHeight, GroupLayout.PREFERRED_SIZE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
-                    .addComponent(contentPanel, GroupLayout.DEFAULT_SIZE, 260, Short.MAX_VALUE))
-        );
-        setLayout(groupLayout);
+        add(contentPanel, BorderLayout.CENTER);
     }
    
     public String getHeader() {
@@ -107,6 +100,7 @@ public class HeaderPanel extends JPanel {
     
     public void setHeader(String header) {
         this.header = header;
+        headerLabel.setText(header);
     }
     
     public void setContent(JComponent content) {
@@ -115,27 +109,9 @@ public class HeaderPanel extends JPanel {
         contentPanel.revalidate();
         repaint();
     }
-    
-    @SuppressWarnings({ "serial" })
-    private class TopPanel extends JPanel {
-        @Override
-        protected void paintComponent(Graphics g) {
-            
-            Graphics2D graphics = graphicsUtils.createAAGraphics(g);
-            
-            Paint gradient = new GradientPaint(0, 0, Color.WHITE, 0, getHeight(), getBackground());
-            graphics.setPaint(gradient);
-            graphics.fillRect(0, 0, getWidth(), getHeight());
-            
-            if (header != null) {
-                int currentHeight = getHeight();
-                
-                Font font = getFont();
-                int height = graphicsUtils.getFontMetrics(this, font).getAscent()/2 + currentHeight/2 - 1;
-                graphicsUtils.drawStringWithShadow(this, graphics, header, getForeground(), 6, height);
-            }
-            graphics.dispose();
-        }
+
+    public void addToolBarButton(ToolbarButton button) {
+        controlPanel.add(button.getToolbarButton());
     }
     
     public static void main(String[] args) throws InvocationTargetException, InterruptedException {
@@ -148,7 +124,7 @@ public class HeaderPanel extends JPanel {
                
                HeaderPanel header = new HeaderPanel();
                header.setHeader("Test");
-               frame.add(header);
+               frame.getContentPane().add(header);
                frame.setSize(500, 500);
                frame.setVisible(true);
             }

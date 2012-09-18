@@ -34,16 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.swing;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.ui.IconDescriptor;
+import javax.swing.AbstractButton;
+import javax.swing.Icon;
+import javax.swing.JButton;
 
-public abstract class ThreadDetailsView extends BasicView {
+@SuppressWarnings("serial")
+public class ActionButton extends JButton implements ToolbarButton {
+
+    private AbstractButton realButton;
+    
+    public ActionButton(final Icon icon) {
+        super(icon);
         
-    public IconDescriptor getEmptyDetailsIcon() {
-        return IconResources.getMonitorIcon();
+        realButton = new JButton() {
+            @Override
+            public int getWidth() {
+                return icon.getIconWidth() + 5;
+            }
+            
+            @Override
+            public int getHeight() {
+                return icon.getIconHeight() + 4;
+            }
+        };
+        setUI(new ActionButtonUI(realButton));
+        
+        setSize(realButton.getWidth(), realButton.getHeight());
+        setContentAreaFilled(false);
+        
+        setPreferredSize(getSize());
+        setMinimumSize(getSize());
+        setMaximumSize(getSize());
+        
+        realButton.setModel(getModel());
+
+        setBorderPainted(false);
     }
     
-    public abstract void setDetails(ThreadTableBean thread);
+    @Override
+    public AbstractButton getToolbarButton() {
+        return this;
+    }
 }

@@ -34,16 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.swing;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.ui.IconDescriptor;
+import javax.swing.AbstractButton;
 
-public abstract class ThreadDetailsView extends BasicView {
-        
-    public IconDescriptor getEmptyDetailsIcon() {
-        return IconResources.getMonitorIcon();
-    }
-    
-    public abstract void setDetails(ThreadTableBean thread);
+public interface ToolbarButton {
+    AbstractButton getToolbarButton();
 }
