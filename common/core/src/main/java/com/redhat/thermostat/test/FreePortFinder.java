@@ -46,8 +46,8 @@ public class FreePortFinder {
         void tryPort(int port) throws Exception;
     }
 
-    private static final int MIN_PORT = 1024;
-    private static final int MAX_PORT = 49151;
+    private static final int MIN_PORT = 49152;
+    private static final int MAX_PORT = 65535;
 
     private static volatile int nextPort = MAX_PORT;
 
