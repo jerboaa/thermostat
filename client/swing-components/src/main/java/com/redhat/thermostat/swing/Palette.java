@@ -34,28 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.swing;
 
 import java.awt.Color;
 
-import com.redhat.thermostat.swing.Palette;
+public enum Palette {
 
-public class ChartColors {
-    private static final Palette[] SERIES_COLORS = {
-        Palette.PALE_RED,
-        Palette.SKY_BLUE,
-        Palette.TUNDRA_GREEN,
-        Palette.POMP_AND_POWER_VIOLET,
-        Palette.DIRTY_CYAN,
-        Palette.EARL_GRAY,
-        Palette.GRANITA_ORANGE,
-    };
+    RED(new Color(192, 0, 0)),
+    PALE_RED(new Color(192, 80, 77)),
+    
+    SKY_BLUE(new Color(79, 129, 189)),
+    AZUREUS(new Color(0, 176, 190)),
+    EGYPTIAN_BLUE(new Color(74, 144, 217)),
+    DIRTY_CYAN(new Color(75, 172, 198)),
+    PRUSSIAN_BLUE(new Color(0, 49, 83)),
+    
+    GREEN(new Color(146, 208, 80)),
+    TUNDRA_GREEN(new Color(155, 187, 89)),
 
-    private ChartColors() {
-        /* should not be instantiated */
+    POMP_AND_POWER_VIOLET(new Color(128, 100, 162)),
+    VIOLET(new Color(112, 48, 160)),
+
+    EARL_GRAY(new Color(128, 128, 128)),
+    LIGHT_GRAY(new Color(242, 242, 242)),
+    GRAY(new Color(216, 216, 216)),
+    DARK_GRAY(new Color(168, 172, 168)),
+
+    GRANITA_ORANGE(new Color(247,150,70)),
+    
+    BLACK(Color.BLACK),
+    WHITE(Color.WHITE),
+
+    /* END */ ;
+    
+    private Color color;
+    Palette(Color color) {
+        this.color = color;
     }
-
-    public static Color getColor(int index) {
-        return SERIES_COLORS[index % SERIES_COLORS.length].getColor();
+    
+    public Color getColor() {
+        return color;
     }
 }
