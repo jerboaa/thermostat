@@ -51,13 +51,11 @@ import java.util.List;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
@@ -94,8 +92,6 @@ public class VmMemoryStatDAOTest {
         cursor = mock(Cursor.class);
         when(storage.findAllPojos(any(Query.class), same(VmMemoryStat.class))).thenReturn(cursor);
 
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
-        when(cursor.limit(any(Integer.class))).thenReturn(cursor);
         when(cursor.hasNext()).thenReturn(false);
 
     }
@@ -164,16 +160,10 @@ public class VmMemoryStatDAOTest {
     }
 
     private void verifyQuery() {
-        @SuppressWarnings("rawtypes")
-        ArgumentCaptor<Key> sortKey = ArgumentCaptor.forClass(Key.class);
-        ArgumentCaptor<SortDirection> sortDirection = ArgumentCaptor.forClass(SortDirection.class);
-        verify(cursor).sort(sortKey.capture(), sortDirection.capture());
 
         assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
         assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_ID));
-
-        assertTrue(sortKey.getValue().equals(Key.TIMESTAMP));
-        assertTrue(sortDirection.getValue().equals(SortDirection.DESCENDING));
+        assertTrue(query.hasSort(Key.TIMESTAMP, Query.SortDirection.DESCENDING));
     }
 
     @Test

@@ -40,26 +40,8 @@ import com.redhat.thermostat.common.model.Pojo;
 
 public interface Cursor<T extends Pojo> {
 
-    public enum SortDirection {
-        ASCENDING(1),
-        DESCENDING(-1);
-
-        private int value;
-
-        private SortDirection(int value) {
-            this.value = value;
-        }
-
-        public int getValue() {
-            return value;
-        }
-    }
-
     boolean hasNext();
 
     T next();
 
-    Cursor<T> sort(Key<?> orderBy, SortDirection direction);
-
-    Cursor<T> limit(int i);
 }

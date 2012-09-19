@@ -92,8 +92,8 @@ public class ThreadDaoImpl implements ThreadDao {
     public ThreadSummary loadLastestSummary(VmRef ref) {
         ThreadSummary summary = null;
 
-        Query query = prepareQuery(THREAD_SUMMARY, ref);
-        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING).limit(1);
+        Query query = prepareQuery(THREAD_SUMMARY, ref).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING).limit(1);
+        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class);
         if (cursor.hasNext()) {
             summary = cursor.next();
         }
@@ -106,10 +106,10 @@ public class ThreadDaoImpl implements ThreadDao {
         
         List<ThreadSummary> result = new ArrayList<>();
         
-        Query query = prepareQuery(THREAD_SUMMARY, ref);
+        Query query = prepareQuery(THREAD_SUMMARY, ref).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
 
-        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
+        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class);
         while (cursor.hasNext()) {
             ThreadSummary summary = cursor.next();
             result.add(summary);
@@ -128,9 +128,10 @@ public class ThreadDaoImpl implements ThreadDao {
         List<ThreadInfoData> result = new ArrayList<>();
         
         Query query = prepareQuery(THREAD_INFO, ref)
-                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
+                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         
-        Cursor<ThreadInfoData> cursor = storage.findAllPojos(query, ThreadInfoData.class).sort(Key.TIMESTAMP, Cursor.SortDirection.DESCENDING);
+        Cursor<ThreadInfoData> cursor = storage.findAllPojos(query, ThreadInfoData.class);
         while (cursor.hasNext()) {
             ThreadInfoData info = cursor.next();
             result.add(info);

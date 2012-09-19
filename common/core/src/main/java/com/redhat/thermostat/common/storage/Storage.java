@@ -74,8 +74,6 @@ public abstract class Storage {
 
     public abstract <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
 
-    public abstract <T extends Pojo> Cursor<T> findAllPojosFromCategory(Category category, Class<T> resultClass);
-    
     public abstract long getCount(Category category);
 
     public abstract void saveFile(String filename, InputStream data);

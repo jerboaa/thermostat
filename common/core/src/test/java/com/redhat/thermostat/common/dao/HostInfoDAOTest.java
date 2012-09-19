@@ -147,7 +147,6 @@ public class HostInfoDAOTest {
                 return new MockQuery();
             }
         });
-        when(storage.findAllPojosFromCategory(HostInfoDAO.hostInfoCategory, HostInfo.class)).thenReturn(cursor);
         when(storage.findAllPojos(any(Query.class), same(HostInfo.class))).thenReturn(cursor);
         
         return storage;
@@ -190,7 +189,6 @@ public class HostInfoDAOTest {
                 return new MockQuery();
             }
         });
-        when(storage.findAllPojosFromCategory(HostInfoDAO.hostInfoCategory, HostInfo.class)).thenReturn(cursor);
         when(storage.findAllPojos(any(Query.class), same(HostInfo.class))).thenReturn(cursor);
         
         return storage;

@@ -54,6 +54,10 @@ public class Categories {
         namesToCategories.put(category.getName(), category);
     }
 
+    public static synchronized void remove(Category category) {
+        namesToCategories.remove(category.getName());
+    }
+
     public static synchronized Category getByName(String categoryName) {
         return namesToCategories.get(categoryName);
     }

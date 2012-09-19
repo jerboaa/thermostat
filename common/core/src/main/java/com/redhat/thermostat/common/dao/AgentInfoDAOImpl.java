@@ -64,7 +64,8 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Cursor<AgentInformation> agentCursor = storage.findAllPojosFromCategory(CATEGORY, AgentInformation.class);
+        Query query = storage.createQuery().from(CATEGORY);
+        Cursor<AgentInformation> agentCursor = storage.findAllPojos(query, AgentInformation.class);
 
         List<AgentInformation> results = new ArrayList<>();
 

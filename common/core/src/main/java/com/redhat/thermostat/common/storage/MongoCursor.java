@@ -74,23 +74,4 @@ class MongoCursor<T extends Pojo> implements Cursor<T> {
         return ChunkToPojoConverter.convertChunkToPojo(resultChunk, resultClass, converters);
     }
 
-    @Override
-    public Cursor<T> sort(Key<?> orderBy, SortDirection direction) {
-        if (!category.getKeys().contains(orderBy)) {
-            throw new IllegalArgumentException("Key not present in this Cursor's category.");
-        }   /* TODO: There are other possible error conditions.  Once there is API to configure
-             * indexing/optimization, we may want to prevent or log predictably bad performance
-             * sorting requests.
-             */
-        DBObject dbOrderBy = new BasicDBObject(orderBy.getName(), direction.getValue());
-        DBCursor sorted = cursor.sort(dbOrderBy);
-        return new MongoCursor<T>(sorted, category, resultClass, converters);
-    }
-
-    @Override
-    public Cursor<T> limit(int i) {
-        DBCursor limited = cursor.limit(i);
-        return new MongoCursor<T>(limited, category, resultClass, converters);
-    }
-
 }

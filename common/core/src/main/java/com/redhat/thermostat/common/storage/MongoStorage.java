@@ -38,6 +38,7 @@ package com.redhat.thermostat.common.storage;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.UUID;
@@ -55,6 +56,7 @@ import com.redhat.thermostat.common.dao.Converter;
 import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
 import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.storage.AbstractQuery.Sort;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 
@@ -347,8 +349,28 @@ public class MongoStorage extends Storage {
     public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
         MongoQuery mongoQuery =  checkAndCastQuery(query);
         DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
-        DBCursor dbCursor = coll.find(mongoQuery.getGeneratedQuery());
+        DBCursor dbCursor;
+        if (mongoQuery.hasClauses()) {
+            dbCursor = coll.find(mongoQuery.getGeneratedQuery());
+        } else {
+            dbCursor = coll.find();
+        }
+        dbCursor = applySortAndLimit(mongoQuery, dbCursor);
         return new MongoCursor<T>(dbCursor, mongoQuery.getCategory(), resultClass, converters);
+    }
+
+    private DBCursor applySortAndLimit(MongoQuery query, DBCursor dbCursor) {
+        BasicDBObject orderBy = new BasicDBObject();
+        List<Sort> sorts = query.getSorts();
+        for (Sort sort : sorts) {
+            orderBy.append(sort.getKey().getName(), sort.getDirection().getValue());
+        }
+        dbCursor.sort(orderBy);
+        int limit = query.getLimit();
+        if (limit > 0) {
+            dbCursor.limit(limit);
+        }
+        return dbCursor;
     }
 
     @Override
@@ -378,13 +400,6 @@ public class MongoStorage extends Storage {
 
     }
     
-    @Override
-    public <T extends Pojo> Cursor<T> findAllPojosFromCategory(Category category, Class<T> resultClass) {
-        DBCollection coll = getCachedCollection(category.getName());
-        DBCursor dbCursor = coll.find();
-        return new MongoCursor<T>(dbCursor, category, resultClass, converters);
-    }
-
     @Override
     public long getCount(Category category) {
         DBCollection coll = getCachedCollection(category.getName());

@@ -144,6 +144,7 @@ public class MongoStorageTest {
     private Mongo m;
     private DB db;
     private DBCollection testCollection, emptyTestCollection, mockedCollection;
+    private DBCursor cursor;
 
     private MongoStorage makeStorage() {
         MongoStorage storage = new MongoStorage(conf);
@@ -177,7 +178,7 @@ public class MongoStorageTest {
         multiKeyQuery.put(key2, "test4");
         multiKeyQuery.put(key1, "test5");
 
-        DBCursor cursor = mock(DBCursor.class);
+        cursor = mock(DBCursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
 
@@ -200,6 +201,7 @@ public class MongoStorageTest {
         testCollection = null;
         emptyTestCollection = null;
         multiKeyQuery = null;
+        cursor = null;
     }
 
     @Test
@@ -248,7 +250,7 @@ public class MongoStorageTest {
     public void verifyFindAllCallsDBCollectionFind() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery().from(testCategory);
+        Query query = storage.createQuery().from(testCategory).where(key1, Criteria.EQUALS, "fluff");
         storage.findAllPojos(query, TestClass.class);
         verify(testCollection).find(any(DBObject.class));
     }
@@ -268,6 +270,7 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
 
         MongoQuery query = mock(MongoQuery.class);
+        when(query.hasClauses()).thenReturn(true);
         DBObject generatedQuery = mock(DBObject.class);
         when(query.getGeneratedQuery()).thenReturn(generatedQuery);
         when(query.getCollectionName()).thenReturn(testCategory.getName());
@@ -329,10 +332,29 @@ public class MongoStorageTest {
     }
 
     @Test
+    public void verifyFindAllWithSortAndLimit() throws Exception {
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        MongoStorage storage = makeStorage();
+        // TODO find a way to test this that isn't just testing MongoCursor
+        // Because we mock the DBCollection, the contents of this query don't actually determine the result.
+        MongoQuery query = (MongoQuery) new MongoQuery().from(testCategory).sort(key1, Query.SortDirection.ASCENDING).limit(3);
+
+        Cursor<TestClass> cursor = storage.findAllPojos(query, TestClass.class);
+
+        verifyDefaultCursor(cursor);
+        ArgumentCaptor<DBObject> orderBy = ArgumentCaptor.forClass(DBObject.class);
+        verify(this.cursor).sort(orderBy.capture());
+        assertTrue(orderBy.getValue().containsField("key1"));
+        assertEquals(1, orderBy.getValue().get("key1"));
+        verify(this.cursor).limit(3);
+    }
+
+    @Test
     public void verifyFindAllFromCategoryCallsDBCollectionFindAll() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        storage.findAllPojosFromCategory(testCategory, TestClass.class);
+        Query query = storage.createQuery().from(testCategory);
+        storage.findAllPojos(query, TestClass.class);
         verify(testCollection).find();
     }
 
@@ -340,7 +362,8 @@ public class MongoStorageTest {
     public void verifyFindAllFromCategoryReturnsCorrectCursor() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Cursor<TestClass> cursor = storage.findAllPojosFromCategory(testCategory, TestClass.class);
+        Query query = storage.createQuery().from(testCategory);
+        Cursor<TestClass> cursor = storage.findAllPojos(query, TestClass.class);
 
         verifyDefaultCursor(cursor);
     }

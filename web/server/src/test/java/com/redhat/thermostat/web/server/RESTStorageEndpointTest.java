@@ -43,14 +43,26 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.google.gson.Gson;
 import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.storage.Categories;
 import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
@@ -58,9 +70,10 @@ import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.client.RESTStorage;
+import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 
-public class RESTStorageTest {
+public class RESTStorageEndpointTest {
 
     public static class TestClass implements Pojo {
         private String key1;
@@ -83,8 +96,28 @@ public class RESTStorageTest {
     private int port;
     private Storage mockStorage;
 
+    private static Key<String> key1;
+    private static Key<Integer> key2;
+    private static Category category;
+
+    @BeforeClass
+    public static void setupCategory() {
+        key1 = new Key<>("key1", true);
+        key2 = new Key<>("key2", false);
+        category = new Category("test", key1, key2);
+    }
+
+    @AfterClass
+    public static void cleanupCategory() {
+        Categories.remove(category);
+        category = null;
+        key2 = null;
+        key1 = null;
+    }
+
     @Before
     public void setUp() throws Exception {
+
         mockStorage = mock(Storage.class);
         StorageWrapper.setStorage(mockStorage);
 
@@ -121,11 +154,8 @@ public class RESTStorageTest {
         when(mockStorage.createQuery()).thenReturn(mockQuery);
 
         RESTStorage restStorage = new RESTStorage();
-        restStorage.setEndpoint("http://localhost:" + port + "/storage");
+        restStorage.setEndpoint(getEndpoint());
         Query query = restStorage.createQuery();
-        Key<String> key1 = new Key<>("key1", true);
-        Key<Integer> key2 = new Key<>("key2", false);
-        Category category = new Category("test", key1, key2);
         query.from(category).where(key1, Criteria.EQUALS, "fluff");
 
         TestClass result = restStorage.findPojo(query, TestClass.class);
@@ -134,5 +164,47 @@ public class RESTStorageTest {
         assertEquals(42, result.getKey2());
         verify(mockStorage).createQuery();
         verify(mockStorage).findPojo(any(Query.class), same(TestClass.class));
+    }
+
+    @Test
+    public void testFindAllPojos() throws IOException {
+        TestClass expected1 = new TestClass();
+        expected1.setKey1("fluff1");
+        expected1.setKey2(42);
+        TestClass expected2 = new TestClass();
+        expected2.setKey1("fluff2");
+        expected2.setKey2(43);
+        @SuppressWarnings("unchecked")
+        Cursor<TestClass> cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(expected1).thenReturn(expected2);
+
+        when(mockStorage.findAllPojos(any(Query.class), same(TestClass.class))).thenReturn(cursor);
+        Query mockQuery = QueryTestHelper.createMockQuery();
+        when(mockStorage.createQuery()).thenReturn(mockQuery);
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/find-all");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        RESTQuery query = (RESTQuery) new RESTQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
+        query.setResultClassName(TestClass.class.getName());
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        gson.toJson(query, out);
+        out.flush();
+
+        Reader in = new InputStreamReader(conn.getInputStream());
+        TestClass[] results = gson.fromJson(in, TestClass[].class);
+        assertEquals(2, results.length);
+        assertEquals("fluff1", results[0].getKey1());
+        assertEquals(42, results[0].getKey2());
+        assertEquals("fluff2", results[1].getKey1());
+        assertEquals(43, results[1].getKey2());
+    }
+
+    private String getEndpoint() {
+        return "http://localhost:" + port + "/storage";
     }
 }

@@ -39,6 +39,8 @@ package com.redhat.thermostat.common.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -49,15 +51,14 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.QueryTestHelper;
+import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
@@ -119,8 +120,9 @@ public class AgentInfoDAOTest {
         when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAllPojosFromCategory(AgentInfoDAO.CATEGORY, AgentInformation.class)).thenReturn(agentCursor);
-
+        when(storage.findAllPojos(any(Query.class), same(AgentInformation.class))).thenReturn(agentCursor);
+        MockQuery query = new MockQuery();
+        when(storage.createQuery()).thenReturn(query);
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
         List<AgentInformation> allAgentInfo = dao.getAllAgentInformation();

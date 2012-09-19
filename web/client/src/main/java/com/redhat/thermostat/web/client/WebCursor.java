@@ -34,57 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+package com.redhat.thermostat.web.client;
 
-import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Query.Criteria;
-import com.redhat.thermostat.common.storage.Storage;
 
-class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
+class WebCursor<T extends Pojo> implements Cursor<T> {
 
-    private final Storage storage;
+    private T[] data;
+    private int index;
 
-    private Map<VmRef, VmLatestPojoListGetter<VmMemoryStat>> getters = new HashMap<>();
-
-    VmMemoryStatDAOImpl(Storage storage) {
-        this.storage = storage;
+    WebCursor(T[] data) {
+        this.data = data;
+        index = 0;
     }
 
     @Override
-    public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        Query query = storage.createQuery()
-                .from(vmMemoryStatsCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
-                .where(Key.VM_ID, Criteria.EQUALS, ref.getId())
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING)
-                .limit(1);;
-        Cursor<VmMemoryStat> cursor = storage.findAllPojos(query, VmMemoryStat.class);
-        if (cursor.hasNext()) {
-            return cursor.next();
-        }
-        return null;
+    public boolean hasNext() {
+        return index < data.length;
     }
 
     @Override
-    public void putVmMemoryStat(VmMemoryStat stat) {
-        storage.putPojo(vmMemoryStatsCategory, false, stat);
-    }
-
-    @Override
-    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
-        VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
-        if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, ref, VmMemoryStat.class);
-            getters.put(ref, getter);
-        }
-        return getter.getLatest(since);
+    public T next() {
+        T result = data[index];
+        index++;
+        return result;
     }
 
 }

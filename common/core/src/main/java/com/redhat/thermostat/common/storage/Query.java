@@ -47,8 +47,26 @@ public interface Query {
         LESS_THAN_OR_EQUAL_TO,
     }
 
+    enum SortDirection {
+        ASCENDING(1),
+        DESCENDING(-1);
+
+        private int value;
+
+        private SortDirection(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
     Query from(Category category);
 
     <T> Query where(Key<T> key, Criteria criteria, T value);
 
+    <T> Query sort(Key<T> key, SortDirection direction);
+
+    Query limit(int n);
 }

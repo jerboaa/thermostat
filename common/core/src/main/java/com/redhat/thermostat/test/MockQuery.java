@@ -40,11 +40,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import com.redhat.thermostat.common.storage.AbstractQuery;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
 
-public class MockQuery implements Query {
+public class MockQuery extends AbstractQuery {
 
     public static class WhereClause <T> {
         public final Key<T> key;
@@ -79,11 +79,10 @@ public class MockQuery implements Query {
     }
 
     private final List<WhereClause<?>> whereClauses = new ArrayList<>();
-    private Category category;
 
     @Override
     public MockQuery from(Category category) {
-        this.category = category;
+        setCategory(category);
         return this;
     }
 
@@ -91,10 +90,6 @@ public class MockQuery implements Query {
     public <T> MockQuery where(Key<T> key, Criteria criteria, T value) {
         whereClauses.add(new WhereClause<>(key, criteria, value));
         return this;
-    }
-
-    public Category getCategory() {
-        return category;
     }
 
     public List<WhereClause<?>> getWhereClauses() {
@@ -135,12 +130,17 @@ public class MockQuery implements Query {
             return false;
         }
         MockQuery other = (MockQuery) obj;
-        return Objects.equals(category, other.category) && Objects.equals(whereClauses, other.whereClauses);
+        return Objects.equals(getCategory(), other.getCategory()) && Objects.equals(whereClauses, other.whereClauses);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(category, whereClauses);
+        return Objects.hash(getCategory(), whereClauses);
+    }
+
+    public boolean hasSort(Key<?> key, SortDirection direction) {
+        
+        return getSorts().contains(new Sort(key, direction));
     }
 
 }

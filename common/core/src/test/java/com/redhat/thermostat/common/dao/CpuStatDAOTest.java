@@ -38,7 +38,6 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
@@ -56,7 +55,6 @@ import org.junit.Test;
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
@@ -93,7 +91,6 @@ public class CpuStatDAOTest {
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         when(storage.createQuery()).thenReturn(query);
         when(storage.findAllPojos(query, CpuStat.class)).thenReturn(cursor);
@@ -125,7 +122,6 @@ public class CpuStatDAOTest {
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         when(storage.createQuery()).thenReturn(query);
         when(storage.findAllPojos(any(Query.class), same(CpuStat.class))).thenReturn(cursor);

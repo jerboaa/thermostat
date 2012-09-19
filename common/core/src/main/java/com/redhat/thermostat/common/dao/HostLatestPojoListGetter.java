@@ -42,7 +42,6 @@ import java.util.List;
 import com.redhat.thermostat.common.model.TimeStampedPojo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
@@ -70,7 +69,6 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
 
     private List<T> getLatest(Query query) {
         Cursor<T> cursor = storage.findAllPojos(query, resultClass);
-        cursor = cursor.sort(Key.TIMESTAMP, SortDirection.DESCENDING);
         List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
             T pojo = cursor.next();
@@ -82,8 +80,10 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
     protected Query buildQuery(long since) {
         Query query = storage.createQuery()
                 .from(cat)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
-        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId())
+                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
+                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        
         return query;
     }
 }

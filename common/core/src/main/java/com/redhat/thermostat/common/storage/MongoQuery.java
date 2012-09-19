@@ -41,14 +41,14 @@ import java.util.Objects;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 
-public class MongoQuery implements Query {
+public class MongoQuery extends AbstractQuery {
 
-    private Category category;
     private BasicDBObject query = new BasicDBObject();
+    private boolean hasClauses = false;
 
     @Override
     public MongoQuery from(Category category) {
-        this.category = category;
+        setCategory(category);
         return this;
     }
 
@@ -84,20 +84,16 @@ public class MongoQuery implements Query {
         default:
             throw new IllegalArgumentException("MongoQuery can not handle " + operator);
         }
-
+        hasClauses = true;
         return this;
     }
 
     String getCollectionName() {
-        return category.getName();
+        return getCategory().getName();
     }
 
     DBObject getGeneratedQuery() {
         return query;
-    }
-
-    Category getCategory() {
-        return category;
     }
 
     @Override
@@ -112,11 +108,16 @@ public class MongoQuery implements Query {
             return false;
         }
         MongoQuery other = (MongoQuery) obj;
-        return Objects.equals(this.category, other.category) && Objects.equals(this.query, other.query);
+        return Objects.equals(getCategory(), other.getCategory()) && Objects.equals(this.query, other.query);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.category, this.query);
+        return Objects.hash(getCategory(), this.query);
     }
+
+    boolean hasClauses() {
+        return hasClauses ;
+    }
+
 }

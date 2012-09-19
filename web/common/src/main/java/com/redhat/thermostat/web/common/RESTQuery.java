@@ -40,13 +40,12 @@ package com.redhat.thermostat.web.common;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.AbstractQuery;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 
-public class RESTQuery implements Query {
+public class RESTQuery extends AbstractQuery {
 
-    private Category category;
     private List<Qualifier<?>> qualifiers;
     private String resultClassName;
 
@@ -55,23 +54,9 @@ public class RESTQuery implements Query {
     }
 
     @Override
-    public Query from(Category category) {
-        this.category = category;
-        return this;
-    }
-
-    @Override
     public <T> Query where(Key<T> key, Criteria criteria, T value) {
         qualifiers.add(new Qualifier<>(key, criteria, value));
         return this;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     public List<Qualifier<?>> getQualifiers() {
@@ -89,4 +74,5 @@ public class RESTQuery implements Query {
     public void setResultClassName(String resultClassName) {
         this.resultClassName = resultClassName;
     }
+
 }

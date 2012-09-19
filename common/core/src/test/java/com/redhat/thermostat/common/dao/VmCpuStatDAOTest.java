@@ -55,7 +55,6 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Cursor.SortDirection;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
@@ -93,7 +92,6 @@ public class VmCpuStatDAOTest {
         Cursor<VmCpuStat> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
-        when(cursor.sort(any(Key.class), any(SortDirection.class))).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).then(new Answer<Query>() {

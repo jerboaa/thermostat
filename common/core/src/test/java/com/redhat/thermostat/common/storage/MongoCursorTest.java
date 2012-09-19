@@ -150,34 +150,4 @@ public class MongoCursorTest {
         assertNull(cursor.next());
     }
 
-    @Test
-    public void verifyCursorSort() {
-        ArgumentCaptor<DBObject> arg = ArgumentCaptor.forClass(DBObject.class);
-        Cursor<TestClass> sorted = cursor.sort(key1, Cursor.SortDirection.ASCENDING);
-
-        verify(dbCursor).sort(arg.capture());
-        DBObject orderByDBObject = arg.getValue();
-        assertEquals(1, orderByDBObject.keySet().size());
-        assertEquals((Integer) Cursor.SortDirection.ASCENDING.getValue(), orderByDBObject.get(key1.getName()));
-        // Verify that the sorted cursor is still return the same number of items. We leave the actual
-        // sorting to Mongo and won't check it here.
-        assertTrue(sorted.hasNext());
-        sorted.next();
-        assertTrue(sorted.hasNext());
-        sorted.next();
-        assertFalse(sorted.hasNext());
-    }
-
-    @Test
-    public void verifyCursorLimit() {
-
-        Cursor<TestClass> sorted = cursor.limit(1);
-
-        verify(dbCursor).limit(1);
-
-        // We cannot really test if the cursor really got limited, this is up to the mongo implementation.
-        // In any case, we can verify that the returned cursor actually is 'active'.
-        assertTrue(sorted.hasNext());
-        sorted.next();
-    }
 }

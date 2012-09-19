@@ -42,6 +42,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
@@ -85,16 +86,26 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public <T extends Pojo> Cursor<T> findAllPojos(Query arg0, Class<T> arg1) {
-        // TODO Auto-generated method stub
-        return null;
-    }
+    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
+        try {
+            URL url = new URL(endpoint + "/find-all");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            ((RESTQuery) query).setResultClassName(resultClass.getName());
+            gson.toJson(query, writer);
+            writer.flush();
 
-    @Override
-    public <T extends Pojo> Cursor<T> findAllPojosFromCategory(Category arg0,
-            Class<T> arg1) {
-        // TODO Auto-generated method stub
-        return null;
+            InputStream in = conn.getInputStream();
+            T[] result = (T[]) gson.fromJson(new InputStreamReader(in), Array.newInstance(resultClass, 0).getClass());
+            return new WebCursor<T>(result);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

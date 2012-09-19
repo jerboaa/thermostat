@@ -38,10 +38,12 @@
 package com.redhat.thermostat.web.client;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -53,11 +55,15 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.gson.Gson;
+import com.redhat.thermostat.common.storage.Categories;
 import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
@@ -75,6 +81,22 @@ public class RESTStorageTest {
     private String requestBody;
 
     private String responseBody;
+
+    private static Category category;
+    private static Key<String> key1;
+
+    @BeforeClass
+    public static void setupCategory() {
+        key1 = new Key<>("property1", true);
+        category = new Category("test", key1);
+    }
+
+    @AfterClass
+    public static void cleanupCategory() {
+        Categories.remove(category);
+        category = null;
+        key1 = null;
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -134,8 +156,7 @@ public class RESTStorageTest {
         Gson gson = new Gson();
         responseBody = gson.toJson(obj);
 
-        Key<String> key1 = new Key<>("property1", true);
-        Query query = storage.createQuery().from(new Category("test", key1)).where(key1, Criteria.EQUALS, "fluff");
+        Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
 
         TestObj result = storage.findPojo(query, TestObj.class);
         RESTQuery restQuery = gson.fromJson(requestBody, RESTQuery.class);
@@ -154,4 +175,42 @@ public class RESTStorageTest {
 
         assertEquals("fluffor", result.getProperty1());
     }
+
+    @Test
+    public void testFindAllPojos() {
+        RESTStorage storage = new RESTStorage();
+        storage.setEndpoint("http://localhost:" + port + "/");
+
+        TestObj obj1 = new TestObj();
+        obj1.setProperty1("fluffor1");
+        TestObj obj2 = new TestObj();
+        obj2.setProperty1("fluffor2");
+        Gson gson = new Gson();
+        responseBody = gson.toJson(Arrays.asList(obj1, obj2));
+
+        Key<String> key1 = new Key<>("property1", true);
+        Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
+
+        Cursor<TestObj> results = storage.findAllPojos(query, TestObj.class);
+        RESTQuery restQuery = gson.fromJson(requestBody, RESTQuery.class);
+
+        Category actualCategory = restQuery.getCategory();
+        assertEquals("test", actualCategory.getName());
+        Collection<Key<?>> keys = actualCategory.getKeys();
+        assertEquals(1, keys.size());
+        assertTrue(keys.contains(new Key<String>("property1", true)));
+        List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
+        assertEquals(1, qualifiers.size());
+        Qualifier<?> qual = qualifiers.get(0);
+        assertEquals(new Key<String>("property1", true), qual.getKey());
+        assertEquals(Criteria.EQUALS, qual.getCriteria());
+        assertEquals("fluff", qual.getValue());
+
+        assertTrue(results.hasNext());
+        assertEquals("fluffor1", results.next().getProperty1());
+        assertTrue(results.hasNext());
+        assertEquals("fluffor2", results.next().getProperty1());
+        assertFalse(results.hasNext());
+    }
+
 }
