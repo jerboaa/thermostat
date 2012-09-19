@@ -34,52 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.swing.models;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+public class LongRangeNormalizer {
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+    private long minNormalized;
+    
+    private long maxNormalized;
+ 
+    private long value;
 
-import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ChartPanel;
-import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+    private LongRange range;
+    
+    public LongRangeNormalizer(LongRange range) {
+        this.range = range;
+    }
 
-public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
-
-    private JPanel details;
-    private static final Translate t = LocaleResources.createLocalizer();
-
-    SwingThreadDetailsView() {
-        details = new JPanel();
-        details.setLayout(new BorderLayout(0, 0));
-        
-        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
-        lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
-        details.add(lblNewLabel);
+    public void setMaxNormalized(long maxNormalized) {
+        this.maxNormalized = maxNormalized;
     }
     
-    @Override
-    public Component getUiComponent() {
-        return details;
+    public void setMinNormalized(long minNormalized) {
+        this.minNormalized = minNormalized;
+    }
+    
+    public long getValue() {
+        return value;
     }
 
-    @Override
-    public void setDetails(ThreadTableBean thread) {
-        details.removeAll();
-        
-        ThreadDetailsChart threadChart = new ThreadDetailsChart();
-        
-        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread).createChart());
-        threadChart.add(threadSummary);
-        
-        details.add(threadChart);
-        details.repaint();
+    public void setValue(long newValue) {
+        this.value = newValue;
+    }
+    
+    public long getMaxNormalized() {
+        return maxNormalized;
+    }
+    
+    public long getMinNormalized() {
+        return minNormalized;
+    }
+    
+    public long getValueNormalized() {
+        double normalized = ((value - range.min) * (double)(maxNormalized - minNormalized)/(range.max - range.min)) + minNormalized;
+        return Math.round(normalized);
     }
 }

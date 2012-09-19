@@ -36,6 +36,47 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-public interface CommonController {
-    void initialize();
+import java.util.concurrent.TimeUnit;
+
+import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
+
+public abstract class CommonController {
+    
+    protected Timer timer;
+    protected BasicView view;
+    
+    public CommonController(Timer timer, BasicView view) {
+        this.view = view;
+        this.timer = timer;
+    }
+    
+    void initialize() {
+        timer.setInitialDelay(0);
+        timer.setDelay(1000);
+        timer.setTimeUnit(TimeUnit.MILLISECONDS);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+        
+        view.addActionListener(new ActionListener<Action>() {
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                case VISIBLE:
+                    timer.start();
+                    break;
+
+                case HIDDEN:
+                    timer.stop();
+                    break;
+
+                default:
+                    break;
+                }
+            }
+        });
+    }
 }

@@ -34,52 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.thread.client.controller.impl;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
 
-import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ChartPanel;
-import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+public class ThreadInfoHelper {
 
-public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
-
-    private JPanel details;
-    private static final Translate t = LocaleResources.createLocalizer();
-
-    SwingThreadDetailsView() {
-        details = new JPanel();
-        details.setLayout(new BorderLayout(0, 0));
-        
-        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
-        lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
-        details.add(lblNewLabel);
-    }
-    
-    @Override
-    public Component getUiComponent() {
-        return details;
-    }
-
-    @Override
-    public void setDetails(ThreadTableBean thread) {
-        details.removeAll();
-        
-        ThreadDetailsChart threadChart = new ThreadDetailsChart();
-        
-        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread).createChart());
-        threadChart.add(threadSummary);
-        
-        details.add(threadChart);
-        details.repaint();
+    /**
+     * Creates a {@link Map} whose keys are {@link ThreadInfoData} in the input
+     * list and whose values are all the {@link ThreadInfoData} equals to the
+     * key.
+     *
+     * <br /><br />
+     * 
+     * Preserves the order of the input list.
+     * 
+     * <br /><br />
+     * 
+     * <strong>NOTE</strong>: The current invariant is that
+     * {@link ThreadInfoData} are equals if they have same thread id and name.
+     */
+    public static Map<ThreadInfoData, List<ThreadInfoData>> getThreadInfoDataMap(List<ThreadInfoData> infos) {
+        Map<ThreadInfoData, List<ThreadInfoData>> stats = new HashMap<>();
+        for (ThreadInfoData info : infos) {
+            List<ThreadInfoData> beanList = stats.get(info);
+            if (beanList == null) {
+                beanList = new ArrayList<ThreadInfoData>();
+                stats.put(info, beanList);
+            }                    
+            beanList.add(info);
+        }
+        return stats;
     }
 }

@@ -43,7 +43,7 @@ import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
-public class VMThreadCapabilitiesController implements CommonController {
+public class VMThreadCapabilitiesController {
 
     private ThreadCollector collector;
     private VMThreadCapabilitiesView view;
@@ -53,7 +53,6 @@ public class VMThreadCapabilitiesController implements CommonController {
         this.collector = collector;
     }
     
-    @Override
     public void initialize() {
         view.addActionListener(new ActionListener<Action>() {
             @Override

@@ -68,7 +68,7 @@ public class ThreadTableControllerTest {
         collector = mock(ThreadCollector.class);
         
         timer = mock(Timer.class);
-                
+
         view = mock(ThreadTableView.class);
         
         setUpTimers();

@@ -34,52 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.thread.client.common;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import java.util.Date;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+public class ThreadTimelineBean {
 
-import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ChartPanel;
-import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
-
-public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
-
-    private JPanel details;
-    private static final Translate t = LocaleResources.createLocalizer();
-
-    SwingThreadDetailsView() {
-        details = new JPanel();
-        details.setLayout(new BorderLayout(0, 0));
-        
-        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
-        lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
-        details.add(lblNewLabel);
+    private long startTime;
+    private long stopTime;
+    private String name;
+    private Thread.State state;
+    
+    public Thread.State getState() {
+        return state;
     }
     
-    @Override
-    public Component getUiComponent() {
-        return details;
+    public void setState(Thread.State state) {
+        this.state = state;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public long getStartTime() {
+        return startTime;
+    }
+    
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+    
+    public long getStopTime() {
+        return stopTime;
+    }
+    
+    public void setStopTime(long stopTime) {
+        this.stopTime = stopTime;
     }
 
     @Override
-    public void setDetails(ThreadTableBean thread) {
-        details.removeAll();
-        
-        ThreadDetailsChart threadChart = new ThreadDetailsChart();
-        
-        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread).createChart());
-        threadChart.add(threadSummary);
-        
-        details.add(threadChart);
-        details.repaint();
+    public String toString() {
+        return "ThreadTimelineBean [name=" + name + ", state=" + state
+                + ", startTime=" + startTime + " (" + new Date(startTime) + ")"
+                + ", stopTime=" + stopTime + " (" + new Date(stopTime) + ")]";
     }
 }

@@ -43,8 +43,6 @@ import java.awt.FlowLayout;
 import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;

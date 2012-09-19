@@ -34,52 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.swing.models;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+public class LongRange {
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-
-import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ChartPanel;
-import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
-
-public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
-
-    private JPanel details;
-    private static final Translate t = LocaleResources.createLocalizer();
-
-    SwingThreadDetailsView() {
-        details = new JPanel();
-        details.setLayout(new BorderLayout(0, 0));
-        
-        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
-        lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
-        details.add(lblNewLabel);
+    long min;
+    long max;
+    
+    public void setMax(long max) {
+        this.max = max;
     }
     
-    @Override
-    public Component getUiComponent() {
-        return details;
+    public long getMax() {
+        return max;
     }
-
-    @Override
-    public void setDetails(ThreadTableBean thread) {
-        details.removeAll();
-        
-        ThreadDetailsChart threadChart = new ThreadDetailsChart();
-        
-        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread).createChart());
-        threadChart.add(threadSummary);
-        
-        details.add(threadChart);
-        details.repaint();
+    
+    public void setMin(long min) {
+        this.min = min;
+    }
+    
+    
+    public long getMin() {
+        return min;
     }
 }

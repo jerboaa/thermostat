@@ -41,60 +41,29 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 
-public class ThreadTableController implements CommonController {
+public class ThreadTableController extends CommonController {
     
     private ThreadTableView threadTableView;
     private ThreadCollector collector;
-    private Timer timer;
     
     public ThreadTableController(ThreadTableView threadTableView,
                                  ThreadCollector collector,
                                  Timer timer)
     {
+        super(timer, threadTableView);
+        timer.setAction(new ThreadTableControllerAction());
+
         this.collector = collector;
         this.threadTableView = threadTableView;
-        this.timer = timer;
     }
 
-    @Override
-    public void initialize() {
-        
-        timer.setInitialDelay(0);
-        timer.setDelay(1000);
-        timer.setTimeUnit(TimeUnit.MILLISECONDS);
-        timer.setSchedulingType(SchedulingType.FIXED_RATE);
-        timer.setAction(new ThreadTableControllerAction());
-        
-        threadTableView.addActionListener(new ActionListener<Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                switch (actionEvent.getActionId()) {
-                case VISIBLE:
-                    timer.start();
-                    break;
-
-                case HIDDEN:
-                    timer.stop();
-                    break;
-
-                default:
-                    break;
-                }
-            }
-        });
-    }
     
     private class ThreadTableControllerAction implements Runnable {
         @Override
@@ -110,15 +79,8 @@ public class ThreadTableController implements CommonController {
                 // first, get a map of all threads with the respective info
                 // the list will contain an ordered-by-timestamp list
                 // with the known history for each thread
-                Map<ThreadInfoData, List<ThreadInfoData>> stats = new HashMap<>();
-                for (ThreadInfoData info : infos) {
-                    List<ThreadInfoData> beanList = stats.get(info);
-                    if (beanList == null) {
-                        beanList = new ArrayList<ThreadInfoData>();
-                        stats.put(info, beanList);
-                    }                    
-                    beanList.add(info);
-                }
+                Map<ThreadInfoData, List<ThreadInfoData>> stats =
+                        ThreadInfoHelper.getThreadInfoDataMap(infos);
                 
                 List<ThreadTableBean> tableBeans = new ArrayList<>();
                 

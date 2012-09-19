@@ -36,50 +36,54 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
+import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.plaf.ColorUIResource;
 
-import com.redhat.thermostat.client.ui.SwingComponent;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ChartPanel;
-import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
-import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
-import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.swing.GraphicsUtils;
 
-public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
+@SuppressWarnings("serial")
+public class ThreadTimelineChart extends JPanel {
 
-    private JPanel details;
-    private static final Translate t = LocaleResources.createLocalizer();
+    private static final ColorUIResource TICK_COLOR = new ColorUIResource(0xa8aca8);
 
-    SwingThreadDetailsView() {
-        details = new JPanel();
-        details.setLayout(new BorderLayout(0, 0));
-        
-        JLabel lblNewLabel = new JLabel(t.localize(LocaleResources.THREAD_DETAILS_EMTPY));
-        lblNewLabel.setIcon(new ImageIcon(getEmptyDetailsIcon().getData().array()));
-        details.add(lblNewLabel);
+    public ThreadTimelineChart() {
     }
     
     @Override
-    public Component getUiComponent() {
-        return details;
+    protected void paintComponent(Graphics g) {
+        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+        
+        graphics.setColor(TICK_COLOR);
+        
+        int x = 1;
+        int y = 2;
+        int w = getWidth() - 2;
+        int h = getHeight();
+        
+        graphics.drawLine(x, y, w, y);
+        
+        graphics.dispose();
     }
-
-    @Override
-    public void setDetails(ThreadTableBean thread) {
-        details.removeAll();
-        
-        ThreadDetailsChart threadChart = new ThreadDetailsChart();
-        
-        ChartPanel threadSummary = new ChartPanel(new ThreadDeatailsPieChart(thread).createChart());
-        threadChart.add(threadSummary);
-        
-        details.add(threadChart);
-        details.repaint();
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                JFrame frame = new JFrame();
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                
+                ThreadTimelineChart chart = new ThreadTimelineChart();
+                
+                frame.add(chart);
+                frame.setSize(500, 500);
+                frame.setVisible(true);
+            }
+        });
     }
 }
