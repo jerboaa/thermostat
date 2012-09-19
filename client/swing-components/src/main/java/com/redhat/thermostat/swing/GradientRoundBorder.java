@@ -34,22 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.locale;
+package com.redhat.thermostat.swing;
 
-import com.redhat.thermostat.common.locale.Translate;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.GradientPaint;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Paint;
+import java.awt.Shape;
+import java.io.Serializable;
 
-public enum LocaleResources {
+import javax.swing.UIManager;
+import javax.swing.border.AbstractBorder;
+import javax.swing.plaf.UIResource;
 
-    ACTION_NAME,
-    ACTION_DESCRIPTION,
-    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
-    KILL_ACTION_ERROR_RESPONSE_MSG,
-    MISSING_INFO;
+@SuppressWarnings("serial")
+public class GradientRoundBorder extends AbstractBorder implements UIResource, Serializable {
 
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.killvm.locale.strings";
-    
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+        GraphicsUtils utils = GraphicsUtils.getInstance();
+        Graphics2D graphics = utils.createAAGraphics(g);
+        
+        Color highlight = UIManager.getColor("textHighlight");
+        if (highlight == null) {
+            highlight = Palette.EGYPTIAN_BLUE.getColor();
+        }
+        Paint paint = new GradientPaint(x, y, highlight, 0, height, c.getBackground());
+        graphics.setPaint(paint);
+        
+        graphics.translate(x, y);
+        
+        Shape shape = utils.getRoundShape(width, height);
+        graphics.draw(shape);
+        
+        graphics.dispose();
     }
 }

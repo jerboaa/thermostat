@@ -56,6 +56,7 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.ChartPanel;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.ThreadView;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
@@ -70,8 +71,9 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     
     private SwingThreadTableView threadTableView;
     private SwingVMThreadCapabilitiesView vmCapsView;
+    private SwingThreadTimelineView threadTimelineView;
     private SwingThreadDetailsView threadDetailsView;
-    
+
     private JTabbedPane pane;
     
     private static final Translate t = LocaleResources.createLocalizer();
@@ -151,6 +153,9 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         threadDetailsView = new SwingThreadDetailsView();
         pane.addTab(t.localize(LocaleResources.DETAILS), threadDetailsView.getUiComponent());
         threadDetailsPaneID = 2;
+        
+        threadTimelineView = new SwingThreadTimelineView();
+        pane.addTab(t.localize(LocaleResources.TIMELINE), threadTimelineView.getUiComponent());
         
         panel.getSplitPane().setBottomComponent(pane);
     }
@@ -260,5 +265,10 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 threadDetailsView.setDetails(thread);
             }
         });
+    }
+    
+    @Override
+    public ThreadTimelineView createThreadTimelineView() {
+        return threadTimelineView;
     }
 }

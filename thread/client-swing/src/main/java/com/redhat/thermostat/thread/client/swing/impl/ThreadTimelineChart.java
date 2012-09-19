@@ -34,22 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.locale;
+package com.redhat.thermostat.thread.client.swing.impl;
 
-import com.redhat.thermostat.common.locale.Translate;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 
-public enum LocaleResources {
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+import javax.swing.plaf.ColorUIResource;
 
-    ACTION_NAME,
-    ACTION_DESCRIPTION,
-    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
-    KILL_ACTION_ERROR_RESPONSE_MSG,
-    MISSING_INFO;
+import com.redhat.thermostat.swing.GraphicsUtils;
 
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.killvm.locale.strings";
+@SuppressWarnings("serial")
+public class ThreadTimelineChart extends JPanel {
+
+    private static final ColorUIResource TICK_COLOR = new ColorUIResource(0xa8aca8);
+
+    public ThreadTimelineChart() {
+    }
     
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+        
+        graphics.setColor(TICK_COLOR);
+        
+        int x = 1;
+        int y = 2;
+        int w = getWidth() - 2;
+        int h = getHeight();
+        
+        graphics.drawLine(x, y, w, y);
+        
+        graphics.dispose();
+    }
+    
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                JFrame frame = new JFrame();
+                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+                
+                ThreadTimelineChart chart = new ThreadTimelineChart();
+                
+                frame.add(chart);
+                frame.setSize(500, 500);
+                frame.setVisible(true);
+            }
+        });
     }
 }

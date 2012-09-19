@@ -196,8 +196,7 @@ public class LauncherImpl implements Launcher {
             // If this happens we definitely need to do something about it, and the
             // trace will be immeasurably helpful in figuring out what is wrong.
             out.println("Could not load necessary bundles for: " + cmdName);
-            e.printStackTrace();
-            out.print(e.getStackTrace());
+            e.printStackTrace(out);
             return;
         }
 

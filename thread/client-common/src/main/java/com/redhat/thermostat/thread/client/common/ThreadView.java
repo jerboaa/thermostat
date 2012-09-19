@@ -74,6 +74,7 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     
     public abstract VMThreadCapabilitiesView createVMThreadCapabilitiesView();
     public abstract ThreadTableView createThreadTableView();
+    public abstract ThreadTimelineView createThreadTimelineView();
     
     public abstract void displayWarning(String warning);
 

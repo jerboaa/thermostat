@@ -34,43 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.internal;
+package com.redhat.thermostat.thread.client.common;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.List;
+import java.util.Map;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
 
-public class VMKilledListener implements RequestResponseListener {
+public abstract class ThreadTimelineView extends BasicView {
 
-    private static final Logger logger = Logger
-            .getLogger(VMKilledListener.class.getName());
+    public abstract void displayStats(Map<ThreadInfoData, List<ThreadTimelineBean>> timelines, long start, long stop);
 
-    @Override
-    public void fireComplete(Request request, Response response) {
-        switch (response.getType()) {
-        case EXCEPTION:
-            logger.log(Level.SEVERE,
-                    "Exception response from kill VM request. Command channel failure?");
-            break;
-        case ERROR:
-            logger.log(Level.SEVERE,
-                    "Kill request error for VM ID "
-                            + request.getParameter("vm-id"));
-            break;
-        case PONG: // fall-through, also OK :)
-        case OK:
-            // TODO: Report this to user somehow (notification?)
-            logger.log(Level.INFO,
-                    "VM with id " + request.getParameter("vm-id")
-                            + " killed on host "
-                            + request.getTarget().toString());
-            break;
-        default:
-            logger.log(Level.WARNING, "Unknown result from KILL VM command.");
-            break;
-        }
-    }
 }

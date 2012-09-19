@@ -45,7 +45,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(BundleContext context) throws Exception {
-        context.registerService(VMContextAction.class.getName(), new KillVMAction(), null);
+        context.registerService(VMContextAction.class.getName(), new KillVMAction(new SwingVMKilledListener()), null);
     }
 
     @Override

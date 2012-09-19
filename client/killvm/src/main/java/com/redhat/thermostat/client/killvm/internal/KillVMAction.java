@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -60,10 +61,15 @@ public class KillVMAction implements VMContextAction {
     private static final String RECEIVER = "com.redhat.thermostat.agent.killvm.internal.KillVmReceiver";
     private final DAOFactory dao;
     private final Translate t;
+    private final RequestResponseListener listener;
 
-    public KillVMAction() {
+    public KillVMAction(RequestResponseListener listener) {
+        if (listener == null) {
+            throw new IllegalArgumentException("Listener can't be null");
+        }
         this.dao = ApplicationContext.getInstance().getDAOFactory();
         this.t = LocaleResources.createLocalizer();
+        this.listener = listener;
     }
 
     @Override
@@ -85,7 +91,7 @@ public class KillVMAction implements VMContextAction {
         Request murderer = getKillRequest(target);
         murderer.setParameter("vm-id", reference.getIdString());
         murderer.setReceiver(RECEIVER);
-        murderer.addListener(new VMKilledListener());
+        murderer.addListener(listener);
 
         RequestQueue queue = OSGIUtils.getInstance().getService(RequestQueue.class);
         queue.putRequest(murderer);

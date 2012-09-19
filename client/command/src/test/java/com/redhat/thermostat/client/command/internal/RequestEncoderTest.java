@@ -34,22 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.locale;
+package com.redhat.thermostat.client.command.internal;
 
-import com.redhat.thermostat.common.locale.Translate;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.isA;
 
-public enum LocaleResources {
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ExceptionEvent;
+import org.junit.Test;
 
-    ACTION_NAME,
-    ACTION_DESCRIPTION,
-    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
-    KILL_ACTION_ERROR_RESPONSE_MSG,
-    MISSING_INFO;
+public class RequestEncoderTest {
 
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.killvm.locale.strings";
-    
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    /**
+     * This test verifies that exception events are forwarded upstream. This is to ensure that
+     * fireComplete() events get delivered in case of Exceptions.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void exceptionCaughtCallsFireComplete() throws Exception {
+        RequestEncoder encoder = new RequestEncoder();
+        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
+        ExceptionEvent evt = mock(ExceptionEvent.class);
+        when(evt.getCause()).thenReturn(new Exception());
+        Channel channel = mock(Channel.class);
+        when(ctx.getChannel()).thenReturn(channel);
+        encoder.exceptionCaught(ctx, evt);
+        // Channels.fireExceptionCaught implicitly calls this
+        verify(ctx).sendUpstream(isA(ExceptionEvent.class));
     }
 }

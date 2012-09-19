@@ -34,22 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.locale;
+package com.redhat.thermostat.swing.models;
 
-import com.redhat.thermostat.common.locale.Translate;
+public class LongRangeNormalizer {
 
-public enum LocaleResources {
-
-    ACTION_NAME,
-    ACTION_DESCRIPTION,
-    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
-    KILL_ACTION_ERROR_RESPONSE_MSG,
-    MISSING_INFO;
-
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.killvm.locale.strings";
+    private long minNormalized;
     
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    private long maxNormalized;
+ 
+    private long value;
+
+    private LongRange range;
+    
+    public LongRangeNormalizer(LongRange range) {
+        this.range = range;
+    }
+
+    public void setMaxNormalized(long maxNormalized) {
+        this.maxNormalized = maxNormalized;
+    }
+    
+    public void setMinNormalized(long minNormalized) {
+        this.minNormalized = minNormalized;
+    }
+    
+    public long getValue() {
+        return value;
+    }
+
+    public void setValue(long newValue) {
+        this.value = newValue;
+    }
+    
+    public long getMaxNormalized() {
+        return maxNormalized;
+    }
+    
+    public long getMinNormalized() {
+        return minNormalized;
+    }
+    
+    public long getValueNormalized() {
+        double normalized = ((value - range.min) * (double)(maxNormalized - minNormalized)/(range.max - range.min)) + minNormalized;
+        return Math.round(normalized);
     }
 }

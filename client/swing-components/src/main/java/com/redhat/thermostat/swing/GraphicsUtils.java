@@ -85,7 +85,7 @@ public class GraphicsUtils {
     }
     
     public Shape getRoundShape(int width, int height) {
-        return new RoundRectangle2D.Double(0, 0, width - 2, height - 1, 4, 4);
+        return new RoundRectangle2D.Double(0, 0, width, height, 4, 4);
     }
     
     public void setGradientPaint(Graphics2D g, int x, int height, Color start, Color stop) {

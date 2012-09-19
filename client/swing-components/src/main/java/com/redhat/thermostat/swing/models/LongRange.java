@@ -34,22 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.locale;
+package com.redhat.thermostat.swing.models;
 
-import com.redhat.thermostat.common.locale.Translate;
+public class LongRange {
 
-public enum LocaleResources {
-
-    ACTION_NAME,
-    ACTION_DESCRIPTION,
-    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
-    KILL_ACTION_ERROR_RESPONSE_MSG,
-    MISSING_INFO;
-
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.killvm.locale.strings";
+    long min;
+    long max;
     
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    public void setMax(long max) {
+        this.max = max;
+    }
+    
+    public long getMax() {
+        return max;
+    }
+    
+    public void setMin(long min) {
+        this.min = min;
+    }
+    
+    
+    public long getMin() {
+        return min;
     }
 }

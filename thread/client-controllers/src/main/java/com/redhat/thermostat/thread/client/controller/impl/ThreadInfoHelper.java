@@ -34,22 +34,41 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.locale;
+package com.redhat.thermostat.thread.client.controller.impl;
 
-import com.redhat.thermostat.common.locale.Translate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public enum LocaleResources {
+import com.redhat.thermostat.thread.model.ThreadInfoData;
 
-    ACTION_NAME,
-    ACTION_DESCRIPTION,
-    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
-    KILL_ACTION_ERROR_RESPONSE_MSG,
-    MISSING_INFO;
+public class ThreadInfoHelper {
 
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.killvm.locale.strings";
-    
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    /**
+     * Creates a {@link Map} whose keys are {@link ThreadInfoData} in the input
+     * list and whose values are all the {@link ThreadInfoData} equals to the
+     * key.
+     *
+     * <br /><br />
+     * 
+     * Preserves the order of the input list.
+     * 
+     * <br /><br />
+     * 
+     * <strong>NOTE</strong>: The current invariant is that
+     * {@link ThreadInfoData} are equals if they have same thread id and name.
+     */
+    public static Map<ThreadInfoData, List<ThreadInfoData>> getThreadInfoDataMap(List<ThreadInfoData> infos) {
+        Map<ThreadInfoData, List<ThreadInfoData>> stats = new HashMap<>();
+        for (ThreadInfoData info : infos) {
+            List<ThreadInfoData> beanList = stats.get(info);
+            if (beanList == null) {
+                beanList = new ArrayList<ThreadInfoData>();
+                stats.put(info, beanList);
+            }                    
+            beanList.add(info);
+        }
+        return stats;
     }
 }

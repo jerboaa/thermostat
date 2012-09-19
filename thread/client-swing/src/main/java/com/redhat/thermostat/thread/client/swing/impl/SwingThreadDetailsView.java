@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
 
+import javax.swing.ImageIcon;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import com.redhat.thermostat.client.ui.SwingComponent;
@@ -47,15 +50,6 @@ import com.redhat.thermostat.thread.client.common.ThreadDetailsView;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.chart.ThreadDeatailsPieChart;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
-
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.ImageIcon;
-import javax.swing.JLabel;
-import java.awt.GridBagLayout;
-import java.awt.GridBagConstraints;
-import java.awt.BorderLayout;
-import java.awt.GridLayout;
 
 public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
 

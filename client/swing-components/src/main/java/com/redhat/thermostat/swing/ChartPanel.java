@@ -51,7 +51,7 @@ public class ChartPanel extends JPanel {
     private ChartRenderingInfo info;
     
     public ChartPanel(JFreeChart chart) {
-        this.chart = chart;
+        this(chart, new ChartRenderingInfo());
     }
     
     public ChartPanel(JFreeChart chart, ChartRenderingInfo info) {

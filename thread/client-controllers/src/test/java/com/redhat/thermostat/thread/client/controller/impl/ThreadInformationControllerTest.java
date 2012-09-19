@@ -60,6 +60,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadTableView.ThreadSelectionAction;
+import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.ThreadView;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
@@ -80,6 +81,7 @@ public class ThreadInformationControllerTest {
 
     private ThreadTableView threadTableView;
     private VMThreadCapabilitiesView threadCapsView;
+    private ThreadTimelineView threadTimelineView;
     
     @Before
     public void setUp() {
@@ -96,13 +98,15 @@ public class ThreadInformationControllerTest {
     private void setUpView() {
         threadCapsView = mock(VMThreadCapabilitiesView.class);
         threadTableView = mock(ThreadTableView.class);
-
+        threadTimelineView = mock(ThreadTimelineView.class);
+        
         view = mock(ThreadView.class);
         viewFactory = mock(ThreadViewProvider.class);
         when(viewFactory.createView()).thenReturn(view);
         
         when(view.createVMThreadCapabilitiesView()).thenReturn(threadCapsView);
         when(view.createThreadTableView()).thenReturn(threadTableView);
+        when(view.createThreadTimelineView()).thenReturn(threadTimelineView);
     }
     
     private void setUpTimers() {
@@ -152,6 +156,7 @@ public class ThreadInformationControllerTest {
         
         verify(view).createThreadTableView();
         verify(view).createVMThreadCapabilitiesView();
+        verify(view).createThreadTimelineView();
     }
     
     @Test

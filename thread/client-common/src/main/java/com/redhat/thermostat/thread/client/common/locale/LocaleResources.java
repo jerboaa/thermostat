@@ -57,6 +57,7 @@ public enum LocaleResources {
     VM_CAPABILITIES,
     TABLE,
     DETAILS,
+    TIMELINE,
     
     LIVE_THREADS,
     DAEMON_THREADS,

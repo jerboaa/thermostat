@@ -34,22 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.killvm.locale;
+package com.redhat.thermostat.thread.client.common;
 
-import com.redhat.thermostat.common.locale.Translate;
+import java.util.Date;
 
-public enum LocaleResources {
+public class ThreadTimelineBean {
 
-    ACTION_NAME,
-    ACTION_DESCRIPTION,
-    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
-    KILL_ACTION_ERROR_RESPONSE_MSG,
-    MISSING_INFO;
-
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.client.killvm.locale.strings";
+    private long startTime;
+    private long stopTime;
+    private String name;
+    private Thread.State state;
     
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    public Thread.State getState() {
+        return state;
+    }
+    
+    public void setState(Thread.State state) {
+        this.state = state;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+    
+    public long getStartTime() {
+        return startTime;
+    }
+    
+    public void setStartTime(long startTime) {
+        this.startTime = startTime;
+    }
+    
+    public long getStopTime() {
+        return stopTime;
+    }
+    
+    public void setStopTime(long stopTime) {
+        this.stopTime = stopTime;
+    }
+
+    @Override
+    public String toString() {
+        return "ThreadTimelineBean [name=" + name + ", state=" + state
+                + ", startTime=" + startTime + " (" + new Date(startTime) + ")"
+                + ", stopTime=" + stopTime + " (" + new Date(stopTime) + ")]";
     }
 }

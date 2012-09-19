@@ -36,22 +36,27 @@
 
 package com.redhat.thermostat.client.command.internal;
 
+import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
+import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
+
 import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.Channels;
+import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 
 import com.redhat.thermostat.common.command.EncodingHelper;
 import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
 
-import static org.jboss.netty.buffer.ChannelBuffers.dynamicBuffer;
-import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
-
 class RequestEncoder extends MessageEncoder {
 
+    private static final Logger logger = Logger.getLogger(RequestEncoder.class.getName());
+    
     @Override
     public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) {
 
@@ -75,5 +80,12 @@ class RequestEncoder extends MessageEncoder {
         ChannelBuffer buf = wrappedBuffer(typeBuffer, parmsBuffer);
         Channels.write(ctx, e.getFuture(), buf);
     }
-
+    
+    // This must be implemented, even though we are simply passing on the exception.  If
+    // not implemented, this exception ends up going uncaught which causes problems.
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
+        logger.log(Level.WARNING, "Forwarding exception ", e.getCause());
+        Channels.fireExceptionCaught(ctx, e.getCause());
+    }
 }
