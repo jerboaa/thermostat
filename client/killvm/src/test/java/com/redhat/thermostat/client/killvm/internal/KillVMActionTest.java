@@ -83,7 +83,7 @@ public class KillVMActionTest {
         ApplicationContextUtil.resetApplicationContext();
         factory = mock(DAOFactory.class);
         ApplicationContext.getInstance().setDAOFactory(factory);
-        action = new KillVMAction();
+        action = new KillVMAction(new SwingVMKilledListener());
     }
 
     @After
@@ -124,7 +124,7 @@ public class KillVMActionTest {
         when(factory.getAgentInfoDAO()).thenReturn(agentDao);
 
         final Request req = mock(Request.class);
-        KillVMAction action = new KillVMAction() {
+        KillVMAction action = new KillVMAction(new SwingVMKilledListener()) {
             @Override
             Request getKillRequest(InetSocketAddress target) {
                 return req;
@@ -140,7 +140,7 @@ public class KillVMActionTest {
                 .forClass(String.class);
         verify(req).setParameter(vmIdParamCaptor.capture(), any(String.class));
         assertEquals("vm-id", vmIdParamCaptor.getValue());
-        verify(req).addListener(isA(VMKilledListener.class));
+        verify(req).addListener(isA(SwingVMKilledListener.class));
         ArgumentCaptor<String> receiverCaptor = ArgumentCaptor
                 .forClass(String.class);
         verify(req).setReceiver(receiverCaptor.capture());

@@ -42,6 +42,8 @@ public enum LocaleResources {
 
     ACTION_NAME,
     ACTION_DESCRIPTION,
+    KILL_ACTION_EXCEPTION_RESPONSE_MSG,
+    KILL_ACTION_ERROR_RESPONSE_MSG,
     MISSING_INFO;
 
     public static final String RESOURCE_BUNDLE =

@@ -36,41 +36,62 @@
 
 package com.redhat.thermostat.client.killvm.internal;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.net.SocketAddress;
+
+import org.junit.Test;
 
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 
-public class VMKilledListener implements RequestResponseListener {
+public class SwingVMKilledListenerTest {
+    
+    @Test
+    public void exceptionShowsError() {
+        ResponseActionListener listener = new ResponseActionListener();
+        Request request = mock(Request.class); 
+        Response resp = new Response(ResponseType.EXCEPTION);
+        listener.fireComplete(request, resp);
+        assertTrue(listener.isActionPerformed());
+    }
+    
+    @Test
+    public void errorShowsError() {
+        ResponseActionListener listener = new ResponseActionListener();
+        Request request = mock(Request.class); 
+        Response resp = new Response(ResponseType.ERROR);
+        listener.fireComplete(request, resp);
+        assertTrue(listener.isActionPerformed());
+    }
+    
+    @Test
+    public void okShowsNoMessage() {
+        ResponseActionListener listener = new ResponseActionListener();
+        Request request = mock(Request.class);
+        SocketAddress addr = mock(SocketAddress.class);
+        when(request.getTarget()).thenReturn(addr);
+        Response resp = new Response(ResponseType.OK);
+        listener.fireComplete(request, resp);
+        assertFalse(listener.isActionPerformed());
+    }
+    
+    private class ResponseActionListener extends SwingVMKilledListener {
 
-    private static final Logger logger = Logger
-            .getLogger(VMKilledListener.class.getName());
-
-    @Override
-    public void fireComplete(Request request, Response response) {
-        switch (response.getType()) {
-        case EXCEPTION:
-            logger.log(Level.SEVERE,
-                    "Exception response from kill VM request. Command channel failure?");
-            break;
-        case ERROR:
-            logger.log(Level.SEVERE,
-                    "Kill request error for VM ID "
-                            + request.getParameter("vm-id"));
-            break;
-        case PONG: // fall-through, also OK :)
-        case OK:
-            // TODO: Report this to user somehow (notification?)
-            logger.log(Level.INFO,
-                    "VM with id " + request.getParameter("vm-id")
-                            + " killed on host "
-                            + request.getTarget().toString());
-            break;
-        default:
-            logger.log(Level.WARNING, "Unknown result from KILL VM command.");
-            break;
+        private boolean actionPerformed = false;
+        
+        public boolean isActionPerformed() {
+            return actionPerformed;
         }
+
+        @Override
+        protected void showErrorMessage(final String message) {
+            actionPerformed = true;
+        }
+        
     }
 }
