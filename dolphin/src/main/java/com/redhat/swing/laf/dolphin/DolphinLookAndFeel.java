@@ -103,8 +103,6 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "textHighlight", theme.getSelectionColor(),
                 "textHighlightText", theme.getSelectionColor(),
                 
-                "TitledBorder.border", theme.getTitledBorderBorderColor(),
-
                 "Button.focus", theme.getSelectionColor(),
                 "Button.border", theme.getButtonBorder(),
                 "Button.borderPaintsFocus", theme.borderPaintsFocus(),
