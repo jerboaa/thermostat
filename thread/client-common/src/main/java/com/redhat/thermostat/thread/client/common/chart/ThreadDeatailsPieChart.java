@@ -36,10 +36,16 @@
 
 package com.redhat.thermostat.thread.client.common.chart;
 
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.RadialGradientPaint;
+import java.awt.geom.Point2D;
+import java.lang.Thread.State;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
-import org.jfree.chart.plot.PiePlot3D;
+import org.jfree.chart.plot.PiePlot;
 import org.jfree.data.general.DefaultPieDataset;
 
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
@@ -56,12 +62,12 @@ public class ThreadDeatailsPieChart {
         
         DefaultPieDataset dataset = new DefaultPieDataset();
         
-        dataset.setValue("Running", thread.getRunningPercent());
-        dataset.setValue("Waiting", thread.getWaitingPercent());
-        dataset.setValue("Monitor", thread.getMonitorPercent());
-        dataset.setValue("Sleeping", thread.getSleepingPercent());
+        dataset.setValue(State.RUNNABLE, thread.getRunningPercent());
+        dataset.setValue(State.WAITING, thread.getWaitingPercent());
+        dataset.setValue(State.BLOCKED, thread.getMonitorPercent());
+        dataset.setValue(State.TIMED_WAITING, thread.getSleepingPercent());
         
-        JFreeChart chart = ChartFactory.createPieChart3D(
+        JFreeChart chart = ChartFactory.createPieChart(
                 thread.getName(),       // chart title
                 dataset,                // data
                 true,                   // include legend
@@ -71,15 +77,38 @@ public class ThreadDeatailsPieChart {
 
         chart.setAntiAlias(true);
         
-        PiePlot3D plot = (PiePlot3D) chart.getPlot();
+        PiePlot plot = (PiePlot) chart.getPlot();
+        plot.setBackgroundPaint(null);
+        plot.setOutlineVisible(false);
         
         plot.setStartAngle(290);
         plot.setForegroundAlpha(0.5f);
-
+        
+        Color color = ChartColors.getColor(State.RUNNABLE);
+        plot.setSectionPaint(State.RUNNABLE, createGradientPaint(color.brighter(), color));
+        
+        color = ChartColors.getColor(State.WAITING);
+        plot.setSectionPaint(State.WAITING, createGradientPaint(color.brighter(), color));
+        
+        color = ChartColors.getColor(State.BLOCKED);
+        plot.setSectionPaint(State.BLOCKED, createGradientPaint(color.brighter(), color));
+        
+        color = ChartColors.getColor(State.TIMED_WAITING);
+        plot.setSectionPaint(State.TIMED_WAITING, createGradientPaint(color.brighter(), color));
+        
+        plot.setBaseSectionOutlinePaint(Color.WHITE);
+        plot.setSectionOutlinesVisible(true);
+        plot.setBaseSectionOutlineStroke(new BasicStroke(2.0f));
+        
         plot.setLabelGenerator(new StandardPieSectionLabelGenerator("{0} - {2}"));
-        
-        plot.setInteriorGap(0.0);
-        
+                
         return chart;
+    }
+    
+    private static RadialGradientPaint createGradientPaint(Color c1, Color c2) {
+        Point2D center = new Point2D.Float(0, 0);
+        float radius = 200;
+        float[] dist = {0.0f, 1.0f};
+        return new RadialGradientPaint(center, radius, dist, new Color[] {c1, c2});
     }
 }
