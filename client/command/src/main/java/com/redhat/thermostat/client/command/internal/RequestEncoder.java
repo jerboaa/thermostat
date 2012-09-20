@@ -85,7 +85,7 @@ class RequestEncoder extends MessageEncoder {
     // not implemented, this exception ends up going uncaught which causes problems.
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) {
-        logger.log(Level.WARNING, "Forwarding exception ", e.getCause());
+        logger.log(Level.FINE, "Forwarding exception ", e.getCause());
         Channels.fireExceptionCaught(ctx, e.getCause());
     }
 }
