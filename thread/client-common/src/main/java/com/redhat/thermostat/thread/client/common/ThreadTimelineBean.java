@@ -38,12 +38,22 @@ package com.redhat.thermostat.thread.client.common;
 
 import java.util.Date;
 
-public class ThreadTimelineBean {
+public class ThreadTimelineBean implements Cloneable {
 
     private long startTime;
     private long stopTime;
     private String name;
     private Thread.State state;
+    
+    private boolean highlight;
+    
+    public boolean isHighlight() {
+        return highlight;
+    }
+    
+    public void setHighlight(boolean highlight) {
+        this.highlight = highlight;
+    }
     
     public Thread.State getState() {
         return state;
@@ -82,5 +92,69 @@ public class ThreadTimelineBean {
         return "ThreadTimelineBean [name=" + name + ", state=" + state
                 + ", startTime=" + startTime + " (" + new Date(startTime) + ")"
                 + ", stopTime=" + stopTime + " (" + new Date(stopTime) + ")]";
+    }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + (int) (startTime ^ (startTime >>> 32));
+        result = prime * result + ((state == null) ? 0 : state.hashCode());
+        result = prime * result + (int) (stopTime ^ (stopTime >>> 32));
+        return result;
+    }
+    
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        ThreadTimelineBean other = (ThreadTimelineBean) obj;
+        if (name == null) {
+            if (other.name != null)
+                return false;
+        } else if (!name.equals(other.name))
+            return false;
+        if (startTime != other.startTime)
+            return false;
+        if (state != other.state)
+            return false;
+        if (stopTime != other.stopTime)
+            return false;
+        return true;
+    }
+    
+    /**
+     * NOTE: A {@link ThreadTimelineBean} is contains another if they are
+     * either equals, or the the name, state and start time are the same
+     * (in other words, this method does not check the stop time, and is not a
+     * strict Set operation).
+     */
+    public boolean contains(ThreadTimelineBean other) {
+        if (equals(other)) {
+            return true;
+        }
+        if (getName().equals(other.getName())      &&
+            getState().equals(other.getState())    &&
+            getStartTime() == other.getStartTime())
+        {
+            return true;
+        }
+        
+        return false;
+    }
+    
+    @Override
+    public ThreadTimelineBean clone() {
+        ThreadTimelineBean copy = new ThreadTimelineBean();
+        copy.name = this.name;
+        copy.startTime = this.startTime;
+        copy.stopTime = this.stopTime;
+        copy.state = this.state;
+        return copy;
     }
 }

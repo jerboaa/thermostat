@@ -40,6 +40,9 @@ import java.awt.Color;
 
 public enum Palette {
 
+    THERMOSTAT_BLU(new Color(74, 93, 117)),
+    THERMOSTAT_RED(new Color(226, 46, 42)),
+    
     RED(new Color(192, 0, 0)),
     PALE_RED(new Color(192, 80, 77)),
     

@@ -36,14 +36,18 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
+import com.redhat.thermostat.thread.client.common.ThreadTimelineView.ThreadTimelineViewAction;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 
@@ -52,16 +56,37 @@ public class ThreadTimelineController extends CommonController {
     private ThreadTimelineView view;
     private ThreadCollector collector;
     
+    private final String lock = new String("ThreadTimelineController"); 
+    private ThreadTimelineBean latestSelected;
+    
     public ThreadTimelineController(ThreadTimelineView view, ThreadCollector collector, Timer timer) {
         super(timer, view);
         timer.setAction(new ThreadTimelineControllerAction());
         this.view = view;
+        this.view.addThreadSelectionActionListener(new ThreadTimelineSelectedAction());
         this.collector = collector;
     }
 
+    private class ThreadTimelineSelectedAction implements ActionListener<ThreadTimelineViewAction> {
+        
+        @Override
+        public void actionPerformed(ActionEvent<ThreadTimelineViewAction> actionEvent) {
+            synchronized (lock) {
+                latestSelected = (ThreadTimelineBean) actionEvent.getPayload();
+            }
+        }
+    }
+    
     private class ThreadTimelineControllerAction implements Runnable {
         @Override
         public void run() {
+            ThreadTimelineBean _latestSelected = null;
+            synchronized (lock) {
+                if (latestSelected != null) {
+                    _latestSelected = latestSelected.clone();
+                }
+            }
+            
             List<ThreadInfoData> infos = collector.getThreadInfo();
             if(infos.size() > 0) {
                 
@@ -88,6 +113,10 @@ public class ThreadTimelineController extends CommonController {
                     
                     Stack<ThreadTimelineBean> threadTimelines = new Stack<ThreadTimelineBean>();
                     timelines.put(lastThreadInfo, threadTimelines);
+                    
+                    if (_latestSelected != null && _latestSelected.contains(timeline)) {
+                        timeline.setHighlight(true);
+                    }                    
                     threadTimelines.push(timeline);
                     
                     for (int i = beanList.size() - 1; i >= 0; i--) {
@@ -100,6 +129,10 @@ public class ThreadTimelineController extends CommonController {
                             timeline = threadTimelines.pop();
                             timeline.setStopTime(threadInfo.getTimeStamp());
                             
+                            if (_latestSelected != null && _latestSelected.contains(timeline)) {
+                                timeline.setHighlight(true);
+                            }
+                            
                             threadTimelines.push(timeline);
                             
                             timeline = new ThreadTimelineBean();
@@ -111,6 +144,10 @@ public class ThreadTimelineController extends CommonController {
                             lastThreadInfo = threadInfo;
                             lastState = currentState;
                             
+                            if (_latestSelected != null && _latestSelected.contains(timeline)) {
+                                timeline.setHighlight(true);
+                            }
+
                             // add the new thread stat
                             threadTimelines.push(timeline);
                         }
@@ -118,6 +155,13 @@ public class ThreadTimelineController extends CommonController {
                 }
                 
                 view.displayStats(timelines, infos.get(infos.size() - 1).getTimeStamp(), infos.get(0).getTimeStamp());
+
+                if (_latestSelected != null) {
+                    view.setMarkersMessage(new Date(_latestSelected.getStartTime()).toString(),
+                                           new Date(_latestSelected.getStopTime()).toString());
+                } else {
+                    view.resetMarkerMessage();
+                }
             }
         }
     }

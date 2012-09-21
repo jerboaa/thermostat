@@ -40,10 +40,30 @@ import java.util.List;
 import java.util.Map;
 
 import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public abstract class ThreadTimelineView extends BasicView {
 
+    public static enum ThreadTimelineViewAction {
+        THREAD_TIMELINE_SELECTED
+    }
+    
+    protected final ActionNotifier<ThreadTimelineViewAction> threadTimelineNotifier;
+    public ThreadTimelineView() {
+        threadTimelineNotifier = new ActionNotifier<>(this);
+    }
+    
+    public void addThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
+        threadTimelineNotifier.addActionListener(listener);
+    }
+    
+    public void removeThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
+        threadTimelineNotifier.removeActionListener(listener);
+    }
+    
     public abstract void displayStats(Map<ThreadInfoData, List<ThreadTimelineBean>> timelines, long start, long stop);
-
+    public abstract void setMarkersMessage(String left, String right);
+    public abstract void resetMarkerMessage();
 }

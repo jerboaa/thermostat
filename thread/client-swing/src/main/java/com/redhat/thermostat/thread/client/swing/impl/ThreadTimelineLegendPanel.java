@@ -36,40 +36,68 @@
 
 package com.redhat.thermostat.thread.client.swing.impl;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 
+import javax.swing.Icon;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
-import javax.swing.plaf.ColorUIResource;
 
 import com.redhat.thermostat.swing.GraphicsUtils;
+import com.redhat.thermostat.thread.client.common.chart.ChartColors;
 
 @SuppressWarnings("serial")
-public class ThreadTimelineChart extends JPanel {
-
-    private static final ColorUIResource TICK_COLOR = new ColorUIResource(0xa8aca8);
-
-    public ThreadTimelineChart() {
+public class ThreadTimelineLegendPanel extends JPanel {
+    
+    public ThreadTimelineLegendPanel() {
+        setLayout(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        setPreferredSize(new Dimension(getWidth(), 40));
+        
+        for (Thread.State state : Thread.State.values()) {
+            
+            Color color = ChartColors.getColor(state);
+            // no chart is black, it's just the default colour
+            if (!color.equals(Color.BLACK)) {
+                JLabel label =  new JLabel(new ColorIcon(color), SwingConstants.LEFT);
+                label.setText(state.toString());
+                add(label);
+            }
+        }
     }
     
-    @Override
-    protected void paintComponent(Graphics g) {
-        Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+    private class ColorIcon implements Icon {
         
-        graphics.setColor(TICK_COLOR);
+        private Color color;
+        private ColorIcon(Color color) {
+            this.color = color;
+        }
         
-        int x = 1;
-        int y = 2;
-        int w = getWidth() - 2;
-        int h = getHeight();
+        @Override
+        public int getIconHeight() {
+            return 16;
+        }
         
-        graphics.drawLine(x, y, w, y);
+        @Override
+        public int getIconWidth() {
+            return 16;
+        }
         
-        graphics.dispose();
+        @Override
+        public void paintIcon(Component c, Graphics g, int x, int y) {
+            Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
+            graphics.setColor(color);
+            graphics.fillRect(x, y, getIconWidth(), getIconHeight());
+            graphics.dispose();
+        }
     }
-    
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
             
@@ -77,11 +105,12 @@ public class ThreadTimelineChart extends JPanel {
             public void run() {
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+               
+                ThreadTimelineLegendPanel panel = new ThreadTimelineLegendPanel();
                 
-                ThreadTimelineChart chart = new ThreadTimelineChart();
+                frame.add(panel);
+                frame.setSize(800, 150);
                 
-                frame.add(chart);
-                frame.setSize(500, 500);
                 frame.setVisible(true);
             }
         });

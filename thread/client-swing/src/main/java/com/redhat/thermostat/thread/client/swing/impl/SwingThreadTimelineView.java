@@ -39,6 +39,12 @@ package com.redhat.thermostat.thread.client.swing.impl;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.awt.Point;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.List;
 import java.util.Map;
 
@@ -47,8 +53,8 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListCellRenderer;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
@@ -58,8 +64,14 @@ import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public class SwingThreadTimelineView extends ThreadTimelineView  implements SwingComponent  {
 
+    private final String lock = new String("SwingThreadTimelineViewLock");
+        
     private JPanel timeLinePanel;
-    private DefaultListModel<SwingThreadTimelineChart> model;
+    private JList<SwingThreadTimelineChart> chartList;
+    private DefaultListModel<SwingThreadTimelineChart> chartModel;
+    
+    private String leftMarkerMessage; 
+    private String rightMarkerMessage;
     
     public SwingThreadTimelineView() {
         timeLinePanel = new JPanel();
@@ -76,22 +88,21 @@ public class SwingThreadTimelineView extends ThreadTimelineView  implements Swin
         });
         
         timeLinePanel.setLayout(new BorderLayout(0, 0));
-        model = new DefaultListModel<>();
-        JList<SwingThreadTimelineChart> chartList = new JList<>(model);
         
-        chartList.setLayoutOrientation(JList.VERTICAL);
-        chartList.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+        
+        chartModel = new DefaultListModel<>();
+        chartList = new JList<>(chartModel);
+        
+        chartList.setCellRenderer(new ChartRenderer());
+        chartList.addMouseListener(new ChartListListener());
+        
         JScrollPane scrollPane = new JScrollPane(chartList);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        timeLinePanel.add(scrollPane);
-        chartList.setCellRenderer(new ListCellRenderer<SwingThreadTimelineChart>() {
-            @Override
-            public Component getListCellRendererComponent(
-                    JList<? extends SwingThreadTimelineChart> list, SwingThreadTimelineChart value,
-                    int index, boolean isSelected, boolean cellHasFocus) {
-                return value;
-            }
-        });
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        
+        timeLinePanel.add(scrollPane, BorderLayout.CENTER);
+        ThreadTimelineLegendPanel timelineLegend = new ThreadTimelineLegendPanel();
+        timeLinePanel.add(timelineLegend, BorderLayout.SOUTH);
     }
     
     @Override
@@ -101,18 +112,94 @@ public class SwingThreadTimelineView extends ThreadTimelineView  implements Swin
             
             @Override
             public void run() {
-                model.clear();
+                String _leftMarkerMessage = null; 
+                String _rightMarkerMessage = null;
+                synchronized (lock) {
+                    _leftMarkerMessage = leftMarkerMessage;
+                    _rightMarkerMessage = rightMarkerMessage;                        
+                }
+                
+                chartModel.clear();
                 for (List<ThreadTimelineBean> timeline : timelines.values()) {
                     SwingThreadTimelineChart panel = new SwingThreadTimelineChart(timeline, start, stop);
-                    panel.setPreferredSize(new Dimension(timeLinePanel.getWidth(), 50));
-                    model.addElement(panel);
+                    panel.setPreferredSize(new Dimension(chartList.getWidth(), 75));
+                    panel.setMarkersMessage(_leftMarkerMessage, _rightMarkerMessage);
+                    panel.addPropertyChangeListener(SwingThreadTimelineChart.HIGHLIGHT_THREAD_STATE_PROPERTY,
+                                                    new SelectedThreadListener());
+                    panel.setMarkersMessage(_leftMarkerMessage, _rightMarkerMessage);
+                    chartModel.addElement(panel);
                 }
             }
         });
     }
     
+    private class SelectedThreadListener implements PropertyChangeListener {
+        @Override
+        public void propertyChange(final PropertyChangeEvent evt) {
+            SwingWorker<Void, Void> notifier = new SwingWorker<Void, Void>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    SwingThreadTimelineView.this.
+                    threadTimelineNotifier.fireAction(ThreadTimelineView.ThreadTimelineViewAction.THREAD_TIMELINE_SELECTED,
+                                                      evt.getNewValue());
+                    return null;
+                }
+            };
+            notifier.execute();
+        }
+    }
+    
+    private class ChartRenderer implements ListCellRenderer<SwingThreadTimelineChart> {
+        @Override
+        public Component getListCellRendererComponent(JList<? extends SwingThreadTimelineChart> list,
+                                                      SwingThreadTimelineChart chart,
+                                                      int index, boolean isSelected,
+                                                      boolean cellHasFocus)
+        {
+            if (!isSelected) {
+                chart.unsetHighlightArea();
+            }
+            return chart;
+        }
+    }
+    
+    private class ChartListListener extends MouseAdapter {
+        
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            int index = chartList.getSelectedIndex();
+            if (index > 0) {
+                Point listIndex = chartList.indexToLocation(index);
+                Point absoluteLocation = e.getPoint();
+                listIndex.x = absoluteLocation.x;
+                if (index != 0) {
+                    listIndex.y = absoluteLocation.y - listIndex.y;
+                }
+                
+                SwingThreadTimelineChart chart = chartModel.get(index);
+                chart.clickAndHighlightArea(listIndex);                
+            }
+        }
+    }
+    
     @Override
     public Component getUiComponent() {
         return timeLinePanel;
+    }
+    
+    @Override
+    public void resetMarkerMessage() {
+        synchronized (lock) {
+            this.leftMarkerMessage = null;
+            this.rightMarkerMessage = null;            
+        }
+    }
+    
+    @Override
+    public void setMarkersMessage(String left, String right) {
+        synchronized (lock) {
+            this.leftMarkerMessage = left;
+            this.rightMarkerMessage = right;            
+        }
     }
 }
