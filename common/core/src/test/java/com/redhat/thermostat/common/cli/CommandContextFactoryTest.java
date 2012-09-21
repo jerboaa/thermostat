@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.cli;
 
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
 
@@ -67,7 +66,6 @@ public class CommandContextFactoryTest {
         Arguments args = mock(Arguments.class);
         CommandContext ctx = cmdCtxFactory.createContext(args);
         assertSame(args, ctx.getArguments());
-        assertNotNull(ctx.getAppContextSetup());
         assertSame(cmdCtxFactory, ctx.getCommandContextFactory());
         assertSame(cmdCtxFactory.getCommandRegistry(), ctx.getCommandRegistry());
         assertSame(cmdCtxFactory.getConsole(), ctx.getConsole());

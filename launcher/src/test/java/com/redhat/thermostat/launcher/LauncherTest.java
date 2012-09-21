@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.any;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -58,6 +59,7 @@ import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -69,7 +71,6 @@ import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.AppContextSetup;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -79,6 +80,7 @@ import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -88,7 +90,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(FrameworkUtil.class)
+@PrepareForTest({FrameworkUtil.class, DbServiceFactory.class})
 public class LauncherTest {
     
     private static String defaultKeyringProvider;
@@ -123,7 +125,6 @@ public class LauncherTest {
     }
 
     private TestCommandContextFactory  ctxFactory;
-    private AppContextSetup appContextSetup;
     private BundleContext bundleContext;
     private TestTimerFactory timerFactory;
     private OSGiRegistry registry;
@@ -169,22 +170,15 @@ public class LauncherTest {
     }
 
     private void setupCommandContextFactory() {
-        appContextSetup = mock(AppContextSetup.class);
         Bundle sysBundle = mock(Bundle.class);
         bundleContext = mock(BundleContext.class);
         when(bundleContext.getBundle(0)).thenReturn(sysBundle);
-        ctxFactory = new TestCommandContextFactory(bundleContext) {
-            @Override
-            protected AppContextSetup getAppContextSetup() {
-                return appContextSetup;
-            }
-        };
+        ctxFactory = new TestCommandContextFactory(bundleContext);
     }
 
 
     @After
     public void tearDown() {
-        appContextSetup = null;
         ctxFactory = null;
         ApplicationContextUtil.resetApplicationContext();
     }
@@ -300,32 +294,63 @@ public class LauncherTest {
     public void verifyStorageCommandSetsUpDAOFactory() {
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
         Keyring keyring = mock(Keyring.class);
+        Bundle sysBundle = mock(Bundle.class);
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        when(FrameworkUtil.getBundle(OSGIUtils.class)).thenReturn(sysBundle);
+        when(sysBundle.getBundleContext()).thenReturn(bundleContext);
+        PowerMockito.mockStatic(DbServiceFactory.class);
+        String dbUrl = "mongo://fluff:12345";
+        DbService dbService = mock(DbService.class);
+        when(DbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
         launcher.setPreferences(new ClientPreferences(keyring));
         
-        launcher.setArgs(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345" });
+        launcher.setArgs(new String[] { "test3" , "--dbUrl", dbUrl });
         launcher.run();
-        verify(appContextSetup).setupAppContext("mongo://fluff:12345", null, null);
+        verify(dbService).connect();
+        verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
     }
 
     @Test
     public void verifyStorageCommandSetsUpDAOFactoryWithAuth() {
         LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
         Keyring keyring = mock(Keyring.class);
+        Bundle sysBundle = mock(Bundle.class);
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        when(FrameworkUtil.getBundle(OSGIUtils.class)).thenReturn(sysBundle);
+        when(sysBundle.getBundleContext()).thenReturn(bundleContext);
+        PowerMockito.mockStatic(DbServiceFactory.class);
+        String dbUrl = "mongo://fluff:12345";
+        String testUser = "testUser";
+        String testPasswd = "testPassword";
+        DbService dbService = mock(DbService.class);
+        when(DbServiceFactory.createDbService(testUser, testPasswd, dbUrl)).thenReturn(dbService);
+        
         launcher.setPreferences(new ClientPreferences(keyring));
         
-        launcher.setArgs(new String[] { "test3" , "--dbUrl", "mongo://fluff:12345", "--username", "testuser", "--password", "testpwd" });
+        launcher.setArgs(new String[] { "test3" , "--dbUrl", dbUrl, "--username", testUser, "--password", testPasswd });
         launcher.run();
-        verify(appContextSetup).setupAppContext("mongo://fluff:12345", "testuser", "testpwd");
+        verify(dbService).connect();
+        verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
     }
 
     public void verifyPrefsAreUsed() {
         ClientPreferences prefs = mock(ClientPreferences.class);
-        when(prefs.getConnectionUrl()).thenReturn("mongo://fluff:12345");
+        String dbUrl = "mongo://fluff:12345";
+        when(prefs.getConnectionUrl()).thenReturn(dbUrl);
         LauncherImpl l = new LauncherImpl(bundleContext, ctxFactory, registry);
+        Bundle sysBundle = mock(Bundle.class);
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        when(FrameworkUtil.getBundle(OSGIUtils.class)).thenReturn(sysBundle);
+        when(sysBundle.getBundleContext()).thenReturn(bundleContext);
+        PowerMockito.mockStatic(DbServiceFactory.class);
+        DbService dbService = mock(DbService.class);
+        // this makes sure that dbUrl is indeed retrieved from preferences
+        when(DbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
         l.setPreferences(prefs);
         l.setArgs(new String[] { "test3" });
         l.run();
-        verify(appContextSetup).setupAppContext("mongo://fluff:12345", null, null);
+        verify(dbService).connect();
+        verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
     }
     
     @Test

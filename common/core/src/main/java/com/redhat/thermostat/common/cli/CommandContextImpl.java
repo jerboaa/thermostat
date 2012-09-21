@@ -62,11 +62,6 @@ public class CommandContextImpl implements CommandContext {
     }
 
     @Override
-    public AppContextSetup getAppContextSetup() {
-        return commandContextFactory.getAppContextSetup();
-    }
-
-    @Override
     public CommandContextFactory getCommandContextFactory() {
         return commandContextFactory;
     }

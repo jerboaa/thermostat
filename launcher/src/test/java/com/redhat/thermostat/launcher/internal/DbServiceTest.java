@@ -34,17 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
+import static org.junit.Assert.fail;
 
-public interface CommandContext {
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    Console getConsole();
+import com.redhat.thermostat.launcher.DbService;
 
-    Arguments getArguments();
-
-    CommandRegistry getCommandRegistry();
-
-    CommandContextFactory getCommandContextFactory();
+public class DbServiceTest {
+    
+    private DbService dbService;
+    
+    @Before
+    public void setup() {
+        String dbUrl = "mongodb://testhost.example.com:19223";
+        dbService = new DbServiceImpl("tester", "testerpassword", dbUrl);
+    }
+    
+    @After
+    public void teardown() {
+        dbService = null;
+    }
+    
+    @Test
+    public void testSetRegistrationRegistryThrowsException() {
+        try {
+            dbService.setServiceRegistration(null);
+            fail("Null registrations not allowed");
+        } catch (Exception e) {
+            // pass
+        }
+    }
 
 }

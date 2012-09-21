@@ -45,6 +45,7 @@ import java.util.logging.Level;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
@@ -67,6 +68,8 @@ import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
+import com.redhat.thermostat.launcher.DbService;
+import com.redhat.thermostat.launcher.DbServiceFactory;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -253,29 +256,37 @@ public class LauncherImpl implements Launcher {
         return args;
     }
 
+    @SuppressWarnings("rawtypes")
     private CommandContext setupCommandContext(Command cmd, Arguments args) throws CommandException {
 
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+        
         if (prefs == null) {
             prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
         }
         
-        CommandContext ctx = cmdCtxFactory.createContext(args);
         if (cmd.isStorageRequired()) {
-            String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);
-            if (dbUrl == null) {
-                dbUrl = prefs.getConnectionUrl();
-            }
-            String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
-            String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
-            try {
-                ctx.getAppContextSetup().setupAppContext(dbUrl, username, password);
-            } catch (ConnectionException ex) {
-                throw new CommandException("Could not connect to: " + dbUrl, ex);
+            DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
+            if (service == null) {
+                String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);
+                if (dbUrl == null) {
+                    dbUrl = prefs.getConnectionUrl();
+                }
+                String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
+                String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
+                service = DbServiceFactory.createDbService(username, password, dbUrl);
+                try {
+                    service.connect();
+                } catch (ConnectionException ex) {
+                    throw new CommandException("Could not connect to: " + dbUrl, ex);
+                }
+                ServiceRegistration registration = OSGIUtils.getInstance().registerService(DbService.class, service);
+                service.setServiceRegistration(registration);
             }
         }
         return ctx;
     }
-    
+
     private boolean isVersionQuery() {
         return args[0].equals(Version.VERSION_OPTION);
     }

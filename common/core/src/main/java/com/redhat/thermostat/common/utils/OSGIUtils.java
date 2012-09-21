@@ -41,6 +41,7 @@ import java.util.Dictionary;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 public class OSGIUtils {
     
@@ -55,6 +56,13 @@ public class OSGIUtils {
     	instance = utils;
     }
 
+    /**
+     * Gets a service and never return null. It will throw a NullPointerException
+     * before it returns.
+     * 
+     * @param clazz
+     * @return The best matching service implementation for the requested clazz.
+     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public <E extends Object> E getService(Class<E> clazz) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
@@ -62,12 +70,24 @@ public class OSGIUtils {
         return (E) ctx.getService(ref);
     }
     
-    public <E extends Object> void registerService(Class<? extends E> serviceClass, E service) {
-        registerService(serviceClass, service, null);
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public <E extends Object> E getServiceAllowNull(Class<E> clazz) {
+        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference ref = ctx.getServiceReference(clazz.getName());
+        if (ref == null) {
+            return null;
+        }
+        return (E) ctx.getService(ref);
+    }
+    
+    @SuppressWarnings("rawtypes")
+    public <E extends Object> ServiceRegistration registerService(Class<? extends E> serviceClass, E service) {
+        return registerService(serviceClass, service, null);
     }
         
-    public <E extends Object> void registerService(Class<? extends E> serviceClass, E service, Dictionary<String, ?> properties) {
+    @SuppressWarnings("rawtypes")
+    public <E extends Object> ServiceRegistration registerService(Class<? extends E> serviceClass, E service, Dictionary<String, ?> properties) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ctx.registerService(serviceClass.getName(), service, properties);
+        return ctx.registerService(serviceClass.getName(), service, properties);
     }
 }

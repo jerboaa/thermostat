@@ -34,17 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher;
 
+import com.redhat.thermostat.launcher.internal.DbServiceImpl;
 
-public interface CommandContext {
+/**
+ * Factory in order to be able to hide the BbService implementation.
+ *
+ */
+public class DbServiceFactory {
 
-    Console getConsole();
-
-    Arguments getArguments();
-
-    CommandRegistry getCommandRegistry();
-
-    CommandContextFactory getCommandContextFactory();
-
+    public static DbService createDbService(String username, String password, String dbUrl) {
+        return DbServiceImpl.create(username, password, dbUrl);
+    }
 }

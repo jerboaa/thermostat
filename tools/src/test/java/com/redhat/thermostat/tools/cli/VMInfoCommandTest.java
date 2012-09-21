@@ -56,7 +56,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.AppContextSetup;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
@@ -87,7 +86,6 @@ public class VMInfoCommandTest {
 
     private VMInfoCommand cmd;
     private VmInfoDAO vmsDAO;
-    private AppContextSetup appContextSetup;
     private TestCommandContextFactory cmdCtxFactory;
     private VmRef vm;
 
@@ -103,13 +101,7 @@ public class VMInfoCommandTest {
     }
 
     private void setupCommandContextFactory() {
-        appContextSetup = mock(AppContextSetup.class);
-        cmdCtxFactory = new TestCommandContextFactory() {
-            @Override
-            protected AppContextSetup getAppContextSetup() {
-                return appContextSetup;
-            }
-        };
+        cmdCtxFactory = new TestCommandContextFactory();
     }
 
     private void setupDAOs() {

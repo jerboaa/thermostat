@@ -51,10 +51,6 @@ public class CommandContextFactory {
         return new CommandContextImpl(args, this);
     }
 
-    protected AppContextSetup getAppContextSetup() {
-        return new AppContextSetupImpl();
-    }
-
     public CommandRegistry getCommandRegistry() {
         return commandRegistry;
     }

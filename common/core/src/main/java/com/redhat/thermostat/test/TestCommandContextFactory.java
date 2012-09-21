@@ -68,14 +68,6 @@ public class TestCommandContextFactory extends CommandContextFactory {
 
     private CommandRegistry commandRegistry = new TestCommandRegistry();
 
-    private AppContextSetup appContextSetup = new AppContextSetup() {
-
-        @Override
-        public void setupAppContext(String dbUrl, String username, String password) {
-            // We do nothing for now.
-        }
-    };
-
     private TestConsole console;
     private PipedOutputStream inOut;
 
@@ -118,11 +110,6 @@ public class TestCommandContextFactory extends CommandContextFactory {
             }
 
             @Override
-            public AppContextSetup getAppContextSetup() {
-                return TestCommandContextFactory.this.getAppContextSetup();
-            }
-
-            @Override
             public CommandContextFactory getCommandContextFactory() {
                 return TestCommandContextFactory.this;
             }
@@ -133,11 +120,6 @@ public class TestCommandContextFactory extends CommandContextFactory {
     @Override
     public CommandRegistry getCommandRegistry() {
         return commandRegistry;
-    }
-
-    @Override
-    protected AppContextSetup getAppContextSetup() {
-        return appContextSetup;
     }
 
     public String getOutput() {

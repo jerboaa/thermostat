@@ -34,8 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
+import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {

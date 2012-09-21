@@ -39,8 +39,8 @@ package com.redhat.thermostat.tools.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.isA;
-import static org.mockito.Mockito.eq;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -53,7 +53,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.AppContextSetup;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -69,7 +68,6 @@ import com.redhat.thermostat.test.TestCommandContextFactory;
 public class ListVMsCommandTest {
 
     private ListVMsCommand cmd;
-    private AppContextSetup appContextSetup;
     private TestCommandContextFactory cmdCtxFactory;
     private HostInfoDAO hostsDAO;
     private VmInfoDAO vmsDAO;
@@ -86,13 +84,7 @@ public class ListVMsCommandTest {
     }
 
     private void setupCommandContextFactory() {
-        appContextSetup = mock(AppContextSetup.class);
-        cmdCtxFactory = new TestCommandContextFactory() {
-            @Override
-            protected AppContextSetup getAppContextSetup() {
-                return appContextSetup;
-            }
-        };
+        cmdCtxFactory = new TestCommandContextFactory();
     }
 
     private void setupDAOs() {
@@ -110,7 +102,6 @@ public class ListVMsCommandTest {
         hostsDAO = null;
         cmdCtxFactory = null;
         cmd = null;
-        appContextSetup = null;
         ApplicationContextUtil.resetApplicationContext();
     }
 

@@ -60,7 +60,6 @@ import org.junit.Test;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.AppContextSetup;
 import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
@@ -98,7 +97,6 @@ public class VmStatCommandTest {
 
     private VMStatCommand cmd;
     private VmCpuStatDAO vmCpuStatDAO;
-    private AppContextSetup appContextSetup;
     private TestCommandContextFactory cmdCtxFactory;
     private VmMemoryStatDAO vmMemoryStatDAO;
     private TestTimerFactory timerFactory;
@@ -120,7 +118,6 @@ public class VmStatCommandTest {
     public void tearDown() {
 
         vmCpuStatDAO = null;
-        appContextSetup = null;
         cmdCtxFactory = null;
         cmd = null;
         timerFactory = null;
@@ -128,13 +125,7 @@ public class VmStatCommandTest {
     }
 
     private void setupCommandContextFactory() {
-        appContextSetup = mock(AppContextSetup.class);
-        cmdCtxFactory = new TestCommandContextFactory() {
-            @Override
-            protected AppContextSetup getAppContextSetup() {
-                return appContextSetup;
-            }
-        };
+        cmdCtxFactory = new TestCommandContextFactory();
     }
 
     private void setupDAOs() {

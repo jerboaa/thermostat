@@ -34,28 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
-import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.MongoStorageProvider;
-import com.redhat.thermostat.common.storage.StorageProvider;
+import org.osgi.framework.ServiceRegistration;
 
-class AppContextSetupImpl implements AppContextSetup {
+import com.redhat.thermostat.common.storage.ConnectionException;
 
-    @Override
-    public void setupAppContext(String dbUrl, String username, String password) {
-        StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
-        
-        StorageProvider connProv = new MongoStorageProvider(config);
-        DAOFactory daoFactory = new MongoDAOFactory(connProv);
-        Connection connection = daoFactory.getConnection();
-        connection.connect();
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+public interface DbService {
 
-    }
-
-}
+    /**
+     * Connects to the given database.
+     * 
+     * @throws ConnectionException If DB connection cannot be established.
+     */
+    void connect() throws ConnectionException;
+    
+    
+    /**
+     * Disconnects from the database.
+     * 
+     * @throws ConnectionException
+     */
+    void disconnect() throws ConnectionException;
+    
+    /**
+     * Get the registration for this service.
+     * @return
+     */
+    @SuppressWarnings("rawtypes")
+    ServiceRegistration getServiceRegistration();
+    
+    /**
+     * Set the registration suitable for this service.
+     */
+    @SuppressWarnings("rawtypes")
+    void setServiceRegistration(ServiceRegistration registration);
+} 

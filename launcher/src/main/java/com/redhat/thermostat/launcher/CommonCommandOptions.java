@@ -14,9 +14,9 @@ public class CommonCommandOptions {
     public static final String USERNAME_ARG = "username";
     public static final String PASSWORD_ARG = "password";
 
-    private static final String DB_URL_DESC = "the URL of the storage to connect to";
-    private static final String USERNAME_DESC = "the username to use for authentication";
-    private static final String PASSWORD_DESC = "the password to use for authentication";
+    public static final String DB_URL_DESC = "the URL of the storage to connect to";
+    public static final String USERNAME_DESC = "the username to use for authentication";
+    public static final String PASSWORD_DESC = "the password to use for authentication";
 
     public static final String LOG_LEVEL_ARG = "logLevel";
     private static final String LOG_LEVEL_DESC = "log level";
