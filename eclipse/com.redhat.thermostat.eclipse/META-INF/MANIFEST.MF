@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Thermostat Eclipse Client
 Bundle-Activator: com.redhat.thermostat.eclipse.Activator
 Bundle-SymbolicName: com.redhat.thermostat.eclipse;singleton:=true
-Bundle-Version: 0.4.0.qualifier
+Bundle-Version: 0.5.0.qualifier
 Bundle-Vendor: Red Hat Inc.
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
