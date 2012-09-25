@@ -5,12 +5,12 @@
   <parent>
     <artifactId>thermostat-eclipse-parent</artifactId>
     <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-    <version>0.4.0-SNAPSHOT</version>
+    <version>0.5.0-SNAPSHOT</version>
   </parent>
   <groupId>com.redhat.thermostat.eclipse.parent</groupId>
   <artifactId>com.redhat.thermostat.eclipse.test</artifactId>
   <packaging>eclipse-test-plugin</packaging>
-  <version>0.4.0-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
 
   <name>Thermostat Eclipse Client Tests</name>
 
@@ -18,12 +18,12 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
-      <version>0.4.0-SNAPSHOT</version>
+      <version>0.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
       <artifactId>com.redhat.thermostat.eclipse.test-deps-repo</artifactId>
-      <version>0.4.0-SNAPSHOT</version>
+      <version>0.5.0-SNAPSHOT</version>
       <type>pom</type>
     </dependency>
   </dependencies>
