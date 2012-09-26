@@ -243,6 +243,11 @@ public class DolphinDefaultTheme extends DolphinTheme {
     }
     
     @Override
+    public ColorUIResource getMenuBarBackgroundColor() {
+        return WINDOW_BACKGROUND;
+    }
+
+    @Override
     public ColorUIResource getMenuBackgroundColor() {
         return WHITE;
     }
@@ -433,7 +438,7 @@ public class DolphinDefaultTheme extends DolphinTheme {
         Object[] uiDefaults = {
 
                 "MenuBarUI", "com.redhat.swing.laf.dolphin.menu.DolphinMenuBarUI",
-                "MenuBar.background", getMenuBackgroundColor(),
+                "MenuBar.background", getMenuBarBackgroundColor(),
                 "MenuBar.border", new DolphinMenuBarBorder(),
                 
                 "MenuUI", "com.redhat.swing.laf.dolphin.menu.DolphinMenuUI",

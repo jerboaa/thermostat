@@ -39,6 +39,7 @@ package com.redhat.swing.laf.dolphin.menu;
 import java.awt.Graphics;
 
 import javax.swing.JComponent;
+import javax.swing.plaf.ColorUIResource;
 import javax.swing.plaf.ComponentUI;
 import javax.swing.plaf.metal.MetalMenuBarUI;
 
@@ -50,6 +51,9 @@ public class DolphinMenuBarUI extends MetalMenuBarUI {
     
     @Override
     public void update(Graphics g, JComponent c) {
-        // do nothing for now
+        if (c.isOpaque() && (c.getBackground() instanceof ColorUIResource)) {
+            g.setColor(c.getBackground());
+            g.fillRect(0, 0, c.getWidth(), c.getHeight());
+        }
     } 
 }

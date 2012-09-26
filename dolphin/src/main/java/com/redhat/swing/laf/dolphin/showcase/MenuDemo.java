@@ -37,11 +37,14 @@
 package com.redhat.swing.laf.dolphin.showcase;
 
 import java.awt.EventQueue;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
@@ -92,6 +95,8 @@ public class MenuDemo {
         JMenu mnNewMenu = new JMenu("New menu");
         menuBar.add(mnNewMenu);
         
+        mnNewMenu.addSeparator();
+
         JMenu mnNewMenu_1 = new JMenu("New menu");
         mnNewMenu.add(mnNewMenu_1);
         
@@ -105,6 +110,7 @@ public class MenuDemo {
         mnNewMenu_1.add(mntmNewMenuItem_3);
         
         JMenuItem mntmNewMenuItem = new JMenuItem("New menu item");
+        mntmNewMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
         mnNewMenu.add(mntmNewMenuItem);
         
         JMenuItem mntmNewMenuItem_1 = new JMenuItem("New menu item");

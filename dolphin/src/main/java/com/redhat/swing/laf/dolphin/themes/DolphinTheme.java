@@ -96,6 +96,7 @@ public abstract class DolphinTheme extends OceanTheme {
     
     public abstract ColorUIResource getWindowBackgroundColor();
     
+    public abstract ColorUIResource getMenuBarBackgroundColor();
     public abstract ColorUIResource getMenuBackgroundColor();
     public abstract ColorUIResource getMenuForegroundColor();
     public abstract ColorUIResource getTabAreaBackground();
@@ -138,4 +139,5 @@ public abstract class DolphinTheme extends OceanTheme {
 
     abstract public int getOneTouchButtonSize();
     abstract public int getOneTouchButtonOffset();
+
 }
