@@ -60,11 +60,18 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -156,7 +163,7 @@ public final class AgentApplication extends BasicCommand {
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, daoFactory);
+        final Agent agent = new Agent(backendRegistry, configuration, daoFactory, daoFactory.getAgentInfoDAO());
         try {
             logger.fine("Starting agent.");
             agent.start();
@@ -194,16 +201,20 @@ public final class AgentApplication extends BasicCommand {
 
         registerer.registerService(Storage.class, daoFactory.getStorage());
 
-        /*
-         * only register DAOs that don't maintain state;
-         * the dao instances will be shared across multiple unrelated classes
-         * and any state maintained will quickly lead to bugs
-         */
         registerer.registerService(AgentInfoDAO.class, daoFactory.getAgentInfoDAO());
         registerer.registerService(BackendInfoDAO.class, daoFactory.getBackendInfoDAO());
+
         registerer.registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
         registerer.registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
+        registerer.registerService(CpuStatDAO.class, daoFactory.getCpuStatDAO());
+        registerer.registerService(MemoryStatDAO.class, daoFactory.getMemoryStatDAO());
+
         registerer.registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());
+        registerer.registerService(VmClassStatDAO.class, daoFactory.getVmClassStatsDAO());
+        registerer.registerService(VmCpuStatDAO.class, daoFactory.getVmCpuStatDAO());
+        registerer.registerService(VmGcStatDAO.class, daoFactory.getVmGcStatDAO());
+        registerer.registerService(VmMemoryStatDAO.class, daoFactory.getVmMemoryStatDAO());
+        registerer.registerService(HeapDAO.class, daoFactory.getHeapDAO());
     }
 
     @Override

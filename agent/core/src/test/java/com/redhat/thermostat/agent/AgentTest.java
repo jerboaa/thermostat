@@ -85,7 +85,6 @@ public class AgentTest {
         backendInfoDao = mock(BackendInfoDAO.class);
         daos = mock(DAOFactory.class);
         when(daos.getStorage()).thenReturn(storage);
-        when(daos.getAgentInfoDAO()).thenReturn(agentInfoDao);
         when(daos.getBackendInfoDAO()).thenReturn(backendInfoDao);
         
         backend = mock(Backend.class);
@@ -104,7 +103,7 @@ public class AgentTest {
     public void testStartAgent() throws Exception {
         
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, daos);
+        Agent agent = new Agent(backendRegistry, config, daos, agentInfoDao);
         agent.start();
 
         // Verify that backend has been activated and storage received the agent information.
@@ -130,7 +129,7 @@ public class AgentTest {
     
     @Test
     public void testStopAgentWithPurging() throws Exception {
-        Agent agent = new Agent(backendRegistry, config, daos);
+        Agent agent = new Agent(backendRegistry, config, daos, agentInfoDao);
         agent.start();
         
         // stop agent
@@ -150,7 +149,7 @@ public class AgentTest {
         when(config.getStartTime()).thenReturn(123L);
         when(config.purge()).thenReturn(false);
         
-        Agent agent = new Agent(backendRegistry, config, daos);
+        Agent agent = new Agent(backendRegistry, config, daos, agentInfoDao);
         agent.start();
         
         // stop agent

@@ -34,31 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal.osgi;
+package com.redhat.thermostat.test;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Dictionary;
+import java.util.Map;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationCache;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import org.osgi.framework.Filter;
+import org.osgi.framework.ServiceReference;
 
-public class ApplicationServiceProvider implements ApplicationService {
+import com.redhat.thermostat.common.NotImplementedException;
 
-    private ApplicationCache cache = new ApplicationCache();
+public class StubFilter implements Filter {
 
-    // NOTE: When merging with ApplicationContext, this could be provided by the same
-    // thread pool that does the timer scheduling. Not sure we want this though,
-    // as scheduled thread pools are always limited in number of threads (could lead to deadlocks
-    // when used carelessly).
-    private ExecutorService executor = Executors.newCachedThreadPool();
+    private final String filter;
 
-    @Override
-    public ApplicationCache getApplicationCache() {
-        return cache;
+    public StubFilter(String filter) {
+        this.filter = filter;
     }
 
     @Override
-    public ExecutorService getApplicationExecutor() {
-        return executor;
+    public boolean match(ServiceReference reference) {
+        if (filter == null) {
+            return true;
+        }
+        throw new NotImplementedException();
     }
+
+    @Override
+    public boolean match(Dictionary dictionary) {
+        if (filter == null) {
+            return true;
+        }
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean matchCase(Dictionary dictionary) {
+        if (filter == null) {
+            return true;
+        }
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean matches(Map map) {
+        if (filter == null) {
+            return true;
+        }
+        throw new NotImplementedException();
+    }
+
 }

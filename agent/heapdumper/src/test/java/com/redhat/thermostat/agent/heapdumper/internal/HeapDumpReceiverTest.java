@@ -34,7 +34,6 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.agent.heapdumper.internal;
 
 import static org.junit.Assert.assertEquals;
@@ -54,12 +53,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HistogramLoader;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
@@ -77,19 +73,14 @@ public class HeapDumpReceiverTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
         heapDAO = mock(HeapDAO.class);
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(heapDAO);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         request = mock(Request.class);
         when(request.getParameter("vmId")).thenReturn("123");
         jmxDumper = mock(JMXHeapDumper.class);
         jmapDumper = mock(JMapHeapDumper.class);
         histogramLoader = mock(HistogramLoader.class);
-        receiver = new HeapDumpReceiver(jmxDumper, jmapDumper, histogramLoader);
+        receiver = new HeapDumpReceiver(heapDAO, jmxDumper, jmapDumper, histogramLoader);
     }
 
     @After
@@ -99,7 +90,6 @@ public class HeapDumpReceiverTest {
         jmxDumper = null;
         request = null;
         heapDAO = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

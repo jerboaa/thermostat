@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -101,6 +102,16 @@ public class PingCommand extends SimpleCommand {
         
     }
 
+    private OSGIUtils serviceProvider;
+
+    public PingCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    public PingCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
         PrintStream out = ctx.getConsole().getOutput();
@@ -116,7 +127,12 @@ public class PingCommand extends SimpleCommand {
             printCustomMessageWithUsage(out, "Invalid host ID or agent no longer running.  See \'help list-vms to obtain a valid host ID.");
             return;
         }
-        String address = df.getAgentInfoDAO().getAgentInformation(targetHostRef).getConfigListenAddress();
+        AgentInfoDAO service = serviceProvider.getService(AgentInfoDAO.class);
+        if (service == null) {
+            throw new CommandException("Unable to access agent information: service not available");
+        }
+        String address = service.getAgentInformation(targetHostRef).getConfigListenAddress();
+        serviceProvider.ungetService(service);
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));

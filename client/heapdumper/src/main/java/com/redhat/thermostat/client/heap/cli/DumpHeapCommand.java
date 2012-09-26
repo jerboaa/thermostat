@@ -46,21 +46,24 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleCommand;
-import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+
 
 public class DumpHeapCommand extends SimpleCommand {
-
     private static final String NAME = "dump-heap";
     private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_DUMP_HEAP_DESCRIPTION);
     private static final String USAGE = DESCRIPTION;
 
+    private final OSGIUtils serviceProvider;
     private final HeapDumperCommand implementation;
 
     public DumpHeapCommand() {
-        this(new HeapDumperCommand());
+        this(OSGIUtils.getInstance(), new HeapDumperCommand());
     }
 
-    DumpHeapCommand(HeapDumperCommand impl) {
+    DumpHeapCommand(OSGIUtils serviceProvider, HeapDumperCommand impl) {
+        this.serviceProvider = serviceProvider;
         this.implementation = impl;
     }
 
@@ -96,7 +99,13 @@ public class DumpHeapCommand extends SimpleCommand {
                 s.release();
             }
         };
-        implementation.execute(args.getVM(), r);
+        AgentInfoDAO service = serviceProvider.getService(AgentInfoDAO.class);
+        if (service == null) {
+            throw new CommandException("Unable to access agent information");
+        }
+        implementation.execute(service, args.getVM(), r);
+        serviceProvider.ungetService(service);
+
         try {
             s.acquire();
             ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));

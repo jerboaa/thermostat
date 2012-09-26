@@ -43,7 +43,7 @@ import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.client.ui.IconResource;
-import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 
 public class VMDecorator implements VmDecorator {
     
@@ -72,7 +72,7 @@ public class VMDecorator implements VmDecorator {
     private LivingVMFilter decoratorFilter;
     private LivingVMDecorator decorator;
     
-    public VMDecorator(final DAOFactory dao) {
+    public VMDecorator(VmInfoDAO dao) {
         decorator = new LivingVMDecorator();
         decoratorFilter = new LivingVMFilter(dao);
     }

@@ -50,10 +50,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
@@ -73,11 +69,18 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -292,10 +295,8 @@ public class Main {
                 
                 // register the storage, so other services can request it
                 DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-                Storage storage = daoFactory.getStorage();
-                OSGIUtils.getInstance().registerService(Storage.class, storage);
 
-                registerDAOsAsOSGiServices(daoFactory);
+                registerDAOsAndStorageAsOSGiServices(daoFactory);
 
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
@@ -314,17 +315,25 @@ public class Main {
         }
     }
     
-    private void registerDAOsAsOSGiServices(DAOFactory daoFactory) {
-        /*
-         * only register DAOs that don't maintain state;
-         * the dao instances will be shared across multiple unrelated classes
-         * and any state maintained will quickly lead to bugs
-         */
-        OSGIUtils.getInstance().registerService(AgentInfoDAO.class, daoFactory.getAgentInfoDAO());
-        OSGIUtils.getInstance().registerService(BackendInfoDAO.class, daoFactory.getBackendInfoDAO());
-        OSGIUtils.getInstance().registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
-        OSGIUtils.getInstance().registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
-        OSGIUtils.getInstance().registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());
+    private void registerDAOsAndStorageAsOSGiServices(DAOFactory daoFactory) {
+        OSGIUtils registerer = OSGIUtils.getInstance();
+
+        registerer.registerService(Storage.class, daoFactory.getStorage());
+
+        registerer.registerService(AgentInfoDAO.class, daoFactory.getAgentInfoDAO());
+        registerer.registerService(BackendInfoDAO.class, daoFactory.getBackendInfoDAO());
+
+        registerer.registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
+        registerer.registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
+        registerer.registerService(CpuStatDAO.class, daoFactory.getCpuStatDAO());
+        registerer.registerService(MemoryStatDAO.class, daoFactory.getMemoryStatDAO());
+
+        registerer.registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());
+        registerer.registerService(VmClassStatDAO.class, daoFactory.getVmClassStatsDAO());
+        registerer.registerService(VmCpuStatDAO.class, daoFactory.getVmCpuStatDAO());
+        registerer.registerService(VmGcStatDAO.class, daoFactory.getVmGcStatDAO());
+        registerer.registerService(VmMemoryStatDAO.class, daoFactory.getVmMemoryStatDAO());
+        registerer.registerService(HeapDAO.class, daoFactory.getHeapDAO());
     }
 
     private void showMainWindow() {

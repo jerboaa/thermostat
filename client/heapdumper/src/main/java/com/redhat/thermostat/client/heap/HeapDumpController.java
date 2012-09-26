@@ -56,6 +56,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -79,11 +80,11 @@ public class HeapDumpController implements VmInformationServiceController {
     private OverviewChart model;
     private ApplicationService appService;
 
-    public HeapDumpController(final VmRef ref, final ApplicationService appService) {
-        this(ref, appService, new HeapDumperCommand());
+    public HeapDumpController(final AgentInfoDAO agentInfoDao, final VmRef ref, final ApplicationService appService) {
+        this(agentInfoDao, ref, appService, new HeapDumperCommand());
     }
 
-    HeapDumpController(final VmRef ref, final ApplicationService appService, final HeapDumperCommand command) {
+    HeapDumpController(final AgentInfoDAO agentInfoDao, final VmRef ref, final ApplicationService appService, final HeapDumperCommand command) {
         
         this.appService = appService;
         this.ref = ref;
@@ -146,7 +147,7 @@ public class HeapDumpController implements VmInformationServiceController {
                 HeapDump dump = null;
                 switch (actionEvent.getActionId()) {
                 case DUMP_REQUESTED:
-                    command.execute(ref, new Runnable() {
+                    command.execute(agentInfoDao, ref, new Runnable() {
                         public void run() {
                             view.notifyHeapDumpComplete();
                         }

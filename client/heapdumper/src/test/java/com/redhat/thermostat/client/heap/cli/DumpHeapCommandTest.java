@@ -40,9 +40,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -52,7 +55,9 @@ import org.mockito.stubbing.Answer;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class DumpHeapCommandTest {
@@ -67,6 +72,10 @@ public class DumpHeapCommandTest {
 
     @Test
     public void verifyAcuallyCallsWorker() throws CommandException {
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        OSGIUtils osgi = mock(OSGIUtils.class);
+        when(osgi.getService(AgentInfoDAO.class)).thenReturn(agentInfoDao);
+
         HeapDumperCommand impl = mock(HeapDumperCommand.class);
         final ArgumentCaptor<Runnable> arg = ArgumentCaptor.forClass(Runnable.class);
         doAnswer(new Answer<Void>() {
@@ -76,9 +85,9 @@ public class DumpHeapCommandTest {
                 arg.getValue().run();
                 return null;
             }
-        }).when(impl).execute(any(VmRef.class), arg.capture());
+        }).when(impl).execute(eq(agentInfoDao), any(VmRef.class), arg.capture());
 
-        DumpHeapCommand command = new DumpHeapCommand(impl);
+        DumpHeapCommand command = new DumpHeapCommand(osgi, impl);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -88,14 +97,18 @@ public class DumpHeapCommandTest {
 
         command.run(factory.createContext(args));
 
-        verify(impl).execute(isA(VmRef.class), any(Runnable.class));
+        verify(impl).execute(eq(agentInfoDao), isA(VmRef.class), any(Runnable.class));
         assertEquals("Done\n", factory.getOutput());
     }
 
     @Test
     public void verifyNeedsHostAndVmId() throws CommandException {
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        OSGIUtils osgi = mock(OSGIUtils.class);
+        when(osgi.getService(AgentInfoDAO.class)).thenReturn(agentInfoDao);
+
         HeapDumperCommand impl = mock(HeapDumperCommand.class);
-        DumpHeapCommand command = new DumpHeapCommand(impl);
+        DumpHeapCommand command = new DumpHeapCommand(osgi, impl);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -106,6 +119,27 @@ public class DumpHeapCommandTest {
             assertTrue("should not reach here", false);
         } catch (CommandException ce) {
             assertEquals("a hostId is required", ce.getMessage());
+        }
+    }
+
+    @Test
+    public void verifyFailsIfAgentDaoIsNotAvailable() {
+        OSGIUtils osgi = mock(OSGIUtils.class);
+
+        HeapDumperCommand impl = mock(HeapDumperCommand.class);
+        DumpHeapCommand command = new DumpHeapCommand(osgi, impl);
+
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("hostId", "foo");
+        args.addArgument("vmId", "0");
+
+        try {
+            command.run(factory.createContext(args));
+            assertTrue("should not reach here", false);
+        } catch (CommandException ce) {
+            assertEquals("Unable to access agent information", ce.getMessage());
         }
     }
 

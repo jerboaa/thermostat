@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.client.heap;
 
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.ServiceLoader;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.heap.swing.HeapDetailsSwing;
 import com.redhat.thermostat.client.heap.swing.HeapSwingView;
@@ -52,35 +52,56 @@ import com.redhat.thermostat.client.heap.swing.ObjectDetailsPanel;
 import com.redhat.thermostat.client.heap.swing.ObjectRootsFrame;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg;
-    private ServiceRegistration contextServiceReg;
+    private MultipleServiceTracker heapDumperServiceTracker;
+    private ServiceRegistration heapDumperServiceRegistration;
 
     @Override
     public void start(final BundleContext context) throws Exception {
 
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ApplicationService appService = (ApplicationService) context.getService(reference);
+        registerViewClass(HeapView.class, HeapSwingView.class);
+        registerViewClass(HeapDumpDetailsView.class, HeapDetailsSwing.class);
+        registerViewClass(HeapHistogramView.class, HistogramPanel.class);
+        registerViewClass(ObjectDetailsView.class, ObjectDetailsPanel.class);
+        registerViewClass(ObjectRootsView.class, ObjectRootsFrame.class);
 
-                registerViewClass(HeapView.class, HeapSwingView.class);
-                registerViewClass(HeapDumpDetailsView.class, HeapDetailsSwing.class);
-                registerViewClass(HeapHistogramView.class, HistogramPanel.class);
-                registerViewClass(ObjectDetailsView.class, ObjectDetailsPanel.class);
-                registerViewClass(ObjectRootsView.class, ObjectRootsFrame.class);
-                context.registerService(VmInformationService.class.getName(), new HeapDumperService(appService), null);
-                return super.addingService(reference);
-            }
+        Class<?>[] deps = new Class<?>[] {
+                ApplicationService.class,
+                AgentInfoDAO.class,
         };
-        tracker.open();
+
+        heapDumperServiceTracker = new MultipleServiceTracker(context, deps, new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                ApplicationService appService = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appService);
+                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                Objects.requireNonNull(agentDao);
+                heapDumperServiceRegistration = context.registerService(
+                        VmInformationService.class.getName(),
+                        new HeapDumperService(appService, agentDao),
+                        null);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                heapDumperServiceRegistration.unregister();
+            }
+
+        });
+        heapDumperServiceTracker.open();
 
         reg = new CommandRegistryImpl(context);
         ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
@@ -93,10 +114,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (contextServiceReg != null) {
-            contextServiceReg.unregister();
-        }
-
+        heapDumperServiceTracker.close();
         reg.unregisterCommands();
     }
 }

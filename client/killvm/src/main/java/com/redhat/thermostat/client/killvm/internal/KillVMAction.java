@@ -37,16 +37,17 @@
 package com.redhat.thermostat.client.killvm.internal;
 
 import java.net.InetSocketAddress;
+import java.util.Objects;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.killvm.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.VmInfo;
@@ -59,15 +60,15 @@ import com.redhat.thermostat.common.utils.OSGIUtils;
 public class KillVMAction implements VMContextAction {
 
     private static final String RECEIVER = "com.redhat.thermostat.agent.killvm.internal.KillVmReceiver";
-    private final DAOFactory dao;
+    private final AgentInfoDAO agentDao;
+    private final VmInfoDAO vmDao;
     private final Translate t;
     private final RequestResponseListener listener;
 
-    public KillVMAction(RequestResponseListener listener) {
-        if (listener == null) {
-            throw new IllegalArgumentException("Listener can't be null");
-        }
-        this.dao = ApplicationContext.getInstance().getDAOFactory();
+    public KillVMAction(AgentInfoDAO agentDao, VmInfoDAO vmDao, RequestResponseListener listener) {
+        Objects.requireNonNull(listener, "Listener can't be null");
+        this.agentDao = agentDao;
+        this.vmDao = vmDao;
         this.t = LocaleResources.createLocalizer();
         this.listener = listener;
     }
@@ -84,7 +85,7 @@ public class KillVMAction implements VMContextAction {
 
     @Override
     public void execute(VmRef reference) {
-        String address = dao.getAgentInfoDAO().getAgentInformation(reference.getAgent()).getConfigListenAddress();
+        String address = agentDao.getAgentInformation(reference.getAgent()).getConfigListenAddress();
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
@@ -111,7 +112,7 @@ public class KillVMAction implements VMContextAction {
 
         @Override
         public boolean matches(VmRef ref) {
-            VmInfo vmInfo = dao.getVmInfoDAO().getVmInfo(ref);
+            VmInfo vmInfo = vmDao.getVmInfo(ref);
             return vmInfo.isAlive();
         }
 

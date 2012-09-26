@@ -80,6 +80,14 @@ public class OSGIUtils {
         return (E) ctx.getService(ref);
     }
     
+    public <E extends Object> void ungetService(Object service) {
+        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        Class<?> clazz = service.getClass();
+        // FIXME the reference returned now may be different from a previous invocation
+        ServiceReference ref = ctx.getServiceReference(clazz.getName());
+        ctx.ungetService(ref);
+    }
+
     @SuppressWarnings("rawtypes")
     public <E extends Object> ServiceRegistration registerService(Class<? extends E> serviceClass, E service) {
         return registerService(serviceClass, service, null);
@@ -90,4 +98,5 @@ public class OSGIUtils {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
         return ctx.registerService(serviceClass.getName(), service, properties);
     }
+
 }

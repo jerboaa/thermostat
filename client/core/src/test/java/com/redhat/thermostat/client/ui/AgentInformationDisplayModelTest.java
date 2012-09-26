@@ -58,17 +58,11 @@ public class AgentInformationDisplayModelTest {
     private AgentInformation agentInfo1 = new AgentInformation();
     private AgentInformation agentInfo2 = new AgentInformation();
 
-    private DAOFactory daoFactory = mock(DAOFactory.class);
     private AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
     private BackendInfoDAO backendInfoDao = mock(BackendInfoDAO.class);
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
-        when(daoFactory.getAgentInfoDAO()).thenReturn(agentInfoDao);
-        when(daoFactory.getBackendInfoDAO()).thenReturn(backendInfoDao);
-
         agentInfo1.setAgentId("agent1-id");
         agentInfo1.setStartTime(0);
         agentInfo1.setStopTime(1);
@@ -78,18 +72,11 @@ public class AgentInformationDisplayModelTest {
         agentInfo2.setAgentId("agent2-id");
 
         when(agentInfoDao.getAllAgentInformation()).thenReturn(Arrays.asList(agentInfo1));
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test
     public void testModelInitializesItself() {
-        AgentInformationDisplayModel model = new AgentInformationDisplayModel();
+        AgentInformationDisplayModel model = new AgentInformationDisplayModel(agentInfoDao, backendInfoDao);
 
         AgentInformation agentInfoFromModel = model.getAgentInfo(agentInfo1.getAgentId());
 
@@ -98,7 +85,7 @@ public class AgentInformationDisplayModelTest {
 
     @Test
     public void testGetUnknownAgentInformation() {
-        AgentInformationDisplayModel model = new AgentInformationDisplayModel();
+        AgentInformationDisplayModel model = new AgentInformationDisplayModel(agentInfoDao, backendInfoDao);
 
         AgentInformation agentInfoFromModel = model.getAgentInfo("some unknown agent id");
 
@@ -107,7 +94,7 @@ public class AgentInformationDisplayModelTest {
 
     @Test
     public void testChangesOnlyVisibleAfterRefresh() {
-        AgentInformationDisplayModel model = new AgentInformationDisplayModel();
+        AgentInformationDisplayModel model = new AgentInformationDisplayModel(agentInfoDao, backendInfoDao);
         AgentInformation agentInfoFromModel;
 
         agentInfoFromModel = model.getAgentInfo(agentInfo1.getAgentId());
