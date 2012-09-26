@@ -123,11 +123,12 @@ public class ActivatorTest {
                 actionCaptor.capture());
         Action action = actionCaptor.getValue();
 
-        action.doIt(any(Map.class));
+        action.dependenciesAvailable(isA(Map.class));
         verify(context).registerService(eq(Launcher.class.getName()), isA(Launcher.class), (Dictionary) isNull());
 
         activator.stop(context);
-        verify(launcherServiceRegistration).unregister();
+        // osgi will take care of unregistration on bundle stop
+        // verify(launcherServiceRegistration).unregister();
         verify(tracker).close();
     }
 }

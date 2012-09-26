@@ -40,6 +40,7 @@ import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
@@ -62,14 +63,21 @@ public class Activator implements BundleActivator {
         };
         
         Action action = new Action() {
+
+            private ServiceRegistration registration;
+
             @Override
-            public void doIt(Map<String, Object> services) {
+            public void dependenciesAvailable(Map<String, Object> services) {
                 ThreadCollectorFactory collectorFactory = (ThreadCollectorFactory) services.get(ThreadCollectorFactory.class.getName());
                 ApplicationService applicationService = (ApplicationService) services.get(ApplicationService.class.getName());
                 ThreadViewProvider viewFactory = (ThreadViewProvider) services.get(ThreadViewProvider.class.getName());
                 
                 VmInformationService vmInfoService = new ThreadInformationService(applicationService, collectorFactory, viewFactory);
-                context.registerService(VmInformationService.class.getName(), vmInfoService, null);
+                registration = context.registerService(VmInformationService.class.getName(), vmInfoService, null);
+            }
+            @Override
+            public void dependenciesUnavailable() {
+                registration.unregister();
             }
         };
         

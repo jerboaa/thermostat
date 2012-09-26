@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -48,63 +49,45 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
- * 
- * This class is intended to be used within BundleActivator implementations that require
- * some action be taken only after certain services have appeared.  It is not actually
- * an extension to the ServiceTracker class, but embeds a number of ServiceTracker objects
- * (one per required service) nonetheless.
- *
+ * A {@link ServiceTracker} for multiple services. This class is intended to be
+ * used within BundleActivator implementations that require some action be taken
+ * only after certain services have appeared.
  */
 public class MultipleServiceTracker {
 
     public interface Action {
-        public void doIt(Map<String, Object> services);
+        public void dependenciesAvailable(Map<String, Object> services);
+        public void dependenciesUnavailable();
     }
 
     class InternalServiceTrackerCustomizer implements ServiceTrackerCustomizer {
 
-        private static final String OBJECT_CLASS = "objectClass";
-        private ServiceTracker tracker;
-
-        void setTracker(ServiceTracker tracker) {
-            this.tracker = tracker;
-        }
-
         @Override
         public Object addingService(ServiceReference reference) {
-            ensureTracker();
+            Object service = context.getService(reference);
             services.put(getServiceClassName(reference), context.getService(reference));
             if (allServicesReady()) {
-                action.doIt(services);
+                action.dependenciesAvailable(services);
             }
-            return tracker.addingService(reference);
+            return service;
         }
 
         @Override
         public void modifiedService(ServiceReference reference, Object service) {
             // We don't actually need to do anything here.
-            ensureTracker();
-            tracker.modifiedService(reference, service);
         }
 
         @Override
         public void removedService(ServiceReference reference, Object service) {
-            ensureTracker();
-            services.put(getServiceClassName(reference), null);
-            tracker.removedService(reference, service);
-        }
-
-        private void ensureTracker() {
-            if (tracker == null) {
-                // This class is used only internally, and is initialized within the constructor.  The trackers that could
-                // be generating events cannot be opened except by calling open on the enclosing class, so this should
-                // never ever ever ever happen.
-                throw new IllegalStateException("Trackers should not be opened before this guy has been set.");
+            if (servicesWillBecomeNotReady(getServiceClassName(reference))) {
+                action.dependenciesUnavailable();
             }
+            services.put(getServiceClassName(reference), null);
+            context.ungetService(reference);
         }
 
         private String getServiceClassName(ServiceReference reference) {
-            return ((String[]) reference.getProperty(OBJECT_CLASS))[0];
+            return ((String[]) reference.getProperty(org.osgi.framework.Constants.OBJECTCLASS))[0];
         }
     }
 
@@ -113,17 +96,16 @@ public class MultipleServiceTracker {
     private Action action;
     private BundleContext context;
 
-    public MultipleServiceTracker(BundleContext context, Class[] classes, Action action) {
-        action.getClass();
-        context.getClass();
-        classes.getClass(); // Harmless call to cause NPE if passed null.
+    public MultipleServiceTracker(BundleContext context, Class<?>[] classes, Action action) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(classes);
+        Objects.requireNonNull(action);
         this.context = context;
         services = new HashMap<>();
         trackers = new ArrayList<>();
-        for (Class clazz: classes) {
+        for (Class<?> clazz: classes) {
             InternalServiceTrackerCustomizer tc = new InternalServiceTrackerCustomizer();
             ServiceTracker tracker = new ServiceTracker(context, clazz.getName(), tc);
-            tc.setTracker(tracker);
             trackers.add(tracker);
             services.put(clazz.getName(), null);
         }
@@ -149,5 +131,9 @@ public class MultipleServiceTracker {
             }
         }
         return true;
+    }
+
+    private boolean servicesWillBecomeNotReady(String serviceName) {
+        return (allServicesReady() && services.containsKey(serviceName));
     }
 }

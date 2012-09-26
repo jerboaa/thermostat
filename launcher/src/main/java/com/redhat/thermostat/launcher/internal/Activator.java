@@ -55,20 +55,28 @@ public class Activator extends CommandLoadingBundleActivator {
     class RegisterLauncherAction implements Action {
 
         private BundleContext context;
+        private ServiceReference registryReference;
 
         RegisterLauncherAction(BundleContext context) {
             this.context = context;
         }
+
         @Override
-        public void doIt(Map<String, Object> services) {
+        public void dependenciesAvailable(Map<String, Object> services) {
             
-            ServiceReference reference = context.getServiceReference(OSGiRegistry.class);
-            OSGiRegistry bundleService = (OSGiRegistry) context.getService(reference);
+            registryReference = context.getServiceReference(OSGiRegistry.class);
+            OSGiRegistry bundleService = (OSGiRegistry) context.getService(registryReference);
             LauncherImpl launcher = new LauncherImpl(context,
                     new CommandContextFactory(context), bundleService);
             launcherServiceRegistration = context.registerService(Launcher.class.getName(), launcher, null);
         }
-        
+
+        @Override
+        public void dependenciesUnavailable() {
+            launcherServiceRegistration.unregister();
+            context.ungetService(registryReference);
+        }
+
     }
 
     @SuppressWarnings("rawtypes")
@@ -85,9 +93,6 @@ public class Activator extends CommandLoadingBundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         super.stop(context);
-        if (launcherServiceRegistration != null) {
-            launcherServiceRegistration.unregister();
-        }
         if (tracker != null) {
             tracker.close();
         }
