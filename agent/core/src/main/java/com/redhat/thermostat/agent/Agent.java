@@ -73,18 +73,18 @@ public class Agent {
     private BackendInfoDAO backendDao;
     private boolean started = false;
 
-    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daos, AgentInfoDAO agentDao) {
-        this(backendRegistry, UUID.randomUUID(), config, daos, agentDao);
+    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daos, AgentInfoDAO agentDao, BackendInfoDAO backendDao) {
+        this(backendRegistry, UUID.randomUUID(), config, daos, agentDao, backendDao);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, DAOFactory daos, AgentInfoDAO agentDao) {
+    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, DAOFactory daos, AgentInfoDAO agentDao, BackendInfoDAO backendDao) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
         this.storage = daos.getStorage();
         this.storage.setAgentId(agentId);
         this.agentDao = agentDao;
-        this.backendDao = daos.getBackendInfoDAO();
+        this.backendDao = backendDao;
     }
 
     private void startBackends() throws LaunchException {

@@ -163,7 +163,7 @@ public final class AgentApplication extends BasicCommand {
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, daoFactory, daoFactory.getAgentInfoDAO());
+        final Agent agent = new Agent(backendRegistry, configuration, daoFactory, daoFactory.getAgentInfoDAO(), daoFactory.getBackendInfoDAO());
         try {
             logger.fine("Starting agent.");
             agent.start();
