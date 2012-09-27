@@ -41,8 +41,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -61,6 +63,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.redhat.thermostat.common.storage.Categories;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
@@ -71,6 +74,7 @@ import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
+import com.redhat.thermostat.web.common.WebInsert;
 
 public class RESTStorageTest {
 
@@ -116,7 +120,6 @@ public class RESTStorageTest {
             public void handle(String target, Request baseRequest,
                     HttpServletRequest request, HttpServletResponse response)
                     throws IOException, ServletException {
-
                 // Read request body.
                 StringBuilder body = new StringBuilder();
                 Reader reader = request.getReader();
@@ -128,7 +131,6 @@ public class RESTStorageTest {
                     body.append((char) read);
                 }
                 requestBody = body.toString();
-
                 // Send response body.
                 response.setStatus(HttpServletResponse.SC_OK);
                 if (responseBody != null) {
@@ -211,6 +213,35 @@ public class RESTStorageTest {
         assertTrue(results.hasNext());
         assertEquals("fluffor2", results.next().getProperty1());
         assertFalse(results.hasNext());
+    }
+
+    @Test
+    public void testPut() throws IOException, JsonSyntaxException, ClassNotFoundException {
+        RESTStorage storage = new RESTStorage();
+        storage.setEndpoint("http://localhost:" + port + "/");
+        TestObj obj = new TestObj();
+        obj.setProperty1("fluff");
+
+        storage.putPojo(category, true, obj);
+
+        Gson gson = new Gson();
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = bufRead.readLine();
+        String [] params = line.split("&");
+        assertEquals(2, params.length);
+        String[] parts = params[0].split("=");
+        assertEquals("insert", parts[0]);
+        WebInsert insert = gson.fromJson(parts[1], WebInsert.class);
+        assertEquals(category, insert.getCategory());
+        assertEquals(true, insert.isReplace());
+        assertEquals(TestObj.class.getName(), insert.getPojoClass());
+
+        parts = params[1].split("=");
+        assertEquals(2, parts.length);
+        assertEquals("pojo", parts[0]);
+        Object resultObj = gson.fromJson(parts[1], Class.forName(insert.getPojoClass()));
+        assertEquals(obj, resultObj);
     }
 
 }

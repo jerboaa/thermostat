@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class Category {
     private final String name;
@@ -94,5 +95,13 @@ public class Category {
     @Override
     public String toString() {
         return getName();
+    }
+
+    public boolean equals(Object o) {
+        if (! (o instanceof Category)) {
+            return false;
+        }
+        Category other = (Category) o;
+        return Objects.equals(name, other.name) && keys.equals(other.keys);
     }
 }

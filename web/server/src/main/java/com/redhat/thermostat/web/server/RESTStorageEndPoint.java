@@ -10,12 +10,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
+import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
+import com.redhat.thermostat.web.common.WebInsert;
 
 @SuppressWarnings("serial")
 public class RESTStorageEndPoint extends HttpServlet {
@@ -38,6 +40,22 @@ public class RESTStorageEndPoint extends HttpServlet {
             findPojo(req, resp);
         } else if (cmd.equals("find-all")) {
             findAll(req, resp);
+        } else if (cmd.equals("put-pojo")) {
+            putPojo(req, resp);
+        }
+    }
+
+    private void putPojo(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            String insertParam = req.getParameter("insert");
+            WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
+            Class<? extends Pojo> pojoCls = (Class<? extends Pojo>) Class.forName(insert.getPojoClass());
+            String pojoParam = req.getParameter("pojo");
+            Pojo pojo = gson.fromJson(pojoParam, pojoCls);
+            storage.putPojo(insert.getCategory(), insert.isReplace(), pojo);
+            resp.setStatus(HttpServletResponse.SC_OK);
+        } catch (ClassNotFoundException ex) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 

@@ -72,6 +72,7 @@ import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.client.RESTStorage;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
+import com.redhat.thermostat.web.common.WebInsert;
 
 public class RESTStorageEndpointTest {
 
@@ -89,6 +90,13 @@ public class RESTStorageEndpointTest {
         }
         public void setKey2(int key2) {
             this.key2 = key2;
+        }
+        public boolean equals(Object o) {
+            if (! (o instanceof TestClass)) {
+                return false;
+            }
+            TestClass other = (TestClass) o;
+            return key1.equals(other.key1) && key2 == other.key2;
         }
     }
 
@@ -202,6 +210,32 @@ public class RESTStorageEndpointTest {
         assertEquals(42, results[0].getKey2());
         assertEquals("fluff2", results[1].getKey1());
         assertEquals(43, results[1].getKey2());
+    }
+
+    @Test
+    public void testPutPojo() throws IOException {
+
+        TestClass expected1 = new TestClass();
+        expected1.setKey1("fluff1");
+        expected1.setKey2(42);
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/put-pojo");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        WebInsert insert = new WebInsert(category, true, TestClass.class.getName());
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("insert=");
+        gson.toJson(insert, out);
+        out.flush();
+        out.write("&pojo=");
+        gson.toJson(expected1, out);
+        out.write("\n");
+        out.flush();
+        assertEquals(200, conn.getResponseCode());
+        verify(mockStorage).putPojo(category, true, expected1);
     }
 
     private String getEndpoint() {

@@ -35,28 +35,49 @@
  */
 
 
-package com.redhat.thermostat.web.client;
+package com.redhat.thermostat.web.common;
 
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.storage.Category;
 
-public class TestObj implements Pojo {
+public class WebInsert {
 
-    
-    private String property1;
+    private Category category;
+    private boolean replace;
+    private String pojoClass;
 
-    public void setProperty1(String property1) {
-        this.property1 = property1;
+    public WebInsert() {
+        this(null, false, null);
     }
 
-    public String getProperty1() {
-        return property1;
+    public WebInsert(Category category, boolean replace, String pojoClass) {
+        this.category = category;
+        this.replace = replace;
+        this.pojoClass = pojoClass;
     }
 
-    public boolean equals(Object o) {
-        if (! (o instanceof TestObj)) {
-            return false;
-        }
-        TestObj other = (TestObj) o;
-        return property1.equals(other.property1);
+    public Category getCategory() {
+        return category;
     }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public boolean isReplace() {
+        return replace;
+    }
+
+    public void setReplace(boolean replace) {
+        this.replace = replace;
+    }
+
+    public String getPojoClass() {
+        return pojoClass;
+    }
+
+    public void setPojoClass(String pojoClass) {
+        this.pojoClass = pojoClass;
+    }
+
+
 }

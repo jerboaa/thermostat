@@ -58,6 +58,7 @@ import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.web.common.RESTQuery;
+import com.redhat.thermostat.web.common.WebInsert;
 
 public class RESTStorage extends Storage {
 
@@ -162,9 +163,27 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public void putPojo(Category arg0, boolean arg1, Pojo arg2) {
-        // TODO Auto-generated method stub
+    public void putPojo(Category category, boolean replace, Pojo pojo) {
+        try {
+            WebInsert insert = new WebInsert(category, replace, pojo.getClass().getName());
+            URL url = new URL(endpoint + "/put-pojo");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod("POST");
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            writer.write("insert=");
+            gson.toJson(insert, writer);
+            writer.write("&pojo=");
+            gson.toJson(pojo, writer);
+            writer.flush();
 
+            InputStream in = conn.getInputStream();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
