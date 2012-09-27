@@ -294,8 +294,13 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-killvm</artifactId>
+      <artifactId>thermostat-killvm-agent</artifactId>
       <version>${project.version}</version>
+    </dependency>
+    <dependency>
+    	<groupId>com.redhat.thermostat</groupId>
+    	<artifactId>thermostat-killvm-client-swing</artifactId>
+    	<version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
@@ -310,11 +315,6 @@
     <dependency>
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-osgi-process-handler</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-client-killvm</artifactId>
     	<version>${project.version}</version>
     </dependency>
     <dependency>
