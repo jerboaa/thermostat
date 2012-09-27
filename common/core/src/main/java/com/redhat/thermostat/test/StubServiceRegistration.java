@@ -34,31 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal.osgi;
+package com.redhat.thermostat.test;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Dictionary;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationCache;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
-public class ApplicationServiceProvider implements ApplicationService {
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.test.StubBundleContext.ServiceInformation;
 
-    private ApplicationCache cache = new ApplicationCache();
+public class StubServiceRegistration implements ServiceRegistration {
 
-    // NOTE: When merging with ApplicationContext, this could be provided by the same
-    // thread pool that does the timer scheduling. Not sure we want this though,
-    // as scheduled thread pools are always limited in number of threads (could lead to deadlocks
-    // when used carelessly).
-    private ExecutorService executor = Executors.newCachedThreadPool();
+    private StubBundleContext bundleContext;
+    private ServiceInformation info;
 
-    @Override
-    public ApplicationCache getApplicationCache() {
-        return cache;
+    public StubServiceRegistration(StubBundleContext ctx, ServiceInformation info) {
+        this.bundleContext = ctx;
+        this.info = info;
     }
 
     @Override
-    public ExecutorService getApplicationExecutor() {
-        return executor;
+    public ServiceReference getReference() {
+        throw new NotImplementedException();
     }
+
+    @Override
+    public void setProperties(Dictionary properties) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public void unregister() {
+        bundleContext.removeService(info);
+    }
+
+    public ServiceInformation getInfo() {
+        return info;
+    }
+
 }

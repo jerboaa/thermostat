@@ -34,26 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.agent.heapdumper.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.common.dao.HeapDAO;
 
 public class Activator implements BundleActivator {
 
     private ReceiverRegistry receivers;
 
+    private HeapDumpReceiver receiver = null;
+
+    private ServiceTracker heapDumpCommandReceiverTracker;
+
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(BundleContext context) {
         receivers = new ReceiverRegistry(context);
-        receivers.registerReceiver(new HeapDumpReceiver());
+
+        heapDumpCommandReceiverTracker = new ServiceTracker(context, HeapDAO.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                HeapDAO service = (HeapDAO) super.addingService(reference);
+                receiver = new HeapDumpReceiver(service);
+                receivers.registerReceiver(receiver);
+                return service;
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                receivers.unregisterReceivers();
+                super.removedService(reference, service);
+            }
+        };
+        heapDumpCommandReceiverTracker.open();
+
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
+    public void stop(BundleContext context) {
+        heapDumpCommandReceiverTracker.close();
+
         receivers.unregisterReceivers();
     }
 

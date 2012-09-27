@@ -42,13 +42,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.BackendInformation;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 /**
  * This model sits between the current view and the remote model, and maintains
@@ -63,10 +62,14 @@ public class AgentInformationDisplayModel {
     private final Map<String, List<BackendInformation>> backends;
 
     public AgentInformationDisplayModel() {
-        ApplicationContext appContext = ApplicationContext.getInstance();
-        DAOFactory daoFactory = appContext.getDAOFactory();
-        agentInfoDao = daoFactory.getAgentInfoDAO();
-        backendInfoDao = daoFactory.getBackendInfoDAO();
+        this(
+                OSGIUtils.getInstance().getService(AgentInfoDAO.class),
+                OSGIUtils.getInstance().getService(BackendInfoDAO.class));
+    }
+
+    public AgentInformationDisplayModel(AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao) {
+        this.agentInfoDao = agentInfoDao;
+        this.backendInfoDao = backendInfoDao;
 
         agents = new ArrayList<>();
         backends = new HashMap<>();
@@ -93,7 +96,9 @@ public class AgentInformationDisplayModel {
 
     public void refresh() {
         agents.clear();
-        agents.addAll(agentInfoDao.getAllAgentInformation());
+        if (agentInfoDao != null) {
+            agents.addAll(agentInfoDao.getAllAgentInformation());
+        }
         backends.clear();
         for (AgentInformation agent : agents) {
             String agentId = agent.getAgentId();

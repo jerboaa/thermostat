@@ -36,48 +36,81 @@
 
 package com.redhat.thermostat.client.filter.vm;
 
-import java.util.Hashtable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VmFilter;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 
 public class VMFilterActivator implements BundleActivator {
-    
+
+    private final List<ServiceRegistration> registeredServices = Collections.synchronizedList(new ArrayList<ServiceRegistration>());
+
+    private ServiceTracker vmInfoDaoTracker;
+
     @Override
     public void start(BundleContext context) throws Exception {
         
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
+        vmInfoDaoTracker = new ServiceTracker(context, VmInfoDAO.class.getName(), null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                ApplicationService service = (ApplicationService) context.getService(reference);
-                
-                LivingVMFilter filter = new LivingVMFilter(service.getDAOFactory());
-                VMDecorator decorator = new VMDecorator(service.getDAOFactory());
-                DeadVMDecorator deadDecorator = new DeadVMDecorator(service.getDAOFactory());
+                VmInfoDAO dao = (VmInfoDAO) context.getService(reference);
+
+                LivingVMFilter filter = new LivingVMFilter(dao);
+                VMDecorator decorator = new VMDecorator(dao);
+                DeadVMDecorator deadDecorator = new DeadVMDecorator(dao);
                 
                 LivingVMFilterMenuAction menu = new LivingVMFilterMenuAction(filter);
+
+                ServiceRegistration registration = null;
                 
-                context.registerService(VmDecorator.class.getName(), deadDecorator, null);
-                context.registerService(VmDecorator.class.getName(), decorator, null);
-                
-                context.registerService(VmFilter.class.getName(), filter, null);
-                context.registerService(MenuAction.class.getName(), menu, null);
-                
+                registration = context.registerService(MenuAction.class.getName(), menu, null);
+                registeredServices.add(registration);
+
+                registration = context.registerService(VmDecorator.class.getName(), deadDecorator, null);
+                registeredServices.add(registration);
+
+                registration = context.registerService(VmDecorator.class.getName(), decorator, null);
+                registeredServices.add(registration);
+
+                registration = context.registerService(VmFilter.class.getName(), filter, null);
+                registeredServices.add(registration);
+
                 return super.addingService(reference);
             }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                Iterator<ServiceRegistration> iterator = registeredServices.iterator();
+                while(iterator.hasNext()) {
+                    ServiceRegistration registration = iterator.next();
+                    registration.unregister();
+                    iterator.remove();
+                }
+
+                context.ungetService(reference);
+                super.removedService(reference, service);
+            }
         };
-        tracker.open();
+        vmInfoDaoTracker.open();
     }
     
     @Override
     public void stop(BundleContext context) throws Exception {
+        vmInfoDaoTracker.close();
         
+        for (ServiceRegistration registration : registeredServices) {
+            registration.unregister();
+        }
     }
 }

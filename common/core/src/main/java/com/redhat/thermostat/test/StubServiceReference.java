@@ -34,31 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal.osgi;
+package com.redhat.thermostat.test;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationCache;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.test.StubBundleContext.ServiceInformation;
 
-public class ApplicationServiceProvider implements ApplicationService {
+public class StubServiceReference implements ServiceReference {
 
-    private ApplicationCache cache = new ApplicationCache();
+    private ServiceInformation information;
 
-    // NOTE: When merging with ApplicationContext, this could be provided by the same
-    // thread pool that does the timer scheduling. Not sure we want this though,
-    // as scheduled thread pools are always limited in number of threads (could lead to deadlocks
-    // when used carelessly).
-    private ExecutorService executor = Executors.newCachedThreadPool();
-
-    @Override
-    public ApplicationCache getApplicationCache() {
-        return cache;
+    public StubServiceReference(ServiceInformation info) {
+        this.information = info;
     }
 
     @Override
-    public ExecutorService getApplicationExecutor() {
-        return executor;
+    public Object getProperty(String key) {
+        throw new NotImplementedException();
     }
+
+    @Override
+    public String[] getPropertyKeys() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public Bundle getBundle() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public Bundle[] getUsingBundles() {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public boolean isAssignableTo(Bundle bundle, String className) {
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public int compareTo(Object reference) {
+        throw new NotImplementedException();
+    }
+
+    public ServiceInformation getInformation() {
+        return information;
+    }
+
 }

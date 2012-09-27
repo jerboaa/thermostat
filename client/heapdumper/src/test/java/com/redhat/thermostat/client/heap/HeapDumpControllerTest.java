@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.heap;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -65,6 +66,7 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
@@ -81,6 +83,7 @@ public class HeapDumpControllerTest {
     
     private Timer timer;
     
+    private AgentInfoDAO agentDao;
     private HeapDAO heapDAO;
     private VmMemoryStatDAO vmDAO;
     private HeapView view;
@@ -100,6 +103,7 @@ public class HeapDumpControllerTest {
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
         when(daoFactory.getVmClassStatsDAO()).thenReturn(vmClassStatDAO);
         
+        agentDao = mock(AgentInfoDAO.class);
         heapDAO = mock(HeapDAO.class);
         when(daoFactory.getHeapDAO()).thenReturn(heapDAO);
         vmDAO = mock(VmMemoryStatDAO.class);
@@ -158,7 +162,7 @@ public class HeapDumpControllerTest {
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
         heapDumperCommand = mock(HeapDumperCommand.class);
-        controller = new HeapDumpController(ref, appService, heapDumperCommand);
+        controller = new HeapDumpController(agentDao, ref, appService, heapDumperCommand);
     }
     
     @After
@@ -233,7 +237,7 @@ public class HeapDumpControllerTest {
         appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
-        controller = new HeapDumpController(ref, appService);
+        controller = new HeapDumpController(agentDao, ref, appService);
         
         verify(view, times(1)).setChildView(any(HeapView.class));
         verify(view, times(1)).openDumpView();
@@ -256,7 +260,7 @@ public class HeapDumpControllerTest {
         appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
-        controller = new HeapDumpController(ref, appService);
+        controller = new HeapDumpController(agentDao, ref, appService);
         
         verify(view, times(0)).openDumpView();
     }
@@ -269,7 +273,7 @@ public class HeapDumpControllerTest {
         heapDumperListener.actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.DUMP_REQUESTED));
 
         ArgumentCaptor<Runnable> heapDumpCompleteAction = ArgumentCaptor.forClass(Runnable.class);
-        verify(heapDumperCommand).execute(any(VmRef.class), heapDumpCompleteAction.capture());
+        verify(heapDumperCommand).execute(same(agentDao), any(VmRef.class), heapDumpCompleteAction.capture());
         heapDumpCompleteAction.getValue().run();
         verify(view).notifyHeapDumpComplete();
 

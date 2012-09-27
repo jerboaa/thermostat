@@ -42,7 +42,6 @@ import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
@@ -74,13 +73,12 @@ public class DeadVMDecorator implements VmDecorator {
     private VmFilter decoratorFilter;
     private VMDecorator decorator;
     
-    public DeadVMDecorator(final DAOFactory dao) {
+    public DeadVMDecorator(final VmInfoDAO dao) {
         decorator = new VMDecorator();
         decoratorFilter = new VmFilter() {
             @Override
             public boolean matches(VmRef vm) {
-                VmInfoDAO info = dao.getVmInfoDAO();
-                VmInfo vmInfo = info.getVmInfo(vm);
+                VmInfo vmInfo = dao.getVmInfo(vm);
 
                 return !vmInfo.isAlive();
             }

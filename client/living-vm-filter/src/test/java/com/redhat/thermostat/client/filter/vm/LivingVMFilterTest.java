@@ -36,22 +36,21 @@
 
 package com.redhat.thermostat.client.filter.vm;
 
-import static org.junit.Assert.*;
-
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
 
 public class LivingVMFilterTest {
 
-    private DAOFactory dao;
+    private VmInfoDAO dao;
     private VmRef vmRef1;
     private VmRef vmRef2;
     
@@ -60,10 +59,7 @@ public class LivingVMFilterTest {
     
     @Before
     public void setUp() {
-        dao = mock(DAOFactory.class);
-        
-        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
-        when(dao.getVmInfoDAO()).thenReturn(vmInfoDao);
+        dao = mock(VmInfoDAO.class);
         
         vmRef1 = mock(VmRef.class);
         vmRef2 = mock(VmRef.class);
@@ -71,8 +67,8 @@ public class LivingVMFilterTest {
         vmInfo1 = mock(VmInfo.class);
         vmInfo2 = mock(VmInfo.class);
         
-        when(vmInfoDao.getVmInfo(vmRef1)).thenReturn(vmInfo1);
-        when(vmInfoDao.getVmInfo(vmRef2)).thenReturn(vmInfo2);
+        when(dao.getVmInfo(vmRef1)).thenReturn(vmInfo1);
+        when(dao.getVmInfo(vmRef2)).thenReturn(vmInfo2);
         
         when(vmInfo1.isAlive()).thenReturn(true);
         when(vmInfo2.isAlive()).thenReturn(false);

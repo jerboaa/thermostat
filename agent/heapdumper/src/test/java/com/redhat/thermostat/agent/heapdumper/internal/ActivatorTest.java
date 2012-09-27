@@ -34,37 +34,61 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.agent.heapdumper.internal;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import java.util.Dictionary;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.common.dao.HeapDAO;
+import com.redhat.thermostat.test.StubBundleContext;
 
 public class ActivatorTest {
 
     @Test
-    public void testStartStop() throws Exception {
-        BundleContext ctx = mock(BundleContext.class);
-        ServiceRegistration serviceReg = mock(ServiceRegistration.class);
-        when(ctx.registerService(anyString(), any(), any(Dictionary.class))).thenReturn(serviceReg);
+    public void testStartStopWithoutDependencies() {
+        StubBundleContext ctx = new StubBundleContext();
+
         Activator activator = new Activator();
+
         activator.start(ctx);
-        verify(ctx).registerService(eq(RequestReceiver.class.getName()), isA(HeapDumpReceiver.class), any(Dictionary.class));
+
+        assertEquals(0, ctx.getAllServices().size());
+
         activator.stop(ctx);
-        verify(serviceReg).unregister();
+
+        assertEquals(0, ctx.getAllServices().size());
+        assertEquals(0, ctx.getServiceListeners().size());
+    }
+
+    @Test
+    public void testStartStopWithDependency() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+
+        HeapDAO heapDao = mock(HeapDAO.class);
+        ServiceRegistration registration = ctx.registerService(HeapDAO.class, heapDao, null);
+
+        Activator activator = new Activator();
+
+        activator.start(ctx);
+
+        assertTrue(ctx.isServiceRegistered(RequestReceiver.class.getName(), HeapDumpReceiver.class));
+
+        assertEquals(1, ctx.getServiceListeners().size());
+
+        activator.stop(ctx);
+
+        assertFalse(ctx.isServiceRegistered(RequestReceiver.class.getName(), HeapDumpReceiver.class));
+
+        assertEquals(0, ctx.getServiceListeners().size());
+
+        assertEquals(0, ctx.getExportedServiceCount(registration));
     }
 
 }

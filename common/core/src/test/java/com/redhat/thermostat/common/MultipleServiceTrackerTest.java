@@ -59,7 +59,6 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.any;
 
 import static org.powermock.api.mockito.PowerMockito.verifyNew;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
@@ -72,6 +71,8 @@ public class MultipleServiceTrackerTest {
     private BundleContext context;
     private ServiceTracker objectTracker, stringTracker;
     private ServiceReference objectReference, stringReference;
+    private final Object OBJECT = new Object();
+    private final String STRING = "foo";
 
     @Before
     public void setUp() throws Exception {
@@ -79,9 +80,8 @@ public class MultipleServiceTrackerTest {
         context = mock(BundleContext.class);
 
         objectReference = mock(ServiceReference.class);
-        String[] objObjectClassProperty = {Object.class.getName()};
-        when(objectReference.getProperty(eq("objectClass"))).thenReturn(objObjectClassProperty);
-        when(context.getService(objectReference)).thenReturn(new Object());
+        when(objectReference.getProperty(eq("objectClass"))).thenReturn(new String[] { OBJECT.getClass().getName() });
+        when(context.getService(objectReference)).thenReturn(OBJECT);
         objectTracker = mock(ServiceTracker.class);
         whenNew(ServiceTracker.class).
                 withParameterTypes(BundleContext.class, String.class, ServiceTrackerCustomizer.class).
@@ -89,9 +89,8 @@ public class MultipleServiceTrackerTest {
                         isA(ServiceTrackerCustomizer.class)).thenReturn(objectTracker);
 
         stringReference = mock(ServiceReference.class);
-        String[] stringObjectClassProperty = {String.class.getName()};
-        when(stringReference.getProperty(eq("objectClass"))).thenReturn(stringObjectClassProperty);
-        when(context.getService(stringReference)).thenReturn("foo");
+        when(stringReference.getProperty(eq("objectClass"))).thenReturn(new String[] { STRING.getClass().getName() });
+        when(context.getService(stringReference)).thenReturn(STRING);
         stringTracker = mock(ServiceTracker.class);
         whenNew(ServiceTracker.class).
                 withParameterTypes(BundleContext.class, String.class, ServiceTrackerCustomizer.class).
@@ -115,7 +114,10 @@ public class MultipleServiceTrackerTest {
         verify(objectTracker).open();
 
         customizer.addingService(objectReference);
-        verify(action).doIt(any(Map.class));
+        verify(action).dependenciesAvailable(isA(Map.class));
+
+        customizer.removedService(objectReference, OBJECT);
+        verify(action).dependenciesUnavailable();
     }
 
     @Test
@@ -140,11 +142,21 @@ public class MultipleServiceTrackerTest {
 
         customizer.addingService(objectReference);
         customizer.addingService(stringReference);
-        verify(action).doIt(serviceMap.capture());
+        verify(action).dependenciesAvailable(serviceMap.capture());
         
         Map caputerServices = serviceMap.getValue();
         Assert.assertTrue(caputerServices.containsKey(Object.class.getName()));
         Assert.assertTrue(caputerServices.containsKey(String.class.getName()));
         Assert.assertEquals(2, caputerServices.size());
+
+        customizer.removedService(objectReference, OBJECT);
+
+        verify(action).dependenciesUnavailable();
+
+        customizer.removedService(stringReference, STRING);
+
+        // this second invocation of removedServices must not trigger dependenciesUnavailable again.
+        // it should still have been invoked exactly 1 time
+        verify(action).dependenciesUnavailable();
     }
 }

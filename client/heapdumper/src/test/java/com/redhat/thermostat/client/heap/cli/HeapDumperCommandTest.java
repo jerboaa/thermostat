@@ -52,7 +52,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
@@ -60,15 +59,14 @@ import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class HeapDumperCommandTest {
 
+    private AgentInfoDAO agentInfoDao;
     private HeapDumperCommand cmd;
     private VmRef vmRef;
     private RequestQueue reqQueue;
@@ -88,12 +86,8 @@ public class HeapDumperCommandTest {
         AgentInformation agentInfo = mock(AgentInformation.class);
         when(agentInfo.getConfigListenAddress()).thenReturn("test:123");
 
-        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        agentInfoDao = mock(AgentInfoDAO.class);
         when(agentInfoDao.getAgentInformation(host)).thenReturn(agentInfo);
-
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getAgentInfoDAO()).thenReturn(agentInfoDao);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         cmd = new HeapDumperCommand();
         vmRef = mock(VmRef.class);
@@ -115,7 +109,7 @@ public class HeapDumperCommandTest {
     @Test
 	public void testExecute() {
 
-        cmd.execute(vmRef, heapDumpCompleteAction);
+        cmd.execute(agentInfoDao, vmRef, heapDumpCompleteAction);
 
 		ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
 		verify(reqQueue).putRequest(reqArg.capture());

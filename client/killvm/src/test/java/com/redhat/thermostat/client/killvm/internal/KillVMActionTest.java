@@ -47,8 +47,6 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -58,58 +56,45 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.VmInfo;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(OSGIUtils.class)
 public class KillVMActionTest {
 
-    private KillVMAction action;
-    private DAOFactory factory;
-
-    @Before
-    public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-        factory = mock(DAOFactory.class);
-        ApplicationContext.getInstance().setDAOFactory(factory);
-        action = new KillVMAction(new SwingVMKilledListener());
-    }
-
-    @After
-    public void teardown() {
-        factory = null;
-        action = null;
-    }
-
     @Test
     public void killVMFilterOnlyMatchesLiveVMs() {
-        VmFilter filter = action.getFilter();
-        VmRef matching = mock(VmRef.class);
+        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
+
+        VmRef matching = mock(VmRef.class);
+
         VmInfo vmInfo = mock(VmInfo.class);
-        when(factory.getVmInfoDAO()).thenReturn(vmInfoDao);
         when(vmInfoDao.getVmInfo(matching)).thenReturn(vmInfo);
+
+        RequestResponseListener listener = mock(RequestResponseListener.class);
+
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, listener);
+
+        VmFilter filter = action.getFilter();
+
         when(vmInfo.isAlive()).thenReturn(true);
         assertTrue(filter.matches(matching));
+
         when(vmInfo.isAlive()).thenReturn(false);
         assertFalse(filter.matches(matching));
     }
 
     @Test
     public void canQueueKillRequest() {
-        Storage storage = mock(Storage.class);
-        when(factory.getStorage()).thenReturn(storage);
         VmRef ref = mock(VmRef.class);
         HostRef hostref = mock(HostRef.class);
         when(ref.getAgent()).thenReturn(hostref);
@@ -120,11 +105,12 @@ public class KillVMActionTest {
 
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         when(agentDao.getAgentInformation(hostref)).thenReturn(agentInfo);
+        VmInfoDAO vmInfoDao = mock(VmInfoDAO.class);
 
-        when(factory.getAgentInfoDAO()).thenReturn(agentDao);
+        RequestResponseListener agentResponseListener = mock(RequestResponseListener.class);
 
         final Request req = mock(Request.class);
-        KillVMAction action = new KillVMAction(new SwingVMKilledListener()) {
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, agentResponseListener) {
             @Override
             Request getKillRequest(InetSocketAddress target) {
                 return req;
@@ -140,7 +126,7 @@ public class KillVMActionTest {
                 .forClass(String.class);
         verify(req).setParameter(vmIdParamCaptor.capture(), any(String.class));
         assertEquals("vm-id", vmIdParamCaptor.getValue());
-        verify(req).addListener(isA(SwingVMKilledListener.class));
+        verify(req).addListener(agentResponseListener);
         ArgumentCaptor<String> receiverCaptor = ArgumentCaptor
                 .forClass(String.class);
         verify(req).setReceiver(receiverCaptor.capture());

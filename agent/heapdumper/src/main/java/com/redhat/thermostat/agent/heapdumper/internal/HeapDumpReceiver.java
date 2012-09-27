@@ -34,7 +34,6 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.agent.heapdumper.internal;
 
 import java.io.File;
@@ -44,7 +43,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
@@ -57,15 +55,19 @@ public class HeapDumpReceiver implements RequestReceiver {
 
     private static final Logger log = Logger.getLogger(HeapDumpReceiver.class.getName());
 
-    private JMXHeapDumper jmxHeapDumper;
-    private JMapHeapDumper jmapHeapDumper;
+    private final HeapDAO heapDao;
 
-    private HistogramLoader histogramLoader;
-    public HeapDumpReceiver() {
-        this(new JMXHeapDumper(), new JMapHeapDumper(), new HistogramLoader());
+    private final JMXHeapDumper jmxHeapDumper;
+    private final JMapHeapDumper jmapHeapDumper;
+
+    private final HistogramLoader histogramLoader;
+
+    public HeapDumpReceiver(HeapDAO heapDao) {
+        this(heapDao, new JMXHeapDumper(), new JMapHeapDumper(), new HistogramLoader());
     }
 
-    HeapDumpReceiver(JMXHeapDumper jmxHeapDumper, JMapHeapDumper jmapHeapDumper, HistogramLoader histogramLoader) {
+    HeapDumpReceiver(HeapDAO heapDao, JMXHeapDumper jmxHeapDumper, JMapHeapDumper jmapHeapDumper, HistogramLoader histogramLoader) {
+        this.heapDao = heapDao;
         this.jmxHeapDumper = jmxHeapDumper;
         this.jmapHeapDumper = jmapHeapDumper;
         this.histogramLoader = histogramLoader;
@@ -116,10 +118,8 @@ public class HeapDumpReceiver implements RequestReceiver {
     }
 
     private void saveHeapDumpInfo(String vmId, File tempFile, ObjectHistogram histogram) throws IOException {
-    
-        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         HeapInfo heapInfo = new HeapInfo(Integer.parseInt(vmId), System.currentTimeMillis());
-        heapDAO.putHeapInfo(heapInfo, tempFile, histogram);
+        heapDao.putHeapInfo(heapInfo, tempFile, histogram);
     }
 
 }

@@ -39,12 +39,11 @@ package com.redhat.thermostat.client.heap.cli;
 import java.net.InetSocketAddress;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -69,11 +68,10 @@ public class HeapDumperCommand {
         
     }
 
-    public void execute(VmRef reference, Runnable heapDumpCompleteAction) {
+    public void execute(AgentInfoDAO agentInfoDAO, VmRef reference, Runnable heapDumpCompleteAction) {
 
-        DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
         HostRef targetHostRef = reference.getAgent();
-        String address = df.getAgentInfoDAO().getAgentInformation(targetHostRef).getConfigListenAddress();
+        String address = agentInfoDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));

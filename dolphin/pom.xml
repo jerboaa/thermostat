@@ -64,12 +64,12 @@
               com.redhat.swing.laf.dolphin.text,
               com.redhat.swing.laf.dolphin.themes,
               com.redhat.swing.laf.dolphin.table,
-              com.redhat.swing.laf.dolphin.tree
+              com.redhat.swing.laf.dolphin.tree,
             </Export-Package>
             <Private-Package>
               com.redhat.swing.laf.dolphin.showcase,
               com.redhat.swing.laf.dolphin.showcase.table,
-              com.redhat.swing.laf.dolphin.showcase.tree
+              com.redhat.swing.laf.dolphin.showcase.tree,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

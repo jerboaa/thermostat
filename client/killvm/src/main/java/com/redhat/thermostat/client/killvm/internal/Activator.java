@@ -36,20 +36,54 @@
 
 package com.redhat.thermostat.client.killvm.internal;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 
 public class Activator implements BundleActivator {
 
+    private MultipleServiceTracker killVmActionTracker;
+    private ServiceRegistration killActionRegistration;
+
     @Override
-    public void start(BundleContext context) throws Exception {
-        context.registerService(VMContextAction.class.getName(), new KillVMAction(new SwingVMKilledListener()), null);
+    public void start(final BundleContext context) throws Exception {
+        Class<?>[] serviceDeps = new Class<?>[] {
+            AgentInfoDAO.class,
+            VmInfoDAO.class,
+            ContextAction.class,
+        };
+
+        killVmActionTracker = new MultipleServiceTracker(context, serviceDeps, new Action() {
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                KillVMAction service = new KillVMAction(agentDao, vmDao, new SwingVMKilledListener());
+                killActionRegistration = context.registerService(VMContextAction.class.getName(), service, null);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                killActionRegistration.unregister();
+                killActionRegistration = null;
+            }
+        });
+
+        killVmActionTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        killVmActionTracker.close();
         // service automatically unregistered on bundle stop
     }
 

@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.filter.vm;
 
 import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
@@ -46,9 +45,9 @@ public class LivingVMFilter implements VmFilter {
 
     volatile boolean filterActive = true;
     
-    private DAOFactory dao;
+    private VmInfoDAO dao;
     
-    public LivingVMFilter(DAOFactory dao) {
+    public LivingVMFilter(VmInfoDAO dao) {
         this.dao = dao;
     }
     
@@ -57,8 +56,7 @@ public class LivingVMFilter implements VmFilter {
         if (!filterActive)
             return true;
 
-        VmInfoDAO info = dao.getVmInfoDAO();
-        VmInfo vmInfo = info.getVmInfo(ref);
+        VmInfo vmInfo = dao.getVmInfo(ref);
         return vmInfo.isAlive();
     }
 }
