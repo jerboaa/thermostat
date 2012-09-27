@@ -80,14 +80,14 @@ class ThreadMainPanel extends JPanel {
             gl_content.createParallelGroup(Alignment.TRAILING)
                 .addGroup(Alignment.LEADING, gl_content.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 426, Short.MAX_VALUE)
+                    .addComponent(splitPane, 0, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addContainerGap())
         );
         gl_content.setVerticalGroup(
             gl_content.createParallelGroup(Alignment.TRAILING)
                 .addGroup(Alignment.LEADING, gl_content.createSequentialGroup()
                     .addContainerGap()
-                    .addComponent(splitPane, GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
+                    .addComponent(splitPane, 0, 240, Short.MAX_VALUE)
                     .addContainerGap())
         );
         
