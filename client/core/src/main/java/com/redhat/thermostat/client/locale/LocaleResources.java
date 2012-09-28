@@ -36,11 +36,10 @@
 
 package com.redhat.thermostat.client.locale;
 
-import com.redhat.thermostat.client.ui.ValueField;
-
 public enum LocaleResources {
 
     MISSING_INFO,
+    INFORMATION_NOT_AVAILABLE,
 
     COMMAND_GUI_DESCRIPTION,
 

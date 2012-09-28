@@ -162,15 +162,17 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         LabelField agentStartTimeLabel = new LabelField(localize(LocaleResources.AGENT_INFO_AGENT_START_TIME_LABEL));
         LabelField agentStopTimeLabel = new LabelField(localize(LocaleResources.AGENT_INFO_AGENT_STOP_TIME_LABEL));
 
-        currentAgentName = new ValueField("${AGENT_NAME}");
+        String notAvailable = localize(LocaleResources.INFORMATION_NOT_AVAILABLE);
+
+        currentAgentName = new ValueField(notAvailable);
         currentAgentName.setName("agentName");
-        currentAgentId = new ValueField("${AGENT_ID}");
+        currentAgentId = new ValueField(notAvailable);
         currentAgentId.setName("agentId");
-        currentAgentCommandAddress = new ValueField("${AGENT_COMMAND_ADDRESS}");
+        currentAgentCommandAddress = new ValueField(notAvailable);
         currentAgentCommandAddress.setName("commandAddress");
-        currentAgentStartTime = new ValueField("${START_TIME}");
+        currentAgentStartTime = new ValueField(notAvailable);
         currentAgentStartTime.setName("startTime");
-        currentAgentStopTime = new ValueField("${STOP_TIME}");
+        currentAgentStopTime = new ValueField(notAvailable);
         currentAgentStopTime.setName("stopTime");
 
         SectionHeader backendSectionTitle = new SectionHeader(localize(LocaleResources.AGENT_INFO_BACKENDS_SECTION_TITLE));
@@ -189,7 +191,7 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         JScrollPane backendsTableScollPane = new JScrollPane(backendsTable);
 
         JLabel backendDescriptionLabel = new JLabel(localize(LocaleResources.AGENT_INFO_BACKEND_DESCRIPTION_LABEL));
-        backendDescription = new ValueField("${DESCRIPTION}");
+        backendDescription = new ValueField(notAvailable);
         backendDescription.setName("backendDescription");
 
         GroupLayout agentConfigurationPanelLayout = new GroupLayout(agentConfigurationPanel);

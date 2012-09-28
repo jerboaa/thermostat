@@ -121,6 +121,19 @@ public class AgentInformationDisplayControllerTest {
     }
 
     @Test
+    public void testDisplayWithNoAgents() {
+        AgentInformationDisplayView view = mock(AgentInformationDisplayView.class);
+        AgentInformationDisplayModel model = mock(AgentInformationDisplayModel.class);
+
+        when(model.getAgents()).thenReturn(Arrays.<AgentInformation>asList());
+
+        AgentInformationDisplayController controller = new AgentInformationDisplayController(model, view);
+        controller.showView();
+
+        verify(view).showDialog();
+    }
+
+    @Test
     public void testAddAgentAndBackendsOnInit() {
         AgentInformationDisplayView view = mock(AgentInformationDisplayView.class);
         AgentInformationDisplayModel model = mock(AgentInformationDisplayModel.class);

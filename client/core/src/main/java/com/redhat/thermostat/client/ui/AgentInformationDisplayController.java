@@ -78,7 +78,10 @@ public class AgentInformationDisplayController implements ActionListener<Configu
             view.addAgent(agentName);
         }
         view.showDialog();
-        updateViewFromModel(agentId);
+
+        if (agentId != null) {
+            updateViewFromModel(agentId);
+        }
     }
 
     public void hideView() {
