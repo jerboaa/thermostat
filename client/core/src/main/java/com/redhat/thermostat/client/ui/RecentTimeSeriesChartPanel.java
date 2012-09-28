@@ -101,6 +101,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
 
     private Component getControlsAndAdditionalDisplay() {
         JPanel container = new JPanel();
+        container.setOpaque(false);
 
         container.setLayout(new BorderLayout());
 
@@ -112,6 +113,7 @@ public class RecentTimeSeriesChartPanel extends JPanel {
 
     private Component getChartControls() {
         JPanel container = new JPanel();
+        container.setOpaque(false);
 
         final JTextField durationSelector = new JTextField(5);
         final JComboBox<TimeUnit> unitSelector = new JComboBox<>();
@@ -137,7 +139,9 @@ public class RecentTimeSeriesChartPanel extends JPanel {
 
     private Component getAdditionalDataDisplay() {
         JPanel panel = new JPanel(new GridBagLayout());
+        panel.setOpaque(false);
         labelContainer = new JPanel();
+        labelContainer.setOpaque(false);
         GridBagConstraints constraints = new GridBagConstraints();
         constraints.fill = GridBagConstraints.BOTH;
         constraints.anchor = GridBagConstraints.CENTER;

@@ -217,6 +217,7 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
         chart.getPlot().setOutlinePaint(new Color(0,0,0,0));
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        chartPanel.setOpaque(false);
 
         legendPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));
         legendPanel.setOpaque(false);

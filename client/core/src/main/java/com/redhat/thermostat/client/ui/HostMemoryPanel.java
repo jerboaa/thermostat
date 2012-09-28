@@ -133,6 +133,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
                 newCheckBox.setActionCommand(tag);
                 newCheckBox.setSelected(true);
                 newCheckBox.addActionListener(memoryCheckboxListener);
+                newCheckBox.setOpaque(false);
                 checkBoxes.put(tag, newCheckBox);
                 memoryCheckBoxPanel.add(newCheckBox);
 
@@ -241,14 +242,18 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     private void initializePanel() {
         visiblePanel = new JPanel();
+        visiblePanel.setOpaque(false);
 
         chart = createMemoryChart();
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        chartPanel.setOpaque(false);
 
         JLabel lblMemory = Components.header(localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
 
         JLabel totalMemoryLabel = Components.label(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+
+        memoryCheckBoxPanel.setOpaque(false);
 
         GroupLayout groupLayout = new GroupLayout(visiblePanel);
         groupLayout.setHorizontalGroup(
