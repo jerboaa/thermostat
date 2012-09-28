@@ -180,15 +180,11 @@ public final class AgentApplication extends BasicCommand {
         logger.fine("Agent id: " + agent.getId());
 
         final CountDownLatch shutdownLatch = new CountDownLatch(1);
-        Signal.handle(new Signal("INT"), new SignalHandler() {
-            public void handle(sun.misc.Signal sig) {
-                configServer.stopListening();
-                agent.stop();
-                logger.fine("Agent stopped.");       
-                shutdownLatch.countDown();
-            }
-        });
+        SignalHandler handler = new CustomSignalHandler(agent, configServer, logger, shutdownLatch);
+        Signal.handle(new Signal("INT"), handler);
+        Signal.handle(new Signal("TERM"), handler);
         try {
+            // Wait for either SIGINT or SIGTERM
             shutdownLatch.await();
             logger.fine("terminating agent cmd");
         } catch (InterruptedException e) {
@@ -247,6 +243,31 @@ public final class AgentApplication extends BasicCommand {
     @Override
     public Collection<ArgumentSpec> getAcceptedArguments() {
         return AgentOptionParser.getAcceptedArguments();
+    }
+    
+    // Does not need a reference of the enclosing type so lets declare this class static
+    private static class CustomSignalHandler implements SignalHandler {
+
+        private Agent agent;
+        private ConfigurationServer configServer;
+        private Logger logger;
+        private CountDownLatch shutdownLatch;
+        
+        CustomSignalHandler(Agent agent, ConfigurationServer configServer, Logger logger, CountDownLatch latch) {
+            this.agent = agent;
+            this.configServer = configServer;
+            this.logger = logger;
+            this.shutdownLatch = latch;
+        }
+        
+        @Override
+        public void handle(Signal arg0) {
+            configServer.stopListening();
+            agent.stop();
+            logger.fine("Agent stopped.");       
+            shutdownLatch.countDown();
+        }
+        
     }
 
 }
