@@ -91,6 +91,8 @@ import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
 
+import sun.misc.Signal;
+
 import com.redhat.thermostat.client.internal.MainView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.BasicView;
@@ -325,6 +327,7 @@ public class MainWindow extends JFrame implements MainView {
             new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
+    @SuppressWarnings("restriction")
     public MainWindow() {
         super();
 
@@ -376,6 +379,10 @@ public class MainWindow extends JFrame implements MainView {
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         addWindowListener(shutdownAction);
 
+        // Handle SIGTERM/SIGINT properly
+        Signal.handle(new Signal("TERM"), shutdownAction);
+        Signal.handle(new Signal("INT"), shutdownAction);
+        
         addComponentListener(new ComponentAdapter() {
 
             @Override
@@ -536,7 +543,8 @@ public class MainWindow extends JFrame implements MainView {
         return result;
     }
 
-    public class ShutdownClient extends WindowAdapter implements java.awt.event.ActionListener {
+    @SuppressWarnings("restriction")
+    public class ShutdownClient extends WindowAdapter implements java.awt.event.ActionListener, sun.misc.SignalHandler {
 
         @Override
         public void windowClosing(WindowEvent e) {
@@ -547,11 +555,17 @@ public class MainWindow extends JFrame implements MainView {
         public void actionPerformed(java.awt.event.ActionEvent e) {
             shutdown();
         }
+        
+        @Override
+        public void handle(Signal arg0) {
+            shutdown();
+        }
 
         private void shutdown() {
             dispose();
             fireViewAction(Action.SHUTDOWN);
         }
+
     }
 
     private static class AgentVmTreeCellRenderer extends DefaultTreeCellRenderer {
