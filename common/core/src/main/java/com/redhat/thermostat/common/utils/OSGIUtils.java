@@ -57,23 +57,28 @@ public class OSGIUtils {
     }
 
     /**
-     * Gets a service and never return null. It will throw a NullPointerException
-     * before it returns.
-     * 
-     * @param clazz
-     * @return The best matching service implementation for the requested clazz.
+     * Gets a service. If no matching service is available, throw a NullPointerException.
+     *
+     * @param serviceType the class for the service
+     * @return The best matching service implementation for the requested serviceType.
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public <E extends Object> E getService(Class<E> clazz) {
+    public <E extends Object> E getService(Class<E> serviceType) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceReference ref = ctx.getServiceReference(clazz.getName());
+        ServiceReference ref = ctx.getServiceReference(serviceType.getName());
         return (E) ctx.getService(ref);
     }
     
+    /**
+     * Gets a service. If no matching service is available, return {@code null}.
+     *
+     * @param serviceType the class for the service
+     * @return The best matching service implementation for the requested serviceType or null.
+     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public <E extends Object> E getServiceAllowNull(Class<E> clazz) {
+    public <E extends Object> E getServiceAllowNull(Class<E> serviceType) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceReference ref = ctx.getServiceReference(clazz.getName());
+        ServiceReference ref = ctx.getServiceReference(serviceType.getName());
         if (ref == null) {
             return null;
         }
@@ -82,21 +87,21 @@ public class OSGIUtils {
     
     public <E extends Object> void ungetService(Object service) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        Class<?> clazz = service.getClass();
+        Class<?> serviceType = service.getClass();
         // FIXME the reference returned now may be different from a previous invocation
-        ServiceReference ref = ctx.getServiceReference(clazz.getName());
+        ServiceReference ref = ctx.getServiceReference(serviceType.getName());
         ctx.ungetService(ref);
     }
 
     @SuppressWarnings("rawtypes")
-    public <E extends Object> ServiceRegistration registerService(Class<? extends E> serviceClass, E service) {
-        return registerService(serviceClass, service, null);
+    public <E extends Object> ServiceRegistration registerService(Class<? extends E> serviceType, E service) {
+        return registerService(serviceType, service, null);
     }
         
     @SuppressWarnings("rawtypes")
-    public <E extends Object> ServiceRegistration registerService(Class<? extends E> serviceClass, E service, Dictionary<String, ?> properties) {
+    public <E extends Object> ServiceRegistration registerService(Class<? extends E> serviceType, E service, Dictionary<String, ?> properties) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        return ctx.registerService(serviceClass.getName(), service, properties);
+        return ctx.registerService(serviceType.getName(), service, properties);
     }
 
 }
