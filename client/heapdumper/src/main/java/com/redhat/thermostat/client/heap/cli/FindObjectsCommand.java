@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap.cli;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
@@ -77,7 +78,18 @@ public class FindObjectsCommand extends SimpleCommand {
             ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
             return;
         }
-        String searchTerm = ctx.getArguments().getNonOptionArguments().get(0);
+
+        List<String> terms = ctx.getArguments().getNonOptionArguments();
+        if (terms.size() == 0) {
+            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.SEARCH_TERM_REQUIRED));
+            return;
+        }
+        String searchTerm = terms.get(0);
+        if (searchTerm.trim().length() == 0) {
+            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.SEARCH_TERM_REQUIRED));
+            return;
+        }
+
         String limitArg = ctx.getArguments().getArgument(LIMIT_ARG);
         int limit = parseLimit(limitArg);
         Collection<String> results = heapDump.searchObjects(searchTerm, limit);
