@@ -61,7 +61,6 @@ import com.redhat.thermostat.launcher.Launcher;
 public class ServiceCommand extends SimpleCommand implements ActionListener<ApplicationState> {
     
     private static final String NAME = "service";
-    private static final String USAGE = "thermostat service";
 
     private List<ActionListener<ApplicationState>> listeners;
 
@@ -116,11 +115,6 @@ public class ServiceCommand extends SimpleCommand implements ActionListener<Appl
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

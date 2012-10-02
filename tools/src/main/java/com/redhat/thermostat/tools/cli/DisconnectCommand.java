@@ -51,7 +51,6 @@ import com.redhat.thermostat.tools.Translate;
 public class DisconnectCommand extends SimpleCommand {
     
     private static final String NAME = "disconnect";
-    private static final String USAGE = NAME;
 
     @SuppressWarnings("rawtypes")
     @Override
@@ -74,11 +73,6 @@ public class DisconnectCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

@@ -58,7 +58,6 @@ public class FindRootCommand extends SimpleCommand {
 
     private static final String ALL_ARG = "all";
     private static final String NAME = "find-root";
-    private static final String USAGE = "thermostat find-root --heapId <heap> --objectId <object> [-a]";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
@@ -115,11 +114,6 @@ public class FindRootCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

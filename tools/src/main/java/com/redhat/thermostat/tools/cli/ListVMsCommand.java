@@ -55,8 +55,6 @@ public class ListVMsCommand extends SimpleCommand {
 
     private static final String NAME = "list-vms";
 
-    private static final String USAGE = "thermostat list-vms [-d <url> [-u <username> -p <password>]]";
-
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
@@ -78,11 +76,6 @@ public class ListVMsCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

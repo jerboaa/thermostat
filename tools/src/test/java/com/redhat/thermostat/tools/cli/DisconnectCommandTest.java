@@ -152,9 +152,9 @@ public class DisconnectCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        String expected = "disconnect";
-        assertEquals(expected, cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

@@ -101,8 +101,9 @@ public class GUIClientCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        assertEquals("thermostat gui", cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

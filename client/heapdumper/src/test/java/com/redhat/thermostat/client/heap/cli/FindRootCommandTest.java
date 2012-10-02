@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -191,8 +192,9 @@ public class FindRootCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        assertEquals("thermostat find-root --heapId <heap> --objectId <object> [-a]", cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

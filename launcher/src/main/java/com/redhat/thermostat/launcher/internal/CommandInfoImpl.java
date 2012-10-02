@@ -53,9 +53,9 @@ public class CommandInfoImpl implements CommandInfo {
     private static final Logger logger = LoggingUtils.getLogger(CommandInfoSource.class);
     private static final String PROPERTY_BUNDLES = "bundles";
     private static final String PROPERTY_DESC = "description";
+    private static final String PROPERTY_USAGE = "usage";
 
-    private String name;
-    private String description;
+    private String name, description, usage;
     private List<String> dependencies;
 
     CommandInfoImpl(String name, Properties properties, String thermostatHome) {
@@ -66,6 +66,8 @@ public class CommandInfoImpl implements CommandInfo {
                 learnDependencies(entry, thermostatHome);
             } else if (key.equals(PROPERTY_DESC)) {
                 description = properties.getProperty(key);
+            } else if (key.equals(PROPERTY_USAGE)) {
+                usage = properties.getProperty(key);
             }
             
         }
@@ -95,6 +97,10 @@ public class CommandInfoImpl implements CommandInfo {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getUsage() {
+        return usage;
     }
 
     public List<String> getDependencyResourceNames() {

@@ -210,10 +210,9 @@ public class VMInfoCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        String expected = "thermostat vm-info [--vmId <vm>] [--hostId <host>]";
-
-        assertEquals(expected, cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

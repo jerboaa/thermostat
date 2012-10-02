@@ -234,8 +234,9 @@ public class ShellCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        assertEquals("thermostat shell", cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

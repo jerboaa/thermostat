@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -157,8 +158,9 @@ public class ObjectInfoCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        assertEquals("thermostat object-info --heapId <heap> --objectId <object>", cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

@@ -8,6 +8,8 @@ public interface CommandInfo {
 
     public String getDescription();
 
+    public String getUsage();
+
     public List<String> getDependencyResourceNames();
 
 }

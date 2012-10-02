@@ -70,8 +70,6 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
 
     private static final String NAME = "shell";
 
-    private static final String USAGE = "thermostat shell";
-
     private static final String PROMPT = "Thermostat > ";
 
     private HistoryProvider historyProvider;
@@ -171,11 +169,6 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

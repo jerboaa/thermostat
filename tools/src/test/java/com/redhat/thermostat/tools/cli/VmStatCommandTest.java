@@ -296,8 +296,9 @@ public class VmStatCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        assertEquals("thermostat vm-stat --hostId <host> --vmId <vm>", cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getUsage());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

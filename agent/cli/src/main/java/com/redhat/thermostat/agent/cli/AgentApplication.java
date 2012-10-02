@@ -90,10 +90,6 @@ public final class AgentApplication extends BasicCommand {
 
     private static final String NAME = "agent";
 
-    // TODO: Use LocaleResources for i18n-ized strings.
-
-    private static final String USAGE = "thermostat agent -d <url> [-u <user> -p <password>] [-s] [--debug]";
-
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
     
@@ -227,11 +223,6 @@ public final class AgentApplication extends BasicCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

@@ -62,7 +62,6 @@ import com.redhat.thermostat.common.utils.OSGIUtils;
 public class PingCommand extends SimpleCommand {
 
     private static final String NAME = "ping";
-    private static final String USAGE = "ping <agentId>";
 
     private class PongListener implements RequestResponseListener {
 
@@ -177,11 +176,6 @@ public class PingCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

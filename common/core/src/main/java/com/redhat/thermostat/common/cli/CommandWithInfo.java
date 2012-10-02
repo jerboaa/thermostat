@@ -6,9 +6,10 @@ public abstract class CommandWithInfo implements Command {
 
     private CommandInfo info;
     private static final String noDesc = "Description not available.";
+    private static final String noUsage = "Usage not available.";
 
     void setCommandInfo(CommandInfo info) {
-        this.info = info;
+        this.info = info; 
     }
 
     @Override
@@ -17,6 +18,7 @@ public abstract class CommandWithInfo implements Command {
         try {
             desc = info.getDescription();
         } catch (NullPointerException infoWasNotSet) {}
+
         if (desc == null) {
             desc = noDesc;
         }
@@ -25,8 +27,14 @@ public abstract class CommandWithInfo implements Command {
 
     @Override
     public String getUsage() {
-        // TODO Auto-generated method stub
-        return null;
+        String usage = null;
+        try {
+            usage = info.getUsage();
+        } catch (NullPointerException infoNotSet) {}
+        if (usage == null) {
+            usage = noUsage;
+        }
+        return usage;
     }
 
     @Override

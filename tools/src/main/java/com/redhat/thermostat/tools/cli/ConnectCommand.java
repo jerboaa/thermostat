@@ -64,7 +64,6 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class ConnectCommand extends SimpleCommand {
 
     private static final String NAME = "connect";
-    private static final String USAGE = "connect -d <url> [-u <username>] [-p <password>]";
     
     private ClientPreferences prefs;
     
@@ -98,11 +97,6 @@ public class ConnectCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

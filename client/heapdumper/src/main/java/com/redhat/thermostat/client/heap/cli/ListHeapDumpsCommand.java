@@ -61,7 +61,6 @@ import com.redhat.thermostat.common.model.HeapInfo;
 public class ListHeapDumpsCommand extends SimpleCommand {
 
     private static final String NAME = "list-heap-dumps";
-    private static final String USAGE = "same_as_desc";
 
     // TODO localize
     private static final String[] COLUMN_NAMES = {
@@ -74,11 +73,6 @@ public class ListHeapDumpsCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

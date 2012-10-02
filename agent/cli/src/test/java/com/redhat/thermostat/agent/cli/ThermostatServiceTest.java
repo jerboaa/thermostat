@@ -67,9 +67,9 @@ public class ThermostatServiceTest {
     }
 
     @Test
-    public void testUsage() {
-        String usage = thermostatService.getUsage();
-        assertEquals("thermostat service", usage);
+    public void testDescAndUsage() {
+        assertNotNull(thermostatService.getDescription());
+        assertNotNull(thermostatService.getUsage());
     }
 
     @Test

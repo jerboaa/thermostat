@@ -60,8 +60,6 @@ public class StorageCommand extends BasicCommand {
 
     private static final String NAME = "storage";
 
-    private static final String USAGE = "thermostat storage <--start|--stop>";
-
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
     
@@ -183,11 +181,6 @@ public class StorageCommand extends BasicCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

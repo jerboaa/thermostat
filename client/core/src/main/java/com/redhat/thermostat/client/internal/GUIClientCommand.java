@@ -82,11 +82,6 @@ public class GUIClientCommand extends SimpleCommand implements OSGiContext {
     }
 
     @Override
-    public String getUsage() {
-        return "thermostat gui";
-    }
-
-    @Override
     public Options getOptions() {
         return new Options();
     }

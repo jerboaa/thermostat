@@ -72,9 +72,9 @@ public class AgentApplicationTest {
     }
 
     @Test
-    public void testUsage() {
-        String usage = agent.getUsage();
-        assertEquals("thermostat agent -d <url> [-u <user> -p <password>] [-s] [--debug]", usage);
+    public void testDescAndUsage() {
+        assertNotNull(agent.getDescription());
+        assertNotNull(agent.getUsage());
     }
 
     @Test

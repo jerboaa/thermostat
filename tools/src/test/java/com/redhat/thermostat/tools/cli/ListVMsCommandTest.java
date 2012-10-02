@@ -161,10 +161,9 @@ public class ListVMsCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        String expected = "thermostat list-vms [-d <url> [-u <username> -p <password>]]";
-
-        assertEquals(expected, cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test

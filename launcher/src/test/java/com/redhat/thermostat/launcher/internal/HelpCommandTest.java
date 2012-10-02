@@ -37,6 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,10 +59,7 @@ public class HelpCommandTest {
 
     @Before
     public void setUp() {
-
         ctxFactory = new TestCommandContextFactory();
-
-
     }
 
     @After
@@ -199,10 +197,9 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void testUsage() {
+    public void testDescAndUsage() {
         HelpCommand cmd = new HelpCommand();
-        String expected = "thermostat help [command-name]";
-
-        assertEquals(expected, cmd.getUsage());
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 }

@@ -58,7 +58,6 @@ import com.sun.tools.hat.internal.model.Snapshot;
 public class ObjectInfoCommand extends SimpleCommand {
 
     private static final String NAME = "object-info";
-    private static final String USAGE = "thermostat object-info --heapId <heap> --objectId <object>";
 
     private Snapshot snapshot;
 
@@ -119,11 +118,6 @@ public class ObjectInfoCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getUsage() {
-        return USAGE;
     }
 
     @Override

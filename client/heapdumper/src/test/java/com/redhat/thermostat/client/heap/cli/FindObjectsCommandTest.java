@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
@@ -136,8 +137,9 @@ public class FindObjectsCommandTest {
     }
 
     @Test
-    public void testUsage() {
-        assertEquals("thermostat find-objects --heapId <id> --limit <limit> <pattern>", cmd.getUsage());
+    public void testDescAndUsage() {
+        assertNotNull(cmd.getDescription());
+        assertNotNull(cmd.getUsage());
     }
 
     @Test
