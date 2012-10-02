@@ -50,16 +50,12 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
-import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 public class ListVMsCommand extends SimpleCommand {
 
     private static final String NAME = "list-vms";
 
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_LIST_VMS_DESCRIPTION);
-
-    private static final String USAGE = DESCRIPTION;
+    private static final String USAGE = "thermostat list-vms [-d <url> [-u <username> -p <password>]]";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
@@ -82,11 +78,6 @@ public class ListVMsCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
     }
 
     @Override

@@ -136,13 +136,8 @@ public class FindObjectsCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("Finds objects in a heapdump", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
-        assertEquals("Finds objects in a heapdump", cmd.getUsage());
+        assertEquals("thermostat find-objects --heapId <id> --limit <limit> <pattern>", cmd.getUsage());
     }
 
     @Test

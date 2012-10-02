@@ -199,15 +199,9 @@ public class HelpCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        HelpCommand cmd = new HelpCommand();
-        assertEquals("show help for a given command or help overview", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
         HelpCommand cmd = new HelpCommand();
-        String expected = "show help for a given command or help overview";
+        String expected = "thermostat help [command-name]";
 
         assertEquals(expected, cmd.getUsage());
     }

@@ -63,7 +63,6 @@ public class PingCommand extends SimpleCommand {
 
     private static final String NAME = "ping";
     private static final String USAGE = "ping <agentId>";
-    private static final String DESC = "Using the Command Channel, send a ping to a running agent.";
 
     private class PongListener implements RequestResponseListener {
 
@@ -178,11 +177,6 @@ public class PingCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESC;
     }
 
     @Override

@@ -49,7 +49,7 @@ import java.util.logging.Logger;
 public class CommandInfoSource {
 
     private static final Logger logger = Logger.getLogger(CommandInfoSource.class.getSimpleName());
-    private Map<String, CommandInfo> commands;
+    private Map<String, CommandInfoImpl> commands;
 
     CommandInfoSource(String thermostatHome) {
         commands = new HashMap<>();
@@ -77,7 +77,7 @@ public class CommandInfoSource {
                     logger.warning("Issue loading properties file: " + file.getPath());
                 }
                 String commandName = deduceCommandName(file.getName());
-                commands.put(commandName, new CommandInfo(commandName, commandProps, thermostatHome));
+                commands.put(commandName, new CommandInfoImpl(commandName, commandProps, thermostatHome));
             }
         } else {
             logger.warning("Command configuration directory not found or not a directory: " + dir.getPath());
@@ -89,11 +89,11 @@ public class CommandInfoSource {
         return fileName.substring(0, dotIndex);
     }
 
-    public CommandInfo getCommandInfo(String name) {
+    public CommandInfoImpl getCommandInfo(String name) {
         return commands.get(name);
     }
 
-    public Collection<CommandInfo> getCommandInfos() {
+    public Collection<CommandInfoImpl> getCommandInfos() {
         return commands.values();
     }
 

@@ -52,8 +52,7 @@ import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class DumpHeapCommand extends SimpleCommand {
     private static final String NAME = "dump-heap";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_DUMP_HEAP_DESCRIPTION);
-    private static final String USAGE = DESCRIPTION;
+    private static final String USAGE = "thermostat dump-heap --hostId <host> --vmId <vm>";
 
     private final OSGIUtils serviceProvider;
     private final HeapDumperCommand implementation;
@@ -70,11 +69,6 @@ public class DumpHeapCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
     }
 
     @Override

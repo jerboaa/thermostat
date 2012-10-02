@@ -244,17 +244,10 @@ public class DBServiceTest {
     }
 
     @Test
-    public void testDescription() {
-        StorageCommand dbService = new StorageCommand();
-        String desc = dbService.getDescription();
-        assertEquals("starts and stops the thermostat storage", desc);
-    }
-
-    @Test
     public void testUsage() {
         StorageCommand dbService = new StorageCommand();
         String usage = dbService.getUsage();
-        assertEquals("starts and stops the thermostat storage", usage);
+        assertEquals("thermostat storage <--start|--stop>", usage);
     }
 
     @Test

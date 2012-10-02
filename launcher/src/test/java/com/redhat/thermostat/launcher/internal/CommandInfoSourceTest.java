@@ -93,7 +93,7 @@ public class CommandInfoSourceTest {
     @Test
     public void testGetCommandInfo() {
         CommandInfoSource bundles = new CommandInfoSource(tempThermostatHome.toString());
-        CommandInfo info = bundles.getCommandInfo("foo");
+        CommandInfoImpl info = bundles.getCommandInfo("foo");
         assertNotNull(info);
         assertEquals("foo", info.getName());
     }
@@ -101,10 +101,10 @@ public class CommandInfoSourceTest {
     @Test
     public void testGetCommandInfos() {
         CommandInfoSource bundles = new CommandInfoSource(tempThermostatHome.toString());
-        Collection<CommandInfo> infos = bundles.getCommandInfos();
+        Collection<CommandInfoImpl> infos = bundles.getCommandInfos();
         assertNotNull(infos);
         assertEquals(1, infos.size());
-        CommandInfo info = infos.iterator().next();
+        CommandInfoImpl info = infos.iterator().next();
         assertNotNull(info);
         assertEquals("foo", info.getName());
     }

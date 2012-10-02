@@ -61,8 +61,6 @@ import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 public class ShellCommand extends SimpleCommand implements OSGiContext {
 
@@ -72,13 +70,10 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
 
     private static final String NAME = "shell";
 
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SHELL_DESCRIPTION);
-
-    private static final String USAGE = DESCRIPTION;
+    private static final String USAGE = "thermostat shell";
 
     private static final String PROMPT = "Thermostat > ";
 
-    //private CommandContext context;
     private HistoryProvider historyProvider;
 
     private BundleContext bundleContext;
@@ -176,11 +171,6 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
     }
 
     @Override

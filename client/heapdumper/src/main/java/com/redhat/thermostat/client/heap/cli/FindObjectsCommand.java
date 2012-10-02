@@ -59,7 +59,7 @@ public class FindObjectsCommand extends SimpleCommand {
     private static final String HEAP_ID_ARG = "heapId";
     private static final String LIMIT_ARG = "limit";
     private static final String NAME = "find-objects";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_FIND_OBJECTS_DESCRIPTION);
+    private static final String USAGE = "thermostat find-objects --heapId <id> --limit <limit> <pattern>";
     private static final String HEADER_OBJECT_ID = Translate.localize(LocaleResources.HEADER_OBJECT_ID);
     private static final String HEADER_TYPE = Translate.localize(LocaleResources.HEADER_OBJECT_TYPE);
     private static final int DEFAULT_LIMIT = 10;
@@ -122,13 +122,8 @@ public class FindObjectsCommand extends SimpleCommand {
     }
 
     @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
-
-    @Override
     public String getUsage() {
-        return DESCRIPTION;
+        return USAGE;
     }
 
     @Override

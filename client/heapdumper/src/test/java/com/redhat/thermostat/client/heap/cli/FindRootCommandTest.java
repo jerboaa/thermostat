@@ -191,13 +191,8 @@ public class FindRootCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("finds the shortest path from an object to a GC root", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
-        assertEquals("finds the shortest path from an object to a GC root", cmd.getUsage());
+        assertEquals("thermostat find-root --heapId <heap> --objectId <object> [-a]", cmd.getUsage());
     }
 
     @Test

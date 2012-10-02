@@ -47,8 +47,6 @@ import com.redhat.thermostat.agent.cli.db.DBConfig;
 import com.redhat.thermostat.agent.cli.db.DBOptionParser;
 import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
 import com.redhat.thermostat.agent.cli.db.MongoProcessRunner;
-import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.agent.cli.impl.locale.Translate;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -62,9 +60,7 @@ public class StorageCommand extends BasicCommand {
 
     private static final String NAME = "storage";
 
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_STORAGE_DESCRIPTION);
-
-    private static final String USAGE = DESCRIPTION;
+    private static final String USAGE = "thermostat storage <--start|--stop>";
 
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
@@ -187,11 +183,6 @@ public class StorageCommand extends BasicCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
     }
 
     @Override

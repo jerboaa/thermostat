@@ -44,21 +44,28 @@ import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class CommandInfo {
 
-    private static final Logger logger = Logger.getLogger(CommandInfoSource.class.getSimpleName());
+public class CommandInfoImpl implements CommandInfo {
+
+    private static final Logger logger = LoggingUtils.getLogger(CommandInfoSource.class);
     private static final String PROPERTY_BUNDLES = "bundles";
+    private static final String PROPERTY_DESC = "description";
 
     private String name;
+    private String description;
     private List<String> dependencies;
 
-    CommandInfo(String name, Properties properties, String thermostatHome) {
+    CommandInfoImpl(String name, Properties properties, String thermostatHome) {
         this.name = name;
         for (Entry<Object,Object> entry: properties.entrySet()) {
             String key = (String) entry.getKey();
             if (key.equals(PROPERTY_BUNDLES)) {
                 learnDependencies(entry, thermostatHome);
+            } else if (key.equals(PROPERTY_DESC)) {
+                description = properties.getProperty(key);
             }
             
         }
@@ -86,7 +93,11 @@ public class CommandInfo {
         return name;
     }
 
-    List<String> getDependencyResourceNames() {
+    public String getDescription() {
+        return description;
+    }
+
+    public List<String> getDependencyResourceNames() {
         return dependencies;
     }
 }

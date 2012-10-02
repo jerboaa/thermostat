@@ -72,15 +72,9 @@ public class AgentApplicationTest {
     }
 
     @Test
-    public void testDescription() {
-        String description = agent.getDescription();
-        assertEquals("starts and stops the thermostat agent", description);
-    }
-
-    @Test
     public void testUsage() {
         String usage = agent.getUsage();
-        assertEquals("starts and stops the thermostat agent", usage);
+        assertEquals("thermostat agent -d <url> [-u <user> -p <password>] [-s] [--debug]", usage);
     }
 
     @Test

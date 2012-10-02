@@ -67,7 +67,7 @@ public class DumpHeapCommandTest {
         Command command = new DumpHeapCommand();
         assertEquals("dump-heap", command.getName());
         assertNotNull(command.getDescription());
-        assertNotNull(command.getUsage());
+        assertEquals("thermostat dump-heap --hostId <host> --vmId <vm>", command.getUsage());
     }
 
     @Test

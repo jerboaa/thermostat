@@ -58,8 +58,7 @@ public class HelpCommand extends SimpleCommand {
 
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
     private static final String NAME = "help";
-    private static final String DESCRIPTION = "show help for a given command or help overview";
-    private static final String USAGE = DESCRIPTION;
+    private static final String USAGE = "thermostat help [command-name]";
 
     private static final CommandComparator comparator = new CommandComparator();
 
@@ -116,11 +115,6 @@ public class HelpCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
     }
 
     @Override

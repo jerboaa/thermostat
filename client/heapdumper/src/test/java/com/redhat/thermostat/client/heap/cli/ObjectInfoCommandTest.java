@@ -157,13 +157,8 @@ public class ObjectInfoCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("prints information about an object in a heap dump", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
-        assertEquals("prints information about an object in a heap dump", cmd.getUsage());
+        assertEquals("thermostat object-info --heapId <heap> --objectId <object>", cmd.getUsage());
     }
 
     @Test

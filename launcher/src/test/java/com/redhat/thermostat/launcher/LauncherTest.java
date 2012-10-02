@@ -194,7 +194,7 @@ public class LauncherTest {
     @Test
     public void testMainNoArgs() {
         String expected = "list of commands:\n\n"
-                        + " help          show help for a given command or help overview\n"
+                        + " help          Description not available.\n" // We haven't actually set up CommandInfo here.
                         + " basic         nothing that means anything\n"
                         + " test1         description 1\n"
                         + " test2         description 2\n"
@@ -213,7 +213,7 @@ public class LauncherTest {
     public void testMainBadCommand1() {
         String expected = "unknown command '--help'\n"
             + "list of commands:\n\n"
-            + " help          show help for a given command or help overview\n"
+            + " help          Description not available.\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -225,7 +225,7 @@ public class LauncherTest {
     public void testMainBadCommand2() {
         String expected = "unknown command '-help'\n"
             + "list of commands:\n\n"
-            + " help          show help for a given command or help overview\n"
+            + " help          Description not available.\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -237,7 +237,7 @@ public class LauncherTest {
     public void testMainBadCommand3() {
         String expected = "unknown command 'foobarbaz'\n"
             + "list of commands:\n\n"
-            + " help          show help for a given command or help overview\n"
+            + " help          Description not available.\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -249,7 +249,7 @@ public class LauncherTest {
     public void testMainBadCommand4() {
         String expected = "unknown command 'foo'\n"
             + "list of commands:\n\n"
-            + " help          show help for a given command or help overview\n"
+            + " help          Description not available.\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"

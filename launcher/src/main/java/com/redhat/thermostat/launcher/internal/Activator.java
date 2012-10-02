@@ -74,7 +74,7 @@ public class Activator extends CommandLoadingBundleActivator {
         }
 
         private void informRegistryAboutCommandDependencies(CommandInfoSource commands, OSGiRegistry bundleService) {
-            for (CommandInfo info : commands.getCommandInfos()) {
+            for (CommandInfoImpl info : commands.getCommandInfos()) {
                 bundleService.setCommandBundleDependencies(info.getName(),
                     info.getDependencyResourceNames());
             }

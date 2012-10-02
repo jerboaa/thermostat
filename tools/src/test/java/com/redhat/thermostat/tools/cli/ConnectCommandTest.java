@@ -163,11 +163,6 @@ public class ConnectCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("persistenly connect to a database", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
         String expected = "connect -d <url> [-u <username>] [-p <password>]";
 

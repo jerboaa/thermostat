@@ -57,17 +57,11 @@ import com.redhat.thermostat.common.model.HeapInfo;
 public class ShowHeapHistogramCommand extends SimpleCommand {
 
     private static final String NAME = "show-heap-histogram";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SHOW_HEAP_HISTOGRAM_DESCRIPTION);
-    private static final String USAGE = DESCRIPTION;
+    private static final String USAGE = "same as desc";
 
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
     }
 
     @Override

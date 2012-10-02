@@ -152,11 +152,6 @@ public class DisconnectCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("disconnect from the currently used database", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
         String expected = "disconnect";
         assertEquals(expected, cmd.getUsage());

@@ -101,13 +101,8 @@ public class GUIClientCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("launches the GUI client", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
-        assertEquals("launches the GUI client", cmd.getUsage());
+        assertEquals("thermostat gui", cmd.getUsage());
     }
 
     @Test

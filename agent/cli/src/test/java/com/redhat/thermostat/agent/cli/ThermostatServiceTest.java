@@ -67,15 +67,9 @@ public class ThermostatServiceTest {
     }
 
     @Test
-    public void testDescription() {
-        String desc = thermostatService.getDescription();
-        assertEquals("starts thermostat storage and agent", desc);
-    }
-
-    @Test
     public void testUsage() {
         String usage = thermostatService.getUsage();
-        assertEquals("starts thermostat storage and agent", usage);
+        assertEquals("thermostat service", usage);
     }
 
     @Test

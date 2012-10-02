@@ -63,7 +63,7 @@ public class VMStatCommand extends SimpleCommand {
     private static final Logger log = Logger.getLogger(VMStatCommand.class.getName());
 
     private static final String CMD_NAME = "vm-stat";
-    private static final String CMD_DESCRIPTION = Translate.localize(LocaleResources.COMMAND_VM_STAT_DESCRIPTION);
+    private static final String USAGE = "thermostat vm-stat --hostId <host> --vmId <vm>";
 
     @Override
     public void run(final CommandContext ctx) throws CommandException {
@@ -123,13 +123,8 @@ public class VMStatCommand extends SimpleCommand {
     }
 
     @Override
-    public String getDescription() {
-        return CMD_DESCRIPTION;
-    }
-
-    @Override
     public String getUsage() {
-        return CMD_DESCRIPTION;
+        return USAGE;
     }
 
     @Override

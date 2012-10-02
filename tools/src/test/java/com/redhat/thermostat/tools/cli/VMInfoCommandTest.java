@@ -184,11 +184,6 @@ public class VMInfoCommandTest {
         assertEquals("vm-info", cmd.getName());
     }
 
-    @Test
-    public void testDescription() {
-        assertEquals("shows basic information about a VM", cmd.getDescription());
-    }
-
     @Bug(id="1046",
             summary="CLI vm-info display wrong stop time for living vms",
             url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1046")
@@ -216,7 +211,7 @@ public class VMInfoCommandTest {
 
     @Test
     public void testUsage() {
-        String expected = "shows basic information about a VM";
+        String expected = "thermostat vm-info [--vmId <vm>] [--hostId <host>]";
 
         assertEquals(expected, cmd.getUsage());
     }

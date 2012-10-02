@@ -37,13 +37,13 @@
 package com.redhat.thermostat.common.tools;
 
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CommandWithInfo;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 /**
  * Common base class for all daemon and application
  */
-public abstract class BasicCommand implements Command {
+public abstract class BasicCommand extends CommandWithInfo {
 
     private ActionNotifier<ApplicationState> notifier;
     private boolean storageRequired;

@@ -234,13 +234,8 @@ public class ShellCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("launches the Thermostat interactive shell", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
-        assertEquals("launches the Thermostat interactive shell", cmd.getUsage());
+        assertEquals("thermostat shell", cmd.getUsage());
     }
 
     @Test

@@ -42,8 +42,6 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.internal.osgi.ApplicationServiceProvider;
 import com.redhat.thermostat.client.internal.osgi.ContextActionServiceProvider;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -84,13 +82,8 @@ public class GUIClientCommand extends SimpleCommand implements OSGiContext {
     }
 
     @Override
-    public String getDescription() {
-        return Translate.localize(LocaleResources.COMMAND_GUI_DESCRIPTION);
-    }
-
-    @Override
     public String getUsage() {
-        return getDescription();
+        return "thermostat gui";
     }
 
     @Override

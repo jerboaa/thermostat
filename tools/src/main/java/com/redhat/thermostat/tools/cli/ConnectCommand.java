@@ -65,7 +65,6 @@ public class ConnectCommand extends SimpleCommand {
 
     private static final String NAME = "connect";
     private static final String USAGE = "connect -d <url> [-u <username>] [-p <password>]";
-    private static final String DESC = Translate.localize(LocaleResources.COMMAND_CONNECT_DESCRIPTION);
     
     private ClientPreferences prefs;
     
@@ -99,11 +98,6 @@ public class ConnectCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESC;
     }
 
     @Override

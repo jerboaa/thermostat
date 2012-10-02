@@ -61,8 +61,7 @@ import com.redhat.thermostat.common.utils.StreamUtils;
 public class SaveHeapDumpToFileCommand extends SimpleCommand {
 
     private static final String NAME = "save-heap-dump-to-file";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_DESCRIPTION);
-    private static final String USAGE = DESCRIPTION;
+    private static final String USAGE = "same as desc";
 
     private static final String HEAP_ID_ARGUMENT = "heapId";
     private static final String FILE_NAME_ARGUMENT = "file";
@@ -80,11 +79,6 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESCRIPTION;
     }
 
     @Override

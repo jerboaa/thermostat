@@ -57,8 +57,8 @@ import com.sun.tools.hat.internal.model.Snapshot;
 
 public class ObjectInfoCommand extends SimpleCommand {
 
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_DESCRIPTION);
     private static final String NAME = "object-info";
+    private static final String USAGE = "thermostat object-info --heapId <heap> --objectId <object>";
 
     private Snapshot snapshot;
 
@@ -122,13 +122,8 @@ public class ObjectInfoCommand extends SimpleCommand {
     }
 
     @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
-
-    @Override
     public String getUsage() {
-        return DESCRIPTION;
+        return USAGE;
     }
 
     @Override

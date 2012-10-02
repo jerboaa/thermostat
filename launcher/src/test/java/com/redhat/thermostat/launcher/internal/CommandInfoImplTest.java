@@ -50,7 +50,7 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-public class CommandInfoTest {
+public class CommandInfoImplTest {
 
     private Path tempThermostatHome, someJarName1, someJarName2, missingJarName;
 
@@ -86,7 +86,7 @@ public class CommandInfoTest {
     public void verifyGetName() {
         Properties props = new Properties();
         String name = "name";
-        CommandInfo info = new CommandInfo(name, props, "");
+        CommandInfoImpl info = new CommandInfoImpl(name, props, "");
 
         String commandName = info.getName();
         assertEquals(name, commandName);
@@ -97,7 +97,7 @@ public class CommandInfoTest {
         Properties props = new Properties();
         props.setProperty("bundles", someJarName1.getFileName().toString());
         String name = "name";
-        CommandInfo info = new CommandInfo(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
 
         List<String> resources = info.getDependencyResourceNames();
         assertEquals(1, resources.size());
@@ -109,7 +109,7 @@ public class CommandInfoTest {
         Properties props = new Properties();
         props.setProperty("bundles", someJarName1.getFileName() + "," + someJarName2.getFileName());
         String name = "name";
-        CommandInfo info = new CommandInfo(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
 
         List<String> resources = info.getDependencyResourceNames();
         assertEquals(2, resources.size());
@@ -122,10 +122,22 @@ public class CommandInfoTest {
         Properties props = new Properties();
         props.setProperty("bundles", missingJarName.getFileName().toString());
         String name = "name";
-        CommandInfo info = new CommandInfo(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
 
         List<String> resources = info.getDependencyResourceNames();
         assertEquals(0, resources.size());
         assertFalse(resources.contains(resolvedJar(missingJarName)));
+    }
+
+    @Test
+    public void verifyGetDescription() {
+        Properties props = new Properties();
+        String name = "name";
+        String desc = "desc";
+        props.put("description", desc);
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+
+        String commandDesc = info.getDescription();
+        assertEquals(desc, commandDesc);
     }
 }

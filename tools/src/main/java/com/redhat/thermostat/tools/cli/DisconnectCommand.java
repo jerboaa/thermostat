@@ -52,8 +52,6 @@ public class DisconnectCommand extends SimpleCommand {
     
     private static final String NAME = "disconnect";
     private static final String USAGE = NAME;
-    private static final String DESC = Translate.localize(LocaleResources.COMMAND_DISCONNECT_DESCRIPTION);
-    
 
     @SuppressWarnings("rawtypes")
     @Override
@@ -76,11 +74,6 @@ public class DisconnectCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public String getDescription() {
-        return DESC;
     }
 
     @Override

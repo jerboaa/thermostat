@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.cli;
 
-public abstract class SimpleCommand implements Command {
+public abstract class SimpleCommand extends CommandWithInfo {
 
     @Override
     public boolean isStorageRequired() {

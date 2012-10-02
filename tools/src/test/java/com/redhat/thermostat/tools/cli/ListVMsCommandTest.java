@@ -161,13 +161,8 @@ public class ListVMsCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("lists all currently monitored VMs", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
-        String expected = "lists all currently monitored VMs";
+        String expected = "thermostat list-vms [-d <url> [-u <username> -p <password>]]";
 
         assertEquals(expected, cmd.getUsage());
     }

@@ -60,8 +60,7 @@ import com.redhat.thermostat.tools.Translate;
 public class VMInfoCommand extends SimpleCommand {
 
     private static final String NAME = "vm-info";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_VM_INFO_DESCRIPTION);
-
+    private static final String USAGE = "thermostat vm-info [--vmId <vm>] [--hostId <host>]";
     private static final String STILL_ALIVE = Translate.localize(LocaleResources.VM_STOP_TIME_RUNNING);
 
     @Override
@@ -118,13 +117,8 @@ public class VMInfoCommand extends SimpleCommand {
     }
 
     @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
-
-    @Override
     public String getUsage() {
-        return DESCRIPTION;
+        return USAGE;
     }
 
     @Override

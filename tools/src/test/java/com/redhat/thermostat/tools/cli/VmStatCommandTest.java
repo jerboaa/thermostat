@@ -296,13 +296,8 @@ public class VmStatCommandTest {
     }
 
     @Test
-    public void testDescription() {
-        assertEquals("show various statistics about a VM", cmd.getDescription());
-    }
-
-    @Test
     public void testUsage() {
-        assertEquals("show various statistics about a VM", cmd.getUsage());
+        assertEquals("thermostat vm-stat --hostId <host> --vmId <vm>", cmd.getUsage());
     }
 
     @Test

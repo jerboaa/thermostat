@@ -57,8 +57,8 @@ import com.sun.tools.hat.internal.model.Snapshot;
 public class FindRootCommand extends SimpleCommand {
 
     private static final String ALL_ARG = "all";
-    private static final String DESCRIPTION = Translate.localize(LocaleResources.COMMAND_FIND_ROOT_DESCRIPTION);
     private static final String NAME = "find-root";
+    private static final String USAGE = "thermostat find-root --heapId <heap> --objectId <object> [-a]";
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
@@ -118,13 +118,8 @@ public class FindRootCommand extends SimpleCommand {
     }
 
     @Override
-    public String getDescription() {
-        return DESCRIPTION;
-    }
-
-    @Override
     public String getUsage() {
-        return DESCRIPTION;
+        return USAGE;
     }
 
     @Override

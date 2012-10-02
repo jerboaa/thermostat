@@ -107,7 +107,7 @@ public class ActivatorTest {
         when(registryService.getConfiguration()).thenReturn(config);
 
         CommandInfoSource commands = mock(CommandInfoSource.class);
-        when(commands.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
+        when(commands.getCommandInfos()).thenReturn(new ArrayList<CommandInfoImpl>());
         whenNew(CommandInfoSource.class).
                 withParameterTypes(String.class).
                 withArguments(isA(String.class)).thenReturn(commands);
