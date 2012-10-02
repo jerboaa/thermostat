@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.launcher;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
-
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.test.cli.TestCommand;
 
 public class CommonCommandOptionsTest {
@@ -54,9 +54,14 @@ public class CommonCommandOptionsTest {
         cmd.setStorageRequired(true);
 
         CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Collection<ArgumentSpec> cmdOpts = commonOpts.getAcceptedOptionsFor(cmd);
+        Options cmdOpts = commonOpts.getOptionsFor(cmd);
 
-        assertTrue(cmdOpts.contains(new SimpleArgumentSpec("dbUrl", "d", "the URL of the storage to connect to", false, true)));
+        assertTrue(cmdOpts.hasOption("dbUrl"));
+        Option db = cmdOpts.getOption("dbUrl");
+        assertEquals("d", db.getOpt());
+        assertEquals("the URL of the storage to connect to", db.getDescription());
+        assertFalse(db.isRequired());
+        assertTrue(db.hasArg());
     }
 
     @Test
@@ -64,8 +69,12 @@ public class CommonCommandOptionsTest {
         TestCommand cmd = new TestCommand("test1");
 
         CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Collection<ArgumentSpec> cmdOpts = commonOpts.getAcceptedOptionsFor(cmd);
+        Options cmdOpts = commonOpts.getOptionsFor(cmd);
 
-        assertTrue(cmdOpts.contains(new SimpleArgumentSpec("logLevel", "log level", false, true)));
+        assertTrue(cmdOpts.hasOption("logLevel"));
+        Option log = cmdOpts.getOption("logLevel");
+        assertEquals("log level", log.getDescription());
+        assertFalse(log.isRequired());
+        assertTrue(log.hasArg());
     }
 }

@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 
+import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceRegistration;
@@ -53,7 +54,6 @@ import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -217,8 +217,8 @@ public class LauncherImpl implements Launcher {
             }
         }
         CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Collection<ArgumentSpec> acceptedOptions = commonOpts.getAcceptedOptionsFor(cmd);
-        Arguments args = parseCommandArguments(cmdArgs, acceptedOptions);
+        Options options = commonOpts.getOptionsFor(cmd);
+        Arguments args = parseCommandArguments(cmdArgs, options);
         setupLogLevel(args);
         CommandContext ctx = setupCommandContext(cmd, args);
         cmd.run(ctx);
@@ -247,11 +247,11 @@ public class LauncherImpl implements Launcher {
         return cmd;
     }
 
-    private Arguments parseCommandArguments(String[] cmdArgs, Collection<ArgumentSpec> acceptedArguments)
+    private Arguments parseCommandArguments(String[] cmdArgs, Options options)
             throws CommandLineArgumentParseException {
 
         CommandLineArgumentsParser cliArgsParser = new CommandLineArgumentsParser();
-        cliArgsParser.addArguments(acceptedArguments);
+        cliArgsParser.addOptions(options);
         Arguments args = cliArgsParser.parse(cmdArgs);
         return args;
     }

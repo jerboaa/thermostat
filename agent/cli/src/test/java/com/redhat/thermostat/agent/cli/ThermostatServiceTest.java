@@ -38,17 +38,13 @@ package com.redhat.thermostat.agent.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
-
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.cli.ServiceCommand;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 
 public class ThermostatServiceTest {
 
@@ -73,20 +69,19 @@ public class ThermostatServiceTest {
     @Test
     public void testDescription() {
         String desc = thermostatService.getDescription();
-        assertEquals("starts and stops the thermostat storage and agent", desc);
+        assertEquals("starts thermostat storage and agent", desc);
     }
 
     @Test
     public void testUsage() {
         String usage = thermostatService.getUsage();
-        assertEquals("starts and stops the thermostat storage and agent", usage);
+        assertEquals("starts thermostat storage and agent", usage);
     }
 
     @Test
-    public void testArgumentSpecs() {
-        Collection<ArgumentSpec> args = thermostatService.getAcceptedArguments();
-        assertNotNull(args);
-        assertTrue(args.contains(new SimpleArgumentSpec("start", "start the database and agent")));
-        assertTrue(args.contains(new SimpleArgumentSpec("stop", "stop the database and agent")));
+    public void testOptions() {
+        Options options = thermostatService.getOptions();
+        assertNotNull(options);
+        assertEquals(0, options.getOptions().size());
     }
 }

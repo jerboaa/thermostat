@@ -36,10 +36,11 @@
 
 package com.redhat.thermostat.agent.cli;
 
-import java.util.Collection;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.command.ConfigurationServer;
@@ -53,7 +54,6 @@ import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -241,8 +241,8 @@ public final class AgentApplication extends BasicCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return AgentOptionParser.getAcceptedArguments();
+    public Options getOptions() {
+        return AgentOptionParser.getOptions();
     }
     
     // Does not need a reference of the enclosing type so lets declare this class static

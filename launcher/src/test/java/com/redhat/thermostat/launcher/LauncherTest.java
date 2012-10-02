@@ -50,6 +50,8 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -74,7 +76,6 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
@@ -139,18 +140,14 @@ public class LauncherTest {
         setupCommandContextFactory();
 
         TestCommand cmd1 = new TestCommand("test1", new TestCmd1());
-        SimpleArgumentSpec arg1 = new SimpleArgumentSpec("arg1", null);
-        arg1.setUsingAdditionalArgument(true);
-        SimpleArgumentSpec arg2 = new SimpleArgumentSpec("arg2", null);
-        arg2.setUsingAdditionalArgument(true);
-        cmd1.addArguments(arg1, arg2);
+        Option opt1 = new Option(null, "arg1", true, null);
+        Option opt2 = new Option(null, "arg2", true, null);
+        cmd1.addOptions(opt1, opt2);
         cmd1.setDescription("description 1");
         TestCommand cmd2 = new TestCommand("test2", new TestCmd2());
-        SimpleArgumentSpec arg3 = new SimpleArgumentSpec("arg3", null);
-        arg3.setUsingAdditionalArgument(true);
-        SimpleArgumentSpec arg4 = new SimpleArgumentSpec("arg4", null);
-        arg4.setUsingAdditionalArgument(true);
-        cmd2.addArguments(arg3, arg4);
+        Option opt3 = new Option(null, "arg3", true, null);
+        Option opt4 = new Option(null, "arg4", true, null);
+        cmd2.addOptions(opt3, opt4);
         cmd2.setDescription("description 2");
 
         TestCommand cmd3 = new TestCommand("test3");
@@ -161,6 +158,8 @@ public class LauncherTest {
         when(basicCmd.getName()).thenReturn("basic");
         when(basicCmd.getDescription()).thenReturn("nothing that means anything");
         when(basicCmd.isStorageRequired()).thenReturn(false);
+        Options options = new Options();
+        when(basicCmd.getOptions()).thenReturn(options);
         notifier = mock(ActionNotifier.class);
         when(basicCmd.getNotifier()).thenReturn(notifier);
 

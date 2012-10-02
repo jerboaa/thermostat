@@ -38,12 +38,12 @@ package com.redhat.thermostat.tools.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
-import java.util.Collections;
 
 import jline.TerminalFactory;
 import jline.TerminalFactory.Flavor;
@@ -51,6 +51,7 @@ import jline.TerminalFactory.Type;
 import jline.UnixTerminal;
 import jline.console.history.PersistentHistory;
 
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -243,8 +244,10 @@ public class ShellCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        assertEquals(Collections.EMPTY_LIST, cmd.getAcceptedArguments());
+    public void testOptions() {
+        Options options = cmd.getOptions();
+        assertNotNull(options);
+        assertEquals(0, options.getOptions().size());
     }
 
     @Test

@@ -38,22 +38,20 @@ package com.redhat.thermostat.tools.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -175,9 +173,9 @@ public class ListVMsCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertNotNull(args);
-        assertTrue(args.isEmpty());
+    public void testOptions() {
+        Options options = cmd.getOptions();
+        assertNotNull(options);
+        assertEquals(0, options.getOptions().size());
     }
 }

@@ -36,17 +36,16 @@
 
 package com.redhat.thermostat.client.heap.cli;
 
-import java.util.Arrays;
-import java.util.Collection;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
@@ -93,9 +92,17 @@ class ObjectCommandHelper {
         return obj;
     }
 
-    static Collection<ArgumentSpec> getArgumentSpecs() {
-        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true);
-        ArgumentSpec objectIdArg = new SimpleArgumentSpec(OBJECT_ID_ARG, Translate.localize(LocaleResources.ARGUMENT_OBJECT_ID_DESCRIPTION), true, true);
-        return Arrays.asList(heapIdArg, objectIdArg);
+    static Options getOptions() {
+        Options options = new Options();
+
+        Option heapIdOption = new Option("h", HEAP_ID_ARG, true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
+        heapIdOption.setRequired(true);
+        options.addOption(heapIdOption);
+
+        Option objectIdOption = new Option("o", OBJECT_ID_ARG, true, Translate.localize(LocaleResources.ARGUMENT_OBJECT_ID_DESCRIPTION));
+        objectIdOption.setRequired(true);
+        options.addOption(objectIdOption);
+
+        return options;
     }
 }

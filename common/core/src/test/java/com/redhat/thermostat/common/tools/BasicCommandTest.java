@@ -38,13 +38,11 @@ package com.redhat.thermostat.common.tools;
 
 import static org.junit.Assert.assertNotNull;
 
-import java.util.Collection;
-
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
@@ -84,8 +82,8 @@ public class BasicCommandTest {
             }
 
             @Override
-            public Collection<ArgumentSpec> getAcceptedArguments() {
-                return null;
+            public Options getOptions() {
+                return new Options();
             }
 
             @Override

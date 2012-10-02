@@ -38,32 +38,31 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.GnuParser;
 import org.apache.commons.cli.MissingOptionException;
+import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
-
-import static com.redhat.thermostat.launcher.internal.LaunchUtils.convertToCommonsCLIOptions;
 
 public class CommandLineArgumentsParser {
 
-    private List<ArgumentSpec> arguments = new LinkedList<>();
+    private Options options = new Options();
 
-    void addArguments(Collection<ArgumentSpec> args) {
-        arguments.addAll(args);
+    @SuppressWarnings("unchecked")
+    void addOptions(Options options) {
+        for (Option option : (Collection<Option>) options.getOptions()) {
+            this.options.addOption(option);
+        }
     }
 
     Arguments parse(String[] args) throws CommandLineArgumentParseException {
         try {
-            Options options = convertToCommonsCLIOptions(arguments);
             CommandLineParser parser = new GnuParser();
             CommandLine commandLine;
             commandLine = parser.parse(options, args);

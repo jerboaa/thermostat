@@ -37,18 +37,17 @@
 package com.redhat.thermostat.agent.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
-
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.cli.AgentApplication;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 
 public class AgentApplicationTest {
 
@@ -85,14 +84,41 @@ public class AgentApplicationTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = agent.getAcceptedArguments();
-        assertNotNull(args);
-        assertEquals(5, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("saveOnExit", "s", "save the data on exit", false, false)));
-        assertTrue(args.contains(new SimpleArgumentSpec("debug", "launch with debug console enabled")));
-        assertTrue(args.contains(new SimpleArgumentSpec("dbUrl", "d", "connect to the given url", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("username", "the username to use for authentication", false, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("password", "the password to use for authentication", false, true)));
+    public void testOptions() {
+        Options options = agent.getOptions();
+        assertNotNull(options);
+        assertEquals(5, options.getOptions().size());
+
+        assertTrue(options.hasOption("saveOnExit"));
+        Option save = options.getOption("saveOnExit");
+        assertEquals("s", save.getOpt());
+        assertEquals("save the data on exit", save.getDescription());
+        assertFalse(save.isRequired());
+        assertFalse(save.hasArg());
+
+        assertTrue(options.hasOption("debug"));
+        Option debug = options.getOption("debug");
+        assertEquals("launch with debug console enabled", debug.getDescription());
+        assertFalse(debug.isRequired());
+        assertFalse(debug.hasArg());
+
+        assertTrue(options.hasOption("dbUrl"));
+        Option db = options.getOption("dbUrl");
+        assertEquals("d", db.getOpt());
+        assertEquals("connect to the given url", db.getDescription());
+        assertTrue(db.isRequired());
+        assertTrue(db.hasArg());
+
+        assertTrue(options.hasOption("username"));
+        Option user = options.getOption("username");
+        assertEquals("the username to use for authentication", user.getDescription());
+        assertFalse(user.isRequired());
+        assertTrue(user.hasArg());
+
+        assertTrue(options.hasOption("password"));
+        Option pass = options.getOption("password");
+        assertEquals("the password to use for authentication", pass.getDescription());
+        assertFalse(pass.isRequired());
+        assertTrue(pass.hasArg());
     }
 }

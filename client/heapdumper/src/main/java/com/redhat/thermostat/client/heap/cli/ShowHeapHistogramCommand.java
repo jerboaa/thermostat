@@ -37,18 +37,16 @@
 package com.redhat.thermostat.client.heap.cli;
 
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -78,10 +76,14 @@ public class ShowHeapHistogramCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        List<ArgumentSpec> args = new ArrayList<>();
-        args.add(new SimpleArgumentSpec("heapId", "heapId", Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true));
-        return args;
+    public Options getOptions() {
+        Options options = new Options();
+
+        Option heapOption = new Option("i", "heapId", true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
+        heapOption.setRequired(true);
+        options.addOption(heapOption);
+
+        return options;
     }
 
     @Override

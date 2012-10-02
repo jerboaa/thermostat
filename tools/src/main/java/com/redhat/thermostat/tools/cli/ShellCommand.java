@@ -39,8 +39,6 @@ package com.redhat.thermostat.tools.cli;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -51,10 +49,10 @@ import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.PersistentHistory;
 
+import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.OSGiContext;
@@ -80,7 +78,7 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
 
     private static final String PROMPT = "Thermostat > ";
 
-    private CommandContext context;
+    //private CommandContext context;
     private HistoryProvider historyProvider;
 
     private BundleContext bundleContext;
@@ -112,7 +110,6 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        context = ctx;
         Terminal term = TerminalFactory.create();
         PersistentHistory history = historyProvider.get();
 
@@ -192,8 +189,8 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return Collections.emptyList();
+    public Options getOptions() {
+        return new Options();
     }
 
     @Override

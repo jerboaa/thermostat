@@ -37,14 +37,16 @@
 package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,9 +54,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.heap.cli.FindObjectsCommand;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -146,11 +146,21 @@ public class FindObjectsCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertEquals(2, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("heapId", "the ID of the heapdump to analyze", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("limit", "l", "limit search to top N results, defaults to 10", false, true)));
+    public void testOptions() {
+        Options options = cmd.getOptions();
+        assertEquals(2, options.getOptions().size());
+
+        assertTrue(options.hasOption("heapId"));
+        Option heapOption = options.getOption("heapId");
+        assertEquals("the ID of the heapdump to analyze", heapOption.getDescription());
+        assertTrue(heapOption.isRequired());
+        assertTrue(heapOption.hasArg());
+
+        assertTrue(options.hasOption("limit"));
+        Option limitOption = options.getOption("limit");
+        assertEquals("limit search to top N results, defaults to 10", limitOption.getDescription());
+        assertFalse(limitOption.isRequired());
+        assertTrue(limitOption.hasArg());
     }
 
     @Test

@@ -42,12 +42,11 @@ import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.List;
 import java.util.TimeZone;
 
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -56,7 +55,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -104,10 +102,11 @@ public class ListHeapDumpsCommandTest {
     }
 
     @Test
-    public void verifyArguments() {
+    public void verifyOptions() {
         Command command = new ListHeapDumpsCommand();
-        List<ArgumentSpec> arguments = new ArrayList<>(command.getAcceptedArguments());
-        assertEquals(2, arguments.size());
+        Options options = command.getOptions();
+        assertNotNull(options);
+        assertEquals(2, options.getOptions().size());
     }
 
     @Test

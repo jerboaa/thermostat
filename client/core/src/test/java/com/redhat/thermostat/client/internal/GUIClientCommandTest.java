@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
@@ -47,6 +48,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Dictionary;
 
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -109,8 +111,10 @@ public class GUIClientCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        assertEquals(0, cmd.getAcceptedArguments().size());
+    public void testOptions() {
+        Options options = cmd.getOptions();
+        assertNotNull(options);
+        assertEquals(0, options.getOptions().size());
     }
 
     @Test

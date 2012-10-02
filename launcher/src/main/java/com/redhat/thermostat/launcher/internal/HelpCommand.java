@@ -46,7 +46,6 @@ import java.util.List;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -54,8 +53,6 @@ import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
-
-import static com.redhat.thermostat.launcher.internal.LaunchUtils.convertToCommonsCLIOptions;
 
 public class HelpCommand extends SimpleCommand {
 
@@ -111,8 +108,7 @@ public class HelpCommand extends SimpleCommand {
         HelpFormatter helpFormatter = new HelpFormatter();
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
         CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Collection<ArgumentSpec> acceptedOptions = commonOpts.getAcceptedOptionsFor(cmd);
-        Options options = convertToCommonsCLIOptions(acceptedOptions);
+        Options options = commonOpts.getOptionsFor(cmd);
         helpFormatter.printHelp(pw, 80, cmd.getName(), cmd.getUsage(), options, 2, 4, null, true);
         pw.flush();
     }
@@ -133,8 +129,8 @@ public class HelpCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return Collections.emptyList();
+    public Options getOptions() {
+        return new Options();
     }
 
     @Override

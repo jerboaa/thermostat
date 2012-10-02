@@ -36,16 +36,12 @@
 
 package com.redhat.thermostat.tools.cli;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.storage.ConnectionException;
@@ -116,12 +112,22 @@ public class ConnectCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        List<ArgumentSpec> acceptedArgs = new ArrayList<>();
-        acceptedArgs.add(new SimpleArgumentSpec(CommonCommandOptions.DB_URL_ARG, "d", CommonCommandOptions.DB_URL_DESC, true, true));
-        acceptedArgs.add(new SimpleArgumentSpec(CommonCommandOptions.USERNAME_ARG, "u", CommonCommandOptions.USERNAME_DESC, false, true));
-        acceptedArgs.add(new SimpleArgumentSpec(CommonCommandOptions.PASSWORD_ARG, "p", CommonCommandOptions.PASSWORD_DESC, false, true));
-        return acceptedArgs;
+    public Options getOptions() {
+        Options options = new Options();
+
+        Option dbOption = new Option("d", CommonCommandOptions.DB_URL_ARG, true, CommonCommandOptions.DB_URL_DESC);
+        dbOption.setRequired(true);
+        options.addOption(dbOption);
+
+        Option usernameOption = new Option("u", CommonCommandOptions.USERNAME_ARG, true, CommonCommandOptions.USERNAME_DESC);
+        usernameOption.setRequired(false);
+        options.addOption(usernameOption);
+
+        Option passwordOption = new Option("p", CommonCommandOptions.PASSWORD_ARG, true, CommonCommandOptions.PASSWORD_DESC);
+        passwordOption.setRequired(false);
+        options.addOption(passwordOption);
+
+        return options;
     }
     
     @Override

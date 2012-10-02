@@ -44,13 +44,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -60,9 +61,7 @@ import org.junit.Test;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -307,13 +306,29 @@ public class VmStatCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertNotNull(args);
-        assertEquals(3, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("vmId", "the ID of the VM to monitor", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("hostId", "the ID of the host to monitor", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("continuous", "c", "print data continuously", false, false)));
+    public void testOptions() {
+        Options options = cmd.getOptions();
+        assertNotNull(options);
+        assertEquals(3, options.getOptions().size());
+
+        assertTrue(options.hasOption("vmId"));
+        Option vm = options.getOption("vmId");
+        assertEquals("the ID of the VM to monitor", vm.getDescription());
+        assertTrue(vm.isRequired());
+        assertTrue(vm.hasArg());
+
+        assertTrue(options.hasOption("hostId"));
+        Option host = options.getOption("hostId");
+        assertEquals("the ID of the host to monitor", host.getDescription());
+        assertTrue(host.isRequired());
+        assertTrue(host.hasArg());
+
+        assertTrue(options.hasOption("continuous"));
+        Option cont = options.getOption("continuous");
+        assertEquals("c", cont.getOpt());
+        assertEquals("print data continuously", cont.getDescription());
+        assertFalse(cont.isRequired());
+        assertFalse(cont.hasArg());
     }
 
     @Test

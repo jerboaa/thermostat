@@ -36,12 +36,9 @@
 
 package com.redhat.thermostat.client.internal;
 
-import java.util.Collection;
-import java.util.Collections;
 
+import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.internal.osgi.ApplicationServiceProvider;
 import com.redhat.thermostat.client.internal.osgi.ContextActionServiceProvider;
@@ -49,7 +46,6 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.OSGiContext;
@@ -98,8 +94,8 @@ public class GUIClientCommand extends SimpleCommand implements OSGiContext {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return Collections.emptyList();
+    public Options getOptions() {
+        return new Options();
     }
 
     @Override

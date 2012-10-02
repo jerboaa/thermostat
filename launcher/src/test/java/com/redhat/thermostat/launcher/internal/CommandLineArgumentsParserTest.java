@@ -39,49 +39,46 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 
 public class CommandLineArgumentsParserTest {
 
     private CommandLineArgumentsParser parser;
 
-    private ArgumentSpec arg3;
-
     @Before
     public void setUp() {
         parser = new CommandLineArgumentsParser();
 
-        ArgumentSpec arg1 = mock(ArgumentSpec.class);
-        when(arg1.getName()).thenReturn("test1");
-        when(arg1.getShortOption()).thenReturn("t");
-        when(arg1.isRequired()).thenReturn(true);
+        Options options = new Options();
 
-        ArgumentSpec arg2 = mock(ArgumentSpec.class);
-        when(arg2.getName()).thenReturn("test2");
-        when(arg2.isRequired()).thenReturn(false);
+        Option option1 = new Option("t", "test1", false, null);
+        option1.setArgName("test1");
+        option1.setRequired(true);
+        options.addOption(option1);
 
-        arg3 = mock(ArgumentSpec.class);
-        when(arg3.getName()).thenReturn("test3");
-        when(arg3.isRequired()).thenReturn(false);
-        when(arg3.isUsingAdditionalArgument()).thenReturn(true);
+        Option option2 = new Option("r", "test2", false, null);
+        option2.setArgName("test2");
+        option2.setRequired(false);
+        options.addOption(option2);
 
-        parser.addArguments(Arrays.asList(arg1, arg2, arg3));
+        Option option3 = new Option("s", "test3", true, null);
+        option3.setArgName("test3");
+        option3.setRequired(false);
+        options.addOption(option3);
+
+        parser.addOptions(options);
     }
 
     @After
     public void tearDown() {
-       parser = null; 
-       arg3 = null;
+       parser = null;
     }
 
     @Test
@@ -123,10 +120,12 @@ public class CommandLineArgumentsParserTest {
 
     @Test
     public void testMissingRequiredArguments() throws CommandLineArgumentParseException {
-        ArgumentSpec arg4 = mock(ArgumentSpec.class);
-        when(arg4.getName()).thenReturn("test4");
-        when(arg4.isRequired()).thenReturn(true);
-        parser.addArguments(Arrays.asList(arg4));
+        Options options = new Options();
+        Option option4 = new Option(null, "test4", false, null);
+        option4.setArgName("test4");
+        option4.setRequired(true);
+        options.addOption(option4);
+        parser.addOptions(options);
 
         try {
           parser.parse(new String[] { "--test2" });

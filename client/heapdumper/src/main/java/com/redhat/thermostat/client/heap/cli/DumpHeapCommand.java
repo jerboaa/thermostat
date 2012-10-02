@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.client.heap.cli;
 
-import java.util.Collection;
 import java.util.concurrent.Semaphore;
+
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
@@ -83,8 +83,8 @@ public class DumpHeapCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs();
+    public Options getOptions() {
+        return HostVMArguments.getOptions();
     }
 
     @Override

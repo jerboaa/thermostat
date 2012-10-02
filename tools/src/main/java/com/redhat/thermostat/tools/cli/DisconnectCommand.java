@@ -36,12 +36,9 @@
 
 package com.redhat.thermostat.tools.cli;
 
-import java.util.Collection;
-import java.util.Collections;
-
+import org.apache.commons.cli.Options;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
@@ -92,8 +89,8 @@ public class DisconnectCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return Collections.emptyList();
+    public Options getOptions() {
+        return new Options();
     }
     
     @Override

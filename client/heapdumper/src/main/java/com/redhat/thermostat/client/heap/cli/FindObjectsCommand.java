@@ -36,17 +36,17 @@
 
 package com.redhat.thermostat.client.heap.cli;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -132,10 +132,18 @@ public class FindObjectsCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec heapIdArg = new SimpleArgumentSpec(HEAP_ID_ARG, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true);
-        ArgumentSpec limitArg = new SimpleArgumentSpec(LIMIT_ARG, "l", Translate.localize(LocaleResources.ARGUMENT_LIMIT_DESCRIPTION, String.valueOf(DEFAULT_LIMIT)), false, true);
-        return Arrays.asList(heapIdArg, limitArg);
+    public Options getOptions() {
+        Options options = new Options();
+
+        Option heapIdOption = new Option("h", HEAP_ID_ARG, true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
+        heapIdOption.setRequired(true);
+        options.addOption(heapIdOption);
+
+        Option limitOption = new Option("l", LIMIT_ARG, true, Translate.localize(LocaleResources.ARGUMENT_LIMIT_DESCRIPTION, String.valueOf(DEFAULT_LIMIT)));
+        limitOption.setRequired(false);
+        options.addOption(limitOption);
+
+        return options;
     }
 
 }

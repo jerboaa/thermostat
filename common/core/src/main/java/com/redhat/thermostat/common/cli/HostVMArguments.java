@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.common.cli;
 
-import java.util.Arrays;
-import java.util.Collection;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -95,25 +95,33 @@ public class HostVMArguments {
      * @return a collection of arguments for accepting hosts and vms (where both
      * are required)
      */
-    public static Collection<ArgumentSpec> getArgumentSpecs() {
-        return getArgumentSpecs(true);
+    public static Options getOptions() {
+        return getOptions(true);
     }
 
     /**
      * @return a collection of arguments for accepting hosts and vms (where the
      * vm is optional)
      */
-    public static Collection<ArgumentSpec> getArgumentSpecs(boolean vmRequired) {
-        return getArgumentSpecs(true, vmRequired);
+    public static Options getOptions(boolean vmRequired) {
+        return getOptions(true, vmRequired);
     }
 
     /**
-     * @return a collection of arguments for accepting hosts and vms (where the
+     * @return an Options for accepting hosts and vms (where the
      * vm is optional)
      */
-    public static Collection<ArgumentSpec> getArgumentSpecs(boolean hostRequired, boolean vmRequired) {
-        ArgumentSpec vmId = new SimpleArgumentSpec(VM_ID_ARGUMENT, "the ID of the VM to monitor", vmRequired, true);
-        ArgumentSpec hostId = new SimpleArgumentSpec(HOST_ID_ARGUMENT, "the ID of the host to monitor", hostRequired, true);
-        return Arrays.asList(vmId, hostId);
+    public static Options getOptions(boolean hostRequired, boolean vmRequired) {
+        Options options = new Options();
+
+        Option vmIdOption = new Option("p", VM_ID_ARGUMENT, true, "the ID of the VM to monitor");
+        vmIdOption.setRequired(vmRequired);
+        options.addOption(vmIdOption);
+
+        Option hostIdOption = new Option("a", HOST_ID_ARGUMENT, true, "the ID of the host to monitor");
+        hostIdOption.setRequired(hostRequired);
+        options.addOption(hostIdOption);
+
+        return options;
     }
 }

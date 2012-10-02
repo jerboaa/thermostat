@@ -37,6 +37,7 @@
 package com.redhat.thermostat.agent.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
@@ -53,6 +54,9 @@ import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Assert;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,10 +66,8 @@ import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
 import com.redhat.thermostat.agent.cli.db.MongoProcessRunner;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
@@ -256,14 +258,44 @@ public class DBServiceTest {
     }
 
     @Test
-    public void testArguments() {
+    public void testOptions() {
         StorageCommand dbService = new StorageCommand();
-        Collection<ArgumentSpec> args = dbService.getAcceptedArguments();
-        assertNotNull(args);
-        assertEquals(4, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("dryRun", "d", "run the service in dry run mode", false, false)));
-        assertTrue(args.contains(new SimpleArgumentSpec("start", "start the database")));
-        assertTrue(args.contains(new SimpleArgumentSpec("stop", "stop the database")));
-        assertTrue(args.contains(new SimpleArgumentSpec("quiet", "q", "don't produce any output", false, false)));
+        Options options = dbService.getOptions();
+        assertNotNull(options);
+        assertEquals(4, options.getOptions().size());
+
+        assertTrue(options.hasOption("dryRun"));
+        Option dry = options.getOption("dryRun");
+        assertEquals("d", dry.getOpt());
+        assertEquals("run the service in dry run mode", dry.getDescription());
+        assertFalse(dry.isRequired());
+        assertFalse(dry.hasArg());
+
+        assertTrue(options.hasOption("start"));
+        Option start = options.getOption("start");
+        assertEquals("start the database", start.getDescription());
+        assertFalse(start.isRequired());
+        assertFalse(start.hasArg());
+
+        assertTrue(options.hasOption("stop"));
+        Option stop = options.getOption("stop");
+        assertEquals("stop the database", stop.getDescription());
+        assertFalse(stop.isRequired());
+        assertFalse(stop.hasArg());
+
+        assertTrue(options.hasOption("quiet"));
+        Option quiet = options.getOption("quiet");
+        assertEquals("q", quiet.getOpt());
+        assertEquals("don't produce any output", quiet.getDescription());
+        assertFalse(quiet.isRequired());
+        assertFalse(quiet.hasArg());
+
+        OptionGroup startStop = options.getOptionGroup(start);
+        assertTrue(startStop.isRequired());
+        @SuppressWarnings("unchecked")
+        Collection<Option> groupOpts = startStop.getOptions();
+        assertEquals(2, groupOpts.size());
+        assertTrue(groupOpts.contains(start));
+        assertTrue(groupOpts.contains(stop));
     }
 }

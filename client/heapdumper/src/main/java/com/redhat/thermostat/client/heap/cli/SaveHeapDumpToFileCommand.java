@@ -43,18 +43,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.model.HeapInfo;
@@ -95,12 +93,19 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        List<ArgumentSpec> args = new ArrayList<>();
-        args.add(new SimpleArgumentSpec(HEAP_ID_ARGUMENT, "i", Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION), true, true));
-        args.add(new SimpleArgumentSpec(FILE_NAME_ARGUMENT, "f", Translate.localize(LocaleResources.ARGUMENT_FILE_NAME_DESCRIPTION), true, true));
+    public Options getOptions() {
 
-        return args;
+        Options options = new Options();
+
+        Option heapOption = new Option("i", HEAP_ID_ARGUMENT, true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
+        heapOption.setRequired(true);
+        options.addOption(heapOption);
+
+        Option fileOption = new Option("f", FILE_NAME_ARGUMENT, true, Translate.localize(LocaleResources.ARGUMENT_FILE_NAME_DESCRIPTION));
+        fileOption.setRequired(true);
+        options.addOption(fileOption);
+
+        return options;
     }
 
     @Override

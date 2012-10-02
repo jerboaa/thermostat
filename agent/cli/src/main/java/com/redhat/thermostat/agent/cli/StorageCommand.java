@@ -39,8 +39,9 @@ package com.redhat.thermostat.agent.cli;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Properties;
+
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.agent.cli.db.DBConfig;
 import com.redhat.thermostat.agent.cli.db.DBOptionParser;
@@ -48,7 +49,6 @@ import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
 import com.redhat.thermostat.agent.cli.db.MongoProcessRunner;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.agent.cli.impl.locale.Translate;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -200,8 +200,8 @@ public class StorageCommand extends BasicCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return DBOptionParser.getAcceptedArguments();
+    public Options getOptions() {
+        return DBOptionParser.getOptions();
     }
 
 }

@@ -36,12 +36,9 @@
 
 package com.redhat.thermostat.test.cli;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -57,7 +54,7 @@ public class TestCommand implements Command {
     private boolean availableInShell = true;
     private boolean availableOutsideShell = true;
 
-    private List<ArgumentSpec> arguments = new LinkedList<ArgumentSpec>();
+    private Options options = new Options();
 
     public static interface Handle {
         public void run(CommandContext ctx) throws CommandException;
@@ -103,12 +100,14 @@ public class TestCommand implements Command {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return arguments;
+    public Options getOptions() {
+        return options;
     }
 
-    public void addArguments(ArgumentSpec... arguments) {
-        this.arguments.addAll(Arrays.asList(arguments));
+    public void addOptions(Option... options) {
+        for (Option option : options) {
+            this.options.addOption(option);
+        }
     }
 
     @Override

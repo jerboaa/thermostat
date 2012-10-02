@@ -1,12 +1,10 @@
 
 package com.redhat.thermostat.launcher;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 
 public class CommonCommandOptions {
 
@@ -21,29 +19,37 @@ public class CommonCommandOptions {
     public static final String LOG_LEVEL_ARG = "logLevel";
     private static final String LOG_LEVEL_DESC = "log level";
 
-    public Collection<ArgumentSpec> getAcceptedOptionsFor(Command cmd) {
+    public Options getOptionsFor(Command cmd) {
 
-        Collection<ArgumentSpec> acceptedArguments = cmd.getAcceptedArguments();
-        acceptedArguments = new ArrayList<>(acceptedArguments);
-        addDbUrlOptionForStorageCommand(cmd, acceptedArguments);
-        addLogLevelOption(acceptedArguments);
-        addOptionalAuthenticationArguments(acceptedArguments);
-        return acceptedArguments;
+        Options options = cmd.getOptions();
+        addDbUrlOptionForStorageCommand(cmd, options);
+        addLogLevelOption(options);
+        addOptionalAuthenticationArguments(options);
+        return options;
     }
 
-    private void addDbUrlOptionForStorageCommand(Command cmd, Collection<ArgumentSpec> acceptedArguments) {
+    private void addDbUrlOptionForStorageCommand(Command cmd, Options options) {
         if (cmd.isStorageRequired()) {
-            acceptedArguments.add(new SimpleArgumentSpec(DB_URL_ARG, "d", DB_URL_DESC, false, true));
+            Option option = new Option("d", DB_URL_ARG, true, DB_URL_DESC);
+            option.setRequired(false);
+            options.addOption(option);
         }
     }
 
-    private void addLogLevelOption(Collection<ArgumentSpec> acceptedArguments) {
-        acceptedArguments.add(new SimpleArgumentSpec(LOG_LEVEL_ARG, LOG_LEVEL_DESC, false, true));
+    private void addLogLevelOption(Options options) {
+        Option option = new Option(null, LOG_LEVEL_ARG, true, LOG_LEVEL_DESC);
+        option.setRequired(false);
+        options.addOption(option);
     }
 
-    private void addOptionalAuthenticationArguments(Collection<ArgumentSpec> acceptedArguments) {
-        acceptedArguments.add(new SimpleArgumentSpec(USERNAME_ARG, USERNAME_DESC, false, true));
-        acceptedArguments.add(new SimpleArgumentSpec(PASSWORD_ARG, PASSWORD_DESC, false, true));
+    private void addOptionalAuthenticationArguments(Options options) {
+
+        Option userOption = new Option(null, USERNAME_ARG, true, USERNAME_DESC);
+        userOption.setRequired(false);
+        options.addOption(userOption);
+        Option passwordOption = new Option(null, PASSWORD_ARG, true, PASSWORD_DESC);
+        passwordOption.setRequired(false);
+        options.addOption(passwordOption);
     }
 
 }

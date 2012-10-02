@@ -39,8 +39,6 @@ package com.redhat.thermostat.agent.cli.impl.locale;
 public enum LocaleResources {
 
     COMMAND_SERVICE_DESCRIPTION,
-    COMMAND_SERVICE_ARGUMENT_START_DESCRIPTION,
-    COMMAND_SERVICE_ARGUMENT_STOP_DESCRIPTION,
 
     STARTING_AGENT,
 

@@ -37,21 +37,19 @@
 package com.redhat.thermostat.tools.cli;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
@@ -135,11 +133,14 @@ public class VMStatCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        List<ArgumentSpec> acceptedArgs = new ArrayList<>(); 
-        acceptedArgs.addAll(HostVMArguments.getArgumentSpecs());
-        acceptedArgs.add(new SimpleArgumentSpec("continuous", "c", Translate.localize(LocaleResources.COMMAND_VM_STAT_ARGUMENT_CONTINUOUS_DESCRIPTION), false, false));
-        return acceptedArgs;
+    public Options getOptions() {
+        Options options = HostVMArguments.getOptions();
+
+        Option continuousOption = new Option("c", "continuous", false, Translate.localize(LocaleResources.COMMAND_VM_STAT_ARGUMENT_CONTINUOUS_DESCRIPTION));
+        continuousOption.setRequired(false);
+        options.addOption(continuousOption);
+
+        return options;
     }
 
 }

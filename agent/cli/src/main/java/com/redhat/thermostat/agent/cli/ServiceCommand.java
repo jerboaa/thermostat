@@ -37,20 +37,18 @@
 package com.redhat.thermostat.agent.cli;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Semaphore;
+
+import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.agent.cli.db.StorageAlreadyRunningException;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.agent.cli.impl.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -137,10 +135,8 @@ public class ServiceCommand extends SimpleCommand implements ActionListener<Appl
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec start = new SimpleArgumentSpec("start", Translate.localize(LocaleResources.COMMAND_SERVICE_ARGUMENT_START_DESCRIPTION));
-        ArgumentSpec stop = new SimpleArgumentSpec("stop", Translate.localize(LocaleResources.COMMAND_SERVICE_ARGUMENT_STOP_DESCRIPTION));
-        return Arrays.asList(start, stop);
+    public Options getOptions() {
+        return new Options();
     }
 
     @Override

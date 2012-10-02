@@ -38,27 +38,25 @@ package com.redhat.thermostat.common.cli;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
-
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 
 public class HostVMArgumentsTest {
 
     @Test
     public void testArgumentSpecification() {
-        ArrayList<ArgumentSpec> args = new ArrayList<>(HostVMArguments.getArgumentSpecs(false));
-        assertEquals(2, args.size());
+        Options options = HostVMArguments.getOptions(false);
+        assertEquals(2, options.getOptions().size());
 
-        // TODO different order should be okay
-        ArgumentSpec vmIdArg = args.get(0);
-        assertEquals("vmId", vmIdArg.getName());
-        assertEquals(false, vmIdArg.isRequired());
+        Option vmIdOption = options.getOption("vmId");
+        assertEquals("vmId", vmIdOption.getLongOpt());
+        assertEquals(false, vmIdOption.isRequired());
 
-        ArgumentSpec hostIdArg = args.get(1);
-        assertEquals("hostId", hostIdArg.getName());
-        assertEquals(true, hostIdArg.isRequired());
+        Option hostIdOption = options.getOption("hostId");
+        assertEquals("hostId", hostIdOption.getLongOpt());
+        assertEquals(true, hostIdOption.isRequired());
     }
 }

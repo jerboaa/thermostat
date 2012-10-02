@@ -46,8 +46,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Matchers.any;
 
-import java.util.Collection;
-
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,10 +60,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
@@ -178,11 +176,26 @@ public class ConnectCommandTest {
 
     @Test
     public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertNotNull(args);
-        assertTrue(args.size() == 3);
-        assertTrue(args.contains(new SimpleArgumentSpec(CommonCommandOptions.DB_URL_ARG, "d", CommonCommandOptions.DB_URL_DESC, true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec(CommonCommandOptions.USERNAME_ARG, "u", CommonCommandOptions.USERNAME_DESC, false, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec(CommonCommandOptions.PASSWORD_ARG, "p", CommonCommandOptions.PASSWORD_DESC, false, true)));
+        Options options = cmd.getOptions();
+        assertNotNull(options);
+        assertTrue(options.getOptions().size() == 3);
+
+        assertTrue(options.hasOption(CommonCommandOptions.DB_URL_ARG));
+        Option db = options.getOption(CommonCommandOptions.DB_URL_ARG);
+        assertEquals(CommonCommandOptions.DB_URL_DESC, db.getDescription());
+        assertTrue(db.isRequired());
+        assertTrue(db.hasArg());
+
+        assertTrue(options.hasOption(CommonCommandOptions.USERNAME_ARG));
+        Option user = options.getOption(CommonCommandOptions.USERNAME_ARG);
+        assertEquals(CommonCommandOptions.USERNAME_DESC, user.getDescription());
+        assertFalse(user.isRequired());
+        assertTrue(user.hasArg());
+
+        assertTrue(options.hasOption(CommonCommandOptions.PASSWORD_ARG));
+        Option pass = options.getOption(CommonCommandOptions.PASSWORD_ARG);
+        assertEquals(CommonCommandOptions.PASSWORD_DESC, pass.getDescription());
+        assertFalse(pass.isRequired());
+        assertTrue(pass.hasArg());
     }
 }

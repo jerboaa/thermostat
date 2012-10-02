@@ -36,12 +36,10 @@
 
 package com.redhat.thermostat.agent.config;
 
-import java.util.Arrays;
-import java.util.Collection;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
 
@@ -105,12 +103,29 @@ public class AgentOptionParser implements ThermostatOptionParser {
         }
     }
 
-    public static Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec saveOnExit = new SimpleArgumentSpec(Args.SAVE_ON_EXIT.option, "s", Args.SAVE_ON_EXIT.description, false, false);
-        ArgumentSpec db = new SimpleArgumentSpec(Args.DB.option, "d",  Args.DB.description, true, true);
-        ArgumentSpec username = new SimpleArgumentSpec(Args.USERNAME.option, Args.USERNAME.description, false, true);
-        ArgumentSpec password = new SimpleArgumentSpec(Args.PASSWORD.option, Args.PASSWORD.description, false, true);
-        ArgumentSpec debug = new SimpleArgumentSpec(Args.DEBUG.option, Args.DEBUG.description);
-        return Arrays.asList(saveOnExit, db, debug, username, password);
+    public static Options getOptions() {
+        Options options = new Options();
+
+        Option saveOnExitOption = new Option("s", Args.SAVE_ON_EXIT.option, false, Args.SAVE_ON_EXIT.description);
+        saveOnExitOption.setRequired(false);
+        options.addOption(saveOnExitOption);
+
+        Option dbOption = new Option("d", Args.DB.option, true, Args.DB.description);
+        dbOption.setRequired(true);
+        options.addOption(dbOption);
+
+        Option usernameOption = new Option("u", Args.USERNAME.option, true, Args.USERNAME.description);
+        usernameOption.setRequired(false);
+        options.addOption(usernameOption);
+
+        Option passwordOption = new Option("p", Args.PASSWORD.option, true, Args.PASSWORD.description);
+        passwordOption.setRequired(false);
+        options.addOption(passwordOption);
+
+        Option debugOption = new Option("v", Args.DEBUG.option, false, Args.DEBUG.description);
+        debugOption.setRequired(false);
+        options.addOption(debugOption);
+
+        return options;
     }
 }

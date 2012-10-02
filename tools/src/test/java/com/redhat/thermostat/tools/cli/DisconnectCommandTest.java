@@ -45,8 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
-
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,7 +59,6 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -165,9 +163,9 @@ public class DisconnectCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertNotNull(args);
-        assertTrue(args.size() == 0);
+    public void testOptions() {
+        Options options = cmd.getOptions();
+        assertNotNull(options);
+        assertTrue(options.getOptions().size() == 0);
     }
 }

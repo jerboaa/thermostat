@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
@@ -47,6 +48,8 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 import java.util.Enumeration;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,9 +60,7 @@ import com.redhat.thermostat.client.heap.cli.FindRootCommand;
 import com.redhat.thermostat.client.heap.cli.HeapNotFoundException;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -200,12 +201,32 @@ public class FindRootCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertEquals(3, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("heapId", "the ID of the heapdump to analyze", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("objectId", "the ID of the object to query", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("all", "a", "finds all paths to GC roots", false, false)));
+    public void testOptions() {
+        String heapIdOption = "heapId";
+        String objectIdOption = "objectId";
+        String allOption = "all";
+        Options options = cmd.getOptions();
+        @SuppressWarnings("unchecked")
+        Collection<Options> theOptions = options.getOptions();
+        assertEquals(3, theOptions.size());
+
+        assertTrue(options.hasOption(heapIdOption));
+        Option heapOption = options.getOption(heapIdOption);
+        assertEquals("the ID of the heapdump to analyze", heapOption.getDescription());
+        assertTrue(heapOption.isRequired());
+        assertTrue(heapOption.hasArg());
+
+        assertTrue(options.hasOption(objectIdOption));
+        Option objectOption = options.getOption(objectIdOption);
+        assertEquals("the ID of the object to query", objectOption.getDescription());
+        assertTrue(heapOption.isRequired());
+        assertTrue(heapOption.hasArg());
+
+        assertTrue(options.hasOption(allOption));
+        Option all = options.getOption(allOption);
+        assertEquals("finds all paths to GC roots", all.getDescription());
+        assertFalse(all.isRequired());
+        assertFalse(all.hasArg());
     }
 
     @Test

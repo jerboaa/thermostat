@@ -45,9 +45,10 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
 import java.util.Enumeration;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,9 +59,7 @@ import com.redhat.thermostat.client.heap.cli.HeapNotFoundException;
 import com.redhat.thermostat.client.heap.cli.ObjectInfoCommand;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
@@ -168,11 +167,21 @@ public class ObjectInfoCommandTest {
     }
 
     @Test
-    public void testAcceptedArguments() {
-        Collection<ArgumentSpec> args = cmd.getAcceptedArguments();
-        assertEquals(2, args.size());
-        assertTrue(args.contains(new SimpleArgumentSpec("heapId", "the ID of the heapdump to analyze", true, true)));
-        assertTrue(args.contains(new SimpleArgumentSpec("objectId", "the ID of the object to query", true, true)));
+    public void testOptions() {
+        Options options = cmd.getOptions();
+        assertEquals(2, options.getOptions().size());
+
+        assertTrue(options.hasOption("heapId"));
+        Option heapOption = options.getOption("heapId");
+        assertEquals("the ID of the heapdump to analyze", heapOption.getDescription());
+        assertTrue(heapOption.isRequired());
+        assertTrue(heapOption.hasArg());
+
+        assertTrue(options.hasOption("objectId"));
+        Option objOption = options.getOption("objectId");
+        assertEquals("the ID of the object to query", objOption.getDescription());
+        assertTrue(objOption.isRequired());
+        assertTrue(objOption.hasArg());
     }
 
     @Test

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common.cli;
 
-import java.util.Collection;
+import org.apache.commons.cli.Options;
 
 /**
  * Represents a command on the command line.
@@ -77,11 +77,11 @@ public interface Command {
     public String getUsage();
 
     /**
-     * Returns a collection of arguments that the command is prepared to handle.
+     * Returns the Options that the command is prepared to handle.
      * If the user provides unknown or malformed arguments, this command will
      * not be invoked.
      */
-    public Collection<ArgumentSpec> getAcceptedArguments();
+    public Options getOptions();
 
     public boolean isStorageRequired();
 

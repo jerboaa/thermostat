@@ -36,12 +36,11 @@
 
 package com.redhat.thermostat.agent.cli.db;
 
-import java.util.Arrays;
-import java.util.Collection;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
 
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.SimpleArgumentSpec;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.agent.cli.impl.locale.Translate;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -67,7 +66,7 @@ public class DBOptionParser implements ThermostatOptionParser {
     
     @Override
     public void parse() throws InvalidConfigurationException {
-        
+
         if (args.hasArgument(DBArgs.START.option)) {
             serviceAction = DBArgs.START;
         } else if (args.hasArgument(DBArgs.STOP.option)) {
@@ -125,11 +124,31 @@ public class DBOptionParser implements ThermostatOptionParser {
         return quiet;
     }
 
-    public static Collection<ArgumentSpec> getAcceptedArguments() {
-        ArgumentSpec dryRun = new SimpleArgumentSpec(DBArgs.DRY.option, "d", DBArgs.DRY.description, false, false);
-        ArgumentSpec start = new SimpleArgumentSpec(DBArgs.START.option, DBArgs.START.description);
-        ArgumentSpec stop = new SimpleArgumentSpec(DBArgs.STOP.option, DBArgs.STOP.description);
-        ArgumentSpec quiet = new SimpleArgumentSpec(DBArgs.QUIET.option, "q", DBArgs.QUIET.description, false, false);
-        return Arrays.asList(dryRun, start, stop, quiet);
+    public static Options getOptions() {
+        Options options = new Options();
+
+        // TODO set default values here instead of needing to check if present later.
+        Option dryRunOption = new Option("d", DBArgs.DRY.option, false, DBArgs.DRY.description);
+        dryRunOption.setRequired(false);
+        options.addOption(dryRunOption);
+
+        OptionGroup startStopGroup = new OptionGroup();
+        startStopGroup.setRequired(true);
+
+        Option startOption = new Option("s", DBArgs.START.option, false, DBArgs.START.description);
+        startOption.setRequired(false);
+        startStopGroup.addOption(startOption);
+
+        Option stopOption = new Option("p", DBArgs.STOP.option, false, DBArgs.STOP.description);
+        stopOption.setRequired(false);
+        startStopGroup.addOption(stopOption);
+
+        options.addOptionGroup(startStopGroup);
+
+        Option quietOption = new Option("q", DBArgs.QUIET.option, false, DBArgs.QUIET.description);
+        quietOption.setRequired(false);
+        options.addOption(quietOption);
+
+        return options;
     }
 }

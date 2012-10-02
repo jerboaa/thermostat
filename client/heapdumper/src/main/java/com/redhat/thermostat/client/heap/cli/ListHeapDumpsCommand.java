@@ -40,10 +40,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
+import org.apache.commons.cli.Options;
+
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
@@ -87,8 +88,8 @@ public class ListHeapDumpsCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        return HostVMArguments.getArgumentSpecs(false, false);
+    public Options getOptions() {
+        return HostVMArguments.getOptions(false, false);
     }
 
     @Override

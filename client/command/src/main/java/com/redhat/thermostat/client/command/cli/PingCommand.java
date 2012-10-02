@@ -38,14 +38,13 @@ package com.redhat.thermostat.client.command.cli;
 
 import java.io.PrintStream;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+import org.apache.commons.cli.Options;
+
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.cli.ArgumentSpec;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -192,9 +191,8 @@ public class PingCommand extends SimpleCommand {
     }
 
     @Override
-    public Collection<ArgumentSpec> getAcceptedArguments() {
-        List<ArgumentSpec> args = new ArrayList<>();
-        return args;
+    public Options getOptions() {
+        return new Options();
     }
 
 }
