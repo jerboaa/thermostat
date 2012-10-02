@@ -40,8 +40,6 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Date;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -113,11 +111,6 @@ public class VMInfoCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        return HostVMArguments.getOptions(false);
     }
 
 }

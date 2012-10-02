@@ -39,9 +39,6 @@ package com.redhat.thermostat.client.heap.cli;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -119,20 +116,4 @@ public class FindObjectsCommand extends SimpleCommand {
     public String getName() {
         return NAME;
     }
-
-    @Override
-    public Options getOptions() {
-        Options options = new Options();
-
-        Option heapIdOption = new Option("h", HEAP_ID_ARG, true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
-        heapIdOption.setRequired(true);
-        options.addOption(heapIdOption);
-
-        Option limitOption = new Option("l", LIMIT_ARG, true, Translate.localize(LocaleResources.ARGUMENT_LIMIT_DESCRIPTION, String.valueOf(DEFAULT_LIMIT)));
-        limitOption.setRequired(false);
-        options.addOption(limitOption);
-
-        return options;
-    }
-
 }

@@ -36,10 +36,6 @@
 
 package com.redhat.thermostat.client.heap.cli;
 
-
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -90,19 +86,5 @@ class ObjectCommandHelper {
             throw new HeapNotFoundException(objectId);
         }
         return obj;
-    }
-
-    static Options getOptions() {
-        Options options = new Options();
-
-        Option heapIdOption = new Option("h", HEAP_ID_ARG, true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
-        heapIdOption.setRequired(true);
-        options.addOption(heapIdOption);
-
-        Option objectIdOption = new Option("o", OBJECT_ID_ARG, true, Translate.localize(LocaleResources.ARGUMENT_OBJECT_ID_DESCRIPTION));
-        objectIdOption.setRequired(true);
-        options.addOption(objectIdOption);
-
-        return options;
     }
 }

@@ -50,6 +50,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
@@ -168,6 +169,7 @@ public class ConnectCommandTest {
         assertNotNull(cmd.getUsage());
     }
 
+    @Ignore
     @Test
     public void testAcceptedArguments() {
         Options options = cmd.getOptions();

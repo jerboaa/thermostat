@@ -224,11 +224,6 @@ public final class AgentApplication extends BasicCommand {
     public String getName() {
         return NAME;
     }
-
-    @Override
-    public Options getOptions() {
-        return AgentOptionParser.getOptions();
-    }
     
     // Does not need a reference of the enclosing type so lets declare this class static
     private static class CustomSignalHandler implements SignalHandler {

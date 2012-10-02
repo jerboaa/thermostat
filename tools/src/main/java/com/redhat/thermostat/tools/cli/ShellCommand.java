@@ -49,7 +49,6 @@ import jline.console.history.FileHistory;
 import jline.console.history.History;
 import jline.console.history.PersistentHistory;
 
-import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 
@@ -169,11 +168,6 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        return new Options();
     }
 
     @Override

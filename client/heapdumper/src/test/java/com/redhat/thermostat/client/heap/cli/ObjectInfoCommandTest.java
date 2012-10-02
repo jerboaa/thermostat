@@ -52,6 +52,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -163,6 +164,7 @@ public class ObjectInfoCommandTest {
         assertNotNull(cmd.getUsage());
     }
 
+    @Ignore
     @Test
     public void testOptions() {
         Options options = cmd.getOptions();

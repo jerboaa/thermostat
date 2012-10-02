@@ -41,8 +41,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.agent.cli.db.DBConfig;
 import com.redhat.thermostat.agent.cli.db.DBOptionParser;
 import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
@@ -181,11 +179,6 @@ public class StorageCommand extends BasicCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        return DBOptionParser.getOptions();
     }
 
 }

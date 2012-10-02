@@ -40,8 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.agent.cli.db.StorageAlreadyRunningException;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.agent.cli.impl.locale.Translate;
@@ -120,11 +118,6 @@ public class ServiceCommand extends SimpleCommand implements ActionListener<Appl
     @Override
     public boolean isAvailableInShell() {
         return false;
-    }
-
-    @Override
-    public Options getOptions() {
-        return new Options();
     }
 
     @Override

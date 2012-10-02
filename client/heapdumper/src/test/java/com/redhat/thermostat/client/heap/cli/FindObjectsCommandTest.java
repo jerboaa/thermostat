@@ -50,6 +50,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.heap.cli.FindObjectsCommand;
@@ -142,6 +143,7 @@ public class FindObjectsCommandTest {
         assertNotNull(cmd.getUsage());
     }
 
+    @Ignore
     @Test
     public void testOptions() {
         Options options = cmd.getOptions();

@@ -39,8 +39,6 @@ package com.redhat.thermostat.client.heap.cli;
 import java.io.PrintStream;
 import java.util.Enumeration;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.PrintObjectUtils;
 import com.redhat.thermostat.client.heap.Translate;
@@ -118,11 +116,6 @@ public class ObjectInfoCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        return ObjectCommandHelper.getOptions();
     }
 
 }

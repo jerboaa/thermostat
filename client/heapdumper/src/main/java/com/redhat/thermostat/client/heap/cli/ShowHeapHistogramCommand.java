@@ -38,9 +38,6 @@ package com.redhat.thermostat.client.heap.cli;
 
 import java.io.PrintStream;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -61,17 +58,6 @@ public class ShowHeapHistogramCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        Options options = new Options();
-
-        Option heapOption = new Option("i", "heapId", true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
-        heapOption.setRequired(true);
-        options.addOption(heapOption);
-
-        return options;
     }
 
     @Override

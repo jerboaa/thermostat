@@ -117,11 +117,6 @@ public class HelpCommand extends SimpleCommand {
     }
 
     @Override
-    public Options getOptions() {
-        return new Options();
-    }
-
-    @Override
     public boolean isStorageRequired() {
         return false;
     }

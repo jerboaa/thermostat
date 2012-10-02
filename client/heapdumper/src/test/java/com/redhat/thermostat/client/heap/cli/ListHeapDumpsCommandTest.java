@@ -51,6 +51,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -101,6 +102,7 @@ public class ListHeapDumpsCommandTest {
         assertNotNull(command.getUsage());
     }
 
+    @Ignore
     @Test
     public void verifyOptions() {
         Command command = new ListHeapDumpsCommand();

@@ -107,14 +107,14 @@ public class GUIClientCommandTest {
     }
 
     @Test
+    public void testRequiresStorage() {
+        assertFalse(cmd.isStorageRequired());
+    }
+
+    @Test
     public void testOptions() {
         Options options = cmd.getOptions();
         assertNotNull(options);
         assertEquals(0, options.getOptions().size());
-    }
-
-    @Test
-    public void testRequiresStorage() {
-        assertFalse(cmd.isStorageRequired());
     }
 }

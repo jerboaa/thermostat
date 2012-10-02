@@ -56,6 +56,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Timer;
@@ -301,6 +302,7 @@ public class VmStatCommandTest {
         assertNotNull(cmd.getUsage());
     }
 
+    @Ignore
     @Test
     public void testOptions() {
         Options options = cmd.getOptions();

@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.tools.cli;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -97,25 +95,6 @@ public class ConnectCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        Options options = new Options();
-
-        Option dbOption = new Option("d", CommonCommandOptions.DB_URL_ARG, true, CommonCommandOptions.DB_URL_DESC);
-        dbOption.setRequired(true);
-        options.addOption(dbOption);
-
-        Option usernameOption = new Option("u", CommonCommandOptions.USERNAME_ARG, true, CommonCommandOptions.USERNAME_DESC);
-        usernameOption.setRequired(false);
-        options.addOption(usernameOption);
-
-        Option passwordOption = new Option("p", CommonCommandOptions.PASSWORD_ARG, true, CommonCommandOptions.PASSWORD_DESC);
-        passwordOption.setRequired(false);
-        options.addOption(passwordOption);
-
-        return options;
     }
     
     @Override

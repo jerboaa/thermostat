@@ -38,15 +38,20 @@ package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
+import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -139,5 +144,72 @@ public class CommandInfoImplTest {
 
         String commandDesc = info.getDescription();
         assertEquals(desc, commandDesc);
+    }
+
+    @Test
+    public void verifyGetUsage() {
+        Properties props = new Properties();
+        String name = "name";
+        String usage = "some sort of usage message";
+        props.put("usage", usage);
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+
+        String commandUsage = info.getUsage();
+        assertEquals(usage, commandUsage);
+    }
+
+    @Test
+    public void verifyGetOptions() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "foo, bar");
+        props.put("foo.short", "f");
+        props.put("foo.long", "foo");
+        props.put("foo.hasarg", "true");
+        props.put("foo.required", "TRUE");
+        props.put("foo.description", "the foo option");
+        props.put("bar.short", "b");
+        props.put("bar.long", "bar");
+        props.put("bar.hasarg", "FALSE");
+        props.put("bar.required", "this will evaluate as false");
+        props.put("bar.description", "the bar option");
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+
+        Options options = info.getOptions();
+        Option foo = options.getOption("foo");
+        assertEquals("foo", foo.getArgName());
+        assertEquals("f", foo.getOpt());
+        assertEquals("foo", foo.getLongOpt());
+        assertTrue(foo.hasArg());
+        assertTrue(foo.isRequired());
+        assertEquals("the foo option", foo.getDescription());
+        Option bar = options.getOption("bar");
+        assertEquals("bar", bar.getArgName());
+        assertEquals("b", bar.getOpt());
+        assertEquals("bar", bar.getLongOpt());
+        assertFalse(bar.hasArg());
+        assertFalse(bar.isRequired());
+        assertEquals("the bar option", bar.getDescription());
+    }
+
+    @Test
+    public void verifyOptionGroup() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "foo|bar");
+        props.put("foo.short", "f");
+        props.put("bar.short", "b");
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+
+        Options options = info.getOptions();
+        Option foo = options.getOption("f");
+        assertNotNull(foo);
+        OptionGroup og = options.getOptionGroup(foo);
+        assertNotNull(og);
+        Option bar = options.getOption("b");
+        @SuppressWarnings("rawtypes")
+        Collection members = og.getOptions();
+        assertTrue(members.contains(foo));
+        assertTrue(members.contains(bar));
     }
 }

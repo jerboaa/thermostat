@@ -39,6 +39,7 @@ package com.redhat.thermostat.bundles.impl;
 import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.ConfigurationException;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,7 +55,7 @@ import org.osgi.framework.launch.Framework;
 
 public class OSGiRegistryImpl extends OSGiRegistry {
 
-    private Map<String, List<String>> needed;
+    private CommandInfoSource commandInfos;
     private Map<String, Bundle> loaded;
     private Configuration configuration;
     private BundleLoader loader;
@@ -63,7 +64,6 @@ public class OSGiRegistryImpl extends OSGiRegistry {
         initLoadedBundles();
         this.configuration = configuration;
         loader = new BundleLoader(configuration.getPrintOSGiInfo());
-        needed = new HashMap<>();
     }
 
     private void initLoadedBundles() {
@@ -81,8 +81,8 @@ public class OSGiRegistryImpl extends OSGiRegistry {
     }
 
     @Override
-    public void setCommandBundleDependencies(String commandName, List<String> resourceNames) {
-        needed.put(commandName, resourceNames);
+    public void setCommandInfoSource(CommandInfoSource source) {
+        this.commandInfos = source;
     }
 
     @Override
@@ -90,7 +90,7 @@ public class OSGiRegistryImpl extends OSGiRegistry {
         if (configuration.getPrintOSGiInfo()) {
             System.out.println("Loading additional bundles for: " + commandName);
         }
-        List<String> requiredBundles = needed.get(commandName);
+        List<String> requiredBundles = commandInfos.getCommandInfo(commandName).getDependencyResourceNames();
         List<String> bundlesToLoad = new ArrayList<>();
         if (requiredBundles != null) {
             for (String resource : requiredBundles) {

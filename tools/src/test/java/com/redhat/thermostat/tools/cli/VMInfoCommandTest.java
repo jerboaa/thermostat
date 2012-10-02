@@ -54,6 +54,7 @@ import org.apache.commons.cli.Options;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -215,6 +216,7 @@ public class VMInfoCommandTest {
         assertNotNull(cmd.getUsage());
     }
 
+    @Ignore
     @Test
     public void testOptions() {
         Options options = cmd.getOptions();

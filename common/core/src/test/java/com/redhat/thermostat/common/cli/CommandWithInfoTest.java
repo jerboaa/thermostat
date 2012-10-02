@@ -34,65 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.common.cli;
 
-public enum LocaleResources {
+import org.junit.Test;
 
-    MISSING_INFO,
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-    HEADER_TIMESTAMP,
-    HEADER_HOST_ID,
-    HEADER_VM_ID,
-    HEADER_HEAP_ID,
-    HEADER_OBJECT_ID,
-    HEADER_OBJECT_TYPE,
+public class CommandWithInfoTest {
 
-    FILE_REQUIRED,
-    INVALID_LIMIT,
-    HEAP_ID_NOT_FOUND,
-    HEAP_ID_REQUIRED,
-    SEARCH_TERM_REQUIRED,
+    @Test
+    public void testHasCommandInfo() {
+        CommandWithInfo command = new CommandWithInfo() {
 
-    COMMAND_HEAP_DUMP_DONE,
+            @Override
+            public void run(CommandContext ctx) throws CommandException {
+                // Do nothing.
+            }
 
-    COMMAND_FIND_ROOT_NO_ROOT_FOUND,
-
-    COMMAND_OBJECT_INFO_OBJECT_ID,
-    COMMAND_OBJECT_INFO_TYPE,
-    COMMAND_OBJECT_INFO_SIZE,
-    COMMAND_OBJECT_INFO_HEAP_ALLOCATED,
-    COMMAND_OBJECT_INFO_REFERENCES,
-    COMMAND_OBJECT_INFO_REFERRERS,
-
-    COMMAND_SAVE_HEAP_DUMP_SAVED_TO_FILE,
-    COMMAND_SAVE_HEAP_DUMP_ERROR_SAVING,
-    COMMAND_SAVE_HEAP_DUMP_ERROR_CLOSING_STREAM,
-
-    HEAP_SECTION_TITLE,
-    HEAP_OVERVIEW_TITLE,
-    HEAP_CHART_TITLE,
-    HEAP_CHART_TIME_AXIS,
-    HEAP_CHART_HEAP_AXIS,
-    HEAP_CHART_CAPACITY,
-    HEAP_CHART_USED,
-
-    HEAP_DUMP_SECTION_HISTOGRAM,
-    HEAP_DUMP_SECTION_OBJECT_BROWSER,
-
-    HEAP_DUMP_CLASS_USAGE,
-    HEAP_DUMP_HISTOGRAM_COLUMN_CLASS,
-    HEAP_DUMP_HISTOGRAM_COLUMN_INSTANCES,
-    HEAP_DUMP_HISTOGRAM_COLUMN_SIZE,
-
-    HEAP_DUMP_OBJECT_BROWSE_SEARCH_HINT,
-    HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP,
-    HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL,
-    HEAP_DUMP_OBJECT_BROWSE_REFERRERS,
-    HEAP_DUMP_OBJECT_BROWSE_REFERENCES,
-    HEAP_DUMP_OBJECT_FIND_ROOT,
-
-    OBJECT_ROOTS_VIEW_TITLE,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.heap.strings";
+            @Override
+            public String getName() {
+                return "name";
+            }
+            
+        };
+        CommandInfo info = mock(CommandInfo.class);
+        assertFalse(command.hasCommandInfo());
+        command.setCommandInfo(info);
+        assertTrue(command.hasCommandInfo());
+    }
 }

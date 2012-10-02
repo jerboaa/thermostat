@@ -40,9 +40,6 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.PrintObjectUtils;
 import com.redhat.thermostat.client.heap.Translate;
@@ -114,18 +111,6 @@ public class FindRootCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-
-        Options options = ObjectCommandHelper.getOptions();
-
-        Option allOption = new Option("a", ALL_ARG, false, Translate.localize(LocaleResources.COMMAND_FIND_ROOT_ARGUMENT_ALL));
-        allOption.setRequired(false);
-        options.addOption(allOption);
-
-        return options;
     }
 
 }

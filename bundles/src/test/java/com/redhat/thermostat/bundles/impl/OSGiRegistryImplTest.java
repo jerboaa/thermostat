@@ -59,6 +59,8 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.Configuration;
+import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({OSGiRegistryImpl.class, FrameworkUtil.class})
@@ -121,7 +123,11 @@ public class OSGiRegistryImplTest {
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
         OSGiRegistryImpl registry = new OSGiRegistryImpl(conf);
-        registry.setCommandBundleDependencies(cmdName, bundleLocs);
+        CommandInfoSource infos = mock(CommandInfoSource.class);
+        CommandInfo info = mock(CommandInfo.class);
+        when (info.getDependencyResourceNames()).thenReturn(bundleLocs);
+        when (infos.getCommandInfo(cmdName)).thenReturn(info);
+        registry.setCommandInfoSource(infos);
         registry.addBundlesFor(cmdName);
         verify(loader).installAndStartBundles(any(Framework.class), eq(locationsNeeded));
     }

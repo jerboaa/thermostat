@@ -66,6 +66,7 @@ import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.utils.ServiceRegistry;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -106,9 +107,9 @@ public class ActivatorTest {
         when(config.getThermostatHome()).thenReturn("");
         when(registryService.getConfiguration()).thenReturn(config);
 
-        CommandInfoSource commands = mock(CommandInfoSource.class);
-        when(commands.getCommandInfos()).thenReturn(new ArrayList<CommandInfoImpl>());
-        whenNew(CommandInfoSource.class).
+        CommandInfoSourceImpl commands = mock(CommandInfoSourceImpl.class);
+        when(commands.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
+        whenNew(CommandInfoSourceImpl.class).
                 withParameterTypes(String.class).
                 withArguments(isA(String.class)).thenReturn(commands);
 

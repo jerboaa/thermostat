@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.internal;
 
-
-import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.internal.osgi.ApplicationServiceProvider;
@@ -79,11 +77,6 @@ public class GUIClientCommand extends SimpleCommand implements OSGiContext {
     @Override
     public String getName() {
         return "gui";
-    }
-
-    @Override
-    public Options getOptions() {
-        return new Options();
     }
 
     @Override

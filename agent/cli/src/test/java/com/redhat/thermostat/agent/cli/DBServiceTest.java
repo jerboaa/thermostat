@@ -58,6 +58,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.cli.StorageCommand;
@@ -250,6 +251,7 @@ public class DBServiceTest {
         assertNotNull(dbService.getUsage());
     }
 
+    @Ignore
     @Test
     public void testOptions() {
         StorageCommand dbService = new StorageCommand();

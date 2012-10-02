@@ -44,9 +44,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -78,22 +75,6 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-
-        Options options = new Options();
-
-        Option heapOption = new Option("i", HEAP_ID_ARGUMENT, true, Translate.localize(LocaleResources.ARGUMENT_HEAP_ID_DESCRIPTION));
-        heapOption.setRequired(true);
-        options.addOption(heapOption);
-
-        Option fileOption = new Option("f", FILE_NAME_ARGUMENT, true, Translate.localize(LocaleResources.ARGUMENT_FILE_NAME_DESCRIPTION));
-        fileOption.setRequired(true);
-        options.addOption(fileOption);
-
-        return options;
     }
 
     @Override

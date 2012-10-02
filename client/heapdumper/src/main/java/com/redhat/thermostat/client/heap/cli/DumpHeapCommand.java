@@ -71,11 +71,6 @@ public class DumpHeapCommand extends SimpleCommand {
     }
 
     @Override
-    public Options getOptions() {
-        return HostVMArguments.getOptions();
-    }
-
-    @Override
     public void run(CommandContext ctx) throws CommandException {
         HostVMArguments args = new HostVMArguments(ctx.getArguments());
 

@@ -53,6 +53,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.stubbing.OngoingStubbing;
 
@@ -197,6 +198,7 @@ public class FindRootCommandTest {
         assertNotNull(cmd.getUsage());
     }
 
+    @Ignore
     @Test
     public void testOptions() {
         String heapIdOption = "heapId";

@@ -36,27 +36,7 @@
 
 package com.redhat.thermostat.common.cli;
 
-import static org.junit.Assert.assertEquals;
-
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.junit.Test;
-
-import com.redhat.thermostat.common.cli.HostVMArguments;
-
 public class HostVMArgumentsTest {
 
-    @Test
-    public void testArgumentSpecification() {
-        Options options = HostVMArguments.getOptions(false);
-        assertEquals(2, options.getOptions().size());
-
-        Option vmIdOption = options.getOption("vmId");
-        assertEquals("vmId", vmIdOption.getLongOpt());
-        assertEquals(false, vmIdOption.isRequired());
-
-        Option hostIdOption = options.getOption("hostId");
-        assertEquals("hostId", hostIdOption.getLongOpt());
-        assertEquals(true, hostIdOption.isRequired());
-    }
+    // TODO make a test that checks the argument parsing behaviour.
 }

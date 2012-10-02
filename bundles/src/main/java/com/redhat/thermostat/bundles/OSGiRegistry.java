@@ -44,13 +44,14 @@ import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.bundles.impl.BundleLoader;
 import com.redhat.thermostat.common.Configuration;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 
 public abstract class OSGiRegistry {
 
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
 
-    public abstract void setCommandBundleDependencies(String commandName, List<String> resourceNames);
+    public abstract void setCommandInfoSource(CommandInfoSource source);
 
     public abstract void addBundlesFor(String commandName) throws BundleException, IOException;
 

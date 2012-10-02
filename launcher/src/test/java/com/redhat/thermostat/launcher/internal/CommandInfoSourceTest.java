@@ -50,7 +50,8 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.launcher.internal.CommandInfoSource;
+import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.launcher.internal.CommandInfoSourceImpl;
 
 public class CommandInfoSourceTest {
 
@@ -92,19 +93,19 @@ public class CommandInfoSourceTest {
 
     @Test
     public void testGetCommandInfo() {
-        CommandInfoSource bundles = new CommandInfoSource(tempThermostatHome.toString());
-        CommandInfoImpl info = bundles.getCommandInfo("foo");
+        CommandInfoSourceImpl bundles = new CommandInfoSourceImpl(tempThermostatHome.toString());
+        CommandInfo info = bundles.getCommandInfo("foo");
         assertNotNull(info);
         assertEquals("foo", info.getName());
     }
 
     @Test
     public void testGetCommandInfos() {
-        CommandInfoSource bundles = new CommandInfoSource(tempThermostatHome.toString());
-        Collection<CommandInfoImpl> infos = bundles.getCommandInfos();
+        CommandInfoSourceImpl bundles = new CommandInfoSourceImpl(tempThermostatHome.toString());
+        Collection<CommandInfo> infos = bundles.getCommandInfos();
         assertNotNull(infos);
         assertEquals(1, infos.size());
-        CommandInfoImpl info = infos.iterator().next();
+        CommandInfo info = infos.iterator().next();
         assertNotNull(info);
         assertEquals("foo", info.getName());
     }

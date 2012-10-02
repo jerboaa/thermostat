@@ -36,9 +36,6 @@
 
 package com.redhat.thermostat.agent.config;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
@@ -59,14 +56,14 @@ public class AgentOptionParser implements ThermostatOptionParser {
     @Override
     public void parse() throws InvalidConfigurationException {
 
-        if (args.hasArgument(Args.SAVE_ON_EXIT.option)) {
+        if (args.hasArgument("saveOnExit")) {
             configuration.setPurge(false);
         }
 
-        configuration.setDebugConsole(args.hasArgument(Args.DEBUG.option));
+        configuration.setDebugConsole(args.hasArgument("debug"));
         
-        if (args.hasArgument(Args.DB.option)) {
-            String url = args.getArgument(Args.DB.option);
+        if (args.hasArgument("dbUrl")) {
+            String url = args.getArgument("dbUrl");
             configuration.setDatabaseURL(url);
         } else {
             if (configuration.getDBConnectionString() == null) {
@@ -76,56 +73,11 @@ public class AgentOptionParser implements ThermostatOptionParser {
                 isHelp = true;
             }
         }
-        configuration.setUsername(args.getArgument(Args.USERNAME.option));
-        configuration.setPassword(args.getArgument(Args.PASSWORD.option));
+        configuration.setUsername(args.getArgument("username"));
+        configuration.setPassword(args.getArgument("password"));
     }
     
     public boolean isHelp() {
         return isHelp;
-    }
-    
-    private static enum Args {
-        
-        // TODO: localize
-        SAVE_ON_EXIT("saveOnExit", "save the data on exit"),
-        DB("dbUrl", "connect to the given url"),
-        USERNAME("username", "the username to use for authentication"),
-        PASSWORD("password", "the password to use for authentication"),
-        DEBUG("debug", "launch with debug console enabled"),
-        HELP("help", "print this help and exit");
-        
-        private String option;
-        private String description;
-        
-        Args(String option, String description) {
-            this.option = option;
-            this.description = description;
-        }
-    }
-
-    public static Options getOptions() {
-        Options options = new Options();
-
-        Option saveOnExitOption = new Option("s", Args.SAVE_ON_EXIT.option, false, Args.SAVE_ON_EXIT.description);
-        saveOnExitOption.setRequired(false);
-        options.addOption(saveOnExitOption);
-
-        Option dbOption = new Option("d", Args.DB.option, true, Args.DB.description);
-        dbOption.setRequired(true);
-        options.addOption(dbOption);
-
-        Option usernameOption = new Option("u", Args.USERNAME.option, true, Args.USERNAME.description);
-        usernameOption.setRequired(false);
-        options.addOption(usernameOption);
-
-        Option passwordOption = new Option("p", Args.PASSWORD.option, true, Args.PASSWORD.description);
-        passwordOption.setRequired(false);
-        options.addOption(passwordOption);
-
-        Option debugOption = new Option("v", Args.DEBUG.option, false, Args.DEBUG.description);
-        debugOption.setRequired(false);
-        options.addOption(debugOption);
-
-        return options;
     }
 }

@@ -40,6 +40,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.utils.ServiceRegistry;
 
@@ -83,7 +84,22 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     @Override
     public Command getCommand(String name) {
-        return proxy.getService(name);
+        Command command = proxy.getService(name);
+        if (command instanceof CommandWithInfo) {
+            initializeCommandInfo((CommandWithInfo) command);
+        }
+        return command;
+    }
+
+    void initializeCommandInfo(CommandWithInfo command) {
+        if (!command.hasCommandInfo()) {
+            @SuppressWarnings("rawtypes")
+            ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
+            @SuppressWarnings("unchecked")
+            CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
+            command.setCommandInfo(infos.getCommandInfo(command.getName()));
+            context.ungetService(infosRef);
+        }
     }
 
     @Override

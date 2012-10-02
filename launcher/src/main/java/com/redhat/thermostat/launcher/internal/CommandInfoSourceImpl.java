@@ -46,12 +46,15 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-public class CommandInfoSource {
+import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 
-    private static final Logger logger = Logger.getLogger(CommandInfoSource.class.getSimpleName());
-    private Map<String, CommandInfoImpl> commands;
+public class CommandInfoSourceImpl implements CommandInfoSource {
 
-    CommandInfoSource(String thermostatHome) {
+    private static final Logger logger = Logger.getLogger(CommandInfoSourceImpl.class.getSimpleName());
+    private Map<String, CommandInfo> commands;
+
+    CommandInfoSourceImpl(String thermostatHome) {
         commands = new HashMap<>();
         final File dir = new File(thermostatHome + File.separator + "etc", "commands");
         if (dir.isDirectory()) {
@@ -89,11 +92,11 @@ public class CommandInfoSource {
         return fileName.substring(0, dotIndex);
     }
 
-    public CommandInfoImpl getCommandInfo(String name) {
+    public CommandInfo getCommandInfo(String name) {
         return commands.get(name);
     }
 
-    public Collection<CommandInfoImpl> getCommandInfos() {
+    public Collection<CommandInfo> getCommandInfos() {
         return commands.values();
     }
 

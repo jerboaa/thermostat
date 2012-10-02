@@ -42,9 +42,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -55,8 +52,6 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 public class VMStatCommand extends SimpleCommand {
 
@@ -120,16 +115,4 @@ public class VMStatCommand extends SimpleCommand {
     public String getName() {
         return CMD_NAME;
     }
-
-    @Override
-    public Options getOptions() {
-        Options options = HostVMArguments.getOptions();
-
-        Option continuousOption = new Option("c", "continuous", false, Translate.localize(LocaleResources.COMMAND_VM_STAT_ARGUMENT_CONTINUOUS_DESCRIPTION));
-        continuousOption.setRequired(false);
-        options.addOption(continuousOption);
-
-        return options;
-    }
-
 }

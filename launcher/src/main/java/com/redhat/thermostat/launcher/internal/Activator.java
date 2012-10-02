@@ -47,6 +47,7 @@ import com.redhat.thermostat.common.CommandLoadingBundleActivator;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -66,18 +67,12 @@ public class Activator extends CommandLoadingBundleActivator {
             
             registryReference = context.getServiceReference(OSGiRegistry.class);
             OSGiRegistry bundleService = (OSGiRegistry) context.getService(registryReference);
-            CommandInfoSource commands = new CommandInfoSource(bundleService.getConfiguration().getThermostatHome());
-            informRegistryAboutCommandDependencies(commands, bundleService);
+            CommandInfoSourceImpl commands = new CommandInfoSourceImpl(bundleService.getConfiguration().getThermostatHome());
+            context.registerService(CommandInfoSource.class, commands, null);
+            bundleService.setCommandInfoSource(commands);
             LauncherImpl launcher = new LauncherImpl(context,
                     new CommandContextFactory(context), bundleService);
             launcherServiceRegistration = context.registerService(Launcher.class.getName(), launcher, null);
-        }
-
-        private void informRegistryAboutCommandDependencies(CommandInfoSource commands, OSGiRegistry bundleService) {
-            for (CommandInfoImpl info : commands.getCommandInfos()) {
-                bundleService.setCommandBundleDependencies(info.getName(),
-                    info.getDependencyResourceNames());
-            }
         }
 
         @Override

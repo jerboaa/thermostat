@@ -38,8 +38,6 @@ package com.redhat.thermostat.tools.cli;
 
 import java.util.Collection;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -76,11 +74,6 @@ public class ListVMsCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        return new Options();
     }
 
 }

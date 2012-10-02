@@ -1,9 +1,14 @@
 package com.redhat.thermostat.common.cli;
 
+import java.util.logging.Logger;
+
 import org.apache.commons.cli.Options;
+
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public abstract class CommandWithInfo implements Command {
 
+    private static final Logger logger = LoggingUtils.getLogger(CommandWithInfo.class);
     private CommandInfo info;
     private static final String noDesc = "Description not available.";
     private static final String noUsage = "Usage not available.";
@@ -12,13 +17,16 @@ public abstract class CommandWithInfo implements Command {
         this.info = info; 
     }
 
+    boolean hasCommandInfo() {
+        return info != null;
+    }
+
     @Override
     public String getDescription() {
         String desc = null;
-        try {
+        if (hasCommandInfo()) {
             desc = info.getDescription();
-        } catch (NullPointerException infoWasNotSet) {}
-
+        }
         if (desc == null) {
             desc = noDesc;
         }
@@ -28,9 +36,9 @@ public abstract class CommandWithInfo implements Command {
     @Override
     public String getUsage() {
         String usage = null;
-        try {
+        if (hasCommandInfo()) { 
             usage = info.getUsage();
-        } catch (NullPointerException infoNotSet) {}
+        }
         if (usage == null) {
             usage = noUsage;
         }
@@ -39,8 +47,12 @@ public abstract class CommandWithInfo implements Command {
 
     @Override
     public Options getOptions() {
-        // TODO Auto-generated method stub
-        return null;
+        try {
+            return info.getOptions();
+        } catch (NullPointerException e) {
+            logger.warning("CommandInfo not yet set, returning empty Options.");
+            return new Options();
+        }
     }
 
     @Override

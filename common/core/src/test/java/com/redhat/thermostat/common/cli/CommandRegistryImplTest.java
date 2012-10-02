@@ -52,6 +52,7 @@ import java.util.Hashtable;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -206,5 +207,23 @@ public class CommandRegistryImplTest {
         assertEquals(2, cmds.size());
         assertTrue(cmds.contains(cmd1));
         assertTrue(cmds.contains(cmd2));
+    }
+
+    @Test
+    public void testInitializeCommandInfo() {
+        CommandInfoSource infos = mock(CommandInfoSource.class);
+        ServiceReference infosRef = mock(ServiceReference.class);
+        CommandInfo info = mock(CommandInfo.class);
+        when(infos.getCommandInfo("name")).thenReturn(info);
+        CommandWithInfo command = mock(CommandWithInfo.class);
+        when(command.getName()).thenReturn("name");
+        when(command.hasCommandInfo()).thenReturn(false);
+
+        when(bundleContext.getServiceReference(CommandInfoSource.class)).thenReturn(infosRef);
+        when(bundleContext.getService(infosRef)).thenReturn(infos);
+
+        commandRegistry.initializeCommandInfo(command);
+        verify(command).setCommandInfo(info);
+        verify(bundleContext).ungetService(infosRef);
     }
 }

@@ -41,8 +41,6 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -176,11 +174,6 @@ public class PingCommand extends SimpleCommand {
     @Override
     public String getName() {
         return NAME;
-    }
-
-    @Override
-    public Options getOptions() {
-        return new Options();
     }
 
 }
