@@ -43,11 +43,14 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.bundles.impl.BundleLoader;
+import com.redhat.thermostat.common.Configuration;
 
 
 public abstract class OSGiRegistry {
 
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
+
+    public abstract void setCommandBundleDependencies(String commandName, List<String> resourceNames);
 
     public abstract void addBundlesFor(String commandName) throws BundleException, IOException;
 
@@ -56,5 +59,7 @@ public abstract class OSGiRegistry {
         BundleLoader loader = new BundleLoader(printOSGiInfo);
         loader.installAndStartBundles(framework, bundleLocations);
     }
+
+    public abstract Configuration getConfiguration();
 
 }

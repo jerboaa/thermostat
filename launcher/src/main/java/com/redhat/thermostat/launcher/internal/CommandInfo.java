@@ -34,55 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.bundles.impl;
+package com.redhat.thermostat.launcher.internal;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
+import java.util.logging.Logger;
 
-public class BundleProperties {
 
-    private Map<String, List<String>> bundleDependencies;
+public class CommandInfo {
 
-    BundleProperties(String thermostatHome) throws FileNotFoundException, IOException {
-        bundleDependencies = new HashMap<>();
-        File bundlePropFile = new File(thermostatHome + File.separator + "etc", "bundles.properties");
-        Properties bundleProps = new Properties();
-        bundleProps.load(new FileReader(bundlePropFile));
-        for (Entry<Object,Object> entry: bundleProps.entrySet()) {
-            String libRoot = thermostatHome + File.separator + "libs";
-            String group = (String) entry.getKey();
-            List<String> resourceNames = Arrays.asList(((String)entry.getValue()).split(","));
-            List<String> paths = new ArrayList<>(resourceNames.size());
-            for (String value: resourceNames) {
-                File file = new File(libRoot, value.trim());
-                String path = file.toURI().toString();
-                if (!file.exists()) {
-                    throw new FileNotFoundException("Bundle " + path + " required by " +
-                            group + " command does not exist in the filesystem.");
-                }
-                paths.add(path);
+    private static final Logger logger = Logger.getLogger(CommandInfoSource.class.getSimpleName());
+    private static final String PROPERTY_BUNDLES = "bundles";
+
+    private String name;
+    private List<String> dependencies;
+
+    CommandInfo(String name, Properties properties, String thermostatHome) {
+        this.name = name;
+        for (Entry<Object,Object> entry: properties.entrySet()) {
+            String key = (String) entry.getKey();
+            if (key.equals(PROPERTY_BUNDLES)) {
+                learnDependencies(entry, thermostatHome);
             }
-            bundleDependencies.put(group, paths);
+            
         }
-
     }
 
-    public List<String> getDependencyResourceNamesFor(String group) {
-        List<String> deps = bundleDependencies.get(group);
-        if (deps == null) {
-            deps = new ArrayList<String>();
-            bundleDependencies.put(group, deps);
+    private void learnDependencies(Entry<Object, Object> bundlesEntry, String thermostatHome) {
+        String libRoot = thermostatHome + File.separator + "libs";
+        List<String> resourceNames = Arrays.asList(((String)bundlesEntry.getValue()).split(","));
+        dependencies = new ArrayList<>(resourceNames.size());
+        for (String value: resourceNames) {
+            File file = new File(libRoot, value.trim());
+            String path = file.toURI().toString();
+            if (!file.exists()) {
+                logger.severe("Bundle " + path + " required by " + getName() +
+                        " command does not exist in the filesystem.  This will cause" +
+                        " osgi wiring issue when attempting to run this command.");
+                // Allow to proceed because this command may never be called.
+            } else {
+                dependencies.add(path);
+            }
         }
-        return deps;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    List<String> getDependencyResourceNames() {
+        return dependencies;
+    }
 }

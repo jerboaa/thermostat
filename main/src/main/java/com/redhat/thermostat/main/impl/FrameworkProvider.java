@@ -77,11 +77,7 @@ public class FrameworkProvider {
 
     public FrameworkProvider(Configuration config) {
         printOSGiInfo = config.getPrintOSGiInfo();
-        try {
-            this.thermostatHome = config.getThermostatHome();
-        } catch (ConfigurationException e) {
-            throw new RuntimeException("Cannot initialize frameworks without valid ThermostatHome.", e);
-        }
+        this.thermostatHome = config.getThermostatHome();
     }
 
     // This is our ticket into OSGi land. Unfortunately, we to use a bit of reflection here.

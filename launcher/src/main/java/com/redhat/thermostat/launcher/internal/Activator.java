@@ -66,9 +66,18 @@ public class Activator extends CommandLoadingBundleActivator {
             
             registryReference = context.getServiceReference(OSGiRegistry.class);
             OSGiRegistry bundleService = (OSGiRegistry) context.getService(registryReference);
+            CommandInfoSource commands = new CommandInfoSource(bundleService.getConfiguration().getThermostatHome());
+            informRegistryAboutCommandDependencies(commands, bundleService);
             LauncherImpl launcher = new LauncherImpl(context,
                     new CommandContextFactory(context), bundleService);
             launcherServiceRegistration = context.registerService(Launcher.class.getName(), launcher, null);
+        }
+
+        private void informRegistryAboutCommandDependencies(CommandInfoSource commands, OSGiRegistry bundleService) {
+            for (CommandInfo info : commands.getCommandInfos()) {
+                bundleService.setCommandBundleDependencies(info.getName(),
+                    info.getDependencyResourceNames());
+            }
         }
 
         @Override

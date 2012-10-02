@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.verifyNew;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
@@ -61,6 +62,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.bundles.OSGiRegistry;
+import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
@@ -99,6 +101,16 @@ public class ActivatorTest {
                 thenReturn(helpCommandRegistration);
         when(context.getService(helpCommandReference)).thenReturn(helpCommand);
         when(context.getServiceReferences(Command.class.getName(), null)).thenReturn(new ServiceReference[] {helpCommandReference});
+
+        Configuration config = mock(Configuration.class);
+        when(config.getThermostatHome()).thenReturn("");
+        when(registryService.getConfiguration()).thenReturn(config);
+
+        CommandInfoSource commands = mock(CommandInfoSource.class);
+        when(commands.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
+        whenNew(CommandInfoSource.class).
+                withParameterTypes(String.class).
+                withArguments(isA(String.class)).thenReturn(commands);
 
         tracker = mock(MultipleServiceTracker.class);
         whenNew(MultipleServiceTracker.class).

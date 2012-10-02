@@ -54,18 +54,16 @@ import org.osgi.framework.launch.Framework;
 
 public class OSGiRegistryImpl extends OSGiRegistry {
 
+    private Map<String, List<String>> needed;
     private Map<String, Bundle> loaded;
     private Configuration configuration;
-    private String thermostatHome;
-    private BundleProperties bundleProperties;
     private BundleLoader loader;
 
     OSGiRegistryImpl(Configuration configuration) throws ConfigurationException, FileNotFoundException, IOException {
         initLoadedBundles();
-        thermostatHome = configuration.getThermostatHome();
-        bundleProperties = new BundleProperties(thermostatHome);
         this.configuration = configuration;
         loader = new BundleLoader(configuration.getPrintOSGiInfo());
+        needed = new HashMap<>();
     }
 
     private void initLoadedBundles() {
@@ -83,15 +81,22 @@ public class OSGiRegistryImpl extends OSGiRegistry {
     }
 
     @Override
+    public void setCommandBundleDependencies(String commandName, List<String> resourceNames) {
+        needed.put(commandName, resourceNames);
+    }
+
+    @Override
     public void addBundlesFor(String commandName) throws BundleException, IOException {
         if (configuration.getPrintOSGiInfo()) {
             System.out.println("Loading additional bundles for: " + commandName);
         }
-        List<String> requiredBundles = bundleProperties.getDependencyResourceNamesFor(commandName);
+        List<String> requiredBundles = needed.get(commandName);
         List<String> bundlesToLoad = new ArrayList<>();
-        for (String resource : requiredBundles) {
-            if (!isBundleActive(resource)) {
-                bundlesToLoad.add(resource);
+        if (requiredBundles != null) {
+            for (String resource : requiredBundles) {
+                if (!isBundleActive(resource)) {
+                    bundlesToLoad.add(resource);
+                }
             }
         }
         Framework framework = getFramework(this.getClass());
@@ -108,5 +113,10 @@ public class OSGiRegistryImpl extends OSGiRegistry {
 
     private Framework getFramework(Class<?> cls) {
         return (Framework) FrameworkUtil.getBundle(cls).getBundleContext().getBundle(0);
+    }
+
+    @Override
+    public Configuration getConfiguration() {
+        return configuration;
     }
 }

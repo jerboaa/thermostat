@@ -52,21 +52,21 @@ public class Configuration {
     private final String home;
     private boolean printOSGiInfo;
 
-    public Configuration() {
+    public Configuration() throws ConfigurationException {
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
         String home = System.getProperty("THERMOSTAT_HOME");
         if (home == null) {
             home = System.getenv("THERMOSTAT_HOME");
         }
+        if (home == null) {
+            throw new ConfigurationException("THERMOSTAT_HOME is not defined as either Java property or environment variable.  Cannot proceed.");
+        }
         this.home = home;
         printOSGiInfo = false;
     }
 
-    public String getThermostatHome() throws ConfigurationException {
-        if (home == null) {
-            throw new ConfigurationException("THERMOSTAT_HOME not defined...");
-        }
+    public String getThermostatHome() {
         return home;
     }
 

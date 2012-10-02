@@ -37,7 +37,6 @@
 package com.redhat.thermostat.bundles.impl;
 
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -46,7 +45,6 @@ import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -76,7 +74,6 @@ public class OSGiRegistryImplTest {
     private List<String> bundleLocs;
 
     private BundleLoader loader;
-    private BundleProperties bundleProps;
     private Configuration conf;
     
     @Before
@@ -94,12 +91,7 @@ public class OSGiRegistryImplTest {
         when(b3.getLocation()).thenReturn(jar3Name);
         when(b3.getState()).thenReturn(Bundle.ACTIVE);
         List<Bundle> installed = Arrays.asList(b1, b2, b3);
-        
-        bundleProps = mock(BundleProperties.class);
-        when(bundleProps.getDependencyResourceNamesFor(eq(cmdName))).
-                thenReturn(bundleLocs);
-        whenNew(BundleProperties.class).withParameterTypes(String.class).
-                withArguments(anyString()).thenReturn(bundleProps);
+
         loader = mock(BundleLoader.class);
         when(loader.installAndStartBundles(any(Framework.class), eq(bundleLocs))).
                 thenReturn(installed);
@@ -129,6 +121,7 @@ public class OSGiRegistryImplTest {
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
         OSGiRegistryImpl registry = new OSGiRegistryImpl(conf);
+        registry.setCommandBundleDependencies(cmdName, bundleLocs);
         registry.addBundlesFor(cmdName);
         verify(loader).installAndStartBundles(any(Framework.class), eq(locationsNeeded));
     }
