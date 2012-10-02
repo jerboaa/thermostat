@@ -5,6 +5,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
 import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.common.cli.CommandInfo;
 
 public class CommonCommandOptions {
 
@@ -23,6 +24,14 @@ public class CommonCommandOptions {
 
         Options options = cmd.getOptions();
         addDbUrlOptionForStorageCommand(cmd, options);
+        addLogLevelOption(options);
+        addOptionalAuthenticationArguments(options);
+        return options;
+    }
+
+    public Options getOptionsFor(CommandInfo info) {
+        // TODO make storageRequired part of CommandInfo (in command.properties)
+        Options options = info.getOptions();
         addLogLevelOption(options);
         addOptionalAuthenticationArguments(options);
         return options;

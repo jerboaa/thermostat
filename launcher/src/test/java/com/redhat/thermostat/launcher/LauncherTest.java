@@ -38,6 +38,7 @@ package com.redhat.thermostat.launcher;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,6 +62,7 @@ import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -76,6 +78,8 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
@@ -91,10 +95,13 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FrameworkUtil.class, DbServiceFactory.class})
+@PrepareForTest({FrameworkUtil.class, DbServiceFactory.class, HelpCommand.class})
 public class LauncherTest {
     
     private static String defaultKeyringProvider;
+    private static final String name1 = "test1";
+    private static final String name2 = "test2";
+    private static final String name3 = "test3";
       
     @BeforeClass
     public static void beforeClassSetUp() {
@@ -139,33 +146,84 @@ public class LauncherTest {
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
         setupCommandContextFactory();
 
-        TestCommand cmd1 = new TestCommand("test1", new TestCmd1());
+        TestCommand cmd1 = new TestCommand(name1, new TestCmd1());
+        CommandInfo info1 = mock(CommandInfo.class);
+        when(info1.getName()).thenReturn(name1);
+        Options options1 = new Options();
         Option opt1 = new Option(null, "arg1", true, null);
+        options1.addOption(opt1);
         Option opt2 = new Option(null, "arg2", true, null);
+        options1.addOption(opt2);
         cmd1.addOptions(opt1, opt2);
         cmd1.setDescription("description 1");
+        when(info1.getDescription()).thenReturn("description 1");
+        when(info1.getOptions()).thenReturn(options1);
         TestCommand cmd2 = new TestCommand("test2", new TestCmd2());
+        CommandInfo info2 = mock(CommandInfo.class);
+        when(info2.getName()).thenReturn(name2);
+        Options options2 = new Options();
         Option opt3 = new Option(null, "arg3", true, null);
+        options2.addOption(opt3);
         Option opt4 = new Option(null, "arg4", true, null);
+        options2.addOption(opt4);
         cmd2.addOptions(opt3, opt4);
         cmd2.setDescription("description 2");
+        when(info2.getDescription()).thenReturn("description 2");
+        when(info2.getOptions()).thenReturn(options2);
 
-        TestCommand cmd3 = new TestCommand("test3");
+        TestCommand cmd3 = new TestCommand(name3);
+        CommandInfo info3 = mock(CommandInfo.class);
+        when(info3.getName()).thenReturn(name3);
         cmd3.setStorageRequired(true);
         cmd3.setDescription("description 3");
+        when(info3.getDescription()).thenReturn("description 3");
+        when(info3.getOptions()).thenReturn(new Options());
 
         BasicCommand basicCmd = mock(BasicCommand.class);
+        CommandInfo basicInfo = mock(CommandInfo.class);
         when(basicCmd.getName()).thenReturn("basic");
+        when(basicInfo.getName()).thenReturn("basic");
         when(basicCmd.getDescription()).thenReturn("nothing that means anything");
+        when(basicInfo.getDescription()).thenReturn("nothing that means anything");
         when(basicCmd.isStorageRequired()).thenReturn(false);
         Options options = new Options();
         when(basicCmd.getOptions()).thenReturn(options);
+        when(basicInfo.getOptions()).thenReturn(options);
         notifier = mock(ActionNotifier.class);
         when(basicCmd.getNotifier()).thenReturn(notifier);
+        CommandInfo helpCommandInfo = mock(CommandInfo.class);
+        when(helpCommandInfo.getName()).thenReturn("help");
+        when(helpCommandInfo.getDescription()).thenReturn("print help information");
+        when(helpCommandInfo.getDependencyResourceNames()).thenReturn(new ArrayList<String>());
+        when(helpCommandInfo.getOptions()).thenReturn(new Options());
+        when(helpCommandInfo.getUsage()).thenReturn("thermostat help");
 
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(new HelpCommand(), cmd1, cmd2, cmd3, basicCmd));
 
         registry = mock(OSGiRegistry.class);
+
+        CommandInfoSource infos = mock(CommandInfoSource.class);
+        when(infos.getCommandInfo(name1)).thenReturn(info1);
+        when(infos.getCommandInfo(name2)).thenReturn(info2);
+        when(infos.getCommandInfo(name3)).thenReturn(info3);
+        when(infos.getCommandInfo("basic")).thenReturn(basicInfo);
+        when(infos.getCommandInfo("help")).thenReturn(helpCommandInfo);
+        Collection<CommandInfo> infoList = new ArrayList<CommandInfo>();
+        infoList.add(helpCommandInfo);
+        infoList.add(basicInfo);
+        infoList.add(info1);
+        infoList.add(info2);
+        infoList.add(info3);
+        when(infos.getCommandInfos()).thenReturn(infoList);
+
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle bundle = mock(Bundle.class);
+        BundleContext bCtx = mock(BundleContext.class);
+        when(bundle.getBundleContext()).thenReturn(bCtx);
+        ServiceReference infosRef = mock(ServiceReference.class);
+        when(bCtx.getServiceReference(CommandInfoSource.class)).thenReturn(infosRef);
+        when(bCtx.getService(infosRef)).thenReturn(infos);
+        when(FrameworkUtil.getBundle(isA(HelpCommand.class.getClass()))).thenReturn(bundle);
     }
 
     private void setupCommandContextFactory() {
@@ -184,7 +242,7 @@ public class LauncherTest {
 
     @Test
     public void testMain() {
-        runAndVerifyCommand(new String[] {"test1", "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
+        runAndVerifyCommand(new String[] {name1, "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
 
         ctxFactory.reset();
 
@@ -194,7 +252,7 @@ public class LauncherTest {
     @Test
     public void testMainNoArgs() {
         String expected = "list of commands:\n\n"
-                        + " help          Description not available.\n" // We haven't actually set up CommandInfo here.
+                        + " help          print help information\n"
                         + " basic         nothing that means anything\n"
                         + " test1         description 1\n"
                         + " test2         description 2\n"
@@ -204,7 +262,7 @@ public class LauncherTest {
 
     @Test
     public void verifySetLogLevel() {
-        runAndVerifyCommand(new String[] {"test1", "--logLevel", "WARNING", "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
+        runAndVerifyCommand(new String[] {name1, "--logLevel", "WARNING", "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
         Logger globalLogger = Logger.getLogger("com.redhat.thermostat");
         assertEquals(Level.WARNING, globalLogger.getLevel());
     }
@@ -213,7 +271,7 @@ public class LauncherTest {
     public void testMainBadCommand1() {
         String expected = "unknown command '--help'\n"
             + "list of commands:\n\n"
-            + " help          Description not available.\n"
+            + " help          print help information\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -225,7 +283,7 @@ public class LauncherTest {
     public void testMainBadCommand2() {
         String expected = "unknown command '-help'\n"
             + "list of commands:\n\n"
-            + " help          Description not available.\n"
+            + " help          print help information\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -237,7 +295,7 @@ public class LauncherTest {
     public void testMainBadCommand3() {
         String expected = "unknown command 'foobarbaz'\n"
             + "list of commands:\n\n"
-            + " help          Description not available.\n"
+            + " help          print help information\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"
@@ -249,7 +307,7 @@ public class LauncherTest {
     public void testMainBadCommand4() {
         String expected = "unknown command 'foo'\n"
             + "list of commands:\n\n"
-            + " help          Description not available.\n"
+            + " help          print help information\n"
             + " basic         nothing that means anything\n"
             + " test1         description 1\n"
             + " test2         description 2\n"

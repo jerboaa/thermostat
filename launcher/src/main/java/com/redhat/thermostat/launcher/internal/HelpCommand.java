@@ -45,11 +45,14 @@ import java.util.List;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandRegistry;
+import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
@@ -59,7 +62,7 @@ public class HelpCommand extends SimpleCommand {
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
     private static final String NAME = "help";
 
-    private static final CommandComparator comparator = new CommandComparator();
+    private static final CommandInfoComparator comparator = new CommandInfoComparator();
 
     @Override
     public void run(CommandContext ctx) {
@@ -73,41 +76,47 @@ public class HelpCommand extends SimpleCommand {
     }
 
     private void printCommandSummaries(CommandContext ctx) {
-        CommandRegistry cmdRegistry = ctx.getCommandRegistry();
-
+        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
+        CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
         ctx.getConsole().getOutput().print("list of commands:\n\n");
 
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
-        Collection<Command> commands = cmdRegistry.getRegisteredCommands();
-        List<Command> sortedCommands = new ArrayList<>(commands);
+        Collection<CommandInfo> commandInfos = infos.getCommandInfos();
+        context.ungetService(infosRef);
+        List<CommandInfo> sortedCommandInfos = new ArrayList<>(commandInfos);
 
-        Collections.sort(sortedCommands, comparator);
-        for (Command cmd : sortedCommands) {
-            printCommandSummary(renderer, cmd);
+        Collections.sort(sortedCommandInfos, comparator);
+        for (CommandInfo info : sortedCommandInfos) {
+            printCommandSummary(renderer, info);
         }
         renderer.render(ctx.getConsole().getOutput());
     }
 
-    private void printCommandSummary(TableRenderer renderer, Command cmd) {
-        renderer.printLine(" " + cmd.getName(), cmd.getDescription());
+    private void printCommandSummary(TableRenderer renderer, CommandInfo info) {
+        renderer.printLine(" " + info.getName(), info.getDescription());
     }
 
     private void printCommandUsage(CommandContext ctx, String cmdName) {
-        Command cmd = ctx.getCommandRegistry().getCommand(cmdName);
-        if (cmd != null) {
-            printHelp(ctx, cmd);
+        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
+        CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
+        CommandInfo info = infos.getCommandInfo(cmdName);
+        context.ungetService(infosRef);
+        if (info != null) {
+            printHelp(ctx, info);
         } else {
             printCommandSummaries(ctx);
         }
     }
 
-    private void printHelp(CommandContext ctx, Command cmd) {
+    private void printHelp(CommandContext ctx, CommandInfo info) {
         HelpFormatter helpFormatter = new HelpFormatter();
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
         CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Options options = commonOpts.getOptionsFor(cmd);
-        helpFormatter.printHelp(pw, 80, cmd.getName(), cmd.getUsage(), options, 2, 4, null, true);
+        Options options = commonOpts.getOptionsFor(info);
+        helpFormatter.printHelp(pw, 80, info.getName(), info.getUsage(), options, 2, 4, null, true);
         pw.flush();
     }
 
@@ -121,10 +130,10 @@ public class HelpCommand extends SimpleCommand {
         return false;
     }
 
-    private static class CommandComparator implements Comparator<Command> {
+    private static class CommandInfoComparator implements Comparator<CommandInfo> {
 
         @Override
-        public int compare(Command o1, Command o2) {
+        public int compare(CommandInfo o1, CommandInfo o2) {
             // this command ('help') is always listed first
             if (o1.getName().equals(o2.getName())) {
                 return 0;
