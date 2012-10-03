@@ -67,7 +67,7 @@ RUNNING THERMOSTAT
 0. cd into distribution/target directory just created
 
 1. To start the agent and the db:
-   bin/thermostat service --start
+   bin/thermostat service
 
 2. To start the gui client:
    bin/thermostat gui
