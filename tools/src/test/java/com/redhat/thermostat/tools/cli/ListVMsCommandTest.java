@@ -61,6 +61,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class ListVMsCommandTest {
@@ -69,16 +70,19 @@ public class ListVMsCommandTest {
     private TestCommandContextFactory cmdCtxFactory;
     private HostInfoDAO hostsDAO;
     private VmInfoDAO vmsDAO;
+    private OSGIUtils serviceProvider;
 
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
         setupCommandContextFactory();
+        serviceProvider = mock(OSGIUtils.class);
 
-        cmd = new ListVMsCommand();
+        cmd = new ListVMsCommand(serviceProvider);
 
         setupDAOs();
 
+        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostsDAO);
     }
 
     private void setupCommandContextFactory() {
@@ -89,7 +93,6 @@ public class ListVMsCommandTest {
         hostsDAO = mock(HostInfoDAO.class);
         vmsDAO = mock(VmInfoDAO.class);
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostsDAO);
         when(daoFactory.getVmInfoDAO()).thenReturn(vmsDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }

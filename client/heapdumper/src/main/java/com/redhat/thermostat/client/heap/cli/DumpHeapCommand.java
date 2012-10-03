@@ -87,7 +87,7 @@ public class DumpHeapCommand extends SimpleCommand {
             throw new CommandException("Unable to access agent information");
         }
         implementation.execute(service, args.getVM(), r);
-        serviceProvider.ungetService(service);
+        serviceProvider.ungetService(AgentInfoDAO.class, service);
 
         try {
             s.acquire();

@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class ListHeapDumpsCommand extends SimpleCommand {
 
@@ -67,6 +68,17 @@ public class ListHeapDumpsCommand extends SimpleCommand {
         Translate.localize(LocaleResources.HEADER_HEAP_ID),
         Translate.localize(LocaleResources.HEADER_TIMESTAMP),
     };
+
+    private final OSGIUtils serviceProvider;
+
+    public ListHeapDumpsCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    /** For tests only */
+    ListHeapDumpsCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
 
     @Override
     public String getName() {
@@ -82,7 +94,11 @@ public class ListHeapDumpsCommand extends SimpleCommand {
         renderer.printLine(COLUMN_NAMES);
 
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-        HostInfoDAO hostDAO = daoFactory.getHostInfoDAO();
+        HostInfoDAO hostDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
+        if (hostDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILALBE));
+        }
+
         VmInfoDAO vmDAO = daoFactory.getVmInfoDAO();
         HeapDAO heapDAO = daoFactory.getHeapDAO();
 
@@ -93,6 +109,8 @@ public class ListHeapDumpsCommand extends SimpleCommand {
                 printDumpsForVm(heapDAO, hostRef, vmRef, renderer);
             }
         }
+
+        serviceProvider.ungetService(HostInfoDAO.class, hostDAO);
 
         renderer.render(ctx.getConsole().getOutput());
     }

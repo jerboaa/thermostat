@@ -48,17 +48,36 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 public class ListVMsCommand extends SimpleCommand {
 
     private static final String NAME = "list-vms";
 
+    private final OSGIUtils serviceProvider;
+
+    public ListVMsCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    ListVMsCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-        HostInfoDAO hostsDAO = daoFactory.getHostInfoDAO();
+
+        HostInfoDAO hostsDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
+        if (hostsDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
+        }
         Collection<HostRef> hosts = hostsDAO.getHosts();
+        serviceProvider.ungetService(HostInfoDAO.class, hostsDAO);
+
         VmInfoDAO vmsDAO = daoFactory.getVmInfoDAO();
         VMListFormatter formatter = new VMListFormatter();
         for (HostRef host : hosts) {

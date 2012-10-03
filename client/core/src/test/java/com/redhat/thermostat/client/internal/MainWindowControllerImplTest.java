@@ -185,7 +185,7 @@ public class MainWindowControllerImplTest {
 
         setUpVMContextActions();
 
-        controller = new MainWindowControllerImpl(uiFacadeFactory, view, registryFactory);
+        controller = new MainWindowControllerImpl(uiFacadeFactory, view, registryFactory, mockHostsDAO);
         l = grabListener.getValue();
         
         hostFiltersListener = grabHostFiltersListener.getValue();
@@ -222,7 +222,6 @@ public class MainWindowControllerImplTest {
         mockVmsDAO = mock(VmInfoDAO.class);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(mockHostsDAO);
         when(daoFactory.getVmInfoDAO()).thenReturn(mockVmsDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 

@@ -67,26 +67,13 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.BackendInfoDAO;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.storage.Connection.ConnectionType;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -296,7 +283,8 @@ public class Main {
                 // register the storage, so other services can request it
                 DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
 
-                registerDAOsAndStorageAsOSGiServices(daoFactory);
+                daoFactory.registerDAOsAndStorageAsOSGiServices();
+                uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
 
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
@@ -314,27 +302,7 @@ public class Main {
             }
         }
     }
-    
-    private void registerDAOsAndStorageAsOSGiServices(DAOFactory daoFactory) {
-        OSGIUtils registerer = OSGIUtils.getInstance();
 
-        registerer.registerService(Storage.class, daoFactory.getStorage());
-
-        registerer.registerService(AgentInfoDAO.class, daoFactory.getAgentInfoDAO());
-        registerer.registerService(BackendInfoDAO.class, daoFactory.getBackendInfoDAO());
-
-        registerer.registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
-        registerer.registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
-        registerer.registerService(CpuStatDAO.class, daoFactory.getCpuStatDAO());
-        registerer.registerService(MemoryStatDAO.class, daoFactory.getMemoryStatDAO());
-
-        registerer.registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());
-        registerer.registerService(VmClassStatDAO.class, daoFactory.getVmClassStatsDAO());
-        registerer.registerService(VmCpuStatDAO.class, daoFactory.getVmCpuStatDAO());
-        registerer.registerService(VmGcStatDAO.class, daoFactory.getVmGcStatDAO());
-        registerer.registerService(VmMemoryStatDAO.class, daoFactory.getVmMemoryStatDAO());
-        registerer.registerService(HeapDAO.class, daoFactory.getHeapDAO());
-    }
 
     private void showMainWindow() {
         SwingUtilities.invokeLater(new ShowMainWindow());

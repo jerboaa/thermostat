@@ -70,12 +70,12 @@ public class HostCpuController {
     private int chartsAdded = 0;
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public HostCpuController(HostRef ref) {
+    public HostCpuController(HostInfoDAO hostInfoDao, HostRef ref) {
         this.ref = ref;
         view = ApplicationContext.getInstance().getViewFactory().getView(HostCpuView.class);
         view.clearCpuUsageData();
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
-        hostInfoDAO = daos.getHostInfoDAO();
+        this.hostInfoDAO = hostInfoDao;
         cpuStatDAO = daos.getCpuStatDAO();
 
         backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();

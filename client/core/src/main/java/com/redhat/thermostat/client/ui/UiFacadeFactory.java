@@ -40,10 +40,13 @@ import java.util.Collection;
 
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public interface UiFacadeFactory {
+
+    void setHostInfoDao(HostInfoDAO hostInfoDao);
 
     public MainWindowController getMainWindow();
 

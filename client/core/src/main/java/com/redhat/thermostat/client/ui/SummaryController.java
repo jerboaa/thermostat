@@ -59,7 +59,7 @@ public class SummaryController {
 
     private final Timer backgroundUpdateTimer;
 
-    public SummaryController() {
+    public SummaryController(HostInfoDAO hostInfoDao) {
         ApplicationContext ctx = ApplicationContext.getInstance();
 
         this.view = ctx.getViewFactory().getView(SummaryView.class);
@@ -81,7 +81,7 @@ public class SummaryController {
         });
 
         DAOFactory daoFactory = ctx.getDAOFactory();
-        hostsDAO = daoFactory.getHostInfoDAO();
+        hostsDAO = hostInfoDao;
         vmsDAO = daoFactory.getVmInfoDAO();
 
         backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();

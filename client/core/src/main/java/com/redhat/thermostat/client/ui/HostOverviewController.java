@@ -75,10 +75,10 @@ public class HostOverviewController {
 
     private final HostOverviewView view;
 
-    public HostOverviewController(final HostRef ref) {
+    public HostOverviewController(HostInfoDAO hostInfoDAO, final HostRef ref) {
         this.ref = ref;
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
-        hostInfoDAO = df.getHostInfoDAO();
+        this.hostInfoDAO = hostInfoDAO;
         networkInfoDAO = df.getNetworkInterfaceInfoDAO();
 
         final Vector<String> networkTableColumnVector;
@@ -91,7 +91,7 @@ public class HostOverviewController {
         backgroundUpdateTimer.setAction(new Runnable() {
             @Override
             public void run() {
-                HostInfo hostInfo = hostInfoDAO.getHostInfo(ref);
+                HostInfo hostInfo = HostOverviewController.this.hostInfoDAO.getHostInfo(ref);
                 view.setHostName(hostInfo.getHostname());
                 view.setOsName(hostInfo.getOsName());
                 view.setOsKernel(hostInfo.getOsKernel());

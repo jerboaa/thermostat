@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.dao;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class MongoDAOFactory implements DAOFactory {
 
@@ -132,5 +133,27 @@ public class MongoDAOFactory implements DAOFactory {
     public HeapDAO getHeapDAO() {
         ensureStorageConnected();
         return new HeapDAOImpl(storage);
+    }
+
+    @Override
+    public void registerDAOsAndStorageAsOSGiServices() {
+        OSGIUtils registerer = OSGIUtils.getInstance();
+
+        registerer.registerService(Storage.class, getStorage());
+
+        registerer.registerService(AgentInfoDAO.class, getAgentInfoDAO());
+        registerer.registerService(BackendInfoDAO.class, getBackendInfoDAO());
+
+        registerer.registerService(HostInfoDAO.class, getHostInfoDAO());
+        registerer.registerService(NetworkInterfaceInfoDAO.class, getNetworkInterfaceInfoDAO());
+        registerer.registerService(CpuStatDAO.class, getCpuStatDAO());
+        registerer.registerService(MemoryStatDAO.class, getMemoryStatDAO());
+
+        registerer.registerService(VmInfoDAO.class, getVmInfoDAO());
+        registerer.registerService(VmClassStatDAO.class, getVmClassStatsDAO());
+        registerer.registerService(VmCpuStatDAO.class, getVmCpuStatDAO());
+        registerer.registerService(VmGcStatDAO.class, getVmGcStatDAO());
+        registerer.registerService(VmMemoryStatDAO.class, getVmMemoryStatDAO());
+        registerer.registerService(HeapDAO.class, getHeapDAO());
     }
 }

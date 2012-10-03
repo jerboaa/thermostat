@@ -65,10 +65,6 @@ public class DbServiceImpl implements DbService {
         this.dbUrl = dbUrl;
     }
 
-    /*
-     * (non-Javadoc)
-     * @see com.redhat.thermostat.launcher.DbService#connect()
-     */
     public void connect() throws ConnectionException {
         StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
         
@@ -77,20 +73,16 @@ public class DbServiceImpl implements DbService {
         Connection connection = daoFactory.getConnection();
         connection.connect();
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
+
+        daoFactory.registerDAOsAndStorageAsOSGiServices();
     }
     
-    /*
-     * (non-Javadoc)
-     * @see com.redhat.thermostat.launcher.DbService#disconnect()
-     */
     public void disconnect() throws ConnectionException {
         DAOFactory factory = ApplicationContext.getInstance().getDAOFactory();
         Connection connection = factory.getConnection();
         connection.disconnect();
         ApplicationContext.getInstance().setDAOFactory(null);
     }
-    
-    
     
     /**
      * Factory method for creating a DbService instance.

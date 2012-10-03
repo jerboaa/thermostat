@@ -89,7 +89,6 @@ public class HostMemoryControllerTest {
         when(memoryStatDAO.getLatestMemoryStats(any(HostRef.class), anyLong())).thenReturn(memoryStats);
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfoDAO);
         when(daoFactory.getMemoryStatDAO()).thenReturn(memoryStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
@@ -111,7 +110,7 @@ public class HostMemoryControllerTest {
         when(viewFactory.getView(eq(HostMemoryView.class))).thenReturn(view);
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
-        HostMemoryController controller = new HostMemoryController(ref);
+        HostMemoryController controller = new HostMemoryController(hostInfoDAO, ref);
 
         ActionListener<HostMemoryView.Action> l = viewArgumentCaptor.getValue();
 

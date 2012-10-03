@@ -85,9 +85,8 @@ public class OSGIUtils {
         return (E) ctx.getService(ref);
     }
     
-    public <E extends Object> void ungetService(Object service) {
+    public <E extends Object> void ungetService(Class<E> serviceType, Object service) {
         BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        Class<?> serviceType = service.getClass();
         // FIXME the reference returned now may be different from a previous invocation
         ServiceReference ref = ctx.getServiceReference(serviceType.getName());
         ctx.ungetService(ref);

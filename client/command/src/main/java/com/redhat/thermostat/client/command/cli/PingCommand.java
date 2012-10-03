@@ -115,19 +115,24 @@ public class PingCommand extends SimpleCommand {
             printCustomMessageWithUsage(out, "Ping command accepts one and only one argument.");
             return;
         }
-        DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
-        HostInfoDAO dao = df.getHostInfoDAO();
-        HostRef targetHostRef = getHostRef(dao, agentId);
+
+        HostInfoDAO hostInfoDao = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
+        if (hostInfoDao == null) {
+            throw new CommandException("Unable to access host information: service not available");
+        }
+        HostRef targetHostRef = getHostRef(hostInfoDao, agentId);
+        serviceProvider.ungetService(HostInfoDAO.class, hostInfoDao);
+
         if (targetHostRef == null) {
             printCustomMessageWithUsage(out, "Invalid host ID or agent no longer running.  See \'help list-vms to obtain a valid host ID.");
             return;
         }
-        AgentInfoDAO service = serviceProvider.getService(AgentInfoDAO.class);
-        if (service == null) {
+        AgentInfoDAO agentInfoDao = serviceProvider.getService(AgentInfoDAO.class);
+        if (agentInfoDao == null) {
             throw new CommandException("Unable to access agent information: service not available");
         }
-        String address = service.getAgentInformation(targetHostRef).getConfigListenAddress();
-        serviceProvider.ungetService(service);
+        String address = agentInfoDao.getAgentInformation(targetHostRef).getConfigListenAddress();
+        serviceProvider.ungetService(AgentInfoDAO.class, agentInfoDao);
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));

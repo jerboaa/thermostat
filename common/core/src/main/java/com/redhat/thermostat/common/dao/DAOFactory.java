@@ -70,4 +70,6 @@ public interface DAOFactory {
 
     public HeapDAO getHeapDAO();
 
+    public void registerDAOsAndStorageAsOSGiServices();
+
 }

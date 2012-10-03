@@ -74,10 +74,10 @@ public class HostMemoryController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public HostMemoryController(final HostRef ref) {
+    public HostMemoryController(HostInfoDAO hostInfoDAO, final HostRef ref) {
         this.ref = ref;
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
-        hostInfoDAO = daos.getHostInfoDAO();
+        this.hostInfoDAO = hostInfoDAO;
         memoryStatDAO = daos.getMemoryStatDAO();
 
         view = ApplicationContext.getInstance().getViewFactory().getView(HostMemoryView.class);
@@ -110,7 +110,7 @@ public class HostMemoryController {
         backgroundUpdateTimer.setAction(new Runnable() {
             @Override
             public void run() {
-                long memorySize = hostInfoDAO.getHostInfo(ref).getTotalMemory();
+                long memorySize = HostMemoryController.this.hostInfoDAO.getHostInfo(ref).getTotalMemory();
                 String[] memorySizeParts = DisplayableValues.bytes(memorySize);
                 view.setTotalMemory(localize(LocaleResources.NUMBER_AND_UNIT, memorySizeParts[0], memorySizeParts[1]));
                 doMemoryChartUpdate();

@@ -95,7 +95,6 @@ public class SummaryControllerTest {
         when(vDAO.getCount()).thenReturn(42l);
 
         DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hDAO);
         when(daoFactory.getVmInfoDAO()).thenReturn(vDAO);
 
         ctx.setDAOFactory(daoFactory);
@@ -109,7 +108,7 @@ public class SummaryControllerTest {
         when(viewFactory.getView(eq(SummaryView.class))).thenReturn(view);
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
-        SummaryController summaryCtrl = new SummaryController();
+        SummaryController summaryCtrl = new SummaryController(hDAO);
 
         timerAction = actionCaptor.getValue();
         viewListener = viewArgumentCaptor.getValue();

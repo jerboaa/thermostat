@@ -119,7 +119,6 @@ public class HostOverviewControllerTest {
         NetworkInterfaceInfoDAO networkInfoDao = mock(NetworkInterfaceInfoDAO.class);
         when(networkInfoDao.getNetworkInterfaces(any(HostRef.class))).thenReturn(networkInfo);
 
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfoDao);
         when(daoFactory.getNetworkInterfaceInfoDAO()).thenReturn(networkInfoDao);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
@@ -133,7 +132,7 @@ public class HostOverviewControllerTest {
 
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
-        HostOverviewController controller = new HostOverviewController(ref);
+        HostOverviewController controller = new HostOverviewController(hostInfoDao, ref);
 
         listener = listenerCaptor.getValue();
         timerAction = timerActionCaptor.getValue();

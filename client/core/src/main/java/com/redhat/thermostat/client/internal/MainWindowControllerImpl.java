@@ -162,7 +162,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private VmInformationControllerProvider vmInfoControllerProvider;
 
-    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory)
+    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory, HostInfoDAO hostsDao)
     {
         try {
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
@@ -184,7 +184,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         ApplicationContext ctx = ApplicationContext.getInstance();
         DAOFactory daoFactory = ctx.getDAOFactory();
-        hostsDAO = daoFactory.getHostInfoDAO();
+        this.hostsDAO = hostsDao;
         vmsDAO = daoFactory.getVmInfoDAO();
 
         initView(view);
@@ -426,7 +426,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         Ref ref = view.getSelectedHostOrVm();
 
         if (ref == null) {
-            SummaryController controller = new SummaryController();
+            SummaryController controller = new SummaryController(hostsDAO);
             view.setSubView(controller.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;

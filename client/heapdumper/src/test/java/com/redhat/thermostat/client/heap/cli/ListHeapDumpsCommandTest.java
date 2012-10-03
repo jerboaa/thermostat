@@ -66,6 +66,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class ListHeapDumpsCommandTest {
@@ -112,18 +113,34 @@ public class ListHeapDumpsCommandTest {
     }
 
     @Test
+    public void verifyFailsWithoutHostDao() throws Exception {
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+
+        Command command = new ListHeapDumpsCommand(serviceProvider);
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+        try {
+            command.run(factory.createContext(new SimpleArguments()));
+        } catch (CommandException hostDaoNotAvailableException) {
+            assertEquals("Unable to access host information (HostInfoDAO unavailable)",
+                    hostDaoNotAvailableException.getMessage());
+        }
+    }
+
+    @Test
     public void verifyWorksWithoutAnyInformation() throws CommandException {
         HostInfoDAO hostInfo = mock(HostInfoDAO.class);
 
         VmInfoDAO vmInfo = mock(VmInfoDAO.class);
 
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfo);
         when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
-        Command command = new ListHeapDumpsCommand();
+        Command command = new ListHeapDumpsCommand(serviceProvider);
         TestCommandContextFactory factory = new TestCommandContextFactory();
         command.run(factory.createContext(new SimpleArguments()));
         assertEquals("HOST ID VM ID HEAP ID TIMESTAMP\n", factory.getOutput());
@@ -152,14 +169,16 @@ public class ListHeapDumpsCommandTest {
 
         when(heapDao.getAllHeapInfo(vmRef)).thenReturn(Arrays.asList(heapInfo));
 
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfo);
         when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
-        Command command = new ListHeapDumpsCommand();
+        Command command = new ListHeapDumpsCommand(serviceProvider);
         TestCommandContextFactory factory = new TestCommandContextFactory();
         command.run(factory.createContext(new SimpleArguments()));
 
@@ -198,14 +217,16 @@ public class ListHeapDumpsCommandTest {
         when(heapDao.getAllHeapInfo(vmRef1)).thenReturn(Arrays.asList(heapInfo));
         when(heapDao.getAllHeapInfo(vmRef2)).thenReturn(Arrays.asList(heapInfo));
 
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfo);
         when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
-        Command command = new ListHeapDumpsCommand();
+        Command command = new ListHeapDumpsCommand(serviceProvider);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
@@ -249,14 +270,16 @@ public class ListHeapDumpsCommandTest {
         when(heapDao.getAllHeapInfo(vmRef1)).thenReturn(Arrays.asList(heapInfo));
         when(heapDao.getAllHeapInfo(vmRef2)).thenReturn(Arrays.asList(heapInfo));
 
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHostInfoDAO()).thenReturn(hostInfo);
         when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
-        Command command = new ListHeapDumpsCommand();
+        Command command = new ListHeapDumpsCommand(serviceProvider);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();

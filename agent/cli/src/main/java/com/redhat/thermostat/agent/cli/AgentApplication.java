@@ -58,25 +58,12 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.BackendInfoDAO;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
-import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -132,7 +119,7 @@ public final class AgentApplication extends BasicCommand {
                     break;
                 case CONNECTED:
                     logger.fine("Connected to storage, registering storage as service");
-                    registerDAOsAndStorageAsOSGiServices(daoFactory);
+                    daoFactory.registerDAOsAndStorageAsOSGiServices();
                     break;
                 case FAILED_TO_CONNECT:
                     logger.warning("Could not connect to storage.");
@@ -185,27 +172,6 @@ public final class AgentApplication extends BasicCommand {
         } catch (InterruptedException e) {
             return;
         }
-    }
-    
-    private void registerDAOsAndStorageAsOSGiServices(DAOFactory daoFactory) {
-        OSGIUtils registerer = OSGIUtils.getInstance();
-
-        registerer.registerService(Storage.class, daoFactory.getStorage());
-
-        registerer.registerService(AgentInfoDAO.class, daoFactory.getAgentInfoDAO());
-        registerer.registerService(BackendInfoDAO.class, daoFactory.getBackendInfoDAO());
-
-        registerer.registerService(HostInfoDAO.class, daoFactory.getHostInfoDAO());
-        registerer.registerService(NetworkInterfaceInfoDAO.class, daoFactory.getNetworkInterfaceInfoDAO());
-        registerer.registerService(CpuStatDAO.class, daoFactory.getCpuStatDAO());
-        registerer.registerService(MemoryStatDAO.class, daoFactory.getMemoryStatDAO());
-
-        registerer.registerService(VmInfoDAO.class, daoFactory.getVmInfoDAO());
-        registerer.registerService(VmClassStatDAO.class, daoFactory.getVmClassStatsDAO());
-        registerer.registerService(VmCpuStatDAO.class, daoFactory.getVmCpuStatDAO());
-        registerer.registerService(VmGcStatDAO.class, daoFactory.getVmGcStatDAO());
-        registerer.registerService(VmMemoryStatDAO.class, daoFactory.getVmMemoryStatDAO());
-        registerer.registerService(HeapDAO.class, daoFactory.getHeapDAO());
     }
 
     @Override
