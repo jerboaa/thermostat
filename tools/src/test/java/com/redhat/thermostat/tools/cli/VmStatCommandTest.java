@@ -73,6 +73,7 @@ import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
 
@@ -108,15 +109,16 @@ public class VmStatCommandTest {
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
         setupCommandContextFactory();
 
-        cmd = new VMStatCommand();
-
         setupDAOs();
 
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(VmCpuStatDAO.class)).thenReturn(vmCpuStatDAO);
+
+        cmd = new VMStatCommand(serviceProvider);
     }
 
     @After
     public void tearDown() {
-
         vmCpuStatDAO = null;
         cmdCtxFactory = null;
         cmd = null;
@@ -139,7 +141,6 @@ public class VmStatCommandTest {
         List<VmCpuStat> cpuStats2 = Collections.emptyList();
         when(vmCpuStatDAO.getLatestVmCpuStats(vm, Long.MIN_VALUE)).thenReturn(cpuStats).thenReturn(cpuStats2);
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmCpuStatDAO()).thenReturn(vmCpuStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         VmMemoryStat.Space space1_1_1 = newSpace("space1", 123456, 12345, 1, 0);

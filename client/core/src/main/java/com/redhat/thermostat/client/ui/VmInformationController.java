@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
@@ -56,9 +57,10 @@ public class VmInformationController {
     private final VmCpuController cpuController;
     private final VmGcController gcController;
 
-    public VmInformationController(UiFacadeFactory uiFacadeFactory, VmInfoDAO vmInfoDao, VmRef vmRef) {
+    public VmInformationController(UiFacadeFactory uiFacadeFactory,
+            VmInfoDAO vmInfoDao, VmCpuStatDAO vmCpuStatDao, VmRef vmRef) {
         overviewController = new VmOverviewController(vmInfoDao, vmRef);
-        cpuController = new VmCpuController(vmRef);
+        cpuController = new VmCpuController(vmCpuStatDao, vmRef);
         gcController = new VmGcController(vmRef);
 
         view = ApplicationContext.getInstance().getViewFactory().getView(VmInformationView.class);

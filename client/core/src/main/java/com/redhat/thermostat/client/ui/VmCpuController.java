@@ -62,9 +62,9 @@ class VmCpuController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmCpuController(VmRef ref) {
+    public VmCpuController(VmCpuStatDAO vmCpuStatDao, VmRef ref) {
         this.ref = ref;
-        dao = ApplicationContext.getInstance().getDAOFactory().getVmCpuStatDAO();
+        dao = vmCpuStatDao;
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
         timer.setAction(new Runnable() {

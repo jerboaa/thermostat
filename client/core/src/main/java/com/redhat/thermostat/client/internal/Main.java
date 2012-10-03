@@ -291,6 +291,8 @@ public class Main {
 
                 uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
 
+                uiFacadeFactory.setVmCpuStatDao(daoFactory.getVmCpuStatDAO());
+
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
                 if (retry) {

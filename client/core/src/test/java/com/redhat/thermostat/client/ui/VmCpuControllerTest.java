@@ -82,10 +82,6 @@ public class VmCpuControllerTest {
         VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
         when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
 
-        DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getVmCpuStatDAO()).thenReturn(vmCpuStatDAO);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);
 
         Timer timer = mock(Timer.class);
@@ -104,7 +100,7 @@ public class VmCpuControllerTest {
 
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
-        VmCpuController controller = new VmCpuController(ref);
+        VmCpuController controller = new VmCpuController(vmCpuStatDAO, ref);
 
         ActionListener<VmCpuView.Action> l = viewArgumentCaptor.getValue();
 

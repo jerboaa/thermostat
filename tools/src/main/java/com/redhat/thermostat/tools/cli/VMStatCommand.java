@@ -52,6 +52,9 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.tools.LocaleResources;
+import com.redhat.thermostat.tools.Translate;
 
 public class VMStatCommand extends SimpleCommand {
 
@@ -59,10 +62,25 @@ public class VMStatCommand extends SimpleCommand {
 
     private static final String CMD_NAME = "vm-stat";
 
+    private OSGIUtils serviceProvider;
+
+    public VMStatCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    VMStatCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
+
     @Override
     public void run(final CommandContext ctx) throws CommandException {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-        VmCpuStatDAO vmCpuStatDAO = daoFactory.getVmCpuStatDAO();
+
+        VmCpuStatDAO vmCpuStatDAO = serviceProvider.getServiceAllowNull(VmCpuStatDAO.class);
+        if (vmCpuStatDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.VM_CPU_SERVICE_NOT_AVAILABLE));
+        }
+
         VmMemoryStatDAO vmMemoryStatDAO = daoFactory.getVmMemoryStatDAO();
 
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
@@ -73,6 +91,8 @@ public class VMStatCommand extends SimpleCommand {
         if (continuous) {
             startContinuousStats(ctx, statPrinter);
         }
+
+        serviceProvider.ungetService(VmCpuStatDAO.class, vmCpuStatDAO);
     }
 
     private void startContinuousStats(final CommandContext ctx, final VMStatPrinter statPrinter) {
