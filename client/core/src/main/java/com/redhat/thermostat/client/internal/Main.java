@@ -285,6 +285,7 @@ public class Main {
 
                 daoFactory.registerDAOsAndStorageAsOSGiServices();
                 uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
+                uiFacadeFactory.setCpuStatDao(daoFactory.getCpuStatDAO());
 
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {

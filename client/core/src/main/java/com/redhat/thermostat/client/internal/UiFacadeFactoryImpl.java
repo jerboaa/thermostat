@@ -50,6 +50,7 @@ import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -63,6 +64,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     private BundleContext context;
     private HostInfoDAO hostInfoDao;
+    private CpuStatDAO cpuStatDao;
 
     public UiFacadeFactoryImpl(BundleContext context) {
         this.context = context;
@@ -71,6 +73,10 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public void setHostInfoDao(HostInfoDAO hostInfoDao) {
         this.hostInfoDao = hostInfoDao;
+    }
+
+    public void setCpuStatDao(CpuStatDAO cpuStatDao) {
+        this.cpuStatDao = cpuStatDao;
     }
 
     @Override
@@ -88,7 +94,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     @Override
     public HostInformationController getHostController(HostRef ref) {
-        return new HostInformationController(hostInfoDao, ref);
+        return new HostInformationController(hostInfoDao, cpuStatDao, ref);
 
     }
 

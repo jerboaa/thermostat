@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.internal;
 import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.client.ui.HostOverviewController;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 
@@ -48,9 +49,9 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     private final HostCpuController cpuController;
     private final HostMemoryController memoryController;
 
-    public HostPanelFacadeImpl(HostInfoDAO hostInfoDao, HostRef ref) {
+    public HostPanelFacadeImpl(HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDao, HostRef ref) {
         overviewController = new HostOverviewController(hostInfoDao, ref);
-        cpuController = new HostCpuController(hostInfoDao, ref);
+        cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref);
         memoryController = new HostMemoryController(hostInfoDao, ref);
     }
 

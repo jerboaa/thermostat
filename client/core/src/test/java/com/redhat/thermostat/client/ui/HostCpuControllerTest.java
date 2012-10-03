@@ -106,11 +106,6 @@ public class HostCpuControllerTest {
         CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
         when(cpuStatDAO.getLatestCpuStats(any(HostRef.class), anyLong())).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
 
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getCpuStatDAO()).thenReturn(cpuStatDAO);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-
         // Set up View
         view = mock(HostCpuView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -121,7 +116,7 @@ public class HostCpuControllerTest {
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
         HostRef host = new HostRef("123", "fluffhost");
-        controller = new HostCpuController(hostInfoDAO, host);
+        controller = new HostCpuController(hostInfoDAO, cpuStatDAO, host);
 
         timerAction = actionCaptor.getValue();
         viewListener = viewArgumentCaptor.getValue();

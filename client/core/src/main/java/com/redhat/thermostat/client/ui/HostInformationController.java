@@ -41,6 +41,7 @@ import static com.redhat.thermostat.client.locale.Translate.localize;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 
@@ -52,9 +53,9 @@ public class HostInformationController {
 
     private final HostInformationView view;
 
-    public HostInformationController(HostInfoDAO hostInfoDao, HostRef ref) {
+    public HostInformationController(HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDao, HostRef ref) {
         overviewController = new HostOverviewController(hostInfoDao, ref);
-        cpuController = new HostCpuController(hostInfoDao, ref);
+        cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref);
         memoryController = new HostMemoryController(hostInfoDao ,ref);
 
         view = ApplicationContext.getInstance().getViewFactory().getView(HostInformationView.class);
