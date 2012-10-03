@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
+import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 
 public class HostInformationController {
 
@@ -55,8 +56,10 @@ public class HostInformationController {
     private final HostInformationView view;
 
     public HostInformationController(HostInfoDAO hostInfoDao,
-            CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao, HostRef ref) {
-        overviewController = new HostOverviewController(hostInfoDao, ref);
+            CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao,
+            NetworkInterfaceInfoDAO networkInfoDao, HostRef ref) {
+
+        overviewController = new HostOverviewController(hostInfoDao, networkInfoDao, ref);
         cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref);
         memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref);
 

@@ -53,7 +53,6 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -75,11 +74,11 @@ public class HostOverviewController {
 
     private final HostOverviewView view;
 
-    public HostOverviewController(HostInfoDAO hostInfoDAO, final HostRef ref) {
+    public HostOverviewController(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO,
+            final HostRef ref) {
         this.ref = ref;
-        DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
         this.hostInfoDAO = hostInfoDAO;
-        networkInfoDAO = df.getNetworkInterfaceInfoDAO();
+        this.networkInfoDAO = networkInfoDAO;
 
         final Vector<String> networkTableColumnVector;
         networkTableColumnVector = new Vector<String>();
@@ -102,7 +101,8 @@ public class HostOverviewController {
                 String readableTotalMemory = localize(LocaleResources.NUMBER_AND_UNIT, parts[0], parts[1]);
                 view.setTotalMemory(readableTotalMemory);
 
-                List<NetworkInterfaceInfo> networkInfo = networkInfoDAO.getNetworkInterfaces(ref);
+                List<NetworkInterfaceInfo> networkInfo =
+                        HostOverviewController.this.networkInfoDAO.getNetworkInterfaces(ref);
 
                 boolean firstRun = knownNetworkIfaces.isEmpty();
                 if (firstRun) {

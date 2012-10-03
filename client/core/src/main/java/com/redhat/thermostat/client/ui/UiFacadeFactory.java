@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
+import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public interface UiFacadeFactory {
@@ -53,6 +54,8 @@ public interface UiFacadeFactory {
     void setCpuStatDao(CpuStatDAO cpuStatDAO);
 
     void setMemoryStatDao(MemoryStatDAO memoryStatDAO);
+
+    void setNetworkInfoDao(NetworkInterfaceInfoDAO networkInterfaceInfoDAO);
 
     public MainWindowController getMainWindow();
 

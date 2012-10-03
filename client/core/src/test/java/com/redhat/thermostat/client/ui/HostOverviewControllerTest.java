@@ -63,7 +63,6 @@ import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -111,17 +110,11 @@ public class HostOverviewControllerTest {
 
         HostRef ref = mock(HostRef.class);
 
-        DAOFactory daoFactory = mock(DAOFactory.class);
-
         HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
         when(hostInfoDao.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
         NetworkInterfaceInfoDAO networkInfoDao = mock(NetworkInterfaceInfoDAO.class);
         when(networkInfoDao.getNetworkInterfaces(any(HostRef.class))).thenReturn(networkInfo);
-
-        when(daoFactory.getNetworkInterfaceInfoDAO()).thenReturn(networkInfoDao);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         // Setup View
         ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -132,7 +125,7 @@ public class HostOverviewControllerTest {
 
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
-        HostOverviewController controller = new HostOverviewController(hostInfoDao, ref);
+        HostOverviewController controller = new HostOverviewController(hostInfoDao, networkInfoDao, ref);
 
         listener = listenerCaptor.getValue();
         timerAction = timerActionCaptor.getValue();
