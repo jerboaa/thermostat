@@ -190,6 +190,23 @@ public class AgentInformationDisplayFrameTest {
     @Category(GUITest.class)
     @GUITest
     @Test
+    public void testInitialInformation() {
+        fixture.show();
+
+        String EMPTY_TEXT = "---";
+
+        assertEquals(EMPTY_TEXT, fixture.textBox("agentName").text());
+        assertEquals(EMPTY_TEXT, fixture.textBox("agentId").text());
+        assertEquals(EMPTY_TEXT, fixture.textBox("commandAddress").text());
+        assertEquals(EMPTY_TEXT, fixture.textBox("startTime").text());
+        assertEquals(EMPTY_TEXT, fixture.textBox("stopTime").text());
+        assertEquals(EMPTY_TEXT, fixture.textBox("backendDescription").text());
+
+    }
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
     public void testUpdatingAgentInformationWorks() {
 
         final String AGENT_NAME = "the-agent-name";
