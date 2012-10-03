@@ -74,11 +74,10 @@ public class HostMemoryController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public HostMemoryController(HostInfoDAO hostInfoDAO, final HostRef ref) {
+    public HostMemoryController(HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO, final HostRef ref) {
         this.ref = ref;
-        DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
         this.hostInfoDAO = hostInfoDAO;
-        memoryStatDAO = daos.getMemoryStatDAO();
+        this.memoryStatDAO = memoryStatDAO;
 
         view = ApplicationContext.getInstance().getViewFactory().getView(HostMemoryView.class);
 

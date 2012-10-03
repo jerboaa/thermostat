@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.MemoryStatDAO;
 
 public class HostInformationController {
 
@@ -53,10 +54,11 @@ public class HostInformationController {
 
     private final HostInformationView view;
 
-    public HostInformationController(HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDao, HostRef ref) {
+    public HostInformationController(HostInfoDAO hostInfoDao,
+            CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao, HostRef ref) {
         overviewController = new HostOverviewController(hostInfoDao, ref);
         cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref);
-        memoryController = new HostMemoryController(hostInfoDao ,ref);
+        memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref);
 
         view = ApplicationContext.getInstance().getViewFactory().getView(HostInformationView.class);
 

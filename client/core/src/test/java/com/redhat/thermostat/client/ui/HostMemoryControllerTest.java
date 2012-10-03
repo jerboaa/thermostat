@@ -59,11 +59,9 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.MemoryStat;
 
@@ -88,10 +86,6 @@ public class HostMemoryControllerTest {
         MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
         when(memoryStatDAO.getLatestMemoryStats(any(HostRef.class), anyLong())).thenReturn(memoryStats);
 
-        DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getMemoryStatDAO()).thenReturn(memoryStatDAO);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-
         Timer timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(timerActionCaptor.capture());
@@ -110,7 +104,7 @@ public class HostMemoryControllerTest {
         when(viewFactory.getView(eq(HostMemoryView.class))).thenReturn(view);
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
-        HostMemoryController controller = new HostMemoryController(hostInfoDAO, ref);
+        HostMemoryController controller = new HostMemoryController(hostInfoDAO, memoryStatDAO, ref);
 
         ActionListener<HostMemoryView.Action> l = viewArgumentCaptor.getValue();
 
