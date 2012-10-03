@@ -64,13 +64,14 @@ import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.IntervalTimeData;
+import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {
 
-    private JPanel visiblePanel;
+    private HeaderPanel visiblePanel = new HeaderPanel();
+    private JPanel realPanel = new JPanel();
 
     private final Map<String, SampledDataset> dataset = new HashMap<>();
     private final Map<String, JPanel> subPanels = new HashMap<>();
@@ -117,8 +118,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
     }
 
     private void initializePanel() {
-        visiblePanel = new JPanel();
-        visiblePanel.setLayout(new GridBagLayout());
+        visiblePanel.setContent(realPanel);
+        visiblePanel.setHeader(localize(LocaleResources.VM_GC_TITLE));
+        realPanel.setLayout(new GridBagLayout());
     }
 
     private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, String title, String units) {
@@ -191,9 +193,9 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
                 dataset.put(tag, newData);
                 JPanel subPanel = createCollectorDetailsPanel(newData, title, units);
                 subPanels.put(tag, subPanel);
-                visiblePanel.add(subPanel, gcPanelConstraints);
+                realPanel.add(subPanel, gcPanelConstraints);
                 gcPanelConstraints.gridy++;
-                visiblePanel.revalidate();
+                realPanel.revalidate();
             }
         });
     }
@@ -205,8 +207,8 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
             public void run() {
                 dataset.remove(tag);
                 JPanel subPanel = subPanels.remove(tag);
-                visiblePanel.remove(subPanel);
-                visiblePanel.revalidate();
+                realPanel.remove(subPanel);
+                realPanel.revalidate();
                 gcPanelConstraints.gridy--;
             }
         });

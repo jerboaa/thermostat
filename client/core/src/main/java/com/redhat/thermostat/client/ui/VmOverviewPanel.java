@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,10 +49,11 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     
-    private JPanel visiblePanel;
+    private HeaderPanel visiblePanel;
 
     private final ChangeableText pid = new ChangeableText("");
     private final ChangeableText startTimeStamp = new ChangeableText("");
@@ -148,9 +148,9 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     }
 
     private void initializePanel() {
-        visiblePanel = new JPanel();
-        visiblePanel.setBorder(Components.smallBorder());
-        visiblePanel.setLayout(new BorderLayout());
+        visiblePanel = new HeaderPanel();
+
+        visiblePanel.setHeader(localize(LocaleResources.VM_INFO_TITLE));
 
         TableEntry entry;
         List<Section> allSections = new ArrayList<Section>();
@@ -182,6 +182,6 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
         SimpleTable simpleTable = new SimpleTable();
         JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
-        visiblePanel.add(table, BorderLayout.PAGE_START);
+        visiblePanel.setContent(table);
     }
 }

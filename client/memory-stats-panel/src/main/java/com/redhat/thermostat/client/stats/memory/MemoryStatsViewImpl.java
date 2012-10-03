@@ -46,18 +46,19 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.border.TitledBorder;
 
 import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.swing.HeaderPanel;
 
 public class MemoryStatsViewImpl extends MemoryStatsView implements SwingComponent {
 
     private static final long REPAINT_DELAY = 500;
     private long lastRepaint;
     
-    private JPanel visiblePanel;
+    private HeaderPanel visiblePanel;
+    private JPanel realPanel;
     
     private final Map<String, MemoryGraphPanel> regions;
     
@@ -65,13 +66,13 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     
     public MemoryStatsViewImpl() {
         super();
-        visiblePanel = new JPanel();
+        visiblePanel = new HeaderPanel();
         regions = new HashMap<>();
  
         preferredSize = new Dimension(0, 0);
         
-        visiblePanel.setBorder(new TitledBorder(null, "Memory Regions", TitledBorder.RIGHT, TitledBorder.TOP, null, null));
-        visiblePanel.setLayout(new BoxLayout(visiblePanel, BoxLayout.Y_AXIS));
+        visiblePanel.setHeader("Memory Regions");
+
         visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
@@ -83,6 +84,10 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
                 notifier.fireAction(Action.HIDDEN);
             }
         });
+
+        realPanel = new JPanel();
+        realPanel.setLayout(new BoxLayout(realPanel, BoxLayout.Y_AXIS));
+        visiblePanel.setContent(realPanel);
     }
     
     @Transient
@@ -109,8 +114,8 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
             public void run() {
                 MemoryGraphPanel memoryGraphPanel = new MemoryGraphPanel();
                 
-                visiblePanel.add(memoryGraphPanel);
-                visiblePanel.add(Box.createRigidArea(new Dimension(5,5)));                
+                realPanel.add(memoryGraphPanel);
+                realPanel.add(Box.createRigidArea(new Dimension(5,5)));
                 regions.put(region.getName(), memoryGraphPanel);
                 
                 // components are stacked up vertically in this panel
@@ -121,7 +126,7 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
                 }
 
                 updateRegion(region);
-                visiblePanel.revalidate();
+                realPanel.revalidate();
             }
         });
     }

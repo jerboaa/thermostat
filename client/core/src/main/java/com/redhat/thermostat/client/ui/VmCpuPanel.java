@@ -39,8 +39,6 @@ package com.redhat.thermostat.client.ui;
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
 import java.awt.Component;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,13 +53,13 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
-    private JPanel visiblePanel;
+    private HeaderPanel visiblePanel;
     
     private final TimeSeriesCollection data = new TimeSeriesCollection();
     private final TimeSeries cpuTimeSeries = new TimeSeries("cpu-stats");
@@ -101,7 +99,9 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
     }
 
     private void initializePanel() {
-        visiblePanel = new JPanel();
+        visiblePanel = new HeaderPanel();
+        visiblePanel.setHeader(localize(LocaleResources.VM_CPU_TITLE));
+
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
                 localize(LocaleResources.VM_CPU_CHART_TIME_LABEL),
@@ -113,14 +113,7 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        visiblePanel.setLayout(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.gridx = 0;
-        c.gridy = 0;
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1;
-        c.weighty = 1;
-        visiblePanel.add(chartPanel, c);
+        visiblePanel.setContent(chartPanel);
     }
 
     @Override

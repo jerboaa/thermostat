@@ -38,12 +38,11 @@ package com.redhat.thermostat.client.vmclassstat;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JPanel;
+import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
 import org.jfree.chart.ChartFactory;
@@ -59,31 +58,28 @@ import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
-import com.redhat.thermostat.client.ui.Components;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmClassStatPanel extends VmClassStatView implements SwingComponent {
 
-    private JPanel visiblePanel;
+    private HeaderPanel visiblePanel;
     
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
 
     public VmClassStatPanel() {
-        visiblePanel = new JPanel();
+        visiblePanel = new HeaderPanel();
         // any name works
         dataset.addSeries(new TimeSeries("class-stat"));
 
-        visiblePanel.setBorder(Components.smallBorder());
-        visiblePanel.setLayout(new BorderLayout());
-
-        visiblePanel.add(Components.header(localize(LocaleResources.VM_LOADED_CLASSES)), BorderLayout.NORTH);
+        visiblePanel.setHeader(localize(LocaleResources.VM_CLASSES_TITLE));
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
@@ -106,9 +102,9 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
         axis.setRangeType(RangeType.POSITIVE);
         axis.setAutoRangeMinimumSize(10);
 
-        Component chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+        JComponent chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
 
-        visiblePanel.add(chartPanel, BorderLayout.CENTER);
+        visiblePanel.setContent(chartPanel);
 
         visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
