@@ -64,7 +64,6 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
@@ -113,6 +112,7 @@ public class VmStatCommandTest {
 
         OSGIUtils serviceProvider = mock(OSGIUtils.class);
         when(serviceProvider.getServiceAllowNull(VmCpuStatDAO.class)).thenReturn(vmCpuStatDAO);
+        when(serviceProvider.getServiceAllowNull(VmMemoryStatDAO.class)).thenReturn(vmMemoryStatDAO);
 
         cmd = new VMStatCommand(serviceProvider);
     }
@@ -140,8 +140,6 @@ public class VmStatCommandTest {
         List<VmCpuStat> cpuStats = Arrays.asList(cpustat1, cpustat2);
         List<VmCpuStat> cpuStats2 = Collections.emptyList();
         when(vmCpuStatDAO.getLatestVmCpuStats(vm, Long.MIN_VALUE)).thenReturn(cpuStats).thenReturn(cpuStats2);
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         VmMemoryStat.Space space1_1_1 = newSpace("space1", 123456, 12345, 1, 0);
         VmMemoryStat.Space space1_1_2 = newSpace("space2", 123456, 12345, 1, 0);
@@ -205,7 +203,6 @@ public class VmStatCommandTest {
 
         when(vmMemoryStatDAO.getLatestVmMemoryStats(vm, memStat3.getTimeStamp())).thenReturn(Arrays.asList(memStat4));
 
-        when(daoFactory.getVmMemoryStatDAO()).thenReturn(vmMemoryStatDAO);
     }
 
     private Space newSpace(String name, long maxCapacity, long capacity, long used, int index) {

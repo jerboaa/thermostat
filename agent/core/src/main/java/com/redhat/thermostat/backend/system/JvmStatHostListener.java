@@ -61,6 +61,7 @@ import com.redhat.thermostat.agent.JvmStatusListener;
 import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -69,17 +70,20 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
     private boolean attachNew;
+
     private final DAOFactory df;
     private final VmInfoDAO vmInfoDAO;
+    private final VmMemoryStatDAO vmMemoryStatDAO;
 
     private Map<Integer, MonitoredVm> monitoredVms  = new HashMap<>();
     private Map<MonitoredVm, List<VmListener>> registeredListeners  = new ConcurrentHashMap<>();
     
     private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
 
-    JvmStatHostListener(DAOFactory df, VmInfoDAO vmInfoDAO, boolean attachNew) {
+    JvmStatHostListener(DAOFactory df, VmInfoDAO vmInfoDAO, VmMemoryStatDAO vmMemoryStatDAO, boolean attachNew) {
         this.df = df;
         this.vmInfoDAO = vmInfoDAO;
+        this.vmMemoryStatDAO = vmMemoryStatDAO;
         this.attachNew = attachNew;        
     }
 
@@ -161,7 +165,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                     listeners = new CopyOnWriteArrayList<>();
                 }
                 
-                VmListener listener =  new JvmStatVmListener(df, vmId);
+                VmListener listener =  new JvmStatVmListener(df, vmMemoryStatDAO, vmId);
                 vm.addVmListener(listener);
                 listeners.add(listener);
                 

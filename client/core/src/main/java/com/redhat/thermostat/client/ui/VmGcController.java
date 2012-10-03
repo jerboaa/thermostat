@@ -82,14 +82,14 @@ class VmGcController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmGcController(VmRef ref) {
+    public VmGcController(VmMemoryStatDAO vmMemoryStatDao, VmRef ref) {
         this.ref = ref;
         this.view = ApplicationContext.getInstance().getViewFactory().getView(VmGcView.class);
         this.timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
         DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
         gcDao = df.getVmGcStatDAO();
-        memDao = df.getVmMemoryStatDAO();
+        memDao = vmMemoryStatDao;
 
         view.addActionListener(new ActionListener<VmGcView.Action>() {
             @Override

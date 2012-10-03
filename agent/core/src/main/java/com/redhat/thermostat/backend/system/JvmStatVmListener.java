@@ -64,9 +64,9 @@ public class JvmStatVmListener implements VmListener {
     private final VmGcStatDAO gcDAO;
     private final VmMemoryStatDAO memDAO;
 
-    public JvmStatVmListener(DAOFactory df, int vmId) {
+    public JvmStatVmListener(DAOFactory df, VmMemoryStatDAO vmMemoryStatDao, int vmId) {
         gcDAO = df.getVmGcStatDAO();
-        memDAO = df.getVmMemoryStatDAO();
+        memDAO = vmMemoryStatDao;
         this.vmId = vmId;
     }
 

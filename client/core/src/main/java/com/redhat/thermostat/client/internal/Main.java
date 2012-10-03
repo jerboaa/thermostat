@@ -290,8 +290,8 @@ public class Main {
                 uiFacadeFactory.setNetworkInfoDao(daoFactory.getNetworkInterfaceInfoDAO());
 
                 uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
-
                 uiFacadeFactory.setVmCpuStatDao(daoFactory.getVmCpuStatDAO());
+                uiFacadeFactory.setVmMemoryStatDao(daoFactory.getVmMemoryStatDAO());
 
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {

@@ -42,22 +42,27 @@ import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class HeapDumperService implements VmInformationService {
     
-    private AgentInfoDAO agentInfoDao;
     private ApplicationService appService;
+    private AgentInfoDAO agentInfoDao;
+    private VmMemoryStatDAO vmMemoryStatDao;
+
     private VmFilter filter = new AlwaysMatchFilter();
 
-    public HeapDumperService(ApplicationService appService, AgentInfoDAO agentInfoDao) {
-        this.agentInfoDao = agentInfoDao;
+    public HeapDumperService(ApplicationService appService,
+            AgentInfoDAO agentInfoDao, VmMemoryStatDAO vmMemoryStatDao) {
         this.appService = appService;
+        this.agentInfoDao = agentInfoDao;
+        this.vmMemoryStatDao = vmMemoryStatDao;
     }
 
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new HeapDumpController(agentInfoDao, ref, appService);
+        return new HeapDumpController(agentInfoDao, vmMemoryStatDao, ref, appService);
     }
 
     @Override

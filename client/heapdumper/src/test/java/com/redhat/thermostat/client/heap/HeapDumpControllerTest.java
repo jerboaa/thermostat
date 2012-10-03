@@ -85,7 +85,7 @@ public class HeapDumpControllerTest {
     
     private AgentInfoDAO agentDao;
     private HeapDAO heapDAO;
-    private VmMemoryStatDAO vmDAO;
+    private VmMemoryStatDAO vmDao;
     private HeapView view;
     private HeapDumpDetailsView detailsView;
     
@@ -106,8 +106,7 @@ public class HeapDumpControllerTest {
         agentDao = mock(AgentInfoDAO.class);
         heapDAO = mock(HeapDAO.class);
         when(daoFactory.getHeapDAO()).thenReturn(heapDAO);
-        vmDAO = mock(VmMemoryStatDAO.class);
-        when(daoFactory.getVmMemoryStatDAO()).thenReturn(vmDAO);
+        vmDao = mock(VmMemoryStatDAO.class);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
@@ -162,13 +161,13 @@ public class HeapDumpControllerTest {
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
         heapDumperCommand = mock(HeapDumperCommand.class);
-        controller = new HeapDumpController(agentDao, ref, appService, heapDumperCommand);
+        controller = new HeapDumpController(agentDao, vmDao, ref, appService, heapDumperCommand);
     }
     
     @After
     public void tearDown() {
     	controller = null;
-    	vmDAO = null;
+    	vmDao = null;
     	heapDAO = null;
         ApplicationContextUtil.resetApplicationContext();
     }
@@ -237,7 +236,7 @@ public class HeapDumpControllerTest {
         appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
-        controller = new HeapDumpController(agentDao, ref, appService);
+        controller = new HeapDumpController(agentDao, vmDao, ref, appService);
         
         verify(view, times(1)).setChildView(any(HeapView.class));
         verify(view, times(1)).openDumpView();
@@ -260,7 +259,7 @@ public class HeapDumpControllerTest {
         appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
-        controller = new HeapDumpController(agentDao, ref, appService);
+        controller = new HeapDumpController(agentDao, vmDao, ref, appService);
         
         verify(view, times(0)).openDumpView();
     }

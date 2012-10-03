@@ -136,12 +136,12 @@ class MemoryStatsController implements VmInformationServiceController {
         }
     }
     
-    public MemoryStatsController(final VmRef ref) {
+    public MemoryStatsController(final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref) {
         
         regions = new HashMap<>();
         this.ref = ref;
         view = ApplicationContext.getInstance().getViewFactory().getView(MemoryStatsView.class);
-        vmDao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
+        vmDao = vmMemoryStatDao;
         
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         

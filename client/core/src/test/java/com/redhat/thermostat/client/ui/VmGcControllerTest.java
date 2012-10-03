@@ -112,7 +112,6 @@ public class VmGcControllerTest {
 
         DAOFactory daoFactory = mock(DAOFactory.class);
         when(daoFactory.getVmGcStatDAO()).thenReturn(vmGcStatDAO);
-        when(daoFactory.getVmMemoryStatDAO()).thenReturn(vmMemoryStatDAO);
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         // Setup View
@@ -128,7 +127,7 @@ public class VmGcControllerTest {
         // Now start the controller
         VmRef ref = mock(VmRef.class);
 
-        new VmGcController(ref);
+        new VmGcController(vmMemoryStatDAO, ref);
 
         // Extract relevant objects
         viewListener = viewArgumentCaptor.getValue();

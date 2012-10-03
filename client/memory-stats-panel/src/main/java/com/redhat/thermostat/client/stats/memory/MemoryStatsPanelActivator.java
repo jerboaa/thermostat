@@ -36,32 +36,53 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 
 public class MemoryStatsPanelActivator implements BundleActivator {
 
+    private MultipleServiceTracker tracker;
+    private ServiceRegistration memoryStatRegistration;
+
     @Override
-    public void start(BundleContext context) throws Exception {
-        ServiceTracker tracker = new ServiceTracker(context, ApplicationService.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(MemoryStatsView.class, MemoryStatsViewImpl.class);
-                context.registerService(VmInformationService.class.getName(), new MemoryStatsService(), null);
-                return super.addingService(reference);
-            }
+    public void start(final BundleContext context) throws Exception {
+        Class<?>[] deps = new Class<?>[] {
+            ApplicationService.class,
+            VmMemoryStatDAO.class,
         };
+
+        tracker = new MultipleServiceTracker(context, deps, new Action() {
+
+            @Override
+            public void dependenciesUnavailable() {
+                memoryStatRegistration.unregister();
+                memoryStatRegistration = null;
+            }
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                ApplicationContext.getInstance().getViewFactory().setViewClass(MemoryStatsView.class, MemoryStatsViewImpl.class);
+                VmMemoryStatDAO memoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
+                MemoryStatsService impl = new MemoryStatsService(memoryStatDao);
+                memoryStatRegistration = context.registerService(VmInformationService.class.getName(), impl , null);
+            }
+        });
         tracker.open();
+
     }
-    
+
     @Override
     public void stop(BundleContext context) throws Exception {
-        
+        tracker.close();
     }
 }

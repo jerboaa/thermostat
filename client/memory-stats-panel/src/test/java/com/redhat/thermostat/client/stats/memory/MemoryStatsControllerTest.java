@@ -63,7 +63,6 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmMemoryStat;
@@ -129,11 +128,6 @@ public class MemoryStatsControllerTest {
         
         VmMemoryStatDAO memoryStatDao = mock(VmMemoryStatDAO.class);
         when(memoryStatDao.getLatestVmMemoryStats(any(VmRef.class), anyLong())).thenReturn(vmInfo);
-
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmMemoryStatDAO()).thenReturn(memoryStatDao);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
         
         view = mock(MemoryStatsView.class);
         ViewFactory viewFactory = mock(ViewFactory.class);
@@ -146,7 +140,7 @@ public class MemoryStatsControllerTest {
 
         VmRef ref = mock(VmRef.class);
         
-        controller = new MemoryStatsController(ref);
+        controller = new MemoryStatsController(memoryStatDao, ref);
         
         viewListener = viewArgumentCaptor.getValue();
     }

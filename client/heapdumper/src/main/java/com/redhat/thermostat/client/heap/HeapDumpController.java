@@ -80,15 +80,15 @@ public class HeapDumpController implements VmInformationServiceController {
     private OverviewChart model;
     private ApplicationService appService;
 
-    public HeapDumpController(final AgentInfoDAO agentInfoDao, final VmRef ref, final ApplicationService appService) {
-        this(agentInfoDao, ref, appService, new HeapDumperCommand());
+    public HeapDumpController(final AgentInfoDAO agentInfoDao, final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref, final ApplicationService appService) {
+        this(agentInfoDao, vmMemoryStatDao, ref, appService, new HeapDumperCommand());
     }
 
-    HeapDumpController(final AgentInfoDAO agentInfoDao, final VmRef ref, final ApplicationService appService, final HeapDumperCommand command) {
+    HeapDumpController(final AgentInfoDAO agentInfoDao, final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref, final ApplicationService appService, final HeapDumperCommand command) {
         
         this.appService = appService;
         this.ref = ref;
-        this.vmDao = ApplicationContext.getInstance().getDAOFactory().getVmMemoryStatDAO();
+        this.vmDao = vmMemoryStatDao;
         this.heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         
         model = new OverviewChart(

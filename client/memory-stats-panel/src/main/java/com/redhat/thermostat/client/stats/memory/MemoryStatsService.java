@@ -40,16 +40,22 @@ import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
 import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
-import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
 class MemoryStatsService implements VmInformationService {
     
     private VmFilter filter = new AlwaysMatchFilter();
+
+    private VmMemoryStatDAO vmMemoryStatDao;
+
+    public MemoryStatsService(VmMemoryStatDAO vmMemoryStatDao) {
+        this.vmMemoryStatDao = vmMemoryStatDao;
+    }
     
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new MemoryStatsController(ref);
+        return new MemoryStatsController(vmMemoryStatDao, ref);
     }
 
     @Override
