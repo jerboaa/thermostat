@@ -39,7 +39,8 @@ package com.redhat.thermostat.client.heap;
 public enum LocaleResources {
 
     MISSING_INFO,
-    HOST_SERVICE_UNAVAILALBE,
+    HOST_SERVICE_UNAVAILABLE,
+    VM_SERVICE_UNAVAILABLE,
 
     HEADER_TIMESTAMP,
     HEADER_HOST_ID,

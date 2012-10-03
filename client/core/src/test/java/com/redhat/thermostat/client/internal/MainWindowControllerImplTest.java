@@ -84,7 +84,6 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -143,7 +142,9 @@ public class MainWindowControllerImplTest {
 
         uiFacadeFactory = mock(UiFacadeFactory.class);
         when(uiFacadeFactory.getSummary()).thenReturn(summaryController);
-        setupDAOs();
+
+        mockHostsDAO = mock(HostInfoDAO.class);
+        mockVmsDAO = mock(VmInfoDAO.class);
 
         // Setup View
         view = mock(MainView.class);
@@ -185,7 +186,7 @@ public class MainWindowControllerImplTest {
 
         setUpVMContextActions();
 
-        controller = new MainWindowControllerImpl(uiFacadeFactory, view, registryFactory, mockHostsDAO);
+        controller = new MainWindowControllerImpl(uiFacadeFactory, view, registryFactory, mockHostsDAO, mockVmsDAO);
         l = grabListener.getValue();
         
         hostFiltersListener = grabHostFiltersListener.getValue();
@@ -215,16 +216,6 @@ public class MainWindowControllerImplTest {
         actions.add(action2);
         
         when(uiFacadeFactory.getVMContextActions()).thenReturn(actions);
-    }
-    
-    private void setupDAOs() {
-        mockHostsDAO = mock(HostInfoDAO.class);
-        mockVmsDAO = mock(VmInfoDAO.class);
-
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(mockVmsDAO);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-
     }
 
     @After

@@ -50,12 +50,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -74,27 +71,20 @@ public class ListVMsCommandTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
         setupCommandContextFactory();
         serviceProvider = mock(OSGIUtils.class);
 
         cmd = new ListVMsCommand(serviceProvider);
 
-        setupDAOs();
+        hostsDAO = mock(HostInfoDAO.class);
+        vmsDAO = mock(VmInfoDAO.class);
 
         when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostsDAO);
+        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmsDAO);
     }
 
     private void setupCommandContextFactory() {
         cmdCtxFactory = new TestCommandContextFactory();
-    }
-
-    private void setupDAOs() {
-        hostsDAO = mock(HostInfoDAO.class);
-        vmsDAO = mock(VmInfoDAO.class);
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(vmsDAO);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }
 
     @After
@@ -103,7 +93,6 @@ public class ListVMsCommandTest {
         hostsDAO = null;
         cmdCtxFactory = null;
         cmd = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

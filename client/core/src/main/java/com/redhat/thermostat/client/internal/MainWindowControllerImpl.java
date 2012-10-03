@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.internal;
 
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,7 +76,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
@@ -162,7 +160,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private VmInformationControllerProvider vmInfoControllerProvider;
 
-    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory, HostInfoDAO hostsDao)
+    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory, HostInfoDAO hostsDao, VmInfoDAO vmsDAO)
     {
         try {
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
@@ -182,10 +180,8 @@ public class MainWindowControllerImpl implements MainWindowController {
         
         this.facadeFactory = facadeFactory;
 
-        ApplicationContext ctx = ApplicationContext.getInstance();
-        DAOFactory daoFactory = ctx.getDAOFactory();
         this.hostsDAO = hostsDao;
-        vmsDAO = daoFactory.getVmInfoDAO();
+        this.vmsDAO = vmsDAO;
 
         initView(view);
 
@@ -426,7 +422,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         Ref ref = view.getSelectedHostOrVm();
 
         if (ref == null) {
-            SummaryController controller = new SummaryController(hostsDAO);
+            SummaryController controller = new SummaryController(hostsDAO, vmsDAO);
             view.setSubView(controller.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;

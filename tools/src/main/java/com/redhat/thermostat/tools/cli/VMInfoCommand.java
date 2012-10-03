@@ -40,18 +40,17 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Date;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.DAOException;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.tools.LocaleResources;
 import com.redhat.thermostat.tools.Translate;
 
@@ -60,10 +59,24 @@ public class VMInfoCommand extends SimpleCommand {
     private static final String NAME = "vm-info";
     private static final String STILL_ALIVE = Translate.localize(LocaleResources.VM_STOP_TIME_RUNNING);
 
+    private OSGIUtils serviceProvider;
+
+    public VMInfoCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    /** For tests only */
+    VMInfoCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-        VmInfoDAO vmsDAO = daoFactory.getVmInfoDAO();
+        VmInfoDAO vmsDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
+        if (vmsDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        }
+
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), true, false);
         HostRef host = hostVMArgs.getHost();
         VmRef vm = hostVMArgs.getVM();
@@ -76,6 +89,8 @@ public class VMInfoCommand extends SimpleCommand {
             }
         } catch (DAOException ex) {
             ctx.getConsole().getError().println(ex.getMessage());
+        } finally {
+            serviceProvider.ungetService(VmInfoDAO.class, vmsDAO);
         }
     }
 

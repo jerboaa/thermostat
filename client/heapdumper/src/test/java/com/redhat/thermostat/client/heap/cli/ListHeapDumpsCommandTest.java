@@ -134,10 +134,10 @@ public class ListHeapDumpsCommandTest {
 
         OSGIUtils serviceProvider = mock(OSGIUtils.class);
         when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
-
+        // FIXME the command queries this for the heap dao (null!) which is never used by this test.
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         Command command = new ListHeapDumpsCommand(serviceProvider);
@@ -171,9 +171,9 @@ public class ListHeapDumpsCommandTest {
 
         OSGIUtils serviceProvider = mock(OSGIUtils.class);
         when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
@@ -219,9 +219,9 @@ public class ListHeapDumpsCommandTest {
 
         OSGIUtils serviceProvider = mock(OSGIUtils.class);
         when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
@@ -272,9 +272,9 @@ public class ListHeapDumpsCommandTest {
 
         OSGIUtils serviceProvider = mock(OSGIUtils.class);
         when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
+        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
 
         DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(vmInfo);
         when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
         ApplicationContext.getInstance().setDAOFactory(daoFactory);

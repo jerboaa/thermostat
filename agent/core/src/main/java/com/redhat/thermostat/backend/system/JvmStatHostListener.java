@@ -77,9 +77,9 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
     
     private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
 
-    JvmStatHostListener(DAOFactory df, boolean attachNew) {
+    JvmStatHostListener(DAOFactory df, VmInfoDAO vmInfoDAO, boolean attachNew) {
         this.df = df;
-        this.vmInfoDAO = df.getVmInfoDAO();
+        this.vmInfoDAO = vmInfoDAO;
         this.attachNew = attachNew;        
     }
 

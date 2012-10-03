@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class UiFacadeFactoryImpl implements UiFacadeFactory {
@@ -69,6 +70,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     private CpuStatDAO cpuStatDao;
     private MemoryStatDAO memoryStatDao;
     private NetworkInterfaceInfoDAO networkInfoDao;
+
+    private VmInfoDAO vmInfoDao;
 
     public UiFacadeFactoryImpl(BundleContext context) {
         this.context = context;
@@ -91,16 +94,20 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
         this.networkInfoDao = networkInfoDao;
     }
 
+    public void setVmInfoDao(VmInfoDAO vmInfoDao) {
+        this.vmInfoDao = vmInfoDao;
+    }
+
     @Override
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow();
         RegistryFactory registryFactory = new RegistryFactory(context);
-        return new MainWindowControllerImpl(this, mainView, registryFactory, hostInfoDao);
+        return new MainWindowControllerImpl(this, mainView, registryFactory, hostInfoDao, vmInfoDao);
     }
 
     @Override
     public SummaryController getSummary() {
-        return new SummaryController(hostInfoDao);
+        return new SummaryController(hostInfoDao, vmInfoDao);
 
     }
 
@@ -112,7 +119,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     @Override
     public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, ref);
+        return new VmInformationController(this, vmInfoDao, ref);
 
     }
 

@@ -38,11 +38,9 @@ package com.redhat.thermostat.tools.cli;
 
 import java.util.Collection;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -69,8 +67,6 @@ public class ListVMsCommand extends SimpleCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
-        DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-
         HostInfoDAO hostsDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
         if (hostsDAO == null) {
             throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
@@ -78,7 +74,10 @@ public class ListVMsCommand extends SimpleCommand {
         Collection<HostRef> hosts = hostsDAO.getHosts();
         serviceProvider.ungetService(HostInfoDAO.class, hostsDAO);
 
-        VmInfoDAO vmsDAO = daoFactory.getVmInfoDAO();
+        VmInfoDAO vmsDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
+        if (vmsDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        }
         VMListFormatter formatter = new VMListFormatter();
         for (HostRef host : hosts) {
             Collection<VmRef> vms = vmsDAO.getVMs(host);
@@ -88,6 +87,8 @@ public class ListVMsCommand extends SimpleCommand {
             }
         }
         formatter.format(ctx.getConsole().getOutput());
+
+        serviceProvider.ungetService(VmInfoDAO.class, vmsDAO);
     }
 
     @Override

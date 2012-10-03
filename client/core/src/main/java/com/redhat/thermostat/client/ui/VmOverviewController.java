@@ -43,7 +43,6 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -65,11 +64,11 @@ class VmOverviewController {
 
     private final VmOverviewView view;
 
-    public VmOverviewController(VmRef vmRef) {
+    public VmOverviewController(VmInfoDAO vmDao, VmRef vmRef) {
         this.ref = vmRef;
         this.view = ApplicationContext.getInstance().getViewFactory().getView(VmOverviewView.class);
 
-        dao = ApplicationContext.getInstance().getDAOFactory().getVmInfoDAO();
+        dao = vmDao;
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
         vmRunningTimeFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.FULL);

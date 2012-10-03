@@ -289,6 +289,8 @@ public class Main {
                 uiFacadeFactory.setMemoryStatDao(daoFactory.getMemoryStatDAO());
                 uiFacadeFactory.setNetworkInfoDao(daoFactory.getNetworkInterfaceInfoDAO());
 
+                uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
+
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
                 if (retry) {

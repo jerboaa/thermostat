@@ -96,10 +96,13 @@ public class ListHeapDumpsCommand extends SimpleCommand {
         DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
         HostInfoDAO hostDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
         if (hostDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILALBE));
+            throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         }
 
-        VmInfoDAO vmDAO = daoFactory.getVmInfoDAO();
+        VmInfoDAO vmDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
+        if (vmDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+        }
         HeapDAO heapDAO = daoFactory.getHeapDAO();
 
         Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();
@@ -110,6 +113,7 @@ public class ListHeapDumpsCommand extends SimpleCommand {
             }
         }
 
+        serviceProvider.ungetService(VmInfoDAO.class, vmDAO);
         serviceProvider.ungetService(HostInfoDAO.class, hostDAO);
 
         renderer.render(ctx.getConsole().getOutput());

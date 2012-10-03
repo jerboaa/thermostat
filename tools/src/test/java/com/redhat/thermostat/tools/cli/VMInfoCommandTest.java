@@ -67,6 +67,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.Bug;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
@@ -95,10 +96,14 @@ public class VMInfoCommandTest {
         ApplicationContextUtil.resetApplicationContext();
         setupCommandContextFactory();
 
-        cmd = new VMInfoCommand();
+        vmsDAO = mock(VmInfoDAO.class);
+
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmsDAO);
+
+        cmd = new VMInfoCommand(serviceProvider);
 
         setupDAOs();
-
     }
 
     private void setupCommandContextFactory() {
@@ -106,7 +111,6 @@ public class VMInfoCommandTest {
     }
 
     private void setupDAOs() {
-        vmsDAO = mock(VmInfoDAO.class);
         HostRef host = new HostRef("123", "dummy");
         vm = new VmRef(host, 234, "dummy");
         Calendar start = Calendar.getInstance();
@@ -117,9 +121,6 @@ public class VMInfoCommandTest {
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
         when(vmsDAO.getVmInfo(new VmRef(host, 9876, "dummy"))).thenThrow(new DAOException("Unknown VM ID: 9876"));
         when(vmsDAO.getVMs(host)).thenReturn(Arrays.asList(vm));
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(vmsDAO);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }
 
 

@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.doNothing;
@@ -44,8 +43,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -61,12 +58,8 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
 
 public class SummaryControllerTest {
 
@@ -94,11 +87,6 @@ public class SummaryControllerTest {
         VmInfoDAO vDAO = mock(VmInfoDAO.class);
         when(vDAO.getCount()).thenReturn(42l);
 
-        DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getVmInfoDAO()).thenReturn(vDAO);
-
-        ctx.setDAOFactory(daoFactory);
-
         // Setup view
         view = mock(SummaryView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -108,7 +96,7 @@ public class SummaryControllerTest {
         when(viewFactory.getView(eq(SummaryView.class))).thenReturn(view);
         ApplicationContext.getInstance().setViewFactory(viewFactory);
 
-        SummaryController summaryCtrl = new SummaryController(hDAO);
+        SummaryController summaryCtrl = new SummaryController(hDAO, vDAO);
 
         timerAction = actionCaptor.getValue();
         viewListener = viewArgumentCaptor.getValue();
