@@ -61,9 +61,8 @@ public class JvmStatVmClassListenerTest {
     public void testMonitorUpdatedClassStat() throws Exception {
 
         VmClassStatDAO dao = mock(VmClassStatDAO.class);
-        DAOFactory df = mock(DAOFactory.class);
-        when(df.getVmClassStatsDAO()).thenReturn(dao);
-        JvmStatVmClassListener l = new JvmStatVmClassListener(df, VM_ID);
+
+        JvmStatVmClassListener l = new JvmStatVmClassListener(dao, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);
@@ -84,9 +83,8 @@ public class JvmStatVmClassListenerTest {
     public void testMonitorUpdatedClassStatTwice() throws Exception {
 
         VmClassStatDAO dao = mock(VmClassStatDAO.class);
-        DAOFactory df = mock(DAOFactory.class);
-        when(df.getVmClassStatsDAO()).thenReturn(dao);
-        JvmStatVmClassListener l = new JvmStatVmClassListener(df, VM_ID);
+
+        JvmStatVmClassListener l = new JvmStatVmClassListener(dao, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);

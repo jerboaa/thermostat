@@ -131,7 +131,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         memoryStats = df.getMemoryStatDAO();
         vmCpuStats = df.getVmCpuStatDAO();
         networkInterfaces = df.getNetworkInterfaceInfoDAO();
-        hostListener = new JvmStatHostListener(df, df.getVmInfoDAO(), df.getVmMemoryStatDAO(), getObserveNewJvm());
+        hostListener = new JvmStatHostListener(df, df.getVmInfoDAO(), df.getVmMemoryStatDAO(), df.getVmClassStatsDAO(), getObserveNewJvm());
     }
 
     @Override

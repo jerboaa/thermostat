@@ -80,9 +80,9 @@ class VmClassStatController implements VmInformationServiceController {
 
     private volatile long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmClassStatController(VmRef ref, VmClassStatViewProvider viewProvider) {
+    public VmClassStatController(VmClassStatDAO vmClassStatDao, VmRef ref, VmClassStatViewProvider viewProvider) {
         this.ref = ref;
-        dao = ApplicationContext.getInstance().getDAOFactory().getVmClassStatsDAO();
+        dao = vmClassStatDao;
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
         timer.setAction(new UpdateChartData());

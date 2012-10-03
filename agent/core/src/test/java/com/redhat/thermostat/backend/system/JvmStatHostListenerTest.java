@@ -82,8 +82,8 @@ public class JvmStatHostListenerTest {
         VmClassStatDAO vmClassDAO = mock(VmClassStatDAO.class);
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         DAOFactory df = mock(DAOFactory.class);
-        when(df.getVmClassStatsDAO()).thenReturn(vmClassDAO);
-        JvmStatHostListener l = new JvmStatHostListener(df, vmInfoDAO, null, true);
+
+        JvmStatHostListener l = new JvmStatHostListener(df, vmInfoDAO, null, vmClassDAO ,true);
         SystemBackend backend = mock(SystemBackend.class);
         when(backend.getObserveNewJvm()).thenReturn(true);
 

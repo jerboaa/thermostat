@@ -34,58 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.client.vmclassstat;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
-import sun.jvmstat.monitor.event.VmEvent;
-import sun.jvmstat.monitor.event.VmListener;
+import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.test.StubBundleContext;
 
-class JvmStatVmClassListener implements VmListener {
+public class ActivatorTest {
 
-    private static final Logger logger = LoggingUtils.getLogger(JvmStatVmClassListener.class);
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
 
-    private VmClassStatDAO dao;
-    private int vmId;
+        Activator activator = new Activator();
 
-    JvmStatVmClassListener(VmClassStatDAO dao, int vmId) {
-        this.dao = dao;
-        this.vmId = vmId;
+        activator.start(context);
+
+        assertEquals(0, context.getAllServices().size());
+        assertNotSame(0, context.getServiceListeners().size());
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
     }
 
-    @Override
-    public void disconnected(VmEvent vmEvent) {
-        /* nothing to do here */
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        ApplicationService appService = mock(ApplicationService.class);
+        VmClassStatDAO daoService = mock(VmClassStatDAO.class);
+
+        context.registerService(ApplicationService.class, appService, null);
+        context.registerService(VmClassStatDAO.class, daoService, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(VmInformationService.class.getName(), VmClassStatService.class));
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(2, context.getAllServices().size());
     }
-
-    @Override
-    public void monitorStatusChanged(MonitorStatusChangeEvent vmEvent) {
-        /* nothing to do here */
-    }
-
-    @Override
-    public void monitorsUpdated(VmEvent vmEvent) {
-        MonitoredVm vm = vmEvent.getMonitoredVm();
-        try {
-            JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-            long loadedClasses = extractor.getLoadedClasses();
-            long timestamp = System.currentTimeMillis();
-            VmClassStat stat = new VmClassStat(vmId, timestamp, loadedClasses);
-            dao.putVmClassStat(stat);
-        } catch (MonitorException e) {
-            logger.log(Level.WARNING, "error gathering class info for vm " + vmId, e);
-        }
-
-
-    }
-
 }

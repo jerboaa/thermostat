@@ -37,6 +37,7 @@
 package com.redhat.thermostat.test;
 
 import org.osgi.framework.Bundle;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.NotImplementedException;
@@ -52,6 +53,10 @@ public class StubServiceReference implements ServiceReference {
 
     @Override
     public Object getProperty(String key) {
+        if (Constants.OBJECTCLASS.equals(key)) {
+            return new String[] { information.serviceInterface };
+        }
+
         throw new NotImplementedException();
     }
 

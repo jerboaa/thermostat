@@ -54,8 +54,6 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmClassStat;
@@ -73,10 +71,6 @@ public class VmClassStatControllerTest {
         VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
         when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), anyInt())).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
 
-        DAOFactory daoFactory = mock(MongoDAOFactory.class);
-        when(daoFactory.getVmClassStatsDAO()).thenReturn(vmClassStatDAO);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
         VmRef ref = mock(VmRef.class);
 
         Timer timer = mock(Timer.class);
@@ -94,7 +88,7 @@ public class VmClassStatControllerTest {
         VmClassStatViewProvider viewFactory = mock(VmClassStatViewProvider.class);
         when(viewFactory.createView()).thenReturn(view);
 
-        VmClassStatController controller = new VmClassStatController(ref, viewFactory);
+        VmClassStatController controller = new VmClassStatController(vmClassStatDAO, ref, viewFactory);
 
         ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
 
