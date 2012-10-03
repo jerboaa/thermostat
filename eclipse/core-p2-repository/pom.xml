@@ -157,7 +157,7 @@
                 </artifactItem>
                 <artifactItem>
                     <groupId>com.redhat.thermostat</groupId>
-                    <artifactId>thermostat-client-killvm</artifactId>
+                    <artifactId>thermostat-killvm-client-swing</artifactId>
                     <version>${project.version}</version>
                 </artifactItem>
                 <artifactItem>
