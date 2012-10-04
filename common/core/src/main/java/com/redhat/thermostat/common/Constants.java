@@ -51,19 +51,6 @@ public class Constants {
 
     public static final int SAMPLING_INTERVAL_UNKNOWN = -1;
 
-    public static final String AGENT_ARGUMENT_LOCAL = "--local";
-    public static final String AGENT_ARGUMENT_LOGLEVEL = "--loglevel";
-    public static final String AGENT_ARGUMENT_DEVEL = "--devel";
-    public static final String AGENT_ARGUMENT_PROPERTIES = "--properties";
-
-    public static final String AGENT_PROPERTY_MONGOS_PORT = "mongos_port";
-    public static final String AGENT_PROPERTY_MONGOD_PORT = "mongod_port";
-    public static final String AGENT_PROPERTY_MONGO_LAUNCH_SCRIPT = "mongo_launch_script";
-    public static final String AGENT_PROPERTY_BACKENDS = "backends";
-    public static final String AGENT_PROPERTY_BACKEND_ACTIVE = "active";
-
-    public static final String CLIENT_PROPERTY_AGENT_LAUNCH_SCRIPT = "agent_launch_script";
-
     public static final String AGENT_LOCAL_HOSTNAME = "localhost";
 
     public static final long KILOBYTES_TO_BYTES = 1000;
