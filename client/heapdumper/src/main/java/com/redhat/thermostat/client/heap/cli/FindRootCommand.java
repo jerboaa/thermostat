@@ -46,7 +46,9 @@ import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.model.Snapshot;
@@ -56,9 +58,32 @@ public class FindRootCommand extends SimpleCommand {
     private static final String ALL_ARG = "all";
     private static final String NAME = "find-root";
 
+    private OSGIUtils serviceProvider;
+
+    public FindRootCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    FindRootCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        ObjectCommandHelper objCmdHelper = new ObjectCommandHelper(ctx);
+        HeapDAO heapDao = serviceProvider.getServiceAllowNull(HeapDAO.class);
+        if (heapDao == null) {
+            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+        }
+
+        try {
+            run(ctx, heapDao);
+        } finally {
+            serviceProvider.ungetService(HeapDAO.class, heapDao);
+        }
+    }
+
+    private void run(CommandContext ctx, HeapDAO heapDao) throws CommandException {
+        ObjectCommandHelper objCmdHelper = new ObjectCommandHelper(ctx, heapDao);
         HeapDump heapDump = objCmdHelper.getHeapDump();
         Snapshot snapshot = heapDump.getSnapshot();
         JavaHeapObject obj = objCmdHelper.getJavaHeapObject();

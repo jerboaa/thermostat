@@ -60,14 +60,12 @@ import org.mockito.stubbing.OngoingStubbing;
 import com.redhat.thermostat.client.heap.cli.ObjectNotFoundException;
 import com.redhat.thermostat.client.heap.cli.FindRootCommand;
 import com.redhat.thermostat.client.heap.cli.HeapNotFoundException;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -90,12 +88,17 @@ public class FindRootCommandTest {
 
     private JavaHeapObject beeObj;
 
+    private HeapDAO dao;
+
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-        cmd = new FindRootCommand();
         HeapDump heapDump = setupHeapDump();
         setupDAO(heapDump);
+
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(dao);
+
+        cmd = new FindRootCommand(serviceProvider);
     }
 
     @After
@@ -106,7 +109,6 @@ public class FindRootCommandTest {
         bumObj = null;
         beeObj = null;
         cmd = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @SuppressWarnings("rawtypes")
@@ -152,14 +154,10 @@ public class FindRootCommandTest {
 
         HeapInfo heapInfo = mock(HeapInfo.class);
 
-        HeapDAO dao = mock(HeapDAO.class);
+        dao = mock(HeapDAO.class);
         when(dao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
         when(dao.getHeapDump(heapInfo)).thenReturn(heapDump);
 
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(dao);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }
 
     private JavaHeapObject createMockObject(String className, String id) {

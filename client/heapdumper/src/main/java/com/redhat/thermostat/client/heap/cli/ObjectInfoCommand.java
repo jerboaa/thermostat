@@ -46,7 +46,9 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaField;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -57,11 +59,33 @@ public class ObjectInfoCommand extends SimpleCommand {
 
     private static final String NAME = "object-info";
 
+    private OSGIUtils serviceProvider;
     private Snapshot snapshot;
+
+    public ObjectInfoCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    ObjectInfoCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        ObjectCommandHelper objCmdHelper = new ObjectCommandHelper(ctx);
+        HeapDAO heapDao = serviceProvider.getServiceAllowNull(HeapDAO.class);
+        if (heapDao == null) {
+            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+        }
+
+        try {
+            run(ctx, heapDao);
+        } finally {
+            serviceProvider.ungetService(HeapDAO.class, heapDao);
+        }
+    }
+
+    private void run(CommandContext ctx, HeapDAO heapDao) throws CommandException {
+        ObjectCommandHelper objCmdHelper = new ObjectCommandHelper(ctx, heapDao);
         HeapDump heapDump = objCmdHelper.getHeapDump();
         snapshot = heapDump.getSnapshot();
         JavaHeapObject obj = objCmdHelper.getJavaHeapObject();

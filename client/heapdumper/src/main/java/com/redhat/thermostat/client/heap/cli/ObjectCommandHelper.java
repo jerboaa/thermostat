@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.heap.cli;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -53,10 +52,12 @@ class ObjectCommandHelper {
     private static final String HEAP_ID_ARG = "heapId";
 
     private CommandContext ctx;
+    private HeapDAO dao;
     private HeapDump heapDump;
 
-    ObjectCommandHelper(CommandContext ctx) {
+    ObjectCommandHelper(CommandContext ctx, HeapDAO dao) {
         this.ctx = ctx;
+        this.dao = dao;
     }
 
     HeapDump getHeapDump() throws CommandException {
@@ -69,7 +70,6 @@ class ObjectCommandHelper {
     private void loadHeapDump() throws CommandException {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument(HEAP_ID_ARG);
-        HeapDAO dao = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         HeapInfo heapInfo = dao.getHeapInfo(heapId);
         if (heapInfo == null) {
             throw new CommandException(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));

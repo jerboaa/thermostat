@@ -60,6 +60,7 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 
 public class Activator implements BundleActivator {
@@ -81,6 +82,7 @@ public class Activator implements BundleActivator {
                 ApplicationService.class,
                 AgentInfoDAO.class,
                 VmMemoryStatDAO.class,
+                HeapDAO.class,
         };
 
         heapDumperServiceTracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -93,9 +95,12 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(agentDao);
                 VmMemoryStatDAO vmMemoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
                 Objects.requireNonNull(vmMemoryStatDao);
+                HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
+                Objects.requireNonNull(heapDao);
+
                 heapDumperServiceRegistration = context.registerService(
                         VmInformationService.class.getName(),
-                        new HeapDumperService(appService, agentDao, vmMemoryStatDao),
+                        new HeapDumperService(appService, agentDao, vmMemoryStatDao, heapDao),
                         null);
             }
 

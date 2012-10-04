@@ -47,33 +47,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.heap.cli.SaveHeapDumpToFileCommand;
 import com.redhat.thermostat.client.heap.cli.SaveHeapDumpToFileCommand.FileStreamCreator;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class SaveHeapDumpToFileCommandTest {
-
-    @Before
-    public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
-    }
 
     @Test
     public void verifyBasicInformation() {
@@ -92,7 +78,10 @@ public class SaveHeapDumpToFileCommandTest {
         args.addArgument("vmId", "1");
         args.addArgument("file", "heap-id-1");
 
-        Command command = new SaveHeapDumpToFileCommand();
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(mock(HeapDAO.class));
+
+        Command command = new SaveHeapDumpToFileCommand(serviceProvider, mock(FileStreamCreator.class));
         command.run(factory.createContext(args));
     }
 
@@ -105,7 +94,10 @@ public class SaveHeapDumpToFileCommandTest {
         args.addArgument("vmId", "1");
         args.addArgument("heapId", "heap-id-1");
 
-        Command command = new SaveHeapDumpToFileCommand();
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(mock(HeapDAO.class));
+
+        Command command = new SaveHeapDumpToFileCommand(serviceProvider, mock(FileStreamCreator.class));
         command.run(factory.createContext(args));
     }
 
@@ -123,10 +115,9 @@ public class SaveHeapDumpToFileCommandTest {
         HeapInfo info = mock(HeapInfo.class);
         when(heapDao.getHeapInfo(HEAP_ID)).thenReturn(info);
         when(heapDao.getHeapDumpData(info)).thenReturn(new ByteArrayInputStream(HEAP_CONTENT_BYTES));
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -137,7 +128,7 @@ public class SaveHeapDumpToFileCommandTest {
         FileStreamCreator creator = mock(FileStreamCreator.class);
         when(creator.createOutputStream(FILE_NAME)).thenReturn(heapDumpStream);
 
-        Command command = new SaveHeapDumpToFileCommand(creator);
+        Command command = new SaveHeapDumpToFileCommand(serviceProvider, creator);
         command.run(factory.createContext(args));
 
         assertArrayEquals(HEAP_CONTENT_BYTES, heapDumpStream.toByteArray());

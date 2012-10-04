@@ -42,13 +42,11 @@ import java.util.Date;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -93,7 +91,6 @@ public class ListHeapDumpsCommand extends SimpleCommand {
 
         renderer.printLine(COLUMN_NAMES);
 
-        DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
         HostInfoDAO hostDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
         if (hostDAO == null) {
             throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
@@ -103,7 +100,11 @@ public class ListHeapDumpsCommand extends SimpleCommand {
         if (vmDAO == null) {
             throw new CommandException(Translate.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         }
-        HeapDAO heapDAO = daoFactory.getHeapDAO();
+
+        HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
+        if (heapDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+        }
 
         Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();
         for (HostRef hostRef : hosts) {
@@ -113,6 +114,7 @@ public class ListHeapDumpsCommand extends SimpleCommand {
             }
         }
 
+        serviceProvider.ungetService(HeapDAO.class, heapDAO);
         serviceProvider.ungetService(VmInfoDAO.class, vmDAO);
         serviceProvider.ungetService(HostInfoDAO.class, hostDAO);
 

@@ -41,7 +41,6 @@ import java.util.List;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
@@ -49,6 +48,7 @@ import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class FindObjectsCommand extends SimpleCommand {
@@ -60,9 +60,32 @@ public class FindObjectsCommand extends SimpleCommand {
     private static final String HEADER_TYPE = Translate.localize(LocaleResources.HEADER_OBJECT_TYPE);
     private static final int DEFAULT_LIMIT = 10;
 
+    private OSGIUtils serviceProvider;
+
+    public FindObjectsCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    FindObjectsCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
+
+        HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
+        if (heapDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+        }
+        try {
+            run(ctx, heapDAO);
+        } finally {
+            serviceProvider.ungetService(HeapDAO.class, heapDAO);
+            heapDAO = null;
+        }
+    }
+
+    private void run(CommandContext ctx, HeapDAO heapDAO) throws CommandException {
         String heapId = ctx.getArguments().getArgument(HEAP_ID_ARG);
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         if (heapInfo == null) {

@@ -59,14 +59,12 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.heap.cli.HeapNotFoundException;
 import com.redhat.thermostat.client.heap.cli.ObjectInfoCommand;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -80,19 +78,23 @@ public class ObjectInfoCommandTest {
     private ObjectInfoCommand cmd;
     private HeapDump heapDump;
 
+    private HeapDAO dao;
+
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-        cmd = new ObjectInfoCommand();
         setupHeapDump();
         setupDAO();
+
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(dao);
+
+        cmd = new ObjectInfoCommand(serviceProvider);
     }
 
     @After
     public void tearDown() {
         heapDump = null;
         cmd = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     private void setupHeapDump() {
@@ -143,14 +145,9 @@ public class ObjectInfoCommandTest {
 
         HeapInfo heapInfo = mock(HeapInfo.class);
 
-        HeapDAO dao = mock(HeapDAO.class);
+        dao = mock(HeapDAO.class);
         when(dao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
         when(dao.getHeapDump(heapInfo)).thenReturn(heapDump);
-
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(dao);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
     }
 
     @Test

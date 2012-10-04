@@ -46,13 +46,13 @@ import java.io.OutputStream;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.common.utils.StreamUtils;
 
 public class SaveHeapDumpToFileCommand extends SimpleCommand {
@@ -63,12 +63,14 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
     private static final String FILE_NAME_ARGUMENT = "file";
 
     private final FileStreamCreator creator;
+    private final OSGIUtils serviceProvider;
 
     public SaveHeapDumpToFileCommand() {
-        this(new FileStreamCreator());
+        this(OSGIUtils.getInstance(), new FileStreamCreator());
     }
 
-    SaveHeapDumpToFileCommand(FileStreamCreator creator) {
+    SaveHeapDumpToFileCommand(OSGIUtils serviceProvider, FileStreamCreator creator) {
+        this.serviceProvider = serviceProvider;
         this.creator = creator;
     }
 
@@ -78,7 +80,18 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
     }
 
     @Override
+
     public void run(CommandContext ctx) throws CommandException {
+        HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
+        try {
+            run(ctx, heapDAO);
+        } finally {
+            serviceProvider.ungetService(HeapDAO.class, heapDAO);
+            heapDAO = null;
+        }
+    }
+
+    private void run(CommandContext ctx, HeapDAO heapDAO) throws CommandException {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument(HEAP_ID_ARGUMENT);
         if (heapId == null) {
@@ -89,7 +102,6 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
             throw new CommandException(Translate.localize(LocaleResources.FILE_REQUIRED));
         }
 
-        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         try (InputStream heapStream = heapDAO.getHeapDumpData(heapInfo)) {
             if (heapStream != null) {

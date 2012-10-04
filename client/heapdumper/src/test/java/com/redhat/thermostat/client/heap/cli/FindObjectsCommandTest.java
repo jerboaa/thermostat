@@ -48,20 +48,17 @@ import java.util.Arrays;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.heap.cli.FindObjectsCommand;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -74,15 +71,18 @@ public class FindObjectsCommandTest {
 
     private HeapDump heapDump;
 
+    private HeapDAO dao;
+
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
-        cmd = new FindObjectsCommand();
-
         setupHeapDump();
 
         setupDAO();
+
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(dao);
+
+        cmd = new FindObjectsCommand(serviceProvider);
 
     }
 
@@ -112,24 +112,11 @@ public class FindObjectsCommandTest {
     }
 
     private void setupDAO() {
-
         HeapInfo heapInfo = mock(HeapInfo.class);
 
-        HeapDAO dao = mock(HeapDAO.class);
+        dao = mock(HeapDAO.class);
         when(dao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
         when(dao.getHeapDump(heapInfo)).thenReturn(heapDump);
-
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(dao);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-    }
-
-    @After
-    public void tearDown() {
-        heapDump = null;
-        cmd = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test
@@ -223,15 +210,9 @@ public class FindObjectsCommandTest {
     public void testSearchWithBadHeapId() throws CommandException {
         final String INVALID_HEAP_ID = "foobarbaz";
 
-
         HeapDAO dao = mock(HeapDAO.class);
         when(dao.getHeapInfo(INVALID_HEAP_ID)).thenReturn(null);
         when(dao.getHeapDump(isA(HeapInfo.class))).thenReturn(null);
-
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(dao);
-
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();

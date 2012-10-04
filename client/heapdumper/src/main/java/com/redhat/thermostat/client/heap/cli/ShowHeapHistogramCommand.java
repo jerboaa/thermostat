@@ -40,7 +40,6 @@ import java.io.PrintStream;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -50,10 +49,21 @@ import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class ShowHeapHistogramCommand extends SimpleCommand {
 
     private static final String NAME = "show-heap-histogram";
+
+    private OSGIUtils serviceProvider;
+
+    public ShowHeapHistogramCommand() {
+        this(OSGIUtils.getInstance());
+    }
+
+    ShowHeapHistogramCommand(OSGIUtils serviceProvider) {
+        this.serviceProvider = serviceProvider;
+    }
 
     @Override
     public String getName() {
@@ -62,10 +72,21 @@ public class ShowHeapHistogramCommand extends SimpleCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
+        HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
+        if (heapDAO == null) {
+            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+        }
+
+        try {
+            run(ctx, heapDAO);
+        } finally {
+            serviceProvider.ungetService(HeapDAO.class, heapDAO);
+        }
+    }
+
+    private void run(CommandContext ctx, HeapDAO heapDAO) throws CommandException {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument("heapId");
-
-        HeapDAO heapDAO = ApplicationContext.getInstance().getDAOFactory().getHeapDAO();
 
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         if (heapInfo == null) {

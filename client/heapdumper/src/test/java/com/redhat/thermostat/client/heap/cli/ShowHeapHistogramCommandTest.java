@@ -40,19 +40,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.heap.cli.ShowHeapHistogramCommand;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -97,12 +96,11 @@ public class ShowHeapHistogramCommandTest {
         HeapInfo heapInfo = mock(HeapInfo.class);
         when(heapDao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
         when(heapDao.getHistogram(heapInfo)).thenReturn(histo);
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
 
-        Command command = new ShowHeapHistogramCommand();
+        Command command = new ShowHeapHistogramCommand(serviceProvider);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
@@ -112,6 +110,7 @@ public class ShowHeapHistogramCommandTest {
 
         assertEquals("class1                  2 8\n" +
         		     "verylongclassnameclass2 1 10\n", factory.getOutput());
+        verify(serviceProvider).ungetService(HeapDAO.class, heapDao);
     }
 
     @Test
@@ -123,12 +122,11 @@ public class ShowHeapHistogramCommandTest {
         HeapInfo heapInfo = mock(HeapInfo.class);
         when(heapDao.getHeapInfo(BAD_HEAP_ID)).thenReturn(null);
         when(heapDao.getHistogram(any(HeapInfo.class))).thenReturn(null);
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getHeapDAO()).thenReturn(heapDao);
 
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
 
-        Command command = new ShowHeapHistogramCommand();
+        Command command = new ShowHeapHistogramCommand(serviceProvider);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
@@ -137,5 +135,6 @@ public class ShowHeapHistogramCommandTest {
         command.run(factory.createContext(args));
 
         assertEquals("Heap ID not found: " + BAD_HEAP_ID + "\n", factory.getOutput());
+        verify(serviceProvider).ungetService(HeapDAO.class, heapDao);
     }
 }
