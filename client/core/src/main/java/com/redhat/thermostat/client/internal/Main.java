@@ -292,6 +292,7 @@ public class Main {
                 uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
                 uiFacadeFactory.setVmCpuStatDao(daoFactory.getVmCpuStatDAO());
                 uiFacadeFactory.setVmMemoryStatDao(daoFactory.getVmMemoryStatDAO());
+                uiFacadeFactory.setVmGcStatDao(daoFactory.getVmGcStatDAO());
 
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {

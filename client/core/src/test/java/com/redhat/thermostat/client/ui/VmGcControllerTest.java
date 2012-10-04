@@ -61,7 +61,6 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -110,10 +109,6 @@ public class VmGcControllerTest {
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         when(vmMemoryStatDAO.getLatestMemoryStat(isA(VmRef.class))).thenReturn(memoryStat);
 
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getVmGcStatDAO()).thenReturn(vmGcStatDAO);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-
         // Setup View
         view = mock(VmGcView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -127,7 +122,7 @@ public class VmGcControllerTest {
         // Now start the controller
         VmRef ref = mock(VmRef.class);
 
-        new VmGcController(vmMemoryStatDAO, ref);
+        new VmGcController(vmMemoryStatDAO, vmGcStatDAO, ref);
 
         // Extract relevant objects
         viewListener = viewArgumentCaptor.getValue();

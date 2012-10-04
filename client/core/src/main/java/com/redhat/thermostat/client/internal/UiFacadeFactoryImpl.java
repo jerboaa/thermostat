@@ -56,6 +56,7 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -77,6 +78,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     private VmInfoDAO vmInfoDao;
     private VmCpuStatDAO vmCpuStatDao;
     private VmMemoryStatDAO vmMemoryStatDao;
+    private VmGcStatDAO vmGcStatDao;
 
     public UiFacadeFactoryImpl(BundleContext context) {
         this.context = context;
@@ -113,6 +115,11 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
+    public void setVmGcStatDao(VmGcStatDAO vmGcStatDao) {
+        this.vmGcStatDao = vmGcStatDao;
+    }
+
+    @Override
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow();
         RegistryFactory registryFactory = new RegistryFactory(context);
@@ -133,7 +140,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     @Override
     public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, vmInfoDao, vmCpuStatDao, vmMemoryStatDao, ref);
+        return new VmInformationController(this, vmInfoDao, vmCpuStatDao, vmMemoryStatDao, vmGcStatDao, ref);
 
     }
 

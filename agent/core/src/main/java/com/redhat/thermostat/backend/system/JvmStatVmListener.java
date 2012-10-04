@@ -47,7 +47,6 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.model.VmGcStat;
@@ -64,8 +63,8 @@ public class JvmStatVmListener implements VmListener {
     private final VmGcStatDAO gcDAO;
     private final VmMemoryStatDAO memDAO;
 
-    public JvmStatVmListener(DAOFactory df, VmMemoryStatDAO vmMemoryStatDao, int vmId) {
-        gcDAO = df.getVmGcStatDAO();
+    public JvmStatVmListener(VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, int vmId) {
+        gcDAO = vmGcStatDao;
         memDAO = vmMemoryStatDao;
         this.vmId = vmId;
     }
