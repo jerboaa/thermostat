@@ -93,8 +93,7 @@ public class BackendRegistryTest {
 
         @Override
         protected void setDAOFactoryAction() {
-            // TODO Auto-generated method stub
-            
+            /* NO-OP */
         }
     }
 

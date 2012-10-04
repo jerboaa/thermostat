@@ -60,14 +60,12 @@ public class ConnectionTest {
             
             @Override
             public void disconnect() {
-                // TODO Auto-generated method stub
-                
+                /* NO-OP */
             }
             
             @Override
             public void connect() {
-                // TODO Auto-generated method stub
-                
+                /* NO-OP */
             }
         };
         listener1 = mock(Connection.ConnectionListener.class);

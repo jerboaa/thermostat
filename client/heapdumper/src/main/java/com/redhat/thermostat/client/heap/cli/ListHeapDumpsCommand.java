@@ -59,7 +59,6 @@ public class ListHeapDumpsCommand extends SimpleCommand {
 
     private static final String NAME = "list-heap-dumps";
 
-    // TODO localize
     private static final String[] COLUMN_NAMES = {
         Translate.localize(LocaleResources.HEADER_HOST_ID),
         Translate.localize(LocaleResources.HEADER_VM_ID),

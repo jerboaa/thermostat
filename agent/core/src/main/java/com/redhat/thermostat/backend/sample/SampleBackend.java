@@ -132,8 +132,7 @@ public class SampleBackend extends Backend {
 
     @Override
     protected void setDAOFactoryAction() {
-        // TODO Auto-generated method stub
-        
+        /* NO-OP */
     }
 
 }

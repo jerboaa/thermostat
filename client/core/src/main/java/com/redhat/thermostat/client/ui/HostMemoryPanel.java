@@ -290,8 +290,6 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
     }
 
     private JFreeChart createMemoryChart() {
-        // FIXME associate a fixed color with each type
-
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 localize(LocaleResources.HOST_MEMORY_CHART_TITLE), // Title
                 localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label

@@ -122,13 +122,13 @@ public class ObjectDetailsController {
 
                     @Override
                     public boolean mightExclude() {
-                        // TODO what is this?
+                        /* we never return true in exclude */
                         return false;
                     }
 
                     @Override
                     public boolean exclude(JavaClass clazz, JavaField f) {
-                        // TODO hmm.... what is this?
+                        /* visit every field in every java class */
                         return false;
                     }
                 };
