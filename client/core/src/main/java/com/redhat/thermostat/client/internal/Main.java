@@ -51,12 +51,12 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
+import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.ClientConfigurationSwing;
-import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.ActionEvent;
@@ -134,8 +134,6 @@ public class Main {
         ApplicationContext.getInstance().setDAOFactory(daoFactory);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
-        SwingViewFactory viewFactory = new SwingViewFactory();
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
     }
         
     private void showGui() {

@@ -56,12 +56,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.views.HostCpuView;
+import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
@@ -75,6 +76,7 @@ import com.redhat.thermostat.common.utils.ArrayUtils;
 
 public class HostCpuControllerTest {
 
+    @SuppressWarnings("unused")
     private HostCpuController controller;
 
     private HostCpuView view;
@@ -84,6 +86,7 @@ public class HostCpuControllerTest {
     private ActionListener<HostCpuView.Action> viewListener;
     private Runnable timerAction;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
         // Setup timer.
@@ -110,13 +113,11 @@ public class HostCpuControllerTest {
         view = mock(HostCpuView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(HostCpuView.class))).thenReturn(view);
-
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
+        HostCpuViewProvider viewProvider = mock(HostCpuViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
 
         HostRef host = new HostRef("123", "fluffhost");
-        controller = new HostCpuController(hostInfoDAO, cpuStatDAO, host);
+        controller = new HostCpuController(hostInfoDAO, cpuStatDAO, host, viewProvider);
 
         timerAction = actionCaptor.getValue();
         viewListener = viewArgumentCaptor.getValue();

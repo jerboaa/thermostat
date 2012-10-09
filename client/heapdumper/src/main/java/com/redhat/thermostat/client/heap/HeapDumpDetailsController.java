@@ -40,8 +40,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.common.views.BasicView;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.utils.LoggingUtils;

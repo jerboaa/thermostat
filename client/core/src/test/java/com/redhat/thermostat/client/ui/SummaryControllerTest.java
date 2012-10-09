@@ -50,10 +50,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.views.SummaryView;
+import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -68,6 +69,7 @@ public class SummaryControllerTest {
     private SummaryView view;
     private ActionListener<SummaryView.Action> viewListener;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -92,11 +94,11 @@ public class SummaryControllerTest {
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(SummaryView.class))).thenReturn(view);
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
+        SummaryViewProvider viewProvider = mock(SummaryViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
 
-        SummaryController summaryCtrl = new SummaryController(hDAO, vDAO);
+        @SuppressWarnings("unused")
+        SummaryController summaryCtrl = new SummaryController(hDAO, vDAO, viewProvider);
 
         timerAction = actionCaptor.getValue();
         viewListener = viewArgumentCaptor.getValue();

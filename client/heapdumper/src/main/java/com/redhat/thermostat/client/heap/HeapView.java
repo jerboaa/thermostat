@@ -38,8 +38,8 @@ package com.redhat.thermostat.client.heap;
 
 import java.util.List;
 
+import com.redhat.thermostat.client.common.views.BasicView;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.heap.HeapDump;

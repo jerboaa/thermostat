@@ -53,12 +53,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.views.VmGcView;
+import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
@@ -75,6 +76,7 @@ public class VmGcControllerTest {
     private VmGcView view;
     private ActionListener<VmGcView.Action> viewListener;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -114,15 +116,13 @@ public class VmGcControllerTest {
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(VmGcView.class))).thenReturn(view);
-
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
+        VmGcViewProvider viewProvider = mock(VmGcViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
 
         // Now start the controller
         VmRef ref = mock(VmRef.class);
 
-        new VmGcController(vmMemoryStatDAO, vmGcStatDAO, ref);
+        new VmGcController(vmMemoryStatDAO, vmGcStatDAO, ref, viewProvider);
 
         // Extract relevant objects
         viewListener = viewArgumentCaptor.getValue();
@@ -156,6 +156,7 @@ public class VmGcControllerTest {
         verify(timer).stop();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyAction() {
         timerAction.run();

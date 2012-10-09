@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.thread.client.common;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;

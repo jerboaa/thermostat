@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.common.views.BasicView;
 
 public abstract class MemoryStatsView extends BasicView {
     

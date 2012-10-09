@@ -41,12 +41,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.common.views.BasicView;
+import com.redhat.thermostat.client.common.views.UIComponent;
+import com.redhat.thermostat.client.common.views.BasicView.Action;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
-import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;

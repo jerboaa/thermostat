@@ -39,13 +39,13 @@ package com.redhat.thermostat.client.internal;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.osgi.service.HostDecorator;
-import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.Ref;

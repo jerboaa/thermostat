@@ -44,8 +44,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView.ConfigurationAction;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.ui.AgentInformationDisplayView.ConfigurationAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.AgentInformation;

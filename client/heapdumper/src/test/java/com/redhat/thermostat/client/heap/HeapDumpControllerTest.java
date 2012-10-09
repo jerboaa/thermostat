@@ -55,6 +55,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.common.views.ViewFactory;
 import com.redhat.thermostat.client.heap.HeapView.HeapDumperAction;
 import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
 import com.redhat.thermostat.client.osgi.service.ApplicationCache;
@@ -63,7 +64,6 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;

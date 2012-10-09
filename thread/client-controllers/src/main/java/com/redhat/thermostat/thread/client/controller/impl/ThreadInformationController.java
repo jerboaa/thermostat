@@ -41,10 +41,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
-import com.redhat.thermostat.client.ui.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;

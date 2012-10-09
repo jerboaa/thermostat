@@ -44,6 +44,7 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
+import com.redhat.thermostat.client.core.views.VmOverviewView;
 import com.redhat.thermostat.client.internal.ChangeableText;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;

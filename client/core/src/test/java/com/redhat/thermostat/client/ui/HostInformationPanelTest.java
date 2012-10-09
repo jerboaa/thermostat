@@ -51,7 +51,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
 
 public class HostInformationPanelTest {
 

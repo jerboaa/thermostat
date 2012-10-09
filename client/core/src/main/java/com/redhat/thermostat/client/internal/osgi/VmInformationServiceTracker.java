@@ -41,7 +41,7 @@ import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 
 class VmInformationServiceTracker extends ServiceTracker {

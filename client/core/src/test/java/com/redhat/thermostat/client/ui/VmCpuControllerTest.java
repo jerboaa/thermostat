@@ -50,11 +50,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.views.VmCpuView;
+import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -71,7 +72,7 @@ public class VmCpuControllerTest {
         ApplicationContextUtil.resetApplicationContext();
     }
 
-    @SuppressWarnings("unchecked") // any(List.class)
+    @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
     public void testChartUpdate() {
 
@@ -95,12 +96,12 @@ public class VmCpuControllerTest {
         final VmCpuView view = mock(VmCpuView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(VmCpuView.class))).thenReturn(view);
+        
+        VmCpuViewProvider viewProvider = mock(VmCpuViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
 
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
-
-        VmCpuController controller = new VmCpuController(vmCpuStatDAO, ref);
+        @SuppressWarnings("unused")
+        VmCpuController controller = new VmCpuController(vmCpuStatDAO, ref, viewProvider);
 
         ActionListener<VmCpuView.Action> l = viewArgumentCaptor.getValue();
 
@@ -110,7 +111,7 @@ public class VmCpuControllerTest {
 
         timerActionCaptor.getValue().run();
 
-        l.actionPerformed(new ActionEvent<>(viewFactory, VmCpuView.Action.HIDDEN));
+        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.HIDDEN));
 
         verify(timer).stop();
 

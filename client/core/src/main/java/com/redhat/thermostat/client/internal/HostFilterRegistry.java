@@ -40,7 +40,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.osgi.service.HostFilter;
+import com.redhat.thermostat.client.core.HostFilter;
 
 class HostFilterRegistry extends ThermostatExtensionRegistry<HostFilter> {
 

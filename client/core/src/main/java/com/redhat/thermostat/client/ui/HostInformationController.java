@@ -38,14 +38,19 @@ package com.redhat.thermostat.client.ui;
 
 import static com.redhat.thermostat.client.locale.Translate.localize;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
+import com.redhat.thermostat.client.core.views.HostInformationView;
+import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
+import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class HostInformationController {
 
@@ -55,15 +60,16 @@ public class HostInformationController {
 
     private final HostInformationView view;
 
-    public HostInformationController(HostInfoDAO hostInfoDao,
-            CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao,
-            NetworkInterfaceInfoDAO networkInfoDao, HostRef ref) {
+    public HostInformationController(HostInfoDAO hostInfoDao, NetworkInterfaceInfoDAO networkInfoDao, CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao, HostRef ref, HostInformationViewProvider provider) {
+        OSGIUtils utils = OSGIUtils.getInstance();
+        HostCpuViewProvider hostCpuProvider = utils.getService(HostCpuViewProvider.class);
+        HostOverviewViewProvider hostOverviewProvider = utils.getService(HostOverviewViewProvider.class);
+        HostMemoryViewProvider hostMemoryProvider = utils.getService(HostMemoryViewProvider.class);
+        overviewController = new HostOverviewController(hostInfoDao, networkInfoDao, ref, hostOverviewProvider);
+        cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref, hostCpuProvider);
+        memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref, hostMemoryProvider);
 
-        overviewController = new HostOverviewController(hostInfoDao, networkInfoDao, ref);
-        cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref);
-        memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref);
-
-        view = ApplicationContext.getInstance().getViewFactory().getView(HostInformationView.class);
+        view = provider.createView();
 
         view.addChildView(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getView());
         view.addChildView(localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getView());

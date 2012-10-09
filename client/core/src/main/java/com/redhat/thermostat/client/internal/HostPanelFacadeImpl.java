@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client.internal;
 
+import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
+import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
+import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
 import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.client.ui.HostOverviewController;
@@ -44,6 +47,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class HostPanelFacadeImpl implements HostPanelFacade {
 
@@ -54,9 +58,13 @@ public class HostPanelFacadeImpl implements HostPanelFacade {
     public HostPanelFacadeImpl(HostInfoDAO hostInfoDao,
             CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao,
             NetworkInterfaceInfoDAO networkInfoDao, HostRef ref) {
-        overviewController = new HostOverviewController(hostInfoDao, networkInfoDao, ref);
-        cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref);
-        memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref);
+        OSGIUtils utils = OSGIUtils.getInstance();
+        HostOverviewViewProvider hostOverviewProvider = utils.getService(HostOverviewViewProvider.class);
+        overviewController = new HostOverviewController(hostInfoDao, networkInfoDao, ref, hostOverviewProvider);
+        HostCpuViewProvider cpuProvider = utils.getService(HostCpuViewProvider.class);
+        cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref, cpuProvider);
+        HostMemoryViewProvider memoryProvider = utils.getService(HostMemoryViewProvider.class);
+        memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref, memoryProvider);
     }
 
     @Override

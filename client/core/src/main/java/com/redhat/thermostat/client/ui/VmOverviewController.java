@@ -42,8 +42,12 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.VmOverviewView;
+import com.redhat.thermostat.client.core.views.VmOverviewViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -64,9 +68,9 @@ class VmOverviewController {
 
     private final VmOverviewView view;
 
-    public VmOverviewController(VmInfoDAO vmDao, VmRef vmRef) {
+    public VmOverviewController(VmInfoDAO vmDao, VmRef vmRef, VmOverviewViewProvider provider) {
         this.ref = vmRef;
-        this.view = ApplicationContext.getInstance().getViewFactory().getView(VmOverviewView.class);
+        this.view = provider.createView();
 
         dao = vmDao;
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();

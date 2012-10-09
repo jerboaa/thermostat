@@ -63,6 +63,8 @@ import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.VmGcView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.IntervalTimeData;

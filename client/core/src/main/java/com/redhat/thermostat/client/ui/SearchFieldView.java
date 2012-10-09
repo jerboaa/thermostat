@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.client.ui;
 
+import com.redhat.thermostat.client.core.views.View;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
 
 public interface SearchFieldView extends View {
 

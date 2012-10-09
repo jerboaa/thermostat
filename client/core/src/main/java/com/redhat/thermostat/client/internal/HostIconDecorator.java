@@ -41,8 +41,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 
+import com.redhat.thermostat.client.core.HostFilter;
 import com.redhat.thermostat.client.osgi.service.HostDecorator;
-import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.client.ui.IconResource;

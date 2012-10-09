@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.client.vmclassstat;
 
+import com.redhat.thermostat.client.common.VmFilter;
+import com.redhat.thermostat.client.common.VmInformationService;
+import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 

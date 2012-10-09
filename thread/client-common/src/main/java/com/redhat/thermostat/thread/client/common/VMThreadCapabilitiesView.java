@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.thread.client.common;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public abstract class VMThreadCapabilitiesView extends BasicView {

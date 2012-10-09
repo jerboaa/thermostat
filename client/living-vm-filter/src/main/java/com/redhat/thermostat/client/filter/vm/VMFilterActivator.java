@@ -47,9 +47,9 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 
 public class VMFilterActivator implements BundleActivator {

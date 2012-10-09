@@ -49,11 +49,11 @@ import javax.swing.SwingWorker;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import com.redhat.thermostat.client.common.views.BasicView;
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.heap.HeapDump;

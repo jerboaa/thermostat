@@ -40,10 +40,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.HostCpuView;
+import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -70,9 +72,9 @@ public class HostCpuController {
     private int chartsAdded = 0;
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public HostCpuController(HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDAO, HostRef ref) {
+    public HostCpuController(HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDAO, HostRef ref, HostCpuViewProvider provider) {
         this.ref = ref;
-        view = ApplicationContext.getInstance().getViewFactory().getView(HostCpuView.class);
+        view = provider.createView();
         view.clearCpuUsageData();
         DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
         this.hostInfoDAO = hostInfoDao;

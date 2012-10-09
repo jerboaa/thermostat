@@ -54,7 +54,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
+import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;

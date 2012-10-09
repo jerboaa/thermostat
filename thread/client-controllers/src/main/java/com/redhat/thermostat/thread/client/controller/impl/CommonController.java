@@ -38,8 +38,8 @@ package com.redhat.thermostat.thread.client.controller.impl;
 
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;

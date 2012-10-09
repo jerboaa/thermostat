@@ -48,8 +48,11 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.VmGcView;
+import com.redhat.thermostat.client.core.views.VmGcViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -81,9 +84,9 @@ class VmGcController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmGcController(VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef ref) {
+    public VmGcController(VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef ref, VmGcViewProvider provider) {
         this.ref = ref;
-        this.view = ApplicationContext.getInstance().getViewFactory().getView(VmGcView.class);
+        this.view = provider.createView();
         this.timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
 
         gcDao = vmGcStatDao;

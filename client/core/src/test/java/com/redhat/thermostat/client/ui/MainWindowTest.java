@@ -73,12 +73,12 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.client.internal.MainView;
 import com.redhat.thermostat.client.osgi.service.HostDecorator;
-import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.HostsVMsLoader;

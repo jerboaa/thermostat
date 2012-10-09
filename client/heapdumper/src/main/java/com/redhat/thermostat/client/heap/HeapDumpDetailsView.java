@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.heap;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.common.views.BasicView;
 
 public abstract class HeapDumpDetailsView extends BasicView {
 

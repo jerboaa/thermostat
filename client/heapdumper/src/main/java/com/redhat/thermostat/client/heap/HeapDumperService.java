@@ -36,11 +36,11 @@
 
 package com.redhat.thermostat.client.heap;
 
+import com.redhat.thermostat.client.common.VmFilter;
+import com.redhat.thermostat.client.common.VmInformationService;
+import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;

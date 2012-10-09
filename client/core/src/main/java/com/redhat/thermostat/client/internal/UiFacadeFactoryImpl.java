@@ -42,8 +42,11 @@ import java.util.concurrent.CountDownLatch;
 
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.SummaryViewProvider;
+import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindow;
 import com.redhat.thermostat.client.ui.MainWindowController;
@@ -60,6 +63,7 @@ import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
@@ -80,8 +84,15 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     private VmMemoryStatDAO vmMemoryStatDao;
     private VmGcStatDAO vmGcStatDao;
 
-    public UiFacadeFactoryImpl(BundleContext context) {
+    private OSGIUtils serviceProvider;
+    
+    UiFacadeFactoryImpl(OSGIUtils serviceProvider, BundleContext context) {
         this.context = context;
+        this.serviceProvider = serviceProvider;
+    }
+    
+    public UiFacadeFactoryImpl(BundleContext context) {
+        this(OSGIUtils.getInstance(), context);
     }
 
     @Override
@@ -128,20 +139,20 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     @Override
     public SummaryController getSummary() {
-        return new SummaryController(hostInfoDao, vmInfoDao);
-
+        SummaryViewProvider viewProvider = serviceProvider.getService(SummaryViewProvider.class);
+        return new SummaryController(hostInfoDao, vmInfoDao, viewProvider);
     }
 
     @Override
     public HostInformationController getHostController(HostRef ref) {
-        return new HostInformationController(hostInfoDao, cpuStatDao, memoryStatDao, networkInfoDao, ref);
-
+        HostInformationViewProvider viewProvider = serviceProvider.getService(HostInformationViewProvider.class);
+        return new HostInformationController(hostInfoDao, networkInfoDao, cpuStatDao, memoryStatDao, ref, viewProvider);
     }
 
     @Override
     public VmInformationController getVmController(VmRef ref) {
-        return new VmInformationController(this, vmInfoDao, vmCpuStatDao, vmMemoryStatDao, vmGcStatDao, ref);
-
+        VmInformationViewProvider viewProvider = serviceProvider.getService(VmInformationViewProvider.class);
+        return new VmInformationController(this, vmInfoDao, vmCpuStatDao, vmMemoryStatDao, vmGcStatDao, ref, viewProvider);
     }
 
     @Override

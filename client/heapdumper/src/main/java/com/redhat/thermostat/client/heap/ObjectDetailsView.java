@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.heap;
 
 import java.util.Collection;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
+import com.redhat.thermostat.client.common.views.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 

@@ -49,7 +49,7 @@ import javax.imageio.ImageIO;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.osgi.service.HostFilter;
+import com.redhat.thermostat.client.core.HostFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.common.dao.HostRef;
 

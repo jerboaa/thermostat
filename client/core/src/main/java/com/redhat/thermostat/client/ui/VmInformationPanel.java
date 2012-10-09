@@ -42,6 +42,9 @@ import java.awt.Component;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.VmInformationView;
+
 public class VmInformationPanel extends VmInformationView implements SwingComponent {
 
     private final JTabbedPane tabPane = new JTabbedPane();

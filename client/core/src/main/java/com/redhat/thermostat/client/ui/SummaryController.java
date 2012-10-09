@@ -38,8 +38,10 @@ package com.redhat.thermostat.client.ui;
 
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.SummaryView;
+import com.redhat.thermostat.client.core.views.SummaryViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
@@ -57,10 +59,9 @@ public class SummaryController {
 
     private final Timer backgroundUpdateTimer;
 
-    public SummaryController(HostInfoDAO hostInfoDao, VmInfoDAO vmInfoDao) {
-        ApplicationContext ctx = ApplicationContext.getInstance();
+    public SummaryController(HostInfoDAO hostInfoDao, VmInfoDAO vmInfoDao, SummaryViewProvider viewProvider) {
 
-        this.view = ctx.getViewFactory().getView(SummaryView.class);
+        this.view = viewProvider.createView();
 
         view.addActionListener(new ActionListener<Action>() {
             @Override

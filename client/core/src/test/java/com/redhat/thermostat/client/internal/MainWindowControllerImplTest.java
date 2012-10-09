@@ -64,15 +64,14 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action;
-import com.redhat.thermostat.client.osgi.service.BasicView;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.SummaryView;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
@@ -81,7 +80,6 @@ import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -98,7 +96,7 @@ public class MainWindowControllerImplTest {
     private MainWindowControllerImpl controller;
 
     private UiFacadeFactory uiFacadeFactory;
-
+    
     private MainView view;
 
     private Timer mainWindowTimer;
@@ -116,7 +114,9 @@ public class MainWindowControllerImplTest {
     private VMInformationRegistry vmInfoRegistry;
     private MenuRegistry menus;
     
+    @SuppressWarnings("unused")
     private ActionListener<ThermostatExtensionRegistry.Action> hostFiltersListener;
+    @SuppressWarnings("unused")
     private ActionListener<ThermostatExtensionRegistry.Action> vmFiltersListener;
     private ActionListener<ThermostatExtensionRegistry.Action> decoratorsListener;
     
@@ -141,6 +141,7 @@ public class MainWindowControllerImplTest {
         SummaryController summaryController = mock(SummaryController.class);
 
         uiFacadeFactory = mock(UiFacadeFactory.class);
+        
         when(uiFacadeFactory.getSummary()).thenReturn(summaryController);
 
         mockHostsDAO = mock(HostInfoDAO.class);
@@ -177,12 +178,6 @@ public class MainWindowControllerImplTest {
         
         ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
-        
-        // TODO remove this asap. the main window has a hard dependency on summary controller/view
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        SummaryView summaryView = mock(SummaryView.class);
-        when(viewFactory.getView(SummaryView.class)).thenReturn(summaryView);
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
 
         setUpVMContextActions();
 
@@ -228,6 +223,7 @@ public class MainWindowControllerImplTest {
         ApplicationContextUtil.resetApplicationContext();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyDecoratorsAdded() {
 
@@ -258,6 +254,7 @@ public class MainWindowControllerImplTest {
         verify(mainWindowTimer).stop();
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyThatHostsVmsFilterChangeUpdatesTree() {
 
@@ -289,6 +286,7 @@ public class MainWindowControllerImplTest {
         verify(view).setSubView(any(BasicView.class));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyUpdateHostsVMsLoadsCorrectHosts() {
 
@@ -308,6 +306,7 @@ public class MainWindowControllerImplTest {
         assertEqualCollection(expectedHosts, actualHosts);
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyHistoryModeUpdateHostsVMCorrectly() {
 
@@ -341,6 +340,7 @@ public class MainWindowControllerImplTest {
         assertEqualCollection(allHosts, actualHosts);
     }
 
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyUpdateHostsVMsLoadsCorrectVMs() {
 
@@ -388,7 +388,7 @@ public class MainWindowControllerImplTest {
     @Bug(id="954",
          summary="Thermostat GUI client should remember my last panel selected",
          url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=954")
-    public void verifyOpenSameHostVMTab() {
+    public void verifyOpenSameHostVMTab() throws Exception {
 
         VmRef vmRef = mock(VmRef.class);
         when(vmRef.getName()).thenReturn("testvm");

@@ -65,6 +65,7 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.core.views.HostMemoryView;
 import com.redhat.thermostat.client.internal.ui.swing.WrapLayout;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;

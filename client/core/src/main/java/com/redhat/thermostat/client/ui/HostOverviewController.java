@@ -44,9 +44,11 @@ import java.util.Vector;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.HostOverviewView;
+import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -74,8 +76,7 @@ public class HostOverviewController {
 
     private final HostOverviewView view;
 
-    public HostOverviewController(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO,
-            final HostRef ref) {
+    public HostOverviewController(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO, final HostRef ref, HostOverviewViewProvider provider) {
         this.ref = ref;
         this.hostInfoDAO = hostInfoDAO;
         this.networkInfoDAO = networkInfoDAO;
@@ -134,7 +135,7 @@ public class HostOverviewController {
         backgroundUpdateTimer.setInitialDelay(0);
         backgroundUpdateTimer.setDelay(5);
 
-        view = ApplicationContext.getInstance().getViewFactory().getView(HostOverviewView.class);
+        view = provider.createView();
 
         view.setNetworkTableColumns(networkTableColumnVector.toArray());
 

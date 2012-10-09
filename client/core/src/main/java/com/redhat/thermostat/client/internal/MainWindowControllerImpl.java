@@ -48,19 +48,21 @@ import java.util.logging.Logger;
 
 import org.osgi.framework.InvalidSyntaxException;
 
+import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
+import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
+import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
+import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.internal.MainView.Action;
 import com.redhat.thermostat.client.internal.ui.swing.AboutDialog;
 import com.redhat.thermostat.client.osgi.service.HostDecorator;
-import com.redhat.thermostat.client.osgi.service.HostFilter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
+import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayController;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayModel;
-import com.redhat.thermostat.client.ui.AgentInformationDisplayView;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
-import com.redhat.thermostat.client.ui.ClientConfigurationView;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.client.ui.MainWindowController;
@@ -400,14 +402,16 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private void showAgentConfiguration() {
         AgentInformationDisplayModel model = new AgentInformationDisplayModel();
-        AgentInformationDisplayView view = ApplicationContext.getInstance().getViewFactory().getView(AgentInformationDisplayView.class);
+        AgentInformationViewProvider viewProvider = OSGIUtils.getInstance().getService(AgentInformationViewProvider.class);
+        AgentInformationDisplayView view = viewProvider.createView();
         AgentInformationDisplayController controller = new AgentInformationDisplayController(model, view);
         controller.showView();
     }
 
     private void showConfigureClientPreferences() {
         ClientPreferences prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
-        ClientConfigurationView view = ApplicationContext.getInstance().getViewFactory().getView(ClientConfigurationView.class);
+        ClientConfigViewProvider viewProvider = OSGIUtils.getInstance().getService(ClientConfigViewProvider.class);
+        ClientConfigurationView view = viewProvider.createView();
         ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
         controller.showDialog();
     }
@@ -422,7 +426,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         Ref ref = view.getSelectedHostOrVm();
 
         if (ref == null) {
-            SummaryController controller = new SummaryController(hostsDAO, vmsDAO);
+            SummaryController controller = facadeFactory.getSummary();
             view.setSubView(controller.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
@@ -451,6 +455,7 @@ public class MainWindowControllerImpl implements MainWindowController {
             this.extensionList = addRemoveExtensionsFrom;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         public void actionPerformed(ActionEvent<com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action> actionEvent) {
 

@@ -38,8 +38,8 @@ package com.redhat.thermostat.client.heap;
 
 import java.util.List;
 
+import com.redhat.thermostat.client.common.views.View;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.View;
 
 public interface ObjectRootsView extends View {
 

@@ -45,16 +45,16 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.client.common.VmInformationService;
+import com.redhat.thermostat.client.common.views.View;
 import com.redhat.thermostat.client.heap.swing.HeapDetailsSwing;
 import com.redhat.thermostat.client.heap.swing.HeapSwingView;
 import com.redhat.thermostat.client.heap.swing.HistogramPanel;
 import com.redhat.thermostat.client.heap.swing.ObjectDetailsPanel;
 import com.redhat.thermostat.client.heap.swing.ObjectRootsFrame;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.View;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;

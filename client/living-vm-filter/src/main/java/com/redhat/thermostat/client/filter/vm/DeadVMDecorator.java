@@ -38,8 +38,8 @@ package com.redhat.thermostat.client.filter.vm;
 
 import java.io.IOException;
 
+import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.common.dao.VmInfoDAO;

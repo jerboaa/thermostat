@@ -40,7 +40,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
+import com.redhat.thermostat.client.core.VmInformationService;
 
 class VMInformationRegistry extends ThermostatExtensionRegistry<VmInformationService> {
 

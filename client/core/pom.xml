@@ -94,6 +94,7 @@
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
     </dependency>
+    
     <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>
@@ -149,7 +150,13 @@
             <Export-Package>
               com.redhat.thermostat.client.osgi.service,
               com.redhat.thermostat.client.ui,
-              com.redhat.thermostat.client.locale
+              com.redhat.thermostat.client.locale,
+              <!-- Contains Swing view providers -->
+              com.redhat.thermostat.client.swing,
+              <!-- Interfaces for views, controllers, etc. -->
+              com.redhat.thermostat.client.core,
+              com.redhat.thermostat.client.core.controllers,
+              com.redhat.thermostat.client.core.views,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.client.internal,

@@ -51,7 +51,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.ui.AgentInformationDisplayView.ConfigurationAction;
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView.ConfigurationAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.model.AgentInformation;

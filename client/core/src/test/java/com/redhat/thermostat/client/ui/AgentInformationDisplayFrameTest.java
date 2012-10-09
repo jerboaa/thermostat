@@ -62,7 +62,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.ui.AgentInformationDisplayView.ConfigurationAction;
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView.ConfigurationAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 

@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
+import com.redhat.thermostat.client.core.HostFilter;
 import com.redhat.thermostat.client.ui.Decorator;
 
 /**

@@ -36,11 +36,13 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
+import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
@@ -69,4 +71,5 @@ public class ThreadInformationService implements VmInformationService {
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
         return new ThreadInformationController(ref, service, collectorFactory, viewFactory);
     }
+
 }

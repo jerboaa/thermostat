@@ -48,8 +48,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.client.common.views.ViewFactory;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.heap.HeapDump;

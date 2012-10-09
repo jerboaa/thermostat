@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyLong;
-import static org.mockito.Mockito.eq;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -52,11 +52,12 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.client.core.views.HostMemoryView;
+import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -72,7 +73,7 @@ public class HostMemoryControllerTest {
         ApplicationContextUtil.resetApplicationContext();
     }
 
-    @SuppressWarnings("unchecked") // any(List.class)
+    @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
     public void testUpdate() {
         final long TOTAL_MEMORY = 512;
@@ -100,11 +101,11 @@ public class HostMemoryControllerTest {
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(HostMemoryView.class))).thenReturn(view);
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
+        HostMemoryViewProvider viewProvider = mock(HostMemoryViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
 
-        HostMemoryController controller = new HostMemoryController(hostInfoDAO, memoryStatDAO, ref);
+        @SuppressWarnings("unused")
+        HostMemoryController controller = new HostMemoryController(hostInfoDAO, memoryStatDAO, ref, viewProvider);
 
         ActionListener<HostMemoryView.Action> l = viewArgumentCaptor.getValue();
 

@@ -36,23 +36,17 @@
 
 package com.redhat.thermostat.main;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.any;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
 
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -60,8 +54,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.bundles.impl.OSGiRegistryImpl;
 import com.redhat.thermostat.common.Configuration;
-import com.redhat.thermostat.launcher.Launcher;
-import com.redhat.thermostat.launcher.internal.LauncherImpl;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(value = Thermostat.class)

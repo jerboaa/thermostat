@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.client.osgi.service.HostFilter;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
+import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.vmclassstat;
 
-import com.redhat.thermostat.client.osgi.service.ViewProvider;
+import com.redhat.thermostat.client.common.views.ViewProvider;
 
 public class VmClassStatViewProvider implements ViewProvider {
 

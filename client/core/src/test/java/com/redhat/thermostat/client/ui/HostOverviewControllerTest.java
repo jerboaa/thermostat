@@ -54,13 +54,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.core.views.HostOverviewView;
+import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.ViewFactory;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -86,6 +87,7 @@ public class HostOverviewControllerTest {
     private HostOverviewView view;
     private ActionListener<HostOverviewView.Action> listener;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -120,12 +122,11 @@ public class HostOverviewControllerTest {
         ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
         view = mock(HostOverviewView.class);
         doNothing().when(view).addActionListener(listenerCaptor.capture());
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(HostOverviewView.class))).thenReturn(view);
+        HostOverviewViewProvider viewProvider = mock(HostOverviewViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
 
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
-
-        HostOverviewController controller = new HostOverviewController(hostInfoDao, networkInfoDao, ref);
+        @SuppressWarnings("unused")
+        HostOverviewController controller = new HostOverviewController(hostInfoDao, networkInfoDao, ref, viewProvider);
 
         listener = listenerCaptor.getValue();
         timerAction = timerActionCaptor.getValue();

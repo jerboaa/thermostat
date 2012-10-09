@@ -40,7 +40,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.VmCpuView;
+import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -62,7 +65,7 @@ class VmCpuController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmCpuController(VmCpuStatDAO vmCpuStatDao, VmRef ref) {
+    public VmCpuController(VmCpuStatDAO vmCpuStatDao, VmRef ref, VmCpuViewProvider provider) {
         this.ref = ref;
         dao = vmCpuStatDao;
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
@@ -78,7 +81,7 @@ class VmCpuController {
         timer.setInitialDelay(0);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
 
-        view = ApplicationContext.getInstance().getViewFactory().getView(VmCpuView.class);
+        view = provider.createView();
 
         view.addActionListener(new ActionListener<VmCpuView.Action>() {
             @Override

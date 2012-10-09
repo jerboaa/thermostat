@@ -36,11 +36,12 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
+import com.redhat.thermostat.client.common.VmFilter;
+import com.redhat.thermostat.client.common.VmInformationService;
+import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
-import com.redhat.thermostat.client.osgi.service.VmFilter;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
+import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 
 class MemoryStatsService implements VmInformationService {

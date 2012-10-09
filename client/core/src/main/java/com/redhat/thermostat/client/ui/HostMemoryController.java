@@ -42,10 +42,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.HostMemoryView;
+import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.views.HostMemoryView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.BasicView;
-import com.redhat.thermostat.client.osgi.service.BasicView.Action;
-import com.redhat.thermostat.client.ui.HostMemoryView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -74,12 +76,12 @@ public class HostMemoryController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public HostMemoryController(HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO, final HostRef ref) {
+    public HostMemoryController(HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO, final HostRef ref, HostMemoryViewProvider provider) {
         this.ref = ref;
         this.hostInfoDAO = hostInfoDAO;
         this.memoryStatDAO = memoryStatDAO;
 
-        view = ApplicationContext.getInstance().getViewFactory().getView(HostMemoryView.class);
+        view = provider.createView();
 
         view.addMemoryChart(MemoryType.MEMORY_TOTAL.name(), localize(LocaleResources.HOST_MEMORY_TOTAL));
         view.addMemoryChart(MemoryType.MEMORY_FREE.name(), localize(LocaleResources.HOST_MEMORY_FREE));
