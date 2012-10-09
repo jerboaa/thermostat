@@ -147,16 +147,23 @@ public class OverviewChart {
         Millisecond millisecond = new Millisecond(new Date(timeStamp));
         synchronized (lock) {            
             if (this.total.getValue(millisecond) == null) {
-                this.total.add(millisecond, total);
+                this.total.add(millisecond, total, false);
                 this.total.removeAgedItems(true);
             }
             
             if (this.used.getValue(millisecond) == null) {
-                this.used.add(millisecond, used);
+                this.used.add(millisecond, used, false);
                 this.used.removeAgedItems(true);
             }
         }
         
+    }
+
+    public void notifyListenersOfModelChange() {
+        synchronized (lock) {
+            this.total.fireSeriesChanged();
+            this.used.fireSeriesChanged();
+        }
     }
 
     public void setRange(int seconds) {

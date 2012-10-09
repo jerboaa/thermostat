@@ -237,7 +237,6 @@ public class HeapDumpController implements VmInformationServiceController {
                         max =+ space.maxCapacity;
                     }
                 }
-                // model will automatically update view
                 model.addData(memoryStats.getTimeStamp(), used, capacity);
                 
                 NumberFormat formatter = DecimalFormat.getInstance();
@@ -250,6 +249,8 @@ public class HeapDumpController implements VmInformationServiceController {
                 
                 view.updateUsedAndCapacity(_used, _capacity);
             }
+
+            model.notifyListenersOfModelChange();
         }
     }
 }
