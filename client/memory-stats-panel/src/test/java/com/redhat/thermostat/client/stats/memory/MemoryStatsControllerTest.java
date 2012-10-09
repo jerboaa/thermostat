@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -55,7 +54,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.common.views.ViewFactory;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
@@ -82,6 +80,7 @@ public class MemoryStatsControllerTest {
     
     private Space canary;
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
     public void setUp() {
         timer = mock(Timer.class);
@@ -130,9 +129,8 @@ public class MemoryStatsControllerTest {
         when(memoryStatDao.getLatestVmMemoryStats(any(VmRef.class), anyLong())).thenReturn(vmInfo);
         
         view = mock(MemoryStatsView.class);
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(eq(MemoryStatsView.class))).thenReturn(view);
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
+        MemoryStatsViewProvider viewProvider = mock(MemoryStatsViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
         
         ArgumentCaptor<ActionListener> viewArgumentCaptor =
                 ArgumentCaptor.forClass(ActionListener.class);
@@ -140,7 +138,7 @@ public class MemoryStatsControllerTest {
 
         VmRef ref = mock(VmRef.class);
         
-        controller = new MemoryStatsController(memoryStatDao, ref);
+        controller = new MemoryStatsController(memoryStatDao, ref, viewProvider);
         
         viewListener = viewArgumentCaptor.getValue();
     }

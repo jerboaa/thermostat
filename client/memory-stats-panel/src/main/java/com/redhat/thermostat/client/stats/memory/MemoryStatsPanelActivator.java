@@ -42,11 +42,10 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.common.VmInformationService;
+import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 
 public class MemoryStatsPanelActivator implements BundleActivator {
@@ -56,13 +55,16 @@ public class MemoryStatsPanelActivator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
+        MemoryStatsViewProvider provider = new SwingMemoryStatsViewProvider();
+        context.registerService(MemoryStatsViewProvider.class.getName(), provider, null);
+        
         Class<?>[] deps = new Class<?>[] {
             ApplicationService.class,
             VmMemoryStatDAO.class,
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
-
+            
             @Override
             public void dependenciesUnavailable() {
                 memoryStatRegistration.unregister();
@@ -71,7 +73,6 @@ public class MemoryStatsPanelActivator implements BundleActivator {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationContext.getInstance().getViewFactory().setViewClass(MemoryStatsView.class, MemoryStatsViewImpl.class);
                 VmMemoryStatDAO memoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
                 MemoryStatsService impl = new MemoryStatsService(memoryStatDao);
                 memoryStatRegistration = context.registerService(VmInformationService.class.getName(), impl , null);

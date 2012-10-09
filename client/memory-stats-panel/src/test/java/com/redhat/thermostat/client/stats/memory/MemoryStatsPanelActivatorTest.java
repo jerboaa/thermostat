@@ -36,13 +36,21 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public abstract class MemoryStatsView extends BasicView implements UIComponent {
-    
-    public abstract void addRegion(Payload region);
-    public abstract void updateRegion(Payload region);
-    
-    public abstract void requestRepaint();
+import org.junit.Test;
+
+import com.redhat.thermostat.test.StubBundleContext;
+
+public class MemoryStatsPanelActivatorTest {
+
+    @Test
+    public void verifyStartRegistersViewProvider() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        MemoryStatsPanelActivator activator = new MemoryStatsPanelActivator();
+        activator.start(ctx);
+        assertTrue(ctx.isServiceRegistered(MemoryStatsViewProvider.class.getName(), SwingMemoryStatsViewProvider.class));
+        assertEquals(1, ctx.getAllServices().size());
+    }
 }

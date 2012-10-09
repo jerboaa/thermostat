@@ -36,13 +36,11 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
+public class SwingMemoryStatsViewProvider implements MemoryStatsViewProvider {
 
-public abstract class MemoryStatsView extends BasicView implements UIComponent {
-    
-    public abstract void addRegion(Payload region);
-    public abstract void updateRegion(Payload region);
-    
-    public abstract void requestRepaint();
+    @Override
+    public MemoryStatsView createView() {
+        return new MemoryStatsViewImpl();
+    }
+
 }

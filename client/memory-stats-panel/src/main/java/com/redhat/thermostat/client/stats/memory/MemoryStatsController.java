@@ -41,10 +41,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
-import com.redhat.thermostat.client.common.views.BasicView;
-import com.redhat.thermostat.client.common.views.UIComponent;
-import com.redhat.thermostat.client.common.views.BasicView.Action;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
@@ -136,12 +135,12 @@ class MemoryStatsController implements VmInformationServiceController {
         }
     }
     
-    public MemoryStatsController(final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref) {
+    public MemoryStatsController(final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref, MemoryStatsViewProvider viewProvider) {
         
         regions = new HashMap<>();
         this.ref = ref;
-        view = ApplicationContext.getInstance().getViewFactory().getView(MemoryStatsView.class);
         vmDao = vmMemoryStatDao;
+        view = viewProvider.createView();
         
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         

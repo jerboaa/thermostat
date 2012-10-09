@@ -36,13 +36,13 @@
 
 package com.redhat.thermostat.client.stats.memory;
 
-import com.redhat.thermostat.client.common.VmFilter;
-import com.redhat.thermostat.client.common.VmInformationService;
-import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
-import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
 class MemoryStatsService implements VmInformationService {
     
@@ -56,7 +56,8 @@ class MemoryStatsService implements VmInformationService {
     
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new MemoryStatsController(vmMemoryStatDao, ref);
+        MemoryStatsViewProvider viewProvider = OSGIUtils.getInstance().getService(MemoryStatsViewProvider.class);
+        return new MemoryStatsController(vmMemoryStatDao, ref, viewProvider);
     }
 
     @Override
