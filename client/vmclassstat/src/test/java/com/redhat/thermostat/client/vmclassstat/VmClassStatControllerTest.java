@@ -60,7 +60,7 @@ import com.redhat.thermostat.common.model.VmClassStat;
 
 public class VmClassStatControllerTest {
 
-    @SuppressWarnings("unchecked") // any(List.class)
+    @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
     public void testChartUpdate() {
 
@@ -85,10 +85,11 @@ public class VmClassStatControllerTest {
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         
-        VmClassStatViewProvider viewFactory = mock(VmClassStatViewProvider.class);
-        when(viewFactory.createView()).thenReturn(view);
+        VmClassStatViewProvider viewProvider = mock(VmClassStatViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
 
-        VmClassStatController controller = new VmClassStatController(vmClassStatDAO, ref, viewFactory);
+        @SuppressWarnings("unused")
+        VmClassStatController controller = new VmClassStatController(vmClassStatDAO, ref, viewProvider);
 
         ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
 

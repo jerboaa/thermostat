@@ -43,8 +43,8 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.client.osgi.service.VmInformationService;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
 
@@ -58,8 +58,9 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertEquals(0, context.getAllServices().size());
-        assertNotSame(0, context.getServiceListeners().size());
+        // View provider registers unconditionally
+        assertEquals(1, context.getAllServices().size());
+        assertNotSame(1, context.getServiceListeners().size());
 
         activator.stop(context);
 
@@ -84,6 +85,15 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(3, context.getAllServices().size());
+    }
+
+    @Test
+    public void verifyStartRegistersViewProvider() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        Activator activator = new Activator();
+        activator.start(ctx);
+        assertTrue(ctx.isServiceRegistered(VmClassStatViewProvider.class.getName(), SwingVmClassStatViewProvider.class));
+        assertEquals(1, ctx.getAllServices().size());
     }
 }

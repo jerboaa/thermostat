@@ -43,7 +43,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.common.VmInformationService;
+import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -56,6 +56,8 @@ public class Activator implements BundleActivator {
 
     @Override
     public void start(final BundleContext context) throws Exception {
+        VmClassStatViewProvider viewProvider = new SwingVmClassStatViewProvider();
+        context.registerService(VmClassStatViewProvider.class.getName(), viewProvider, null);
 
         Class<?>[] deps = new Class<?>[] {
             ApplicationService.class,

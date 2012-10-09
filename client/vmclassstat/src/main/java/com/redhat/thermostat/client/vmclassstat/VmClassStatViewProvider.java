@@ -36,12 +36,11 @@
 
 package com.redhat.thermostat.client.vmclassstat;
 
-import com.redhat.thermostat.client.common.views.ViewProvider;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public class VmClassStatViewProvider implements ViewProvider {
+
+public interface VmClassStatViewProvider extends ViewProvider {
 
     @Override
-    public VmClassStatView createView() {
-        return new VmClassStatPanel();
-    }
+    public VmClassStatView createView();
 }

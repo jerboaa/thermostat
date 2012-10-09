@@ -36,16 +36,11 @@
 
 package com.redhat.thermostat.client.vmclassstat;
 
-import java.util.List;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+public class SwingVmClassStatViewProvider implements VmClassStatViewProvider {
 
-public abstract class VmClassStatView extends BasicView implements UIComponent {
-
-    public abstract void clearClassCount();
-
-    public abstract void addClassCount(List<DiscreteTimeData<Long>> data);
-
+    @Override
+    public VmClassStatView createView() {
+        return new VmClassStatPanel();
+    }
 }
