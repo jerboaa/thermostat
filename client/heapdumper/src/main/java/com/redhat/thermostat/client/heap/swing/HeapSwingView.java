@@ -48,6 +48,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import org.jfree.chart.ChartPanel;
+
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.LocaleResources;
@@ -56,7 +58,6 @@ import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.heap.HeapDump;
-import com.redhat.thermostat.swing.ChartPanel;
 import com.redhat.thermostat.swing.HeaderPanel;
 
 public class HeapSwingView extends HeapView implements SwingComponent {
@@ -114,16 +115,37 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     }
 
     @Override
-    public void updateOverview(final OverviewChart model, final String used, final String capacity) {
+    public void setModel(final OverviewChart model) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                ChartPanel charts = new ChartPanel(model.createChart(stats.getWidth(), stats.getBackground()));
+                /*
+                 * By default, ChartPanel scales itself instead of redrawing things when
+                 * it's resized. To have it resize automatically, we need to set minimum
+                 * and maximum sizes. Lets constrain the minimum, but not the maximum
+                 * size.
+                 */
+                final int MINIMUM_DRAW_SIZE = 100;
+
+                charts.setMinimumDrawHeight(MINIMUM_DRAW_SIZE);
+                charts.setMinimumDrawWidth(MINIMUM_DRAW_SIZE);
+
+                charts.setMaximumDrawHeight(Integer.MAX_VALUE);
+                charts.setMaximumDrawWidth(Integer.MAX_VALUE);
+
+                stats.setChartPanel(charts);
+            }
+        });
+    }
+
+    @Override
+    public void updateUsedAndCapacity(final String used, final String capacity) {
         
         SwingUtilities.invokeLater(new Runnable() {
             
             @Override
             public void run() {
-
-                ChartPanel charts = new ChartPanel(model.createChart(stats.getWidth(), stats.getBackground()));
-                stats.setChartPanel(charts);
-                
                 stats.setMax(capacity);
                 stats.setUsed(used);
             }

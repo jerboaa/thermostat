@@ -88,12 +88,8 @@ public class OverviewChart {
         TimeSeriesCollection dataset = new TimeSeriesCollection();
         
         synchronized (lock) {
-            try {
-                dataset.addSeries(total.createCopy(0, total.getItemCount() - 1));
-                dataset.addSeries(used.createCopy(0, used.getItemCount() - 1));
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-            }
+            dataset.addSeries(total);
+            dataset.addSeries(used);
         }
         
         JFreeChart chart = ChartFactory.createTimeSeriesChart(

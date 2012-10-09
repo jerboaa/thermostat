@@ -116,6 +116,7 @@ public class HeapDumpController implements VmInformationServiceController {
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
         
         view = viewProvider.createView();
+        view.setModel(model);
         
         HeapDump dump = null;
         view.clearHeapDumpList();
@@ -236,6 +237,7 @@ public class HeapDumpController implements VmInformationServiceController {
                         max =+ space.maxCapacity;
                     }
                 }
+                // model will automatically update view
                 model.addData(memoryStats.getTimeStamp(), used, capacity);
                 
                 NumberFormat formatter = DecimalFormat.getInstance();
@@ -246,7 +248,7 @@ public class HeapDumpController implements VmInformationServiceController {
                 res = Scale.convertTo(Scale.B, capacity);
                 String _capacity= formatter.format(capacity) + " " + Scale.B;
                 
-                view.updateOverview(model, _used, _capacity);
+                view.updateUsedAndCapacity(_used, _capacity);
             }
         }
     }

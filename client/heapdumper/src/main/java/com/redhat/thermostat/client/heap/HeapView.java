@@ -66,7 +66,9 @@ public abstract class HeapView extends BasicView implements UIComponent {
         heapDumperNotifier.removeActionListener(listener);
     }
 
-    abstract public void updateOverview(OverviewChart model, String used, String capacity);
+    abstract public void updateUsedAndCapacity(String used, String capacity);
+    /** View updates automatically based on the model */
+    abstract public void setModel(OverviewChart model);
     abstract public void addHeapDump(HeapDump dump);
     abstract public void clearHeapDumpList();
     
@@ -75,4 +77,5 @@ public abstract class HeapView extends BasicView implements UIComponent {
     public abstract void notifyHeapDumpComplete();
 
     public abstract void updateHeapDumpList(List<HeapDump> heapDumps);
+
 }
