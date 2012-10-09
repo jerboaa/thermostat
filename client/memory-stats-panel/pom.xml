@@ -21,6 +21,9 @@
             <Bundle-Activator>com.redhat.thermostat.client.stats.memory.MemoryStatsPanelActivator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.client.stats.memory</Bundle-SymbolicName>
+            <Export-Package>
+              com.redhat.thermostat.client.stats.memory.locale,
+            </Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

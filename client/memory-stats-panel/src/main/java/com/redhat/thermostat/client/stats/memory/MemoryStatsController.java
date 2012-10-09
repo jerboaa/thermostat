@@ -44,8 +44,7 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.locale.Translate;
+import com.redhat.thermostat.client.stats.memory.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -54,6 +53,7 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
@@ -213,8 +213,8 @@ class MemoryStatsController implements VmInformationServiceController {
 
     @Override
     public String getLocalizedName() {
-        // TODO: this class should have it's own bundle...
-        return Translate.localize(LocaleResources.VM_INFO_TAB_MEMORY);
+        Translate t = LocaleResources.createLocalizer();
+        return t.localize(LocaleResources.VM_INFO_TAB_MEMORY);
     }
 
     @Override

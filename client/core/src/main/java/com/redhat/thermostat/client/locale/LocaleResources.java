@@ -145,7 +145,6 @@ public enum LocaleResources {
 
     VM_INFO_TAB_OVERVIEW,
     VM_INFO_TAB_CPU,
-    VM_INFO_TAB_MEMORY,
     VM_INFO_TAB_GC,
 
     VM_INFO_TITLE,
