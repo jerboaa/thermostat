@@ -43,10 +43,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Alignment;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 import javax.swing.JTree;
+import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreePath;
 
 import com.redhat.thermostat.client.heap.HeapObjectUI;
 import com.redhat.thermostat.client.heap.LocaleResources;
@@ -55,19 +65,8 @@ import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.swing.EdtHelper;
-import com.sun.jdi.event.EventQueue;
 
-import javax.swing.GroupLayout;
-import javax.swing.GroupLayout.Alignment;
-import javax.swing.JLabel;
-import javax.swing.LayoutStyle.ComponentPlacement;
-import javax.swing.event.TreeSelectionEvent;
-import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreePath;
-import javax.swing.JTextPane;
-
+@SuppressWarnings("serial")
 public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
 
     /** For TESTING ONLY! */
@@ -124,7 +123,7 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowOpened(WindowEvent e) {
-                notifier.fireAction(Action.VISIBILE);
+                notifier.fireAction(Action.VISIBLE);
             }
 
             @Override

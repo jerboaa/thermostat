@@ -36,10 +36,11 @@
 
 package com.redhat.thermostat.client.heap;
 
-import com.redhat.thermostat.client.common.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 
-public abstract class HeapHistogramView extends BasicView {
+public abstract class HeapHistogramView extends BasicView implements UIComponent {
 
     public abstract void display(ObjectHistogram histogram);
 

@@ -60,12 +60,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.stubbing.OngoingStubbing;
 
-import com.redhat.thermostat.client.common.views.ViewFactory;
 import com.redhat.thermostat.client.heap.ObjectDetailsView.ObjectAction;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaClass;
@@ -75,6 +73,8 @@ public class ObjectDetailsControllerTest {
 
     private ObjectDetailsView view;
     private ApplicationService appService;
+    private ObjectRootsViewProvider objectRootsProvider;
+    private ObjectDetailsViewProvider objectDetailsProvider;
 
     private ArgumentCaptor<Runnable> runnableCaptor;
 
@@ -82,28 +82,29 @@ public class ObjectDetailsControllerTest {
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
 
-        // view factory
-        ViewFactory viewFactory = mock(ViewFactory.class);
-
         view = mock(ObjectDetailsView.class);
-        when(viewFactory.getView(ObjectDetailsView.class)).thenReturn(view);
-
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
-
+        objectDetailsProvider = mock(ObjectDetailsViewProvider.class);
+        when(objectDetailsProvider.createView()).thenReturn(view);
+        
+        objectRootsProvider = mock(ObjectRootsViewProvider.class);
+        when(objectRootsProvider.createView()).thenReturn(mock(ObjectRootsView.class));
         runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
         ExecutorService executorService = mock(ExecutorService.class);
         doNothing().when(executorService).execute(runnableCaptor.capture());
 
         appService = mock(ApplicationService.class);
         when(appService.getApplicationExecutor()).thenReturn(executorService);
-
     }
 
     @After
     public void tearDown() {
+        view = null;
+        objectDetailsProvider = null;
+        objectRootsProvider = null;
         ApplicationContextUtil.resetApplicationContext();
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void verifySearchWorks() {
         final String SEARCH_TEXT = "Test";
@@ -126,7 +127,8 @@ public class ObjectDetailsControllerTest {
         ArgumentCaptor<ActionListener> viewArgumentCaptor1 = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addObjectActionListener(viewArgumentCaptor1.capture());
 
-        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
+        @SuppressWarnings("unused")
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump, this.objectDetailsProvider, this.objectRootsProvider);
 
         ActionListener<ObjectAction> actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);
@@ -142,6 +144,7 @@ public class ObjectDetailsControllerTest {
         assertEquals(OBJECT_ID, matchingObjects.get(0).objectId);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void verifyInputConvertedIntoWildcardsIfNeeded() {
         HeapDump heap = mock(HeapDump.class);
@@ -150,7 +153,8 @@ public class ObjectDetailsControllerTest {
         ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
 
-        ObjectDetailsController controller = new ObjectDetailsController(appService, heap);
+        @SuppressWarnings("unused")
+        ObjectDetailsController controller = new ObjectDetailsController(appService, heap, this.objectDetailsProvider, this.objectRootsProvider);
 
         ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
         assertNotNull(actionListener);
@@ -161,6 +165,7 @@ public class ObjectDetailsControllerTest {
         verify(heap).searchObjects("*a*", 100);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void verifyWildcardInputNotConvertedIntoWildcards() {
         HeapDump heap = mock(HeapDump.class);
@@ -169,7 +174,8 @@ public class ObjectDetailsControllerTest {
         ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
 
-        ObjectDetailsController controller = new ObjectDetailsController(appService, heap);
+        @SuppressWarnings("unused")
+        ObjectDetailsController controller = new ObjectDetailsController(appService, heap, this.objectDetailsProvider, this.objectRootsProvider);
 
         ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
         assertNotNull(actionListener);
@@ -180,6 +186,7 @@ public class ObjectDetailsControllerTest {
         verify(heap).searchObjects("*a?", 300);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void verifySearchLimits() {
 
@@ -204,7 +211,8 @@ public class ObjectDetailsControllerTest {
         ArgumentCaptor<ActionListener> objectActionListenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addObjectActionListener(objectActionListenerCaptor.capture());
 
-        ObjectDetailsController controller = new ObjectDetailsController(appService, heap);
+        @SuppressWarnings("unused")
+        ObjectDetailsController controller = new ObjectDetailsController(appService, heap, this.objectDetailsProvider, this.objectRootsProvider);
 
         ActionListener<ObjectAction> actionListener = objectActionListenerCaptor.getValue();
         assertNotNull(actionListener);
@@ -222,6 +230,7 @@ public class ObjectDetailsControllerTest {
         }
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void verifyGettingDetailsWorks() {
         final String OBJECT_ID = "0xcafebabe";
@@ -239,7 +248,8 @@ public class ObjectDetailsControllerTest {
 
         when(view.getSelectedMatchingObject()).thenReturn(heapObjectRepresentation);
 
-        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
+        @SuppressWarnings("unused")
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump, this.objectDetailsProvider, this.objectRootsProvider);
 
         ActionListener<ObjectAction> actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);
@@ -248,6 +258,7 @@ public class ObjectDetailsControllerTest {
         verify(view).setObjectDetails(heapObject);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
     public void verifyFindRoot() {
         final String OBJECT_ID = "0xcafebabe";
@@ -265,7 +276,8 @@ public class ObjectDetailsControllerTest {
 
         when(view.getSelectedMatchingObject()).thenReturn(heapObjectRepresentation);
 
-        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
+        @SuppressWarnings("unused")
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump, this.objectDetailsProvider, this.objectRootsProvider);
 
         ActionListener<ObjectAction> actionListener = viewArgumentCaptor1.getValue();
         assertNotNull(actionListener);

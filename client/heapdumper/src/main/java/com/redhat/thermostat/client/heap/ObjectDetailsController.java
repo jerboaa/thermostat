@@ -47,7 +47,6 @@ import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaField;
@@ -59,12 +58,14 @@ public class ObjectDetailsController {
     private ApplicationService appService;
     private HeapDump heapDump;
     private ObjectDetailsView view;
+    private ObjectRootsViewProvider viewProvider;
 
-    public ObjectDetailsController(ApplicationService appService, HeapDump heapDump) {
+    public ObjectDetailsController(ApplicationService appService, HeapDump heapDump, ObjectDetailsViewProvider viewProvider, ObjectRootsViewProvider rootsViewProvider) {
         this.appService = appService;
         this.heapDump = heapDump;
+        this.viewProvider = rootsViewProvider;
 
-        view = ApplicationContext.getInstance().getViewFactory().getView(ObjectDetailsView.class);
+        view = viewProvider.createView();
         addListenersToView();
     }
 
@@ -192,7 +193,7 @@ public class ObjectDetailsController {
     private void showPathToGC(HeapObjectUI targetObject) {
         JavaHeapObject heapObject = heapDump.findObject(targetObject.objectId);
 
-        ObjectRootsController controller = new ObjectRootsController(heapDump, heapObject);
+        ObjectRootsController controller = new ObjectRootsController(heapDump, heapObject, viewProvider);
         controller.show();
     }
 

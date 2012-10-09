@@ -1,21 +1,19 @@
 package com.redhat.thermostat.client.heap.swing;
 
-import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import java.awt.Container;
-import java.awt.EventQueue;
 import java.util.Arrays;
 import java.util.List;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
 import org.fest.swing.annotation.GUITest;
-import org.fest.swing.annotation.RunsInEDT;
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.Containers;
-import org.fest.swing.fixture.DialogFixture;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JButtonFixture;
 import org.fest.swing.fixture.JListFixture;
@@ -29,9 +27,6 @@ import com.redhat.thermostat.client.heap.HeapView.HeapDumperAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.heap.HeapDump;
-
-import static org.mockito.Mockito.*
-;
 
 @RunWith(CacioFESTRunner.class)
 public class HeapSwingViewTest {

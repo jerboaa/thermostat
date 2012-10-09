@@ -34,28 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.swing;
 
-import java.util.List;
+import com.redhat.thermostat.client.heap.HeapHistogramView;
+import com.redhat.thermostat.client.heap.HeapHistogramViewProvider;
 
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.views.View;
-import com.redhat.thermostat.common.ActionListener;
+public class SwingHeapHistogramViewProvider implements
+        HeapHistogramViewProvider {
 
-public interface ObjectRootsView extends View, UIComponent {
-
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-        OBJECT_SELECTED,
+    @Override
+    public HeapHistogramView createView() {
+        return new HistogramPanel();
     }
 
-    void addActionListener(ActionListener<Action> listener);
-    void removeActionListener(ActionListener<Action> listener);
-
-    void showView();
-    void hideView();
-
-    void setPathToRoot(List<HeapObjectUI> pathToRoot);
-    void setObjectDetails(String information);
 }

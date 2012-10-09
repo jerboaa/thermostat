@@ -50,13 +50,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.common.views.ViewFactory;
 import com.redhat.thermostat.client.heap.ObjectRootsView.Action;
 import com.redhat.thermostat.client.heap.cli.FindRoot;
 import com.redhat.thermostat.client.heap.cli.HeapPath;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaClass;
@@ -74,6 +72,7 @@ public class ObjectRootsControllerTest {
     ObjectRootsView view;
     ActionListener<Action> listener;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
@@ -81,11 +80,9 @@ public class ObjectRootsControllerTest {
         // Set up views
         view = mock(ObjectRootsView.class);
 
-        ViewFactory viewFactory = mock(ViewFactory.class);
-        when(viewFactory.getView(ObjectRootsView.class)).thenReturn(view);
-
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
-
+        ObjectRootsViewProvider viewProvider = mock(ObjectRootsViewProvider.class);
+        when(viewProvider.createView()).thenReturn(view);
+        
         // set up models
         heapObject = mock(JavaHeapObject.class);
         when(heapObject.getIdString()).thenReturn("id-string");
@@ -100,7 +97,7 @@ public class ObjectRootsControllerTest {
         rootFinder = mock(FindRoot.class);
 
         // create controller
-        controller = new ObjectRootsController(heapDump, heapObject, rootFinder);
+        controller = new ObjectRootsController(heapDump, heapObject, rootFinder, viewProvider);
 
         ArgumentCaptor<ActionListener> listenerCaptor = ArgumentCaptor.forClass(ActionListener.class);
         verify(view).addActionListener(listenerCaptor.capture());
@@ -138,6 +135,7 @@ public class ObjectRootsControllerTest {
                 "Heap allocated: true\n");
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Test
     public void testShow() {
 

@@ -34,28 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.client.heap.swing;
 
-import java.util.List;
+import com.redhat.thermostat.client.heap.HeapDumpDetailsView;
+import com.redhat.thermostat.client.heap.HeapDumpDetailsViewProvider;
 
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.views.View;
-import com.redhat.thermostat.common.ActionListener;
+public class SwingHeapDumpDetailsViewProvider implements
+        HeapDumpDetailsViewProvider {
 
-public interface ObjectRootsView extends View, UIComponent {
-
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-        OBJECT_SELECTED,
+    @Override
+    public HeapDumpDetailsView createView() {
+        return new HeapDetailsSwing();
     }
 
-    void addActionListener(ActionListener<Action> listener);
-    void removeActionListener(ActionListener<Action> listener);
-
-    void showView();
-    void hideView();
-
-    void setPathToRoot(List<HeapObjectUI> pathToRoot);
-    void setObjectDetails(String information);
 }

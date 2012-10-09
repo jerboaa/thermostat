@@ -37,7 +37,6 @@
 package com.redhat.thermostat.client.heap;
 
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.ServiceLoader;
 
@@ -45,17 +44,15 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.common.VmInformationService;
-import com.redhat.thermostat.client.common.views.View;
-import com.redhat.thermostat.client.heap.swing.HeapDetailsSwing;
-import com.redhat.thermostat.client.heap.swing.HeapSwingView;
-import com.redhat.thermostat.client.heap.swing.HistogramPanel;
-import com.redhat.thermostat.client.heap.swing.ObjectDetailsPanel;
-import com.redhat.thermostat.client.heap.swing.ObjectRootsFrame;
+import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.heap.swing.SwingHeapDumpDetailsViewProvider;
+import com.redhat.thermostat.client.heap.swing.SwingHeapHistogramViewProvider;
+import com.redhat.thermostat.client.heap.swing.SwingHeapViewProvider;
+import com.redhat.thermostat.client.heap.swing.SwingObjectDetailsViewProvider;
+import com.redhat.thermostat.client.heap.swing.SwingObjectRootsViewProvider;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
@@ -68,16 +65,12 @@ public class Activator implements BundleActivator {
     private CommandRegistry reg;
     private MultipleServiceTracker heapDumperServiceTracker;
     private ServiceRegistration heapDumperServiceRegistration;
+    private BundleContext context;
 
     @Override
     public void start(final BundleContext context) throws Exception {
 
-        registerViewClass(HeapView.class, HeapSwingView.class);
-        registerViewClass(HeapDumpDetailsView.class, HeapDetailsSwing.class);
-        registerViewClass(HeapHistogramView.class, HistogramPanel.class);
-        registerViewClass(ObjectDetailsView.class, ObjectDetailsPanel.class);
-        registerViewClass(ObjectRootsView.class, ObjectRootsFrame.class);
-
+        this.context = context;
         Class<?>[] deps = new Class<?>[] {
                 ApplicationService.class,
                 AgentInfoDAO.class,
@@ -85,45 +78,59 @@ public class Activator implements BundleActivator {
                 HeapDAO.class,
         };
 
-        heapDumperServiceTracker = new MultipleServiceTracker(context, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                ApplicationService appService = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appService);
-                AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
-                Objects.requireNonNull(agentDao);
-                VmMemoryStatDAO vmMemoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
-                Objects.requireNonNull(vmMemoryStatDao);
-                HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
-                Objects.requireNonNull(heapDao);
-
-                heapDumperServiceRegistration = context.registerService(
-                        VmInformationService.class.getName(),
-                        new HeapDumperService(appService, agentDao, vmMemoryStatDao, heapDao),
-                        null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                heapDumperServiceRegistration.unregister();
-            }
-
-        });
+        heapDumperServiceTracker = new MultipleServiceTracker(context, deps,
+                getServiceAvailableAction());
         heapDumperServiceTracker.open();
 
         reg = new CommandRegistryImpl(context);
-        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
+        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class,
+                getClass().getClassLoader());
         reg.registerCommands(cmds);
-    }
-
-    private <T extends View > void registerViewClass(Class<T> viewClass, Class<? extends T> implClass) {
-        ApplicationContext.getInstance().getViewFactory().setViewClass(viewClass, implClass);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         heapDumperServiceTracker.close();
         reg.unregisterCommands();
+    }
+    
+    // package private for testing
+    ServicesAvailableAction getServiceAvailableAction() {
+        return new ServicesAvailableAction();
+    }
+    
+    class ServicesAvailableAction implements Action {
+
+        @Override
+        public void dependenciesAvailable(Map<String, Object> services) {
+            ApplicationService appService = (ApplicationService) services
+                    .get(ApplicationService.class.getName());
+            Objects.requireNonNull(appService);
+            AgentInfoDAO agentDao = (AgentInfoDAO) services
+                    .get(AgentInfoDAO.class.getName());
+            Objects.requireNonNull(agentDao);
+            VmMemoryStatDAO vmMemoryStatDao = (VmMemoryStatDAO) services
+                    .get(VmMemoryStatDAO.class.getName());
+            Objects.requireNonNull(vmMemoryStatDao);
+            HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
+            Objects.requireNonNull(heapDao);
+            heapDumperServiceRegistration = context
+                    .registerService(VmInformationService.class
+                            .getName(), new HeapDumperService(
+                            appService, agentDao, vmMemoryStatDao, heapDao,
+                            new SwingHeapDumpDetailsViewProvider(),
+                            new SwingHeapViewProvider(),
+                            new SwingHeapHistogramViewProvider(),
+                            new SwingObjectDetailsViewProvider(),
+                            new SwingObjectRootsViewProvider()),
+                            null);
+            
+        }
+
+        @Override
+        public void dependenciesUnavailable() {
+            heapDumperServiceRegistration.unregister();
+        }
+        
     }
 }

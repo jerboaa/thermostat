@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.client.heap;
 
-import com.redhat.thermostat.client.common.VmFilter;
-import com.redhat.thermostat.client.common.VmInformationService;
-import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
@@ -54,19 +54,27 @@ public class HeapDumperService implements VmInformationService {
     private HeapDAO heapDao;
 
     private VmFilter filter = new AlwaysMatchFilter();
+    private HeapDumpDetailsViewProvider detailsViewProvider;
+    private HeapHistogramViewProvider histogramViewProvider;
+    private HeapViewProvider viewProvider;
+    private ObjectDetailsViewProvider objectDetailsViewProvider;
+    private ObjectRootsViewProvider objectRootsViewProvider;
 
-    public HeapDumperService(ApplicationService appService,
-            AgentInfoDAO agentInfoDao, VmMemoryStatDAO vmMemoryStatDao,
-            HeapDAO heapDao) {
-        this.appService = appService;
+    public HeapDumperService(ApplicationService appService, AgentInfoDAO agentInfoDao, VmMemoryStatDAO vmMemoryStatDao, HeapDAO heapDao, HeapDumpDetailsViewProvider detailsViewProvider, HeapViewProvider viewProvider, HeapHistogramViewProvider histogramViewProvider, ObjectDetailsViewProvider objectDetailsViewProvider, ObjectRootsViewProvider objectRootsViewProvider) {
         this.agentInfoDao = agentInfoDao;
         this.vmMemoryStatDao = vmMemoryStatDao;
         this.heapDao = heapDao;
+        this.appService = appService;
+        this.viewProvider = viewProvider;
+        this.detailsViewProvider = detailsViewProvider;
+        this.histogramViewProvider = histogramViewProvider;
+        this.objectDetailsViewProvider = objectDetailsViewProvider;
+        this.objectRootsViewProvider = objectRootsViewProvider;
     }
 
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
-        return new HeapDumpController(agentInfoDao, vmMemoryStatDao, heapDao, ref, appService);
+        return new HeapDumpController(agentInfoDao, vmMemoryStatDao, heapDao, ref, appService, viewProvider, detailsViewProvider, histogramViewProvider, objectDetailsViewProvider, objectRootsViewProvider);
     }
 
     @Override

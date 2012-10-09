@@ -87,6 +87,7 @@ public class ObjectDetailsPanelTest {
         FailOnThreadViolationRepaintManager.install();
     }
 
+    @SuppressWarnings("unchecked")
     @Before
     public void setUp() {
         GuiActionRunner.execute(new GuiTask() {

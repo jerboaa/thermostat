@@ -36,9 +36,10 @@
 
 package com.redhat.thermostat.client.heap;
 
-import com.redhat.thermostat.client.common.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 
-public abstract class HeapDumpDetailsView extends BasicView {
+public abstract class HeapDumpDetailsView extends BasicView implements UIComponent {
 
     public abstract void addSubView(String title, HeapHistogramView child);
     public abstract void addSubView(String title, ObjectDetailsView child);

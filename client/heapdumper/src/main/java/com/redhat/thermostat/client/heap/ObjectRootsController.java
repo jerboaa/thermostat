@@ -47,7 +47,6 @@ import com.redhat.thermostat.client.heap.cli.HeapPath;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
@@ -59,23 +58,23 @@ public class ObjectRootsController {
     private final JavaHeapObject heapObject;
     private final FindRoot rootFinder;
 
-    public ObjectRootsController(HeapDump dump, JavaHeapObject heapObject) {
-        this(dump, heapObject, new FindRoot());
+    public ObjectRootsController(HeapDump dump, JavaHeapObject heapObject, ObjectRootsViewProvider viewProvider) {
+        this(dump, heapObject, new FindRoot(), viewProvider);
     }
 
-    public ObjectRootsController(HeapDump dump, JavaHeapObject heapObject, FindRoot findRoot) {
+    public ObjectRootsController(HeapDump dump, JavaHeapObject heapObject, FindRoot findRoot, ObjectRootsViewProvider viewProvider) {
         this.heapDump = dump;
         this.heapObject = heapObject;
         this.rootFinder = findRoot;
 
-        view = ApplicationContext.getInstance().getViewFactory().getView(ObjectRootsView.class);
+        view = viewProvider.createView();
 
         view.addActionListener(new ActionListener<ObjectRootsView.Action>() {
 
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
                 switch (actionEvent.getActionId()) {
-                case VISIBILE:
+                case VISIBLE:
                     view.showView();
                     break;
                 case HIDDEN:

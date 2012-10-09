@@ -48,9 +48,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.common.views.ViewFactory;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
@@ -58,28 +56,38 @@ import com.redhat.thermostat.common.heap.ObjectHistogram;
 public class HeapDumpDetailsControllerTest {
 
     private HeapDumpDetailsView view;
+    private HeapDumpDetailsViewProvider viewProvider;
+    private HeapHistogramViewProvider histogramProvider;
+    private ObjectDetailsViewProvider objectDetailsProvider;
+    private ObjectRootsViewProvider objectRootsProvider;
 
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
 
-        // view factory
-        ViewFactory viewFactory = mock(ViewFactory.class);
-
+        viewProvider = mock(HeapDumpDetailsViewProvider.class);
         view = mock(HeapDumpDetailsView.class);
-        when(viewFactory.getView(HeapDumpDetailsView.class)).thenReturn(view);
+        when(viewProvider.createView()).thenReturn(view);
 
         HeapHistogramView histogramView = mock(HeapHistogramView.class);
-        when(viewFactory.getView(HeapHistogramView.class)).thenReturn(histogramView);
+        histogramProvider = mock(HeapHistogramViewProvider.class);
+        when(histogramProvider.createView()).thenReturn(histogramView);
 
         ObjectDetailsView objectView = mock(ObjectDetailsView.class);
-        when(viewFactory.getView(ObjectDetailsView.class)).thenReturn(objectView);
+        objectDetailsProvider = mock(ObjectDetailsViewProvider.class);
+        when(objectDetailsProvider.createView()).thenReturn(objectView);
 
-        ApplicationContext.getInstance().setViewFactory(viewFactory);
+        ObjectRootsView objectRootsView = mock(ObjectRootsView.class);
+        objectRootsProvider = mock(ObjectRootsViewProvider.class);
+        when(objectRootsProvider.createView()).thenReturn(objectRootsView);
     }
 
     @After
     public void tearDown() {
+        viewProvider = null;
+        histogramProvider = null;
+        objectDetailsProvider = null;
+        objectRootsProvider = null;
         ApplicationContextUtil.resetApplicationContext();
     }
 
@@ -92,13 +100,16 @@ public class HeapDumpDetailsControllerTest {
         HeapDump dump = mock(HeapDump.class);
         when(dump.getHistogram()).thenReturn(histogram);
 
-
-        HeapDumpDetailsController controller = new HeapDumpDetailsController(appService);
+        HeapDumpDetailsController controller = new HeapDumpDetailsController(
+                appService, viewProvider, histogramProvider,
+                objectDetailsProvider, objectRootsProvider);
         controller.setDump(dump);
 
         verify(dump).searchObjects(isA(String.class), anyInt());
-        verify(view).addSubView(isA(String.class), isA(HeapHistogramView.class));
-        verify(view).addSubView(isA(String.class), isA(ObjectDetailsView.class));
+        verify(view)
+                .addSubView(isA(String.class), isA(HeapHistogramView.class));
+        verify(view)
+                .addSubView(isA(String.class), isA(ObjectDetailsView.class));
     }
 
 }

@@ -45,11 +45,10 @@ import java.util.List;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import com.redhat.thermostat.client.common.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.Translate;

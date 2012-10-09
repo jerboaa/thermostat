@@ -40,9 +40,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.client.common.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -54,16 +53,22 @@ public class HeapDumpDetailsController {
 
     private HeapDumpDetailsView view;
     private HeapDump heapDump;
+    private HeapHistogramViewProvider histogramViewProvider;
+    private ObjectDetailsViewProvider objectDetailsViewProvider;
+    private ObjectRootsViewProvider objectRootsViewProvider;
 
-    public HeapDumpDetailsController(ApplicationService appService) {
+    public HeapDumpDetailsController(ApplicationService appService, HeapDumpDetailsViewProvider viewProvider, HeapHistogramViewProvider histogramProvider, ObjectDetailsViewProvider objectDetailsProvider, ObjectRootsViewProvider objectRootsProvider) {
         this.appService = appService;
-        view = ApplicationContext.getInstance().getViewFactory().getView(HeapDumpDetailsView.class);
+        this.histogramViewProvider = histogramProvider;
+        this.objectDetailsViewProvider = objectDetailsProvider;
+        this.objectRootsViewProvider = objectRootsProvider;
+        view = viewProvider.createView();
     }
 
     public void setDump(HeapDump dump) {
         this.heapDump = dump;
         try {
-            HeapHistogramView heapHistogramView = ApplicationContext.getInstance().getViewFactory().getView(HeapHistogramView.class);
+            HeapHistogramView heapHistogramView = histogramViewProvider.createView();
             heapHistogramView.display(heapDump.getHistogram());
             String title = Translate.localize(LocaleResources.HEAP_DUMP_SECTION_HISTOGRAM);
             view.addSubView(title, heapHistogramView);
@@ -71,7 +76,7 @@ public class HeapDumpDetailsController {
             log.log(Level.SEVERE, "unexpected error while reading heap dump", e);
         }
 
-        ObjectDetailsController controller = new ObjectDetailsController(appService, dump);
+        ObjectDetailsController controller = new ObjectDetailsController(appService, dump, objectDetailsViewProvider, objectRootsViewProvider);
         ObjectDetailsView detailsView = controller.getView();
         view.addSubView(Translate.localize(LocaleResources.HEAP_DUMP_SECTION_OBJECT_BROWSER), detailsView);
 

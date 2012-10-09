@@ -36,26 +36,10 @@
 
 package com.redhat.thermostat.client.heap;
 
-import java.util.List;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.views.View;
-import com.redhat.thermostat.common.ActionListener;
+public interface HeapViewProvider extends ViewProvider {
 
-public interface ObjectRootsView extends View, UIComponent {
-
-    enum Action {
-        VISIBLE,
-        HIDDEN,
-        OBJECT_SELECTED,
-    }
-
-    void addActionListener(ActionListener<Action> listener);
-    void removeActionListener(ActionListener<Action> listener);
-
-    void showView();
-    void hideView();
-
-    void setPathToRoot(List<HeapObjectUI> pathToRoot);
-    void setObjectDetails(String information);
+    @Override
+    public HeapView createView();
 }

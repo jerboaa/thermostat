@@ -38,13 +38,14 @@ package com.redhat.thermostat.client.heap;
 
 import java.util.List;
 
-import com.redhat.thermostat.client.common.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.heap.HeapDump;
 
-public abstract class HeapView extends BasicView {
+public abstract class HeapView extends BasicView implements UIComponent {
     
     public enum HeapDumperAction {
         DUMP_REQUESTED,

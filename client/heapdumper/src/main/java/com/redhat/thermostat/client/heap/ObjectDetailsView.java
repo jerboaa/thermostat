@@ -38,11 +38,12 @@ package com.redhat.thermostat.client.heap;
 
 import java.util.Collection;
 
-import com.redhat.thermostat.client.common.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
-public abstract class ObjectDetailsView extends BasicView {
+public abstract class ObjectDetailsView extends BasicView implements UIComponent {
 
     // TODO this should be some sort of aggregate view
     // showing users 1000 instances of a class is not very useful unless we

@@ -43,9 +43,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.common.controllers.VmInformationServiceController;
-import com.redhat.thermostat.client.common.views.UIComponent;
-import com.redhat.thermostat.client.common.views.BasicView.Action;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.heap.HeapView.HeapDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
@@ -79,15 +79,21 @@ public class HeapDumpController implements VmInformationServiceController {
     
     private OverviewChart model;
     private ApplicationService appService;
+    private HeapDumpDetailsViewProvider detailsViewProvider;
+    private HeapHistogramViewProvider histogramViewProvider;
+    private ObjectDetailsViewProvider objectDetailsViewProvider;
+    private ObjectRootsViewProvider objectRootsViewProvider;
 
-    public HeapDumpController(final AgentInfoDAO agentInfoDao, final VmMemoryStatDAO vmMemoryStatDao, final HeapDAO heapDao,
-            final VmRef ref, final ApplicationService appService) {
-        this(agentInfoDao, vmMemoryStatDao, heapDao, ref, appService, new HeapDumperCommand());
+    public HeapDumpController(final AgentInfoDAO agentInfoDao, final VmMemoryStatDAO vmMemoryStatDao, final HeapDAO heapDao, final VmRef ref, final ApplicationService appService, HeapViewProvider viewProvider, HeapDumpDetailsViewProvider detailsViewProvider, HeapHistogramViewProvider histogramProvider, ObjectDetailsViewProvider objectDetailsProvider, ObjectRootsViewProvider objectRootsProvider) {
+        this(agentInfoDao, vmMemoryStatDao, heapDao, ref, appService, new HeapDumperCommand(), viewProvider, detailsViewProvider, histogramProvider, objectDetailsProvider, objectRootsProvider);
     }
 
-    HeapDumpController(final AgentInfoDAO agentInfoDao, final VmMemoryStatDAO vmMemoryStatDao, final HeapDAO heapDao,
-            final VmRef ref, final ApplicationService appService, final HeapDumperCommand command) {
+    HeapDumpController(final AgentInfoDAO agentInfoDao, final VmMemoryStatDAO vmMemoryStatDao, final HeapDAO heapDao, final VmRef ref, final ApplicationService appService, final HeapDumperCommand command, HeapViewProvider viewProvider, HeapDumpDetailsViewProvider detailsViewProvider, HeapHistogramViewProvider histogramProvider, ObjectDetailsViewProvider objectDetailsProvider, ObjectRootsViewProvider objectRootsProvider) {
         
+        this.objectDetailsViewProvider = objectDetailsProvider;
+        this.objectRootsViewProvider = objectRootsProvider;
+        this.histogramViewProvider = histogramProvider;
+        this.detailsViewProvider = detailsViewProvider;
         this.appService = appService;
         this.ref = ref;
         this.vmDao = vmMemoryStatDao;
@@ -109,7 +115,7 @@ public class HeapDumpController implements VmInformationServiceController {
         timer.setTimeUnit(TimeUnit.MILLISECONDS);
         timer.setSchedulingType(SchedulingType.FIXED_RATE);
         
-        view = ApplicationContext.getInstance().getViewFactory().getView(HeapView.class);
+        view = viewProvider.createView();
         
         HeapDump dump = null;
         view.clearHeapDumpList();
@@ -179,7 +185,7 @@ public class HeapDumpController implements VmInformationServiceController {
     }
 
     private void showHeapDumpDetails(HeapDump dump) {
-        HeapDumpDetailsController controller = new HeapDumpDetailsController(appService);
+        HeapDumpDetailsController controller = new HeapDumpDetailsController(appService, detailsViewProvider, histogramViewProvider, objectDetailsViewProvider, objectRootsViewProvider);
         controller.setDump(dump);
         view.setChildView(controller.getView());
         view.openDumpView();
