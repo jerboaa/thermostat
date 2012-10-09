@@ -36,8 +36,7 @@
 
 package com.redhat.thermostat.client.vmclassstat;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
+import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,13 +55,15 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
+import com.redhat.thermostat.client.ui.Components;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.client.vmclassstat.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.swing.HeaderPanel;
 
@@ -73,18 +74,19 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
+    private final Translate t = LocaleResources.createLocalizer();
 
     public VmClassStatPanel() {
         visiblePanel = new HeaderPanel();
         // any name works
         dataset.addSeries(new TimeSeries("class-stat"));
 
-        visiblePanel.setHeader(localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL));
+        visiblePanel.setHeader(t.localize(LocaleResources.VM_LOADED_CLASSES));
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
-                localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL),
-                localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
+                t.localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL),
+                t.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
                 dataset,
                 false, false, false);
 

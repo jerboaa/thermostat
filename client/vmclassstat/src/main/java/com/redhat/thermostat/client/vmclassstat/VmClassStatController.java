@@ -43,8 +43,8 @@ import java.util.concurrent.TimeUnit;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.locale.Translate;
+import com.redhat.thermostat.client.vmclassstat.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -77,6 +77,7 @@ class VmClassStatController implements VmInformationServiceController {
     private final VmRef ref;
     private final VmClassStatDAO dao;
     private final Timer timer;
+    private final Translate t = LocaleResources.createLocalizer();
 
     private volatile long lastSeenTimeStamp = Long.MIN_VALUE;
 
@@ -120,7 +121,7 @@ class VmClassStatController implements VmInformationServiceController {
 
     @Override
     public String getLocalizedName() {
-        return Translate.localize(LocaleResources.VM_INFO_TAB_CLASSES);
+        return t.localize(LocaleResources.VM_INFO_TAB_CLASSES);
     }
 
     @Override
