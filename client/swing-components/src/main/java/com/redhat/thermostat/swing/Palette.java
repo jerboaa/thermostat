@@ -59,6 +59,8 @@ public enum Palette {
     VIOLET(new Color(112, 48, 160)),
 
     EARL_GRAY(new Color(128, 128, 128)),
+    
+    PALE_GRAY(new Color(235, 235, 235)),
     LIGHT_GRAY(new Color(242, 242, 242)),
     GRAY(new Color(216, 216, 216)),
     DARK_GRAY(new Color(168, 172, 168)),

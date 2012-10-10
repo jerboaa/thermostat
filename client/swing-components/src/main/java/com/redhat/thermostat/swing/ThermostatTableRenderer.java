@@ -34,17 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.swing;
 
-import javax.swing.JPanel;
-import javax.swing.BoxLayout;
+import java.awt.Component;
+
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
 
 @SuppressWarnings("serial")
-public class ThreadTable extends JPanel {
-    /**
-     * Create the panel.
-     */
-    public ThreadTable() {
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+public class ThermostatTableRenderer extends DefaultTableCellRenderer {
+
+    @Override
+    public Component getTableCellRendererComponent(JTable table, Object value,
+            boolean isSelected, boolean hasFocus, int row, int column) {
+
+        Component result = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+        if (result == null || isSelected) {
+            // do nothing
+        } else if (!isEven(row)) {
+            result.setBackground(Palette.LIGHT_GRAY.getColor());
+        } else {
+            result.setBackground(Palette.WHITE.getColor());
+        }
+        
+        return result;
+    }
+
+    private boolean isEven(int row) {
+        return row % 2 == 0;
     }
 }

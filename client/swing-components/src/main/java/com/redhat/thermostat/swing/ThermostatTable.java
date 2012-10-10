@@ -34,17 +34,38 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing.impl;
+package com.redhat.thermostat.swing;
 
-import javax.swing.JPanel;
-import javax.swing.BoxLayout;
+import java.awt.Dimension;
+
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 @SuppressWarnings("serial")
-public class ThreadTable extends JPanel {
-    /**
-     * Create the panel.
-     */
-    public ThreadTable() {
-        setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
+public class ThermostatTable extends JTable {
+
+    public ThermostatTable() {
+        this((DefaultTableModel) null);
+    }
+    
+    public ThermostatTable(DefaultTableModel model) {
+        super(model);
+
+        setIntercellSpacing(new Dimension(0, 0));
+        
+        setFillsViewportHeight(true);
+        setAutoCreateRowSorter(true);
+        
+        setDefaultRenderer(Object.class, new ThermostatTableRenderer());
+        setDefaultRenderer(Double.class, new ThermostatTableRenderer());
+        setDefaultRenderer(Long.class, new ThermostatTableRenderer());
+        setDefaultRenderer(String.class, new ThermostatTableRenderer());
+        setDefaultRenderer(Integer.class, new ThermostatTableRenderer());
+    }
+    
+    public JScrollPane wrap() {        
+        JScrollPane scrollPane = new JScrollPane(this);
+        return scrollPane;
     }
 }

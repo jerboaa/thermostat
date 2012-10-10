@@ -108,6 +108,8 @@ public class DolphinDefaultTheme extends DolphinTheme {
     
     private static final ColorUIResource SEPARATOR = new ColorUIResource(0xebebeb);
     
+    private static final ColorUIResource TABLE_SEPARATOR = new ColorUIResource(0xf2f2f2);
+
     private static final ColorUIResource TABLE_HEADER_FOREGROUND = new ColorUIResource(0x888a85);
     
     private static final ColorUIResource ICONS_COLOR = TABLE_HEADER_FOREGROUND;
@@ -430,6 +432,16 @@ public class DolphinDefaultTheme extends DolphinTheme {
     }
     
     @Override
+    public ColorUIResource getTableSelectionCellBackground() {
+        return SELECTION_COLOR;
+    }
+    
+    @Override
+    public ColorUIResource getTableSelectionCellForeground() {
+        return SELECTION_FOREGROUND;
+    }
+    
+    @Override
     public void addCustomEntriesToTable(UIDefaults table) {
         super.addCustomEntriesToTable(table);
         
@@ -465,6 +477,8 @@ public class DolphinDefaultTheme extends DolphinTheme {
                 "TabbedPane.tabAreaBackground", getTabAreaBackground(),
                 "TabbedPane.background", getTabAreaBackground(),
                 "TabbedPane.foreground", getTabAreaForeground(),
+
+                "Table.gridColor", TABLE_SEPARATOR,
         };
         
         table.putDefaults(uiDefaults);        

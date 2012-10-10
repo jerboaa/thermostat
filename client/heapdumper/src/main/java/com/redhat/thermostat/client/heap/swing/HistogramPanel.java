@@ -57,6 +57,8 @@ import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
 import com.redhat.thermostat.swing.HeaderPanel;
+import com.redhat.thermostat.swing.ThermostatTable;
+import com.redhat.thermostat.swing.ThermostatTableRenderer;
 
 @SuppressWarnings("serial")
 public class HistogramPanel extends HeapHistogramView implements SwingComponent {
@@ -75,17 +77,12 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
 
     @Override
     public void display(ObjectHistogram histogram) {
-        JTable table = new JTable(new HistogramTableModel(histogram));
-
-        table.setFillsViewportHeight(true);
-        table.setAutoCreateRowSorter(true);
+        ThermostatTable table = new ThermostatTable(new HistogramTableModel(histogram));
         table.setDefaultRenderer(Long.class, new NiceNumberFormatter());
-
-        JScrollPane scrollPane = new JScrollPane(table);
-        headerPanel.setContent(scrollPane);
+        headerPanel.setContent(table.wrap());
     }
 
-    private final class NiceNumberFormatter extends DefaultTableCellRenderer {
+    private final class NiceNumberFormatter extends ThermostatTableRenderer {
 
         private final DecimalFormat formatter = new DecimalFormat("###,###.###");
 

@@ -158,6 +158,10 @@ public class DolphinLookAndFeel extends MetalLookAndFeel {
                 "TableHeader.font", theme.getTableHeaderFont(),
                 "Table.ascendingSortIcon", new IconUIResource(new DolphinAscendingArrowIcon()),
                 "Table.descendingSortIcon", new IconUIResource(new DolphinDescendingArrowIcon()),
+                                
+                "Table.selectionBackground", theme.getTableSelectionCellBackground(),
+                "Table.selectionForeground", theme.getTableSelectionCellForeground(),
+
                 "TableHeader.rightAlignSortArrow", true,
         };
         

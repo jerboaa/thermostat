@@ -140,4 +140,6 @@ public abstract class DolphinTheme extends OceanTheme {
     abstract public int getOneTouchButtonSize();
     abstract public int getOneTouchButtonOffset();
 
+    abstract public ColorUIResource getTableSelectionCellBackground();
+    abstract public ColorUIResource getTableSelectionCellForeground();
 }

@@ -52,6 +52,7 @@ import javax.swing.table.DefaultTableModel;
 
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
+import com.redhat.thermostat.swing.ThermostatTable;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
@@ -61,7 +62,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
 
     private int currentSelection = -1;
     
-    private JTable table;
+    private ThermostatTable table;
     private ThreadTable tablePanel;
     
     private static final Translate t = LocaleResources.createLocalizer();
@@ -80,7 +81,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
             }
         });
         
-        table = new JTable(new ThreadViewTableModel(new ArrayList<ThreadTableBean>()));
+        table = new ThermostatTable(new ThreadViewTableModel(new ArrayList<ThreadTableBean>()));
         table.setName("threadBeansTable");
         table.getModel().addTableModelListener(new TableModelListener() {
             @Override
@@ -101,9 +102,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                 });
             }
         });
-        table.setFillsViewportHeight(true);
-        table.setAutoCreateRowSorter(true);
-        tablePanel.setTable(table);
+        tablePanel.add(table.wrap());
         
         table.addMouseListener(new MouseAdapter() {
             @Override
