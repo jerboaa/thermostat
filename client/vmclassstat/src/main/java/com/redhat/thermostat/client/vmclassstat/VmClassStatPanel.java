@@ -74,7 +74,7 @@ public class VmClassStatPanel extends VmClassStatView implements SwingComponent 
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
-    private final Translate t = LocaleResources.createLocalizer();
+    private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     public VmClassStatPanel() {
         visiblePanel = new HeaderPanel();

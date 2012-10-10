@@ -34,21 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.locale;
+package com.redhat.thermostat.client.command.internal;
+
+import com.redhat.thermostat.common.locale.Translate;
 
 public enum LocaleResources {
 
-    MISSING_INFO,
+    COMMAND_PING_ARGUMENT,
 
-    APPLICATION_INFO_LICENSE,
-    APPLICATION_INFO_DESCRIPTION,
-    APPLICATION_VERSION_INFO,
+    COMMAND_PING_QUEUING_REQUEST,
+
+    COMMAND_PING_INVALID_HOST_ID,
+    COMMAND_PING_NO_HOST_INFO_DAO,
+    COMMAND_PING_NO_AGENT_INFO_DAO,
+
+    COMMAND_PING_RESPONSE_ERROR,
+    COMMAND_PING_RESPONSE_EXCEPTION,
+    COMMAND_PING_RESPONSE_OK,
+    COMMAND_PING_RESPONSE_REFUSED,
+    COMMAND_PING_RESPONSE_UNKNOWN,
     ;
 
-    public static final String RESOURCE_BUNDLE =
-            "com.redhat.thermostat.common.locale.strings";
-    
+    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.command.internal.strings";
+
     public static Translate<LocaleResources> createLocalizer() {
         return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
+
 }

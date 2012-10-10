@@ -65,7 +65,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
     private ThermostatTable table;
     private ThreadTable tablePanel;
     
-    private static final Translate t = LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     public SwingThreadTableView() {
         tablePanel = new ThreadTable();

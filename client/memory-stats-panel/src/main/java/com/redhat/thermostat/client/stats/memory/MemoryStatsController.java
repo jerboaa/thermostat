@@ -213,7 +213,7 @@ class MemoryStatsController implements VmInformationServiceController {
 
     @Override
     public String getLocalizedName() {
-        Translate t = LocaleResources.createLocalizer();
+        Translate<LocaleResources> t = LocaleResources.createLocalizer();
         return t.localize(LocaleResources.VM_INFO_TAB_MEMORY);
     }
 

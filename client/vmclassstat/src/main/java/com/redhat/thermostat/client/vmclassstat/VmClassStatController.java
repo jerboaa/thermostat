@@ -77,7 +77,7 @@ class VmClassStatController implements VmInformationServiceController {
     private final VmRef ref;
     private final VmClassStatDAO dao;
     private final Timer timer;
-    private final Translate t = LocaleResources.createLocalizer();
+    private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private volatile long lastSeenTimeStamp = Long.MIN_VALUE;
 

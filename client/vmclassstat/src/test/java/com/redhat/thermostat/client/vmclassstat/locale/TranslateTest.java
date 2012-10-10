@@ -72,7 +72,7 @@ public class TranslateTest {
         props.load(getClass().getResourceAsStream(stringsResource));
 
         Assert.assertEquals(LocaleResources.values().length, props.values().size());
-        Translate t = LocaleResources.createLocalizer();
+        Translate<LocaleResources> t = LocaleResources.createLocalizer();
         Assert.assertEquals("Missing translation!", t.localize(LocaleResources.RESOURCE_MISSING));
         Assert.assertEquals("Classes", t.localize(LocaleResources.VM_INFO_TAB_CLASSES));
     }

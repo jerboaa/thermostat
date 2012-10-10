@@ -69,7 +69,7 @@ public class TranslateTest {
     
     @Test
     public void testLocalizeWithArguments() {
-        Translate t = LocaleResources.createLocalizer();
+        Translate<LocaleResources> t = LocaleResources.createLocalizer();
         
         String testString = t.localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
         Assert.assertEquals("A monitoring and serviceability tool for OpenJDK",

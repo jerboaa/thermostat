@@ -74,7 +74,7 @@ public class Version {
      */
     public String getVersionInfo() {
         ApplicationInfo appInfo = new ApplicationInfo();
-        Translate t = LocaleResources.createLocalizer();
+        Translate<LocaleResources> t = LocaleResources.createLocalizer();
         String format = MessageFormat.format(
                 t.localize(LocaleResources.APPLICATION_VERSION_INFO),
                 appInfo.getName())

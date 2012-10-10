@@ -54,7 +54,7 @@ import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 public class SwingThreadDetailsView extends ThreadDetailsView implements SwingComponent {
 
     private JPanel details;
-    private static final Translate t = LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     SwingThreadDetailsView() {
         details = new JPanel();

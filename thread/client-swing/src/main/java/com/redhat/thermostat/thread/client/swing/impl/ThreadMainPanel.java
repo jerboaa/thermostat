@@ -52,7 +52,7 @@ import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 @SuppressWarnings("serial")
 class ThreadMainPanel extends JPanel {
 
-    private static final Translate t = LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     private JSplitPane splitPane;
     
     private ActionToggleButton toggleButton;

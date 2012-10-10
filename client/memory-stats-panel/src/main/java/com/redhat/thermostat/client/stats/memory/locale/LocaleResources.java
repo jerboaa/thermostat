@@ -46,7 +46,7 @@ public enum LocaleResources {
     public static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.client.stats.memory.locale.strings";
     
-    public static Translate createLocalizer() {
-        return new Translate(RESOURCE_BUNDLE);
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 }

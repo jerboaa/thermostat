@@ -76,7 +76,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
 
     private JTabbedPane pane;
     
-    private static final Translate t = LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     private boolean skipNotification = false;
     

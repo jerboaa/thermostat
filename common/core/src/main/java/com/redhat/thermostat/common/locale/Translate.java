@@ -40,18 +40,19 @@ import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
 
-public class Translate {
+public class Translate<T extends Enum<T>> {
 
     private ResourceBundle resourceBundle = null;
-    public Translate(String stringResources) {
+
+    public Translate(String stringResources, Class<T> enumClass) {
         resourceBundle = ResourceBundle.getBundle(stringResources);
     }
     
-    public <T extends Enum<?>> String localize(T toTranslate) {
+    public String localize(T toTranslate) {
         return resourceBundle.getString(toTranslate.name());
     }
 
-    public <T extends Enum<?>> String localize(T toTranslate, String... params) {
+    public String localize(T toTranslate, String... params) {
         return MessageFormat.format(localize(toTranslate), (Object[]) params);
     }
 }

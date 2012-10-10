@@ -62,7 +62,7 @@ public class KillVMAction implements VMContextAction {
     private static final String RECEIVER = "com.redhat.thermostat.killvm.agent.internal.KillVmReceiver";
     private final AgentInfoDAO agentDao;
     private final VmInfoDAO vmDao;
-    private final Translate t;
+    private final Translate<LocaleResources> t;
     private final RequestResponseListener listener;
 
     public KillVMAction(AgentInfoDAO agentDao, VmInfoDAO vmDao, RequestResponseListener listener) {

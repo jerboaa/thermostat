@@ -77,7 +77,7 @@ import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 @RunWith(CacioFESTRunner.class)
 public class SwingThreadViewTest {
 
-    private static final Translate t = LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     private SwingThreadView view;
     

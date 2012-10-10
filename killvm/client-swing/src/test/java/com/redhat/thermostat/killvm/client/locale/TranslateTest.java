@@ -52,7 +52,7 @@ import com.redhat.thermostat.killvm.client.locale.LocaleResources;
 public class TranslateTest {
 
     private Locale lang;
-    private Translate t;
+    private Translate<LocaleResources> t;
 
     @Before
     public void setUp() {

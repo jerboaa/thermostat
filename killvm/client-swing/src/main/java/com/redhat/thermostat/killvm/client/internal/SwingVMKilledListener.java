@@ -50,7 +50,7 @@ import com.redhat.thermostat.killvm.client.locale.LocaleResources;
 
 public class SwingVMKilledListener implements RequestResponseListener {
 
-    private final Translate t;
+    private final Translate<LocaleResources> t;
     private static final Logger logger = Logger
             .getLogger(SwingVMKilledListener.class.getName());
 

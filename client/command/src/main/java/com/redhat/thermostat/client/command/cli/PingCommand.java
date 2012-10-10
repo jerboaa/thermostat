@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.concurrent.Semaphore;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.client.command.internal.LocaleResources;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -52,12 +52,14 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class PingCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String NAME = "ping";
 
@@ -75,21 +77,21 @@ public class PingCommand extends SimpleCommand {
         public void fireComplete(Request request, Response response) {
             switch (response.getType()) {
             case ERROR:
-                out.println("Error received from:" + request.getTarget().toString());
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_ERROR, request.getTarget().toString()));
                 break;
             case PONG:
             case OK:
             case NOOP:
-                out.println("Response received from: " + request.getTarget().toString());
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_OK, request.getTarget().toString()));
                 break;
             case EXCEPTION:
-                out.println("The tubes, they are probably broken.");
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_EXCEPTION));
                 break;
             case NOK:
-                out.println("The server refused to PONG our PING?");
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_REFUSED));
                 break;
             default:
-                out.println("Unknown result from ping command.");
+                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_UNKNOWN));
                 break;
             }
             responseBarrier.release();
@@ -112,24 +114,24 @@ public class PingCommand extends SimpleCommand {
         PrintStream out = ctx.getConsole().getOutput();
         String agentId = getAgentIDArgument(ctx.getArguments());
         if (agentId == null) {
-            printCustomMessageWithUsage(out, "Ping command accepts one and only one argument.");
+            printCustomMessageWithUsage(out, translator.localize(LocaleResources.COMMAND_PING_ARGUMENT));
             return;
         }
 
         HostInfoDAO hostInfoDao = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
         if (hostInfoDao == null) {
-            throw new CommandException("Unable to access host information: service not available");
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_HOST_INFO_DAO));
         }
         HostRef targetHostRef = getHostRef(hostInfoDao, agentId);
         serviceProvider.ungetService(HostInfoDAO.class, hostInfoDao);
 
         if (targetHostRef == null) {
-            printCustomMessageWithUsage(out, "Invalid host ID or agent no longer running.  See \'help list-vms to obtain a valid host ID.");
+            printCustomMessageWithUsage(out, translator.localize(LocaleResources.COMMAND_PING_INVALID_HOST_ID));
             return;
         }
         AgentInfoDAO agentInfoDao = serviceProvider.getService(AgentInfoDAO.class);
         if (agentInfoDao == null) {
-            throw new CommandException("Unable to access agent information: service not available");
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_AGENT_INFO_DAO));
         }
         String address = agentInfoDao.getAgentInformation(targetHostRef).getConfigListenAddress();
         serviceProvider.ungetService(AgentInfoDAO.class, agentInfoDao);
@@ -142,7 +144,7 @@ public class PingCommand extends SimpleCommand {
         ping.addListener(new PongListener(out, responseBarrier));
 
         RequestQueue queue = OSGIUtils.getInstance().getService(RequestQueue.class);
-        out.println("Queuing ping request.  Destination: " + target.toString());
+        out.println(translator.localize(LocaleResources.COMMAND_PING_QUEUING_REQUEST, target.toString()));
         queue.putRequest(ping);
         try {
             responseBarrier.acquire();

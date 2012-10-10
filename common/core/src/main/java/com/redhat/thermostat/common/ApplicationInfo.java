@@ -54,7 +54,7 @@ public class ApplicationInfo {
     
     private Properties appInfo;
 
-    private static final Translate t = LocaleResources.createLocalizer();
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     public ApplicationInfo() {
         appInfo = new Properties();
