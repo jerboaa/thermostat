@@ -36,26 +36,52 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.redhat.thermostat.common.model.TimeStampedPojo;
 import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 
-class VmLatestPojoListGetter<T extends TimeStampedPojo> extends HostLatestPojoListGetter<T> {
+class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
-    private VmRef vmRef;
+    private final Storage storage;
+    private final Category cat;
+    private final Class<T> resultClass;
 
-    VmLatestPojoListGetter(Storage storage, Category cat, VmRef ref, Class<T> resultClass) {
-        super(storage, cat, ref.getAgent(), resultClass);
-        vmRef = ref;
+    VmLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
+        this.storage = storage;
+        this.cat = cat;
+        this.resultClass = resultClass;
     }
 
-    @Override
-    protected Query buildQuery(long since) {
-        Query query = super.buildQuery(since);
-        query.where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());
+    public List<T> getLatest(VmRef vmRef, long since) {
+        Query query = buildQuery(vmRef, since);
+        return getLatest(query);
+    }
+
+    private List<T> getLatest(Query query) {
+        Cursor<T> cursor = storage.findAllPojos(query, resultClass);
+        List<T> result = new ArrayList<>();
+        while (cursor.hasNext()) {
+            T pojo = cursor.next();
+            result.add(pojo);
+        }
+        return result;
+    }
+
+    protected Query buildQuery(VmRef vmRef, long since) {
+        Query query = storage.createQuery()
+                .from(cat)
+                .where(Key.AGENT_ID, Criteria.EQUALS, vmRef.getAgent().getAgentId())
+                .where(Key.VM_ID, Criteria.EQUALS, vmRef.getId())
+                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
+                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         return query;
     }
+
 }

@@ -36,9 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.storage.Storage;
@@ -46,21 +44,16 @@ import com.redhat.thermostat.common.storage.Storage;
 class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     private final Storage storage;
-
-    private Map<VmRef, VmLatestPojoListGetter<VmCpuStat>> getters = new HashMap<>();
+    private final VmLatestPojoListGetter<VmCpuStat> getter;
 
     VmCpuStatDAOImpl(Storage storage) {
         this.storage = storage;
+        this.getter = new VmLatestPojoListGetter<>(storage, vmCpuStatCategory, VmCpuStat.class);
     }
 
     @Override
     public List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since) {
-        VmLatestPojoListGetter<VmCpuStat> getter = getters.get(ref);
-        if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmCpuStat>(storage, vmCpuStatCategory, ref, VmCpuStat.class);
-            getters.put(ref, getter);
-        }
-        return getter.getLatest(since);
+        return getter.getLatest(ref, since);
     }
 
     @Override

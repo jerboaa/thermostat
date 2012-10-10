@@ -96,8 +96,8 @@ public class VmLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
-        query = (MockQuery) getter.buildQuery(123l);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, VmClassStat.class);
+        query = (MockQuery) getter.buildQuery(vmRef, 123l);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -114,9 +114,9 @@ public class VmLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
-        getter.buildQuery(Long.MIN_VALUE); // Ignore first return value.
-        query = (MockQuery) getter.buildQuery(Long.MIN_VALUE);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, VmClassStat.class);
+        getter.buildQuery(vmRef, Long.MIN_VALUE); // Ignore first return value.
+        query = (MockQuery) getter.buildQuery(vmRef, Long.MIN_VALUE);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -138,9 +138,9 @@ public class VmLatestPojoListGetterTest {
         when(storage.createQuery()).thenReturn(query);
         when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, vmRef, VmClassStat.class);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, VmClassStat.class);
 
-        List<VmClassStat> stats = getter.getLatest(t2);
+        List<VmClassStat> stats = getter.getLatest(vmRef, t2);
 
         verify(storage).findAllPojos(any(Query.class), same(VmClassStat.class));
 

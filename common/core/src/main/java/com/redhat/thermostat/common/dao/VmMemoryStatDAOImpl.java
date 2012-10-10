@@ -36,9 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.storage.Cursor;
@@ -50,11 +48,11 @@ import com.redhat.thermostat.common.storage.Storage;
 class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     private final Storage storage;
-
-    private Map<VmRef, VmLatestPojoListGetter<VmMemoryStat>> getters = new HashMap<>();
+    private final VmLatestPojoListGetter<VmMemoryStat> getter;
 
     VmMemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
+        getter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory, VmMemoryStat.class);
     }
 
     @Override
@@ -64,7 +62,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
                 .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
                 .where(Key.VM_ID, Criteria.EQUALS, ref.getId())
                 .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING)
-                .limit(1);;
+                .limit(1);
         Cursor<VmMemoryStat> cursor = storage.findAllPojos(query, VmMemoryStat.class);
         if (cursor.hasNext()) {
             return cursor.next();
@@ -79,12 +77,7 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
-        VmLatestPojoListGetter<VmMemoryStat> getter = getters.get(ref);
-        if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmMemoryStat>(storage, vmMemoryStatsCategory, ref, VmMemoryStat.class);
-            getters.put(ref, getter);
-        }
-        return getter.getLatest(since);
+        return getter.getLatest(ref, since);
     }
 
 }

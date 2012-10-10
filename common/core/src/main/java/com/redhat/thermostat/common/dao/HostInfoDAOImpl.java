@@ -49,8 +49,9 @@ import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 
 class HostInfoDAOImpl implements HostInfoDAO {
-    private Storage storage;
-    private AgentInfoDAO agentInfoDao;
+
+    private final Storage storage;
+    private final AgentInfoDAO agentInfoDao;
 
 
     public HostInfoDAOImpl(Storage storage, AgentInfoDAO agentInfo) {

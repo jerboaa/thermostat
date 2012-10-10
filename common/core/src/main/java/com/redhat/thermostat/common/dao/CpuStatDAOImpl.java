@@ -36,31 +36,25 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.storage.Storage;
 
 class CpuStatDAOImpl implements CpuStatDAO {
 
-    private Storage storage;
+    private final Storage storage;
 
-    private Map<HostRef, HostLatestPojoListGetter<CpuStat>> getters = new HashMap<>();
+    private final HostLatestPojoListGetter<CpuStat> getter;
 
     CpuStatDAOImpl(Storage storage) {
         this.storage = storage;
+        this.getter = new HostLatestPojoListGetter<>(storage, cpuStatCategory, CpuStat.class);
     }
 
     @Override
     public List<CpuStat> getLatestCpuStats(HostRef ref, long lastTimeStamp) {
-        HostLatestPojoListGetter<CpuStat> getter = getters.get(ref);
-        if (getter == null) {
-            getter = new HostLatestPojoListGetter<CpuStat>(storage, cpuStatCategory, ref, CpuStat.class);
-            getters.put(ref, getter);
-        }
-        return getter.getLatest(lastTimeStamp);
+        return getter.getLatest(ref, lastTimeStamp);
     }
 
     @Override

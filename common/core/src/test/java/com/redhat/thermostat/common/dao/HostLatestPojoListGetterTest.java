@@ -100,8 +100,8 @@ public class HostLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when (storage.createQuery()).thenReturn(query);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
-        query = (MockQuery) getter.buildQuery(123);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
+        query = (MockQuery) getter.buildQuery(ref, 123);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -117,10 +117,10 @@ public class HostLatestPojoListGetterTest {
         MockQuery query = new MockQuery();
         when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
-        ignored = (MockQuery) getter.buildQuery(Long.MIN_VALUE); // Ignore first return value.
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
+        ignored = (MockQuery) getter.buildQuery(ref,Long.MIN_VALUE); // Ignore first return value.
 
-        query = (MockQuery) getter.buildQuery(Long.MIN_VALUE);
+        query = (MockQuery) getter.buildQuery(ref, Long.MIN_VALUE);
 
         assertNotNull(query);
         assertEquals(cat, query.getCategory());
@@ -141,9 +141,9 @@ public class HostLatestPojoListGetterTest {
         when(storage.createQuery()).thenReturn(query);
         when(storage.findAllPojos(query, CpuStat.class)).thenReturn(cursor);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, ref, CpuStat.class);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
 
-        List<CpuStat> stats = getter.getLatest(Long.MIN_VALUE);
+        List<CpuStat> stats = getter.getLatest(ref, Long.MIN_VALUE);
 
         assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
         assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));

@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.storage.Update;
 
 class VmInfoDAOImpl implements VmInfoDAO {
 
-    private Storage storage;
+    private final Storage storage;
 
     VmInfoDAOImpl(Storage storage) {
         this.storage = storage;

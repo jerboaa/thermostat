@@ -36,31 +36,24 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.common.model.VmClassStat;
 import com.redhat.thermostat.common.storage.Storage;
 
 class VmClassStatDAOImpl implements VmClassStatDAO {
 
-    private Storage storage;
-
-    private Map<VmRef, VmLatestPojoListGetter<VmClassStat>> getters = new HashMap<>();
+    private final Storage storage;
+    private final VmLatestPojoListGetter<VmClassStat> getter;
 
     VmClassStatDAOImpl(Storage storage) {
         this.storage = storage;
+        this.getter = new VmLatestPojoListGetter<>(storage, vmClassStatsCategory, VmClassStat.class);
     }
 
     @Override
     public List<VmClassStat> getLatestClassStats(VmRef ref, long lastUpdateTime) {
-        VmLatestPojoListGetter<VmClassStat> getter = getters.get(ref);
-        if (getter == null) {
-            getter = new VmLatestPojoListGetter<VmClassStat>(storage, vmClassStatsCategory, ref, VmClassStat.class);
-            getters.put(ref, getter);
-        }
-        return getter.getLatest(lastUpdateTime);
+        return getter.getLatest(ref, lastUpdateTime);
     }
 
     @Override

@@ -47,23 +47,20 @@ import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
 
-class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoListGetter<T> {
+class HostLatestPojoListGetter<T extends TimeStampedPojo> {
 
-    private Storage storage;
-    private Category cat;
-    private HostRef ref;
-    private Class<T> resultClass;
+    private final Storage storage;
+    private final Category cat;
+    private final Class<T> resultClass;
 
-    HostLatestPojoListGetter(Storage storage, Category cat, HostRef ref, Class<T> resultClass) {
+    HostLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
         this.storage = storage;
         this.cat = cat;
-        this.ref = ref;
         this.resultClass = resultClass;
     }
 
-    @Override
-    public List<T> getLatest(long since) {
-        Query query = buildQuery(since);
+    public List<T> getLatest(HostRef hostRef, long since) {
+        Query query = buildQuery(hostRef, since);
         return getLatest(query);
     }
 
@@ -77,10 +74,10 @@ class HostLatestPojoListGetter<T extends TimeStampedPojo> implements LatestPojoL
         return result;
     }
 
-    protected Query buildQuery(long since) {
+    protected Query buildQuery(HostRef hostRef, long since) {
         Query query = storage.createQuery()
                 .from(cat)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId())
+                .where(Key.AGENT_ID, Criteria.EQUALS, hostRef.getAgentId())
                 .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
                 .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         

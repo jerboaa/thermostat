@@ -36,31 +36,25 @@
 
 package com.redhat.thermostat.common.dao;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.storage.Storage;
 
 class MemoryStatDAOImpl implements MemoryStatDAO {
 
-    private Storage storage;
+    private final Storage storage;
 
-    private Map<HostRef, HostLatestPojoListGetter<MemoryStat>> getters = new HashMap<>();
+    private final HostLatestPojoListGetter<MemoryStat> getter;
 
     MemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
+        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory, MemoryStat.class);
     }
 
     @Override
     public List<MemoryStat> getLatestMemoryStats(HostRef ref, long lastTimeStamp) {
-        HostLatestPojoListGetter<MemoryStat> getter = getters.get(ref);
-        if (getter == null) {
-            getter = new HostLatestPojoListGetter<MemoryStat>(storage, memoryStatCategory, ref, MemoryStat.class);
-            getters.put(ref, getter);
-        }
-        return getter.getLatest(lastTimeStamp);
+        return getter.getLatest(ref, lastTimeStamp);
     }
 
     @Override
