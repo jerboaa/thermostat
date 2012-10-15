@@ -36,56 +36,45 @@
 
 package com.redhat.thermostat.swing;
 
-import java.awt.Dimension;
+import java.awt.Component;
 
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
-@SuppressWarnings("serial")
-public class ThermostatTable extends JTable {
+class ThermostatTableColumnResizer {
     
-    private ThermostatTableColumnResizer resizer;
+    // reference Swing Hacks book:
+    // http://shop.oreilly.com/product/9780596009076.do
     
-    public ThermostatTable() {
-        this((DefaultTableModel) null);
+    private ThermostatTable table;
+    
+    public ThermostatTableColumnResizer(ThermostatTable table) {
+        this.table = table;
     }
     
-    public ThermostatTable(int rowHeight) {
-        this((DefaultTableModel) null, rowHeight);
-    }
-    
-    public ThermostatTable(DefaultTableModel model) {
-        this((DefaultTableModel) model, 25);
-    }
-    
-    public ThermostatTable(DefaultTableModel model, int rowHeight) {
-        super(model);
-
-        setRowHeight(rowHeight);
-        
-        setIntercellSpacing(new Dimension(0, 0));
-        
-        setFillsViewportHeight(true);
-        setAutoCreateRowSorter(true);
-        
-        setDefaultRenderer(Object.class, new ThermostatTableRenderer());
-        setDefaultRenderer(Double.class, new ThermostatTableRenderer());
-        setDefaultRenderer(Long.class, new ThermostatTableRenderer());
-        setDefaultRenderer(String.class, new ThermostatTableRenderer());
-        setDefaultRenderer(Integer.class, new ThermostatTableRenderer());
-        
-        this.resizer = new ThermostatTableColumnResizer(this);
-    }
-    
-    public void repackCells() {
-        resizer.resize();
-        revalidate();
-    }
-    
-    public JScrollPane wrap() {        
-        JScrollPane scrollPane = new JScrollPane(this);
-        repackCells();
-        return scrollPane;
+    public void resize() {
+        TableColumnModel model = table.getColumnModel();
+        for (int column = 0; column < table.getColumnCount(); column++ ) {
+            int maxWidth = 0;
+            for (int row = 0; row < table.getRowCount(); row++ ) {
+                TableCellRenderer renderer = table.getCellRenderer(row, column);
+                Object value = table.getValueAt(row, column);
+                Component component = renderer.getTableCellRendererComponent(table, value, false, false, row, column);
+                maxWidth = Math.max(component.getPreferredSize().width, maxWidth);
+            }
+            
+            TableColumn tableColumn = model.getColumn(column);
+            TableCellRenderer headerRenderer = tableColumn.getHeaderRenderer();
+            if (headerRenderer == null) {
+                headerRenderer = table.getTableHeader().getDefaultRenderer(); 
+            }
+            
+            Object headerValue = tableColumn.getHeaderValue();
+            Component headerComponent = headerRenderer.getTableCellRendererComponent(table, headerValue, false, false, 0, column);
+            maxWidth = Math.max(maxWidth, headerComponent.getPreferredSize().width);
+            
+            tableColumn.setPreferredWidth(maxWidth);
+        }
     }
 }

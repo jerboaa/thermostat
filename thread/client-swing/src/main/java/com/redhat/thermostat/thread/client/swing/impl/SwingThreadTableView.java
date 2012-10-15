@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.event.TableModelEvent;
@@ -60,6 +59,8 @@ import com.redhat.thermostat.thread.client.common.ThreadTableView;
 
 public class SwingThreadTableView extends ThreadTableView implements SwingComponent {
 
+    private boolean tableRepacked = false; 
+    
     private int currentSelection = -1;
     
     private ThermostatTable table;
@@ -161,6 +162,13 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
                         index++;
                     }
                 }
+                
+                // just repack once, or the user will see the table moving around
+                if (!tableRepacked) {
+                    table.repackCells();
+                    tableRepacked = true;
+                }
+                
                 model.fireTableDataChanged();
             }
         });
@@ -213,7 +221,7 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
         @Override
         public Class<?> getColumnClass(int column) {
             switch (column) {
-            case 0:
+            case 1:
             case 2:
             case 3:                
                 return String.class;                
@@ -233,10 +241,10 @@ public class SwingThreadTableView extends ThreadTableView implements SwingCompon
             ThreadTableBean info = infos.get(row);
             switch (column) {
             case 0:
-                result = info.getName();
+                result = info.getId();
                 break;
             case 1:
-                result = info.getId();
+                result = info.getName();
                 break;
             case 2:
                 result = new Date(info.getStartTimeStamp()).toString();
