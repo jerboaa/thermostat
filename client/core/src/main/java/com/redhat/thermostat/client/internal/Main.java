@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.internal;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.EventQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
@@ -69,6 +67,7 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -81,6 +80,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Main {
     
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
     private UiFacadeFactory uiFacadeFactory;
@@ -193,14 +194,14 @@ public class Main {
         @Override
         public void run() {
             Object[] options = {
-                    localize(LocaleResources.CONNECTION_WIZARD),
-                    localize(LocaleResources.CONNECTION_QUIT),
+                    translator.localize(LocaleResources.CONNECTION_WIZARD),
+                    translator.localize(LocaleResources.CONNECTION_QUIT),
             };
             int n = JOptionPane
                     .showOptionDialog(
                             null,
-                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
-                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
                             JOptionPane.OK_CANCEL_OPTION,
                             JOptionPane.ERROR_MESSAGE, null, options,
                             options[0]);
@@ -300,8 +301,8 @@ public class Main {
                 } else {
                     JOptionPane.showMessageDialog(
                             null,
-                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
-                            localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
+                            translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
                             JOptionPane.ERROR_MESSAGE);
                     uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
                 }

@@ -62,15 +62,17 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ OSGIUtils.class, FrameworkUtil.class })
 public class DisconnectCommandTest {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private DisconnectCommand cmd;
     private TestCommandContextFactory cmdCtxFactory;
@@ -110,7 +112,7 @@ public class DisconnectCommandTest {
             cmd.run(cmdCtxFactory.createContext(new SimpleArguments()));
             fail("cmd.run() should have thrown exception.");
         } catch (CommandException e) {
-            assertEquals(Translate.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED), e.getMessage());
         }
     }
     

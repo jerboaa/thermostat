@@ -51,11 +51,13 @@ import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 public class VMStatCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final Logger log = Logger.getLogger(VMStatCommand.class.getName());
 
@@ -75,12 +77,12 @@ public class VMStatCommand extends SimpleCommand {
     public void run(final CommandContext ctx) throws CommandException {
         VmCpuStatDAO vmCpuStatDAO = serviceProvider.getServiceAllowNull(VmCpuStatDAO.class);
         if (vmCpuStatDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.VM_CPU_SERVICE_NOT_AVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.VM_CPU_SERVICE_NOT_AVAILABLE));
         }
 
         VmMemoryStatDAO vmMemoryStatDAO = serviceProvider.getServiceAllowNull(VmMemoryStatDAO.class);
         if (vmMemoryStatDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.VM_MEMORY_SERVICE_NOT_AVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.VM_MEMORY_SERVICE_NOT_AVAILABLE));
         }
 
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());

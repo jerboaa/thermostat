@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -67,10 +65,13 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.VmGcView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.IntervalTimeData;
 import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private HeaderPanel visiblePanel = new HeaderPanel();
     private JPanel realPanel = new JPanel();
@@ -121,7 +122,7 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private void initializePanel() {
         visiblePanel.setContent(realPanel);
-        visiblePanel.setHeader(localize(LocaleResources.VM_GC_TITLE));
+        visiblePanel.setHeader(translator.localize(LocaleResources.VM_GC_TITLE));
         realPanel.setLayout(new GridBagLayout());
     }
 
@@ -134,8 +135,8 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
         JFreeChart chart = ChartFactory.createHistogram(
             null,
-            localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL),
-            localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units),
+            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL),
+            translator.localize(LocaleResources.VM_GC_COLLECTOR_CHART_GC_TIME_LABEL, units),
             collectorData,
             PlotOrientation.VERTICAL,
             false,

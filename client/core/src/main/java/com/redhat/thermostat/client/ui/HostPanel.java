@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.BorderLayout;
 
 import javax.swing.JPanel;
@@ -45,8 +43,11 @@ import javax.swing.JTabbedPane;
 
 import com.redhat.thermostat.client.internal.HostPanelFacade;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
 
 public class HostPanel extends JPanel {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     /*
      * This entire class needs to be more dynamic. We should try to avoid
@@ -69,9 +70,9 @@ public class HostPanel extends JPanel {
         JTabbedPane tabPane = new JTabbedPane();
 
         // FIXME: Fix how we get old of the view impl specific UI component.
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, ((HostOverviewPanel)facade.getOverviewController().getView()).getUiComponent(), null, 0);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_CPU), null, ((HostCpuPanel)facade.getCpuController().getView()).getUiComponent(), null, 1);
-        tabPane.insertTab(localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, ((HostMemoryPanel)facade.getMemoryController().getView()).getUiComponent(), null, 2);
+        tabPane.insertTab(translator.localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), null, ((HostOverviewPanel)facade.getOverviewController().getView()).getUiComponent(), null, 0);
+        tabPane.insertTab(translator.localize(LocaleResources.HOST_INFO_TAB_CPU), null, ((HostCpuPanel)facade.getCpuController().getView()).getUiComponent(), null, 1);
+        tabPane.insertTab(translator.localize(LocaleResources.HOST_INFO_TAB_MEMORY), null, ((HostMemoryPanel)facade.getMemoryController().getView()).getUiComponent(), null, 2);
 
         // TODO additional tabs provided by plugins
         // tabPane.insertTab(title, icon, component, tip, 3)

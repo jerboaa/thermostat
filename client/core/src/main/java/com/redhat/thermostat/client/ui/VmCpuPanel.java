@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,10 +54,13 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.VmCpuView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmCpuPanel extends VmCpuView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private HeaderPanel visiblePanel;
     
@@ -102,12 +103,12 @@ public class VmCpuPanel extends VmCpuView implements SwingComponent {
 
     private void initializePanel() {
         visiblePanel = new HeaderPanel();
-        visiblePanel.setHeader(localize(LocaleResources.VM_CPU_TITLE));
+        visiblePanel.setHeader(translator.localize(LocaleResources.VM_CPU_TITLE));
 
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
-                localize(LocaleResources.VM_CPU_CHART_TIME_LABEL),
-                localize(LocaleResources.VM_CPU_CHART_LOAD_LABEL),
+                translator.localize(LocaleResources.VM_CPU_CHART_TIME_LABEL),
+                translator.localize(LocaleResources.VM_CPU_CHART_LOAD_LABEL),
                 data,
                 false, false, false);
 

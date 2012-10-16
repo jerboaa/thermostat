@@ -38,16 +38,17 @@ package com.redhat.thermostat.agent.cli.db;
 import java.io.File;
 
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.agent.cli.impl.locale.Translate;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationException;
 
-
 public class StalePidFileException extends ApplicationException {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final File pidFile;
 
     public StalePidFileException(File pidFile) {
-        super(Translate.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()));
+        super(translator.localize(LocaleResources.STALE_PID_FILE, pidFile.toString()));
         this.pidFile = pidFile;
     }
 

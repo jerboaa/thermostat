@@ -44,7 +44,6 @@ import com.redhat.thermostat.client.core.controllers.VmInformationServiceControl
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.vmclassstat.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -53,10 +52,13 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.VmClassStat;
 
 class VmClassStatController implements VmInformationServiceController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private class UpdateChartData implements Runnable {
         @Override

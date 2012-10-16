@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,8 +55,11 @@ import javax.swing.text.JTextComponent;
 import com.redhat.thermostat.client.core.views.SummaryView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 
 public class SummaryPanel extends SummaryView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JPanel visiblePanel;
     
@@ -70,17 +71,17 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
     public SummaryPanel() {
         super();
         visiblePanel = new JPanel();
-        JLabel lblHomepanel = Components.header(localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
+        JLabel lblHomepanel = Components.header(translator.localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
 
-        JLabel lblTotalHosts = new JLabel(localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
+        JLabel lblTotalHosts = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
 
         totalMonitoredHosts = new ValueField("${TOTAL_MONITORED_HOSTS}");
 
-        JLabel lblTotal = new JLabel(localize(LocaleResources.HOME_PANEL_TOTAL_JVMS));
+        JLabel lblTotal = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_JVMS));
 
         totalMonitoredVms = new ValueField("${TOTAL_MONITORED_VMS}");
 
-        JLabel lblIssues = Components.header(localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
+        JLabel lblIssues = Components.header(translator.localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
 
         JScrollPane scrollPane = new JScrollPane();
 
@@ -189,7 +190,7 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
 
         private List<? extends Object> delegate;
 
-        private String emptyElement = localize(LocaleResources.HOME_PANEL_NO_ISSUES);
+        private String emptyElement = translator.localize(LocaleResources.HOME_PANEL_NO_ISSUES);
 
         public IssuesListModel(List<? extends Object> actualList) {
             this.delegate = actualList;

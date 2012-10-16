@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -58,12 +56,15 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class HostOverviewController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final Logger logger = LoggingUtils.getLogger(HostOverviewController.class);
 
@@ -83,9 +84,9 @@ public class HostOverviewController {
 
         final Vector<String> networkTableColumnVector;
         networkTableColumnVector = new Vector<String>();
-        networkTableColumnVector.add(localize(LocaleResources.NETWORK_INTERFACE_COLUMN));
-        networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV4_COLUMN));
-        networkTableColumnVector.add(localize(LocaleResources.NETWORK_IPV6_COLUMN));
+        networkTableColumnVector.add(translator.localize(LocaleResources.NETWORK_INTERFACE_COLUMN));
+        networkTableColumnVector.add(translator.localize(LocaleResources.NETWORK_IPV4_COLUMN));
+        networkTableColumnVector.add(translator.localize(LocaleResources.NETWORK_IPV6_COLUMN));
 
         backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
@@ -99,7 +100,7 @@ public class HostOverviewController {
                 view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
 
                 String[] parts = DisplayableValues.bytes(hostInfo.getTotalMemory());
-                String readableTotalMemory = localize(LocaleResources.NUMBER_AND_UNIT, parts[0], parts[1]);
+                String readableTotalMemory = translator.localize(LocaleResources.NUMBER_AND_UNIT, parts[0], parts[1]);
                 view.setTotalMemory(readableTotalMemory);
 
                 List<NetworkInterfaceInfo> networkInfo =

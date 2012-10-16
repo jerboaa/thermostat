@@ -42,18 +42,20 @@ import java.util.Iterator;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.PrintObjectUtils;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Root;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 public class FindRootCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String ALL_ARG = "all";
     private static final String NAME = "find-root";
@@ -72,7 +74,7 @@ public class FindRootCommand extends SimpleCommand {
     public void run(CommandContext ctx) throws CommandException {
         HeapDAO heapDao = serviceProvider.getServiceAllowNull(HeapDAO.class);
         if (heapDao == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
 
         try {
@@ -92,7 +94,7 @@ public class FindRootCommand extends SimpleCommand {
         Collection<HeapPath<JavaHeapObject>> pathsToRoot = findRoot.findShortestPathsToRoot(obj, findAll);
         PrintStream out = ctx.getConsole().getOutput();
         if (pathsToRoot.isEmpty()) {
-            out.println(Translate.localize(LocaleResources.COMMAND_FIND_ROOT_NO_ROOT_FOUND, PrintObjectUtils.objectToString(obj)));
+            out.println(translator.localize(LocaleResources.COMMAND_FIND_ROOT_NO_ROOT_FOUND, PrintObjectUtils.objectToString(obj)));
         } else {
             printPathsToRoot(snapshot, pathsToRoot, out);
         }

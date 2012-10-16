@@ -34,24 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.locale;
+package com.redhat.thermostat.tools;
 
-import java.text.MessageFormat;
-import java.util.ResourceBundle;
+import java.io.IOException;
+import java.util.Properties;
 
-public class Translate {
+import junit.framework.Assert;
 
-    private static ResourceBundle resourceBundle = null;
+import org.junit.Test;
 
-    static {
-        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
-    }
+public class LocaleResourcesTest {
 
-    public static String localize(LocaleResources toTranslate) {
-        return resourceBundle.getString(toTranslate.name());
-    }
+    @Test
+    public void testLocalizedStringsArePresent() throws IOException {
 
-    public static String localize(LocaleResources toTranslate, String... params) {
-        return MessageFormat.format(localize(toTranslate), (Object[]) params);
+        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
+
+        Properties props = new Properties();
+        props.load(getClass().getResourceAsStream(stringsResource));
+
+        Assert.assertEquals(LocaleResources.values().length, props.values().size());
+        for (LocaleResources resource : LocaleResources.values()) {
+            Assert.assertTrue("missing property from resource bound file: " + resource,
+                              props.containsKey(resource.name()));
+        }
     }
 }

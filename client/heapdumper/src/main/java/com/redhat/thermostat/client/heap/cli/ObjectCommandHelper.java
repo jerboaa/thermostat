@@ -37,16 +37,18 @@
 package com.redhat.thermostat.client.heap.cli;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 class ObjectCommandHelper {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String OBJECT_ID_ARG = "objectId";
     private static final String HEAP_ID_ARG = "heapId";
@@ -72,7 +74,7 @@ class ObjectCommandHelper {
         String heapId = args.getArgument(HEAP_ID_ARG);
         HeapInfo heapInfo = dao.getHeapInfo(heapId);
         if (heapInfo == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            throw new CommandException(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
         }
         heapDump = dao.getHeapDump(heapInfo);
     }

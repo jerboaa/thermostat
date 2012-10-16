@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -67,9 +65,12 @@ import com.redhat.thermostat.client.core.views.HostCpuView;
 import com.redhat.thermostat.client.internal.ui.swing.WrapLayout;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 
 public class HostCpuPanel extends HostCpuView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JPanel visiblePanel;
 
@@ -199,16 +200,16 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
 
         visiblePanel = new JPanel();
 
-        JLabel summaryLabel = new SectionHeader(localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
+        JLabel summaryLabel = new SectionHeader(translator.localize(LocaleResources.HOST_CPU_SECTION_OVERVIEW));
 
-        JLabel cpuModelLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_MODEL));
+        JLabel cpuModelLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_CPU_MODEL));
 
-        JLabel cpuCountLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_COUNT));
+        JLabel cpuCountLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_CPU_COUNT));
 
         chart = ChartFactory.createTimeSeriesChart(
                 null,
-                localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL),
-                localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL),
+                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL),
+                translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_VALUE_LABEL),
                 datasetCollection,
                 false, false, false);
 

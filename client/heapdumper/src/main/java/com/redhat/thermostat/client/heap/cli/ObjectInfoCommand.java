@@ -41,13 +41,13 @@ import java.util.Enumeration;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.PrintObjectUtils;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaField;
@@ -56,6 +56,8 @@ import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
 import com.sun.tools.hat.internal.model.Snapshot;
 
 public class ObjectInfoCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String NAME = "object-info";
 
@@ -74,7 +76,7 @@ public class ObjectInfoCommand extends SimpleCommand {
     public void run(CommandContext ctx) throws CommandException {
         HeapDAO heapDao = serviceProvider.getServiceAllowNull(HeapDAO.class);
         if (heapDao == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
 
         try {
@@ -90,13 +92,13 @@ public class ObjectInfoCommand extends SimpleCommand {
         snapshot = heapDump.getSnapshot();
         JavaHeapObject obj = objCmdHelper.getJavaHeapObject();
         TableRenderer table = new TableRenderer(2);
-        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID), obj.getIdString());
-        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE), obj.getClazz().getName());
-        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE), String.valueOf(obj.getSize()) + " bytes");
-        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED), String.valueOf(obj.isHeapAllocated()));
-        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERENCES), "");
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID), obj.getIdString());
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE), obj.getClazz().getName());
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE), String.valueOf(obj.getSize()) + " bytes");
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED), String.valueOf(obj.isHeapAllocated()));
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERENCES), "");
         printReferences(table, obj);
-        table.printLine(Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERRERS), "");
+        table.printLine(translator.localize(LocaleResources.COMMAND_OBJECT_INFO_REFERRERS), "");
         printReferrers(table, obj);
 
         PrintStream out = ctx.getConsole().getOutput();

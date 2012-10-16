@@ -48,9 +48,12 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.locale.Translate;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class ObjectRootsController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final ObjectRootsView view;
 
@@ -95,10 +98,10 @@ public class ObjectRootsController {
 
     private void showObjectDetails(HeapObjectUI uiObject) {
         JavaHeapObject obj = heapDump.findObject(uiObject.objectId);
-        String text = Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID) + " " + obj.getIdString() + "\n" +
-                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE) + " " + obj.getClazz().getName() + "\n" +
-                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE) + " " + String.valueOf(obj.getSize()) + " bytes" + "\n" +
-                Translate.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED) + " " + String.valueOf(obj.isHeapAllocated()) + "\n";
+        String text = translator.localize(LocaleResources.COMMAND_OBJECT_INFO_OBJECT_ID) + " " + obj.getIdString() + "\n" +
+                translator.localize(LocaleResources.COMMAND_OBJECT_INFO_TYPE) + " " + obj.getClazz().getName() + "\n" +
+                translator.localize(LocaleResources.COMMAND_OBJECT_INFO_SIZE) + " " + String.valueOf(obj.getSize()) + " bytes" + "\n" +
+                translator.localize(LocaleResources.COMMAND_OBJECT_INFO_HEAP_ALLOCATED) + " " + String.valueOf(obj.isHeapAllocated()) + "\n";
 
         if (obj.getRoot() != null) {
             text = text + obj.getRoot().getDescription();

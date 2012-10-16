@@ -48,10 +48,10 @@ import javax.swing.table.DefaultTableModel;
 
 import com.redhat.thermostat.client.heap.HeapHistogramView;
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.DescriptorConverter;
 import com.redhat.thermostat.swing.HeaderPanel;
 import com.redhat.thermostat.swing.ThermostatTable;
@@ -59,6 +59,8 @@ import com.redhat.thermostat.swing.ThermostatTableRenderer;
 
 @SuppressWarnings("serial")
 public class HistogramPanel extends HeapHistogramView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final JPanel panel;
 
@@ -68,7 +70,7 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
         panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        headerPanel = new HeaderPanel(Translate.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
+        headerPanel = new HeaderPanel(translator.localize(LocaleResources.HEAP_DUMP_CLASS_USAGE));
         panel.add(headerPanel);
     }
 
@@ -97,9 +99,9 @@ public class HistogramPanel extends HeapHistogramView implements SwingComponent 
     private class HistogramTableModel extends DefaultTableModel {
 
         private final String[] columnNames = new String[] {
-            Translate.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_CLASS),
-            Translate.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_INSTANCES),
-            Translate.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_SIZE),
+            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_CLASS),
+            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_INSTANCES),
+            translator.localize(LocaleResources.HEAP_DUMP_HISTOGRAM_COLUMN_SIZE),
         };
 
         private List<HistogramRecord> histogram;

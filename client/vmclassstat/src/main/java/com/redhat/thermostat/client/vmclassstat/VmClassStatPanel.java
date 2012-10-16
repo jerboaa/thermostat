@@ -69,12 +69,13 @@ import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmClassStatPanel extends VmClassStatView implements SwingComponent {
 
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
     private HeaderPanel visiblePanel;
     
     private final TimeSeriesCollection dataset = new TimeSeriesCollection();
 
     private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
-    private final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
     public VmClassStatPanel() {
         visiblePanel = new HeaderPanel();

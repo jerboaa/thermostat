@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Component;
 
 import javax.swing.JPanel;
@@ -50,12 +48,16 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostOverviewView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
+
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import java.awt.BorderLayout;
 
 public class HostOverviewPanel extends HostOverviewView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JPanel visiblePanel;
 
@@ -202,16 +204,16 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
 
     private void initializePanel() {
         visiblePanel = new JPanel();
-        SectionHeader overviewSection = new SectionHeader(localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS));
-        LabelField hostnameLabel = new LabelField(localize(LocaleResources.HOST_INFO_HOSTNAME));
-        SectionHeader hardwareSection = new SectionHeader(localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE));
-        LabelField cpuModelLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_MODEL));
-        LabelField cpuCountLabel = new LabelField(localize(LocaleResources.HOST_INFO_CPU_COUNT));
-        LabelField memoryTotalLabel = new LabelField(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
-        LabelField networkLabel = new LabelField(localize(LocaleResources.HOST_INFO_NETWORK));
-        SectionHeader softwareSection = new SectionHeader(localize(LocaleResources.HOST_OVERVIEW_SECTION_SOFTWARE));
-        LabelField osNameLabel = new LabelField(localize(LocaleResources.HOST_INFO_OS_NAME));
-        LabelField osKernelLabel = new LabelField(localize(LocaleResources.HOST_INFO_OS_KERNEL));
+        SectionHeader overviewSection = new SectionHeader(translator.localize(LocaleResources.HOST_OVERVIEW_SECTION_BASICS));
+        LabelField hostnameLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_HOSTNAME));
+        SectionHeader hardwareSection = new SectionHeader(translator.localize(LocaleResources.HOST_OVERVIEW_SECTION_HARDWARE));
+        LabelField cpuModelLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_CPU_MODEL));
+        LabelField cpuCountLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_CPU_COUNT));
+        LabelField memoryTotalLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+        LabelField networkLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_NETWORK));
+        SectionHeader softwareSection = new SectionHeader(translator.localize(LocaleResources.HOST_OVERVIEW_SECTION_SOFTWARE));
+        LabelField osNameLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_OS_NAME));
+        LabelField osKernelLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_OS_KERNEL));
 
         JPanel panel = new JPanel();
 

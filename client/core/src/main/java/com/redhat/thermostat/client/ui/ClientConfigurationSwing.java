@@ -52,12 +52,14 @@ import javax.swing.WindowConstants;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.EdtHelper;
 
 public class ClientConfigurationSwing implements ClientConfigurationView {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final WindowClosingListener windowClosingListener;
 
@@ -92,7 +94,7 @@ public class ClientConfigurationSwing implements ClientConfigurationView {
             }
         });
 
-        dialog = new JDialog((Frame) null, Translate.localize(LocaleResources.CLIENT_PREFS_WINDOW_TITLE));
+        dialog = new JDialog((Frame) null, translator.localize(LocaleResources.CLIENT_PREFS_WINDOW_TITLE));
         dialog.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         dialog.setContentPane(optionPane);
         dialog.addWindowListener(windowClosingListener);

@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
@@ -56,9 +54,12 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.VmInfo;
 
 class VmOverviewController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final VmRef ref;
     private final VmInfoDAO dao;
@@ -106,7 +107,7 @@ class VmOverviewController {
                     // Only show a stop time if we have actually stopped.
                     view.setVmStopTimeStamp(vmRunningTimeFormat.format(new Date(actualStopTime)));
                 } else {
-                    view.setVmStopTimeStamp(localize(LocaleResources.VM_INFO_RUNNING));
+                    view.setVmStopTimeStamp(translator.localize(LocaleResources.VM_INFO_RUNNING));
                 }
                 view.setJavaVersion(info.getJavaVersion());
                 view.setJavaHome(info.getJavaHome());
@@ -115,7 +116,7 @@ class VmOverviewController {
                 String actualVmName = info.getVmName();
                 view.setVmInfo(info.getVmInfo());
                 String actualVmVersion = info.getVmInfo();
-                view.setVmNameAndVersion(localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
+                view.setVmNameAndVersion(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
                         actualVmName, actualVmVersion));
                 view.setVmArguments(info.getVmArguments());
             }

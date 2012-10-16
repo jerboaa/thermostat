@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.util.Collection;
 
 import com.redhat.thermostat.client.core.VmInformationService;
@@ -54,9 +52,12 @@ import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class VmInformationController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final VmInformationView view;
 
@@ -77,9 +78,9 @@ public class VmInformationController {
         gcController = new VmGcController(vmMemoryStatDao, vmGcStatDao, vmRef, vmGCProvider);
 
         view = provider.createView();
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_OVERVIEW), overviewController.getView());
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getView());
-        view.addChildView(localize(LocaleResources.VM_INFO_TAB_GC), gcController.getView());
+        view.addChildView(translator.localize(LocaleResources.VM_INFO_TAB_OVERVIEW), overviewController.getView());
+        view.addChildView(translator.localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getView());
+        view.addChildView(translator.localize(LocaleResources.VM_INFO_TAB_GC), gcController.getView());
 
         Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();
         for (VmInformationService vmInfoService : vmInfoServices) {

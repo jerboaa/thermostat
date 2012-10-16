@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.locale;
 
+import com.redhat.thermostat.common.locale.Translate;
+
 public enum LocaleResources {
 
     MISSING_INFO,
@@ -170,10 +172,6 @@ public enum LocaleResources {
     VM_CPU_CHART_TIME_LABEL,
 
     VM_GC_TITLE,
-    VM_MEMORY_SPACE_TITLE,
-    VM_MEMORY_SPACE_USED,
-    VM_MEMORY_SPACE_FREE,
-    VM_MEMORY_SPACE_ADDITIONAL,
 
     VM_GC_COLLECTOR_OVER_GENERATION,
     VM_GC_COLLECTOR_CHART_REAL_TIME_LABEL,
@@ -205,4 +203,8 @@ public enum LocaleResources {
 
     static final String RESOURCE_BUNDLE =
             "com.redhat.thermostat.client.locale.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    }
 }

@@ -64,17 +64,19 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.launcher.DbServiceFactory;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ OSGIUtils.class, DbServiceFactory.class })
 public class ConnectCommandTest {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private ConnectCommand cmd;
     private TestCommandContextFactory cmdCtxFactory;
@@ -116,7 +118,7 @@ public class ConnectCommandTest {
         try {
             cmd.run(cmdCtxFactory.createContext(args));
         } catch (CommandException e) {
-            assertEquals(Translate.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED), e.getMessage());
         }
     }
     

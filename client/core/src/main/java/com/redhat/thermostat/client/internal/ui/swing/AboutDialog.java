@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.internal.ui.swing;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Cursor;
 import java.awt.Desktop;
 import java.awt.event.ActionEvent;
@@ -65,10 +63,12 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.IconResource;
 import com.redhat.thermostat.client.ui.UIResources;
 import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class AboutDialog extends JDialog {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final long serialVersionUID = -7611616871710076514L;
 
     private static final Logger logger = LoggingUtils.getLogger(AboutDialog.class);
@@ -110,7 +110,7 @@ public class AboutDialog extends JDialog {
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(""));
         
-        JButton closeButton = new JButton(localize(LocaleResources.BUTTON_CLOSE));
+        JButton closeButton = new JButton(translator.localize(LocaleResources.BUTTON_CLOSE));
         closeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AboutDialog.this.setVisible(false);

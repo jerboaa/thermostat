@@ -42,13 +42,13 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.launcher.DbServiceFactory;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 /**
@@ -61,6 +61,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
  */
 public class ConnectCommand extends SimpleCommand {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private static final String NAME = "connect";
     
     private ClientPreferences prefs;
@@ -71,7 +73,7 @@ public class ConnectCommand extends SimpleCommand {
         DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
         if (service != null) {
             // Already connected, bail out
-            throw new CommandException(Translate.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED));
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED));
         }
         if (prefs == null) {
             prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
@@ -86,7 +88,7 @@ public class ConnectCommand extends SimpleCommand {
         try {
             service.connect();
         } catch (ConnectionException ex) {
-            throw new CommandException(Translate.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl), ex);
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl), ex);
         }
         ServiceRegistration registration = OSGIUtils.getInstance().registerService(DbService.class, service);
         service.setServiceRegistration(registration);

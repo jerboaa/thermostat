@@ -45,17 +45,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.HeapDAO;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.common.utils.StreamUtils;
 
 public class SaveHeapDumpToFileCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String NAME = "save-heap-dump-to-file";
 
@@ -95,11 +97,11 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
         Arguments args = ctx.getArguments();
         String heapId = args.getArgument(HEAP_ID_ARGUMENT);
         if (heapId == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HEAP_ID_REQUIRED));
+            throw new CommandException(translator.localize(LocaleResources.HEAP_ID_REQUIRED));
         }
         String filename = args.getArgument(FILE_NAME_ARGUMENT);
         if (filename == null) {
-            throw new CommandException(Translate.localize(LocaleResources.FILE_REQUIRED));
+            throw new CommandException(translator.localize(LocaleResources.FILE_REQUIRED));
         }
 
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
@@ -107,15 +109,15 @@ public class SaveHeapDumpToFileCommand extends SimpleCommand {
             if (heapStream != null) {
                 try {
                     saveHeapDump(heapStream, filename);
-                    ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_SAVED_TO_FILE, filename));
+                    ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_SAVED_TO_FILE, filename));
                 } catch (IOException e) {
-                    ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_SAVING, e.getMessage()));
+                    ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_SAVING, e.getMessage()));
                 }
             } else {
-                ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
             }
         } catch (IOException e) {
-            throw new CommandException(Translate.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_CLOSING_STREAM, e.getMessage()));
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_SAVE_HEAP_DUMP_ERROR_CLOSING_STREAM, e.getMessage()));
         }
     }
 

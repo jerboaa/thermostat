@@ -61,6 +61,7 @@ import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
@@ -68,6 +69,8 @@ import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
 public class HeapDumpController implements VmInformationServiceController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final VmMemoryStatDAO vmDao;
     private final VmRef ref;
@@ -100,11 +103,11 @@ public class HeapDumpController implements VmInformationServiceController {
         this.heapDAO = heapDao;
         
         model = new OverviewChart(
-                    Translate.localize(LocaleResources.HEAP_CHART_TITLE),
-                    Translate.localize(LocaleResources.HEAP_CHART_TIME_AXIS),
-                    Translate.localize(LocaleResources.HEAP_CHART_HEAP_AXIS),
-                    Translate.localize(LocaleResources.HEAP_CHART_CAPACITY),
-                    Translate.localize(LocaleResources.HEAP_CHART_USED));
+                    translator.localize(LocaleResources.HEAP_CHART_TITLE),
+                    translator.localize(LocaleResources.HEAP_CHART_TIME_AXIS),
+                    translator.localize(LocaleResources.HEAP_CHART_HEAP_AXIS),
+                    translator.localize(LocaleResources.HEAP_CHART_CAPACITY),
+                    translator.localize(LocaleResources.HEAP_CHART_USED));
         
         timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
         timer.setAction(new HeapOverviewDataCollector());
@@ -199,7 +202,7 @@ public class HeapDumpController implements VmInformationServiceController {
 
     @Override
     public String getLocalizedName() {
-        return Translate.localize(LocaleResources.HEAP_SECTION_TITLE);
+        return translator.localize(LocaleResources.HEAP_SECTION_TITLE);
     }
 
     class HeapOverviewDataCollector implements Runnable {

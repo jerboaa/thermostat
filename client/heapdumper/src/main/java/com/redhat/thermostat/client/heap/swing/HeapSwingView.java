@@ -53,14 +53,16 @@ import org.jfree.chart.ChartPanel;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.heap.HeapView;
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.HeaderPanel;
 
 public class HeapSwingView extends HeapView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private StatsPanel stats;
 
@@ -94,7 +96,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         
         heapDetailPanel = new HeapPanel();
         
-        overview = new HeaderPanel(Translate.localize(LocaleResources.HEAP_OVERVIEW_TITLE));
+        overview = new HeaderPanel(translator.localize(LocaleResources.HEAP_OVERVIEW_TITLE));
         overview.setContent(stats);
         overview.addHierarchyListener(new ViewVisibleListener());
 

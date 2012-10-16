@@ -38,19 +38,19 @@ package com.redhat.thermostat.client.heap.cli;
 
 import java.util.concurrent.Semaphore;
 
-import org.apache.commons.cli.Options;
-
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 
 public class DumpHeapCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String NAME = "dump-heap";
 
     private final OSGIUtils serviceProvider;
@@ -91,7 +91,7 @@ public class DumpHeapCommand extends SimpleCommand {
 
         try {
             s.acquire();
-            ctx.getConsole().getOutput().print(Translate.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
+            ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
             ctx.getConsole().getOutput().print("\n");
         } catch (InterruptedException ex) {
             // Nothing to do here, just return ASAP.

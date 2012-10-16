@@ -39,15 +39,18 @@ package com.redhat.thermostat.common.locale;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 
-
 public class Translate<T extends Enum<T>> {
 
-    private ResourceBundle resourceBundle = null;
+    private final ResourceBundle resourceBundle;
 
     public Translate(String stringResources, Class<T> enumClass) {
-        resourceBundle = ResourceBundle.getBundle(stringResources);
+        this(ResourceBundle.getBundle(stringResources), enumClass);
     }
-    
+
+    Translate(ResourceBundle resourceBundle, Class<T> enumClass) {
+        this.resourceBundle = resourceBundle;
+    }
+
     public String localize(T toTranslate) {
         return resourceBundle.getString(toTranslate.name());
     }

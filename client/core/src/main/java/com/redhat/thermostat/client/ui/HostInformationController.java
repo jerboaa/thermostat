@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationView;
@@ -50,9 +48,12 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class HostInformationController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final HostOverviewController overviewController;
     private final HostCpuController cpuController;
@@ -71,9 +72,9 @@ public class HostInformationController {
 
         view = provider.createView();
 
-        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getView());
-        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getView());
-        view.addChildView(localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getView());
+        view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getView());
+        view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getView());
+        view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getView());
 
     }
 

@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import javax.swing.GroupLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -47,11 +45,15 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.LayoutStyle.ComponentPlacement;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.common.locale.Translate;
+
 import javax.swing.border.TitledBorder;
 import javax.swing.JCheckBox;
 
 @SuppressWarnings("serial")
 class ClientConfigurationPanel extends JPanel {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     final JTextField storageUrl = new JTextField();
     final JTextField userName = new JTextField();
@@ -61,16 +63,16 @@ class ClientConfigurationPanel extends JPanel {
     
     public ClientConfigurationPanel() {
         setBorder(new TitledBorder(null,
-                  localize(LocaleResources.CLIENT_PREFS_CONNECTION),
+                  translator.localize(LocaleResources.CLIENT_PREFS_CONNECTION),
                   TitledBorder.LEFT, TitledBorder.TOP, null, null));
 
-        JLabel storageURLText = new JLabel(localize(LocaleResources.CLIENT_PREFS_STORAGE_URL));
+        JLabel storageURLText = new JLabel(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_URL));
         storageURLText.setName("");
         
         storageUrl.setColumns(10);
         storageUrl.setName("connectionUrl");
         
-        JLabel userNameText = new JLabel(localize(LocaleResources.CLIENT_PREFS_STORAGE_USERNAME));
+        JLabel userNameText = new JLabel(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_USERNAME));
         userNameText.setName("userNameText");
         
         userName.setName("username");
@@ -82,7 +84,7 @@ class ClientConfigurationPanel extends JPanel {
         password.setName("password");
         password.setColumns(10);
         
-        saveEntitlements = new JCheckBox(localize(LocaleResources.CLIENT_PREFS_STORAGE_SAVE_ENTITLEMENTS));
+        saveEntitlements = new JCheckBox(translator.localize(LocaleResources.CLIENT_PREFS_STORAGE_SAVE_ENTITLEMENTS));
         saveEntitlements.setName("saveEntitlements");
         saveEntitlements.setSelected(false);
 

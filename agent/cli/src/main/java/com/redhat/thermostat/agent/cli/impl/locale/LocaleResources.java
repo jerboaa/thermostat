@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.agent.cli.impl.locale;
 
+import com.redhat.thermostat.common.locale.Translate;
+
 public enum LocaleResources {
 
     STARTING_AGENT,
@@ -57,4 +59,9 @@ public enum LocaleResources {
     PID_IS;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    }
+
 }

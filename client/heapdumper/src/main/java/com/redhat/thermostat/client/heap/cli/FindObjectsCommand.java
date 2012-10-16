@@ -40,24 +40,26 @@ import java.util.Collection;
 import java.util.List;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class FindObjectsCommand extends SimpleCommand {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private static final String HEAP_ID_ARG = "heapId";
     private static final String LIMIT_ARG = "limit";
     private static final String NAME = "find-objects";
-    private static final String HEADER_OBJECT_ID = Translate.localize(LocaleResources.HEADER_OBJECT_ID);
-    private static final String HEADER_TYPE = Translate.localize(LocaleResources.HEADER_OBJECT_TYPE);
+    private static final String HEADER_OBJECT_ID = translator.localize(LocaleResources.HEADER_OBJECT_ID);
+    private static final String HEADER_TYPE = translator.localize(LocaleResources.HEADER_OBJECT_TYPE);
     private static final int DEFAULT_LIMIT = 10;
 
     private OSGIUtils serviceProvider;
@@ -75,7 +77,7 @@ public class FindObjectsCommand extends SimpleCommand {
 
         HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
         if (heapDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
         try {
             run(ctx, heapDAO);
@@ -89,23 +91,23 @@ public class FindObjectsCommand extends SimpleCommand {
         String heapId = ctx.getArguments().getArgument(HEAP_ID_ARG);
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         if (heapInfo == null) {
-            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
             return;
         }
         HeapDump heapDump = heapDAO.getHeapDump(heapInfo);
         if (heapDump == null) {
-            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
             return;
         }
 
         List<String> terms = ctx.getArguments().getNonOptionArguments();
         if (terms.size() == 0) {
-            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.SEARCH_TERM_REQUIRED));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED));
             return;
         }
         String searchTerm = terms.get(0);
         if (searchTerm.trim().length() == 0) {
-            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.SEARCH_TERM_REQUIRED));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.SEARCH_TERM_REQUIRED));
             return;
         }
 
@@ -129,7 +131,7 @@ public class FindObjectsCommand extends SimpleCommand {
             try {
                 limit = Integer.parseInt(limitArg);
             } catch (NumberFormatException ex) {
-                throw new CommandException(Translate.localize(LocaleResources.INVALID_LIMIT, limitArg));
+                throw new CommandException(translator.localize(LocaleResources.INVALID_LIMIT, limitArg));
             }
         }
         return limit;

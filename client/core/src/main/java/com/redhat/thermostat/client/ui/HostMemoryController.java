@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -54,16 +52,18 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.MemoryStat;
 import com.redhat.thermostat.common.model.MemoryType;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 
 public class HostMemoryController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final HostMemoryView view;
 
@@ -83,12 +83,12 @@ public class HostMemoryController {
 
         view = provider.createView();
 
-        view.addMemoryChart(MemoryType.MEMORY_TOTAL.name(), localize(LocaleResources.HOST_MEMORY_TOTAL));
-        view.addMemoryChart(MemoryType.MEMORY_FREE.name(), localize(LocaleResources.HOST_MEMORY_FREE));
-        view.addMemoryChart(MemoryType.MEMORY_USED.name(), localize(LocaleResources.HOST_MEMORY_USED));
-        view.addMemoryChart(MemoryType.SWAP_TOTAL.name(), localize(LocaleResources.HOST_SWAP_TOTAL));
-        view.addMemoryChart(MemoryType.SWAP_FREE.name(), localize(LocaleResources.HOST_SWAP_FREE));
-        view.addMemoryChart(MemoryType.BUFFERS.name(), localize(LocaleResources.HOST_BUFFERS));
+        view.addMemoryChart(MemoryType.MEMORY_TOTAL.name(), translator.localize(LocaleResources.HOST_MEMORY_TOTAL));
+        view.addMemoryChart(MemoryType.MEMORY_FREE.name(), translator.localize(LocaleResources.HOST_MEMORY_FREE));
+        view.addMemoryChart(MemoryType.MEMORY_USED.name(), translator.localize(LocaleResources.HOST_MEMORY_USED));
+        view.addMemoryChart(MemoryType.SWAP_TOTAL.name(), translator.localize(LocaleResources.HOST_SWAP_TOTAL));
+        view.addMemoryChart(MemoryType.SWAP_FREE.name(), translator.localize(LocaleResources.HOST_SWAP_FREE));
+        view.addMemoryChart(MemoryType.BUFFERS.name(), translator.localize(LocaleResources.HOST_BUFFERS));
 
         view.addGraphVisibilityListener(listener);
         view.addActionListener(new ActionListener<HostMemoryView.Action>() {
@@ -113,7 +113,7 @@ public class HostMemoryController {
             public void run() {
                 long memorySize = HostMemoryController.this.hostInfoDAO.getHostInfo(ref).getTotalMemory();
                 String[] memorySizeParts = DisplayableValues.bytes(memorySize);
-                view.setTotalMemory(localize(LocaleResources.NUMBER_AND_UNIT, memorySizeParts[0], memorySizeParts[1]));
+                view.setTotalMemory(translator.localize(LocaleResources.NUMBER_AND_UNIT, memorySizeParts[0], memorySizeParts[1]));
                 doMemoryChartUpdate();
             }
         });

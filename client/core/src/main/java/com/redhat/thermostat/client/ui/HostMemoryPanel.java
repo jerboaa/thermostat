@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.FlowLayout;
@@ -69,11 +67,14 @@ import com.redhat.thermostat.client.core.views.HostMemoryView;
 import com.redhat.thermostat.client.internal.ui.swing.WrapLayout;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 
 public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JPanel visiblePanel;
 
@@ -250,9 +251,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
         chartPanel.setOpaque(false);
 
-        JLabel lblMemory = Components.header(localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
+        JLabel lblMemory = Components.header(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
 
-        JLabel totalMemoryLabel = Components.label(localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+        JLabel totalMemoryLabel = Components.label(translator.localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
 
         memoryCheckBoxPanel.setOpaque(false);
 
@@ -292,9 +293,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     private JFreeChart createMemoryChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                localize(LocaleResources.HOST_MEMORY_CHART_TITLE), // Title
-                localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
-                localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Scale.MiB.name()), // y-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_TITLE), // Title
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Scale.MiB.name()), // y-axis Label
                 memoryCollection, // Dataset
                 false, // Show Legend
                 false, // Use tooltips

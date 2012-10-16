@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -110,11 +108,14 @@ import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.swing.EdtHelper;
 import com.redhat.thermostat.swing.StatusBar;
 
 public class MainWindow extends JFrame implements MainView {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     /**
      * Updates a TreeModel in the background in an Swing EDT-safe manner.
@@ -324,7 +325,7 @@ public class MainWindow extends JFrame implements MainView {
     private StatusBar statusBar;
     
     private final DefaultMutableTreeNode publishedRoot =
-            new DefaultMutableTreeNode(localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
+            new DefaultMutableTreeNode(translator.localize(LocaleResources.MAIN_WINDOW_TREE_ROOT_NAME));
     private final DefaultTreeModel publishedTreeModel = new DefaultTreeModel(publishedRoot);
 
     @SuppressWarnings("restriction")
@@ -400,19 +401,19 @@ public class MainWindow extends JFrame implements MainView {
 
     private void setupMenus() {
 
-        JMenu fileMenu = new JMenu(localize(LocaleResources.MENU_FILE));
+        JMenu fileMenu = new JMenu(translator.localize(LocaleResources.MENU_FILE));
         fileMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(fileMenu);
 
-        JMenuItem fileExitMenu = new JMenuItem(localize(LocaleResources.MENU_FILE_EXIT));
+        JMenuItem fileExitMenu = new JMenuItem(translator.localize(LocaleResources.MENU_FILE_EXIT));
         fileExitMenu.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Q, InputEvent.CTRL_DOWN_MASK));
         fileExitMenu.addActionListener(shutdownAction);
         fileMenu.add(fileExitMenu);
 
-        JMenu editMenu = new JMenu(localize(LocaleResources.MENU_EDIT));
+        JMenu editMenu = new JMenu(translator.localize(LocaleResources.MENU_EDIT));
         mainMenuBar.add(editMenu);
 
-        JMenuItem configureClientMenuItem = new JMenuItem(localize(LocaleResources.MENU_EDIT_CONFIGURE_CLIENT));
+        JMenuItem configureClientMenuItem = new JMenuItem(translator.localize(LocaleResources.MENU_EDIT_CONFIGURE_CLIENT));
         configureClientMenuItem.setName("showClientConfig");
         configureClientMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -423,7 +424,7 @@ public class MainWindow extends JFrame implements MainView {
         editMenu.add(configureClientMenuItem);
 
         editMenu.addSeparator();
-        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE));
+        JMenuItem historyModeMenuItem = new JCheckBoxMenuItem(translator.localize(LocaleResources.MENU_EDIT_ENABLE_HISTORY_MODE));
         historyModeMenuItem.setName("historyModeSwitch");
         historyModeMenuItem.setSelected(false);
         historyModeMenuItem.addActionListener(new java.awt.event.ActionListener() {
@@ -434,9 +435,9 @@ public class MainWindow extends JFrame implements MainView {
         });
         editMenu.add(historyModeMenuItem);
 
-        JMenu viewMenu = new JMenu(localize(LocaleResources.MENU_VIEW));
+        JMenu viewMenu = new JMenu(translator.localize(LocaleResources.MENU_VIEW));
         mainMenuBar.add(viewMenu);
-        JMenuItem configureAgentMenuItem = new JMenuItem(localize(LocaleResources.MENU_VIEW_AGENTS));
+        JMenuItem configureAgentMenuItem = new JMenuItem(translator.localize(LocaleResources.MENU_VIEW_AGENTS));
         configureAgentMenuItem.setName("showAgentConfig");
         configureAgentMenuItem.addActionListener(new java.awt.event.ActionListener() {
             @Override
@@ -446,11 +447,11 @@ public class MainWindow extends JFrame implements MainView {
         });
         viewMenu.add(configureAgentMenuItem);
 
-        JMenu helpMenu = new JMenu(localize(LocaleResources.MENU_HELP));
+        JMenu helpMenu = new JMenu(translator.localize(LocaleResources.MENU_HELP));
         helpMenu.getPopupMenu().setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1));
         mainMenuBar.add(helpMenu);
 
-        JMenuItem helpAboutMenu = new JMenuItem(localize(LocaleResources.MENU_HELP_ABOUT));
+        JMenuItem helpAboutMenu = new JMenuItem(translator.localize(LocaleResources.MENU_HELP_ABOUT));
         helpAboutMenu.addActionListener(new java.awt.event.ActionListener() {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
@@ -648,18 +649,18 @@ public class MainWindow extends JFrame implements MainView {
                 String hostNameHtml = new HtmlTextBuilder().bold(hostRef.getHostName()).toPartialHtml();
                 String agentIdHtml = new HtmlTextBuilder().bold(hostRef.getAgentId()).toPartialHtml();
                 HtmlTextBuilder builder = new HtmlTextBuilder()
-                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_HOST_NAME, hostNameHtml))
+                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_HOST_NAME, hostNameHtml))
                     .newLine()
-                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_AGENT_ID, agentIdHtml));
+                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_AGENT_ID, agentIdHtml));
                 return builder.toHtml();
             } else if (value instanceof VmRef) {
                 VmRef vmRef = (VmRef) value;
                 String vmNameHtml= new HtmlTextBuilder().bold(vmRef.getName()).toPartialHtml();
                 String vmIdHtml = new HtmlTextBuilder().bold(vmRef.getIdString()).toPartialHtml();
                 HtmlTextBuilder builder = new HtmlTextBuilder()
-                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_VM_NAME, vmNameHtml))
+                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_VM_NAME, vmNameHtml))
                     .newLine()
-                    .appendRaw(localize(LocaleResources.TREE_HOST_TOOLTIP_VM_ID, vmIdHtml));
+                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_VM_ID, vmIdHtml));
                 return builder.toHtml();
             } else {
                 return null;

@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.Date;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
@@ -52,18 +51,21 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class ListHeapDumpsCommand extends SimpleCommand {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private static final String NAME = "list-heap-dumps";
 
     private static final String[] COLUMN_NAMES = {
-        Translate.localize(LocaleResources.HEADER_HOST_ID),
-        Translate.localize(LocaleResources.HEADER_VM_ID),
-        Translate.localize(LocaleResources.HEADER_HEAP_ID),
-        Translate.localize(LocaleResources.HEADER_TIMESTAMP),
+        translator.localize(LocaleResources.HEADER_HOST_ID),
+        translator.localize(LocaleResources.HEADER_VM_ID),
+        translator.localize(LocaleResources.HEADER_HEAP_ID),
+        translator.localize(LocaleResources.HEADER_TIMESTAMP),
     };
 
     private final OSGIUtils serviceProvider;
@@ -92,17 +94,17 @@ public class ListHeapDumpsCommand extends SimpleCommand {
 
         HostInfoDAO hostDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
         if (hostDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         }
 
         VmInfoDAO vmDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
         if (vmDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         }
 
         HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
         if (heapDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
 
         Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();

@@ -58,18 +58,20 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.EdtHelper;
 
 public class SearchFieldSwingView extends JPanel implements SearchFieldView {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final ActionNotifier<SearchAction> notifier = new ActionNotifier<>(this);
     private final JTextField searchField = new JTextField();
 
     private final AtomicReference<String> searchText = new AtomicReference<String>("");
-    private final AtomicReference<String> label = new AtomicReference<>(Translate.localize(LocaleResources.SEARCH_HINT));
+    private final AtomicReference<String> label = new AtomicReference<>(translator.localize(LocaleResources.SEARCH_HINT));
     private final AtomicBoolean labelDisplayed = new AtomicBoolean(true);
 
     public SearchFieldSwingView() {

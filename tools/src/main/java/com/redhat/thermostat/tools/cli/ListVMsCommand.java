@@ -45,12 +45,14 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 public class ListVMsCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String NAME = "list-vms";
 
@@ -69,14 +71,14 @@ public class ListVMsCommand extends SimpleCommand {
 
         HostInfoDAO hostsDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
         if (hostsDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         }
         Collection<HostRef> hosts = hostsDAO.getHosts();
         serviceProvider.ungetService(HostInfoDAO.class, hostsDAO);
 
         VmInfoDAO vmsDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
         if (vmsDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         }
         VMListFormatter formatter = new VMListFormatter();
         for (HostRef host : hosts) {

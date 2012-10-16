@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -62,6 +60,7 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.IntervalTimeData;
 import com.redhat.thermostat.common.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.common.model.VmGcStat;
@@ -69,6 +68,8 @@ import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 
 class VmGcController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final VmRef ref;
     private final VmGcView view;
@@ -135,7 +136,7 @@ class VmGcController {
 
     // FIXME
     private String chartName(String collectorName, String generationName) {
-        return localize(LocaleResources.VM_GC_COLLECTOR_OVER_GENERATION,
+        return translator.localize(LocaleResources.VM_GC_COLLECTOR_OVER_GENERATION,
                 collectorName, generationName);
     }
 
@@ -186,7 +187,7 @@ class VmGcController {
                 return g.name;
             }
         }
-        return localize(LocaleResources.UNKNOWN_GEN);
+        return translator.localize(LocaleResources.UNKNOWN_GEN);
     }
 
     public UIComponent getView() {

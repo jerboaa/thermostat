@@ -42,14 +42,16 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 public class DisconnectCommand extends SimpleCommand {
-    
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private static final String NAME = "disconnect";
 
     @SuppressWarnings("rawtypes")
@@ -58,12 +60,12 @@ public class DisconnectCommand extends SimpleCommand {
         DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
         if (service == null) {
             // not connected
-            throw new CommandException(Translate.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED));
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED));
         }
         try {
             service.disconnect();
         } catch (ConnectionException e) {
-            throw new CommandException(Translate.localize(LocaleResources.COMMAND_DISCONNECT_ERROR));
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_ERROR));
         }
         // remove DB service
         ServiceRegistration registration = service.getServiceRegistration();

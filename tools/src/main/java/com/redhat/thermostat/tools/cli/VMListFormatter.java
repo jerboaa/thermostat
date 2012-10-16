@@ -40,20 +40,22 @@ import java.io.PrintStream;
 
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 class VMListFormatter {
 
-    private static final String HOST_ID = Translate.localize(LocaleResources.COLUMN_HEADER_HOST_ID);
-    private static final String HOST = Translate.localize(LocaleResources.COLUMN_HEADER_HOST);
-    private static final String VM_ID = Translate.localize(LocaleResources.COLUMN_HEADER_VM_ID);
-    private static final String VM_NAME = Translate.localize(LocaleResources.COLUMN_HEADER_VM_NAME);
-    private static final String VM_STATUS = Translate.localize(LocaleResources.COLUMN_HEADER_VM_STATUS);
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String STATUS_ALIVE = Translate.localize(LocaleResources.VM_STATUS_ALIVE);
-    private static final String STATUS_DEAD = Translate.localize(LocaleResources.VM_STATUS_DEAD);
+    private static final String HOST_ID = translator.localize(LocaleResources.COLUMN_HEADER_HOST_ID);
+    private static final String HOST = translator.localize(LocaleResources.COLUMN_HEADER_HOST);
+    private static final String VM_ID = translator.localize(LocaleResources.COLUMN_HEADER_VM_ID);
+    private static final String VM_NAME = translator.localize(LocaleResources.COLUMN_HEADER_VM_NAME);
+    private static final String VM_STATUS = translator.localize(LocaleResources.COLUMN_HEADER_VM_STATUS);
+
+    private static final String STATUS_ALIVE = translator.localize(LocaleResources.VM_STATUS_ALIVE);
+    private static final String STATUS_DEAD = translator.localize(LocaleResources.VM_STATUS_DEAD);
 
     private TableRenderer tableRenderer;
 

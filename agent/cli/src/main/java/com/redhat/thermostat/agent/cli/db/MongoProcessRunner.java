@@ -50,8 +50,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.agent.cli.impl.locale.Translate;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.utils.LoggedExternalProcess;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -59,6 +59,7 @@ import com.redhat.thermostat.service.process.UnixProcessUtilities;
 
 public class MongoProcessRunner {
     
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final Logger logger = LoggingUtils.getLogger(MongoProcessRunner.class);
 
     private static final String MONGO_PROCESS = "mongod";
@@ -111,12 +112,12 @@ public class MongoProcessRunner {
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = process.runAndReturnResult();
         if (status == 0) {
-            display(Translate.localize(LocaleResources.SERVER_SHUTDOWN_COMPLETE, configuration.getDBPath().toString()));
-            display(Translate.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
+            display(translator.localize(LocaleResources.SERVER_SHUTDOWN_COMPLETE, configuration.getDBPath().toString()));
+            display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
             
         } else {
             
-            String message = Translate.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
+            String message = translator.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
                     configuration.getDBPath().toString(),
                     String.valueOf(status));
             display(message);
@@ -141,10 +142,10 @@ public class MongoProcessRunner {
             String message = null;
             ApplicationException ex = null;
             if (!checkExistingProcess()) {
-                message = Translate.localize(LocaleResources.STALE_PID_FILE_NO_MATCHING_PROCESS, configuration.getPidFile().toString(), MONGO_PROCESS);
+                message = translator.localize(LocaleResources.STALE_PID_FILE_NO_MATCHING_PROCESS, configuration.getPidFile().toString(), MONGO_PROCESS);
                 ex = new StalePidFileException(configuration.getPidFile());
             } else {
-                message = Translate.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
+                message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
                 ex = new StorageAlreadyRunningException(Integer.valueOf(pid), message);
             }
             
@@ -159,7 +160,7 @@ public class MongoProcessRunner {
         }
 
         // check that the db directory exist
-        display(Translate.localize(LocaleResources.STARTING_STORAGE_SERVER));
+        display(translator.localize(LocaleResources.STARTING_STORAGE_SERVER));
 
         commands.add(configuration.getBindIP());
 
@@ -180,7 +181,7 @@ public class MongoProcessRunner {
         try {
             status = process.runAndReturnResult();
         } catch (ApplicationException ae) {
-            String message = Translate.localize(LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
+            String message = translator.localize(LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
             display(message);
             throw ae;
         }
@@ -193,13 +194,13 @@ public class MongoProcessRunner {
         }
         
         if (status == 0) {
-            display(Translate.localize(LocaleResources.SERVER_LISTENING_ON, configuration.getDBConnectionString()));
-            display(Translate.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
-            display(Translate.localize(LocaleResources.PID_IS,  String.valueOf(pid)));
+            display(translator.localize(LocaleResources.SERVER_LISTENING_ON, configuration.getDBConnectionString()));
+            display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
+            display(translator.localize(LocaleResources.PID_IS,  String.valueOf(pid)));
             
         } else {
             
-            String message = Translate.localize(LocaleResources.CANNOT_START_SERVER,
+            String message = translator.localize(LocaleResources.CANNOT_START_SERVER,
                              configuration.getDBPath().toString(),
                              String.valueOf(status));
             display(message);
@@ -213,7 +214,7 @@ public class MongoProcessRunner {
             process = new ProcessBuilder(Arrays.asList("mongod", "--version"))
                     .start();
         } catch (IOException e) {
-            String message = Translate.localize(
+            String message = translator.localize(
                     LocaleResources.CANNOT_EXECUTE_PROCESS, MONGO_PROCESS);
             display(message);
             throw e;

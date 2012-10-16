@@ -61,13 +61,15 @@ import javax.swing.tree.TreePath;
 import com.redhat.thermostat.client.heap.HeapObjectUI;
 import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.ObjectRootsView;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.EdtHelper;
 
 @SuppressWarnings("serial")
 public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     /** For TESTING ONLY! */
     static final String TREE_NAME = "roots-tree";
@@ -83,13 +85,13 @@ public class ObjectRootsFrame extends JFrame implements ObjectRootsView {
     private final JTextPane objectDetails;
 
     public ObjectRootsFrame() {
-        setTitle(Translate.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
+        setTitle(translator.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
 
         dataModel = new DefaultTreeModel(ROOT);
         pathToRootTree = new JTree(dataModel);
         pathToRootTree.setName(TREE_NAME);
 
-        JLabel lblNewLabel = new JLabel(Translate.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
+        JLabel lblNewLabel = new JLabel(translator.localize(LocaleResources.OBJECT_ROOTS_VIEW_TITLE));
 
         JScrollPane scrollPane = new JScrollPane(pathToRootTree);
 

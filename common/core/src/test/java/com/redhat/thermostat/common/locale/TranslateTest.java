@@ -36,61 +36,52 @@
 
 package com.redhat.thermostat.common.locale;
 
-import java.io.IOException;
-import java.util.Locale;
-import java.util.Properties;
+import static org.junit.Assert.assertEquals;
 
-import junit.framework.Assert;
+import java.util.ListResourceBundle;
+import java.util.ResourceBundle;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 public class TranslateTest {
 
-    private Locale lang;
-    
-    @Before
-    public void setUp() {
-        this.lang = Locale.getDefault();
-        Locale.setDefault(Locale.US);
+    enum TestStrings {
+        SIMPLE_STRING,
+        STRING_WITH_PARAMETER,
     }
-    
-    @After
-    public void tearDown() {
-        Locale.setDefault(lang);
+
+    // Mockito can't mock the final method getMessage() which is what Translate
+    // uses. Create a mock the old-fashioned way.
+    private static class LocalizedResourceBundle extends ListResourceBundle {
+
+        private final Object[] contents;
+
+        public LocalizedResourceBundle(String key, String localizedString) {
+            contents = new Object[] { key, localizedString };
+        }
+
+        @Override
+        protected Object[][] getContents() {
+            return new Object[][] { contents };
+        }
     }
-    
+
     @Test
     public void testLocalizeWithoutArguments() {
-        String testString = LocaleResources.createLocalizer().localize(LocaleResources.MISSING_INFO);
-        Assert.assertEquals("Missing Information", testString);
+        ResourceBundle resources = new LocalizedResourceBundle(TestStrings.SIMPLE_STRING.name(), "Localized String");
+
+        Translate<TestStrings> translate = new Translate<>(resources, TestStrings.class);
+
+        assertEquals("Localized String", translate.localize(TestStrings.SIMPLE_STRING));
     }
-    
+
     @Test
     public void testLocalizeWithArguments() {
-        Translate<LocaleResources> t = LocaleResources.createLocalizer();
-        
-        String testString = t.localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
-        Assert.assertEquals("A monitoring and serviceability tool for OpenJDK",
-                            testString);
-        testString = t.localize(LocaleResources.APPLICATION_INFO_LICENSE);
-        Assert.assertEquals("Licensed under GPLv2+ with Classpath exception",
-                testString);
-    }
-    
-    @Test
-    public void testLocalizedStringsArePresent() throws IOException {
-        
-        String stringsResource = "/" + LocaleResources.RESOURCE_BUNDLE.replace(".", "/") + ".properties";
-        
-        Properties props = new Properties();
-        props.load(getClass().getResourceAsStream(stringsResource));
-        
-        Assert.assertEquals(LocaleResources.values().length, props.values().size());
-        for (LocaleResources resource : LocaleResources.values()) {
-            Assert.assertTrue("missing property from resource bound file: " + resource,
-                              props.containsKey(resource.name()));
-        }
+        ResourceBundle resources = new LocalizedResourceBundle(TestStrings.STRING_WITH_PARAMETER.name(), "Parameter: {0}");
+
+        Translate<TestStrings> translate = new Translate<>(resources, TestStrings.class);
+
+        assertEquals("Parameter: FOO", translate.localize(TestStrings.STRING_WITH_PARAMETER, "FOO"));
+
     }
 }

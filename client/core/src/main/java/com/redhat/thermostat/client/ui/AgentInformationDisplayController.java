@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
@@ -49,10 +47,13 @@ import com.redhat.thermostat.client.core.views.AgentInformationDisplayView.Confi
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.BackendInformation;
 
 public class AgentInformationDisplayController implements ActionListener<ConfigurationAction> {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final AgentInformationDisplayView view;
     private final AgentInformationDisplayModel model;
@@ -133,13 +134,14 @@ public class AgentInformationDisplayController implements ActionListener<Configu
         if (stopTime >= startTime) {
             view.setSelectedAgentStopTime(dateTimeFormat.format(new Date(stopTime)));
         } else {
-            view.setSelectedAgentStopTime(localize(LocaleResources.AGENT_INFO_AGENT_RUNNING));
+            view.setSelectedAgentStopTime(translator.localize(LocaleResources.AGENT_INFO_AGENT_RUNNING));
         }
 
         Map<String, String> map = new HashMap<>();
         for (BackendInformation backendInfo : model.getBackends(agentId)) {
             String status = backendInfo.isActive() ?
-                    localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_ACTIVE) : localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_INACTIVE);
+                    translator.localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_ACTIVE)
+                    : translator.localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_INACTIVE);
             map.put(backendInfo.getName(), status);
         }
         view.setSelectedAgentBackendStatus(map);

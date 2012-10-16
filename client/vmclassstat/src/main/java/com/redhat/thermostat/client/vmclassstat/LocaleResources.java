@@ -34,24 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.tools;
+package com.redhat.thermostat.client.vmclassstat;
 
-import java.text.MessageFormat;
-import java.util.ResourceBundle;
+import com.redhat.thermostat.common.locale.Translate;
 
-public class Translate {
+public enum LocaleResources {
 
-    private static ResourceBundle resourceBundle = null;
+    VM_INFO_TAB_CLASSES,
+    VM_CLASSES_TITLE,
+    VM_CLASSES_CHART_REAL_TIME_LABEL,
+    VM_CLASSES_CHART_LOADED_CLASSES_LABEL,
 
-    static {
-        resourceBundle = ResourceBundle.getBundle(LocaleResources.RESOURCE_BUNDLE);
-    }
+    ;
 
-    public static String localize(LocaleResources toTranslate) {
-        return resourceBundle.getString(toTranslate.name());
-    }
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.client.vmclassstat.strings";
 
-    public static String localize(LocaleResources toTranslate, String... params) {
-        return MessageFormat.format(localize(toTranslate), (Object[]) params);
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
 }

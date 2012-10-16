@@ -45,7 +45,6 @@ import com.redhat.thermostat.client.core.views.HostCpuView;
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -56,11 +55,14 @@ import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.HostInfo;
 
 public class HostCpuController {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final HostCpuView view;
     private final Timer backgroundUpdateTimer;
@@ -146,7 +148,7 @@ public class HostCpuController {
 
         for (int i = 0; i < results.size(); i++) {
             if (i == chartsAdded) {
-                view.addCpuUsageChart(i, Translate.localize(LocaleResources.HOST_CPU_ID, String.valueOf(i)));
+                view.addCpuUsageChart(i, translator.localize(LocaleResources.HOST_CPU_ID, String.valueOf(i)));
                 chartsAdded++;
             }
             view.addCpuUsageData(i, results.get(i));

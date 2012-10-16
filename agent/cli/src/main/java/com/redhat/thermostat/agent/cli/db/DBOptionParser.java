@@ -38,13 +38,15 @@ package com.redhat.thermostat.agent.cli.db;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.agent.cli.impl.locale.Translate;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.ThermostatOptionParser;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 
 public class DBOptionParser implements ThermostatOptionParser {
     
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private boolean quiet;
     
     private DBStartupConfiguration configuration;
@@ -68,7 +70,7 @@ public class DBOptionParser implements ThermostatOptionParser {
         } else if (args.hasArgument(DBArgs.STOP.option)) {
             serviceAction = DBArgs.STOP;
         } else {
-            throw new InvalidConfigurationException(Translate.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_REQUIRED));
+            throw new InvalidConfigurationException(translator.localize(LocaleResources.COMMAND_STORAGE_ARGUMENT_REQUIRED));
         }
 
         if (args.hasArgument(DBArgs.DRY.option)) {

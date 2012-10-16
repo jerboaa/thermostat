@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.heap;
 
+import com.redhat.thermostat.common.locale.Translate;
+
 public enum LocaleResources {
 
     MISSING_INFO,
@@ -98,4 +100,8 @@ public enum LocaleResources {
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.heap.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    }
 }

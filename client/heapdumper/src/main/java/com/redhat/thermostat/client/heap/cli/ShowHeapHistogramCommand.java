@@ -39,7 +39,6 @@ package com.redhat.thermostat.client.heap.cli;
 import java.io.PrintStream;
 
 import com.redhat.thermostat.client.heap.LocaleResources;
-import com.redhat.thermostat.client.heap.Translate;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -48,10 +47,13 @@ import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class ShowHeapHistogramCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String NAME = "show-heap-histogram";
 
@@ -74,7 +76,7 @@ public class ShowHeapHistogramCommand extends SimpleCommand {
     public void run(CommandContext ctx) throws CommandException {
         HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
         if (heapDAO == null) {
-            throw new CommandException(Translate.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
 
         try {
@@ -90,13 +92,13 @@ public class ShowHeapHistogramCommand extends SimpleCommand {
 
         HeapInfo heapInfo = heapDAO.getHeapInfo(heapId);
         if (heapInfo == null) {
-            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
             return;
         }
 
         ObjectHistogram histogram = heapDAO.getHistogram(heapInfo);
         if (histogram == null) {
-            ctx.getConsole().getOutput().println(Translate.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
+            ctx.getConsole().getOutput().println(translator.localize(LocaleResources.HEAP_ID_NOT_FOUND, heapId));
             return;
         } else {
             printHeapHistogram(histogram, ctx.getConsole().getOutput());

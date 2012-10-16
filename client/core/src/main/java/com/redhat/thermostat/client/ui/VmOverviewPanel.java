@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-import static com.redhat.thermostat.client.locale.Translate.localize;
-
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,9 +48,12 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SimpleTable.Section;
 import com.redhat.thermostat.client.ui.SimpleTable.TableEntry;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.swing.HeaderPanel;
 
 public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     
     private HeaderPanel visiblePanel;
 
@@ -151,33 +152,33 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     private void initializePanel() {
         visiblePanel = new HeaderPanel();
 
-        visiblePanel.setHeader(localize(LocaleResources.VM_INFO_TITLE));
+        visiblePanel.setHeader(translator.localize(LocaleResources.VM_INFO_TITLE));
 
         TableEntry entry;
         List<Section> allSections = new ArrayList<Section>();
 
-        Section processSection = new Section(localize(LocaleResources.VM_INFO_SECTION_PROCESS));
+        Section processSection = new Section(translator.localize(LocaleResources.VM_INFO_SECTION_PROCESS));
         allSections.add(processSection);
 
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_PROCESS_ID), pid);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_PROCESS_ID), pid);
         processSection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_START_TIME), startTimeStamp);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_START_TIME), startTimeStamp);
         processSection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_STOP_TIME), stopTimeStamp);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_STOP_TIME), stopTimeStamp);
         processSection.add(entry);
 
-        Section javaSection = new Section(localize(LocaleResources.VM_INFO_SECTION_JAVA));
+        Section javaSection = new Section(translator.localize(LocaleResources.VM_INFO_SECTION_JAVA));
         allSections.add(javaSection);
 
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_MAIN_CLASS), mainClass);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_MAIN_CLASS), mainClass);
         javaSection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_COMMAND_LINE), javaCommandLine);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_COMMAND_LINE), javaCommandLine);
         javaSection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_JAVA_VERSION), javaVersion);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_JAVA_VERSION), javaVersion);
         javaSection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_VM), vmNameAndVersion);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_VM), vmNameAndVersion);
         javaSection.add(entry);
-        entry = new TableEntry(localize(LocaleResources.VM_INFO_VM_ARGUMENTS), vmArguments);
+        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_VM_ARGUMENTS), vmArguments);
         javaSection.add(entry);
 
         SimpleTable simpleTable = new SimpleTable();

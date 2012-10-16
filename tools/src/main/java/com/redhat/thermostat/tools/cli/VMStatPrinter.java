@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.model.TimeStampedPojo;
 import com.redhat.thermostat.common.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator;
@@ -58,12 +59,13 @@ import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.tools.LocaleResources;
-import com.redhat.thermostat.tools.Translate;
 
 class VMStatPrinter {
 
-    private static final String CPU_PERCENT = Translate.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT);
-    private static final String TIME = Translate.localize(LocaleResources.COLUMN_HEADER_TIME);
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
+    private static final String CPU_PERCENT = translator.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT);
+    private static final String TIME = translator.localize(LocaleResources.COLUMN_HEADER_TIME);
 
     private VmRef vm;
     private VmCpuStatDAO vmCpuStatDAO;
@@ -161,7 +163,7 @@ class VMStatPrinter {
         for (VmMemoryStat.Generation gen : vmMemoryStat.getGenerations()) {
             for (VmMemoryStat.Space space : gen.spaces) {
                 String[] displayableSize = DisplayableValues.bytes(space.used);
-                memoryUsage[i] = Translate.localize(LocaleResources.VALUE_AND_UNIT, displayableSize[0], displayableSize[1]);
+                memoryUsage[i] = translator.localize(LocaleResources.VALUE_AND_UNIT, displayableSize[0], displayableSize[1]);
                 i++;
             }
         }
@@ -177,7 +179,7 @@ class VMStatPrinter {
         int i = 0;
         for (VmMemoryStat.Generation gen : stat.getGenerations()) {
             for (VmMemoryStat.Space space : gen.spaces) {
-                spacesNames[i] = Translate.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.name);
+                spacesNames[i] = translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.name);
                 i++;
             }
         }

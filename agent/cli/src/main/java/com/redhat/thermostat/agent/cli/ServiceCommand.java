@@ -42,12 +42,12 @@ import java.util.concurrent.Semaphore;
 
 import com.redhat.thermostat.agent.cli.db.StorageAlreadyRunningException;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
-import com.redhat.thermostat.agent.cli.impl.locale.Translate;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.Launcher;
@@ -58,6 +58,8 @@ import com.redhat.thermostat.launcher.Launcher;
  */
 public class ServiceCommand extends SimpleCommand implements ActionListener<ApplicationState> {
     
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private static final String NAME = "service";
 
     private List<ActionListener<ApplicationState>> listeners;
@@ -94,16 +96,16 @@ public class ServiceCommand extends SimpleCommand implements ActionListener<Appl
                 String dbUrl = storage.getConfiguration().getDBConnectionString();
                 Launcher launcher = getLauncher();
                 String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
-                System.err.println(Translate.localize(LocaleResources.STARTING_AGENT));
+                System.err.println(translator.localize(LocaleResources.STARTING_AGENT));
                 launcher.setArgs(agentArgs);
                 launcher.run();
                 agentBarrier.release();
                 break;
             case FAIL:
-                System.err.println(Translate.localize(LocaleResources.ERROR_STARTING_DB));
+                System.err.println(translator.localize(LocaleResources.ERROR_STARTING_DB));
                 Object payload = actionEvent.getPayload();
                 if (payload instanceof StorageAlreadyRunningException) {
-                    System.err.println(Translate.localize(LocaleResources.STORAGE_ALREADY_RUNNING));
+                    System.err.println(translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING));
                 }
                 break;
             }
