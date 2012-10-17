@@ -45,7 +45,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -59,18 +58,16 @@ public class BackendRegistry {
 
     private final Map<String, Backend> registeredBackends;
 
-    public BackendRegistry(AgentStartupConfiguration config) throws BackendLoadException {
-        this(config, new BackendConfigurationLoader());
+    public BackendRegistry(AgentStartupConfiguration config, DAOFactory daoFactory) throws BackendLoadException {
+        this(config, new BackendConfigurationLoader(), daoFactory);
     }
 
-    public BackendRegistry(AgentStartupConfiguration config, BackendConfigurationLoader backendConfigLoader) throws BackendLoadException {
+    public BackendRegistry(AgentStartupConfiguration config, BackendConfigurationLoader backendConfigLoader, DAOFactory daoFactory) throws BackendLoadException {
 
         registeredBackends = new HashMap<String, Backend>();
         
         List<BackendID> backends = config.getBackends();
 
-        DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
-        
         /*
          * Configure the dynamic/custom backends
          */
@@ -83,7 +80,7 @@ public class BackendRegistry {
                 Constructor<? extends Backend> backendConstructor = narrowed.getConstructor();
                 backend = backendConstructor.newInstance();
 
-                backend.setDAOFactory(df);
+                backend.setDAOFactory(daoFactory);
                 backend.setID(backendID);
                 
                 backend.setInitialConfiguration(backendConfigLoader.retrieveBackendConfigs(backend.getName()));

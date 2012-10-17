@@ -51,7 +51,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.Storage;
@@ -90,6 +89,7 @@ public class BackendRegistryTest {
         }
     }
 
+    private DAOFactory daoFactory;
     private List<BackendID> backends;
     private AgentStartupConfiguration config;
     private BackendConfigurationLoader configLoader;
@@ -105,9 +105,8 @@ public class BackendRegistryTest {
         when(configLoader.retrieveBackendConfigs(any(String.class))).thenReturn(new HashMap<String,String>());
 
         Storage storage = mock(Storage.class);
-        DAOFactory df = mock(DAOFactory.class);
-        when(df.getStorage()).thenReturn(storage);
-        ApplicationContext.getInstance().setDAOFactory(df);
+        daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getStorage()).thenReturn(storage);
     }
 
     @After
@@ -122,14 +121,14 @@ public class BackendRegistryTest {
         /* setup fake backend */
         backends.add(new BackendID("mock", MockBackend.class.getName()));
 
-        BackendRegistry registry = new BackendRegistry(config, configLoader);
+        BackendRegistry registry = new BackendRegistry(config, configLoader, daoFactory);
         assertEquals(1, registry.getAll().size());
         assertNotNull(registry.getByName("mock"));
     }
 
     @Test
     public void testNoBackendsRegistered() throws InvalidConfigurationException, BackendLoadException {
-        BackendRegistry registry = new BackendRegistry(config, configLoader);
+        BackendRegistry registry = new BackendRegistry(config, configLoader, daoFactory);
         assertEquals(0, registry.getAll().size());
         assertEquals(null, registry.getByName("system"));
         assertEquals(null, registry.getByName("mock"));
@@ -143,7 +142,7 @@ public class BackendRegistryTest {
         backends.add(new BackendID("mock", MockBackend.class.getClass().getName()));
 
         /* load the backends */
-        new BackendRegistry(config, configLoader);
+        new BackendRegistry(config, configLoader, daoFactory);
     }
 
 }

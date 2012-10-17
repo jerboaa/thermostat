@@ -40,48 +40,34 @@ import java.util.Objects;
 
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.MongoDAOFactory;
-import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
-import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.launcher.DbService;
 
 public class DbServiceImpl implements DbService {
     
-    private String username;
-    private String password;
-    private String dbUrl;
     @SuppressWarnings("rawtypes")
     private ServiceRegistration registration;
     
+    private DAOFactory daoFactory;
     
     DbServiceImpl(String username, String password, String dbUrl) {
-        this.username = username;
-        this.password = password;
-        this.dbUrl = dbUrl;
+        this(new MongoDAOFactory(new MongoStorageProvider(new ConnectionConfiguration(dbUrl, username, password))));
+    }
+
+    DbServiceImpl(DAOFactory daoFactory) {
+        this.daoFactory = daoFactory;
     }
 
     public void connect() throws ConnectionException {
-        StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
-        
-        StorageProvider connProv = new MongoStorageProvider(config);
-        DAOFactory daoFactory = new MongoDAOFactory(connProv);
-        Connection connection = daoFactory.getConnection();
-        connection.connect();
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
-
+        daoFactory.getConnection().connect();
         daoFactory.registerDAOsAndStorageAsOSGiServices();
     }
     
     public void disconnect() throws ConnectionException {
-        DAOFactory factory = ApplicationContext.getInstance().getDAOFactory();
-        Connection connection = factory.getConnection();
-        connection.disconnect();
-        ApplicationContext.getInstance().setDAOFactory(null);
+        daoFactory.getConnection().disconnect();
     }
     
     /**
