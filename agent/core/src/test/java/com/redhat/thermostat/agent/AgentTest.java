@@ -58,7 +58,6 @@ import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
@@ -70,7 +69,6 @@ public class AgentTest {
     private Backend backend;
 
     private Storage storage;
-    private DAOFactory daos;
     private AgentInfoDAO agentInfoDao;
     private BackendInfoDAO backendInfoDao;
     
@@ -83,8 +81,6 @@ public class AgentTest {
         storage = mock(Storage.class);
         agentInfoDao = mock(AgentInfoDAO.class);
         backendInfoDao = mock(BackendInfoDAO.class);
-        daos = mock(DAOFactory.class);
-        when(daos.getStorage()).thenReturn(storage);
         
         backend = mock(Backend.class);
         when(backend.getName()).thenReturn("testname");
@@ -102,7 +98,7 @@ public class AgentTest {
     public void testStartAgent() throws Exception {
         
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, daos, agentInfoDao, backendInfoDao);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         agent.start();
 
         // Verify that backend has been activated and storage received the agent information.
@@ -128,7 +124,7 @@ public class AgentTest {
     
     @Test
     public void testStopAgentWithPurging() throws Exception {
-        Agent agent = new Agent(backendRegistry, config, daos, agentInfoDao, backendInfoDao);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         agent.start();
         
         // stop agent
@@ -148,7 +144,7 @@ public class AgentTest {
         when(config.getStartTime()).thenReturn(123L);
         when(config.purge()).thenReturn(false);
         
-        Agent agent = new Agent(backendRegistry, config, daos, agentInfoDao, backendInfoDao);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         agent.start();
         
         // stop agent

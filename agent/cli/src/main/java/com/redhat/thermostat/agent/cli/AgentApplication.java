@@ -102,7 +102,6 @@ public final class AgentApplication extends BasicCommand {
 
         StorageProvider connProv = new MongoStorageProvider(configuration);
         final DAOFactory daoFactory = new MongoDAOFactory(connProv);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
@@ -139,13 +138,13 @@ public final class AgentApplication extends BasicCommand {
 
         BackendRegistry backendRegistry = null;
         try {
-            backendRegistry = new BackendRegistry(configuration);
+            backendRegistry = new BackendRegistry(configuration, daoFactory);
         } catch (BackendLoadException ble) {
             logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", ble);
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, daoFactory, daoFactory.getAgentInfoDAO(), daoFactory.getBackendInfoDAO());
+        final Agent agent = new Agent(backendRegistry, configuration, daoFactory.getStorage(), daoFactory.getAgentInfoDAO(), daoFactory.getBackendInfoDAO());
         try {
             logger.fine("Starting agent.");
             agent.start();

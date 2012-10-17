@@ -45,7 +45,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.dao.DAOFactory;
 
 public class ApplicationContextTest {
 
@@ -63,35 +62,6 @@ public class ApplicationContextTest {
     public void verifyGetInstanceNotNull() {
         ApplicationContext ctx = ApplicationContext.getInstance();
         assertNotNull(ctx);
-    }
-
-    @Test
-    public void  testDAOFactorySetGet() {
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        ApplicationContext ctx = ApplicationContext.getInstance();
-        ctx.setDAOFactory(daoFactory);
-
-        DAOFactory actual1 = ctx.getDAOFactory();
-        assertSame(daoFactory, actual1);
-    }
-
-    @Test
-    public void  verifyDAOFactoryIsNullWhenNotInitialized() {
-        ApplicationContext ctx = ApplicationContext.getInstance();
-
-        DAOFactory actual = ctx.getDAOFactory();
-        assertNull(actual);
-    }
-
-    @Test
-    public void  verifyDAOFactoryStaysSame() {
-        DAOFactory daoFactory = mock(DAOFactory.class);
-        ApplicationContext ctx = ApplicationContext.getInstance();
-        ctx.setDAOFactory(daoFactory);
-
-        ApplicationContext ctx2 = ApplicationContext.getInstance();
-        DAOFactory actual2 = ctx2.getDAOFactory();
-        assertSame(daoFactory, actual2);
     }
 
     @Test

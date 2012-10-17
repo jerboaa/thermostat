@@ -37,21 +37,32 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.dao.DAOFactory;
+import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.launcher.DbService;
 
 public class DbServiceTest {
     
+    private Connection connection;
+    private DAOFactory daoFactory;
     private DbService dbService;
     
     @Before
     public void setup() {
-        String dbUrl = "mongodb://testhost.example.com:19223";
-        dbService = new DbServiceImpl("tester", "testerpassword", dbUrl);
+        connection = mock(Connection.class);
+
+        daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getConnection()).thenReturn(connection);
+
+        dbService = new DbServiceImpl(daoFactory);
     }
     
     @After
@@ -64,9 +75,24 @@ public class DbServiceTest {
         try {
             dbService.setServiceRegistration(null);
             fail("Null registrations not allowed");
-        } catch (Exception e) {
+        } catch (NullPointerException e) {
             // pass
         }
+    }
+
+    @Test
+    public void testConnect() {
+        dbService.connect();
+
+        verify(connection).connect();
+        verify(daoFactory).registerDAOsAndStorageAsOSGiServices();
+    }
+
+    @Test
+    public void testDisconnect() {
+        dbService.disconnect();
+
+        verify(connection).disconnect();
     }
 
 }

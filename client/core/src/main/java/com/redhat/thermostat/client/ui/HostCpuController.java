@@ -52,7 +52,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -78,7 +77,6 @@ public class HostCpuController {
         this.ref = ref;
         view = provider.createView();
         view.clearCpuUsageData();
-        DAOFactory daos = ApplicationContext.getInstance().getDAOFactory();
         this.hostInfoDAO = hostInfoDao;
         this.cpuStatDAO = cpuStatDAO;
 

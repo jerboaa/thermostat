@@ -37,13 +37,10 @@
 package com.redhat.thermostat.common.appctx;
 
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.DAOFactory;
 
 public class ApplicationContext {
 
     private static ApplicationContext instance = new ApplicationContext();
-
-    private DAOFactory daoFactory;
 
     private TimerFactory timerFactory;
 
@@ -58,14 +55,6 @@ public class ApplicationContext {
     private ApplicationContext() {
         // Nothing to do here, just prevent instantiation of this class outside
         // the factory method.
-    }
-
-    public void setDAOFactory(DAOFactory daoFactory) {
-        this.daoFactory = daoFactory;
-    }
-
-    public DAOFactory getDAOFactory() {
-        return daoFactory;
     }
 
     public void setTimerFactory(TimerFactory timerFactory) {

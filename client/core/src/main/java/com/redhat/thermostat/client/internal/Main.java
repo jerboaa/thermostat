@@ -85,6 +85,7 @@ public class Main {
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
     private UiFacadeFactory uiFacadeFactory;
+    private DAOFactory daoFactory;
     
     public Main(Keyring keyring, UiFacadeFactory uiFacadeFactory, String[] args) {
         this.uiFacadeFactory = uiFacadeFactory;
@@ -131,8 +132,7 @@ public class Main {
         StartupConfiguration config = new ConnectionConfiguration(prefs);
 
         StorageProvider connProv = new MongoStorageProvider(config);
-        DAOFactory daoFactory = new MongoDAOFactory(connProv);
-        ApplicationContext.getInstance().setDAOFactory(daoFactory);
+        daoFactory = new MongoDAOFactory(connProv);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
     }
@@ -155,7 +155,7 @@ public class Main {
         @Override
         public void run() {
             
-            Connection connection = ApplicationContext.getInstance().getDAOFactory().getConnection();
+            Connection connection = daoFactory.getConnection();
             connection.setType(ConnectionType.LOCAL);
             ConnectionListener connectionListener = new ConnectionHandler(connection, service);
             connection.addListener(connectionListener);
@@ -280,8 +280,6 @@ public class Main {
             if (newStatus == ConnectionStatus.CONNECTED) {
                 
                 // register the storage, so other services can request it
-                DAOFactory daoFactory = ApplicationContext.getInstance().getDAOFactory();
-
                 daoFactory.registerDAOsAndStorageAsOSGiServices();
                 uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
                 uiFacadeFactory.setCpuStatDao(daoFactory.getCpuStatDAO());

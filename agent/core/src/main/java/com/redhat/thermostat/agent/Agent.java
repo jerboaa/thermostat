@@ -47,7 +47,6 @@ import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
@@ -73,15 +72,15 @@ public class Agent {
     private BackendInfoDAO backendDao;
     private boolean started = false;
 
-    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daos, AgentInfoDAO agentDao, BackendInfoDAO backendDao) {
-        this(backendRegistry, UUID.randomUUID(), config, daos, agentDao, backendDao);
+    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, Storage storage, AgentInfoDAO agentDao, BackendInfoDAO backendDao) {
+        this(backendRegistry, UUID.randomUUID(), config, storage, agentDao, backendDao);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, DAOFactory daos, AgentInfoDAO agentDao, BackendInfoDAO backendDao) {
+    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, Storage storage, AgentInfoDAO agentDao, BackendInfoDAO backendDao) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
-        this.storage = daos.getStorage();
+        this.storage = storage;
         this.storage.setAgentId(agentId);
         this.agentDao = agentDao;
         this.backendDao = backendDao;
