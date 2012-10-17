@@ -50,31 +50,55 @@ else
     THERMOSTAT_AGENT_RUN="${THERMOSTAT_HOME}/agent/run"
     THEMROSTAT_CLIENT="${THERMOSTAT_HOME}/client"
     THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs/native"
+    THERMOSTAT_OSGI_CACHE="${THERMOSTAT_HOME}/osgi-cache"
 
-    echo "creating $THERMOSTAT_STORAGE"
-    mkdir -p $THERMOSTAT_STORAGE
+    if [ ! -d "${THERMOSTAT_STORAGE}" ] ; then
+        echo "creating ${THERMOSTAT_STORAGE}"
+        mkdir -p ${THERMOSTAT_STORAGE}
+    fi
     
-    echo "creating $THERMOSTAT_LOG"
-    mkdir -p $THERMOSTAT_LOG
+    if [ ! -d "${THERMOSTAT_LOG}" ] ; then
+        echo "creating ${THERMOSTAT_LOG}"
+        mkdir -p ${THERMOSTAT_LOG}
+    fi
     
-    echo "creating $THERMOSTAT_PID"
-    mkdir -p $THERMOSTAT_PID
+    if [ ! -d "${THERMOSTAT_PID}" ] ; then
+        echo "creating ${THERMOSTAT_PID}"
+        mkdir -p ${THERMOSTAT_PID}
+    fi
     
-    echo "creating $THERMOSTAT_BACKEND"
-    mkdir -p $THERMOSTAT_BACKEND
+    if [ ! -d "${THERMOSTAT_BACKEND}" ] ; then
+        echo "creating ${THERMOSTAT_BACKEND}"
+        mkdir -p ${THERMOSTAT_BACKEND}
+    fi
     
-    echo "creating $THERMOSTAT_BIN"
-    mkdir -p $THERMOSTAT_BIN
+    if [ ! -e "${THERMOSTAT_BIN}" ] ; then
+        echo "creating ${THERMOSTAT_BIN}"
+        mkdir -p ${THERMOSTAT_BIN}
+    fi
     
-    echo "creating $THERMOSTAT_AGENT_LOG"
-    mkdir -p $THERMOSTAT_AGENT_LOG
+    if [ ! -d "${THERMOSTAT_AGENT_LOG}" ] ; then
+        echo "creating ${THERMOSTAT_AGENT_LOG}"
+        mkdir -p ${THERMOSTAT_AGENT_LOG}
+    fi
     
-    echo "creating $THERMOSTAT_AGENT_RUN"
-    mkdir -p $THERMOSTAT_AGENT_RUN
+    if [ ! -d "${THERMOSTAT_AGENT_RUN}" ] ; then
+        echo "creating ${THERMOSTAT_AGENT_RUN}"
+        mkdir -p ${THERMOSTAT_AGENT_RUN}
+    fi
 
-    echo "creating $THERMOSTAT_CLIENT"
-    mkdir -p "$THERMOSTAT_CLIENT"
+    if [ ! -d "${THERMOSTAT_CLIENT}" ] ; then
+        echo "creating ${THERMOSTAT_CLIENT}"
+        mkdir -p "${THERMOSTAT_CLIENT}"
+    fi
 
-    echo "creating $THERMOSTAT_LIBS"
-    mkdir -p $THERMOSTAT_LIBS
+    if [ ! -d "${THERMOSTAT_LIBS}" ] ; then
+        echo "creating ${THERMOSTAT_LIBS}"
+        mkdir -p ${THERMOSTAT_LIBS}
+    fi
+
+    if [ ! -d "${THERMOSTAT_OSGI_CACHE}" ] ; then
+        echo "creating ${THERMOSTAT_OSGI_CACHE}"
+        mkdir -p ${THERMOSTAT_OSGI_CACHE}
+    fi
 fi
