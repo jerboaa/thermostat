@@ -54,6 +54,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     VmInfoDAOImpl(Storage storage) {
         this.storage = storage;
+        storage.registerCategory(vmInfoCategory);
     }
 
     @Override

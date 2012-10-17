@@ -44,9 +44,8 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class AgentInformation implements Pojo {
+public class AgentInformation extends BasePojo {
 
-    private String agentId;
     private long startTime;
     private long stopTime;
 
@@ -54,16 +53,6 @@ public class AgentInformation implements Pojo {
     private String address;
 
     private List<BackendInformation> backends = new ArrayList<BackendInformation>();
-
-    @Persist
-    public String getAgentId() {
-        return agentId;
-    }
-
-    @Persist
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
-    }
 
     @Persist
     public long getStartTime() {
@@ -107,7 +96,7 @@ public class AgentInformation implements Pojo {
 
     @Override
     public String toString() {
-        return "agent " + agentId;
+        return "agent " + getAgentId();
     }
 
     @Override
@@ -122,7 +111,7 @@ public class AgentInformation implements Pojo {
             return false;
         }
         AgentInformation other = (AgentInformation) obj;
-        return Objects.equals(this.agentId, other.agentId) &&
+        return super.equals(other) &&
                 Objects.equals(this.alive, other.alive) &&
                 Objects.equals(this.address, other.address) &&
                 Objects.equals(this.startTime, other.startTime) &&
@@ -131,6 +120,6 @@ public class AgentInformation implements Pojo {
 
     @Override
     public int hashCode() {
-        return Objects.hash(agentId, alive, address, startTime, stopTime);
+        return Objects.hash(getAgentId(), alive, address, startTime, stopTime);
     }
 }

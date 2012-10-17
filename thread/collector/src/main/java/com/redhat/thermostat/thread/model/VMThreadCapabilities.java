@@ -41,13 +41,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.model.BasePojo;
 import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
 @Entity
-public class VMThreadCapabilities implements Pojo {
+public class VMThreadCapabilities extends BasePojo {
     
     private Set<String> features = new HashSet<>();
 

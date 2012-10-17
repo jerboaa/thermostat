@@ -65,9 +65,9 @@ public class ThreadDaoImplTest {
         @SuppressWarnings("unused")
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         
-        verify(storage).createConnectionKey(ThreadDao.THREAD_CAPABILITIES);
-        verify(storage).createConnectionKey(ThreadDao.THREAD_INFO);
-        verify(storage).createConnectionKey(ThreadDao.THREAD_SUMMARY);
+        verify(storage).registerCategory(ThreadDao.THREAD_CAPABILITIES);
+        verify(storage).registerCategory(ThreadDao.THREAD_INFO);
+        verify(storage).registerCategory(ThreadDao.THREAD_SUMMARY);
     }
     
     @Test

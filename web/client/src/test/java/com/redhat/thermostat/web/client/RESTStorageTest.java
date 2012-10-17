@@ -45,9 +45,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.net.URLDecoder;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.UUID;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -89,6 +90,8 @@ public class RESTStorageTest {
     private static Category category;
     private static Key<String> key1;
 
+    private RESTStorage storage;
+
     @BeforeClass
     public static void setupCategory() {
         key1 = new Key<>("property1", true);
@@ -110,6 +113,11 @@ public class RESTStorageTest {
                 startServer(port);
             }
         });
+
+        storage = new RESTStorage();
+        storage.setEndpoint("http://localhost:" + port + "/");
+        storage.setAgentId(new UUID(123, 456));
+        registerCategory();
     }
 
     private void startServer(int port) throws Exception {
@@ -144,14 +152,24 @@ public class RESTStorageTest {
 
     @After
     public void tearDown() throws Exception {
+
+        storage = null;
+
         server.stop();
         server.join();
     }
 
+    private void registerCategory() {
+
+        // Return 42 for categoryId.
+        Gson gson = new Gson();
+        responseBody = gson.toJson(42);
+
+        storage.registerCategory(category);
+    }
+
     @Test
     public void testFindPojo() {
-        RESTStorage storage = new RESTStorage();
-        storage.setEndpoint("http://localhost:" + port + "/");
 
         TestObj obj = new TestObj();
         obj.setProperty1("fluffor");
@@ -163,11 +181,7 @@ public class RESTStorageTest {
         TestObj result = storage.findPojo(query, TestObj.class);
         RESTQuery restQuery = gson.fromJson(requestBody, RESTQuery.class);
 
-        Category actualCategory = restQuery.getCategory();
-        assertEquals("test", actualCategory.getName());
-        Collection<Key<?>> keys = actualCategory.getKeys();
-        assertEquals(1, keys.size());
-        assertTrue(keys.contains(new Key<String>("property1", true)));
+        assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
         assertEquals(1, qualifiers.size());
         Qualifier<?> qual = qualifiers.get(0);
@@ -180,8 +194,6 @@ public class RESTStorageTest {
 
     @Test
     public void testFindAllPojos() {
-        RESTStorage storage = new RESTStorage();
-        storage.setEndpoint("http://localhost:" + port + "/");
 
         TestObj obj1 = new TestObj();
         obj1.setProperty1("fluffor1");
@@ -196,11 +208,7 @@ public class RESTStorageTest {
         Cursor<TestObj> results = storage.findAllPojos(query, TestObj.class);
         RESTQuery restQuery = gson.fromJson(requestBody, RESTQuery.class);
 
-        Category actualCategory = restQuery.getCategory();
-        assertEquals("test", actualCategory.getName());
-        Collection<Key<?>> keys = actualCategory.getKeys();
-        assertEquals(1, keys.size());
-        assertTrue(keys.contains(new Key<String>("property1", true)));
+        assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
         assertEquals(1, qualifiers.size());
         Qualifier<?> qual = qualifiers.get(0);
@@ -217,8 +225,7 @@ public class RESTStorageTest {
 
     @Test
     public void testPut() throws IOException, JsonSyntaxException, ClassNotFoundException {
-        RESTStorage storage = new RESTStorage();
-        storage.setEndpoint("http://localhost:" + port + "/");
+
         TestObj obj = new TestObj();
         obj.setProperty1("fluff");
 
@@ -227,13 +234,14 @@ public class RESTStorageTest {
         Gson gson = new Gson();
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
-        String line = bufRead.readLine();
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
         String [] params = line.split("&");
+        System.err.println("params: " + line);
         assertEquals(2, params.length);
         String[] parts = params[0].split("=");
         assertEquals("insert", parts[0]);
         WebInsert insert = gson.fromJson(parts[1], WebInsert.class);
-        assertEquals(category, insert.getCategory());
+        assertEquals(42, insert.getCategoryId());
         assertEquals(true, insert.isReplace());
         assertEquals(TestObj.class.getName(), insert.getPojoClass());
 

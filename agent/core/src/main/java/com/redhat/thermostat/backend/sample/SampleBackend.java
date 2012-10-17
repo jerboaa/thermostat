@@ -36,16 +36,13 @@
 
 package com.redhat.thermostat.backend.sample;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
@@ -118,11 +115,6 @@ public class SampleBackend extends Backend {
     @Override
     public boolean isActive() {
         return currentlyActive;
-    }
-
-    @Override
-    protected Collection<Category> getCategories() {
-        return new HashSet<Category>();
     }
 
     @Override

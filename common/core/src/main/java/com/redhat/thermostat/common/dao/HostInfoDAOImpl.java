@@ -57,6 +57,7 @@ class HostInfoDAOImpl implements HostInfoDAO {
     public HostInfoDAOImpl(Storage storage, AgentInfoDAO agentInfo) {
         this.storage = storage;
         this.agentInfoDao = agentInfo;
+        storage.registerCategory(hostInfoCategory);
     }
 
     @Override

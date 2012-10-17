@@ -48,6 +48,7 @@ class VmGcStatDAOImpl implements VmGcStatDAO {
 
     VmGcStatDAOImpl(Storage storage) {
         this.storage = storage;
+        storage.registerCategory(vmGcStatCategory);
         getter = new VmLatestPojoListGetter<>(storage, vmGcStatCategory, VmGcStat.class);
     }
 

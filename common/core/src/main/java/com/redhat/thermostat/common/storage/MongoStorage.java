@@ -73,7 +73,7 @@ public class MongoStorage extends Storage {
     private DB db = null;
     private Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
 
-    private UUID agentId = null;
+    private UUID agentId;
 
     private Map<Class<?>, Converter<?>> converters;
 
@@ -130,14 +130,14 @@ public class MongoStorage extends Storage {
         } else if (chunk.get(Key.AGENT_ID) != null) {
             return new BasicDBObject(Key.AGENT_ID.getName(), chunk.get(Key.AGENT_ID));
         } else {
-            return null;
+            return new BasicDBObject();
         }
     }
 
     // TODO: Make this private, and change the testcase to test putPojo() instead.
     void putChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
-        DBCollection coll = getCachedCollection(cat.getName());
+        DBCollection coll = getCachedCollection(cat);
         BasicDBObject toInsert = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
         BasicDBObject replaceKey = null;
         boolean replace = chunk.getReplace();
@@ -206,7 +206,7 @@ public class MongoStorage extends Storage {
 
     void updateChunk(Chunk chunk) {
         Category cat = chunk.getCategory();
-        DBCollection coll = getCachedCollection(cat.getName());
+        DBCollection coll = getCachedCollection(cat);
         BasicDBObject toUpdate = new BasicDBObject();
         BasicDBObject updateKey = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
         BasicDBObject setObj = null;
@@ -279,7 +279,7 @@ public class MongoStorage extends Storage {
         MongoRemove mongoRemove = (MongoRemove) remove;
         Chunk query = mongoRemove.getChunk();
         Category category = query.getCategory();
-        DBCollection coll = getCachedCollection(category.getName());
+        DBCollection coll = getCachedCollection(category);
 
         BasicDBObject toRemove = getAgentQueryKeyFromChunkOrGlobalAgent(query);
         for (Key<?> key : category.getKeys()) {
@@ -291,13 +291,11 @@ public class MongoStorage extends Storage {
         coll.remove(toRemove);
     }
 
-    private DBCollection getCachedCollection(String collName) {
+    private DBCollection getCachedCollection(Category category) {
+        String collName = category.getName();
         DBCollection coll = collectionCache.get(collName);
         if (coll == null && db.collectionExists(collName)) {
-            coll = db.getCollection(collName);
-            if (coll != null) {
-                collectionCache.put(collName, coll);
-            }
+            throw new IllegalStateException("Categories need to be registered before being used");
         }
         return coll;
     }
@@ -319,15 +317,24 @@ public class MongoStorage extends Storage {
     }
     
     @Override
-    public ConnectionKey createConnectionKey(Category category) {
+    public void registerCategory(Category category) {
+        String name = category.getName();
+        if (collectionCache.containsKey(name)) {
+            throw new IllegalStateException("Category may only be associated with one backend.");
+        }
+
+        DBCollection coll;
+        if (! db.collectionExists(name)) {
+            coll = db.createCollection(name, new BasicDBObject("capped", false));
+        } else {
+            coll = db.getCollection(name);
+        }
+        collectionCache.put(name, coll);
+    }
+
+    private void createConnectionKey(Category category) {
         // TODO: There is probably some better place to do this, perhaps related to the inner class
         // idea mentioned below.
-        if (!db.collectionExists(category.getName())) {
-            db.createCollection(category.getName(), new BasicDBObject("capped", false));
-        }
-        // TODO: We want to return an instance of an inner class here that carries the actual connection
-        // and replace the collectionCache. For now this is good enough though.
-        return new ConnectionKey(){};
     }
 
     @Override
@@ -348,7 +355,7 @@ public class MongoStorage extends Storage {
     @Override
     public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
         MongoQuery mongoQuery =  checkAndCastQuery(query);
-        DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
+        DBCollection coll = getCachedCollection(mongoQuery.getCategory());
         DBCursor dbCursor;
         if (mongoQuery.hasClauses()) {
             dbCursor = coll.find(mongoQuery.getGeneratedQuery());
@@ -385,7 +392,7 @@ public class MongoStorage extends Storage {
     // TODO: Make this private, and change the testcase to test putPojo() instead.
     Chunk find(Query query) {
         MongoQuery mongoQuery = checkAndCastQuery(query);
-        DBCollection coll = getCachedCollection(mongoQuery.getCollectionName());
+        DBCollection coll = getCachedCollection(mongoQuery.getCategory());
         DBObject dbResult = coll.findOne(mongoQuery.getGeneratedQuery());
         ChunkConverter converter = new ChunkConverter();
         return dbResult == null ? null : converter.dbObjectToChunk(dbResult, mongoQuery.getCategory());
@@ -399,10 +406,10 @@ public class MongoStorage extends Storage {
         return (MongoQuery) query;
 
     }
-    
+
     @Override
     public long getCount(Category category) {
-        DBCollection coll = getCachedCollection(category.getName());
+        DBCollection coll = getCachedCollection(category);
         if (coll != null) {
             return coll.getCount();
         }
@@ -433,8 +440,7 @@ public class MongoStorage extends Storage {
         putChunk(chunk);
     }
 
-    private Chunk convertPojoToChunk(Category category, boolean replace,
-            Pojo pojo) {
+    private Chunk convertPojoToChunk(Category category, boolean replace, Pojo pojo) {
         Converter customConverter = converters.get(pojo.getClass());
         Chunk chunk;
         if (customConverter != null) {

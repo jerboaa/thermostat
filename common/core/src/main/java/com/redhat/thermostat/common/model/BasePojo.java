@@ -35,48 +35,42 @@
  */
 
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.common.model;
 
+import java.util.Objects;
 
-public class WebInsert {
+import com.redhat.thermostat.common.storage.Persist;
 
-    private int categoryId;
-    private boolean replace;
-    private String pojoClass;
+public class BasePojo implements Pojo {
 
-    public WebInsert() {
-        this(-1, false, null);
+    private String agentId;
+
+    @Persist
+    public final String getAgentId() {
+        return agentId;
     }
 
-    public WebInsert(int categoryId, boolean replace, String pojoClass) {
-        this.categoryId = categoryId;
-        this.replace = replace;
-        this.pojoClass = pojoClass;
+    @Persist
+    public final void setAgentId(String agentId) {
+        this.agentId = agentId;
     }
 
-    public int getCategoryId() {
-        return categoryId;
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(agentId);
     }
 
-    public void setCategoryId(int categoryId) {
-        this.categoryId = categoryId;
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BasePojo other = (BasePojo) obj;
+        return Objects.equals(agentId, other.agentId);
     }
 
-    public boolean isReplace() {
-        return replace;
-    }
-
-    public void setReplace(boolean replace) {
-        this.replace = replace;
-    }
-
-    public String getPojoClass() {
-        return pojoClass;
-    }
-
-    public void setPojoClass(String pojoClass) {
-        this.pojoClass = pojoClass;
-    }
-
-
+    
 }

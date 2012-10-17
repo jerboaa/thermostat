@@ -40,7 +40,7 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class NetworkInterfaceInfo implements Pojo {
+public class NetworkInterfaceInfo extends BasePojo {
 
     private String iFace;
     private String ip4Addr;

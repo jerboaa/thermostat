@@ -43,8 +43,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -56,7 +54,6 @@ import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Storage;
 
 public class BackendRegistryTest {
@@ -66,10 +63,6 @@ public class BackendRegistryTest {
             super();
         }
 
-        @Override
-        protected Collection<Category> getCategories() {
-            return Collections.emptyList();
-        }
         @Override
         public String getConfigurationValue(String key) {
             return null;

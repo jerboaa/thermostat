@@ -57,7 +57,7 @@ public class MongoQueryTest {
     @Test
     public void testCollectionName() {
         MongoQuery query = new MongoQuery().from(new Category("some-collection"));
-        assertEquals("some-collection", query.getCollectionName());
+        assertEquals("some-collection", query.getCategory().getName());
     }
 
     @Test

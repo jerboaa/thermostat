@@ -43,23 +43,21 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.model.BasePojo;
 
 public class MongoCursorTest {
 
     @Entity
-    public static class TestClass implements Pojo {
+    public static class TestClass extends BasePojo {
         private String key1;
         private String key2;
         private String key3;

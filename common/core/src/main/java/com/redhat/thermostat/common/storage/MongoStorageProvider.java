@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common.storage;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 public class MongoStorageProvider implements StorageProvider {
@@ -48,7 +51,9 @@ public class MongoStorageProvider implements StorageProvider {
 
     @Override
     public Storage createStorage() {
-        return new MongoStorage(configuration);
+        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        Storage restStorage = (Storage) ctx.getService(ctx.getServiceReference("com.redhat.thermostat.web.client.RESTStorage"));
+        return restStorage;
     }
 
 }

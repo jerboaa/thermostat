@@ -75,7 +75,7 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.model.BasePojo;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 
 @RunWith(PowerMockRunner.class)
@@ -83,7 +83,7 @@ import com.redhat.thermostat.common.storage.Query.Criteria;
 public class MongoStorageTest {
 
     @Entity
-    public static class TestClass implements Pojo {
+    public static class TestClass extends BasePojo {
         private String key1;
         private String key2;
         private String key3;
@@ -204,16 +204,6 @@ public class MongoStorageTest {
         cursor = null;
     }
 
-    @Test
-    public void testCreateConnectionKey() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
-        MongoStorage storage = makeStorage();
-        storage.getConnection().connect();
-        Category category = new Category("testCreateConnectionKey");
-        ConnectionKey connKey = storage.createConnectionKey(category);
-        assertNotNull(connKey);
-    }
-
     @Test (expected=IllegalArgumentException.class)
     public void verifyFindOnlyAcceptsMongoQuery() {
         MongoStorage storage = makeStorage();
@@ -273,7 +263,6 @@ public class MongoStorageTest {
         when(query.hasClauses()).thenReturn(true);
         DBObject generatedQuery = mock(DBObject.class);
         when(query.getGeneratedQuery()).thenReturn(generatedQuery);
-        when(query.getCollectionName()).thenReturn(testCategory.getName());
         when(query.getCategory()).thenReturn(testCategory);
         ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
 
@@ -291,7 +280,6 @@ public class MongoStorageTest {
         MongoQuery query = mock(MongoQuery.class);
         DBObject generatedQuery = mock(DBObject.class);
         when(query.getGeneratedQuery()).thenReturn(generatedQuery);
-        when(query.getCollectionName()).thenReturn(testCategory.getName());
         when(query.getCategory()).thenReturn(testCategory);
 
         ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);

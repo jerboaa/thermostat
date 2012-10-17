@@ -36,14 +36,12 @@
 
 package com.redhat.thermostat.backend;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Storage;
 
 /**
@@ -88,15 +86,10 @@ public abstract class Backend {
     public final void setDAOFactory(DAOFactory df) {
         this.df = df;
         this.storage = df.getStorage();
-        for (Category cat : getCategories()) {
-            storage.registerCategory(cat);
-        }
         setDAOFactoryAction();
     }
 
     protected abstract void setDAOFactoryAction();
-
-    protected abstract Collection<Category> getCategories();
 
     /**
      * Set the named configuration to the given value.

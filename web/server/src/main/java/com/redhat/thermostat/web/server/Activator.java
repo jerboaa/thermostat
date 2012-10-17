@@ -34,59 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
 
-import static org.junit.Assert.assertSame;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+package com.redhat.thermostat.web.server;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.servlet.ServletMapping;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-public class StorageTest {
+public class Activator implements BundleActivator {
 
-    private Storage storage;
-    private ConnectionKey connKey;
+    private Server server;
 
-    @Before
-    public void setUp() {
-        storage = mock(Storage.class);
-        connKey = new ConnectionKey(){};
-        when(storage.createConnectionKey(any(Category.class))).thenReturn(connKey);
+    @Override
+    public void start(BundleContext context) throws Exception {
+        server = new Server(8082);
+        ServletHandler handler = new ServletHandler();
+        ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new RESTStorageEndPoint());
+        handler.setServlets(new ServletHolder[] { servletHolder });
+        ServletMapping mapping = new ServletMapping();
+        mapping.setPathSpec("/");
+        mapping.setServletName("rest-storage-end-point");
+        handler.setServletMappings(new ServletMapping[] { mapping });
+        server.setHandler(handler); //new WebAppContext("/home/rkennke/src/thermostat/distribution/target/libs/thermostat-web-server-0.5.0-SNAPSHOT.war", "/"));
+
+        server.start();
+
     }
 
-    @After
-    public void tearDown() {
-        storage = null;
-        connKey = null;
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        server.stop();
+        server.join();
     }
 
-    @Test
-    public void testRegisterCategory() {
-        Category category = new Category("testRegisterCategory");
-        storage.registerCategory(category);
-
-        verify(storage).createConnectionKey(category);
-        assertSame(connKey, category.getConnectionKey());
-    }
-
-    @Test(expected=IllegalStateException.class)
-    public void testRegisterCategoryTwice() {
-
-        Category category = new Category("test");
-        storage.registerCategory(category);
-        storage.registerCategory(category);
-    }
-
-    @Test(expected=IllegalStateException.class)
-    public void testRegisterCategorySameName() {
-
-        Category category1 = new Category("test");
-        storage.registerCategory(category1);
-        Category category2 = new Category("test");
-        storage.registerCategory(category2);
-    }
 }

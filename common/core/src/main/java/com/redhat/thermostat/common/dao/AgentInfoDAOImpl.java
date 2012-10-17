@@ -54,7 +54,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     public AgentInfoDAOImpl(Storage storage) {
         this.storage = storage;
-        storage.createConnectionKey(CATEGORY);
+        storage.registerCategory(CATEGORY);
     }
 
     @Override

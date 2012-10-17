@@ -37,7 +37,6 @@
 package com.redhat.thermostat.common.storage;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -46,15 +45,6 @@ import java.util.Collection;
 import org.junit.Test;
 
 public class CategoryTest {
-
-    @Test
-    public void testHasBeenRegistered() {
-        Category category1 = new Category("testHasBeenRegistered");
-        assertFalse(category1.hasBeenRegistered());
-        ConnectionKey connKey = new ConnectionKey(){};
-        category1.setConnectionKey(connKey);
-        assertTrue(category1.hasBeenRegistered());
-    }
 
     @Test
     public void testGetKey() {

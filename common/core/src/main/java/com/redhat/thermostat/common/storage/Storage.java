@@ -47,17 +47,9 @@ public abstract class Storage {
 
     public abstract String getAgentId();
 
-    public final void registerCategory(Category category) {
-        if (category.hasBeenRegistered()) {
-            throw new IllegalStateException("Category may only be associated with one backend.");
-        }
-        ConnectionKey connKey = createConnectionKey(category);
-        category.setConnectionKey(connKey);
-    }
+    public abstract void registerCategory(Category category);
 
     public abstract Connection getConnection();
-
-    public abstract ConnectionKey createConnectionKey(Category category);
 
     public abstract void putPojo(Category category, boolean replace, Pojo pojo);
 

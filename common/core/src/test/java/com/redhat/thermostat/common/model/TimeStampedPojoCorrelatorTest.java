@@ -48,7 +48,7 @@ import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator.Correlation;
 
 public class TimeStampedPojoCorrelatorTest {
 
-    private static class TestTimeStampedPojo implements TimeStampedPojo {
+    private static class TestTimeStampedPojo extends BasePojo implements TimeStampedPojo {
 
         private long timestamp;
 

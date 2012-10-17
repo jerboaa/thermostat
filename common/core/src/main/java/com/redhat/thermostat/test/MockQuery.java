@@ -43,6 +43,7 @@ import java.util.Objects;
 import com.redhat.thermostat.common.storage.AbstractQuery;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.MongoQuery;
 
 public class MockQuery extends AbstractQuery {
 
@@ -79,11 +80,20 @@ public class MockQuery extends AbstractQuery {
     }
 
     private final List<WhereClause<?>> whereClauses = new ArrayList<>();
+    private Category category;
 
     @Override
     public MockQuery from(Category category) {
         setCategory(category);
         return this;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     @Override

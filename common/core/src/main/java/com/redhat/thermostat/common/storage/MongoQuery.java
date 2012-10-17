@@ -45,11 +45,20 @@ public class MongoQuery extends AbstractQuery {
 
     private BasicDBObject query = new BasicDBObject();
     private boolean hasClauses = false;
+    private Category category;
 
     @Override
     public MongoQuery from(Category category) {
         setCategory(category);
         return this;
+    }
+
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 
     @Override
@@ -86,10 +95,6 @@ public class MongoQuery extends AbstractQuery {
         }
         hasClauses = true;
         return this;
-    }
-
-    String getCollectionName() {
-        return getCategory().getName();
     }
 
     DBObject getGeneratedQuery() {

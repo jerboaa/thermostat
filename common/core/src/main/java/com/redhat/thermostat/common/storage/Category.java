@@ -43,10 +43,12 @@ import java.util.Map;
 import java.util.Objects;
 
 public class Category {
-    private final String name;
+    private String name;
     private final Map<String, Key<?>> keys;
 
-    private ConnectionKey connectionKey;
+    public Category() {
+        this(null);
+    }
 
     /**
      * Creates a new Category instance with the specified name.
@@ -56,36 +58,32 @@ public class Category {
      * @throws IllegalArgumentException if a Category is created with a name that has been used before
      */
     public Category(String name, Key<?>... keys) {
-        if (Categories.contains(name)) {
-            throw new IllegalStateException();
-        }
-        this.name = name;
         Map<String, Key<?>> keysMap = new HashMap<String, Key<?>>();
         for (Key<?> key : keys) {
             keysMap.put(key.getName(), key);
         }
         this.keys = Collections.unmodifiableMap(keysMap);
-        Categories.add(this);
+        setName(name);
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        if (Categories.contains(name)) {
+            throw new IllegalStateException();
+        }
+
+        this.name = name;
+
+        if (name != null) {
+            Categories.add(this);
+        }
+    }
+
     public synchronized Collection<Key<?>> getKeys() {
         return keys.values();
-    }
-
-    public void setConnectionKey(ConnectionKey connKey) {
-        connectionKey = connKey;
-    }
-
-    public ConnectionKey getConnectionKey() {
-        return connectionKey;
-    }
-
-    public boolean hasBeenRegistered() {
-        return getConnectionKey() != null;
     }
 
     public Key<?> getKey(String name) {
@@ -94,7 +92,10 @@ public class Category {
 
     @Override
     public String toString() {
-        return getName();
+        return getName() + keys;
+    }
+    public int hashCode() {
+        return Objects.hash(name, keys);
     }
 
     public boolean equals(Object o) {
@@ -102,6 +103,6 @@ public class Category {
             return false;
         }
         Category other = (Category) o;
-        return Objects.equals(name, other.name) && keys.equals(other.keys);
+        return Objects.equals(name, other.name) && Objects.equals(keys, other.keys);
     }
 }

@@ -44,11 +44,16 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -59,7 +64,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.gson.Gson;
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.model.BasePojo;
 import com.redhat.thermostat.common.storage.Categories;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
@@ -76,7 +81,7 @@ import com.redhat.thermostat.web.common.WebInsert;
 
 public class RESTStorageEndpointTest {
 
-    public static class TestClass implements Pojo {
+    public static class TestClass extends BasePojo {
         private String key1;
         private int key2;
         public String getKey1() {
@@ -103,6 +108,7 @@ public class RESTStorageEndpointTest {
     private Server server;
     private int port;
     private Storage mockStorage;
+    private Integer categoryId;
 
     private static Key<String> key1;
     private static Key<Integer> key2;
@@ -136,6 +142,7 @@ public class RESTStorageEndpointTest {
                 startServer(port);
             }
         });
+        registerCategory();
     }
 
     private void startServer(int port) throws Exception {
@@ -163,6 +170,7 @@ public class RESTStorageEndpointTest {
 
         RESTStorage restStorage = new RESTStorage();
         restStorage.setEndpoint(getEndpoint());
+        restStorage.registerCategory(category);
         Query query = restStorage.createQuery();
         query.from(category).where(key1, Criteria.EQUALS, "fluff");
 
@@ -196,7 +204,9 @@ public class RESTStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoInput(true);
         conn.setDoOutput(true);
-        RESTQuery query = (RESTQuery) new RESTQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
+        Map<Category,Integer> categoryIdMap = new HashMap<>();
+        categoryIdMap.put(category, categoryId);
+        RESTQuery query = (RESTQuery) new RESTQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff");
         query.setResultClassName(TestClass.class.getName());
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -220,11 +230,12 @@ public class RESTStorageEndpointTest {
         expected1.setKey2(42);
 
         String endpoint = getEndpoint();
+
         URL url = new URL(endpoint + "/put-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebInsert insert = new WebInsert(category, true, TestClass.class.getName());
+        WebInsert insert = new WebInsert(categoryId, true, TestClass.class.getName());
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("insert=");
@@ -236,6 +247,34 @@ public class RESTStorageEndpointTest {
         out.flush();
         assertEquals(200, conn.getResponseCode());
         verify(mockStorage).putPojo(category, true, expected1);
+    }
+
+    private void registerCategory() {
+        try {
+            String endpoint = getEndpoint();
+            URL url = new URL(endpoint + "/register-category");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            String enc = "UTF-8";
+            conn.setRequestProperty("Content-Encoding", enc);
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod("POST");
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            writer.write("name=");
+            writer.write(URLEncoder.encode(category.getName(), enc));
+            writer.write("&category=");
+            writer.write(URLEncoder.encode(gson.toJson(category), enc));
+            writer.flush();
+
+            InputStream in = conn.getInputStream();
+            Reader reader = new InputStreamReader(in);
+            Integer id = gson.fromJson(reader, Integer.class);
+            categoryId = id;
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     private String getEndpoint() {

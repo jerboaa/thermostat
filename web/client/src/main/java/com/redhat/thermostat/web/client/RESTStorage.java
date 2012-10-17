@@ -42,16 +42,19 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import com.google.gson.Gson;
 import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.ConnectionKey;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Remove;
@@ -62,16 +65,70 @@ import com.redhat.thermostat.web.common.WebInsert;
 
 public class RESTStorage extends Storage {
 
+    private final class WebConnection extends Connection {
+        WebConnection() {
+            connected = true;
+        }
+        @Override
+        public void disconnect() {
+            connected = false;
+            fireChanged(ConnectionStatus.DISCONNECTED);
+        }
+
+        @Override
+        public void connect() {
+            connected = true;
+            fireChanged(ConnectionStatus.CONNECTED);
+        }
+        @Override
+        public String getUrl() {
+            // TODO Auto-generated method stub
+            return endpoint;
+        }
+    }
+
     private String endpoint;
+    private UUID agentId;
+
+    private Map<Category, Integer> categoryIds;
+
+    public RESTStorage() {
+        endpoint = "http://localhost:8082";
+        categoryIds = new HashMap<>();
+    }
 
     @Override
-    public ConnectionKey createConnectionKey(Category arg0) {
-        return new ConnectionKey() {};
+    public void registerCategory(Category category) {
+        try {
+            URL url = new URL(endpoint + "/register-category");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            String enc = "UTF-8";
+            conn.setRequestProperty("Content-Encoding", enc);
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod("POST");
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            writer.write("name=");
+            writer.write(URLEncoder.encode(category.getName(), enc));
+            writer.write("&category=");
+            writer.write(URLEncoder.encode(gson.toJson(category), enc));
+            writer.flush();
+
+            InputStream in = conn.getInputStream();
+            Reader reader = new InputStreamReader(in);
+            Integer id = gson.fromJson(reader, Integer.class);
+            categoryIds.put(category, id);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
     }
 
     @Override
     public Query createQuery() {
-        return new RESTQuery();
+        return new RESTQuery(categoryIds);
     }
 
     @Override
@@ -134,14 +191,12 @@ public class RESTStorage extends Storage {
 
     @Override
     public String getAgentId() {
-        // TODO Auto-generated method stub
-        return null;
+        return agentId.toString();
     }
 
     @Override
     public Connection getConnection() {
-        // TODO Auto-generated method stub
-        return null;
+        return new WebConnection();
     }
 
     @Override
@@ -164,8 +219,13 @@ public class RESTStorage extends Storage {
 
     @Override
     public void putPojo(Category category, boolean replace, Pojo pojo) {
+        // TODO: This logic should probably be moved elsewhere. I.e. out of the Storage API.
+        if (pojo.getAgentId() == null) {
+            pojo.setAgentId(getAgentId());
+        }
         try {
-            WebInsert insert = new WebInsert(category, replace, pojo.getClass().getName());
+            int categoryId = categoryIds.get(category);
+            WebInsert insert = new WebInsert(categoryId, replace, pojo.getClass().getName());
             URL url = new URL(endpoint + "/put-pojo");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoOutput(true);
@@ -175,9 +235,9 @@ public class RESTStorage extends Storage {
             Gson gson = new Gson();
             OutputStreamWriter writer = new OutputStreamWriter(out);
             writer.write("insert=");
-            gson.toJson(insert, writer);
+            writer.write(URLEncoder.encode(gson.toJson(insert), "UTF-8"));
             writer.write("&pojo=");
-            gson.toJson(pojo, writer);
+            writer.write(URLEncoder.encode(gson.toJson(pojo), "UTF-8"));
             writer.flush();
 
             InputStream in = conn.getInputStream();
@@ -199,9 +259,8 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public void setAgentId(UUID arg0) {
-        // TODO Auto-generated method stub
-
+    public void setAgentId(UUID agentId) {
+        this.agentId = agentId;
     }
 
     @Override

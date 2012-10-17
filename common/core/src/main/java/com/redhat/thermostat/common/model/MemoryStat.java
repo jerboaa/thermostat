@@ -40,7 +40,7 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class MemoryStat implements TimeStampedPojo {
+public class MemoryStat extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
     private long total;

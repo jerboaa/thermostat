@@ -81,8 +81,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     private VmCpuStatDAO vmCpuStats;
     private NetworkInterfaceInfoDAO networkInterfaces;
 
-    private final List<Category> categories = new ArrayList<Category>();
-
     private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
 
     private long procCheckInterval = 1000; // TODO make this configurable.
@@ -100,17 +98,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     public SystemBackend() {
         super();
-
-        // Set up categories that will later be registered.
-        categories.add(CpuStatDAO.cpuStatCategory);
-        categories.add(HostInfoDAO.hostInfoCategory);
-        categories.add(MemoryStatDAO.memoryStatCategory);
-        categories.add(NetworkInterfaceInfoDAO.networkInfoCategory);
-        categories.add(VmClassStatDAO.vmClassStatsCategory);
-        categories.add(VmCpuStatDAO.vmCpuStatCategory);
-        categories.add(VmGcStatDAO.vmGcStatCategory);
-        categories.add(VmInfoDAO.vmInfoCategory);
-        categories.add(VmMemoryStatDAO.vmMemoryStatsCategory);
 
         Clock clock = new SystemClock();
         ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
@@ -224,11 +211,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     @Override
     public String getConfigurationValue(String key) {
         return null;
-    }
-
-    @Override
-    protected Collection<Category> getCategories() {
-        return Collections.unmodifiableCollection(categories);
     }
 
     @Override

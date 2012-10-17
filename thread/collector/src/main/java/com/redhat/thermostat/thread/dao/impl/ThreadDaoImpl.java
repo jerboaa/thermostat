@@ -56,9 +56,9 @@ public class ThreadDaoImpl implements ThreadDao {
     private Storage storage; 
     public ThreadDaoImpl(Storage storage) {
         this.storage = storage;
-        storage.createConnectionKey(THREAD_CAPABILITIES);
-        storage.createConnectionKey(THREAD_SUMMARY);
-        storage.createConnectionKey(THREAD_INFO);
+        storage.registerCategory(THREAD_CAPABILITIES);
+        storage.registerCategory(THREAD_SUMMARY);
+        storage.registerCategory(THREAD_INFO);
     }
 
     @Override

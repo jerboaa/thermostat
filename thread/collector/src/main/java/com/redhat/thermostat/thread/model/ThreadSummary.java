@@ -36,13 +36,14 @@
 
 package com.redhat.thermostat.thread.model;
 
+import com.redhat.thermostat.common.model.BasePojo;
 import com.redhat.thermostat.common.model.TimeStampedPojo;
 import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 
 @Entity
-public class ThreadSummary implements TimeStampedPojo {
+public class ThreadSummary extends BasePojo implements TimeStampedPojo {
 
     private int vmId;
     private long currentLiveThreads;

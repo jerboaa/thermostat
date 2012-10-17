@@ -40,7 +40,7 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class VmCpuStat implements TimeStampedPojo {
+public class VmCpuStat extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
     private int vmId;

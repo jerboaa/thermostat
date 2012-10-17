@@ -85,26 +85,11 @@ public abstract class AbstractQuery implements Query {
         }
     }
 
-    private Category category;
     private List<Sort> sorts;
     private int limit = -1;
 
     public AbstractQuery() {
         sorts = new ArrayList<>();
-    }
-
-    @Override
-    public Query from(Category category) {
-        this.category = category;
-        return this;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     @Override

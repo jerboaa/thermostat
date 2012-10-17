@@ -1,7 +1,9 @@
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -51,9 +53,11 @@ public class RESTQueryTest {
 
     @Test
     public void test() {
-        RESTQuery query = new RESTQuery();
         Key<String> key1 = new Key<>("testkey", true);
         Category category = new Category("test", key1);
+        Map<Category,Integer> categoryIdMap = new HashMap<>();
+        categoryIdMap.put(category, 42);
+        RESTQuery query = new RESTQuery(categoryIdMap);
         query.from(category).where(key1, Criteria.EQUALS, "fluff");
 
         List<Qualifier<?>> qualifiers = query.getQualifiers();
@@ -63,6 +67,6 @@ public class RESTQueryTest {
         assertEquals(Criteria.EQUALS, qualifier.getCriteria());
         assertEquals("fluff", qualifier.getValue());
 
-        assertSame(category, query.getCategory());
+        assertEquals(42, query.getCategoryId());
     }
 }

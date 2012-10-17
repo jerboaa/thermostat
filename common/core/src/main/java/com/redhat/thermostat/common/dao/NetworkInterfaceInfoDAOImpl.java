@@ -52,6 +52,7 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     NetworkInterfaceInfoDAOImpl(Storage storage) {
         this.storage = storage;
+        storage.registerCategory(networkInfoCategory);
     }
 
     @Override

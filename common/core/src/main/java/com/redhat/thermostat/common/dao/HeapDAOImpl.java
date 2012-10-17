@@ -66,7 +66,7 @@ class HeapDAOImpl implements HeapDAO {
 
     HeapDAOImpl(Storage storage) {
         this.storage = storage;
-        storage.createConnectionKey(heapInfoCategory);
+        storage.registerCategory(heapInfoCategory);
     }
 
     @Override

@@ -53,7 +53,7 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     public BackendInfoDAOImpl(Storage storage) {
         this.storage = storage;
-        storage.createConnectionKey(CATEGORY);
+        storage.registerCategory(CATEGORY);
     }
 
     @Override

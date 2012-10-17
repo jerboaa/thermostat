@@ -48,6 +48,7 @@ class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     VmCpuStatDAOImpl(Storage storage) {
         this.storage = storage;
+        storage.registerCategory(vmCpuStatCategory);
         this.getter = new VmLatestPojoListGetter<>(storage, vmCpuStatCategory, VmCpuStat.class);
     }
 

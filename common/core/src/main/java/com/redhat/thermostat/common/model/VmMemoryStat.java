@@ -38,7 +38,7 @@ package com.redhat.thermostat.common.model;
 
 import java.util.List;
 
-public class VmMemoryStat implements TimeStampedPojo {
+public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
 
     public static class Generation {
         public static final String COLLECTOR_NONE = "none";
@@ -66,9 +66,13 @@ public class VmMemoryStat implements TimeStampedPojo {
         public long used;
     }
 
-    private final List<Generation> generations;
-    private final long timestamp;
-    private final int vmId;
+    private List<Generation> generations;
+    private long timestamp;
+    private int vmId;
+
+    public VmMemoryStat() {
+        this(-1, -1, null);
+    }
 
     public VmMemoryStat(long timestamp, int vmId, List<Generation> generations) {
         this.timestamp = timestamp;
@@ -80,13 +84,25 @@ public class VmMemoryStat implements TimeStampedPojo {
         return vmId;
     }
 
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
     @Override
     public long getTimeStamp() {
         return timestamp;
     }
 
+    public void setTimeStamp(long timeStamp) {
+        this.timestamp = timeStamp;
+    }
+
     public List<Generation> getGenerations() {
         return generations;
+    }
+
+    public void setGenerations(List<Generation> generations) {
+        this.generations = generations;
     }
 
     public Generation getGeneration(String name) {

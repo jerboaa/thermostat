@@ -51,6 +51,12 @@ public class Key<T> {
     private String name;
     private boolean isPartialCategoryKey;
 
+    public Key() {
+        // This is used only in de-serialization, e.g. using Gson, and therefore
+        // we do not check the name for null or empty.
+        super();
+    }
+
     public Key(String name, boolean isPartialCategoryKey) {
         if (name == null || name.length() == 0) {
             throw new IllegalArgumentException("A Key must have a non-null name of length >= 1.");
@@ -63,8 +69,17 @@ public class Key<T> {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public boolean isPartialCategoryKey() {
         return isPartialCategoryKey;
+    }
+
+    public void setPartialCategoryKey(boolean partialCategoryKey) {
+        this.isPartialCategoryKey = partialCategoryKey;
+
     }
 
     @Override

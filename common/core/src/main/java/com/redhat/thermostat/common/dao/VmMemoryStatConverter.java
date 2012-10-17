@@ -51,6 +51,7 @@ public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
     public Chunk toChunk(VmMemoryStat vmMemStat) {
         Chunk chunk = new Chunk(VmMemoryStatDAO.vmMemoryStatsCategory, false);
 
+        chunk.put(Key.AGENT_ID, vmMemStat.getAgentId());
         chunk.put(Key.VM_ID, vmMemStat.getVmId());
         chunk.put(Key.TIMESTAMP, vmMemStat.getTimeStamp());
 
@@ -176,7 +177,8 @@ public class VmMemoryStatConverter implements Converter<VmMemoryStat> {
         permGen.maxCapacity = space.capacity;
 
         gens.add(permGen);
-
-        return new VmMemoryStat(chunk.get(Key.TIMESTAMP), chunk.get(Key.VM_ID), gens);
+        VmMemoryStat stat = new VmMemoryStat(chunk.get(Key.TIMESTAMP), chunk.get(Key.VM_ID), gens);
+        stat.setAgentId(chunk.get(Key.AGENT_ID));
+        return stat;
     }
 }

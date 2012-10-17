@@ -45,7 +45,7 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class BackendInformation implements Pojo {
+public class BackendInformation extends BasePojo {
 
     private String name;
     private String description;

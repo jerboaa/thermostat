@@ -41,12 +41,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Collection;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import com.redhat.thermostat.common.storage.Category;
 
 public class SampleBackendTest {
 
@@ -86,12 +82,6 @@ public class SampleBackendTest {
         b.deactivate();
         b.deactivate();
         assertFalse(b.isActive());
-    }
-
-    @Test
-    public void testCategoriesAreSane() {
-        Collection<Category> categories = b.getCategories();
-        assertEquals(0, categories.size());
     }
 
     @Test

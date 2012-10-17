@@ -48,6 +48,7 @@ class VmClassStatDAOImpl implements VmClassStatDAO {
 
     VmClassStatDAOImpl(Storage storage) {
         this.storage = storage;
+        storage.registerCategory(vmClassStatsCategory);
         this.getter = new VmLatestPojoListGetter<>(storage, vmClassStatsCategory, VmClassStat.class);
     }
 

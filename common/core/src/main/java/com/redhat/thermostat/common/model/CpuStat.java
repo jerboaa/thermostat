@@ -42,7 +42,7 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class CpuStat implements TimeStampedPojo {
+public class CpuStat extends BasePojo implements TimeStampedPojo {
 
     public static final double INVALID_LOAD = Double.MIN_VALUE;
 

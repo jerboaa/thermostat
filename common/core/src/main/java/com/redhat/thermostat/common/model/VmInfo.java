@@ -44,7 +44,7 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class VmInfo implements Pojo {
+public class VmInfo extends BasePojo {
 
     private int vmPid = 0;
     private long startTime = System.currentTimeMillis();

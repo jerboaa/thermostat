@@ -37,9 +37,9 @@
 
 package com.redhat.thermostat.web.client;
 
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.common.model.BasePojo;
 
-public class TestObj implements Pojo {
+public class TestObj extends BasePojo {
 
     
     private String property1;

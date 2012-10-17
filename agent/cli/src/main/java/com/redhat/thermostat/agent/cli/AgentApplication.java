@@ -209,7 +209,13 @@ public final class AgentApplication extends BasicCommand {
         @Override
         public void handle(Signal arg0) {
             configServer.stopListening();
-            agent.stop();
+            try {
+                agent.stop();
+            } catch (Exception ex) {
+                // We don't want any exception to hold back the signal handler, otherwise
+                // there will be no way to actually stop Thermostat.
+                ex.printStackTrace();
+            }
             logger.fine("Agent stopped.");       
             shutdownLatch.countDown();
         }

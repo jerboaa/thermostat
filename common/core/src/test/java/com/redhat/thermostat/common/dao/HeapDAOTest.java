@@ -232,7 +232,7 @@ public class HeapDAOTest {
         
         // verify a connection key has been created before requesting the
         // heap dumps
-        verify(storage).createConnectionKey(HeapDAO.heapInfoCategory);
+        verify(storage).registerCategory(HeapDAO.heapInfoCategory);
         
         HostRef host = new HostRef("123", "test-host");
         VmRef vm = new VmRef(host, 234, "test-vm");

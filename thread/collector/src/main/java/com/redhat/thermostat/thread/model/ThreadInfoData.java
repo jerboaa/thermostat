@@ -39,13 +39,14 @@ package com.redhat.thermostat.thread.model;
 import java.lang.Thread.State;
 import java.util.Arrays;
 
+import com.redhat.thermostat.common.model.BasePojo;
 import com.redhat.thermostat.common.model.TimeStampedPojo;
 import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 
 @Entity
-public class ThreadInfoData implements TimeStampedPojo {
+public class ThreadInfoData extends BasePojo implements TimeStampedPojo {
 
     private int vmId;
     private StackTraceElement[] stackTrace;

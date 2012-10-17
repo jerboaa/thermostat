@@ -39,7 +39,7 @@ package com.redhat.thermostat.common.model;
 import com.redhat.thermostat.common.storage.Entity;
 
 @Entity
-public class VmGcStat implements TimeStampedPojo {
+public class VmGcStat extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
     private int vmId;

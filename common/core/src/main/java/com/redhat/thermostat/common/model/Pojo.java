@@ -42,4 +42,6 @@ package com.redhat.thermostat.common.model;
  */
 public interface Pojo {
 
+    void setAgentId(String agentId);
+    String getAgentId();
 }

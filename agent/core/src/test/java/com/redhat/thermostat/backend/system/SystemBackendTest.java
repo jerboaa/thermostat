@@ -41,8 +41,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Collection;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,12 +49,7 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
-import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Storage;
 
 public class SystemBackendTest {
@@ -103,21 +96,6 @@ public class SystemBackendTest {
         b.deactivate();
         b.deactivate();
         assertFalse(b.isActive());
-    }
-
-    @Test
-    public void testCategoriesAreSane() {
-        Collection<Category> categories = b.getCategories();
-
-        assertTrue(categories.contains(CpuStatDAO.cpuStatCategory));
-        assertTrue(categories.contains(HostInfoDAO.hostInfoCategory));
-        assertTrue(categories.contains(MemoryStatDAO.memoryStatCategory));
-        assertTrue(categories.contains(NetworkInterfaceInfoDAO.networkInfoCategory));
-        assertTrue(categories.contains(VmClassStatDAO.vmClassStatsCategory));
-        assertTrue(categories.contains(VmCpuStatDAO.vmCpuStatCategory));
-        assertTrue(categories.contains(VmGcStatDAO.vmGcStatCategory));
-        assertTrue(categories.contains(VmInfoDAO.vmInfoCategory));
-        assertTrue(categories.contains(VmMemoryStatDAO.vmMemoryStatsCategory));
     }
 
 }

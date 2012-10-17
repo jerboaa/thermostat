@@ -42,9 +42,8 @@ import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
-public class HeapInfo implements TimeStampedPojo {
+public class HeapInfo extends BasePojo implements TimeStampedPojo {
 
-    private String agentId;
     private int vmId;
     private long timeStamp;
 
@@ -59,16 +58,6 @@ public class HeapInfo implements TimeStampedPojo {
     public HeapInfo(int vmId, long timestamp) {
         this.vmId = vmId;
         this.timeStamp = timestamp;
-    }
-
-    @Persist
-    public String getAgentId() {
-        return agentId;
-    }
-
-    @Persist
-    public void setAgentId(String agentId) {
-        this.agentId = agentId;
     }
 
     @Persist

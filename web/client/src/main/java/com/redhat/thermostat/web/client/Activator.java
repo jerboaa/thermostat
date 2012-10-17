@@ -35,48 +35,25 @@
  */
 
 
-package com.redhat.thermostat.web.common;
+package com.redhat.thermostat.web.client;
 
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-public class WebInsert {
+import com.redhat.thermostat.common.storage.Storage;
 
-    private int categoryId;
-    private boolean replace;
-    private String pojoClass;
+public class Activator implements BundleActivator {
 
-    public WebInsert() {
-        this(-1, false, null);
+    @Override
+    public void start(BundleContext context) throws Exception {
+        RESTStorage storage = new RESTStorage();
+        context.registerService(RESTStorage.class.getName(), storage, null);
     }
 
-    public WebInsert(int categoryId, boolean replace, String pojoClass) {
-        this.categoryId = categoryId;
-        this.replace = replace;
-        this.pojoClass = pojoClass;
-    }
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        // TODO Auto-generated method stub
 
-    public int getCategoryId() {
-        return categoryId;
     }
-
-    public void setCategoryId(int categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public boolean isReplace() {
-        return replace;
-    }
-
-    public void setReplace(boolean replace) {
-        this.replace = replace;
-    }
-
-    public String getPojoClass() {
-        return pojoClass;
-    }
-
-    public void setPojoClass(String pojoClass) {
-        this.pojoClass = pojoClass;
-    }
-
 
 }

@@ -46,7 +46,7 @@
   </parent>
 
   <artifactId>thermostat-web-server</artifactId>
-  <packaging>war</packaging>
+  <packaging>bundle</packaging>
 
   <name>Thermostat Web Server</name>
 
@@ -74,13 +74,11 @@
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
       <version>8.1.5.v20120716</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>
       <version>8.1.5.v20120716</version>
-      <scope>test</scope>
     </dependency>
 
 
@@ -95,6 +93,7 @@
       <groupId>javax.servlet</groupId>
       <artifactId>servlet-api</artifactId>
       <version>2.5</version>
+      <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -104,11 +103,53 @@
     </dependency>
 
     <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-web-common</artifactId>
       <version>${project.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-thread-collector</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>com.redhat.thermostat.web.server</Bundle-SymbolicName>
+            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Activator>com.redhat.thermostat.web.server.Activator</Bundle-Activator>
+            <Export-Package>
+              com.redhat.thermostat.web.server
+            </Export-Package>
+            <Import-Package>
+              com.redhat.thermostat.thread.model,
+              *
+            </Import-Package>
+            <!-- Do not autogenerate uses clauses in Manifests -->
+            <_nouses>true</_nouses>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 </project>

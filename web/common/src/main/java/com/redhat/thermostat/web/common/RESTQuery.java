@@ -39,8 +39,10 @@ package com.redhat.thermostat.web.common;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.redhat.thermostat.common.storage.AbstractQuery;
+import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 
@@ -49,8 +51,31 @@ public class RESTQuery extends AbstractQuery {
     private List<Qualifier<?>> qualifiers;
     private String resultClassName;
 
+    private transient Map<Category, Integer> categoryIdMap;
+
+    private int categoryId;
+
     public RESTQuery() {
+        this(null);
+    }
+
+    public RESTQuery(Map<Category, Integer> categoryIdMap) {
         qualifiers = new ArrayList<>();
+        this.categoryIdMap = categoryIdMap;
+    }
+
+    @Override
+    public Query from(Category category) {
+        categoryId = categoryIdMap.get(category);
+        return this;
+    }
+
+    public int getCategoryId() {
+        return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     @Override
