@@ -62,6 +62,7 @@ import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebRemove;
 
 public class RESTStorage extends Storage {
 
@@ -133,8 +134,7 @@ public class RESTStorage extends Storage {
 
     @Override
     public Remove createRemove() {
-        // TODO Auto-generated method stub
-        return null;
+        return new WebRemove(categoryIds);
     }
 
     @Override
@@ -239,17 +239,36 @@ public class RESTStorage extends Storage {
             writer.write("&pojo=");
             writer.write(URLEncoder.encode(gson.toJson(pojo), "UTF-8"));
             writer.flush();
-
-            InputStream in = conn.getInputStream();
+            checkResponseCode(conn);
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
     }
 
-    @Override
-    public void removePojo(Remove arg0) {
-        // TODO Auto-generated method stub
+    private void checkResponseCode(HttpURLConnection conn) throws IOException {
+        int responseCode = conn.getResponseCode();
+        if (responseCode != HttpURLConnection.HTTP_OK) {
+            throw new RuntimeException("Web server returned HTTP code: " + responseCode);
+        }
+    }
 
+    @Override
+    public void removePojo(Remove remove) {
+        try {
+            URL url = new URL(endpoint + "/remove-pojo");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            writer.write("remove=");
+            writer.write(URLEncoder.encode(gson.toJson(remove), "UTF-8"));
+            writer.flush();
+            checkResponseCode(conn);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

@@ -71,6 +71,7 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
@@ -78,6 +79,7 @@ import com.redhat.thermostat.web.client.RESTStorage;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebRemove;
 
 public class RESTStorageEndpointTest {
 
@@ -248,6 +250,39 @@ public class RESTStorageEndpointTest {
         assertEquals(200, conn.getResponseCode());
         verify(mockStorage).putPojo(category, true, expected1);
     }
+
+    @Test
+    public void testRemovePojo() throws IOException {
+
+        Remove mockRemove = mock(Remove.class);
+        when(mockRemove.from(any(Category.class))).thenReturn(mockRemove);
+        when(mockRemove.where(any(Key.class), any())).thenReturn(mockRemove);
+
+        when(mockStorage.createRemove()).thenReturn(mockRemove);
+
+        String endpoint = getEndpoint();
+
+        URL url = new URL(endpoint + "/remove-pojo");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        Map<Category,Integer> categoryIds = new HashMap<>();
+        categoryIds.put(category, categoryId);
+        WebRemove remove = new WebRemove(categoryIds).from(category).where(key1, "test");
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("remove=");
+        gson.toJson(remove, out);
+        out.write("\n");
+        out.flush();
+
+        assertEquals(200, conn.getResponseCode());
+        verify(mockStorage).createRemove();
+        verify(mockRemove).from(category);
+        verify(mockRemove).where(key1, "test");
+        verify(mockStorage).removePojo(mockRemove);
+    }
+
 
     private void registerCategory() {
         try {

@@ -14,15 +14,17 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
 import com.redhat.thermostat.common.model.Pojo;
-import com.redhat.thermostat.common.storage.Categories;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebRemove;
 
 @SuppressWarnings("serial")
 public class RESTStorageEndPoint extends HttpServlet {
@@ -57,6 +59,8 @@ public class RESTStorageEndPoint extends HttpServlet {
             putPojo(req, resp);
         } else if (cmd.equals("register-category")) {
             registerCategory(req, resp);
+        } else if (cmd.equals("remove-pojo")) {
+            removePojo(req, resp);
         }
     }
 
@@ -98,6 +102,21 @@ public class RESTStorageEndPoint extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void removePojo(HttpServletRequest req, HttpServletResponse resp) {
+        String removeParam = req.getParameter("remove");
+        WebRemove remove = gson.fromJson(removeParam, WebRemove.class);
+        Remove targetRemove = storage.createRemove();
+        targetRemove = targetRemove.from(getCategoryFromId(remove.getCategoryId()));
+        List<Qualifier<?>> qualifiers = remove.getQualifiers();
+        for (Qualifier qualifier : qualifiers) {
+            assert (qualifier.getCriteria() == Criteria.EQUALS);
+            targetRemove = targetRemove.where(qualifier.getKey(), qualifier.getValue());
+        }
+        storage.removePojo(targetRemove);
+    }
+
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findPojo(HttpServletRequest req, HttpServletResponse resp) throws IOException {

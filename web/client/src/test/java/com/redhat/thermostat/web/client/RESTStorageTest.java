@@ -39,12 +39,14 @@ package com.redhat.thermostat.web.client;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
 import java.util.List;
@@ -71,11 +73,13 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebRemove;
 
 public class RESTStorageTest {
 
@@ -236,7 +240,6 @@ public class RESTStorageTest {
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
         String [] params = line.split("&");
-        System.err.println("params: " + line);
         assertEquals(2, params.length);
         String[] parts = params[0].split("=");
         assertEquals("insert", parts[0]);
@@ -252,4 +255,43 @@ public class RESTStorageTest {
         assertEquals(obj, resultObj);
     }
 
+    @Test
+    public void testCreateRemove() {
+        WebRemove remove = (WebRemove) storage.createRemove();
+        assertNotNull(remove);
+        remove = remove.from(category);
+        assertEquals(42, remove.getCategoryId());
+        assertNotNull(remove);
+        remove = remove.where(key1, "test");
+        assertNotNull(remove);
+        List<Qualifier<?>> qualifiers = remove.getQualifiers();
+        assertEquals(1, qualifiers.size());
+        Qualifier<?> qualifier = qualifiers.get(0);
+        assertEquals(key1, qualifier.getKey());
+        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
+        assertEquals("test", qualifier.getValue());
+    }
+
+    @Test
+    public void testRemovePojo() throws UnsupportedEncodingException, IOException {
+        Remove remove = storage.createRemove().from(category).where(key1, "test");
+        storage.removePojo(remove);
+
+        Gson gson = new Gson();
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        System.err.println("line: " + line);
+        String[] parts = line.split("=");
+        assertEquals("remove", parts[0]);
+        WebRemove actualRemove = gson.fromJson(parts[1], WebRemove.class);
+        
+        assertEquals(42, actualRemove.getCategoryId());
+        List<Qualifier<?>> qualifiers = actualRemove.getQualifiers();
+        assertEquals(1, qualifiers.size());
+        Qualifier<?> qualifier = qualifiers.get(0);
+        assertEquals(key1, qualifier.getKey());
+        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
+        assertEquals("test", qualifier.getValue());
+    }
 }
