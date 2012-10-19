@@ -372,4 +372,21 @@ public class RESTStorageTest {
         int value2 = gson.fromJson(jsonArray.get(1), Integer.class);
         assertEquals(42, value2);
     }
+
+    @Test
+    public void testGetCount() throws UnsupportedEncodingException, IOException {
+
+        Gson gson = new Gson();
+        responseBody = gson.toJson(12345);
+
+        long result = storage.getCount(category);
+
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        String[] parts = line.split("=");
+        assertEquals("category", parts[0]);
+        assertEquals("42", parts[1]);
+        assertEquals(12345, result);
+    }
 }

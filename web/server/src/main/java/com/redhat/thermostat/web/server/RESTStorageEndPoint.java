@@ -68,6 +68,24 @@ public class RESTStorageEndPoint extends HttpServlet {
             removePojo(req, resp);
         } else if (cmd.equals("update-pojo")) {
             updatePojo(req, resp);
+        } else if (cmd.equals("get-count")) {
+            getCount(req, resp);
+        }
+    }
+
+    private void getCount(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            String categoryParam = req.getParameter("category");
+            int categoryId = gson.fromJson(categoryParam, Integer.class);
+            Category category = categories.get(categoryId);
+            long result = storage.getCount(category);
+            resp.setStatus(HttpServletResponse.SC_OK);
+            resp.setContentType("application/json");
+            gson.toJson(result, resp.getWriter());
+            resp.flushBuffer();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 

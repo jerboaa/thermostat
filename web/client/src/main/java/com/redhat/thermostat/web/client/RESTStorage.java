@@ -201,9 +201,27 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public long getCount(Category arg0) {
-        // TODO Auto-generated method stub
-        return 0;
+    public long getCount(Category category) {
+        try {
+            URL url = new URL(endpoint + "/get-count");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setRequestMethod("POST");
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            writer.write("category=");
+            gson.toJson(categoryIds.get(category), writer);
+            writer.write("\n");
+            writer.flush();
+
+            InputStream in = conn.getInputStream();
+            long result = gson.fromJson(new InputStreamReader(in), Long.class);
+            return result;
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

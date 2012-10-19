@@ -322,6 +322,32 @@ public class RESTStorageEndpointTest {
     }
 
 
+    @Test
+    public void testGetCount() throws IOException {
+
+        when(mockStorage.getCount(category)).thenReturn(12345L);
+        String endpoint = getEndpoint();
+
+        URL url = new URL(endpoint + "/get-count");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("category=" + categoryId);
+        out.flush();
+
+        InputStream in = conn.getInputStream();
+        Reader reader = new InputStreamReader(in);
+        long result = gson.fromJson(reader, Long.class);
+        assertEquals(200, conn.getResponseCode());
+        assertEquals(12345, result);
+        verify(mockStorage).getCount(category);
+        
+    }
+
+
     private void registerCategory() {
         try {
             String endpoint = getEndpoint();
