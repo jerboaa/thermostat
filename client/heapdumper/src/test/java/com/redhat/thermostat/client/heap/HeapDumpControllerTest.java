@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.heap;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -46,8 +48,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -70,6 +74,9 @@ import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.common.model.VmMemoryStat;
+import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 
 public class HeapDumpControllerTest {
 
@@ -310,4 +317,89 @@ public class HeapDumpControllerTest {
         assertTrue(heapDumps.getValue().contains(new HeapDump(info1, heapDao)));
         assertTrue(heapDumps.getValue().contains(new HeapDump(info2, heapDao)));
     }
+
+    @Test
+    public void testTimerFetchesMemoryDataAndUpdatesView() {
+        createController();
+        Runnable timerAction = timerActionCaptor.getValue();
+
+        final long CAPACITY = 10;
+        final long USED = 5;
+        Space space = new Space();
+        space.capacity = CAPACITY;
+        space.maxCapacity = 20;
+        space.used = USED;
+        Generation gen = new Generation();
+        gen.name = "foobar";
+        gen.spaces = Arrays.asList(space);
+        VmMemoryStat stat = new VmMemoryStat();
+        stat.setGenerations(Arrays.asList(gen));
+
+        when(vmDao.getLatestVmMemoryStats(isA(VmRef.class), anyLong())).thenReturn(Arrays.asList(stat));
+
+        timerAction.run();
+
+        ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
+        verify(vmDao).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStampCaptor.getValue());
+        verify(view).updateUsedAndCapacity(USED + " B", CAPACITY + " B");
+    }
+
+    @Test
+    public void testTimerFetchesMemoryDataDeltaOnly() {
+        ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
+
+        final long DATA_TIMESTAMP = System.currentTimeMillis() + 1000000000;
+        Space space = new Space();
+        space.capacity = 10;
+        space.maxCapacity = 20;
+        space.used = 5;
+        Generation gen = new Generation();
+        gen.name = "foobar";
+        gen.spaces = Arrays.asList(space);
+        VmMemoryStat stat = new VmMemoryStat();
+        stat.setTimeStamp(DATA_TIMESTAMP);
+        stat.setGenerations(Arrays.asList(gen));
+
+        when(vmDao.getLatestVmMemoryStats(isA(VmRef.class), anyLong())).thenReturn(Arrays.asList(stat));
+
+        createController();
+        Runnable timerAction = timerActionCaptor.getValue();
+
+        timerAction.run();
+        timerAction.run();
+
+        verify(vmDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
+
+        long timeStamp1 = timeStampCaptor.getAllValues().get(0);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp1);
+
+        long timeStamp2 = timeStampCaptor.getAllValues().get(1);
+        assertTimeStampIsAround(DATA_TIMESTAMP, timeStamp2);
+    }
+
+    @Test
+    public void testTimerFetchesMemoryDataDeltaOnlyEvenWithNoData() {
+        ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
+
+        createController();
+        Runnable timerAction = timerActionCaptor.getValue();
+
+        timerAction.run();
+        timerAction.run();
+
+        verify(vmDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
+
+        long timeStamp1 = timeStampCaptor.getAllValues().get(0);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp1);
+
+        long timeStamp2 = timeStampCaptor.getAllValues().get(1);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp2);
+    }
+
+    private void assertTimeStampIsAround(long expected, long actual) {
+        assertTrue(actual <= expected + 1000);
+        assertTrue(actual >= expected - 1000);
+    }
+
 }

@@ -1,17 +1,23 @@
 Thank you for downloading Thermostat.
 
-This document contains the following information useful to compile and run
-Thermostat:
 
-1. REQUIREMENTS
-2. BUILDING THERMOSTAT
-3. RUNNING THERMOSTAT
-4. PASSING JVM SPECIFIC OPTIONS
-5. GNOME KEYRING
+CONTENT:
+--------------------------------------------------------------------------------
+
+1.  REQUIREMENTS
+2.  BUILDING THERMOSTAT
+2.1   BUILDING THERMOSTAT CORE
+2.2   BUILDING THERMOSTAT ECLIPSE
+3.  RUNNING THERMOSTAT
+3.1   RUNNING THERMOSTAT CORE
+3.1.1 PASSING JVM SPECIFIC OPTIONS
+3.1.2 GNOME KEYRING
+3.2   RUNNING THERMOSTAT ECLIPSE
+4.  REFERECES
 
 
 --------------------------------------------------------------------------------
-REQUIREMENTS
+1. REQUIREMENTS
 
 * OpenJDK7
 
@@ -19,6 +25,8 @@ Thermostat requires at least Java 7 to build and run. Thermostat has been tested
 with OpenJDK7. Other VMs or versions may or may not work.
 
 * Maven (it will download all the java dependencies for you)
+
+* Make
 
 * MongoDB server
 
@@ -44,40 +52,74 @@ On Debian (and probably Ubuntu):
    aptitude install libgnome-keyring-dev
 
 --------------------------------------------------------------------------------
-BUILDING THERMOSTAT
+2. BUILDING THERMOSTAT
 
-1. Run "mvn clean package". All tests should pass and the build should succeed.
+Thermostat consists of "Thermostat Core" and "Thermostat Eclipse".
+
+Thermostat Core consists of:
+  * CLI client
+  * Swing GUI client
+  * The thermostat agent
+
+Thermostat Eclipse is an Eclipse-based Thermostat client.
+
+--------------------------------------------------------------------------------
+2.1. BUILDING THERMOSTAT CORE
+
+2.1.1.
+   Run "make core". All tests should pass and the build should succeed.
    Requires a graphical environment for the ui tests.
    
    You can skip the tests phase by running:
    
-   mvn clean package -Dmaven.test.skip=true
+   make core SKIP_TESTS=true
 
-   If maven is too chatty, you can try to pass the -q option too:
+   If maven is too chatty, you can try to pass the "-q" option via MAVEN_FLAGS::
    
-   mvn -q clean package -Dmaven.test.skip=true
+   make core SKIP_TESTS=true MAVEN_FLAGS="-q"
    
-2. The resultant Thermostat system can now be found under the directory
+2.1.2.
+   The resulting Thermostat system can now be found under the directory
    distribution/target.
            
-            
 --------------------------------------------------------------------------------
-RUNNING THERMOSTAT
+2.2. BUILDING THERMOSTAT ECLIPSE
 
-0. cd into distribution/target directory just created
+2.2.1.
+   Run "make eclipse". This will build both, Thermostat Core and Thermostat
+   Eclipse. All tests should pass and the build should succeed. Running Eclipse
+   plug-in tests will open an Eclipse instance during build. This requires a
+   working graphical environment and DISPLAY.
 
-1. To start the agent and the db:
-   bin/thermostat service
+   You can skip the tests phase by running:
 
-2. To start the gui client:
-   bin/thermostat gui
+   make eclipse SKIP_TESTS=true
 
-3. To start the cli client:
-   bin/thermostat [--help]
+2.2.2.
+   This produces a local "update-site" or p2 repository from which you can
+   install Thermostat Eclipse into your Eclipse. The repository is at:
 
+   eclipse/composite-repo/target/composite-repo
 
 --------------------------------------------------------------------------------
-PASSING JVM SPECIFIC OPTIONS
+3. RUNNING THERMOSTAT
+
+--------------------------------------------------------------------------------
+3.1. RUNNING THERMOSTAT CORE
+
+  cd into distribution/target directory just created
+
+  To start the agent and the db:
+  bin/thermostat service --start
+
+  To start the gui client:
+  bin/thermostat gui
+
+  To start the cli client:
+  bin/thermostat [--help]
+
+
+3.1.1. PASSING JVM SPECIFIC OPTIONS
 
 In some cases, it may be desirable to pass arguments to the virtual machine,
 for example to increase memory or change the look and feel for the Swing Client.
@@ -93,8 +135,7 @@ bin/thermostat gui \
     -J-Dswing.defaultlaf=javax.swing.plaf.nimbus.NimbusLookAndFeel
 
 
---------------------------------------------------------------------------------
-GNOME KEYRING
+3.1.2. GNOME KEYRING
 
 Thermostat includes experimental support to store user credentials in the
 Gnome Keyring daemon, this support is currently limited to passwords only.
@@ -113,3 +154,27 @@ the keyring is only used to securely store passwords on disk. The passwords are
 saved in the user session keychain and available to other applications that
 can access the keyring. 
 
+--------------------------------------------------------------------------------
+3.2. RUNNING THERMOSTAT ECLIPSE
+
+  The "eclipse/composite-repo/target/composite-repo" directory was
+  produced during step 2.2. In order to use this local repository
+  follow these steps:
+
+    "Help" => "Install New Software..."
+    "Add..."
+    "Local..."
+    Select "eclipse/composite-repo/target/composite-repo"
+    Give it any name you like and click "OK".
+    Select "Thermostat Eclipse Plug-ins", then "Next >"
+    Click through dialog, accepting options.
+   
+  After this you should be able to see Thermostat views in Eclipse:
+    "Window" => "Show View" => "Other..." => "Thermostat" 
+            
+
+--------------------------------------------------------------------------------
+4. REFERECES
+
+  User Guide:
+    http://icedtea.classpath.org/wiki/Thermostat/UserGuide

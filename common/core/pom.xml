@@ -97,6 +97,7 @@
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
+            <Include-Resource>META-INF/p2.inf=p2.inf</Include-Resource>
           </instructions>
         </configuration>
       </plugin>
