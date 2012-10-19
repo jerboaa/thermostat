@@ -15,7 +15,11 @@ Import-Package: com.mongodb,
  com.redhat.thermostat.common.config,
  com.redhat.thermostat.common.dao,
  com.redhat.thermostat.common.model,
- com.redhat.thermostat.common.storage
+ com.redhat.thermostat.common.storage,
+ com.redhat.thermostat.launcher,
+ com.redhat.thermostat.common.utils,
+ com.redhat.thermostat.web.client,
+ com.redhat.thermostat.web.common
 Export-Package: com.redhat.thermostat.eclipse;x-friends:=com.redhat.thermostat.eclipse.test,
  com.redhat.thermostat.eclipse.model;x-friends:=com.redhat.thermostat.eclipse.test,
  com.redhat.thermostat.eclipse.views;x-friends:=com.redhat.thermostat.eclipse.test

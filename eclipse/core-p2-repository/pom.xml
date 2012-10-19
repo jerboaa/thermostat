@@ -197,6 +197,22 @@
                     <artifactId>thermostat-thread-collector</artifactId>
                     <version>${project.version}</version>
                 </artifactItem>      
+                <!-- Web bundles -->
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-web-client</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-web-common</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>
+                <artifactItem>
+                    <groupId>com.redhat.thermostat</groupId>
+                    <artifactId>thermostat-web-server</artifactId>
+                    <version>${project.version}</version>
+                </artifactItem>      
               </artifactItems>
               <outputDirectory>${project.basedir}/target/source/plugins</outputDirectory>
             </configuration>

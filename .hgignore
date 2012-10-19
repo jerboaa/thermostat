@@ -10,3 +10,4 @@ syntax: regexp
 syntax: glob
 target/*
 bin/*
+*~

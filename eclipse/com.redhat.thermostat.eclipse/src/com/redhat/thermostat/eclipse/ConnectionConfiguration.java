@@ -41,10 +41,21 @@ import com.redhat.thermostat.common.config.StartupConfiguration;
 public class ConnectionConfiguration implements StartupConfiguration {
 
     private String dbUrl;
-
-    // FIXME: Adapt to more dynamic requirements
-    public ConnectionConfiguration(String dbUrl) {
+    private String username;
+    private String password;
+    
+    public ConnectionConfiguration(String username, String password, String dbUrl) {
         this.dbUrl = dbUrl;
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     @Override

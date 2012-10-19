@@ -43,16 +43,14 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.common.storage.ConnectionException;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.launcher.DbService;
 
 /**
  * The activator class controls the plug-in life cycle
  */
 public class Activator extends AbstractUIPlugin {
-
-    // Storage connection status
-    private volatile boolean connected = false;
 
     // The plug-in ID
     public static final String PLUGIN_ID = "com.redhat.thermostat.eclipse"; //$NON-NLS-1$
@@ -64,14 +62,6 @@ public class Activator extends AbstractUIPlugin {
      * The constructor
      */
     public Activator() {
-    }
-
-    public boolean isConnected() {
-        return connected;
-    }
-
-    public void setConnected(boolean connected) {
-        this.connected = connected;
     }
 
     /*
@@ -94,11 +84,13 @@ public class Activator extends AbstractUIPlugin {
      * )
      */
     public void stop(BundleContext context) throws Exception {
-        if (isConnected()) {
-            Connection connection = ApplicationContext.getInstance()
-                    .getDAOFactory().getConnection();
-            connection.disconnect();
+        DbService dbService = OSGIUtils.getInstance().getService(DbService.class);
+        try {
+            dbService.disconnect();
+        } catch (ConnectionException e) {
+            e.printStackTrace();
         }
+        dbService.getServiceRegistration().unregister();
         plugin = null;
         super.stop(context);
     }
@@ -150,6 +142,11 @@ public class Activator extends AbstractUIPlugin {
      */
     public static ImageDescriptor getImageDescriptor(String path) {
         return imageDescriptorFromPlugin(PLUGIN_ID, path);
+    }
+    
+    public boolean isDbConnected() {
+        DbService dbService = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
+        return dbService != null;
     }
 
 }
