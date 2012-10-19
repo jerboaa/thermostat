@@ -13,18 +13,23 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
+import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebUpdate;
 
 @SuppressWarnings("serial")
 public class RESTStorageEndPoint extends HttpServlet {
@@ -61,6 +66,8 @@ public class RESTStorageEndPoint extends HttpServlet {
             registerCategory(req, resp);
         } else if (cmd.equals("remove-pojo")) {
             removePojo(req, resp);
+        } else if (cmd.equals("update-pojo")) {
+            updatePojo(req, resp);
         }
     }
 
@@ -115,8 +122,40 @@ public class RESTStorageEndPoint extends HttpServlet {
             targetRemove = targetRemove.where(qualifier.getKey(), qualifier.getValue());
         }
         storage.removePojo(targetRemove);
+        resp.setStatus(HttpServletResponse.SC_OK);
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void updatePojo(HttpServletRequest req, HttpServletResponse resp) {
+        try {
+            String updateParam = req.getParameter("update");
+            WebUpdate update = gson.fromJson(updateParam, WebUpdate.class);
+            Update targetUpdate = storage.createUpdate();
+            targetUpdate = targetUpdate.from(getCategoryFromId(update.getCategoryId()));
+            List<Qualifier<?>> qualifiers = update.getQualifiers();
+            for (Qualifier qualifier : qualifiers) {
+                assert (qualifier.getCriteria() == Criteria.EQUALS);
+                targetUpdate = targetUpdate.where(qualifier.getKey(), qualifier.getValue());
+            }
+            String valuesParam = req.getParameter("values");
+            JsonParser parser = new JsonParser();
+            JsonArray jsonArray = parser.parse(valuesParam).getAsJsonArray();
+            List<WebUpdate.UpdateValue> updates = update.getUpdates();
+            int index = 0;
+            for (WebUpdate.UpdateValue updateValue : updates) {
+                Class valueClass = Class.forName(updateValue.getValueClass());
+                Object value = gson.fromJson(jsonArray.get(index), valueClass);
+                index++;
+                Key key = updateValue.getKey();
+                targetUpdate.set(key, value);
+            }
+            storage.updatePojo(targetUpdate);
+            resp.setStatus(HttpServletResponse.SC_OK);
+        } catch (ClassNotFoundException ex) {
+            ex.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+    }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findPojo(HttpServletRequest req, HttpServletResponse resp) throws IOException {

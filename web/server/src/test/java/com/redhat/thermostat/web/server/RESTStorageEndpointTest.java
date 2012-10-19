@@ -73,6 +73,7 @@ import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.client.RESTStorage;
@@ -80,6 +81,7 @@ import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebUpdate;
 
 public class RESTStorageEndpointTest {
 
@@ -281,6 +283,42 @@ public class RESTStorageEndpointTest {
         verify(mockRemove).from(category);
         verify(mockRemove).where(key1, "test");
         verify(mockStorage).removePojo(mockRemove);
+    }
+
+    @Test
+    public void testUpdatePojo() throws IOException {
+
+        Update mockUpdate = mock(Update.class);
+        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
+        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
+        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
+        when(mockStorage.createUpdate()).thenReturn(mockUpdate);
+
+        String endpoint = getEndpoint();
+
+        URL url = new URL(endpoint + "/update-pojo");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        Map<Category,Integer> categoryIds = new HashMap<>();
+        categoryIds.put(category, categoryId);
+        WebUpdate update = new WebUpdate(categoryIds).from(category).where(key1, "test").set(key1, "fluff").set(key2, 42);
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("update=");
+        gson.toJson(update, out);
+        out.write("&values=");
+        gson.toJson(new Object[] {"fluff", 42 }, out);
+        out.write("\n");
+        out.flush();
+
+        assertEquals(200, conn.getResponseCode());
+        verify(mockStorage).createUpdate();
+        verify(mockUpdate).from(category);
+        verify(mockUpdate).where(key1, "test");
+        verify(mockUpdate).set(key1, "fluff");
+        verify(mockUpdate).set(key2, 42);
+        verify(mockStorage).updatePojo(mockUpdate);
     }
 
 

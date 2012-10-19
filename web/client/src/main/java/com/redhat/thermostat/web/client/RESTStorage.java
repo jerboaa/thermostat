@@ -47,7 +47,9 @@ import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -63,6 +65,7 @@ import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebUpdate;
 
 public class RESTStorage extends Storage {
 
@@ -83,7 +86,6 @@ public class RESTStorage extends Storage {
         }
         @Override
         public String getUrl() {
-            // TODO Auto-generated method stub
             return endpoint;
         }
     }
@@ -138,9 +140,8 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public Update createUpdate() {
-        // TODO Auto-generated method stub
-        return null;
+    public WebUpdate createUpdate() {
+        return new WebUpdate(categoryIds);
     }
 
     @Override
@@ -283,9 +284,31 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public void updatePojo(Update arg0) {
-        // TODO Auto-generated method stub
-
+    public void updatePojo(Update update) {
+        WebUpdate webUp = (WebUpdate) update;
+        try {
+            URL url = new URL(endpoint + "/update-pojo");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoOutput(true);
+            conn.setDoInput(true);
+            conn.setRequestMethod("POST");
+            OutputStream out = conn.getOutputStream();
+            Gson gson = new Gson();
+            OutputStreamWriter writer = new OutputStreamWriter(out);
+            writer.write("update=");
+            writer.write(URLEncoder.encode(gson.toJson(webUp), "UTF-8"));
+            List<WebUpdate.UpdateValue> updateValues = webUp.getUpdates();
+            List<Object> values = new ArrayList<>(updateValues.size());
+            for (WebUpdate.UpdateValue updateValue : updateValues) {
+                values.add(updateValue.getValue());
+            }
+            writer.write("&values=");
+            writer.write(URLEncoder.encode(gson.toJson(values), "UTF-8"));
+            writer.flush();
+            checkResponseCode(conn);
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void setEndpoint(String endpoint) {

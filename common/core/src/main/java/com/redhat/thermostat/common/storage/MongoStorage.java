@@ -332,11 +332,6 @@ public class MongoStorage extends Storage {
         collectionCache.put(name, coll);
     }
 
-    private void createConnectionKey(Category category) {
-        // TODO: There is probably some better place to do this, perhaps related to the inner class
-        // idea mentioned below.
-    }
-
     @Override
     public Query createQuery() {
         return new MongoQuery();

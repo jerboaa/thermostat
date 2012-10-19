@@ -40,6 +40,7 @@ package com.redhat.thermostat.web.client;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
@@ -66,6 +67,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import com.redhat.thermostat.common.storage.Categories;
 import com.redhat.thermostat.common.storage.Category;
@@ -80,6 +83,7 @@ import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
+import com.redhat.thermostat.web.common.WebUpdate;
 
 public class RESTStorageTest {
 
@@ -93,12 +97,14 @@ public class RESTStorageTest {
 
     private static Category category;
     private static Key<String> key1;
+    private static Key<Integer> key2;
 
     private RESTStorage storage;
 
     @BeforeClass
     public static void setupCategory() {
         key1 = new Key<>("property1", true);
+        key2 = new Key<>("property2", true);
         category = new Category("test", key1);
     }
 
@@ -293,5 +299,77 @@ public class RESTStorageTest {
         assertEquals(key1, qualifier.getKey());
         assertEquals(Criteria.EQUALS, qualifier.getCriteria());
         assertEquals("test", qualifier.getValue());
+    }
+
+    @Test
+    public void testCreateUpdate() {
+        WebUpdate update = (WebUpdate) storage.createUpdate();
+        assertNotNull(update);
+        update = update.from(category);
+        assertEquals(42, update.getCategoryId());
+        assertNotNull(update);
+        update = update.where(key1, "test");
+        assertNotNull(update);
+        List<Qualifier<?>> qualifiers = update.getQualifiers();
+        assertEquals(1, qualifiers.size());
+        Qualifier<?> qualifier = qualifiers.get(0);
+        assertEquals(key1, qualifier.getKey());
+        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
+        assertEquals("test", qualifier.getValue());
+        update = update.set(key1, "fluff");
+        assertNotNull(update);
+        List<WebUpdate.UpdateValue> updates = update.getUpdates();
+        assertEquals(1, updates.size());
+        assertEquals("fluff", updates.get(0).getValue());
+        assertEquals(key1, updates.get(0).getKey());
+        assertEquals("java.lang.String", updates.get(0).getValueClass());
+    }
+
+    @Test
+    public void testUpdate() throws UnsupportedEncodingException, IOException, JsonSyntaxException, ClassNotFoundException {
+
+        WebUpdate update = storage.createUpdate().from(category).where(key1, "test").set(key1, "fluff").set(key2, 42);
+        storage.updatePojo(update);
+
+        Gson gson = new Gson();
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        String [] params = line.split("&");
+        assertEquals(2, params.length);
+        String[] parts = params[0].split("=");
+        assertEquals("update", parts[0]);
+        WebUpdate receivedUpdate = gson.fromJson(parts[1], WebUpdate.class);
+        assertEquals(42, receivedUpdate.getCategoryId());
+
+        List<WebUpdate.UpdateValue> updates = receivedUpdate.getUpdates();
+        assertEquals(2, updates.size());
+
+        WebUpdate.UpdateValue update1 = updates.get(0);
+        assertEquals(key1, update1.getKey());
+        assertEquals("java.lang.String", update1.getValueClass());
+        assertNull(update1.getValue());
+
+        WebUpdate.UpdateValue update2 = updates.get(1);
+        assertEquals(key2, update2.getKey());
+        assertEquals("java.lang.Integer", update2.getValueClass());
+        assertNull(update2.getValue());
+
+        List<Qualifier<?>> qualifiers = receivedUpdate.getQualifiers();
+        assertEquals(1, qualifiers.size());
+        Qualifier<?> qualifier = qualifiers.get(0);
+        assertEquals(key1, qualifier.getKey());
+        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
+        assertEquals("test", qualifier.getValue());
+
+        parts = params[1].split("=");
+        assertEquals(2, parts.length);
+        assertEquals("values", parts[0]);
+        JsonParser jsonParser = new JsonParser();
+        JsonArray jsonArray = jsonParser.parse(parts[1]).getAsJsonArray();
+        String value1 = gson.fromJson(jsonArray.get(0), String.class);
+        assertEquals("fluff", value1);
+        int value2 = gson.fromJson(jsonArray.get(1), Integer.class);
+        assertEquals(42, value2);
     }
 }
