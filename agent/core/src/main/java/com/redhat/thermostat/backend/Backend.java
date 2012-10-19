@@ -40,13 +40,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.Storage;
 
 /**
- * Represents a monitoring back-end. All the {@link Backend}s should be
- * registered with the {@link BackendRegistry}.
+ * Represents a monitoring back-end.
  */
 public abstract class Backend {
 
@@ -61,6 +61,10 @@ public abstract class Backend {
     
     private BackendID id;
 
+    public Backend(BackendID id) {
+        this.id = id;
+    }
+    
     /**
      * 
      * @param configMap a map containing the settings that this backend has been configured with.
@@ -177,8 +181,14 @@ public abstract class Backend {
 
     /**
      * Activate the {@link Backend}.  Based on the current configuration,
-     * begin pushing data to the {@link Storage} layer.  If the {@link Backend} is
-     * already active, this method should have no effect
+     * begin pushing data to the {@link Storage} layer.
+     * If the {@link Backend} is already active, this method should have no
+     * effect.
+     * 
+     * <br /><br />
+     * 
+     * This method is called by the framework when the {@link Backend} is
+     * registered.
      *
      * @return true on success, false if there was an error
      */
@@ -189,6 +199,11 @@ public abstract class Backend {
      * resources that were obtained as a direct result of a call to
      * {@link #activate()}.  If the {@link Backend} is not active, this
      * method should have no effect
+     *
+     * <br /><br />
+     * 
+     * This method is called by the framework when the {@link Backend} is
+     * deregistered.
      *
      * @return true on success
      */
@@ -225,12 +240,51 @@ public abstract class Backend {
     public void setObserveNewJvm(boolean newValue) {
         observeNewJvm = newValue;
     }
-
-    void setID(BackendID backendID) {
-        this.id = backendID;
-    }
     
     public BackendID getID() {
         return id;
+    }
+    
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((id == null) ? 0 : id.hashCode());
+        result = prime * result + ((vendor == null) ? 0 : vendor.hashCode());
+        result = prime * result + ((version == null) ? 0 : version.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        Backend other = (Backend) obj;
+        if (id == null) {
+            if (other.id != null)
+                return false;
+        } else if (!id.equals(other.id))
+            return false;
+        if (vendor == null) {
+            if (other.vendor != null)
+                return false;
+        } else if (!vendor.equals(other.vendor))
+            return false;
+        if (version == null) {
+            if (other.version != null)
+                return false;
+        } else if (!version.equals(other.version))
+            return false;
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Backend [version=" + version + ", vendor=" + vendor
+                + ", description=" + description + ", id=" + id + "]";
     }
 }

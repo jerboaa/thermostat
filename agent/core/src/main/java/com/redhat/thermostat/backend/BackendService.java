@@ -34,10 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.backend;
 
-public interface Countable {
-
-    public long getCount();
-
+/**
+ * Class used to signal that {@link Backend}s can start registering themselves
+ * into the Framework. It is registered by the Agent as soon as it is ready to
+ * accept new {@link Backend}s. 
+ */
+public class BackendService {
 }

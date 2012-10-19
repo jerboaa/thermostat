@@ -58,4 +58,37 @@ public class BackendID {
     public String toString() {
         return simpleName + " = " + className;
     }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((className == null) ? 0 : className.hashCode());
+        result = prime * result
+                + ((simpleName == null) ? 0 : simpleName.hashCode());
+        return result;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        BackendID other = (BackendID) obj;
+        if (className == null) {
+            if (other.className != null)
+                return false;
+        } else if (!className.equals(other.className))
+            return false;
+        if (simpleName == null) {
+            if (other.simpleName != null)
+                return false;
+        } else if (!simpleName.equals(other.simpleName))
+            return false;
+        return true;
+    }
 }

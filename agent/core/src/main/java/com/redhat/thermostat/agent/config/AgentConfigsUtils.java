@@ -67,15 +67,6 @@ public class AgentConfigsUtils {
             throw new InvalidConfigurationException(e);
         }
         
-        if (properties.containsKey(AgentProperties.BACKENDS.name())) {
-            // this is a command separated list of backends
-            String backends = properties.getProperty(AgentProperties.BACKENDS.name());
-            configuration.parseBackends(backends.split(","));
-            
-        } else {
-            throw new InvalidConfigurationException(AgentProperties.BACKENDS + " property missing");
-        }
-        
         if (properties.containsKey(AgentProperties.DB_URL.name())) {
             String db = properties.getProperty(AgentProperties.DB_URL.name());
             configuration.setDatabaseURL(db);

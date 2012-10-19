@@ -41,6 +41,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 
 class VmFilterRegistry extends ThermostatExtensionRegistry<VmFilter> {
 

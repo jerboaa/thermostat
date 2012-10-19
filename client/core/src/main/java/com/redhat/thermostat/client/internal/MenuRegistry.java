@@ -40,6 +40,7 @@ import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 
 public class MenuRegistry extends ThermostatExtensionRegistry<MenuAction> {
 

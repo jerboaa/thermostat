@@ -34,20 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.internal;
+package com.redhat.thermostat.backend.system.osgi;
 
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
-import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendService;
+import com.redhat.thermostat.backend.system.SystemBackend;
 
-class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<VmDecorator> {
+@SuppressWarnings("rawtypes")
+public class SystemBackendActivator implements BundleActivator {
 
-    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + VmDecorator.class.getName() + ")";
+    private ServiceTracker tracker;
+    private SystemBackend backend;
     
-    public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, VmDecorator.class);
+    @SuppressWarnings("unchecked")
+    @Override
+    public void start(BundleContext context) throws Exception {
+        System.err.println("loading SystemBackendActivator");
+        
+        backend = new SystemBackend();
+        
+        tracker = new ServiceTracker(context, BackendService.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                context.registerService(Backend.class, backend, null);
+                return super.addingService(reference);
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                
+                if (backend.isActive()) {
+                    backend.deactivate();
+                }
+                context.ungetService(reference);
+                super.removedService(reference, service);
+            }
+        };
+        
+        tracker.open();
+    }
+    
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        if (backend.isActive()) {
+            backend.deactivate();
+        }
+        tracker.close();
     }
 }

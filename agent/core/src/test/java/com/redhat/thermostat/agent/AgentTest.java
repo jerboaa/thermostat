@@ -37,17 +37,20 @@
 package com.redhat.thermostat.agent;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.atLeast;
-import static org.mockito.Mockito.isA;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.isA;
+import static org.mockito.Mockito.atLeast;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,19 +58,27 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
+import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.BackendInformation;
 import com.redhat.thermostat.common.storage.Storage;
 
+@SuppressWarnings({ "rawtypes", "unchecked" })
 public class AgentTest {
 
     private AgentStartupConfiguration config;
     private BackendRegistry backendRegistry;
     private Backend backend;
 
+    private DAOFactory daoFactory;
+    
     private Storage storage;
     private AgentInfoDAO agentInfoDao;
     private BackendInfoDAO backendInfoDao;
@@ -82,6 +93,11 @@ public class AgentTest {
         agentInfoDao = mock(AgentInfoDAO.class);
         backendInfoDao = mock(BackendInfoDAO.class);
         
+        daoFactory = mock(DAOFactory.class);
+        when(daoFactory.getStorage()).thenReturn(storage);
+        when(daoFactory.getAgentInfoDAO()).thenReturn(agentInfoDao);
+        when(daoFactory.getBackendInfoDAO()).thenReturn(backendInfoDao);
+
         backend = mock(Backend.class);
         when(backend.getName()).thenReturn("testname");
         when(backend.getDescription()).thenReturn("testdesc");
@@ -91,52 +107,100 @@ public class AgentTest {
         backends.add(backend);
         
         backendRegistry = mock(BackendRegistry.class);
-        when(backendRegistry.getAll()).thenReturn(backends);
+    }
+    
+    @SuppressWarnings("unused")
+    @Test
+    public void testAgentInit() throws Exception {
+        Agent agent = new Agent(backendRegistry, config, daoFactory);
+
+        verify(daoFactory).getStorage();
+        verify(daoFactory).getAgentInfoDAO();
+        verify(daoFactory).getBackendInfoDAO();
+        
+        verify(backendRegistry).addActionListener(any(ActionListener.class));
     }
     
     @Test
     public void testStartAgent() throws Exception {
         
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+        Agent agent = new Agent(backendRegistry, config, daoFactory);
+        
         agent.start();
 
-        // Verify that backend has been activated and storage received the agent information.
-        verify(backend).activate();
+        // Verify that backend registry is started
+        verify(backendRegistry).start();
+        ArgumentCaptor<AgentInformation> argument = ArgumentCaptor.forClass(AgentInformation.class);
+
+        verify(agentInfoDao).addAgentInformation(argument.capture());
+        assertEquals(123, argument.getValue().getStartTime());
+    }
+    
+    @Test
+    public void testServiceAddedRemovedFromOSGi() throws Exception {
+        ArgumentCaptor<ActionListener> backendListener = ArgumentCaptor.forClass(ActionListener.class);
+
+        // Start agent.
+        Agent agent = new Agent(backendRegistry, config, daoFactory);
+        verify(backendRegistry).addActionListener(backendListener.capture());
+        
+        agent.start();
+
+        // Verify that backend registry is started
+        verify(backendRegistry).start();
         ArgumentCaptor<AgentInformation> argument = ArgumentCaptor.forClass(AgentInformation.class);
 
         verify(agentInfoDao).addAgentInformation(argument.capture());
         assertEquals(123, argument.getValue().getStartTime());
 
-        ArgumentCaptor<BackendInformation> backendsArg = ArgumentCaptor.forClass(BackendInformation.class);
-        verify(backendInfoDao).addBackendInformation(backendsArg.capture());
+        ActionListener listener = backendListener.getValue();
+        
+        // add a fake backend to see if it's registered corectly
+        ActionEvent<ThermostatExtensionRegistry.Action> actionEvent =
+                new ActionEvent<>(this, ThermostatExtensionRegistry.Action.SERVICE_ADDED);
+        actionEvent.setPayload(backend);
+        
+        listener.actionPerformed(actionEvent);
+        
+        verify(backend).setDAOFactory(daoFactory);
+        verify(backend).activate();
+        
+        assertTrue(agent.getBackendInfos().containsKey(backend));
+        BackendInformation info = agent.getBackendInfos().get(backend);
+        assertEquals("testname", info.getName());
+        assertEquals("testdesc", info.getDescription());
+        assertEquals(true, info.isObserveNewJvm());
+        assertEquals(true, info.isActive());
+        
+        verify(backendInfoDao).addBackendInformation(info);
 
-        List<BackendInformation> backendInfos = backendsArg.getAllValues();
-        assertEquals(1, backendInfos.size());
-        BackendInformation backend0 = backendInfos.get(0);
-        assertEquals("testname", backend0.getName());
-        assertEquals("testdesc", backend0.getDescription());
-        assertEquals(true, backend0.isObserveNewJvm());
-        assertEquals(true, backend0.isActive());
-        // TODO: We should probably also test getPIDs() and getConfiguration(), but it's not clear to me at this point
-        // what those should really do (and it looks like they're not implemented yet).
+        actionEvent = new ActionEvent<>(this, ThermostatExtensionRegistry.Action.SERVICE_REMOVED);
+        actionEvent.setPayload(backend);
+        listener.actionPerformed(actionEvent);
+        
+        verify(backend).deactivate();
+
+        assertFalse(agent.getBackendInfos().containsKey(backend));
+        verify(backendInfoDao).removeBackendInformation(info);
     }
     
     @Test
     public void testStopAgentWithPurging() throws Exception {
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+                
+        Agent agent = new Agent(backendRegistry, config, daoFactory);
         agent.start();
         
         // stop agent
         agent.stop();
         
-        verify(backend).deactivate();
+        verify(backendRegistry).stop();
 
         ArgumentCaptor<AgentInformation> argument = ArgumentCaptor.forClass(AgentInformation.class);        
         verify(agentInfoDao, never()).updateAgentInformation(argument.capture());
         verify(storage, times(1)).purge();
     }
-    
+   
     @Test
     public void testStopAgentWithoutPurging() throws Exception {
         
@@ -144,16 +208,15 @@ public class AgentTest {
         when(config.getStartTime()).thenReturn(123L);
         when(config.purge()).thenReturn(false);
         
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+        Agent agent = new Agent(backendRegistry, config, daoFactory);
         agent.start();
         
         // stop agent
         agent.stop();
         
-        verify(backend).deactivate();
+        verify(backendRegistry).stop();
 
         verify(agentInfoDao).updateAgentInformation(isA(AgentInformation.class));
-        verify(backendInfoDao, atLeast(1)).removeBackendInformation(isA(BackendInformation.class));
         verify(storage, times(0)).purge();
     }
 }

@@ -55,6 +55,7 @@ import com.redhat.thermostat.client.internal.MenuRegistry;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 
 public class MenuRegistryTest {
 

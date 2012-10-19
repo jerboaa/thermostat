@@ -34,10 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.utils;
 
-public interface Countable {
+import static org.junit.Assert.assertNotNull;
 
-    public long getCount();
+import java.io.IOException;
+import java.io.Reader;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.common.TestUtils;
+import com.redhat.thermostat.utils.ProcDataSource;
+
+public class ProcDataSourceTest {
+
+    @Test
+    public void testGetCpuInfoReader() throws IOException {
+        Reader r = new ProcDataSource().getCpuInfoReader();
+        assertNotNull(r);
+    }
+
+    @Test
+    public void testGetCpuLoadReader() throws IOException {
+        Reader r = new ProcDataSource().getCpuLoadReader();
+        assertNotNull(r);
+    }
+
+    @Test
+    public void testGetMemInfoReader() throws IOException {
+        Reader r = new ProcDataSource().getMemInfoReader();
+        assertNotNull(r);
+    }
+
+    @Test
+    public void testGetStatReader() throws IOException {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getStatReader(pid);
+        assertNotNull(r);
+    }
+
+
+    @Test
+    public void testGetEnvironReader() throws IOException {
+        int pid = TestUtils.getProcessId();
+        Reader r = new ProcDataSource().getEnvironReader(pid);
+        assertNotNull(r);
+    }
 
 }

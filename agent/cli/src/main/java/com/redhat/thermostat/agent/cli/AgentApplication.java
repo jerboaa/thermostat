@@ -40,15 +40,18 @@ import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.cli.Options;
+import org.osgi.framework.BundleContext;
+
+import sun.misc.Signal;
+import sun.misc.SignalHandler;
 
 import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentConfigsUtils;
 import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.backend.BackendLoadException;
 import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
@@ -69,9 +72,6 @@ import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
-import sun.misc.Signal;
-import sun.misc.SignalHandler;
-
 @SuppressWarnings("restriction")
 public final class AgentApplication extends BasicCommand {
 
@@ -79,6 +79,12 @@ public final class AgentApplication extends BasicCommand {
 
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
+    
+    private BundleContext bundleContext;
+    
+    public AgentApplication(BundleContext bundleContext) {
+        this.bundleContext = bundleContext;
+    }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
         configuration = AgentConfigsUtils.createAgentConfigs();
@@ -135,19 +141,23 @@ public final class AgentApplication extends BasicCommand {
 
         final ConfigurationServer configServer = OSGIUtils.getInstance().getService(ConfigurationServer.class);
         configServer.startListening(configuration.getConfigListenAddress());
-
+        
         BackendRegistry backendRegistry = null;
         try {
-            backendRegistry = new BackendRegistry(configuration, daoFactory);
-        } catch (BackendLoadException ble) {
-            logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", ble);
+            backendRegistry = new BackendRegistry(bundleContext);
+            
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", e);
             System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
         }
 
-        final Agent agent = new Agent(backendRegistry, configuration, daoFactory.getStorage(), daoFactory.getAgentInfoDAO(), daoFactory.getBackendInfoDAO());
+        final Agent agent = new Agent(backendRegistry, configuration, daoFactory);
         try {
             logger.fine("Starting agent.");
             agent.start();
+            
+            bundleContext.registerService(BackendService.class, new BackendService(), null);
+            
         } catch (LaunchException le) {
             logger.log(Level.SEVERE,
                     "Agent could not start, probably because a configured backend could not be activated.",

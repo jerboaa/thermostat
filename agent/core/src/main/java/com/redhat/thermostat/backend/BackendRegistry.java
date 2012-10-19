@@ -36,82 +36,27 @@
  
 package com.redhat.thermostat.backend;
 
-import java.lang.reflect.Constructor;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
-import com.redhat.thermostat.common.dao.DAOFactory;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
+import org.osgi.framework.InvalidSyntaxException;
+
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
- * A registry for {@link Backend}s. Each {@link Backend} should call
- * {@link #register(Backend)} to register itself.
+ * A registry for {@link Backend}s. {@link Backend}s are responsible to be
+ * registered as OSGi services into the framework.
  */
-public class BackendRegistry {
+public class BackendRegistry extends ThermostatExtensionRegistry<Backend> {
 
     private static final Logger logger = LoggingUtils.getLogger(BackendRegistry.class);
 
-    private final Map<String, Backend> registeredBackends;
+    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + Backend.class.getName() + ")";
 
-    public BackendRegistry(AgentStartupConfiguration config, DAOFactory daoFactory) throws BackendLoadException {
-        this(config, new BackendConfigurationLoader(), daoFactory);
-    }
-
-    public BackendRegistry(AgentStartupConfiguration config, BackendConfigurationLoader backendConfigLoader, DAOFactory daoFactory) throws BackendLoadException {
-
-        registeredBackends = new HashMap<String, Backend>();
-        
-        List<BackendID> backends = config.getBackends();
-
-        /*
-         * Configure the dynamic/custom backends
-         */
-        for (BackendID backendID : backends) {
-            logger.log(Level.FINE, "Initializing backend: \"" + backendID.getClassName() + "\"");
-            Backend backend = null;
-            try {
-                Class<? > c = Class.forName(backendID.getClassName());
-                Class<? extends Backend> narrowed = c.asSubclass(Backend.class);
-                Constructor<? extends Backend> backendConstructor = narrowed.getConstructor();
-                backend = backendConstructor.newInstance();
-
-                backend.setDAOFactory(daoFactory);
-                backend.setID(backendID);
-                
-                backend.setInitialConfiguration(backendConfigLoader.retrieveBackendConfigs(backend.getName()));
-            } catch (Exception e) {
-                throw new BackendLoadException("Could not instantiate configured backend class: " + backendID.getClassName(), e);
-            }
-            register(backend);
-        }
-    }
-
-    private synchronized void register(Backend backend) throws BackendLoadException {
-        if (registeredBackends.containsKey(backend.getName())) {
-            throw new BackendLoadException("Attempt to register two backends with the same name: " + backend.getName());
-        }
-        registeredBackends.put(backend.getName(), backend);
-    }
-
-    private synchronized void unregister(Backend backend) {
-        registeredBackends.remove(backend.getName());
-    }
-
-    public synchronized Collection<Backend> getAll() {
-        return registeredBackends.values();
-    }
-
-    public synchronized Backend getByName(String name) {
-        for (Backend backend : registeredBackends.values()) {
-            if (backend.getName().equals((name))) {
-                return backend;
-            }
-        }
-        return null;
+    public BackendRegistry(BundleContext context) throws InvalidSyntaxException {
+        super(context, FILTER, Backend.class);
     }
 }

@@ -111,6 +111,7 @@
     <module>thread</module>
     <module>killvm</module>
     <module>web</module>
+    <module>system-backend</module>
   </modules>
 
   <build>

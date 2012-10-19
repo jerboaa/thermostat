@@ -51,8 +51,6 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 
 public class AgentStartupConfiguration implements StartupConfiguration, AuthenticationConfiguration {
-
-    private List<BackendID> backends;
     
     private boolean debugConsole;
     private boolean purge;
@@ -65,49 +63,13 @@ public class AgentStartupConfiguration implements StartupConfiguration, Authenti
     private String address;
     
     AgentStartupConfiguration() {
-        this.backends = new ArrayList<>();
     }
     
     @Override
     public String getDBConnectionString() {
         return url;
     }
-
-    void parseBackends(String[] backendsList) throws InvalidConfigurationException {
-        backends.clear();
-        
-        for (String simpleName : backendsList) {
-            String backendName = simpleName.trim();
-            
-            // a file must exist, at least with the class name
-            File backendSettings = ConfigUtils.getBackendPropertyFile(backendName);
-            if (!backendSettings.exists())
-                throw new InvalidConfigurationException("backends configuration " +
-                                                        "directory doesn't exist: " +
-                                                        backendSettings);
-            Properties backendProps = new Properties();
-            try {
-                backendProps.load(new FileInputStream(backendSettings));
-                
-            } catch (IOException e) {
-                throw new InvalidConfigurationException(e);
-            }
-            
-            String backendClass = backendProps.getProperty(BackendsProperties.BACKEND_CLASS.name());
-            if (backendClass == null) {
-                throw new InvalidConfigurationException("Class name not found for backend: " +
-                                                        backendName);
-            }
-            
-            BackendID backend = new BackendID(backendName, backendClass);
-            backends.add(backend);
-        }
-    }
     
-    public List<BackendID> getBackends() {
-        return backends;
-    }
-
     void setDebugConsole(boolean debugConsole) {
         this.debugConsole = debugConsole;
     }

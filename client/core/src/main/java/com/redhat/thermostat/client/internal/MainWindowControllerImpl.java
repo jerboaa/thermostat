@@ -74,6 +74,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.DefaultHostsVMsLoader;
 import com.redhat.thermostat.common.HostsVMsLoader;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -457,7 +458,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
         @SuppressWarnings("unchecked")
         @Override
-        public void actionPerformed(ActionEvent<com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action> actionEvent) {
+        public void actionPerformed(ActionEvent<com.redhat.thermostat.common.ThermostatExtensionRegistry.Action> actionEvent) {
 
             Object payload = actionEvent.getPayload();
             if (!extensionClass.isInstance(payload)) {

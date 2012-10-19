@@ -66,7 +66,6 @@ import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.internal.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.osgi.service.VmDecorator;
@@ -77,7 +76,9 @@ import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.HostsVMsLoader;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;

@@ -34,10 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.common;
 
-public interface Countable {
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.util.Properties;
+import java.util.Random;
 
-    public long getCount();
+public class TestUtils {
 
+    public static int getProcessId() {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        String pidPart = name.split("@")[0];
+        return Integer.parseInt(pidPart);
+    }
+
+    public static boolean isLinux() {
+        return (System.getProperty("os.name").toLowerCase().contains("linux"));
+    }
+        
+    public static String setupAgentConfigs() throws IOException {
+        // need to create dummy config files for the tests
+        Random random = new Random();
+
+        String tmpDir = System.getProperty("java.io.tmpdir") + File.separatorChar +
+                Math.abs(random.nextInt()) + File.separatorChar;
+
+        System.setProperty("THERMOSTAT_HOME", tmpDir);
+        File agent = new File(tmpDir, "agent");
+        agent.mkdirs();
+
+        File tmpConfigs = new File(agent, "agent.properties");
+
+        new File(agent, "run").mkdirs();
+        new File(agent, "logs").mkdirs();
+
+        File backends = new File(tmpDir, "backends");
+        File system = new File(backends, "system");
+        system.mkdirs();
+
+        Properties props = new Properties();
+        
+        props.setProperty("SAVE_ON_EXIT", "true");
+        props.setProperty("CONFIG_LISTEN_ADDRESS", "42.42.42.42:42");
+        
+        props.store(new FileOutputStream(tmpConfigs), "thermostat agent test properties");
+        
+        return tmpDir;
+    }
 }

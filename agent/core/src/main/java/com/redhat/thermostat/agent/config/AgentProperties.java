@@ -38,8 +38,6 @@ package com.redhat.thermostat.agent.config;
 
 public enum AgentProperties {
 
-    // backend list, comma separated
-    BACKENDS,
     DEBUG_CONSOLE,
     DB_URL,
     SAVE_ON_EXIT,

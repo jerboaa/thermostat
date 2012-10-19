@@ -37,14 +37,12 @@
 package com.redhat.thermostat.agent.config;
 
 import java.io.IOException;
-import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.TestUtils;
-import com.redhat.thermostat.backend.BackendID;
+import com.redhat.thermostat.common.TestUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 public class AgentConfigsUtilsTest {
@@ -57,10 +55,8 @@ public class AgentConfigsUtilsTest {
     @Test
     public void test() throws InvalidConfigurationException {
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
-        List<BackendID> backends = config.getBackends();
-        
-        // the test property only define the system backend so far
-        Assert.assertEquals(1, backends.size());
-        Assert.assertEquals("system", backends.get(0).getSimpleName());
+
+        Assert.assertFalse(config.purge());
+        Assert.assertEquals("42.42.42.42:42", config.getConfigListenAddress());
     }
 }

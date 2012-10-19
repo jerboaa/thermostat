@@ -385,5 +385,11 @@
         <version>${project.version}</version>
     </dependency>
      
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-system-backend</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+     
   </dependencies>
 </project>

@@ -54,7 +54,7 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
-        reg.registerCommands(Arrays.asList(new ServiceCommand(), new StorageCommand(), new AgentApplication()));
+        reg.registerCommands(Arrays.asList(new ServiceCommand(), new StorageCommand(), new AgentApplication(context)));
     }
 
     @Override
