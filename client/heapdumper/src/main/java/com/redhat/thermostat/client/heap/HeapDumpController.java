@@ -206,6 +206,15 @@ public class HeapDumpController implements VmInformationServiceController {
     }
 
     class HeapOverviewDataCollector implements Runnable {
+
+        private long desiredUpdateTimeStamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+
+        @Override
+        public void run() {
+            checkForHeapDumps();
+            updateMemoryChartAndDisplay();
+        }
+
         private void checkForHeapDumps() {
             Collection<HeapInfo> heapInfos = heapDAO.getAllHeapInfo(ref);
             List<HeapDump> heapDumps = new ArrayList<HeapDump>(heapInfos.size());
@@ -215,10 +224,10 @@ public class HeapDumpController implements VmInformationServiceController {
             view.updateHeapDumpList(heapDumps);
         }
 
-        @Override
-        public void run() {
-            checkForHeapDumps();
-            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+        private void updateMemoryChartAndDisplay() {
+            List<VmMemoryStat> vmInfo = null;
+            vmInfo = vmDao.getLatestVmMemoryStats(ref, desiredUpdateTimeStamp);
+
             for (VmMemoryStat memoryStats: vmInfo) {
                 long used = 0l;
                 long capacity = 0l;
@@ -251,9 +260,11 @@ public class HeapDumpController implements VmInformationServiceController {
                 String _capacity= formatter.format(capacity) + " " + Scale.B;
                 
                 view.updateUsedAndCapacity(_used, _capacity);
+                desiredUpdateTimeStamp = Math.max(desiredUpdateTimeStamp, memoryStats.getTimeStamp());
             }
 
             model.notifyListenersOfModelChange();
         }
+
     }
 }
