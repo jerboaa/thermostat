@@ -72,9 +72,12 @@ class MemoryStatsController implements VmInformationServiceController {
     private VMCollector collector;
     
     class VMCollector implements Runnable {
+
+        private long desiredUpdateTimeStamp = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
+
         @Override
         public void run() {
-            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1));
+            List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, desiredUpdateTimeStamp);
             for (VmMemoryStat memoryStats: vmInfo) {
                 List<Generation> generations = memoryStats.getGenerations();
                 
@@ -129,6 +132,7 @@ class MemoryStatsController implements VmInformationServiceController {
                         }
                         
                         view.requestRepaint();
+                        desiredUpdateTimeStamp = Math.max(desiredUpdateTimeStamp, memoryStats.getTimeStamp());
                     }
                 }
             }

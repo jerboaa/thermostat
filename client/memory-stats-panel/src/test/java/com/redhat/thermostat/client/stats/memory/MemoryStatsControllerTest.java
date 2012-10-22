@@ -40,14 +40,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
@@ -71,6 +75,7 @@ public class MemoryStatsControllerTest {
 
     private List<Generation> generations = new ArrayList<>();
     
+    private VmMemoryStatDAO memoryStatDao;
     private MemoryStatsView view;
     private Timer timer;
     
@@ -79,6 +84,7 @@ public class MemoryStatsControllerTest {
     private MemoryStatsController controller;
     
     private Space canary;
+
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
@@ -125,7 +131,7 @@ public class MemoryStatsControllerTest {
         
         generations.get(0).spaces.add(canary);
         
-        VmMemoryStatDAO memoryStatDao = mock(VmMemoryStatDAO.class);
+        memoryStatDao = mock(VmMemoryStatDAO.class);
         when(memoryStatDao.getLatestVmMemoryStats(any(VmRef.class), anyLong())).thenReturn(vmInfo);
         
         view = mock(MemoryStatsView.class);
@@ -200,6 +206,62 @@ public class MemoryStatsControllerTest {
         assertEquals(tooltip, payload.getTooltip());
     }
     
+
+    @Test
+    public void testTimerFetchesMemoryDataDeltaOnly() {
+        ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
+
+        final long DATA_TIMESTAMP = System.currentTimeMillis() + 1000000000;
+        Space space = new Space();
+        space.capacity = 10;
+        space.maxCapacity = 20;
+        space.used = 5;
+        Generation gen = new Generation();
+        gen.name = "foobar";
+        gen.spaces = Arrays.asList(space);
+        VmMemoryStat stat = new VmMemoryStat();
+        stat.setTimeStamp(DATA_TIMESTAMP);
+        stat.setGenerations(Arrays.asList(gen));
+
+        when(memoryStatDao.getLatestVmMemoryStats(isA(VmRef.class), anyLong())).thenReturn(Arrays.asList(stat));
+
+        Runnable timerAction = controller.getCollector();
+
+        timerAction.run();
+        timerAction.run();
+
+        verify(memoryStatDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
+
+        long timeStamp1 = timeStampCaptor.getAllValues().get(0);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp1);
+
+        long timeStamp2 = timeStampCaptor.getAllValues().get(1);
+        assertTimeStampIsAround(DATA_TIMESTAMP, timeStamp2);
+    }
+
+    @Test
+    public void testTimerFetchesMemoryDataDeltaOnlyEvenWithNoData() {
+        ArgumentCaptor<Long> timeStampCaptor = ArgumentCaptor.forClass(Long.class);
+
+        Runnable timerAction = controller.getCollector();
+
+        timerAction.run();
+        timerAction.run();
+
+        verify(memoryStatDao, times(2)).getLatestVmMemoryStats(isA(VmRef.class), timeStampCaptor.capture());
+
+        long timeStamp1 = timeStampCaptor.getAllValues().get(0);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp1);
+
+        long timeStamp2 = timeStampCaptor.getAllValues().get(1);
+        assertTimeStampIsAround(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1), timeStamp2);
+    }
+
+    private void assertTimeStampIsAround(long expected, long actual) {
+        assertTrue(actual <= expected + 1000);
+        assertTrue(actual >= expected - 1000);
+    }
+
     @After
     public void tearDown() {
         ApplicationContextUtil.resetApplicationContext();
