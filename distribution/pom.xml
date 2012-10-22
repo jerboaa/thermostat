@@ -197,6 +197,8 @@
                          resource="${project.build.directory}/libs/netty-3.2.4.Final.jar" />
                 <symlink link="${project.build.directory}/libs/jline2.jar"
                          resource="${project.build.directory}/libs/jline-2.9.jar" />
+                <symlink link="${project.build.directory}/libs/mongo.jar"
+                         resource="${project.build.directory}/libs/mongo-java-driver-2.7.3.jar" />
               </target>
             </configuration>
             <goals>
