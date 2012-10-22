@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.dao;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 import static org.mockito.Mockito.mock;
@@ -47,18 +48,22 @@ import org.junit.Test;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.test.StubBundleContext;
 
 public class MongoDAOFactoryTest {
 
+    private StubBundleContext bundleContext;
     private Storage storage;
     private Connection connection;
     private StorageProvider provider;
     private DAOFactory daoFactory;
-    HostRef hostRef;
-    VmRef vmRef;
+    private HostRef hostRef;
+    private VmRef vmRef;
 
     @Before
     public void setUp() {
+        bundleContext = new StubBundleContext();
+
         storage = mock(Storage.class);
         connection = mock(Connection.class);
         when(storage.getConnection()).thenReturn(connection);
@@ -67,7 +72,7 @@ public class MongoDAOFactoryTest {
         when(provider.createStorage()).thenReturn(storage);
         hostRef = mock(HostRef.class);
         vmRef = mock(VmRef.class);
-        daoFactory = new MongoDAOFactory(provider);
+        daoFactory = new MongoDAOFactory(bundleContext, provider);
     }
 
     @Test
@@ -139,5 +144,24 @@ public class MongoDAOFactoryTest {
     public void testGetHeapDAO() {
         HeapDAO dao = daoFactory.getHeapDAO();
         assertNotNull(dao);
+    }
+
+    @Test
+    public void testServiceRegistration() {
+        assertEquals(0, bundleContext.getAllServices().size());
+
+        daoFactory.registerDAOsAndStorageAsOSGiServices();
+
+        // currently 12 DAOs and Storage are registered
+        assertEquals(13, bundleContext.getAllServices().size());
+    }
+
+    @Test
+    public void testServiceDeregistration() {
+        daoFactory.registerDAOsAndStorageAsOSGiServices();
+        daoFactory.unregisterDAOsAndStorageAsOSGiServices();
+
+        assertEquals(0, bundleContext.getAllServices().size());
+        assertEquals(0, bundleContext.getServiceListeners().size());
     }
 }

@@ -92,6 +92,7 @@ public class DbServiceTest {
     public void testDisconnect() {
         dbService.disconnect();
 
+        verify(daoFactory).unregisterDAOsAndStorageAsOSGiServices();
         verify(connection).disconnect();
     }
 

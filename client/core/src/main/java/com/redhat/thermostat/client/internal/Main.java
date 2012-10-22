@@ -84,15 +84,33 @@ public class Main {
 
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
+    private OSGIUtils serviceProvider;
     private UiFacadeFactory uiFacadeFactory;
     private DAOFactory daoFactory;
     
     public Main(Keyring keyring, UiFacadeFactory uiFacadeFactory, String[] args) {
-        this.uiFacadeFactory = uiFacadeFactory;
-        setUp(keyring);
+        ClientPreferences prefs = new ClientPreferences(keyring);
+        StartupConfiguration config = new ConnectionConfiguration(prefs);
+        StorageProvider connProv = new MongoStorageProvider(config);
+
+        DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
+
+        init(OSGIUtils.getInstance(), uiFacadeFactory, daoFactory, timerFactory);
     }
 
-    void run() {
+    Main(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory, TimerFactory timerFactory) {
+        init(serviceProvider, uiFacadeFactory, daoFactory, timerFactory);
+    }
+
+    private void init(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory, TimerFactory timerFactory) {
+        this.serviceProvider = serviceProvider;
+        this.uiFacadeFactory = uiFacadeFactory;
+        this.daoFactory = daoFactory;
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+    }
+
+    public void run() {
         EventQueue.invokeLater(new Runnable() {
 
             @Override
@@ -127,21 +145,9 @@ public class Main {
         }
     }
 
-    void setUp(Keyring keyring) {
-        ClientPreferences prefs = new ClientPreferences(keyring);
-        StartupConfiguration config = new ConnectionConfiguration(prefs);
-
-        StorageProvider connProv = new MongoStorageProvider(config);
-        daoFactory = new MongoDAOFactory(connProv);
-        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
-    }
-        
     private void showGui() {
-        
-        ApplicationService appSrv = OSGIUtils.getInstance().getService(ApplicationService.class);
+        ApplicationService appSrv = serviceProvider.getService(ApplicationService.class);
         final ExecutorService service = appSrv.getApplicationExecutor();
-        
         service.execute(new ConnectorSetup(service));
     }
     

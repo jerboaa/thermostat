@@ -67,6 +67,7 @@ public class DbServiceImpl implements DbService {
     }
     
     public void disconnect() throws ConnectionException {
+        daoFactory.unregisterDAOsAndStorageAsOSGiServices();
         daoFactory.getConnection().disconnect();
     }
     

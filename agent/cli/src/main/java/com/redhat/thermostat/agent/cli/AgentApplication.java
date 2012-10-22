@@ -41,6 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -70,24 +71,30 @@ import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 
 @SuppressWarnings("restriction")
 public final class AgentApplication extends BasicCommand {
 
     private static final String NAME = "agent";
 
+    private final BundleContext bundleContext;
+    private final ConfigurationCreator configurationCreator;
+    private final DAOFactoryCreator daoFactoryCreator;
+
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
-    
-    private BundleContext bundleContext;
-    
+
     public AgentApplication(BundleContext bundleContext) {
+        this(bundleContext, new ConfigurationCreator(), new DAOFactoryCreator());
+    }
+
+    AgentApplication(BundleContext bundleContext, ConfigurationCreator configurationCreator, DAOFactoryCreator daoFactoryCreator) {
         this.bundleContext = bundleContext;
+        this.configurationCreator = configurationCreator;
+        this.daoFactoryCreator = daoFactoryCreator;
     }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
-        configuration = AgentConfigsUtils.createAgentConfigs();
         parser = new AgentOptionParser(configuration, args);
         parser.parse();
     }
@@ -106,8 +113,7 @@ public final class AgentApplication extends BasicCommand {
         }
         final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
-        StorageProvider connProv = new MongoStorageProvider(configuration);
-        final DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        final DAOFactory daoFactory = daoFactoryCreator.create(configuration);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
         ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
@@ -139,7 +145,8 @@ public final class AgentApplication extends BasicCommand {
         connection.connect();
         logger.fine("Connecting to storage...");
 
-        final ConfigurationServer configServer = OSGIUtils.getInstance().getService(ConfigurationServer.class);
+        ServiceReference configServiceRef = bundleContext.getServiceReference(ConfigurationServer.class.getName());
+        final ConfigurationServer configServer = (ConfigurationServer) bundleContext.getService(configServiceRef);
         configServer.startListening(configuration.getConfigListenAddress());
         
         BackendRegistry backendRegistry = null;
@@ -186,6 +193,8 @@ public final class AgentApplication extends BasicCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         try {
+            configuration = configurationCreator.create();
+
             parseArguments(ctx.getArguments());
             if (!parser.isHelp()) {
                 runAgent(ctx);
@@ -229,6 +238,20 @@ public final class AgentApplication extends BasicCommand {
             shutdownLatch.countDown();
         }
         
+    }
+
+    static class ConfigurationCreator {
+        public AgentStartupConfiguration create() throws InvalidConfigurationException {
+            return AgentConfigsUtils.createAgentConfigs();
+        }
+    }
+
+    static class DAOFactoryCreator {
+        public DAOFactory create(AgentStartupConfiguration config) {
+            StorageProvider connProv = new MongoStorageProvider(config);
+            final DAOFactory daoFactory = new MongoDAOFactory(connProv);
+            return daoFactory;
+        }
     }
 
 }

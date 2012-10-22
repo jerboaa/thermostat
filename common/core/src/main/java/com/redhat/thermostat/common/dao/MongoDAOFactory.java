@@ -36,16 +36,30 @@
 
 package com.redhat.thermostat.common.dao;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceRegistration;
+
 import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.StorageProvider;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.storage.StorageProvider;
 
 public class MongoDAOFactory implements DAOFactory {
 
     private final Storage storage;
+    private final BundleContext bundleContext;
+    private final List<ServiceRegistration> registeredServices = new ArrayList<>();
 
     public MongoDAOFactory(StorageProvider prov) {
+        this(FrameworkUtil.getBundle(MongoDAOFactory.class).getBundleContext(), prov);
+    }
+
+    public MongoDAOFactory(BundleContext bundleContext, StorageProvider prov) {
+        this.bundleContext = bundleContext;
         storage = prov.createStorage();
     }
 
@@ -137,23 +151,35 @@ public class MongoDAOFactory implements DAOFactory {
 
     @Override
     public void registerDAOsAndStorageAsOSGiServices() {
-        OSGIUtils registerer = OSGIUtils.getInstance();
+        registerAndRecordService(Storage.class, getStorage());
 
-        registerer.registerService(Storage.class, getStorage());
+        registerAndRecordService(AgentInfoDAO.class, getAgentInfoDAO());
+        registerAndRecordService(BackendInfoDAO.class, getBackendInfoDAO());
 
-        registerer.registerService(AgentInfoDAO.class, getAgentInfoDAO());
-        registerer.registerService(BackendInfoDAO.class, getBackendInfoDAO());
+        registerAndRecordService(HostInfoDAO.class, getHostInfoDAO());
+        registerAndRecordService(NetworkInterfaceInfoDAO.class, getNetworkInterfaceInfoDAO());
+        registerAndRecordService(CpuStatDAO.class, getCpuStatDAO());
+        registerAndRecordService(MemoryStatDAO.class, getMemoryStatDAO());
 
-        registerer.registerService(HostInfoDAO.class, getHostInfoDAO());
-        registerer.registerService(NetworkInterfaceInfoDAO.class, getNetworkInterfaceInfoDAO());
-        registerer.registerService(CpuStatDAO.class, getCpuStatDAO());
-        registerer.registerService(MemoryStatDAO.class, getMemoryStatDAO());
-
-        registerer.registerService(VmInfoDAO.class, getVmInfoDAO());
-        registerer.registerService(VmClassStatDAO.class, getVmClassStatsDAO());
-        registerer.registerService(VmCpuStatDAO.class, getVmCpuStatDAO());
-        registerer.registerService(VmGcStatDAO.class, getVmGcStatDAO());
-        registerer.registerService(VmMemoryStatDAO.class, getVmMemoryStatDAO());
-        registerer.registerService(HeapDAO.class, getHeapDAO());
+        registerAndRecordService(VmInfoDAO.class, getVmInfoDAO());
+        registerAndRecordService(VmClassStatDAO.class, getVmClassStatsDAO());
+        registerAndRecordService(VmCpuStatDAO.class, getVmCpuStatDAO());
+        registerAndRecordService(VmGcStatDAO.class, getVmGcStatDAO());
+        registerAndRecordService(VmMemoryStatDAO.class, getVmMemoryStatDAO());
+        registerAndRecordService(HeapDAO.class, getHeapDAO());
     }
+
+    private <K> void registerAndRecordService(Class<K> serviceType, K serviceImplementation) {
+        registeredServices.add(bundleContext.registerService(serviceType, serviceImplementation, null));
+    }
+
+    public void unregisterDAOsAndStorageAsOSGiServices() {
+        Iterator<ServiceRegistration> iter = registeredServices.iterator();
+        while (iter.hasNext()) {
+            ServiceRegistration registration = iter.next();
+            registration.unregister();
+            iter.remove();
+        }
+    }
+
 }
