@@ -188,6 +188,19 @@
               <goal>run</goal>
             </goals>
           </execution>
+          <execution>
+            <id>version-less-dep-symlinks</id>
+            <phase>prepare-package</phase>
+            <configuration>
+              <target>
+                <symlink link="${project.build.directory}/libs/netty.jar"
+                         resource="${project.build.directory}/libs/netty-3.2.4.Final.jar" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
     </plugins>
