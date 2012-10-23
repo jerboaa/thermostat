@@ -44,6 +44,7 @@ import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.bundles.impl.BundleLoader;
 import com.redhat.thermostat.common.Configuration;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 
@@ -53,7 +54,7 @@ public abstract class OSGiRegistry {
 
     public abstract void setCommandInfoSource(CommandInfoSource source);
 
-    public abstract void addBundlesFor(String commandName) throws BundleException, IOException;
+    public abstract void addBundlesFor(String commandName) throws BundleException, CommandInfoNotFoundException, IOException;
 
     public static void preLoadBundles(Framework framework, List<String> bundleLocations,
             boolean printOSGiInfo) throws BundleException {

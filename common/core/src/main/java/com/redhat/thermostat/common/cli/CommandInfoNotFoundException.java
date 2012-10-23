@@ -36,20 +36,17 @@
 
 package com.redhat.thermostat.common.cli;
 
-import java.util.List;
+public class CommandInfoNotFoundException extends RuntimeException {
 
-import org.apache.commons.cli.Options;
+    private String commandName = null;
 
-public interface CommandInfo {
+    public CommandInfoNotFoundException(String commandName) {
+        super("data for command '" + commandName + "' not found");
 
-    public String getName();
+        this.commandName = commandName;
+    }
 
-    public String getDescription();
-
-    public String getUsage();
-
-    public Options getOptions();
-
-    public List<String> getDependencyResourceNames();
-
+    public String getCommandName() {
+        return commandName;
+    }
 }

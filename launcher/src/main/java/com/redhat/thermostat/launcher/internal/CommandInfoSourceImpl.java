@@ -47,6 +47,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 public class CommandInfoSourceImpl implements CommandInfoSource {
@@ -92,10 +93,16 @@ public class CommandInfoSourceImpl implements CommandInfoSource {
         return fileName.substring(0, dotIndex);
     }
 
-    public CommandInfo getCommandInfo(String name) {
-        return commands.get(name);
+    @Override
+    public CommandInfo getCommandInfo(String name) throws CommandInfoNotFoundException {
+        CommandInfo cmdInfo = commands.get(name);
+        if (cmdInfo == null) {
+            throw new CommandInfoNotFoundException(name);
+        }
+        return cmdInfo;
     }
 
+    @Override
     public Collection<CommandInfo> getCommandInfos() {
         return commands.values();
     }

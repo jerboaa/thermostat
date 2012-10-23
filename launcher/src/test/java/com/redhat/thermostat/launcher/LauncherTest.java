@@ -38,12 +38,14 @@ package com.redhat.thermostat.launcher;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Matchers.any;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -61,6 +63,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -79,6 +82,7 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.LocaleResources;
@@ -313,6 +317,19 @@ public class LauncherTest {
             + " test2         description 2\n"
             + " test3         description 3\n";
         runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected);
+    }
+
+    @Test
+    public void testCommandInfoNotFound() throws CommandInfoNotFoundException, BundleException, IOException {
+        doThrow(new CommandInfoNotFoundException("foo")).when(registry).addBundlesFor("foo");
+        String expected = "unknown command 'foo'\n"
+                + "list of commands:\n\n"
+                + " help          print help information\n"
+                + " basic         nothing that means anything\n"
+                + " test1         description 1\n"
+                + " test2         description 2\n"
+                + " test3         description 3\n";
+            runAndVerifyCommand(new String[] {"foo"}, expected);
     }
 
     @Test

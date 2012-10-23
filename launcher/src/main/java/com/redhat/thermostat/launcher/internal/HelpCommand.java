@@ -52,6 +52,7 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
@@ -102,12 +103,13 @@ public class HelpCommand extends SimpleCommand {
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
         ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
         CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
-        CommandInfo info = infos.getCommandInfo(cmdName);
-        context.ungetService(infosRef);
-        if (info != null) {
+        try {
+            CommandInfo info = infos.getCommandInfo(cmdName);
             printHelp(ctx, info);
-        } else {
+        } catch (CommandInfoNotFoundException notFound) {
             printCommandSummaries(ctx);
+        } finally {
+            context.ungetService(infosRef);
         }
     }
 

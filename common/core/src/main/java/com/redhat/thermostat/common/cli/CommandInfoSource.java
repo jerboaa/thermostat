@@ -41,7 +41,7 @@ import java.util.Collection;
 
 public interface CommandInfoSource {
 
-    public CommandInfo getCommandInfo(String name);
+    public CommandInfo getCommandInfo(String name) throws CommandInfoNotFoundException;
 
     public Collection<CommandInfo> getCommandInfos();
 

@@ -59,6 +59,7 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -200,6 +201,10 @@ public class LauncherImpl implements Launcher {
             // trace will be immeasurably helpful in figuring out what is wrong.
             out.println("Could not load necessary bundles for: " + cmdName);
             e.printStackTrace(out);
+            return;
+        } catch (CommandInfoNotFoundException commandNotFound) {
+            out.print(String.format(UNKNOWN_COMMAND_MESSAGE, cmdName));
+            runHelpCommand();
             return;
         }
 
