@@ -38,7 +38,7 @@ package com.redhat.thermostat.thread.client.common.chart;
 
 import java.awt.Color;
 
-import com.redhat.thermostat.swing.Palette;
+import com.redhat.thermostat.client.ui.Palette;
 
 public class ChartColors {
     

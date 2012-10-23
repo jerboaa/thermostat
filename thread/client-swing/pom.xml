@@ -90,6 +90,12 @@
       <scope>test</scope>
     </dependency>
     
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-client-swing</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+
   </dependencies>
 
   <build>

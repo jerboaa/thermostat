@@ -172,11 +172,6 @@
                 </artifactItem>
                 <artifactItem>
                     <groupId>com.redhat.thermostat</groupId>
-                    <artifactId>thermostat-swing-components</artifactId>
-                    <version>${project.version}</version>
-                </artifactItem>
-                <artifactItem>
-                    <groupId>com.redhat.thermostat</groupId>
                     <artifactId>thermostat-keyring</artifactId>
                     <version>${project.version}</version>
                 </artifactItem>

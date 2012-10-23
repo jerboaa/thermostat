@@ -43,7 +43,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.swing.models.NullSelectionModel;
+import com.redhat.thermostat.client.swing.components.models.NullSelectionModel;
 
 @SuppressWarnings("serial")
 class VMCapsSummaryPanel extends JPanel {
