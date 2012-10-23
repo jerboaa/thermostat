@@ -75,7 +75,6 @@ public class Thermostat implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("Launching...");
         try {
             launch();
         } catch (IOException | NoSuchMethodException | InterruptedException |
