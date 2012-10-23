@@ -51,13 +51,6 @@
   <name>Thermostat Client Core</name>
 
   <dependencies>
-  
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-laf</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -66,16 +59,6 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easytesting</groupId>
-      <artifactId>fest-swing</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.java.openjdk.cacio</groupId>
-      <artifactId>cacio-tta</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -110,32 +93,9 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>provided</scope>
     </dependency>
-
-    <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-swing-components</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
   </dependencies>
 
   <build>
-
-    <resources>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>true</filtering>
-        <excludes>
-          <exclude>**/*.png</exclude>
-        </excludes>
-      </resource>
-      <resource>
-        <directory>src/main/resources</directory>
-        <filtering>false</filtering>
-        <includes>
-          <include>**/*.png</include>
-        </includes>
-      </resource>
-    </resources>
 
     <plugins>
       <plugin>
@@ -145,26 +105,16 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.client.internal.osgi.ThermostatActivator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.client.core</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.client.osgi.service,
               com.redhat.thermostat.client.ui,
               com.redhat.thermostat.client.locale,
-              <!-- Contains Swing view providers -->
-              com.redhat.thermostat.client.swing,
               <!-- Interfaces for views, controllers, etc. -->
               com.redhat.thermostat.client.core,
               com.redhat.thermostat.client.core.controllers,
-              com.redhat.thermostat.client.core.views,
+              com.redhat.thermostat.client.core.views
             </Export-Package>
-            <Private-Package>
-              com.redhat.thermostat.client.internal,
-              com.redhat.thermostat.client.internal.config,
-              com.redhat.thermostat.client.internal.osgi,
-              com.redhat.thermostat.client.internal.ui,
-              com.redhat.thermostat.client.internal.ui.swing
-            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

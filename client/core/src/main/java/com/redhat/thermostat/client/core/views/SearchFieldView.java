@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.core.views;
 
 import com.redhat.thermostat.client.core.views.View;
 import com.redhat.thermostat.common.ActionListener;

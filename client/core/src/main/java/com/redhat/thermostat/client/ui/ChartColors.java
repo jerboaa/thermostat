@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Color;
 
-import com.redhat.thermostat.swing.Palette;
 
 public class ChartColors {
     private static final Palette[] SERIES_COLORS = {

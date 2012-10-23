@@ -34,22 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.charts;
+package com.redhat.thermostat.client.ui;
 
-import org.jfree.chart.axis.NumberTickUnit;
+import java.awt.Color;
 
-import com.redhat.thermostat.common.utils.DisplayableValues;
+public enum Palette {
 
-@SuppressWarnings("serial")
-public class BytesTickUnit extends NumberTickUnit {
+    THERMOSTAT_BLU(new Color(74, 93, 117)),
+    THERMOSTAT_RED(new Color(226, 46, 42)),
+    
+    RED(new Color(192, 0, 0)),
+    PALE_RED(new Color(192, 80, 77)),
+    
+    SKY_BLUE(new Color(79, 129, 189)),
+    AZUREUS(new Color(0, 176, 190)),
+    EGYPTIAN_BLUE(new Color(74, 144, 217)),
+    DIRTY_CYAN(new Color(75, 172, 198)),
+    PRUSSIAN_BLUE(new Color(0, 49, 83)),
+    
+    GREEN(new Color(146, 208, 80)),
+    TUNDRA_GREEN(new Color(155, 187, 89)),
 
-    public BytesTickUnit(double size) {
-        super(size);
+    POMP_AND_POWER_VIOLET(new Color(128, 100, 162)),
+    VIOLET(new Color(112, 48, 160)),
+
+    EARL_GRAY(new Color(128, 128, 128)),
+    
+    PALE_GRAY(new Color(235, 235, 235)),
+    LIGHT_GRAY(new Color(242, 242, 242)),
+    GRAY(new Color(216, 216, 216)),
+    DARK_GRAY(new Color(168, 172, 168)),
+
+    GRANITA_ORANGE(new Color(247,150,70)),
+    
+    BLACK(Color.BLACK),
+    WHITE(Color.WHITE),
+
+    /* END */ ;
+    
+    private Color color;
+    Palette(Color color) {
+        this.color = color;
     }
-
-    @Override
-    public String valueToString(double value) {
-        String[] displayable = DisplayableValues.bytes((long) value);
-        return displayable[0] + " " + displayable[1];
+    
+    public Color getColor() {
+        return color;
     }
 }
