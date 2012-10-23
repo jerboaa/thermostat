@@ -209,6 +209,28 @@
                          resource="${project.build.directory}/libs/com.springsource.org.apache.commons.logging-1.1.1.jar" />
                 <symlink link="${project.build.directory}/libs/lucene.jar"
                          resource="${project.build.directory}/libs/org.apache.servicemix.bundles.lucene-3.6.0_1.jar" />
+                <symlink link="${project.build.directory}/libs/gson.jar"
+                         resource="${project.build.directory}/libs/gson-2.2.2.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-continuation.jar"
+                         resource="${project.build.directory}/libs/jetty-continuation-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-http.jar"
+                         resource="${project.build.directory}/libs/jetty-http-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-io.jar"
+                         resource="${project.build.directory}/libs/jetty-io-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-security.jar"
+                         resource="${project.build.directory}/libs/jetty-security-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-server.jar"
+                         resource="${project.build.directory}/libs/jetty-server-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-servlet.jar"
+                         resource="${project.build.directory}/libs/jetty-servlet-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-util.jar"
+                         resource="${project.build.directory}/libs/jetty-util-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-webapp.jar"
+                         resource="${project.build.directory}/libs/jetty-webapp-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-xml.jar"
+                         resource="${project.build.directory}/libs/jetty-xml-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/javax-servlet.jar"
+                         resource="${project.build.directory}/libs/javax.servlet-3.0.0.v201112011016.jar" />
               </target>
             </configuration>
             <goals>
