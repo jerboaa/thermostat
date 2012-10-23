@@ -72,7 +72,7 @@
     <mongo-driver.version>2.7.3</mongo-driver.version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-cli.version>1.2</commons-cli.version>
-    <jline.version>2.5</jline.version>
+    <jline.version>2.9</jline.version>
     <lucene.version>3.6.0</lucene.version>
     <!--
          felix 4.0 is compliant with osgi 4.3
@@ -286,7 +286,7 @@
         <version>${commons-cli.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.sonatype.jline</groupId>
+        <groupId>jline</groupId>
         <artifactId>jline</artifactId>
         <version>${jline.version}</version>
       </dependency>

@@ -195,6 +195,8 @@
               <target>
                 <symlink link="${project.build.directory}/libs/netty.jar"
                          resource="${project.build.directory}/libs/netty-3.2.4.Final.jar" />
+                <symlink link="${project.build.directory}/libs/jline2.jar"
+                         resource="${project.build.directory}/libs/jline-2.9.jar" />
               </target>
             </configuration>
             <goals>
