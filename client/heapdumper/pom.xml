@@ -38,116 +38,21 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
   <parent>
-    <artifactId>thermostat-client</artifactId>
     <groupId>com.redhat.thermostat</groupId>
+    <artifactId>thermostat-client</artifactId>
     <version>0.5.0-SNAPSHOT</version>
   </parent>
+
   <artifactId>thermostat-client-heapdumper</artifactId>
-  <packaging>bundle</packaging>
+  <packaging>pom</packaging>
+
   <name>Thermostat Client Heap Dumper plugin</name>
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.felix</groupId>
-        <artifactId>maven-bundle-plugin</artifactId>
-        <extensions>true</extensions>
-        <configuration>
-          <instructions>
-            <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.client.heap.Activator</Bundle-Activator>
-            <Bundle-SymbolicName>com.redhat.thermostat.client.heapdumper</Bundle-SymbolicName>
-            <Private-Package>
-               com.redhat.thermostat.client.heap,
-               com.redhat.thermostat.client.heap.cli,
-               com.redhat.thermostat.client.heap.swing,
-               com.redhat.thermostat.client.heap.chart
-            </Private-Package>
-            <!-- Do not autogenerate uses clauses in Manifests -->
-            <_nouses>true</_nouses>
-          </instructions>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.easytesting</groupId>
-      <artifactId>fest-swing</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.java.openjdk.cacio</groupId>
-      <artifactId>cacio-tta</artifactId>
-      <scope>test</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.compendium</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-tools</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-swing-components</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-command</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-heapdumper</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
+  <modules>
+    <module>core</module>
+    <module>swing</module>
+  </modules>
 
-    <dependency>
-      <groupId>org.jfree</groupId>
-      <artifactId>jfreechart</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.sun</groupId>
-      <artifactId>tools</artifactId>
-      <scope>system</scope>
-      <systemPath>${java.home}/../lib/tools.jar</systemPath>
-    </dependency>
-    
-  </dependencies>
 </project>
