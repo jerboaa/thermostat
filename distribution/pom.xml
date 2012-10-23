@@ -201,6 +201,12 @@
                          resource="${project.build.directory}/libs/mongo-java-driver-2.7.3.jar" />
                 <symlink link="${project.build.directory}/libs/commons-cli.jar"
                          resource="${project.build.directory}/libs/commons-cli-1.2.jar" />
+                <symlink link="${project.build.directory}/libs/commons-beanutils.jar"
+                         resource="${project.build.directory}/libs/commons-beanutils-1.8.3.jar" />
+                <symlink link="${project.build.directory}/libs/commons-collections.jar"
+                         resource="${project.build.directory}/libs/commons-collections-3.2.1.jar" />
+                <symlink link="${project.build.directory}/libs/commons-logging.jar"
+                         resource="${project.build.directory}/libs/com.springsource.org.apache.commons.logging-1.1.1.jar" />
               </target>
             </configuration>
             <goals>

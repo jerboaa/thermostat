@@ -72,6 +72,8 @@
     <mongo-driver.version>2.7.3</mongo-driver.version>
     <commons-beanutils.version>1.8.3</commons-beanutils.version>
     <commons-cli.version>1.2</commons-cli.version>
+    <commons-collections.version>3.2.1</commons-collections.version>
+    <commons-logging.version>1.1.1</commons-logging.version>
     <jline.version>2.9</jline.version>
     <lucene.version>3.6.0</lucene.version>
     <!--
@@ -94,6 +96,16 @@
         <enabled>false</enabled>
       </snapshots>
     </repository>
+    <repository>
+      <id>com.springsource.repository.bundles.release</id>
+      <name>SpringSource Enterprise Bundle Repository - SpringSource Bundle Releases</name>
+      <url>http://repository.springsource.com/maven/bundles/release</url>
+    </repository>
+    <repository>
+      <id>com.springsource.repository.bundles.external</id>
+      <name>SpringSource Enterprise Bundle Repository - External Bundle Releases</name>
+      <url>http://repository.springsource.com/maven/bundles/external</url>
+    </repository> 
   </repositories>
 
   <modules>
@@ -279,6 +291,17 @@
         <groupId>commons-beanutils</groupId>
         <artifactId>commons-beanutils</artifactId>
         <version>${commons-beanutils.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-collections</groupId>
+        <artifactId>commons-collections</artifactId>
+        <version>${commons-collections.version}</version>
+      </dependency>
+      <dependency>
+        <!-- comes from spring repo -->
+        <groupId>org.apache.commons</groupId>
+        <artifactId>com.springsource.org.apache.commons.logging</artifactId>
+        <version>${commons-logging.version}</version>
       </dependency>
       <dependency>
         <groupId>commons-cli</groupId>
