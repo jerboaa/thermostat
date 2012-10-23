@@ -165,8 +165,8 @@
     </dependency>
     
     <dependency>
-      <groupId>org.apache.lucene</groupId>
-      <artifactId>lucene-core</artifactId>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.lucene</artifactId>
     </dependency>
     <dependency>
       <groupId>com.sun</groupId>
