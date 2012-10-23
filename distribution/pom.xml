@@ -266,7 +266,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-core</artifactId>
+      <artifactId>thermostat-client-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -276,17 +276,17 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-vmclassstat</artifactId>
+      <artifactId>thermostat-client-vmclassstat-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-osgi-memory-stats-panel</artifactId>
+      <artifactId>thermostat-osgi-memory-stats-panel-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-osgi-living-vm-filter</artifactId>
+        <artifactId>thermostat-osgi-living-vm-filter-swing</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -315,9 +315,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-killvm-client-swing</artifactId>
-    	<version>${project.version}</version>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-killvm-client-swing</artifactId>
+        <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
@@ -330,23 +330,18 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-osgi-process-handler</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-client-heapdumper</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
-    <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-laf</artifactId>
+        <artifactId>thermostat-osgi-process-handler</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-swing-components</artifactId>
+        <artifactId>thermostat-client-heapdumper-swing</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-laf</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>
