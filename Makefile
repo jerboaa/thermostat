@@ -14,7 +14,10 @@ ifeq ($(SKIP_TESTS),true)
 	MAVEN_SKIP_TEST = -Dmaven.test.skip=true
 endif
 
-all: eclipse
+# Default to cleaning the local repo and building core + eclipse
+# Cleaning the repo prevents things like not seeing build failures
+# after bundles have been renamed.
+all: clean-repo eclipse
 
 core:
 	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(MAVEN_SKIP_TEST) clean $(GOAL)
