@@ -44,7 +44,7 @@ import com.redhat.thermostat.launcher.internal.DbServiceImpl;
  */
 public class DbServiceFactory {
 
-    public static DbService createDbService(String username, String password, String dbUrl) {
+    public DbService createDbService(String username, String password, String dbUrl) {
         return DbServiceImpl.create(username, password, dbUrl);
     }
 }

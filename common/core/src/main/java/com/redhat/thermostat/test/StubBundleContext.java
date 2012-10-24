@@ -83,6 +83,7 @@ public class StubBundleContext implements BundleContext {
         }
     }
 
+    private List<Bundle> bundles = new ArrayList<>();
     private List<ServiceInformation> registeredServices = new ArrayList<>();
     private List<ListenerSpec> registeredListeners = new ArrayList<>();
 
@@ -112,7 +113,10 @@ public class StubBundleContext implements BundleContext {
 
     @Override
     public Bundle getBundle(long id) {
-        throw new NotImplementedException();
+        if (id > Integer.MAX_VALUE) {
+            throw new NotImplementedException();
+        }
+        return bundles.get((int) id);
     }
 
     @Override
@@ -204,7 +208,12 @@ public class StubBundleContext implements BundleContext {
 
     @Override
     public ServiceReference getServiceReference(Class clazz) {
-        throw new NotImplementedException();
+        for (ServiceInformation info : registeredServices) {
+            if (info.serviceInterface.equals(clazz)) {
+                return new StubServiceReference(info);
+            }
+        }
+        return null;
     }
 
     @Override
@@ -250,6 +259,10 @@ public class StubBundleContext implements BundleContext {
      * Our custom methods
      */
 
+    public void setBundle(int i, Bundle bundle) {
+        bundles.add(i, bundle);
+    }
+
     public boolean isServiceRegistered(String serviceName, Class<?> implementationClass) {
         for (ServiceInformation info : registeredServices) {
             if (info.serviceInterface.equals(serviceName) && info.implementation.getClass().equals(implementationClass)) {
@@ -279,4 +292,6 @@ public class StubBundleContext implements BundleContext {
         StubServiceRegistration reg = (StubServiceRegistration) registration;
         return reg.getInfo().exportedReferences;
     }
+
+
 }

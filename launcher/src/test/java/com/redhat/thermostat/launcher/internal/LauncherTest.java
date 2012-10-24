@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher;
+package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -59,6 +60,7 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
@@ -89,9 +91,12 @@ import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.launcher.DbService;
+import com.redhat.thermostat.launcher.DbServiceFactory;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
+import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
+import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
 import com.redhat.thermostat.test.cli.TestCommand;
@@ -99,7 +104,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FrameworkUtil.class, DbServiceFactory.class, HelpCommand.class})
+@PrepareForTest({FrameworkUtil.class, HelpCommand.class})
 public class LauncherTest {
     
     private static String defaultKeyringProvider;
@@ -137,10 +142,15 @@ public class LauncherTest {
     }
 
     private TestCommandContextFactory  ctxFactory;
-    private BundleContext bundleContext;
+    private StubBundleContext bundleContext;
+    private Bundle sysBundle;
     private TestTimerFactory timerFactory;
     private OSGiRegistry registry;
+    private LoggingInitializer loggingInitializer;
+    private DbServiceFactory dbServiceFactory;
     private ActionNotifier<ApplicationState> notifier;
+
+    private LauncherImpl launcher;
 
     @Before
     public void setUp() {
@@ -228,12 +238,20 @@ public class LauncherTest {
         when(bCtx.getServiceReference(CommandInfoSource.class)).thenReturn(infosRef);
         when(bCtx.getService(infosRef)).thenReturn(infos);
         when(FrameworkUtil.getBundle(isA(HelpCommand.class.getClass()))).thenReturn(bundle);
+
+        loggingInitializer = mock(LoggingInitializer.class);
+        dbServiceFactory = mock(DbServiceFactory.class);
+
+        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, loggingInitializer, dbServiceFactory);
+
+        Keyring keyring = mock(Keyring.class);
+        launcher.setPreferences(new ClientPreferences(keyring));
     }
 
     private void setupCommandContextFactory() {
-        Bundle sysBundle = mock(Bundle.class);
-        bundleContext = mock(BundleContext.class);
-        when(bundleContext.getBundle(0)).thenReturn(sysBundle);
+        sysBundle = mock(Bundle.class);
+        bundleContext = new StubBundleContext();
+        bundleContext.setBundle(0, sysBundle);
         ctxFactory = new TestCommandContextFactory(bundleContext);
     }
 
@@ -344,9 +362,6 @@ public class LauncherTest {
         });
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
-        Keyring keyring = mock(Keyring.class);
-        launcher.setPreferences(new ClientPreferences(keyring));
         launcher.setArgs(new String[] { "error" });
         launcher.run();
         assertEquals("test error\n", ctxFactory.getError());
@@ -354,10 +369,6 @@ public class LauncherTest {
     }
 
     private void runAndVerifyCommand(String[] args, String expected) {
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
-        
-        Keyring keyring = mock(Keyring.class);
-        launcher.setPreferences(new ClientPreferences(keyring));
         launcher.setArgs(args);
         launcher.run();
         assertEquals(expected, ctxFactory.getOutput());
@@ -366,40 +377,24 @@ public class LauncherTest {
 
     @Test
     public void verifyStorageCommandSetsUpDAOFactory() {
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
-        Keyring keyring = mock(Keyring.class);
-        Bundle sysBundle = mock(Bundle.class);
-        PowerMockito.mockStatic(FrameworkUtil.class);
-        when(FrameworkUtil.getBundle(OSGIUtils.class)).thenReturn(sysBundle);
-        when(sysBundle.getBundleContext()).thenReturn(bundleContext);
-        PowerMockito.mockStatic(DbServiceFactory.class);
         String dbUrl = "mongo://fluff:12345";
         DbService dbService = mock(DbService.class);
-        when(DbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
-        launcher.setPreferences(new ClientPreferences(keyring));
+        when(dbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
         
         launcher.setArgs(new String[] { "test3" , "--dbUrl", dbUrl });
         launcher.run();
+
         verify(dbService).connect();
         verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
     }
 
     @Test
     public void verifyStorageCommandSetsUpDAOFactoryWithAuth() {
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
-        Keyring keyring = mock(Keyring.class);
-        Bundle sysBundle = mock(Bundle.class);
-        PowerMockito.mockStatic(FrameworkUtil.class);
-        when(FrameworkUtil.getBundle(OSGIUtils.class)).thenReturn(sysBundle);
-        when(sysBundle.getBundleContext()).thenReturn(bundleContext);
-        PowerMockito.mockStatic(DbServiceFactory.class);
         String dbUrl = "mongo://fluff:12345";
         String testUser = "testUser";
         String testPasswd = "testPassword";
         DbService dbService = mock(DbService.class);
-        when(DbServiceFactory.createDbService(testUser, testPasswd, dbUrl)).thenReturn(dbService);
-        
-        launcher.setPreferences(new ClientPreferences(keyring));
+        when(dbServiceFactory.createDbService(testUser, testPasswd, dbUrl)).thenReturn(dbService);
         
         launcher.setArgs(new String[] { "test3" , "--dbUrl", dbUrl, "--username", testUser, "--password", testPasswd });
         launcher.run();
@@ -407,26 +402,34 @@ public class LauncherTest {
         verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
     }
 
+    @Test
     public void verifyPrefsAreUsed() {
         ClientPreferences prefs = mock(ClientPreferences.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
-        LauncherImpl l = new LauncherImpl(bundleContext, ctxFactory, registry);
-        Bundle sysBundle = mock(Bundle.class);
-        PowerMockito.mockStatic(FrameworkUtil.class);
-        when(FrameworkUtil.getBundle(OSGIUtils.class)).thenReturn(sysBundle);
-        when(sysBundle.getBundleContext()).thenReturn(bundleContext);
-        PowerMockito.mockStatic(DbServiceFactory.class);
+
         DbService dbService = mock(DbService.class);
         // this makes sure that dbUrl is indeed retrieved from preferences
-        when(DbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
-        l.setPreferences(prefs);
-        l.setArgs(new String[] { "test3" });
-        l.run();
+        when(dbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
+        launcher.setPreferences(prefs);
+        launcher.setArgs(new String[] { "test3" });
+        launcher.run();
         verify(dbService).connect();
         verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
     }
-    
+
+    @Ignore("needs a storage-requiring service")
+    @Test
+    public void verifyDbServiceIsRegistered() {
+        DbService dbService = mock(DbService.class);
+        when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
+
+        launcher.setArgs(new String[] { "ignore" });
+        launcher.run();
+
+        assertTrue(bundleContext.isServiceRegistered(DbService.class.getName(), dbService.getClass()));
+    }
+
     @Test
     public void verifyVersionInfoQuery() {
         int major = 0;
@@ -444,21 +447,18 @@ public class LauncherTest {
                 major, minor, micro) + "\n";
         
         String qualifier = "201207241700";
-        Bundle sysBundle = mock(Bundle.class);
-        Bundle framework = mock(Bundle.class);
+
         org.osgi.framework.Version ver = org.osgi.framework.Version
                 .parseVersion(String.format(Version.VERSION_NUMBER_FORMAT,
                         major, minor, micro) + "." + qualifier);
         when(sysBundle.getVersion()).thenReturn(ver);
-        bundleContext = mock(BundleContext.class);
-        when(bundleContext.getBundle(0)).thenReturn(framework);
         
         PowerMockito.mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(Version.class)).thenReturn(sysBundle);
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
         
         launcher.setArgs(new String[] {Version.VERSION_OPTION});
         launcher.run();
+
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
     }
@@ -469,12 +469,26 @@ public class LauncherTest {
         Collection<ActionListener<ApplicationState>> listeners = new ArrayList<>();
         listeners.add(listener);
         String[] args = new String[] {"basic"};
-        LauncherImpl launcher = new LauncherImpl(bundleContext, ctxFactory, registry);
-        Keyring keyring = mock(Keyring.class);
-        launcher.setPreferences(new ClientPreferences(keyring));
 
         launcher.setArgs(args);
         launcher.run(listeners);
         verify(notifier).addActionListener(listener);
     }
+
+    @Test
+    public void verifyLoggingIsInitialized() {
+        launcher.setArgs(new String[] { "ignore" });
+        launcher.run();
+
+        verify(loggingInitializer).initialize();
+    }
+
+    @Test
+    public void verifyShutdown() throws BundleException {
+        launcher.setArgs(new String[] { "ignore" });
+        launcher.run();
+
+        verify(sysBundle).stop();
+    }
+
 }
