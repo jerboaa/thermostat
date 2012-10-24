@@ -40,13 +40,27 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.prefs.PreferenceChangeEvent;
+import java.util.prefs.PreferenceChangeListener;
+import java.util.prefs.Preferences;
 
+import javax.swing.AbstractButton;
 import javax.swing.BoxLayout;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
 /**
@@ -54,6 +68,10 @@ import javax.swing.SwingUtilities;
  */
 @SuppressWarnings("serial")
 public class HeaderPanel extends JPanel {
+        
+    public static final String SHOW_TEXT = "SHOW_TEXT";
+    
+    private boolean showText;
     
     private String header;
     
@@ -62,11 +80,23 @@ public class HeaderPanel extends JPanel {
     private JPanel headerPanel;
     private JPanel controlPanel;
     
+    private List<ToolbarButton> buttons;
+
+    private Preferences prefs;
+    
     public HeaderPanel() {
         this("");
     }
     
     public HeaderPanel(String header) {
+        this(Preferences.userRoot().node(HeaderPanel.class.getName()), "");
+    }
+    
+    public HeaderPanel(Preferences prefs, String header) {
+        
+        buttons = new ArrayList<ToolbarButton>();
+        
+        this.prefs = prefs;
         
         this.header = header;
         
@@ -74,6 +104,7 @@ public class HeaderPanel extends JPanel {
 
         headerLabel = new ShadowLabel(header, new EmptyIcon(5, 5));
         headerPanel = new GradientPanel(Color.WHITE, getBackground());
+        headerPanel.setName("clickableArea");
         headerPanel.setPreferredSize(new Dimension(HeaderPanel.this.getWidth(), 40));
         
         headerPanel.setLayout(new BorderLayout(0, 0));
@@ -90,8 +121,45 @@ public class HeaderPanel extends JPanel {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
         
         add(contentPanel, BorderLayout.CENTER);
+        registerPreferences();
+        showText = prefs.getBoolean(HeaderPanel.class.getName(), false);
+        
+        headerPanel.addMouseListener(new PreferencesPopupListener());
     }
    
+    public boolean isShowToolbarText() {
+        return showText;
+    }
+    
+    private void registerPreferences() {
+        prefs.addPreferenceChangeListener(new PreferenceChangeListener() {
+            @Override
+            public void preferenceChange(PreferenceChangeEvent evt) {
+                
+                String key = evt.getKey();
+                boolean _value = false;
+                if (key.equalsIgnoreCase(HeaderPanel.class.getName())) {
+                    _value = prefs.getBoolean(HeaderPanel.class.getName(), false);
+                }
+                final boolean value = _value;
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        boolean oldShowText = showText;
+                        showText = value;
+                        controlPanel.removeAll();
+                        for (ToolbarButton button : buttons) {
+                            addToolBarButton_noClient(button);
+                        }
+                        revalidate();
+                        
+                        firePropertyChange(SHOW_TEXT, oldShowText, showText);
+                    }
+                });
+            }
+        });
+    }
+    
     public String getHeader() {
         return header;
     }
@@ -108,8 +176,75 @@ public class HeaderPanel extends JPanel {
         repaint();
     }
 
+    private void addToolBarButton_noClient(final ToolbarButton button) {
+        AbstractButton theButton = button.getToolbarButton();
+        if (!showText) {
+            final AbstractButton proxy = button.copy().getToolbarButton();
+            proxy.setText("");
+            proxy.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.getToolbarButton().setSelected(proxy.isSelected());                   
+                }
+            });
+            // need this so that if one of those properties change on the real button
+            // we can reflect it on the proxy
+            button.getToolbarButton().addPropertyChangeListener(new PropertyChangeListener() {
+                @Override
+                public void propertyChange(PropertyChangeEvent evt) {
+                    AbstractButton theButton = button.getToolbarButton();
+                    proxy.setName(theButton.getName());
+                    proxy.setToolTipText(theButton.getToolTipText());                
+                }
+            });
+            theButton = proxy;
+        }
+        controlPanel.add(theButton);
+    }
+    
     public void addToolBarButton(ToolbarButton button) {
-        controlPanel.add(button.getToolbarButton());
+        buttons.add(button);
+        addToolBarButton_noClient(button);
+    }
+    
+    class PreferencesPopup extends JPopupMenu {
+        JMenuItem preferencesMenu;
+        public PreferencesPopup(){
+            // TODO: localize
+            String text = "Show button text";
+            if (showText) {
+                text = "Hide button text";
+            }
+            preferencesMenu = new JMenuItem(text);
+            preferencesMenu.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    prefs.putBoolean(HeaderPanel.class.getName(), !showText);
+                }
+            });
+            add(preferencesMenu);
+        }
+    }
+
+    class PreferencesPopupListener extends MouseAdapter {
+        public void mousePressed(MouseEvent e){
+            if (e.isPopupTrigger()) {
+                popupPreferences(e);
+            }
+        }
+
+        public void mouseReleased(MouseEvent e){
+            if (e.isPopupTrigger()) {
+                popupPreferences(e);
+            }
+        }
+
+        private void popupPreferences(MouseEvent e){
+            if (buttons.size() > 0) {
+                PreferencesPopup menu = new PreferencesPopup();
+                menu.show(e.getComponent(), e.getX(), e.getY());
+            }
+        }
     }
     
     public static void main(String[] args) throws InvocationTargetException, InterruptedException {

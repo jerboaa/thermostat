@@ -36,7 +36,11 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import java.awt.FontMetrics;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.Shape;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
 import java.awt.image.ConvolveOp;
@@ -46,18 +50,16 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
 import javax.swing.Icon;
 import javax.swing.JComponent;
-import javax.swing.border.Border;
 import javax.swing.plaf.metal.MetalButtonUI;
+
+import com.redhat.thermostat.client.ui.Palette;
 
 class ActionButtonUI extends MetalButtonUI {
 
     private BufferedImage sourceIcon;
     private BufferedImage rollOverIcon;
-    private AbstractButton realButton;
     
-    ActionButtonUI(AbstractButton button) {
-        this.realButton = button;
-    }
+    ActionButtonUI() {}
     
     private BufferedImage getBrighterImage(BufferedImage source) {
         float[] kernel = new float[] { 0, 0, 0, 0, 1.2f, 0, 0, 0, 0 };
@@ -67,20 +69,20 @@ class ActionButtonUI extends MetalButtonUI {
         return brighterOp.filter(source, new BufferedImage(source.getWidth(),
                 source.getHeight(), source.getType()));
     }
-
+    
     @Override
-    public void paint(Graphics g, JComponent c) {
-
+    protected void paintFocus(Graphics g, AbstractButton b, Rectangle viewRect,
+                              Rectangle textRect, Rectangle iconRect)
+    {
+        // nothing to do
+    }
+    
+    @Override
+    protected void paintIcon(Graphics g, JComponent c, Rectangle iconRect) {
+        
         AbstractButton button = (AbstractButton) c;
         ButtonModel model = button.getModel();
-        if (model.isPressed() || model.isArmed() || model.isSelected()) {
-            realButton.paint(g);
-        } else if (model.isRollover()) {
-            Border border = realButton.getBorder();
-            border.paintBorder(realButton, g, 0, 0, realButton.getWidth(),
-                    realButton.getHeight());
-        }
-        // paint the icon, always to the center
+        
         Icon icon = button.getIcon();
         int w = icon.getIconWidth();
         int h = icon.getIconHeight();
@@ -95,14 +97,49 @@ class ActionButtonUI extends MetalButtonUI {
         if (rollOverIcon == null) {
             rollOverIcon = getBrighterImage(sourceIcon);
         }
+        
+        int x = 3;
+        int y = button.getHeight() / 2 - h / 2;
 
-        int x = realButton.getWidth() / 2 - w / 2;
-        int y = realButton.getHeight() / 2 - h / 2;
-
+        String text = button.getText();
+        if (text == null || text.equals("")) {
+            x = button.getWidth() / 2 - w / 2;
+        }
+        
         if (model.isRollover()) {
             g.drawImage(rollOverIcon, x, y, null);
         } else {
             g.drawImage(sourceIcon, x, y, null);
         }
+    }
+    
+    @Override
+    protected void paintText(Graphics g, AbstractButton b, Rectangle textRect, String text) {
+        GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
+        Graphics2D graphics = graphicsUtils.createAAGraphics(g);
+        FontMetrics metrics = b.getFontMetrics(b.getFont());
+        graphicsUtils.drawStringWithShadow(b, graphics, text, b.getForeground(), textRect.x,
+                                           textRect.y + metrics.getAscent());
+    }
+
+    @Override
+    public void paint(Graphics g, JComponent c) {
+
+        AbstractButton button = (AbstractButton) c;
+        ButtonModel model = button.getModel();
+
+        if (model.isRollover() || model.isPressed() || model.isSelected()) {
+            GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
+            Graphics2D graphics = graphicsUtils.createAAGraphics(g);
+
+            graphicsUtils.setGradientPaint(graphics, 0, button.getHeight(), button.getBackground(), Palette.WHITE.getColor());
+            
+            Shape shape = graphicsUtils.getRoundShape(button.getWidth() - 1, button.getHeight() - 1);
+            graphics.fill(shape);
+            
+            graphics.dispose();
+        }
+        
+        super.paint(g, c);
     }
 }

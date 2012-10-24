@@ -41,7 +41,6 @@ import java.util.prefs.Preferences;
 
 import com.redhat.thermostat.utils.keyring.Credentials;
 import com.redhat.thermostat.utils.keyring.Keyring;
-import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 public class ClientPreferences {
 

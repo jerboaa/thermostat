@@ -36,24 +36,50 @@
 
 package com.redhat.thermostat.client.swing.components;
 
-import javax.swing.JEditorPane;
-import javax.swing.UIManager;
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Shape;
+import java.io.Serializable;
 
-/**
- * A custom swing component meant for showing values. Use it like you would use
- * any other JTextComponent.
- */
+import javax.swing.AbstractButton;
+import javax.swing.ButtonModel;
+import javax.swing.plaf.UIResource;
+
+import com.redhat.thermostat.client.ui.Palette;
+
 @SuppressWarnings("serial")
-public class ValueField extends JEditorPane {
+public class ToolbarButtonBorder extends DebugBorder implements UIResource, Serializable {
 
-    public ValueField(String text) {
-        setText(text);
-        setBorder(null);
-        setOpaque(false);
-        setBackground(UIManager.getColor("Label.background"));
-        setForeground(UIManager.getColor("Label.foreground"));
-        setFont(UIManager.getFont("Label.font"));
-        setEditable(false);
+    public ToolbarButtonBorder(ToolbarButton button) {
+        // TODO Auto-generated constructor stub
     }
+    
+    @Override
+    public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+        
+        AbstractButton button = (AbstractButton) c;
+        ButtonModel model = button.getModel();
+        
+        Color colour = Palette.GRAY.getColor();
+        if (model.isPressed()) {
+            colour = Palette.PALE_GRAY.getColor();
+        } else if (model.isRollover()) {
+            colour = Palette.DARK_GRAY.getColor();
+        }
+        
+        if (model.isRollover() || model.isPressed() || model.isSelected()) {
+            GraphicsUtils graphicsUtils = GraphicsUtils.getInstance();
+            Graphics2D graphics = graphicsUtils.createAAGraphics(g);            
 
+            Shape shape = graphicsUtils.getRoundShape(width - 1, height - 1);
+
+            graphics.setColor(colour);
+            graphics.translate(x, y);
+            graphics.draw(shape);
+
+            graphics.dispose();
+        }
+    }
 }

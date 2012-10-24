@@ -111,6 +111,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         
         timelinePanel = new ThreadAliveDaemonTimelinePanel();
         panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING));
+        panel.getToggleButton().setText(t.localize(LocaleResources.THREAD_MONITOR_SWITCH));
         panel.getToggleButton().addItemListener(new ItemListener()
         {
             @Override

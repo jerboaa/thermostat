@@ -36,44 +36,87 @@
 
 package com.redhat.thermostat.client.swing.components;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Graphics;
+import java.lang.reflect.InvocationTargetException;
+
 import javax.swing.AbstractButton;
 import javax.swing.Icon;
+import javax.swing.JFrame;
 import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
 
 @SuppressWarnings("serial")
 public class ActionToggleButton extends JToggleButton implements ToolbarButton {
-    private AbstractButton realButton;
-    
+        
     public ActionToggleButton(final Icon icon) {
+        this(icon, "");
+    }
+    
+    public ActionToggleButton(final Icon icon, String text) {
         super(icon);
+                
+        setText(text);
         
-        realButton = new JToggleButton() {
-            @Override
-            public int getWidth() {
-                return icon.getIconWidth() + 4;
-            }
-            
-            @Override
-            public int getHeight() {
-                return icon.getIconHeight() + 4;
-            }
-        };
-        setUI(new ActionButtonUI(realButton));
-        
-        setSize(realButton.getWidth(), realButton.getHeight());
+        setUI(new ActionButtonUI());
+        setOpaque(false);
         setContentAreaFilled(false);
-        
-        setPreferredSize(getSize());
-        setMinimumSize(getSize());
-        setMaximumSize(getSize());
-        
-        realButton.setModel(getModel());
-
-        setBorderPainted(false);
+        setBorder(new ToolbarButtonBorder(this));
     }
     
     @Override
     public AbstractButton getToolbarButton() {
         return this;
-    }    
+    }
+    
+    @Override
+    public ToolbarButton copy() {
+        ActionToggleButton copy = new ActionToggleButton(getIcon(), getText());
+        copy.setSelected(isSelected());
+        copy.setName(getName());
+        copy.setToolTipText(getToolTipText());
+        return copy;
+    }
+    
+    public static void main(String[] args) throws InvocationTargetException, InterruptedException {
+        SwingUtilities.invokeAndWait(new Runnable() {
+            
+            @Override
+            public void run() {
+               JFrame frame = new JFrame();
+               frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+               
+               HeaderPanel header = new HeaderPanel();
+               header.setHeader("Test");
+               
+               Icon icon = new Icon() {
+                   @Override
+                   public void paintIcon(Component c, Graphics g, int x, int y) {
+                       g.setColor(Color.CYAN);
+                       g.fillRect(x, y, 16, 16);
+                   }
+                
+                   @Override
+                   public int getIconWidth() {
+                       return 16;
+                   }
+                
+                   @Override
+                   public int getIconHeight() {
+                       return 16;
+                   }
+               }; 
+               
+               ActionToggleButton button = new ActionToggleButton(icon);
+               header.addToolBarButton(button);
+               
+               button.setText("fluff");
+               
+               frame.getContentPane().add(header);
+               frame.setSize(500, 500);
+               frame.setVisible(true);
+            }
+        });
+    }     
 }
