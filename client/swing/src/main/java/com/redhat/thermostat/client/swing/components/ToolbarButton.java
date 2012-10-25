@@ -40,5 +40,5 @@ import javax.swing.AbstractButton;
 
 public interface ToolbarButton {
     AbstractButton getToolbarButton();
-    ToolbarButton copy();
+    void toggleText(boolean showText);
 }
