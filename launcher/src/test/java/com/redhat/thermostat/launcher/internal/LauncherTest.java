@@ -148,6 +148,7 @@ public class LauncherTest {
     private OSGiRegistry registry;
     private LoggingInitializer loggingInitializer;
     private DbServiceFactory dbServiceFactory;
+    private CommandInfoSource infos;
     private ActionNotifier<ApplicationState> notifier;
 
     private LauncherImpl launcher;
@@ -216,12 +217,13 @@ public class LauncherTest {
 
         registry = mock(OSGiRegistry.class);
 
-        CommandInfoSource infos = mock(CommandInfoSource.class);
+        infos = mock(CommandInfoSource.class);
         when(infos.getCommandInfo(name1)).thenReturn(info1);
         when(infos.getCommandInfo(name2)).thenReturn(info2);
         when(infos.getCommandInfo(name3)).thenReturn(info3);
         when(infos.getCommandInfo("basic")).thenReturn(basicInfo);
         when(infos.getCommandInfo("help")).thenReturn(helpCommandInfo);
+
         Collection<CommandInfo> infoList = new ArrayList<CommandInfo>();
         infoList.add(helpCommandInfo);
         infoList.add(basicInfo);
@@ -291,6 +293,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand1() {
+        when(infos.getCommandInfo("--help")).thenThrow(new CommandInfoNotFoundException("--help"));
+
         String expected = "unknown command '--help'\n"
             + "list of commands:\n\n"
             + " help          print help information\n"
@@ -303,6 +307,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand2() {
+        when(infos.getCommandInfo("-help")).thenThrow(new CommandInfoNotFoundException("-help"));
+
         String expected = "unknown command '-help'\n"
             + "list of commands:\n\n"
             + " help          print help information\n"
@@ -315,6 +321,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand3() {
+        when(infos.getCommandInfo("foobarbaz")).thenThrow(new CommandInfoNotFoundException("foobarbaz"));
+
         String expected = "unknown command 'foobarbaz'\n"
             + "list of commands:\n\n"
             + " help          print help information\n"
@@ -327,6 +335,8 @@ public class LauncherTest {
 
     @Test
     public void testMainBadCommand4() {
+        when(infos.getCommandInfo("foo")).thenThrow(new CommandInfoNotFoundException("foo"));
+
         String expected = "unknown command 'foo'\n"
             + "list of commands:\n\n"
             + " help          print help information\n"
@@ -339,7 +349,9 @@ public class LauncherTest {
 
     @Test
     public void testCommandInfoNotFound() throws CommandInfoNotFoundException, BundleException, IOException {
+        when(infos.getCommandInfo("foo")).thenThrow(new CommandInfoNotFoundException("foo"));
         doThrow(new CommandInfoNotFoundException("foo")).when(registry).addBundlesFor("foo");
+
         String expected = "unknown command 'foo'\n"
                 + "list of commands:\n\n"
                 + " help          print help information\n"
@@ -477,7 +489,7 @@ public class LauncherTest {
 
     @Test
     public void verifyLoggingIsInitialized() {
-        launcher.setArgs(new String[] { "ignore" });
+        launcher.setArgs(new String[] { "test1" });
         launcher.run();
 
         verify(loggingInitializer).initialize();
@@ -485,7 +497,7 @@ public class LauncherTest {
 
     @Test
     public void verifyShutdown() throws BundleException {
-        launcher.setArgs(new String[] { "ignore" });
+        launcher.setArgs(new String[] { "test1" });
         launcher.run();
 
         verify(sysBundle).stop();

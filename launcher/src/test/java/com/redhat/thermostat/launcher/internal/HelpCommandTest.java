@@ -61,7 +61,9 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.cli.TestCommand;
@@ -240,22 +242,18 @@ public class HelpCommandTest {
     public void verifyHelpUnknownCmdPrintsSummaries() {
 
         CommandInfoSource infos = mock(CommandInfoSource.class);
-        Collection<CommandInfo> infoList = new ArrayList<CommandInfo>();
         
-        CommandInfo info1 = mock(CommandInfo.class);
-        when(info1.getName()).thenReturn("test1");
-        when(info1.getDescription()).thenReturn("test command 1");
-        infoList.add(info1);
-
-        when(infos.getCommandInfos()).thenReturn(infoList);
+        when(infos.getCommandInfo("test1")).thenThrow(new CommandInfoNotFoundException("test1"));
         mockCommandInfoSourceService(infos);
 
         HelpCommand cmd = new HelpCommand();
-        Arguments args = mock(Arguments.class);
+        SimpleArguments args = new SimpleArguments();
+        args.addNonOptionArgument("test1");
         cmd.run(ctxFactory.createContext(args));
 
-        String expected = "list of commands:\n\n"
-                        + " test1         test command 1\n";
+        String expected = "unknown command 'test1'\n"
+                        + "list of commands:\n\n";
+
         String actual = ctxFactory.getOutput();
         assertEquals(expected, actual);
     }

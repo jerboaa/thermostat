@@ -76,8 +76,6 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class LauncherImpl implements Launcher {
 
-    private static final String UNKNOWN_COMMAND_MESSAGE = "unknown command '%s'\n";
-
     private ClientPreferences prefs;
 
     private String[] args;
@@ -177,6 +175,10 @@ public class LauncherImpl implements Launcher {
         runCommand("help", new String[0], null);
     }
 
+    private void runHelpCommandFor(String cmdName) {
+        runCommand("help", new String[] { "--", cmdName }, null);
+    }
+
     private void runCommandFromArguments(Collection<ActionListener<ApplicationState>> listeners) {
         runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners);
     }
@@ -201,15 +203,13 @@ public class LauncherImpl implements Launcher {
             e.printStackTrace(out);
             return;
         } catch (CommandInfoNotFoundException commandNotFound) {
-            out.print(String.format(UNKNOWN_COMMAND_MESSAGE, cmdName));
-            runHelpCommand();
+            runHelpCommandFor(cmdName);
             return;
         }
 
         Command cmd = getCommand(cmdName);
         if (cmd == null) {
-            out.print(String.format(UNKNOWN_COMMAND_MESSAGE, cmdName));
-            runHelpCommand();
+            runHelpCommandFor(cmdName);
             return;
         }
         if (listeners != null && cmd instanceof BasicCommand) {
