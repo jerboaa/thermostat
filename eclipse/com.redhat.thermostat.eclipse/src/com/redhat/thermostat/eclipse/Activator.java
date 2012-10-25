@@ -43,6 +43,9 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.common.ThreadPoolTimerFactory;
+import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.DbService;
@@ -74,6 +77,10 @@ public class Activator extends AbstractUIPlugin {
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
+        
+        // Register a TimerFactory
+        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
+        ApplicationContext.getInstance().setTimerFactory(timerFactory);
     }
 
     /*

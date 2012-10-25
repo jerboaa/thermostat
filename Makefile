@@ -31,7 +31,13 @@ eclipse-test-deps: core-install
 eclipse-test-p2: eclipse-test-deps
 	$(MAVEN) -f eclipse/test-deps-p2-repository/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
-eclipse: eclipse-test-p2
+jfreechart-deps: core-install
+	$(MAVEN) -f eclipse/jfreechart-bundle-wrapping/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
+
+jfreechart-p2: jfreechart-deps
+	$(MAVEN) -f eclipse/jfreechart-p2-repository/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
+
+eclipse: eclipse-test-p2 jfreechart-p2
 	$(MAVEN) -f eclipse/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
 create-repo-dir:

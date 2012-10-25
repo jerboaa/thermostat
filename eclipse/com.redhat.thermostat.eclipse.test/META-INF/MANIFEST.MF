@@ -12,11 +12,17 @@ Require-Bundle: org.eclipse.ui,
  com.redhat.thermostat.bundles.org.objenesis;resolution:=optional,
  com.redhat.thermostat.bundles.org.mockito.mockito-core;resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Import-Package: com.redhat.thermostat.common,
+Import-Package: com.redhat.thermostat.client.core.views,
+ com.redhat.thermostat.client.osgi.service,
+ com.redhat.thermostat.client.ui,
+ com.redhat.thermostat.common,
  com.redhat.thermostat.common.dao,
+ com.redhat.thermostat.common.utils,
+ com.redhat.thermostat.eclipse,
+ com.redhat.thermostat.eclipse.chart.common,
  com.redhat.thermostat.eclipse.model,
- org.eclipse.core.resources,
- org.eclipse.ui.ide,
+ com.redhat.thermostat.eclipse.views,
  org.mockito,
  org.mockito.stubbing
-Export-Package: com.redhat.thermostat.eclipse.test.model
+Export-Package: com.redhat.thermostat.eclipse.test.model,
+ com.redhat.thermostat.eclipse.test.views

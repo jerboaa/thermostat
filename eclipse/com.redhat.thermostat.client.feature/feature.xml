@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <feature
-      id="com.redhat.thermostat.eclipse.feature"
-      label="Thermostat Eclipse Feature"
-      version="0.5.0.qualifier">
+      id="com.redhat.thermostat.client.feature"
+      label="Thermostat Client Feature"
+      version="0.5.0.qualifier"
+      provider-name="Red Hat Inc.">
 
-   <description url="http://icedtea.classpath.org/thermostat/">
-      Thermostat Eclipse Plug-ins.
+   <description url="http://icedtea.classpath.org/thermostat">
+      Plug-ins necessary for a Thermostat client interface.
    </description>
 
    <copyright url="http://icedtea.classpath.org/thermostat">
@@ -13,7 +14,7 @@
    </copyright>
 
    <license url="http://www.gnu.org/licenses/">
-Copyright 2012 Red Hat, Inc.
+      Copyright 2012 Red Hat, Inc.
 
 This file is part of Thermostat.
 
@@ -48,27 +49,78 @@ library, but you are not obligated to do so.  If you do not wish
 to do so, delete this exception statement from your version.
    </license>
 
-   <requires>
-      <import feature="com.redhat.thermostat.client.feature" version="0.5.0.qualifier"/>
-   </requires>
-
    <plugin
-         id="com.redhat.thermostat.eclipse"
+         id="com.redhat.thermostat.client.core"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
 
    <plugin
-         id="com.redhat.thermostat.eclipse.boot"
+         id="com.redhat.thermostat.common.core"
          download-size="0"
          install-size="0"
          version="0.0.0"
-         fragment="true"
          unpack="false"/>
 
    <plugin
-         id="com.redhat.thermostat.eclipse.chart.common"
+         id="com.redhat.thermostat.keyring"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.bundles.org.jfree.chart"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.bundles.org.jfree"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.web.client"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.web.common"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.apache.servicemix.bundles.lucene"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.google.gson"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.launcher"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.bundles.core"
          download-size="0"
          install-size="0"
          version="0.0.0"

@@ -8,33 +8,24 @@
     <version>0.5.0-SNAPSHOT</version>
   </parent>
   <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-  <artifactId>com.redhat.thermostat.eclipse.test</artifactId>
+  <artifactId>com.redhat.thermostat.eclipse.test.ui</artifactId>
   <packaging>eclipse-test-plugin</packaging>
   <version>0.5.0-SNAPSHOT</version>
 
-  <name>Thermostat Eclipse Client Tests</name>
+  <name>Thermostat Eclipse Client UI Tests</name>
+
+  <repositories>
+    <repository>
+      <id>swtbot</id>
+      <layout>p2</layout>
+      <url>http://download.eclipse.org/technology/swtbot/helios/dev-build/update-site</url>
+    </repository>
+  </repositories>
 
   <dependencies>
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-      <artifactId>com.redhat.thermostat.eclipse</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <!-- using Web storage -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-client</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-common</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <!-- DbService is in the launcher bundle -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-launcher</artifactId>
+      <artifactId>com.redhat.thermostat.eclipse.chart.common</artifactId>
       <version>0.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
@@ -52,15 +43,9 @@
         <version>${tycho-version}</version>
         <configuration>
           <useUIHarness>true</useUIHarness>
-          <useUIThread>true</useUIThread>
+          <useUIThread>false</useUIThread>
           <product>org.eclipse.platform.ide</product>
-          <dependencies>
-            <dependency>
-              <type>p2-installable-unit</type>
-              <artifactId>org.eclipse.sdk.feature.group</artifactId>
-              <version>${sdk-version}</version>
-            </dependency>
-          </dependencies>
+          <application>org.eclipse.ui.ide.workbench</application>
           <bundleStartLevel>
             <bundle>
               <id>com.redhat.thermostat.common.core</id>

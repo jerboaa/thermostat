@@ -59,4 +59,12 @@
             restorable="true">
       </view>
    </extension>
+   <extension
+         point="org.eclipse.ui.perspectives">
+      <perspective
+            class="com.redhat.thermostat.eclipse.views.ThermostatPerspectiveFactory"
+            id="com.redhat.thermostat.eclipse.perspective"
+            name="Thermostat">
+      </perspective>
+   </extension>
 </plugin>
