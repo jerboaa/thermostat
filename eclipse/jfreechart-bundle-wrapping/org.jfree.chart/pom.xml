@@ -1,0 +1,189 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+<!-- 
+
+ Copyright 2012 Red Hat, Inc.
+
+ This file is part of Thermostat.
+
+ Thermostat is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published
+ by the Free Software Foundation; either version 2, or (at your
+ option) any later version.
+
+ Thermostat is distributed in the hope that it will be useful, but
+ WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ General Public License for more details.
+
+ You should have received a copy of the GNU General Public License
+ along with Thermostat; see the file COPYING.  If not see
+ <http://www.gnu.org/licenses />.
+
+ Linking this code with other modules is making a combined work
+ based on this code.  Thus, the terms and conditions of the GNU
+ General Public License cover the whole combination.
+
+ As a special exception, the copyright holders of this code give
+ you permission to link this code with independent modules to
+ produce an executable, regardless of the license terms of these
+ independent modules, and to copy and distribute the resulting
+ executable under terms of your choice, provided that you also
+ meet, for each linked independent module, the terms and conditions
+ of the license of that module.  An independent module is a module
+ which is not derived from or based on this code.  If you modify
+ this code, you may extend this exception to your version of the
+ library, but you are not obligated to do so.  If you do not wish
+ to do so, delete this exception statement from your version.
+
+-->
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+      <groupId>com.redhat.thermostat.eclipse.parent</groupId>
+      <artifactId>thermostat-eclipse-jfreechart</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </parent>
+
+    <groupId>org.jfree.chart</groupId>
+    <artifactId>com.redhat.thermostat.bundles.org.jfree.chart</artifactId>
+    <packaging>bundle</packaging>
+    <version>1.0.14</version>
+    <name>Thermostat Eclipse :: Bundles :: ${pkgArtifactId}</name>
+    <description>
+        This bundle simply wraps ${pkgArtifactId}-${pkgVersion}.jar.
+    </description>
+
+    <properties>
+        <pkgGroupId>org.jfree</pkgGroupId>
+        <pkgArtifactId>jfreechart</pkgArtifactId>
+        <pkgVersion>1.0.14</pkgVersion>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${pkgGroupId}</groupId>
+            <artifactId>${pkgArtifactId}</artifactId>
+            <version>${pkgVersion}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <extensions>true</extensions>
+          <configuration>
+            <instructions>
+              <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+              <Export-Package>
+                org.jfree.chart,
+                org.jfree.chart.annotations,
+                org.jfree.chart.axis,
+                org.jfree.chart.block,
+                org.jfree.chart.demo,
+                org.jfree.chart.editor,
+                org.jfree.chart.encoders,
+                org.jfree.chart.entity,
+                org.jfree.chart.event,
+                org.jfree.chart.imagemap,
+                org.jfree.chart.labels,
+                org.jfree.chart.needle,
+                org.jfree.chart.panel,
+                org.jfree.chart.plot,
+                org.jfree.chart.plot.dial,
+                org.jfree.chart.renderer,
+                org.jfree.chart.renderer.category,
+                org.jfree.chart.renderer.xy,
+                org.jfree.chart.resources,
+                org.jfree.chart.servlet,
+                org.jfree.chart.title,
+                org.jfree.chart.urls,
+                org.jfree.chart.util,
+                org.jfree.data,
+                org.jfree.data.category,
+                org.jfree.data.contour,
+                org.jfree.data.function,
+                org.jfree.data.gantt,
+                org.jfree.data.general,
+                org.jfree.data.io,
+                org.jfree.data.jdbc,
+                org.jfree.data.resources,
+                org.jfree.data.statistics,
+                org.jfree.data.time,
+                org.jfree.data.time.ohlc,
+                org.jfree.data.xml,
+                org.jfree.data.xy
+              </Export-Package>
+              <Import-Package>
+                com.keypoint;resolution:=optional,
+                javax.imageio;resolution:=optional,
+                javax.imageio.metadata;resolution:=optional,
+                javax.imageio.stream;resolution:=optional,
+                javax.servlet;resolution:=optional,
+                javax.servlet.http;resolution:=optional,
+                javax.swing;resolution:=optional,
+                javax.swing.border;resolution:=optional,
+                javax.swing.event;resolution:=optional,
+                javax.swing.filechooser;resolution:=optional,
+                javax.swing.table;resolution:=optional,
+                javax.xml.parsers;resolution:=optional,
+                org.jfree;resolution:=optional,
+                org.jfree.base;resolution:=optional,
+                org.jfree.chart;resolution:=optional,
+                org.jfree.chart.annotations;resolution:=optional,
+                org.jfree.chart.axis;resolution:=optional,
+                org.jfree.chart.block;resolution:=optional,
+                org.jfree.chart.demo;resolution:=optional,
+                org.jfree.chart.editor;resolution:=optional,
+                org.jfree.chart.encoders;resolution:=optional,
+                org.jfree.chart.entity;resolution:=optional,
+                org.jfree.chart.event;resolution:=optional,
+                org.jfree.chart.imagemap;resolution:=optional,
+                org.jfree.chart.labels;resolution:=optional,
+                org.jfree.chart.needle;resolution:=optional,
+                org.jfree.chart.panel;resolution:=optional,
+                org.jfree.chart.plot;resolution:=optional,
+                org.jfree.chart.plot.dial;resolution:=optional,
+                org.jfree.chart.renderer;resolution:=optional,
+                org.jfree.chart.renderer.category;resolution:=optional,
+                org.jfree.chart.renderer.xy;resolution:=optional,
+                org.jfree.chart.resources;resolution:=optional,
+                org.jfree.chart.servlet;resolution:=optional,
+                org.jfree.chart.title;resolution:=optional,
+                org.jfree.chart.urls;resolution:=optional,
+                org.jfree.chart.util;resolution:=optional,
+                org.jfree.data;resolution:=optional,
+                org.jfree.data.category;resolution:=optional,
+                org.jfree.data.contour;resolution:=optional,
+                org.jfree.data.function;resolution:=optional,
+                org.jfree.data.gantt;resolution:=optional,
+                org.jfree.data.general;resolution:=optional,
+                org.jfree.data.io;resolution:=optional,
+                org.jfree.data.jdbc;resolution:=optional,
+                org.jfree.data.resources;resolution:=optional,
+                org.jfree.data.statistics;resolution:=optional,
+                org.jfree.data.time;resolution:=optional,
+                org.jfree.data.time.ohlc;resolution:=optional,
+                org.jfree.data.xml;resolution:=optional,
+                org.jfree.data.xy;resolution:=optional,
+                org.jfree.date;resolution:=optional,
+                org.jfree.io;resolution:=optional,
+                org.jfree.layout;resolution:=optional,
+                org.jfree.text;resolution:=optional,
+                org.jfree.ui;resolution:=optional,
+                org.jfree.ui.about;resolution:=optional,
+                org.jfree.util;resolution:=optional,
+                org.xml.sax;resolution:=optional,
+                org.xml.sax.helpers;resolution:=optional
+              </Import-Package>
+              <_nouses>true</_nouses>
+            </instructions>
+          </configuration>
+        </plugin>
+      </plugins>
+    </build>
+
+</project>
