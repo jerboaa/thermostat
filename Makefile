@@ -1,7 +1,7 @@
-MAVEN           = mvn
-SKIP_TESTS      = false
-REPO_LOC        = $(HOME)/.thermostat/.build/mvn_repository
-MAVEN_FLAGS     = 
+MAVEN           ?= mvn
+SKIP_TESTS      ?= false
+REPO_LOC        ?= $(HOME)/.thermostat/.build/mvn_repository
+MAVEN_FLAGS     ?= 
 
 #
 # Do not change anything below
