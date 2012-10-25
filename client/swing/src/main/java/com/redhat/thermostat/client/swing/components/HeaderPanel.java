@@ -47,8 +47,6 @@ import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.prefs.PreferenceChangeEvent;
 import java.util.prefs.PreferenceChangeListener;
 import java.util.prefs.Preferences;
@@ -80,8 +78,8 @@ public class HeaderPanel extends JPanel {
     private JPanel headerPanel;
     private JPanel controlPanel;
     
-    private List<ToolbarButton> buttons;
-
+    private boolean hasButtons;
+    
     private Preferences prefs;
     
     public HeaderPanel() {
@@ -93,9 +91,7 @@ public class HeaderPanel extends JPanel {
     }
     
     public HeaderPanel(Preferences prefs, String header) {
-        
-        buttons = new ArrayList<ToolbarButton>();
-        
+                
         this.prefs = prefs;
         
         this.header = header;
@@ -121,8 +117,8 @@ public class HeaderPanel extends JPanel {
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.X_AXIS));
         
         add(contentPanel, BorderLayout.CENTER);
-        registerPreferences();
         showText = prefs.getBoolean(HeaderPanel.class.getName(), false);
+        registerPreferences();
         
         headerPanel.addMouseListener(new PreferencesPopupListener());
     }
@@ -147,12 +143,6 @@ public class HeaderPanel extends JPanel {
                     public void run() {
                         boolean oldShowText = showText;
                         showText = value;
-                        controlPanel.removeAll();
-                        for (ToolbarButton button : buttons) {
-                            addToolBarButton_noClient(button);
-                        }
-                        revalidate();
-                        
                         firePropertyChange(SHOW_TEXT, oldShowText, showText);
                     }
                 });
@@ -175,41 +165,23 @@ public class HeaderPanel extends JPanel {
         contentPanel.revalidate();
         repaint();
     }
-
-    private void addToolBarButton_noClient(final ToolbarButton button) {
-        AbstractButton theButton = button.getToolbarButton();
-        if (!showText) {
-            final AbstractButton proxy = button.copy().getToolbarButton();
-            proxy.setText("");
-            proxy.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    button.getToolbarButton().setSelected(proxy.isSelected());                   
-                }
-            });
-            // need this so that if one of those properties change on the real button
-            // we can reflect it on the proxy
-            button.getToolbarButton().addPropertyChangeListener(new PropertyChangeListener() {
-                @Override
-                public void propertyChange(PropertyChangeEvent evt) {
-                    AbstractButton theButton = button.getToolbarButton();
-                    proxy.setName(theButton.getName());
-                    proxy.setToolTipText(theButton.getToolTipText());                
-                }
-            });
-            theButton = proxy;
-        }
-        controlPanel.add(theButton);
-    }
     
-    public void addToolBarButton(ToolbarButton button) {
-        buttons.add(button);
-        addToolBarButton_noClient(button);
+    public void addToolBarButton(final ToolbarButton button) {
+        AbstractButton theButton = button.getToolbarButton();
+        button.toggleText(isShowToolbarText());
+        addPropertyChangeListener(SHOW_TEXT, new PropertyChangeListener() {
+            @Override
+            public void propertyChange(PropertyChangeEvent evt) {
+                button.toggleText(isShowToolbarText());
+            }
+        });
+        controlPanel.add(theButton);
+        hasButtons = true;
     }
     
     class PreferencesPopup extends JPopupMenu {
         JMenuItem preferencesMenu;
-        public PreferencesPopup(){
+        public PreferencesPopup() {
             // TODO: localize
             String text = "Show button text";
             if (showText) {
@@ -240,7 +212,7 @@ public class HeaderPanel extends JPanel {
         }
 
         private void popupPreferences(MouseEvent e){
-            if (buttons.size() > 0) {
+            if (hasButtons) {
                 PreferencesPopup menu = new PreferencesPopup();
                 menu.show(e.getComponent(), e.getX(), e.getY());
             }

@@ -49,7 +49,10 @@ import javax.swing.SwingUtilities;
 
 @SuppressWarnings("serial")
 public class ActionButton extends JButton implements ToolbarButton {
-        
+    
+    private String lastText;
+    private boolean showText;
+    
     public ActionButton(final Icon icon) {
         this(icon, "");
     }
@@ -57,6 +60,7 @@ public class ActionButton extends JButton implements ToolbarButton {
     public ActionButton(final Icon icon, String text) {
         super(icon);
                 
+        showText = true;
         setText(text);
         
         setUI(new ActionButtonUI());
@@ -71,11 +75,25 @@ public class ActionButton extends JButton implements ToolbarButton {
     }
     
     @Override
-    public ToolbarButton copy() {
-        ActionButton copy = new ActionButton(getIcon(), getText());
-        copy.setName(getName());
-        copy.setToolTipText(getToolTipText());
-        return copy;
+    public void setText(String text) {
+        lastText = text;
+        if (showText) {
+            super.setText(text);
+        }
+    }
+    
+    private void setText_noClient(String text) {
+        super.setText(text);
+    }
+    
+    @Override
+    public void toggleText(boolean showText) {
+        this.showText = showText;
+        if (showText) {
+            setText_noClient(lastText);
+        } else {
+            setText_noClient("");
+        }
     }
     
     public static void main(String[] args) throws InvocationTargetException, InterruptedException {
