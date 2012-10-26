@@ -60,7 +60,7 @@ public class ConnectionJobListener extends JobChangeAdapter {
         if (result.isOK()) {
             connectAction.setImageDescriptor(Activator
                     .getImageDescriptor("icons/online.png"));
-            connectAction.setEnabled(!Activator.getDefault().isConnected());
+            connectAction.setEnabled(!Activator.getDefault().isDbConnected());
             connectAction.setToolTipText("Online");
             view.showHostVmsPage();
         }

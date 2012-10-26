@@ -65,7 +65,7 @@
     <module>memory-stats-panel</module>
     <module>living-vm-filter</module>
     <module>command</module>
-    <module>swing-components</module>
+    <module>swing</module>
   </modules>
 
 </project>

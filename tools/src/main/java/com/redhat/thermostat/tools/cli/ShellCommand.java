@@ -130,7 +130,7 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
     }
 
     private void shellMainLoop(CommandContext ctx, History history, Terminal term) throws IOException, CommandException {
-        ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), new OutputStreamWriter(ctx.getConsole().getOutput()), term);
+        ConsoleReader reader = new ConsoleReader(ctx.getConsole().getInput(), ctx.getConsole().getOutput(), term);
         if (history != null) {
             reader.setHistory(history);
         }

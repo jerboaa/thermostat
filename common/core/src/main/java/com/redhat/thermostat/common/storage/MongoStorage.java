@@ -140,7 +140,7 @@ public class MongoStorage extends Storage {
                     query.put(name, toInsert.get(name));
                 }
             }
-            coll.update(query, toInsert);
+            coll.update(query, toInsert, true, false);
         } else {
             coll.insert(toInsert);
         }

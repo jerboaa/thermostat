@@ -50,7 +50,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.swing.GraphicsUtils;
+import com.redhat.thermostat.client.swing.components.GraphicsUtils;
 import com.redhat.thermostat.thread.client.common.chart.ChartColors;
 
 @SuppressWarnings("serial")

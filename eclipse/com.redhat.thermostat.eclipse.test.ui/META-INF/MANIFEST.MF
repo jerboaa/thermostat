@@ -1,0 +1,37 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Thermostat Eclipse UI Tests
+Bundle-SymbolicName: com.redhat.thermostat.eclipse.test.ui
+Bundle-Version: 0.5.0.qualifier
+Bundle-Vendor: Red Hat Inc.
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.junit;bundle-version="4.10.0",
+ org.hamcrest;bundle-version="1.1.0"
+Import-Package: com.redhat.thermostat.client.core.views,
+ com.redhat.thermostat.client.osgi.service,
+ com.redhat.thermostat.client.ui,
+ com.redhat.thermostat.common,
+ com.redhat.thermostat.common.appctx,
+ com.redhat.thermostat.common.model,
+ com.redhat.thermostat.eclipse,
+ com.redhat.thermostat.eclipse.chart.common,
+ org.apache.log4j;version="1.2.13",
+ org.eclipse.swtbot.eclipse.finder,
+ org.eclipse.swtbot.eclipse.finder.matchers,
+ org.eclipse.swtbot.eclipse.finder.widgets,
+ org.eclipse.swtbot.swt.finder,
+ org.eclipse.swtbot.swt.finder.exceptions,
+ org.eclipse.swtbot.swt.finder.junit,
+ org.eclipse.swtbot.swt.finder.matchers,
+ org.eclipse.swtbot.swt.finder.utils,
+ org.eclipse.swtbot.swt.finder.waits,
+ org.eclipse.swtbot.swt.finder.widgets,
+ org.jfree.chart,
+ org.jfree.chart.axis,
+ org.jfree.chart.plot,
+ org.jfree.data.general,
+ org.jfree.data.time,
+ org.jfree.data.xy
+Export-Package: com.redhat.thermostat.eclipse.test.ui

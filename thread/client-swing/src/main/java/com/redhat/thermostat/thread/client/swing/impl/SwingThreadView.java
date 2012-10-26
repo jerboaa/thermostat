@@ -50,10 +50,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ChartPanel;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
-import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ChartPanel;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
@@ -111,6 +111,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         
         timelinePanel = new ThreadAliveDaemonTimelinePanel();
         panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING));
+        panel.getToggleButton().setText(t.localize(LocaleResources.THREAD_MONITOR_SWITCH));
         panel.getToggleButton().addItemListener(new ItemListener()
         {
             @Override

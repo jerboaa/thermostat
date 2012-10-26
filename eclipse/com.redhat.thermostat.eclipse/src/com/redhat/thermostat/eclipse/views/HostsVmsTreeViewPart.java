@@ -53,9 +53,9 @@ import org.eclipse.ui.part.ViewPart;
 
 import com.redhat.thermostat.common.DefaultHostsVMsLoader;
 import com.redhat.thermostat.common.HostsVMsLoader;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.Activator;
 import com.redhat.thermostat.eclipse.ConnectionConfiguration;
 import com.redhat.thermostat.eclipse.controllers.ConnectDBAction;
@@ -81,7 +81,8 @@ public class HostsVmsTreeViewPart extends ViewPart {
     private PageBook pageBook;
 
     public HostsVmsTreeViewPart() {
-        ConnectionConfiguration configuration = new ConnectionConfiguration("mongodb://127.0.0.1:27518");
+        // FIXME: Get these values from preferences
+        ConnectionConfiguration configuration = new ConnectionConfiguration("dummyUser", "dummyPassword", "mongodb://127.0.0.1:27518");
         Job connectJob = new ConnectDbJob(
                 "Connecting to Thermostat storage...", configuration);
         connectJob.setSystem(true);
@@ -101,10 +102,10 @@ public class HostsVmsTreeViewPart extends ViewPart {
     }
 
     public void showHostVmsPage() {
-        HostInfoDAO hostDAO = ApplicationContext.getInstance().getDAOFactory()
-                .getHostInfoDAO();
-        VmInfoDAO vmsDAO = ApplicationContext.getInstance().getDAOFactory()
-                .getVmInfoDAO();
+        HostInfoDAO hostDAO = OSGIUtils.getInstance().getService(
+                HostInfoDAO.class);
+        VmInfoDAO vmsDAO = OSGIUtils.getInstance().getService(
+                VmInfoDAO.class);
         final HostsVMsLoader loader = new DefaultHostsVMsLoader(hostDAO,
                 vmsDAO, false);
 
@@ -152,8 +153,7 @@ public class HostsVmsTreeViewPart extends ViewPart {
             }
         });
         // Show appropriate page
-        boolean connected = Activator.getDefault().isConnected();
-        if (connected) {
+        if (Activator.getDefault().isDbConnected()) {
             showHostVmsPage();
         } else {
             showConnectionPage();

@@ -57,7 +57,6 @@ import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
 import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
-import org.fest.swing.fixture.JLabelFixture;
 import org.fest.swing.fixture.JToggleButtonFixture;
 import org.junit.After;
 import org.junit.AfterClass;

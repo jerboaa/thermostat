@@ -188,6 +188,55 @@
               <goal>run</goal>
             </goals>
           </execution>
+          <execution>
+            <id>version-less-dep-symlinks</id>
+            <phase>prepare-package</phase>
+            <configuration>
+              <target>
+                <symlink link="${project.build.directory}/libs/netty.jar"
+                         resource="${project.build.directory}/libs/netty-3.2.4.Final.jar" />
+                <symlink link="${project.build.directory}/libs/jline2.jar"
+                         resource="${project.build.directory}/libs/jline-2.9.jar" />
+                <symlink link="${project.build.directory}/libs/mongo.jar"
+                         resource="${project.build.directory}/libs/mongo-java-driver-2.7.3.jar" />
+                <symlink link="${project.build.directory}/libs/commons-cli.jar"
+                         resource="${project.build.directory}/libs/commons-cli-1.2.jar" />
+                <symlink link="${project.build.directory}/libs/commons-beanutils.jar"
+                         resource="${project.build.directory}/libs/commons-beanutils-1.8.3.jar" />
+                <symlink link="${project.build.directory}/libs/commons-collections.jar"
+                         resource="${project.build.directory}/libs/commons-collections-3.2.1.jar" />
+                <symlink link="${project.build.directory}/libs/commons-logging.jar"
+                         resource="${project.build.directory}/libs/com.springsource.org.apache.commons.logging-1.1.1.jar" />
+                <symlink link="${project.build.directory}/libs/lucene.jar"
+                         resource="${project.build.directory}/libs/org.apache.servicemix.bundles.lucene-3.6.0_1.jar" />
+                <symlink link="${project.build.directory}/libs/gson.jar"
+                         resource="${project.build.directory}/libs/gson-2.2.2.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-continuation.jar"
+                         resource="${project.build.directory}/libs/jetty-continuation-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-http.jar"
+                         resource="${project.build.directory}/libs/jetty-http-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-io.jar"
+                         resource="${project.build.directory}/libs/jetty-io-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-security.jar"
+                         resource="${project.build.directory}/libs/jetty-security-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-server.jar"
+                         resource="${project.build.directory}/libs/jetty-server-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-servlet.jar"
+                         resource="${project.build.directory}/libs/jetty-servlet-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-util.jar"
+                         resource="${project.build.directory}/libs/jetty-util-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-webapp.jar"
+                         resource="${project.build.directory}/libs/jetty-webapp-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/jetty-xml.jar"
+                         resource="${project.build.directory}/libs/jetty-xml-8.1.5.v20120716.jar" />
+                <symlink link="${project.build.directory}/libs/javax-servlet.jar"
+                         resource="${project.build.directory}/libs/javax.servlet-3.0.0.v201112011016.jar" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
     </plugins>
@@ -249,7 +298,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-core</artifactId>
+      <artifactId>thermostat-client-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -259,17 +308,17 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-vmclassstat</artifactId>
+      <artifactId>thermostat-client-vmclassstat-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-osgi-memory-stats-panel</artifactId>
+      <artifactId>thermostat-osgi-memory-stats-panel-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-osgi-living-vm-filter</artifactId>
+        <artifactId>thermostat-osgi-living-vm-filter-swing</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -298,9 +347,9 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-killvm-client-swing</artifactId>
-    	<version>${project.version}</version>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-killvm-client-swing</artifactId>
+        <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
@@ -313,23 +362,18 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-osgi-process-handler</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
-    <dependency>
-    	<groupId>com.redhat.thermostat</groupId>
-    	<artifactId>thermostat-client-heapdumper</artifactId>
-    	<version>${project.version}</version>
-    </dependency>
-    <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-laf</artifactId>
+        <artifactId>thermostat-osgi-process-handler</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-swing-components</artifactId>
+        <artifactId>thermostat-client-heapdumper-swing</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-laf</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>

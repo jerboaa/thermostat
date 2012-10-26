@@ -54,13 +54,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.ISelectionListener;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.ViewPart;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -68,7 +67,9 @@ import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.Activator;
+import com.redhat.thermostat.eclipse.ThermostatConstants;
 
 public class HostOverviewViewPart extends ViewPart {
 
@@ -103,7 +104,7 @@ public class HostOverviewViewPart extends ViewPart {
                     && !selection.equals(oldSelection)) {
                 oldSelection = selection;
                 Ref ref = getRefFromSelection(selection);
-                if (Activator.getDefault().isConnected()) {
+                if (Activator.getDefault().isDbConnected()) {
                     if (ref != null) {
                         updateText(ref);
                         if (ref instanceof HostRef) {
@@ -251,23 +252,28 @@ public class HostOverviewViewPart extends ViewPart {
 
         // Listen for VMtree changes
         getSite().getWorkbenchWindow().getSelectionService()
-                .addSelectionListener(listener);
-        if (Activator.getDefault().isConnected()) {
-            ISelection selection = getSite().getWorkbenchWindow()
-                    .getSelectionService().getSelection();
-            Ref ref = getRefFromSelection(selection);
-            if (ref != null) {
-                updateText(ref);
-                if (ref instanceof HostRef) {
-                    showPage(mainScrollPage);
-                } else {
-                    showPage(vmPage);
-                }
-            } else {
-                // FIXME: probably want to show something else, e.g. select x in
-                // VM tree
-                showPage(notConnectedPage);
-            }
+        .addSelectionListener(listener);
+        if (Activator.getDefault().isDbConnected()) {
+        	// Explicitly get the selected element from the VmsTreeViewPart
+        	IViewPart part = getSite().getWorkbenchWindow().getActivePage().findView(ThermostatConstants.VIEW_ID_HOST_VM);
+        	if (part != null && part instanceof HostsVmsTreeViewPart) {
+        		ISelection selection = part.getSite().getSelectionProvider().getSelection();
+        		Ref ref = getRefFromSelection(selection);
+        		if (ref != null) {
+        			updateText(ref);
+        			if (ref instanceof HostRef) {
+        				showPage(mainScrollPage);
+        			} else {
+        				showPage(vmPage);
+        			}
+        		} else {
+        			// FIXME: probably want to show something else, e.g. select x in
+        			// VM tree
+        			showPage(notConnectedPage);
+        		}
+        	} else {
+        		showPage(notConnectedPage);
+        	}
         } else {
             showPage(notConnectedPage);
         }
@@ -287,11 +293,11 @@ public class HostOverviewViewPart extends ViewPart {
     }
 
     private void updateText(final HostRef hostRef) {
-        DAOFactory df = ApplicationContext.getInstance().getDAOFactory();
-        HostInfoDAO hostInfoDAO = df.getHostInfoDAO();
+        HostInfoDAO hostInfoDAO = OSGIUtils.getInstance().getService(
+                HostInfoDAO.class);
         final HostInfo hostInfo = hostInfoDAO.getHostInfo(hostRef);
-        final NetworkInterfaceInfoDAO networkInfoDAO = df
-                .getNetworkInterfaceInfoDAO();
+        final NetworkInterfaceInfoDAO networkInfoDAO = OSGIUtils.getInstance()
+                .getService(NetworkInterfaceInfoDAO.class);
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {

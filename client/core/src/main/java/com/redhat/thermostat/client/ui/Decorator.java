@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.client.ui;
 
-
 /**
  * A {@link Decorator} allows plugins to install special visual clues on
  * selected components.

@@ -46,6 +46,7 @@ import java.util.logging.Level;
 import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.bundles.OSGiRegistry;
@@ -59,6 +60,7 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -66,7 +68,6 @@ import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.launcher.DbServiceFactory;
@@ -74,8 +75,6 @@ import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class LauncherImpl implements Launcher {
-
-    private static final String UNKNOWN_COMMAND_MESSAGE = "unknown command '%s'\n";
 
     private ClientPreferences prefs;
 
@@ -88,12 +87,20 @@ public class LauncherImpl implements Launcher {
 
     private BundleContext context;
     private OSGiRegistry registry;
+    private final DbServiceFactory dbServiceFactory;
     
-    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory,
-            OSGiRegistry registry) {
+    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, OSGiRegistry registry) {
+        this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory());
+    }
+
+    LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, OSGiRegistry registry,
+            LoggingInitializer loggingInitializer, DbServiceFactory dbServiceFactory) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
+        this.dbServiceFactory = dbServiceFactory;
+
+        loggingInitializer.initialize();
     }
 
     @Override
@@ -104,14 +111,9 @@ public class LauncherImpl implements Launcher {
     @Override
     public synchronized void run(Collection<ActionListener<ApplicationState>> listeners) {
         usageCount++;
+        waitForArgs();
+
         try {
-            argsBarrier.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        try {
-            // TODO move this logging init out where it's not part of every command launch
-            initLogging();
             if (hasNoArguments()) {
                 runHelpCommand();
             } else if (isVersionQuery()) {
@@ -137,6 +139,14 @@ public class LauncherImpl implements Launcher {
         argsBarrier.release();
     }
 
+    private void waitForArgs() {
+        try {
+            argsBarrier.acquire();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     private boolean isLastLaunch() {
         return usageCount == 0;
     }
@@ -157,25 +167,16 @@ public class LauncherImpl implements Launcher {
         this.prefs = prefs;
     }
 
-    private void initLogging() {
-        try {
-            LoggingUtils.loadGlobalLoggingConfig();
-        } catch (InvalidConfigurationException e) {
-            System.err.println("WARNING: Could not read global Thermostat logging configuration.");
-        }
-        try {
-            LoggingUtils.loadUserLoggingConfig();
-        } catch (InvalidConfigurationException e) {
-            // We intentionally ignore this.
-        }
-    }
-
     private boolean hasNoArguments() {
         return args.length == 0;
     }
 
     private void runHelpCommand() {
         runCommand("help", new String[0], null);
+    }
+
+    private void runHelpCommandFor(String cmdName) {
+        runCommand("help", new String[] { "--", cmdName }, null);
     }
 
     private void runCommandFromArguments(Collection<ActionListener<ApplicationState>> listeners) {
@@ -201,12 +202,14 @@ public class LauncherImpl implements Launcher {
             out.println("Could not load necessary bundles for: " + cmdName);
             e.printStackTrace(out);
             return;
+        } catch (CommandInfoNotFoundException commandNotFound) {
+            runHelpCommandFor(cmdName);
+            return;
         }
 
         Command cmd = getCommand(cmdName);
         if (cmd == null) {
-            out.print(String.format(UNKNOWN_COMMAND_MESSAGE, cmdName));
-            runHelpCommand();
+            runHelpCommandFor(cmdName);
             return;
         }
         if (listeners != null && cmd instanceof BasicCommand) {
@@ -262,25 +265,27 @@ public class LauncherImpl implements Launcher {
         CommandContext ctx = cmdCtxFactory.createContext(args);
         
         if (prefs == null) {
-            prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
+            ServiceReference keyringReference = context.getServiceReference(Keyring.class);
+            Keyring keyring = (Keyring) context.getService(keyringReference);
+            prefs = new ClientPreferences(keyring);
         }
         
         if (cmd.isStorageRequired()) {
-            DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
-            if (service == null) {
+            ServiceReference dbServiceReference = context.getServiceReference(DbService.class);
+            if (dbServiceReference == null) {
                 String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);
                 if (dbUrl == null) {
                     dbUrl = prefs.getConnectionUrl();
                 }
                 String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
                 String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
-                service = DbServiceFactory.createDbService(username, password, dbUrl);
+                DbService service = dbServiceFactory.createDbService(username, password, dbUrl);
                 try {
                     service.connect();
                 } catch (ConnectionException ex) {
                     throw new CommandException("Could not connect to: " + dbUrl, ex);
                 }
-                ServiceRegistration registration = OSGIUtils.getInstance().registerService(DbService.class, service);
+                ServiceRegistration registration = context.registerService(DbService.class, service, null);
                 service.setServiceRegistration(registration);
             }
         }
@@ -291,4 +296,18 @@ public class LauncherImpl implements Launcher {
         return args[0].equals(Version.VERSION_OPTION);
     }
 
+    static class LoggingInitializer {
+        public void initialize() {
+            try {
+                LoggingUtils.loadGlobalLoggingConfig();
+            } catch (InvalidConfigurationException e) {
+                System.err.println("WARNING: Could not read global Thermostat logging configuration.");
+            }
+            try {
+                LoggingUtils.loadUserLoggingConfig();
+            } catch (InvalidConfigurationException e) {
+                // We intentionally ignore this.
+            }
+        }
+    }
 }

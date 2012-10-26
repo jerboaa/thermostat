@@ -56,8 +56,8 @@ import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 
+import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
-import com.redhat.thermostat.client.ui.SwingComponent;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
 import com.redhat.thermostat.thread.model.ThreadInfoData;

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -148,4 +149,21 @@ public class CommandLineArgumentsParserTest {
     public void testMissingAdditionalArgument() throws CommandLineArgumentParseException {
         parser.parse(new String[] { "--test3" });
     }
+
+    @Test(expected = CommandLineArgumentParseException.class)
+    public void testRequiredArgumentEscaped() throws CommandLineArgumentParseException {
+        String[] rawArgs = new String[] { "--", "-t" };
+        parser.parse(rawArgs);
+    }
+
+    @Test
+    public void testEscapedArguments() throws CommandLineArgumentParseException {
+        String[] rawArgs = new String[] { "-t", "--", "--this-is-not-an-option" };
+        Arguments args = parser.parse(rawArgs);
+
+        assertTrue(args.hasArgument("t"));
+        assertFalse(args.hasArgument("--this-is-not-an-option"));
+        assertEquals("--this-is-not-an-option", args.getNonOptionArguments().get(0));
+    }
+
 }

@@ -39,6 +39,7 @@ package com.redhat.thermostat.bundles.impl;
 import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.ConfigurationException;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 
 import java.io.FileNotFoundException;
@@ -86,7 +87,7 @@ public class OSGiRegistryImpl extends OSGiRegistry {
     }
 
     @Override
-    public void addBundlesFor(String commandName) throws BundleException, IOException {
+    public void addBundlesFor(String commandName) throws BundleException, IOException, CommandInfoNotFoundException {
         if (configuration.getPrintOSGiInfo()) {
             System.out.println("Loading additional bundles for: " + commandName);
         }

@@ -52,12 +52,16 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 
 public class HelpCommand extends SimpleCommand {
+
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
     private static final String NAME = "help";
@@ -79,7 +83,7 @@ public class HelpCommand extends SimpleCommand {
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
         ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
         CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
-        ctx.getConsole().getOutput().print("list of commands:\n\n");
+        ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_LIST_HEADER));
 
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
@@ -102,12 +106,14 @@ public class HelpCommand extends SimpleCommand {
         BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
         ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
         CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
-        CommandInfo info = infos.getCommandInfo(cmdName);
-        context.ungetService(infosRef);
-        if (info != null) {
+        try {
+            CommandInfo info = infos.getCommandInfo(cmdName);
             printHelp(ctx, info);
-        } else {
+        } catch (CommandInfoNotFoundException notFound) {
+            ctx.getConsole().getOutput().print(translator.localize(LocaleResources.UNKNOWN_COMMAND, cmdName));
             printCommandSummaries(ctx);
+        } finally {
+            context.ungetService(infosRef);
         }
     }
 

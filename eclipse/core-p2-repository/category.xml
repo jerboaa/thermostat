@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/com.redhat.thermostat.client.feature_0.5.0.qualifier.jar" id="com.redhat.thermostat.client.feature" version="0.5.0.qualifier">
+      <category name="thermostat-client"/>
+   </feature>
+   <category-def name="thermostat-client" label="Thermostat Client"/>
+</site>

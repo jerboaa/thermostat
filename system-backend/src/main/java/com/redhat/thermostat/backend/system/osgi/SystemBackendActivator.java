@@ -54,7 +54,6 @@ public class SystemBackendActivator implements BundleActivator {
     @SuppressWarnings("unchecked")
     @Override
     public void start(BundleContext context) throws Exception {
-        System.err.println("loading SystemBackendActivator");
         
         backend = new SystemBackend();
         

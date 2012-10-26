@@ -43,9 +43,9 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import com.redhat.thermostat.client.swing.components.ActionToggleButton;
+import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.swing.ActionToggleButton;
-import com.redhat.thermostat.swing.HeaderPanel;
 import com.redhat.thermostat.thread.client.common.IconResources;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 

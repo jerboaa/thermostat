@@ -81,13 +81,16 @@ public class ConnectCommandTest {
     private ConnectCommand cmd;
     private TestCommandContextFactory cmdCtxFactory;
     private BundleContext bundleContext;
+    private DbServiceFactory dbServiceFactory;
 
     @Before
     public void setUp() {
         ApplicationContextUtil.resetApplicationContext();
         setupCommandContextFactory();
 
-        cmd = new ConnectCommand();
+        dbServiceFactory = mock(DbServiceFactory.class);
+
+        cmd = new ConnectCommand(dbServiceFactory);
 
     }
 
@@ -130,11 +133,11 @@ public class ConnectCommandTest {
         when(utils.getServiceAllowNull(DbService.class)).thenReturn(null);
 
         DbService dbService = mock(DbService.class);
-        PowerMockito.mockStatic(DbServiceFactory.class);
+
         String username = "testuser";
         String password = "testpassword";
         String dbUrl = "mongodb://10.23.122.1:12578";
-        when(DbServiceFactory.createDbService(eq(username), eq(password), eq(dbUrl))).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(eq(username), eq(password), eq(dbUrl))).thenReturn(dbService);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", dbUrl);
         args.addArgument("username", username);

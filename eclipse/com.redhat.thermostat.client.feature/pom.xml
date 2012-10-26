@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <artifactId>thermostat-eclipse-parent</artifactId>
+    <groupId>com.redhat.thermostat.eclipse.parent</groupId>
+    <version>0.5.0-SNAPSHOT</version>
+  </parent>
+  <groupId>com.redhat.thermostat.eclipse.parent</groupId>
+  <artifactId>com.redhat.thermostat.client.feature</artifactId>
+  <version>0.5.0-SNAPSHOT</version>
+
+  <name>Thermostat Client Feature</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-core</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-web-client</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-web-common</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-launcher</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+
+  <build>
+     <!-- workaround for https://issues.sonatype.org/browse/TYCHO-168 -->
+     <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-source-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.eclipse.tycho</groupId>
+        <artifactId>tycho-packaging-plugin</artifactId>
+        <version>${tycho-version}</version>
+        <configuration>
+          <deployableFeature>true</deployableFeature>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+  <packaging>eclipse-feature</packaging>
+</project>

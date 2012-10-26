@@ -66,7 +66,16 @@ public class ConnectCommand extends SimpleCommand {
     private static final String NAME = "connect";
     
     private ClientPreferences prefs;
-    
+    private DbServiceFactory dbServiceFactory;
+
+    public ConnectCommand() {
+        this(new DbServiceFactory());
+    }
+
+    ConnectCommand(DbServiceFactory dbServiceFactory) {
+        this.dbServiceFactory = dbServiceFactory;
+    }
+
     @SuppressWarnings("rawtypes")
     @Override
     public void run(CommandContext ctx) throws CommandException {
@@ -84,7 +93,7 @@ public class ConnectCommand extends SimpleCommand {
         }
         String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
         String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
-        service = DbServiceFactory.createDbService(username, password, dbUrl);
+        service = dbServiceFactory.createDbService(username, password, dbUrl);
         try {
             service.connect();
         } catch (ConnectionException ex) {

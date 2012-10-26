@@ -53,6 +53,7 @@ public enum LocaleResources {
     
     START_RECORDING,
     STOP_RECORDING,
+    THREAD_MONITOR_SWITCH,
     
     VM_CAPABILITIES,
     TABLE,

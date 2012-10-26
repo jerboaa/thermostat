@@ -55,7 +55,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.VmCpuStat;
 
-class VmCpuController {
+public class VmCpuController {
 
     private final VmRef ref;
     private final VmCpuStatDAO dao;

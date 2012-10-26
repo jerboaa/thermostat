@@ -67,7 +67,7 @@ import com.redhat.thermostat.common.model.VmGcStat;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 
-class VmGcController {
+public class VmGcController {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
