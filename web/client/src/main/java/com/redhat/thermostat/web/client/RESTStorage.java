@@ -253,8 +253,17 @@ public class RESTStorage extends Storage {
 
     @Override
     public void purge() {
-        // TODO Auto-generated method stub
-
+        try {
+            HttpClient httpClient = new DefaultHttpClient();
+            HttpPost httpPost = new HttpPost(endpoint + "/purge");
+            HttpResponse response = httpClient.execute(httpPost);
+            int status = response.getStatusLine().getStatusCode();
+            if (status != 200) {
+                throw new IOException("Server returned status: " + status);
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

@@ -83,7 +83,14 @@ public class RESTStorageEndPoint extends HttpServlet {
             saveFile(req, resp);
         } else if (cmd.equals("load-file")) {
             loadFile(req, resp);
+        } else if (cmd.equals("purge")) {
+            purge(req, resp);
         }
+    }
+
+    private void purge(HttpServletRequest req, HttpServletResponse resp) {
+        storage.purge();
+        resp.setStatus(HttpServletResponse.SC_OK);
     }
 
     private void loadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {

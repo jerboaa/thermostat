@@ -101,6 +101,8 @@ public class RESTStorageTest {
 
     private String responseBody;
     private Map<String,String> headers;
+    private String method;
+    private String requestURI;
 
     private static Category category;
     private static Key<String> key1;
@@ -136,6 +138,8 @@ public class RESTStorageTest {
         storage.setEndpoint("http://localhost:" + port + "/");
         storage.setAgentId(new UUID(123, 456));
         headers = new HashMap<>();
+        requestURI = null;
+        method = null;
         registerCategory();
     }
 
@@ -152,6 +156,9 @@ public class RESTStorageTest {
                     String headerName = headerNames.nextElement();
                     headers.put(headerName, request.getHeader(headerName));
                 }
+
+                method = request.getMethod();
+                requestURI = request.getRequestURI();
 
                 // Read request body.
                 StringBuilder body = new StringBuilder();
@@ -179,6 +186,8 @@ public class RESTStorageTest {
     public void tearDown() throws Exception {
 
         headers = null;
+        requestURI = null;
+        method = null;
         storage = null;
 
         server.stop();
@@ -442,5 +451,12 @@ public class RESTStorageTest {
         }
         assertEquals("Hello World", new String(data));
 
+    }
+
+    @Test
+    public void testPurge() {
+        storage.purge();
+        assertEquals("POST", method);
+        assertTrue(requestURI.endsWith("/purge"));
     }
 }

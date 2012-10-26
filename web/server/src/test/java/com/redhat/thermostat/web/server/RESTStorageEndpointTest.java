@@ -416,6 +416,18 @@ public class RESTStorageEndpointTest {
         verify(mockStorage).loadFile("fluff");
     }
 
+    @Test
+    public void testPurge() throws IOException {
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/purge");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestMethod("POST");
+        int status = conn.getResponseCode();
+        assertEquals(200, status);
+        verify(mockStorage).purge();
+    }
+
     private void registerCategory() {
         try {
             String endpoint = getEndpoint();
