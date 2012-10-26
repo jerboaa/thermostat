@@ -497,7 +497,7 @@ public class MongoStorageTest {
 
         ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
         ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
-        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture(), true, false);
+        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture(), eq(true), eq(false));
 
         DBObject query = queryCaptor.getValue();
         assertEquals(2, query.keySet().size());
