@@ -34,17 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.common.internal;
 
-import java.util.Objects;
-
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
-import com.redhat.thermostat.launcher.DbService;
 
 public class DbServiceImpl implements DbService {
     
@@ -52,23 +52,27 @@ public class DbServiceImpl implements DbService {
     private ServiceRegistration registration;
     
     private DAOFactory daoFactory;
+    private BundleContext context;
     
     DbServiceImpl(String username, String password, String dbUrl) {
-        this(new DAOFactoryImpl(new MongoStorageProvider(new ConnectionConfiguration(dbUrl, username, password))));
+        this(FrameworkUtil.getBundle(DbService.class).getBundleContext(), new DAOFactoryImpl(new MongoStorageProvider(new ConnectionConfiguration(dbUrl, username, password))));
     }
 
-    DbServiceImpl(DAOFactory daoFactory) {
+    DbServiceImpl(BundleContext context, DAOFactory daoFactory) {
         this.daoFactory = daoFactory;
+        this.context = context;
     }
 
     public void connect() throws ConnectionException {
         daoFactory.getConnection().connect();
+        registration = context.registerService(DbService.class, this, null);
         daoFactory.registerDAOsAndStorageAsOSGiServices();
     }
     
     public void disconnect() throws ConnectionException {
         daoFactory.unregisterDAOsAndStorageAsOSGiServices();
         daoFactory.getConnection().disconnect();
+        registration.unregister();
     }
     
     /**
@@ -81,16 +85,5 @@ public class DbServiceImpl implements DbService {
      */
     public static DbService create(String username, String password, String dbUrl) {
         return new DbServiceImpl(username, password, dbUrl);
-    }
-
-    @SuppressWarnings("rawtypes")
-    @Override
-    public ServiceRegistration getServiceRegistration() {
-        return registration;
-    }
-
-    @Override
-    public void setServiceRegistration(@SuppressWarnings("rawtypes") ServiceRegistration registration) {
-        this.registration = Objects.requireNonNull(registration);
     }
 }

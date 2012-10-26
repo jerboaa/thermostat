@@ -43,12 +43,12 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.launcher.DbService;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -97,7 +97,6 @@ public class Activator extends AbstractUIPlugin {
         } catch (ConnectionException e) {
             e.printStackTrace();
         }
-        dbService.getServiceRegistration().unregister();
         plugin = null;
         super.stop(context);
     }

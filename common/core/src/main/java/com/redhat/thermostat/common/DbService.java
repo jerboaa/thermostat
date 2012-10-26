@@ -34,9 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher;
-
-import org.osgi.framework.ServiceRegistration;
+package com.redhat.thermostat.common;
 
 import com.redhat.thermostat.common.storage.ConnectionException;
 
@@ -56,17 +54,4 @@ public interface DbService {
      * @throws ConnectionException
      */
     void disconnect() throws ConnectionException;
-    
-    /**
-     * Get the registration for this service.
-     * @return
-     */
-    @SuppressWarnings("rawtypes")
-    ServiceRegistration getServiceRegistration();
-    
-    /**
-     * Set the registration suitable for this service.
-     */
-    @SuppressWarnings("rawtypes")
-    void setServiceRegistration(ServiceRegistration registration);
 } 

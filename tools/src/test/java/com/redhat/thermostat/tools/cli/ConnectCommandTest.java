@@ -44,7 +44,6 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.any;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -55,11 +54,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.common.DbService;
+import com.redhat.thermostat.common.DbServiceFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -67,8 +67,6 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
-import com.redhat.thermostat.launcher.DbService;
-import com.redhat.thermostat.launcher.DbServiceFactory;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.tools.LocaleResources;
 
@@ -89,9 +87,7 @@ public class ConnectCommandTest {
         setupCommandContextFactory();
 
         dbServiceFactory = mock(DbServiceFactory.class);
-
         cmd = new ConnectCommand(dbServiceFactory);
-
     }
 
     private void setupCommandContextFactory() {
@@ -99,6 +95,7 @@ public class ConnectCommandTest {
         bundleContext = mock(BundleContext.class);
         when(bundleContext.getBundle(0)).thenReturn(sysBundle);
         cmdCtxFactory = new TestCommandContextFactory(bundleContext);
+        
     }
 
     @After
@@ -145,7 +142,6 @@ public class ConnectCommandTest {
         CommandContext ctx = cmdCtxFactory.createContext(args);
         cmd.run(ctx);
         verify(dbService).connect();
-        verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
     }
     
     @Test

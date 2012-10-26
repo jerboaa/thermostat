@@ -37,15 +37,14 @@
 package com.redhat.thermostat.tools.cli;
 
 import org.apache.commons.cli.Options;
-import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.tools.LocaleResources;
 
 public class DisconnectCommand extends SimpleCommand {
@@ -54,7 +53,6 @@ public class DisconnectCommand extends SimpleCommand {
 
     private static final String NAME = "disconnect";
 
-    @SuppressWarnings("rawtypes")
     @Override
     public void run(CommandContext ctx) throws CommandException {
         DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
@@ -67,9 +65,6 @@ public class DisconnectCommand extends SimpleCommand {
         } catch (ConnectionException e) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_ERROR));
         }
-        // remove DB service
-        ServiceRegistration registration = service.getServiceRegistration();
-        registration.unregister();
     }
 
     @Override

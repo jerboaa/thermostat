@@ -18,7 +18,6 @@ Import-Package: com.mongodb,
  com.redhat.thermostat.common.model,
  com.redhat.thermostat.common.storage,
  com.redhat.thermostat.common.utils,
- com.redhat.thermostat.launcher,
  com.redhat.thermostat.web.client,
  com.redhat.thermostat.web.common
 Export-Package: com.redhat.thermostat.eclipse,

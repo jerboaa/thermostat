@@ -38,13 +38,12 @@ package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
 
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -60,15 +59,14 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -77,10 +75,13 @@ import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.common.DbService;
+import com.redhat.thermostat.common.DbServiceFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.Arguments;
+import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandInfo;
@@ -91,10 +92,6 @@ import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
-import com.redhat.thermostat.launcher.DbService;
-import com.redhat.thermostat.launcher.DbServiceFactory;
-import com.redhat.thermostat.launcher.internal.HelpCommand;
-import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
 import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -261,6 +258,7 @@ public class LauncherTest {
     @After
     public void tearDown() {
         ctxFactory = null;
+        bundleContext = null;
         ApplicationContextUtil.resetApplicationContext();
     }
 
@@ -388,58 +386,38 @@ public class LauncherTest {
     }
 
     @Test
-    public void verifyStorageCommandSetsUpDAOFactory() {
-        String dbUrl = "mongo://fluff:12345";
-        DbService dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
-        
-        launcher.setArgs(new String[] { "test3" , "--dbUrl", dbUrl });
-        launcher.run();
-
-        verify(dbService).connect();
-        verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
-    }
-
-    @Test
-    public void verifyStorageCommandSetsUpDAOFactoryWithAuth() {
-        String dbUrl = "mongo://fluff:12345";
-        String testUser = "testUser";
-        String testPasswd = "testPassword";
-        DbService dbService = mock(DbService.class);
-        when(dbServiceFactory.createDbService(testUser, testPasswd, dbUrl)).thenReturn(dbService);
-        
-        launcher.setArgs(new String[] { "test3" , "--dbUrl", dbUrl, "--username", testUser, "--password", testPasswd });
-        launcher.run();
-        verify(dbService).connect();
-        verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
-    }
-
-    @Test
     public void verifyPrefsAreUsed() {
         ClientPreferences prefs = mock(ClientPreferences.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
 
         DbService dbService = mock(DbService.class);
-        // this makes sure that dbUrl is indeed retrieved from preferences
-        when(dbServiceFactory.createDbService(null, null, dbUrl)).thenReturn(dbService);
+        ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
+        when(dbServiceFactory.createDbService(anyString(), anyString(), dbUrlCaptor.capture())).thenReturn(dbService);
         launcher.setPreferences(prefs);
         launcher.setArgs(new String[] { "test3" });
         launcher.run();
         verify(dbService).connect();
-        verify(dbService).setServiceRegistration(any(ServiceRegistration.class));
+        verify(prefs).getConnectionUrl();
+        assertEquals(dbUrl, dbUrlCaptor.getValue());
     }
 
-    @Ignore("needs a storage-requiring service")
     @Test
-    public void verifyDbServiceIsRegistered() {
+    public void verifyDbServiceConnectIsCalledForStorageCommand() throws Exception {
+        Command mockCmd = mock(Command.class);
+        when(mockCmd.getName()).thenReturn("dummy");
+        when(mockCmd.isStorageRequired()).thenReturn(true);
+        Options options = mock(Options.class);
+        when(mockCmd.getOptions()).thenReturn(options);
+        
+        ctxFactory.getCommandRegistry().registerCommand(mockCmd);
+        
         DbService dbService = mock(DbService.class);
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
 
-        launcher.setArgs(new String[] { "ignore" });
+        launcher.setArgs(new String[] { "dummy" });
         launcher.run();
-
-        assertTrue(bundleContext.isServiceRegistered(DbService.class.getName(), dbService.getClass()));
+        verify(dbService).connect();
     }
 
     @Test

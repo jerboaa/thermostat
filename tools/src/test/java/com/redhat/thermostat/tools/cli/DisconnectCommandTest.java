@@ -53,18 +53,17 @@ import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceRegistration;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.tools.LocaleResources;
 
@@ -116,21 +115,17 @@ public class DisconnectCommandTest {
         }
     }
     
-    @SuppressWarnings({ "rawtypes" })
     @Test
-    public void verifyConnectedDisconnectsAndUnregistersService() throws CommandException {
+    public void verifyConnectedDisconnects() throws CommandException {
         DbService dbService = mock(DbService.class);
         OSGIUtils utils = mock(OSGIUtils.class);
         PowerMockito.mockStatic(OSGIUtils.class);
         when(OSGIUtils.getInstance()).thenReturn(utils);
         when(utils.getServiceAllowNull(DbService.class)).thenReturn(dbService);
-        ServiceRegistration registration = mock(ServiceRegistration.class);
-        when(dbService.getServiceRegistration()).thenReturn(registration);
         
         CommandContext ctx = cmdCtxFactory.createContext(new SimpleArguments());
         cmd.run(ctx);
         verify(dbService).disconnect();
-        verify(registration).unregister();
     }
 
     @Test

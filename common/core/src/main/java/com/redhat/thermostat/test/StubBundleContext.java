@@ -209,7 +209,7 @@ public class StubBundleContext implements BundleContext {
     @Override
     public ServiceReference getServiceReference(Class clazz) {
         for (ServiceInformation info : registeredServices) {
-            if (info.serviceInterface.equals(clazz)) {
+            if (info.serviceInterface.equals(clazz.getName())) {
                 return new StubServiceReference(info);
             }
         }

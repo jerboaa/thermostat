@@ -47,11 +47,12 @@ import org.apache.commons.cli.Options;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.ServiceReference;
-import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.DbService;
+import com.redhat.thermostat.common.DbServiceFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
@@ -69,8 +70,6 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
-import com.redhat.thermostat.launcher.DbService;
-import com.redhat.thermostat.launcher.DbServiceFactory;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -266,6 +265,7 @@ public class LauncherImpl implements Launcher {
         
         if (prefs == null) {
             ServiceReference keyringReference = context.getServiceReference(Keyring.class);
+            @SuppressWarnings("unchecked")
             Keyring keyring = (Keyring) context.getService(keyringReference);
             prefs = new ClientPreferences(keyring);
         }
@@ -281,12 +281,11 @@ public class LauncherImpl implements Launcher {
                 String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
                 DbService service = dbServiceFactory.createDbService(username, password, dbUrl);
                 try {
+                    // This registers the DbService if all goes well
                     service.connect();
                 } catch (ConnectionException ex) {
                     throw new CommandException("Could not connect to: " + dbUrl, ex);
                 }
-                ServiceRegistration registration = context.registerService(DbService.class, service, null);
-                service.setServiceRegistration(registration);
             }
         }
         return ctx;

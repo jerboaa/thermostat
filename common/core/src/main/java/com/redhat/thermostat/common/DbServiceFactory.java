@@ -34,12 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher;
+package com.redhat.thermostat.common;
 
-import com.redhat.thermostat.launcher.internal.DbServiceImpl;
+import org.osgi.framework.BundleContext;
 
-/**
- * Factory in order to be able to hide the BbService implementation.
+import com.redhat.thermostat.common.internal.DbServiceImpl;
+
+/*
+ * Factory in order to be able to hide the DbService implementation. Note that
+ * this package will be part of Export-Package whereas the package where *Impl
+ * classes are won't be.
  *
  */
 public class DbServiceFactory {

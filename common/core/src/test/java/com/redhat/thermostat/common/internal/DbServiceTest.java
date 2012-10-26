@@ -34,9 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher.internal;
+package com.redhat.thermostat.common.internal;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -44,40 +46,35 @@ import static org.mockito.Mockito.when;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.launcher.DbService;
+import com.redhat.thermostat.test.StubBundleContext;
 
 public class DbServiceTest {
     
     private Connection connection;
     private DAOFactory daoFactory;
     private DbService dbService;
+    private StubBundleContext context;
     
     @Before
     public void setup() {
+        context = new StubBundleContext();
         connection = mock(Connection.class);
 
         daoFactory = mock(DAOFactory.class);
         when(daoFactory.getConnection()).thenReturn(connection);
 
-        dbService = new DbServiceImpl(daoFactory);
+        dbService = new DbServiceImpl(context, daoFactory);
     }
     
     @After
     public void teardown() {
         dbService = null;
-    }
-    
-    @Test
-    public void testSetRegistrationRegistryThrowsException() {
-        try {
-            dbService.setServiceRegistration(null);
-            fail("Null registrations not allowed");
-        } catch (NullPointerException e) {
-            // pass
-        }
+        context = null;
     }
 
     @Test
@@ -87,13 +84,42 @@ public class DbServiceTest {
         verify(connection).connect();
         verify(daoFactory).registerDAOsAndStorageAsOSGiServices();
     }
+    
+    @Test
+    public void testConnectRegistersDbService() {
+        dbService.connect();
+
+        verify(connection).connect();
+        @SuppressWarnings("rawtypes")
+        ServiceReference dbServiceRef = context.getServiceReference(DbService.class);
+        // connect registers DbService
+        assertNotNull(dbServiceRef);
+        // make sure we really get the same instance
+        assertTrue(dbService.equals(context.getService(dbServiceRef)));
+        verify(daoFactory).registerDAOsAndStorageAsOSGiServices();
+    }
 
     @Test
     public void testDisconnect() {
+        dbService.connect();
+        assertNotNull(context.getServiceReference(DbService.class));
+        
         dbService.disconnect();
 
         verify(daoFactory).unregisterDAOsAndStorageAsOSGiServices();
         verify(connection).disconnect();
     }
 
+    @Test
+    public void testDisconnectUnregistersService() {
+        dbService.connect();
+        assertNotNull(context.getServiceReference(DbService.class));
+        
+        dbService.disconnect();
+
+        verify(daoFactory).unregisterDAOsAndStorageAsOSGiServices();
+        verify(connection).disconnect();
+        // disconnect unregisters DbService
+        assertNull(context.getServiceReference(DbService.class));
+    }
 }
