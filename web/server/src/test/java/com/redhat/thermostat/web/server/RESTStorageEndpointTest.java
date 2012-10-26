@@ -37,12 +37,15 @@
 package com.redhat.thermostat.web.server;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -62,6 +65,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import com.google.gson.Gson;
 import com.redhat.thermostat.common.model.BasePojo;
@@ -347,6 +351,70 @@ public class RESTStorageEndpointTest {
         
     }
 
+    @Test
+    public void testSaveFile() throws IOException {
+        String endpoint = getEndpoint();
+
+        URL url = new URL(endpoint + "/save-file");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=fluff");
+        conn.setRequestProperty("Transfer-Encoding", "chunked");
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("--fluff\r\n");
+        out.write("Content-Disposition: form-data; name=\"file\"; filename=\"fluff\"\r\n");
+        out.write("Content-Type: application/octet-stream\r\n");
+        out.write("Content-Transfer-Encoding: binary\r\n");
+        out.write("\r\n");
+        out.write("Hello World\r\n");
+        out.write("--fluff--\r\n");
+        out.flush();
+        int status = conn.getResponseCode();
+        System.err.println("status: " + status);
+        ArgumentCaptor<InputStream> inCaptor = ArgumentCaptor.forClass(InputStream.class);
+        verify(mockStorage).saveFile(eq("fluff"), inCaptor.capture());
+        InputStream in = inCaptor.getValue();
+        byte[] data = new byte[11];
+        int totalRead = 0;
+        while (totalRead < 11) {
+            int read = in.read(data, totalRead, 11 - totalRead);
+            if (read < 0) {
+                fail();
+            }
+            totalRead += read;
+        }
+        assertEquals("Hello World", new String(data));
+    }
+
+    @Test
+    public void testLoadFile() throws IOException {
+
+        byte[] data = "Hello World".getBytes();
+        InputStream in = new ByteArrayInputStream(data);
+        when(mockStorage.loadFile("fluff")).thenReturn(in);
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/load-file");
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("file=fluff");
+        out.flush();
+        in = conn.getInputStream();
+        data = new byte[11];
+        int totalRead = 0;
+        while (totalRead < 11) {
+            int read = in.read(data, totalRead, 11 - totalRead);
+            if (read < 0) {
+                fail();
+            }
+            totalRead += read;
+        }
+        assertEquals("Hello World", new String(data));
+        verify(mockStorage).loadFile("fluff");
+    }
 
     private void registerCategory() {
         try {

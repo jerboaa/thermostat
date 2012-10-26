@@ -53,6 +53,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.InputStreamBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.message.BasicNameValuePair;
+
 import com.google.gson.Gson;
 import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Category;
@@ -225,9 +236,19 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public InputStream loadFile(String arg0) {
-        // TODO Auto-generated method stub
-        return null;
+    public InputStream loadFile(String name) {
+        try {
+            HttpClient httpClient = new DefaultHttpClient();
+            HttpPost httpPost = new HttpPost(endpoint + "/load-file");
+            List<NameValuePair> formparams = new ArrayList<NameValuePair>();
+            formparams.add(new BasicNameValuePair("file", name));
+            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formparams, "UTF-8");
+            httpPost.setEntity(entity);
+            HttpResponse response = httpClient.execute(httpPost);
+            return response.getEntity().getContent();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override
@@ -291,9 +312,22 @@ public class RESTStorage extends Storage {
     }
 
     @Override
-    public void saveFile(String arg0, InputStream arg1) {
-        // TODO Auto-generated method stub
-
+    public void saveFile(String name, InputStream in) {
+        try {
+            HttpClient httpClient = new DefaultHttpClient();
+            HttpPost httpPost = new HttpPost(endpoint + "/save-file");
+            InputStreamBody body = new InputStreamBody(in, name);
+            MultipartEntity entity = new MultipartEntity();
+            entity.addPart("file", body);
+            httpPost.setEntity(entity);
+            HttpResponse response = httpClient.execute(httpPost);
+            StatusLine status = response.getStatusLine();
+            if (status.getStatusCode() != 200) {
+                throw new IOException("Server returned status: " + status);
+            }
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     @Override

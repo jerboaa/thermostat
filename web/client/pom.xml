@@ -94,6 +94,17 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient-osgi</artifactId>
+      <version>${httpcomponents.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore-osgi</artifactId>
+      <version>${httpcomponents.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-web-common</artifactId>
       <version>${project.version}</version>

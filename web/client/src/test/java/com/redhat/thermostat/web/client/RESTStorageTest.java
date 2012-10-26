@@ -42,15 +42,21 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import javax.servlet.ServletException;
@@ -94,6 +100,7 @@ public class RESTStorageTest {
     private String requestBody;
 
     private String responseBody;
+    private Map<String,String> headers;
 
     private static Category category;
     private static Key<String> key1;
@@ -117,6 +124,7 @@ public class RESTStorageTest {
 
     @Before
     public void setUp() throws Exception {
+        
         port = FreePortFinder.findFreePort(new TryPort() {
             @Override
             public void tryPort(int port) throws Exception {
@@ -127,6 +135,7 @@ public class RESTStorageTest {
         storage = new RESTStorage();
         storage.setEndpoint("http://localhost:" + port + "/");
         storage.setAgentId(new UUID(123, 456));
+        headers = new HashMap<>();
         registerCategory();
     }
 
@@ -138,6 +147,12 @@ public class RESTStorageTest {
             public void handle(String target, Request baseRequest,
                     HttpServletRequest request, HttpServletResponse response)
                     throws IOException, ServletException {
+                Enumeration<String> headerNames = request.getHeaderNames();
+                while (headerNames.hasMoreElements()) {
+                    String headerName = headerNames.nextElement();
+                    headers.put(headerName, request.getHeader(headerName));
+                }
+
                 // Read request body.
                 StringBuilder body = new StringBuilder();
                 Reader reader = request.getReader();
@@ -163,6 +178,7 @@ public class RESTStorageTest {
     @After
     public void tearDown() throws Exception {
 
+        headers = null;
         storage = null;
 
         server.stop();
@@ -388,5 +404,43 @@ public class RESTStorageTest {
         assertEquals("category", parts[0]);
         assertEquals("42", parts[1]);
         assertEquals(12345, result);
+    }
+
+    @Test
+    public void testSaveFile() {
+        String data = "Hello World";
+        ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
+        storage.saveFile("fluff", in);
+        assertEquals("chunked", headers.get("Transfer-Encoding"));
+        String contentType = headers.get("Content-Type");
+        assertTrue(contentType.startsWith("multipart/form-data; boundary="));
+        String boundary = contentType.split("boundary=")[1];
+        String[] lines = requestBody.split("\n");
+        assertEquals("--" + boundary, lines[0].trim());
+        assertEquals("Content-Disposition: form-data; name=\"file\"; filename=\"fluff\"", lines[1].trim());
+        assertEquals("Content-Type: application/octet-stream", lines[2].trim());
+        assertEquals("Content-Transfer-Encoding: binary", lines[3].trim());
+        assertEquals("", lines[4].trim());
+        assertEquals("Hello World", lines[5].trim());
+        assertEquals("--" + boundary + "--", lines[6].trim());
+        
+    }
+
+    @Test
+    public void testLoadFile() throws IOException {
+        responseBody = "Hello World";
+        InputStream in = storage.loadFile("fluff");
+        assertEquals("file=fluff", requestBody.trim());
+        byte[] data = new byte[11];
+        int totalRead = 0;
+        while (totalRead < 11) {
+            int read = in.read(data, totalRead, 11 - totalRead);
+            if (read < 0) {
+                fail();
+            }
+            totalRead += read;
+        }
+        assertEquals("Hello World", new String(data));
+
     }
 }

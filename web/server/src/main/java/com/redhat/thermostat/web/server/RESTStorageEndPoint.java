@@ -1,6 +1,8 @@
 package com.redhat.thermostat.web.server;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -8,9 +10,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileItemFactory;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -49,7 +58,7 @@ public class RESTStorageEndPoint extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         if (storage == null) {
             storage = StorageWrapper.getStorage();
         }
@@ -70,7 +79,49 @@ public class RESTStorageEndPoint extends HttpServlet {
             updatePojo(req, resp);
         } else if (cmd.equals("get-count")) {
             getCount(req, resp);
+        } else if (cmd.equals("save-file")) {
+            saveFile(req, resp);
+        } else if (cmd.equals("load-file")) {
+            loadFile(req, resp);
         }
+    }
+
+    private void loadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String name = req.getParameter("file");
+        InputStream data = storage.loadFile(name);
+        OutputStream out = resp.getOutputStream();
+        byte[] buffer = new byte[512];
+        int read = 0;
+        while (read >= 0) {
+            read = data.read(buffer);
+            if (read > 0) {
+                out.write(buffer, 0, read);
+            }
+        }
+    }
+
+    private void saveFile(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+        boolean isMultipart = ServletFileUpload.isMultipartContent(req);
+        if (! isMultipart) {
+            throw new ServletException("expected multipart message");
+        }
+        FileItemFactory factory = new DiskFileItemFactory();
+        ServletFileUpload upload = new ServletFileUpload(factory);
+        try {
+            @SuppressWarnings("unchecked")
+            List<FileItem> items = upload.parseRequest(req);
+            for (FileItem item : items) {
+                String fieldName = item.getFieldName();
+                if (fieldName.equals("file")) {
+                    String name = item.getName();
+                    InputStream in = item.getInputStream();
+                    storage.saveFile(name, in);
+                }
+            }
+        } catch (FileUploadException ex) {
+            throw new ServletException(ex);
+        }
+        
     }
 
     private void getCount(HttpServletRequest req, HttpServletResponse resp) {
