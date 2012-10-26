@@ -121,7 +121,7 @@ public class MongoCursorTest {
         when(dbCursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
         when(dbCursor.sort(any(DBObject.class))).thenReturn(dbCursor);
         when(dbCursor.limit(anyInt())).thenReturn(dbCursor);
-        cursor = new MongoCursor<TestClass>(dbCursor, testCategory, TestClass.class, null);
+        cursor = new MongoCursor<TestClass>(dbCursor, TestClass.class);
 
     }
 

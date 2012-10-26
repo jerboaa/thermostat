@@ -36,26 +36,18 @@
 
 package com.redhat.thermostat.common.storage;
 
-import java.util.Map;
-
-import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.dao.Converter;
 import com.redhat.thermostat.common.model.Pojo;
 
 class MongoCursor<T extends Pojo> implements Cursor<T> {
 
     private DBCursor cursor;
-    private Category category;
     private Class<T> resultClass;
-    private Map<Class<?>, Converter<?>> converters;
 
-    MongoCursor(DBCursor cursor, Category category, Class<T> resultClass, Map<Class<?>, Converter<?>> converters) {
+    MongoCursor(DBCursor cursor, Class<T> resultClass) {
         this.cursor = cursor;
-        this.category = category;
         this.resultClass = resultClass;
-        this.converters = converters;
     }
 
     @Override
@@ -69,9 +61,8 @@ class MongoCursor<T extends Pojo> implements Cursor<T> {
         if (next == null) {
             return null;
         }
-        ChunkConverter converter = new ChunkConverter();
-        Chunk resultChunk = converter.dbObjectToChunk(next, category);
-        return ChunkToPojoConverter.convertChunkToPojo(resultChunk, resultClass, converters);
+        MongoPojoConverter converter = new MongoPojoConverter();
+        return converter.convertMongoToPojo(next, resultClass);
     }
 
 }

@@ -37,6 +37,7 @@
 package com.redhat.thermostat.common.model;
 
 import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
 public class VmGcStat extends BasePojo implements TimeStampedPojo {
@@ -59,43 +60,53 @@ public class VmGcStat extends BasePojo implements TimeStampedPojo {
         this.wallTime = wallTime;
     }
 
+    @Persist
     public int getVmId() {
         return vmId;
     }
 
+    @Persist
     public void setVmId(int vmId) {
         this.vmId = vmId;
     }
 
+    @Persist
     public String getCollectorName() {
         return collectorName;
     }
 
+    @Persist
     public void setCollectorName(String collectorName) {
         this.collectorName = collectorName;
     }
 
+    @Persist
     public long getRunCount() {
         return runCount;
     }
 
+    @Persist
     public void setRunCount(long runCount) {
         this.runCount = runCount;
     }
 
+    @Persist
     public long getWallTime() {
         return wallTime;
     }
 
+    @Persist
     public void setWallTime(long wallTime) {
         this.wallTime = wallTime;
     }
 
     @Override
+    @Persist
     public long getTimeStamp() {
         return timeStamp;
     }
 
+    @Persist
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
     }

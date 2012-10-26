@@ -43,7 +43,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.junit.After;
@@ -56,7 +55,6 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.utils.ArrayUtils;
 import com.redhat.thermostat.test.MockQuery;
 
 public class HostLatestPojoListGetterTest {
@@ -89,9 +87,9 @@ public class HostLatestPojoListGetterTest {
     @Before
     public void setUp() {
         ref = new HostRef(AGENT_ID, HOSTNAME);
-        result1 = new CpuStat(t1, Arrays.asList(load5_1, load10_1, load15_1));
-        result2 = new CpuStat(t2, Arrays.asList(load5_2, load10_2, load15_2));
-        result3 = new CpuStat(t3, Arrays.asList(load5_3, load10_3, load15_3));
+        result1 = new CpuStat(t1, new double[] { load5_1, load10_1, load15_1 } );
+        result2 = new CpuStat(t2, new double[] { load5_2, load10_2, load15_2 } );
+        result3 = new CpuStat(t3, new double[] { load5_3, load10_3, load15_3 } );
     }
 
     @Test
@@ -152,10 +150,10 @@ public class HostLatestPojoListGetterTest {
         assertEquals(2, stats.size());
         CpuStat stat1 = stats.get(0);
         assertEquals(t1, stat1.getTimeStamp());
-        assertArrayEquals(new double[] {load5_1, load10_1, load15_1}, ArrayUtils.toPrimitiveDoubleArray(stat1.getPerProcessorUsage()), 0.001);
+        assertArrayEquals(new double[] {load5_1, load10_1, load15_1}, stat1.getPerProcessorUsage(), 0.001);
         CpuStat stat2 = stats.get(1);
         assertEquals(t2, stat2.getTimeStamp());
-        assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, ArrayUtils.toPrimitiveDoubleArray(stat2.getPerProcessorUsage()), 0.001);
+        assertArrayEquals(new double[] {load5_2, load10_2, load15_2}, stat2.getPerProcessorUsage(), 0.001);
     }
 
     @After

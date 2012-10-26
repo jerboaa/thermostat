@@ -152,7 +152,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                 ProcDataSource dataSource = new ProcDataSource();
                 Map<String, String> environment = new ProcessEnvironmentBuilder(dataSource).build(vmId);
                 // TODO actually figure out the loaded libraries.
-                List<String> loadedNativeLibraries = new ArrayList<String>();
+                String[] loadedNativeLibraries = new String[0];
                 info = new VmInfo(vmId, startTime, stopTime,
                         extractor.getJavaVersion(), extractor.getJavaHome(),
                         extractor.getMainClass(), extractor.getCommandLine(),

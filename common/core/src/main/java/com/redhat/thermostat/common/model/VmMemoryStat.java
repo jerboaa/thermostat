@@ -36,17 +36,70 @@
 
 package com.redhat.thermostat.common.model;
 
-import java.util.List;
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 
+@Entity
 public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
 
-    public static class Generation {
+    @Entity
+    public static class Generation implements Pojo {
         public static final String COLLECTOR_NONE = "none";
-        public String name;
-        public long capacity;
-        public long maxCapacity;
-        public List<Space> spaces;
-        public String collector;
+        private String name;
+        private long capacity;
+        private long maxCapacity;
+        private Space[] spaces;
+        private String collector;
+
+        @Persist
+        public String getName() {
+            return name;
+        }
+
+        @Persist
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @Persist
+        public long getCapacity() {
+            return capacity;
+        }
+
+        @Persist
+        public void setCapacity(long capacity) {
+            this.capacity = capacity;
+        }
+
+        @Persist
+        public long getMaxCapacity() {
+            return maxCapacity;
+        }
+
+        @Persist
+        public void setMaxCapacity(long maxCapacity) {
+            this.maxCapacity = maxCapacity;
+        }
+
+        @Persist
+        public Space[] getSpaces() {
+            return spaces;
+        }
+
+        @Persist
+        public void setSpaces(Space[] spaces) {
+            this.spaces = spaces;
+        }
+
+        @Persist
+        public String getCollector() {
+            return collector;
+        }
+
+        @Persist
+        public void setCollector(String collector) {
+            this.collector = collector;
+        }
 
         public Space getSpace(String string) {
             for (Space s : spaces) {
@@ -58,15 +111,68 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
         }
     }
 
-    public static class Space {
-        public int index;
-        public String name;
-        public long capacity;
-        public long maxCapacity;
-        public long used;
+    @Entity
+    public static class Space implements Pojo {
+
+        private int index;
+        private String name;
+        private long capacity;
+        private long maxCapacity;
+        private long used;
+
+        @Persist
+        public int getIndex() {
+            return index;
+        }
+
+        @Persist
+        public void setIndex(int index) {
+            this.index = index;
+        }
+
+        @Persist
+        public String getName() {
+            return name;
+        }
+
+        @Persist
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        @Persist
+        public long getCapacity() {
+            return capacity;
+        }
+
+        @Persist
+        public void setCapacity(long capacity) {
+            this.capacity = capacity;
+        }
+
+        @Persist
+        public long getMaxCapacity() {
+            return maxCapacity;
+        }
+
+        @Persist
+        public void setMaxCapacity(long maxCapacity) {
+            this.maxCapacity = maxCapacity;
+        }
+
+        @Persist
+        public long getUsed() {
+            return used;
+        }
+
+        @Persist
+        public void setUsed(long used) {
+            this.used = used;
+        }
+
     }
 
-    private List<Generation> generations;
+    private Generation[] generations;
     private long timestamp;
     private int vmId;
 
@@ -74,34 +180,42 @@ public class VmMemoryStat extends BasePojo implements TimeStampedPojo {
         this(-1, -1, null);
     }
 
-    public VmMemoryStat(long timestamp, int vmId, List<Generation> generations) {
+    public VmMemoryStat(long timestamp, int vmId, Generation[] generations) {
         this.timestamp = timestamp;
         this.vmId = vmId;
-        this.generations = generations;
+        if (generations != null) {
+            this.generations = generations;
+        }
     }
 
+    @Persist
     public int getVmId() {
         return vmId;
     }
 
+    @Persist
     public void setVmId(int vmId) {
         this.vmId = vmId;
     }
 
+    @Persist
     @Override
     public long getTimeStamp() {
         return timestamp;
     }
 
+    @Persist
     public void setTimeStamp(long timeStamp) {
         this.timestamp = timeStamp;
     }
 
-    public List<Generation> getGenerations() {
+    @Persist
+    public Generation[] getGenerations() {
         return generations;
     }
 
-    public void setGenerations(List<Generation> generations) {
+    @Persist
+    public void setGenerations(Generation[] generations) {
         this.generations = generations;
     }
 

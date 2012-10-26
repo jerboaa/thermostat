@@ -37,42 +37,54 @@
 
 package com.redhat.thermostat.common.storage;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 // TODO: For now we utilize the Chunk based conversion, and rely on MongoStorage to
 // actually resolve the $set fields. Eventually, we want to convert to DBObject
 // directly, and take advantage of improved semantics of this class.
 class MongoUpdate implements Update {
 
-    private Chunk updateChunk;
+    private DBObject query;
+    private DBObject values;
+    private Category category;
 
     @Override
     public Update from(Category category) {
-        if (updateChunk != null) {
+        if (query != null || values != null) {
             throw new IllegalStateException();
         }
-        updateChunk = new Chunk(category, false);
+        this.category = category;
         return this;
+    }
+
+    Category getCategory() {
+        return category;
     }
 
     @Override
     public <T> Update where(Key<T> key, T value) {
-        if (updateChunk == null) {
-            throw new IllegalStateException();
+        if (query == null) {
+            query = new BasicDBObject();
         }
-        updateChunk.put(key, value);
+        query.put(key.getName(), value);
         return this;
+    }
+
+    DBObject getQuery() {
+        return query;
     }
 
     @Override
     public <T> Update set(Key<T> key, T value) {
-        if (updateChunk == null) {
-            throw new IllegalStateException();
+        if (values == null) {
+            values = new BasicDBObject();
         }
-        updateChunk.put(key, value);
+        values.put(key.getName(), value);
         return this;
     }
 
-    Chunk getChunk() {
-        return updateChunk;
+    DBObject getValues() {
+        return new BasicDBObject("$set", values);
     }
-
 }

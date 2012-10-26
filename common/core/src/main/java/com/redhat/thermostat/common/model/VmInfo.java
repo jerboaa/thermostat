@@ -37,14 +37,52 @@
 package com.redhat.thermostat.common.model;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
 @Entity
 public class VmInfo extends BasePojo {
+
+    @Entity
+    public static class KeyValuePair implements Pojo {
+    
+        private String key;
+        private String value;
+
+        public KeyValuePair() {
+            this(null, null);
+        }
+
+        public KeyValuePair(String key, String value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        @Persist
+        public String getKey() {
+            return key;
+        }
+
+        @Persist
+        public void setKey(String key) {
+            this.key = key;
+        }
+
+        @Persist
+        public String getValue() {
+            return value;
+        }
+
+        @Persist
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+        
+    }
 
     private int vmPid = 0;
     private long startTime = System.currentTimeMillis();
@@ -59,7 +97,7 @@ public class VmInfo extends BasePojo {
     private String vmArguments = "unknown";
     private Map<String, String> properties = new HashMap<String, String>();
     private Map<String, String> environment = new HashMap<String, String>();
-    private List<String> loadedNativeLibraries;
+    private String[] loadedNativeLibraries;
 
     public VmInfo() {
         /* use defaults */
@@ -69,7 +107,7 @@ public class VmInfo extends BasePojo {
             String javaVersion, String javaHome,
             String mainClass, String commandLine,
             String vmName, String vmInfo, String vmVersion, String vmArguments,
-            Map<String, String> properties, Map<String, String> environment, List<String> loadedNativeLibraries) {
+            Map<String, String> properties, Map<String, String> environment, String[] loadedNativeLibraries) {
         this.vmPid = vmPid;
         this.startTime = startTime;
         this.stopTime = stopTime;
@@ -210,33 +248,74 @@ public class VmInfo extends BasePojo {
         return getStartTimeStamp() > getStopTimeStamp();
     }
     
-    @Persist
     public Map<String, String> getProperties() {
         return properties;
     }
 
-    @Persist
     public void setProperties(Map<String, String> properties) {
         this.properties = properties;
     }
 
     @Persist
+    public KeyValuePair[] getPropertiesAsArray() {
+        return getMapAsArray(properties);
+    }
+
+    @Persist
+    public void setPropertiesAsArray(KeyValuePair[] properties) {
+        this.properties = getArrayAsMap(properties);
+    }
+
     public Map<String, String> getEnvironment() {
         return environment;
     }
 
-    @Persist
     public void setEnvironment(Map<String, String> environment) {
         this.environment = environment;
     }
 
     @Persist
-    public List<String> getLoadedNativeLibraries() {
+    public KeyValuePair[] getEnvironmentAsArray() {
+        return getMapAsArray(environment);
+    }
+
+    @Persist
+    public void setEnvironmentAsArray(KeyValuePair[] environment) {
+        this.environment = getArrayAsMap(environment);
+    }
+
+    private KeyValuePair[] getMapAsArray(Map<String, String> map) {
+        if (map == null) {
+            return null;
+        }
+        Set<String> keys = map.keySet();
+        KeyValuePair[] tuples = new KeyValuePair[keys.size()];
+        int i = 0;
+        for (String key: keys) {
+            tuples[i] = new KeyValuePair(key, map.get(key));
+            i++;
+        }
+        return tuples;
+    }
+
+    private Map<String,String> getArrayAsMap(KeyValuePair[] tuples) {
+        if (tuples == null) {
+            return null;
+        }
+        Map<String,String> map = new HashMap<>();
+        for (KeyValuePair tuple : tuples) {
+            map.put(tuple.getKey(), tuple.getValue());
+        }
+        return map;
+    }
+
+    @Persist
+    public String[] getLoadedNativeLibraries() {
         return loadedNativeLibraries;
     }
 
     @Persist
-    public void setLoadedNativeLibraries(List<String> loadedNativeLibraries) {
+    public void setLoadedNativeLibraries(String[] loadedNativeLibraries) {
         this.loadedNativeLibraries = loadedNativeLibraries;
     }
 }

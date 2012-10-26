@@ -38,8 +38,6 @@ package com.redhat.thermostat.backend.system;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -86,13 +84,13 @@ public class CpuStatBuilder {
         long currentTime = clock.getMonotonicTimeNanos();
         long[] currentValues = getCurrentCpuTicks();
 
-        List<Double> cpuUsage = new ArrayList<Double>(currentValues.length);
+        double[] cpuUsage = new double[currentValues.length];
 
         double timeDelta = (currentTime - previousTime) * 1E-9;
         for (int i = 0; i < currentValues.length; i++) {
             long cpuTicksDelta = currentValues[i] - previousCpuTicks[i];
             // 100 as in 100 percent.
-            cpuUsage.add(cpuTicksDelta * (100.0 / timeDelta / ticksPerSecond));
+            cpuUsage[i] = cpuTicksDelta * (100.0 / timeDelta / ticksPerSecond);
         }
         previousTime = currentTime;
         previousCpuTicks = currentValues;

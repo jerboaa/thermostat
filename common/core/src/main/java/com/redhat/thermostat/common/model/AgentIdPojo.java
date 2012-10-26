@@ -34,36 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
 
-import java.util.Map;
-import java.util.Set;
+package com.redhat.thermostat.common.model;
 
-import com.redhat.thermostat.common.dao.Converter;
-import com.redhat.thermostat.common.model.Pojo;
+public interface AgentIdPojo extends Pojo {
 
-class ChunkToPojoConverter {
-
-    static <T extends Pojo> T convertChunkToPojo(Chunk resultChunk, Class<T> resultClass, Map<Class<?>, Converter<?>> converters) {
-        try {
-            if (converters != null) {
-                Converter<?> converter = converters.get(resultClass);
-                if (converter != null) {
-                    return (T) converter.fromChunk(resultChunk);
-                }
-            }
-            Pojo pojo = resultClass.newInstance();
-            ChunkAdapter chunk = new ChunkAdapter(pojo, resultChunk.getCategory(), resultChunk.getReplace());
-            Set<Key<?>> keys = resultChunk.getKeys();
-            for (Key key : keys) {
-                if (key == null) {
-                    continue;
-                }
-                chunk.put(key, resultChunk.get(key));
-            }
-            return (T) chunk.getAdaptee();
-        } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-    }
+    void setAgentId(String agentId);
+    String getAgentId();
 }

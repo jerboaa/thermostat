@@ -45,7 +45,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -56,12 +55,11 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.QueryTestHelper;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.test.MockQuery;
@@ -81,7 +79,7 @@ public class VmInfoDAOTest {
     private String vmArgs;
     private Map<String, String> props;
     private Map<String, String> env;
-    private List<String> libs;
+    private String[] libs;
 
     @Before
     public void setUp() {
@@ -98,7 +96,7 @@ public class VmInfoDAOTest {
         vmVersion = "1.0";
         props = new HashMap<>();
         env = new HashMap<>();
-        libs = new ArrayList<>();
+        libs = new String[0];
     }
 
     @Test
@@ -126,22 +124,6 @@ public class VmInfoDAOTest {
 
     @Test
     public void testGetVmInfo() {
-        Chunk chunk = new Chunk(VmInfoDAO.vmInfoCategory, true);
-        chunk.put(Key.VM_ID, vmId);
-        chunk.put(VmInfoDAO.vmPidKey, vmId);
-        chunk.put(VmInfoDAO.startTimeKey, startTime);
-        chunk.put(VmInfoDAO.stopTimeKey, stopTime);
-        chunk.put(VmInfoDAO.runtimeVersionKey, jVersion);
-        chunk.put(VmInfoDAO.javaHomeKey, jHome);
-        chunk.put(VmInfoDAO.mainClassKey, mainClass);
-        chunk.put(VmInfoDAO.commandLineKey, commandLine);
-        chunk.put(VmInfoDAO.vmNameKey, vmName);
-        chunk.put(VmInfoDAO.vmInfoKey, vmInfo);
-        chunk.put(VmInfoDAO.vmVersionKey, vmVersion);
-        chunk.put(VmInfoDAO.vmArgumentsKey, vmArgs);
-        chunk.put(VmInfoDAO.propertiesKey, props);
-        chunk.put(VmInfoDAO.environmentKey, env);
-        chunk.put(VmInfoDAO.librariesKey, libs);
 
         Storage storage = mock(Storage.class);
         Query query = new MockQuery();

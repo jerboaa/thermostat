@@ -111,29 +111,29 @@ public class JvmStatVmListener implements VmListener {
         try {
             long timestamp = System.currentTimeMillis();
             JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-            long maxGenerations = extractor.getTotalGcGenerations();
-            List<Generation> generations = new ArrayList<Generation>();
-            VmMemoryStat stat = new VmMemoryStat(timestamp, vmId, generations);
-            for (long generation = 0; generation < maxGenerations; generation++) {
+            int maxGenerations = (int) extractor.getTotalGcGenerations();
+            Generation[] generations = new Generation[maxGenerations];
+            for (int generation = 0; generation < maxGenerations; generation++) {
                 Generation g = new Generation();
-                generations.add(g);
-                g.name = extractor.getGenerationName(generation);
-                g.capacity = extractor.getGenerationCapacity(generation);
-                g.maxCapacity = extractor.getGenerationMaxCapacity(generation);
-                g.collector = extractor.getGenerationCollector(generation);
-                long maxSpaces = extractor.getTotalSpaces(generation);
-                List<Space> spaces = new ArrayList<Space>();
-                g.spaces = spaces;
-                for (long space = 0; space < maxSpaces; space++) {
+                g.setName(extractor.getGenerationName(generation));
+                g.setCapacity(extractor.getGenerationCapacity(generation));
+                g.setMaxCapacity(extractor.getGenerationMaxCapacity(generation));
+                g.setCollector(extractor.getGenerationCollector(generation));
+                generations[generation] = g;
+                int maxSpaces = (int) extractor.getTotalSpaces(generation);
+                Space[] spaces = new Space[maxSpaces];
+                for (int space = 0; space < maxSpaces; space++) {
                     Space s = new Space();
-                    spaces.add(s);
-                    s.index = (int) space;
-                    s.name = extractor.getSpaceName(generation, space);
-                    s.capacity = extractor.getSpaceCapacity(generation, space);
-                    s.maxCapacity = extractor.getSpaceMaxCapacity(generation, space);
-                    s.used = extractor.getSpaceUsed(generation, space);
+                    s.setIndex((int) space);
+                    s.setName(extractor.getSpaceName(generation, space));
+                    s.setCapacity(extractor.getSpaceCapacity(generation, space));
+                    s.setMaxCapacity(extractor.getSpaceMaxCapacity(generation, space));
+                    s.setUsed(extractor.getSpaceUsed(generation, space));
+                    spaces[space] = s;
                 }
+                g.setSpaces(spaces);
             }
+            VmMemoryStat stat = new VmMemoryStat(timestamp, vmId, generations);
             memDAO.putVmMemoryStat(stat);
         } catch (MonitorException e) {
             logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);

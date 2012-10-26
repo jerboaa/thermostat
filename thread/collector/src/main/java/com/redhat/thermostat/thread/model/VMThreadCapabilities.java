@@ -36,11 +36,6 @@
 
 package com.redhat.thermostat.thread.model;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import com.redhat.thermostat.common.model.BasePojo;
 import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
@@ -49,7 +44,7 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 @Entity
 public class VMThreadCapabilities extends BasePojo {
     
-    private Set<String> features = new HashSet<>();
+    private String[] features;
 
     private int vmId;
 
@@ -64,11 +59,11 @@ public class VMThreadCapabilities extends BasePojo {
     }
 
     public boolean supportCPUTime() {
-        return features.contains(ThreadDao.CPU_TIME);
+        return hasFeature(ThreadDao.CPU_TIME);
     }
 
     public boolean supportContentionMonitor() {
-        return features.contains(ThreadDao.CONTENTION_MONITOR);
+        return hasFeature(ThreadDao.CONTENTION_MONITOR);
     }
 
     public String toString() {
@@ -77,20 +72,26 @@ public class VMThreadCapabilities extends BasePojo {
     }
 
     public boolean supportThreadAllocatedMemory() {
-        return features.contains(ThreadDao.THREAD_ALLOCATED_MEMORY);
+        return hasFeature(ThreadDao.THREAD_ALLOCATED_MEMORY);
+    }
+
+    private boolean hasFeature(String feature) {
+        for (String f : features) {
+            if (f.equals(feature)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Persist
-    public List<String> getSupportedFeaturesList() {
-        return new ArrayList<>(features);
+    public String[] getSupportedFeaturesList() {
+        return features;
     }
 
     @Persist
-    public void setSupportedFeaturesList(List<String> featuresList) {
-        features = new HashSet<>(featuresList);
+    public void setSupportedFeaturesList(String[] features) {
+        this.features = features;
     }
 
-    public void addFeature(String feature) {
-        features.add(feature);
-    }
 }

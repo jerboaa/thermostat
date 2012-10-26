@@ -143,57 +143,57 @@ public class VmStatCommandTest {
 
         VmMemoryStat.Space space1_1_1 = newSpace("space1", 123456, 12345, 1, 0);
         VmMemoryStat.Space space1_1_2 = newSpace("space2", 123456, 12345, 1, 0);
-        List<VmMemoryStat.Space> spaces1_1 = Arrays.asList(space1_1_1, space1_1_2);
+        VmMemoryStat.Space[] spaces1_1 = new VmMemoryStat.Space[] { space1_1_1, space1_1_2 };
         VmMemoryStat.Generation gen1_1 = newGeneration("gen1", "col1", 123456, 12345, spaces1_1);
 
         VmMemoryStat.Space space1_2_1 = newSpace("space3", 123456, 12345, 1, 0);
         VmMemoryStat.Space space1_2_2 = newSpace("space4", 123456, 12345, 1, 0);
-        List<VmMemoryStat.Space> spaces1_2 = Arrays.asList(space1_2_1, space1_2_2);
+        VmMemoryStat.Space[] spaces1_2 = new VmMemoryStat.Space[] { space1_2_1, space1_2_2 };
         VmMemoryStat.Generation gen1_2 = newGeneration("gen2", "col1", 123456, 12345, spaces1_2);
 
-        List<VmMemoryStat.Generation> gens1 = Arrays.asList(gen1_1, gen1_2);
+        VmMemoryStat.Generation[] gens1 = new VmMemoryStat.Generation[] { gen1_1, gen1_2 };
 
         VmMemoryStat memStat1 = new VmMemoryStat(1, vmId, gens1);
 
         VmMemoryStat.Space space2_1_1 = newSpace("space1", 123456, 12345, 2, 0);
         VmMemoryStat.Space space2_1_2 = newSpace("space2", 123456, 12345, 2, 0);
-        List<VmMemoryStat.Space> spaces2_1 = Arrays.asList(space2_1_1, space2_1_2);
+        VmMemoryStat.Space[] spaces2_1 = new VmMemoryStat.Space[] { space2_1_1, space2_1_2 };
         VmMemoryStat.Generation gen2_1 = newGeneration("gen1", "col1", 123456, 12345, spaces2_1);
 
         VmMemoryStat.Space space2_2_1 = newSpace("space3", 123456, 12345, 3, 0);
         VmMemoryStat.Space space2_2_2 = newSpace("space4", 123456, 12345, 4, 0);
-        List<VmMemoryStat.Space> spaces2_2 = Arrays.asList(space2_2_1, space2_2_2);
+        VmMemoryStat.Space[] spaces2_2 = new VmMemoryStat.Space[] { space2_2_1, space2_2_2 };
         VmMemoryStat.Generation gen2_2 = newGeneration("gen2", "col1", 123456, 12345, spaces2_2);
 
-        List<VmMemoryStat.Generation> gens2 = Arrays.asList(gen2_1, gen2_2);
+        VmMemoryStat.Generation[] gens2 = new VmMemoryStat.Generation[] { gen2_1, gen2_2 };
 
         VmMemoryStat memStat2 = new VmMemoryStat(2, vmId, gens2);
 
         VmMemoryStat.Space space3_1_1 = newSpace("space1", 123456, 12345, 4, 0);
         VmMemoryStat.Space space3_1_2 = newSpace("space2", 123456, 12345, 5, 0);
-        List<VmMemoryStat.Space> spaces3_1 = Arrays.asList(space3_1_1, space3_1_2);
+        VmMemoryStat.Space[] spaces3_1 = new VmMemoryStat.Space[] { space3_1_1, space3_1_2 };
         VmMemoryStat.Generation gen3_1 = newGeneration("gen1", "col1", 123456, 12345, spaces3_1);
 
         VmMemoryStat.Space space3_2_1 = newSpace("space3", 123456, 12345, 6, 0);
         VmMemoryStat.Space space3_2_2 = newSpace("space4", 123456, 12345, 7, 0);
-        List<VmMemoryStat.Space> spaces3_2 = Arrays.asList(space3_2_1, space3_2_2);
+        VmMemoryStat.Space[] spaces3_2 = new VmMemoryStat.Space[] { space3_2_1, space3_2_2 };
         VmMemoryStat.Generation gen3_2 = newGeneration("gen2", "col1", 123456, 12345, spaces3_2);
 
-        List<VmMemoryStat.Generation> gens3 = Arrays.asList(gen3_1, gen3_2);
+        VmMemoryStat.Generation[] gens3 = new VmMemoryStat.Generation[] { gen3_1, gen3_2 };
 
         VmMemoryStat memStat3 = new VmMemoryStat(3, vmId, gens3);
 
         VmMemoryStat.Space space4_1_1 = newSpace("space1", 123456, 12345, 8, 0);
         VmMemoryStat.Space space4_1_2 = newSpace("space2", 123456, 12345, 9, 0);
-        List<VmMemoryStat.Space> spaces4_1 = Arrays.asList(space4_1_1, space4_1_2);
+        VmMemoryStat.Space[] spaces4_1 = new VmMemoryStat.Space[] { space4_1_1, space4_1_2 };
         VmMemoryStat.Generation gen4_1 = newGeneration("gen4", "col1", 123456, 12345, spaces4_1);
 
         VmMemoryStat.Space space4_2_1 = newSpace("space3", 123456, 12345, 10, 0);
         VmMemoryStat.Space space4_2_2 = newSpace("space4", 123456, 12345, 11, 0);
-        List<VmMemoryStat.Space> spaces4_2 = Arrays.asList(space4_2_1, space4_2_2);
+        VmMemoryStat.Space[] spaces4_2 = new VmMemoryStat.Space[] { space4_2_1, space4_2_2 };
         VmMemoryStat.Generation gen4_2 = newGeneration("gen4", "col1", 123456, 12345, spaces4_2);
 
-        List<VmMemoryStat.Generation> gens4 = Arrays.asList(gen4_1, gen4_2);
+        VmMemoryStat.Generation[] gens4 = new VmMemoryStat.Generation[] { gen4_1, gen4_2 };
 
         VmMemoryStat memStat4 = new VmMemoryStat(4, vmId, gens4);
 
@@ -207,20 +207,20 @@ public class VmStatCommandTest {
 
     private Space newSpace(String name, long maxCapacity, long capacity, long used, int index) {
         VmMemoryStat.Space space = new VmMemoryStat.Space();
-        space.name = name;
-        space.maxCapacity = maxCapacity;
-        space.capacity = capacity;
-        space.used = used;
-        space.index = index;
+        space.setName(name);
+        space.setMaxCapacity(maxCapacity);
+        space.setCapacity(capacity);
+        space.setUsed(used);
+        space.setIndex(index);
         return space;
     }
 
-    private Generation newGeneration(String name, String collector, long maxCapacity, long capacity, List<Space> spaces) {
+    private Generation newGeneration(String name, String collector, long maxCapacity, long capacity, Space[] spaces) {
         VmMemoryStat.Generation gen = new VmMemoryStat.Generation();
-        gen.name = name;
-        gen.collector = collector;
-        gen.maxCapacity = capacity;
-        gen.spaces = spaces;
+        gen.setName(name);
+        gen.setCollector(collector);
+        gen.setMaxCapacity(capacity);
+        gen.setSpaces(spaces);
         return gen;
     }
 

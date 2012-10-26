@@ -40,6 +40,8 @@ import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -247,20 +249,22 @@ class Harvester {
             ThreadMXBean bean = getDataCollectorBean(connection);
             VMThreadCapabilities caps = new VMThreadCapabilities();
 
+            List<String> features = new ArrayList<>(3);
             if (bean.isThreadCpuTimeSupported())
-                caps.addFeature(ThreadDao.CPU_TIME);
+                features.add(ThreadDao.CPU_TIME);
             if (bean.isThreadContentionMonitoringSupported())
-                caps.addFeature(ThreadDao.CONTENTION_MONITOR);
+                features.add(ThreadDao.CONTENTION_MONITOR);
 
             if (bean instanceof com.sun.management.ThreadMXBean) {
                 com.sun.management.ThreadMXBean sunBean = (com.sun.management.ThreadMXBean) bean;
                 
                 try {
                     if (sunBean.isThreadAllocatedMemorySupported()) {
-                        caps.addFeature(ThreadDao.THREAD_ALLOCATED_MEMORY);
+                        features.add(ThreadDao.THREAD_ALLOCATED_MEMORY);
                     }
                 } catch (Exception ignore) {};
             }
+            caps.setSupportedFeaturesList(features.toArray(new String[features.size()]));
             caps.setVmId(Integer.parseInt(vmId));
             threadDao.saveCapabilities(caps);
 

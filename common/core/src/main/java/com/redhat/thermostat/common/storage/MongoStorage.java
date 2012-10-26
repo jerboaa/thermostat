@@ -37,10 +37,10 @@
 package com.redhat.thermostat.common.storage;
 
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.mongodb.BasicDBObject;
@@ -52,10 +52,8 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.dao.Converter;
-import com.redhat.thermostat.common.dao.VmMemoryStatConverter;
+import com.redhat.thermostat.common.model.AgentIdPojo;
 import com.redhat.thermostat.common.model.Pojo;
-import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.storage.AbstractQuery.Sort;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -75,10 +73,7 @@ public class MongoStorage extends Storage {
 
     private UUID agentId;
 
-    private Map<Class<?>, Converter<?>> converters;
-
     public MongoStorage(StartupConfiguration conf) {
-        setupConverters();
         conn = new MongoConnection(conf);
         conn.addListener(new ConnectionListener() {
             @Override
@@ -93,11 +88,6 @@ public class MongoStorage extends Storage {
                 }
             }
         });
-    }
-
-    private void setupConverters() {
-        converters = new HashMap<>();
-        converters.put(VmMemoryStat.class, new VmMemoryStatConverter());
     }
 
     @Override
@@ -115,82 +105,42 @@ public class MongoStorage extends Storage {
         return agentId.toString();
     }
 
-    private BasicDBObject getAgentQueryKeyFromGlobalAgent() {
+    private String getAgentQueryKeyFromGlobalAgent() {
         if (agentId != null) {
-            return new BasicDBObject(Key.AGENT_ID.getName(), agentId.toString());
+            return agentId.toString();
         } else {
             return null;
         }
     }
 
-    private BasicDBObject getAgentQueryKeyFromChunkOrGlobalAgent(Chunk chunk) {
-        BasicDBObject queryKey = getAgentQueryKeyFromGlobalAgent();
+    private String getAgentQueryKeyFromChunkOrGlobalAgent(AgentIdPojo pojo) {
+        String queryKey = getAgentQueryKeyFromGlobalAgent();
         if (queryKey != null) {
             return queryKey;
-        } else if (chunk.get(Key.AGENT_ID) != null) {
-            return new BasicDBObject(Key.AGENT_ID.getName(), chunk.get(Key.AGENT_ID));
         } else {
-            return new BasicDBObject();
+            return pojo.getAgentId();
         }
     }
 
-    // TODO: Make this private, and change the testcase to test putPojo() instead.
-    void putChunk(Chunk chunk) {
-        Category cat = chunk.getCategory();
+    @Override
+    public void putPojo(Category cat, boolean replace, AgentIdPojo pojo) {
         DBCollection coll = getCachedCollection(cat);
-        BasicDBObject toInsert = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
-        BasicDBObject replaceKey = null;
-        boolean replace = chunk.getReplace();
-        Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
-        Map<String, BasicDBObject> replaceKeyNestedParts = null;
+        MongoPojoConverter converter = new MongoPojoConverter();
+        DBObject toInsert = converter.convertPojoToMongo(pojo);
+        String agentId = getAgentQueryKeyFromChunkOrGlobalAgent(pojo);
+        toInsert.put(Key.AGENT_ID.getName(), agentId);
         if (replace) {
-            replaceKey = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
-            replaceKeyNestedParts = new HashMap<String, BasicDBObject>();
-        }
-        for (Key<?> key : cat.getKeys()) {
-            boolean isKey = key.isPartialCategoryKey();
-            String[] entryParts = key.getName().split("\\.");
-            if (entryParts.length == 2) {
-                BasicDBObject nested = nestedParts.get(entryParts[0]);
-                if (nested == null) {
-                    if (isKey) {
-                        throwMissingKey(key.getName(), chunk);
-                    }
-                    nested = new BasicDBObject();
-                    nestedParts.put(entryParts[0], nested);
-                }
-                nested.append(entryParts[1], chunk.get(key));
-                if (replace && isKey) {
-                    BasicDBObject replaceKeyNested = replaceKeyNestedParts.get(entryParts[0]);
-                    if (replaceKeyNested == null) {
-                        replaceKeyNested = new BasicDBObject();
-                        replaceKeyNestedParts.put(entryParts[0], replaceKeyNested);
-                    }
-                    replaceKeyNested.append(entryParts[1], replaceKeyNested);
-                }
-            } else {
-                /* we dont modify agent id, and it's already used as key in updateKey */
-                if (!key.equals(Key.AGENT_ID)) {
-                    String mongoKey = key.getName();
-                    Object value = chunk.get(key);
-                    if ((value == null) && isKey) {
-                        throwMissingKey(key.getName(), chunk);
-                    }
-                    toInsert.append(mongoKey, value);
-                    if (replace && isKey) {
-                        replaceKey.append(mongoKey, value);
-                    }
+            // TODO: Split this part out into a separate method. It is a very bad practice to
+            // completely change the behaviour of a method based on a boolean flag.
+            DBObject query = new BasicDBObject();
+            Collection<Key<?>> keys = cat.getKeys();
+            for (Key<?> key : keys) {
+                if (key.isPartialCategoryKey()) {
+                    String name = key.getName();
+                    query.put(name, toInsert.get(name));
                 }
             }
-        }
-        for (Entry<String, BasicDBObject> entry: nestedParts.entrySet()) {
-            toInsert.append(entry.getKey(), entry.getValue());
-        }
-        if (replace) {
-            for (Entry<String, BasicDBObject> entry: replaceKeyNestedParts.entrySet()) {
-                replaceKey.append(entry.getKey(), entry.getValue());
-            }
-            coll.update(replaceKey, toInsert, true, false);
+            coll.update(query, toInsert);
         } else {
             coll.insert(toInsert);
         }
@@ -200,95 +150,27 @@ public class MongoStorage extends Storage {
     public void updatePojo(Update update) {
         assert update instanceof MongoUpdate;
         MongoUpdate mongoUpdate = (MongoUpdate) update;
-        Chunk chunk = mongoUpdate.getChunk();
-        updateChunk(chunk);
-    }
-
-    void updateChunk(Chunk chunk) {
-        Category cat = chunk.getCategory();
+        Category cat = mongoUpdate.getCategory();
         DBCollection coll = getCachedCollection(cat);
-        BasicDBObject toUpdate = new BasicDBObject();
-        BasicDBObject updateKey = getAgentQueryKeyFromChunkOrGlobalAgent(chunk);
-        BasicDBObject setObj = null;
-        Map<String, BasicDBObject> nestedParts = new HashMap<String, BasicDBObject>();
-        Map<String, BasicDBObject> updateKeyNestedParts = new HashMap<String, BasicDBObject>();
-        for (Key<?> key : cat.getKeys()) {
-            boolean isKey = key.isPartialCategoryKey();
-            String[] entryParts = key.getName().split("\\.");
-            if (entryParts.length == 2) {
-                BasicDBObject nested = nestedParts.get(entryParts[0]);
-                if (nested == null) {
-                    if (isKey) {
-                        throwMissingKey(key.getName(), chunk);
-                    }
-                } else {
-                    if (isKey) {
-                        BasicDBObject updateKeyNested = updateKeyNestedParts.get(entryParts[0]);
-                        if (updateKeyNested == null) {
-                            updateKeyNested = new BasicDBObject();
-                            updateKeyNestedParts.put(entryParts[0], updateKeyNested);
-                        }
-                        updateKeyNested.append(entryParts[1], updateKeyNested);
-                    } else {
-                        if (setObj == null) {
-                            setObj = new BasicDBObject();
-                            nested.append(SET_MODIFIER, setObj);
-                        }
-                        setObj.append(entryParts[1], chunk.get(key));
-                    }
-                }
-            } else {
-                String mongoKey = key.getName();
-                /* we dont modify agent id, and it's already used as key in updateKey */
-                if (!key.equals(Key.AGENT_ID)) {
-                    Object value = chunk.get(key);
-                    if (value == null) {
-                        if (isKey) {
-                            throwMissingKey(key.getName(), chunk);
-                        }
-                    } else {
-                        if (isKey) {
-                            updateKey.append(mongoKey, value);
-                        } else {
-                            if (setObj == null) {
-                                setObj = new BasicDBObject();
-                                toUpdate.append(SET_MODIFIER, setObj);
-                            }
-                            setObj.append(mongoKey, value);
-                        }
-                    }
-                }
-            }
-        }
-        for (Entry<String, BasicDBObject> entry: nestedParts.entrySet()) {
-            toUpdate.append(entry.getKey(), entry.getValue());
-        }
-        for (Entry<String, BasicDBObject> entry: updateKeyNestedParts.entrySet()) {
-            updateKey.append(entry.getKey(), entry.getValue());
-        }
-        coll.update(updateKey, toUpdate);
-    }
-
-    private void throwMissingKey(String keyName, Chunk chunk) {
-        throw new IllegalArgumentException("Attempt to insert chunk with incomplete partial key.  Missing: '" + keyName + "' in " + chunk);
+        DBObject query = mongoUpdate.getQuery();
+        DBObject values = mongoUpdate.getValues();
+        coll.update(query, values);
     }
 
     @Override
     public void removePojo(Remove remove) {
         assert (remove instanceof MongoRemove);
         MongoRemove mongoRemove = (MongoRemove) remove;
-        Chunk query = mongoRemove.getChunk();
-        Category category = query.getCategory();
+        DBObject query = mongoRemove.getQuery();
+        Category category = mongoRemove.getCategory();
         DBCollection coll = getCachedCollection(category);
 
-        BasicDBObject toRemove = getAgentQueryKeyFromChunkOrGlobalAgent(query);
-        for (Key<?> key : category.getKeys()) {
-            if (key.isPartialCategoryKey()) {
-                toRemove.put(key.getName(), query.get(key));
-            }
+        String agentId = getAgentQueryKeyFromGlobalAgent();
+        if (agentId != null) {
+            query.put(Key.AGENT_ID.getName(), agentId);
         }
 
-        coll.remove(toRemove);
+        coll.remove(query);
     }
 
     private DBCollection getCachedCollection(Category category) {
@@ -310,9 +192,10 @@ public class MongoStorage extends Storage {
 
     @Override
     public void purge() {
-        BasicDBObject deleteKey = getAgentQueryKeyFromGlobalAgent();
+        String deleteKey = getAgentQueryKeyFromGlobalAgent();
+        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), deleteKey);
         for (DBCollection coll : collectionCache.values()) {
-            coll.remove(deleteKey);
+            coll.remove(query);
         }
     }
     
@@ -358,7 +241,7 @@ public class MongoStorage extends Storage {
             dbCursor = coll.find();
         }
         dbCursor = applySortAndLimit(mongoQuery, dbCursor);
-        return new MongoCursor<T>(dbCursor, mongoQuery.getCategory(), resultClass, converters);
+        return new MongoCursor<T>(dbCursor, resultClass);
     }
 
     private DBCursor applySortAndLimit(MongoQuery query, DBCursor dbCursor) {
@@ -375,22 +258,14 @@ public class MongoStorage extends Storage {
         return dbCursor;
     }
 
+
     @Override
     public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) {
-        Chunk resultChunk = find(query);
-        if (resultChunk == null) {
-            return null;
-        }
-        return ChunkToPojoConverter.convertChunkToPojo(resultChunk, resultClass, converters);
-    }
-
-    // TODO: Make this private, and change the testcase to test putPojo() instead.
-    Chunk find(Query query) {
         MongoQuery mongoQuery = checkAndCastQuery(query);
         DBCollection coll = getCachedCollection(mongoQuery.getCategory());
         DBObject dbResult = coll.findOne(mongoQuery.getGeneratedQuery());
-        ChunkConverter converter = new ChunkConverter();
-        return dbResult == null ? null : converter.dbObjectToChunk(dbResult, mongoQuery.getCategory());
+        MongoPojoConverter conv = new MongoPojoConverter();
+        return conv.convertMongoToPojo(dbResult, resultClass);
     }
 
     private MongoQuery checkAndCastQuery(Query query) {
@@ -427,23 +302,6 @@ public class MongoStorage extends Storage {
         } else {
             return file.getInputStream();
         }
-    }
-
-    @Override
-    public void putPojo(Category category, boolean replace, Pojo pojo) {
-        Chunk chunk = convertPojoToChunk(category, replace, pojo);
-        putChunk(chunk);
-    }
-
-    private Chunk convertPojoToChunk(Category category, boolean replace, Pojo pojo) {
-        Converter customConverter = converters.get(pojo.getClass());
-        Chunk chunk;
-        if (customConverter != null) {
-            chunk = customConverter.toChunk(pojo);
-        } else {
-            chunk = new ChunkAdapter(pojo, category, replace);
-        }
-        return chunk;
     }
 
 }

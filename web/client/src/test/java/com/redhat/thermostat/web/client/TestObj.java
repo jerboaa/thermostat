@@ -38,16 +38,21 @@
 package com.redhat.thermostat.web.client;
 
 import com.redhat.thermostat.common.model.BasePojo;
+import com.redhat.thermostat.common.storage.Entity;
+import com.redhat.thermostat.common.storage.Persist;
 
+@Entity
 public class TestObj extends BasePojo {
 
     
     private String property1;
 
+    @Persist
     public void setProperty1(String property1) {
         this.property1 = property1;
     }
 
+    @Persist
     public String getProperty1() {
         return property1;
     }

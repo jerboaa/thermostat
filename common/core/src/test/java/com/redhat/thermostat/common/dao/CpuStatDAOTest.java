@@ -46,7 +46,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -59,7 +58,6 @@ import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.utils.ArrayUtils;
 import com.redhat.thermostat.test.MockQuery;
 
 public class CpuStatDAOTest {
@@ -86,8 +84,7 @@ public class CpuStatDAOTest {
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
         Double LOAD = 5.0;
-        List<Double> loadList = Arrays.asList(LOAD);
-        CpuStat cpuStat = new CpuStat(1234L, loadList);
+        CpuStat cpuStat = new CpuStat(1234L, new double[] { LOAD });
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
@@ -103,7 +100,7 @@ public class CpuStatDAOTest {
         assertEquals(1, cpuStats.size());
         CpuStat stat = cpuStats.get(0);
         assertEquals(1234L, stat.getTimeStamp());
-        assertArrayEquals(new double[] { LOAD }, ArrayUtils.toPrimitiveDoubleArray(stat.getPerProcessorUsage()), 0.001);
+        assertArrayEquals(new double[] { LOAD }, stat.getPerProcessorUsage(), 0.001);
 
     }
 
@@ -118,7 +115,7 @@ public class CpuStatDAOTest {
 
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
-        CpuStat cpuStat = new CpuStat(1234L, Arrays.asList(5.0));
+        CpuStat cpuStat = new CpuStat(1234L, new double[] { 5.0 });
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
@@ -138,7 +135,7 @@ public class CpuStatDAOTest {
     @Test
     public void testPutCpuStat() {
         Storage storage = mock(Storage.class);
-        CpuStat stat = new CpuStat(1,  ArrayUtils.toDoubleList(new double[] {5.0, 10.0, 15.0}));
+        CpuStat stat = new CpuStat(1,  new double[] {5.0, 10.0, 15.0});
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
         dao.putCpuStat(stat);
 

@@ -385,10 +385,9 @@ public class HarvesterTest {
         verify(dao, times(1)).saveCapabilities(any(VMThreadCapabilities.class));
         assertEquals(42, capsCapture.getValue().getVmId());
 
-        List<String> features = capsCapture.getValue().getSupportedFeaturesList();
-        assertEquals(2, features.size());
-        assertTrue(features.contains(ThreadDao.CPU_TIME));
-        assertTrue(features.contains(ThreadDao.CONTENTION_MONITOR));
-        assertFalse(features.contains(ThreadDao.THREAD_ALLOCATED_MEMORY));
+        String[] features = capsCapture.getValue().getSupportedFeaturesList();
+        assertEquals(2, features.length);
+        assertEquals(ThreadDao.CPU_TIME, features[0]);
+        assertEquals(ThreadDao.CONTENTION_MONITOR, features[1]);
     }    
 }

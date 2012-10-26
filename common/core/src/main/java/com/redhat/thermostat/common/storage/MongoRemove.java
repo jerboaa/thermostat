@@ -37,29 +37,37 @@
 
 package com.redhat.thermostat.common.storage;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+
 class MongoRemove implements Remove {
 
-    private Chunk query;
+    private Category category;
+    private DBObject query;
 
     @Override
     public Remove from(Category category) {
         if (query != null) {
             throw new IllegalStateException();
         }
-        query = new Chunk(category, false);
+        this.category = category;
         return this;
+    }
+
+    Category getCategory() {
+        return category;
     }
 
     @Override
     public <T> Remove where(Key<T> key, T value) {
         if (query == null) {
-            throw new IllegalStateException();
+            query = new BasicDBObject();
         }
-        query.put(key, value);
+        query.put(key.getName(), value);
         return this;
     }
 
-    Chunk getChunk() {
+    DBObject getQuery() {
         return query;
     }
 

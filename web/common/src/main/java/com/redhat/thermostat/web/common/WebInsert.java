@@ -62,20 +62,20 @@ public class WebInsert {
         this.categoryId = categoryId;
     }
 
-    public boolean isReplace() {
-        return replace;
-    }
-
-    public void setReplace(boolean replace) {
-        this.replace = replace;
-    }
-
     public String getPojoClass() {
         return pojoClass;
     }
 
     public void setPojoClass(String pojoClass) {
         this.pojoClass = pojoClass;
+    }
+
+    public boolean isReplace() {
+        return replace;
+    }
+
+    public void setReplace(boolean replace) {
+        this.replace = replace;
     }
 
 

@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.common.storage;
 
-import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -131,8 +130,8 @@ public class MongoStorageTest {
         }
     }
 
-    private static final Key<String> key1 = new Key<>("key1", false);
-    private static final Key<String> key2 = new Key<>("key2", false);
+    private static final Key<String> key1 = new Key<>("key1", true);
+    private static final Key<String> key2 = new Key<>("key2", true);
     private static final Key<String> key3 = new Key<>("key3", false);
     private static final Key<String> key4 = new Key<>("key4", false);
     private static final Key<String> key5 = new Key<>("key5", false);
@@ -140,7 +139,6 @@ public class MongoStorageTest {
     private static final Category emptyTestCategory = new Category("MongoEmptyCategory");
 
     private StartupConfiguration conf;
-    private Chunk multiKeyQuery;
     private Mongo m;
     private DB db;
     private DBCollection testCollection, emptyTestCollection, mockedCollection;
@@ -171,13 +169,6 @@ public class MongoStorageTest {
         value2.put("key3", "test3");
         value2.put("key4", "test4");
 
-        multiKeyQuery = new Chunk(testCategory, false);
-        multiKeyQuery.put(key5, "test1");
-        multiKeyQuery.put(key4, "test2");
-        multiKeyQuery.put(key3, "test3");
-        multiKeyQuery.put(key2, "test4");
-        multiKeyQuery.put(key1, "test5");
-
         cursor = mock(DBCursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(value1).thenReturn(value2).thenReturn(null);
@@ -200,7 +191,6 @@ public class MongoStorageTest {
         db = null;
         testCollection = null;
         emptyTestCollection = null;
-        multiKeyQuery = null;
         cursor = null;
     }
 
@@ -208,7 +198,7 @@ public class MongoStorageTest {
     public void verifyFindOnlyAcceptsMongoQuery() {
         MongoStorage storage = makeStorage();
         Query query = mock(Query.class);
-        storage.find(query);
+        storage.findPojo(query, TestClass.class);
     }
 
     @Test (expected=IllegalArgumentException.class)
@@ -232,7 +222,7 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery().from(testCategory).where(key1, Criteria.EQUALS, "test1");
-        Chunk result = storage.find(query);
+        TestClass result = storage.findPojo(query, TestClass.class);
         assertNotNull(result);
     }
 
@@ -250,7 +240,7 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery().from(testCategory);
-        storage.find(query);
+        storage.findPojo(query, TestClass.class);
         verify(testCollection).findOne(any(DBObject.class));
     }
 
@@ -284,7 +274,7 @@ public class MongoStorageTest {
 
         ArgumentCaptor<DBObject> findArg = ArgumentCaptor.forClass(DBObject.class);
 
-        storage.find(query);
+        storage.findPojo(query, TestClass.class);
 
         verify(testCollection).findOne(findArg.capture());
         assertSame(generatedQuery, findArg.getValue());
@@ -298,12 +288,11 @@ public class MongoStorageTest {
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
         MongoQuery query = new MongoQuery().from(testCategory);
 
-        Chunk result = storage.find(query);
+        TestClass result = storage.findPojo(query, TestClass.class);
 
         assertNotNull(result);
-        assertArrayEquals(new Key<?>[]{key1, key2}, result.getKeys().toArray());
-        assertEquals("test1", result.get(key1));
-        assertEquals("test2", result.get(key2));
+        assertEquals("test1", result.getKey1());
+        assertEquals("test2", result.getKey2());
     }
 
     @Test
@@ -415,9 +404,9 @@ public class MongoStorageTest {
     public void verifyPutChunkUsesCorrectChunkAgent() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Chunk chunk1 = new Chunk(testCategory, false);
-        chunk1.put(Key.AGENT_ID, "123");
-        storage.putChunk(chunk1);
+        TestClass pojo = new TestClass();
+        pojo.setAgentId("123");
+        storage.putPojo(testCategory, false, pojo);
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
@@ -429,9 +418,9 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         storage.setAgentId(new UUID(1, 2));
-        Chunk chunk1 = new Chunk(testCategory, false);
-        chunk1.put(Key.AGENT_ID, "123");
-        storage.putChunk(chunk1);
+        TestClass pojo = new TestClass();
+        pojo.setAgentId("123");
+        storage.putPojo(testCategory, false, pojo);
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
@@ -493,4 +482,35 @@ public class MongoStorageTest {
         assertEquals("test3", values.get("key3"));
     }
 
+    @Test
+    public void verifyInsertReplaceCallsUpdate() {
+        TestClass pojo = new TestClass();
+        pojo.setAgentId("123");
+        pojo.setKey1("test1");
+        pojo.setKey2("test2");
+        pojo.setKey3("test3");
+        pojo.setKey4("test4");
+        pojo.setKey5("test5");
+
+        MongoStorage storage = makeStorage();
+        storage.putPojo(testCategory, true, pojo);
+
+        ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
+        ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
+        verify(testCollection).update(queryCaptor.capture(), valueCaptor.capture());
+
+        DBObject query = queryCaptor.getValue();
+        assertEquals(2, query.keySet().size());
+        assertEquals("test1", query.get("key1"));
+        assertEquals("test2", query.get("key2"));
+
+        DBObject value = valueCaptor.getValue();
+        assertEquals(6, value.keySet().size());
+        assertEquals("test1", value.get("key1"));
+        assertEquals("test2", value.get("key2"));
+        assertEquals("test3", value.get("key3"));
+        assertEquals("test4", value.get("key4"));
+        assertEquals("test5", value.get("key5"));
+        assertEquals("123", value.get("agentId"));
+    }
 }

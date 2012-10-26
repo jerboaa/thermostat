@@ -42,13 +42,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.Arrays;
-
 import org.junit.Test;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Storage;
@@ -82,12 +79,9 @@ public class ThreadDaoImplTest {
         when(agent.getAgentId()).thenReturn("0xcafe");
         
         when(ref.getAgent()).thenReturn(agent);
-        
-        Chunk answer = mock(Chunk.class);
-        when(answer.get(ThreadDao.SUPPORTED_FEATURES_LIST_KEY)).thenReturn(Arrays.asList(ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY));
-        
+
         VMThreadCapabilities expected = new VMThreadCapabilities();
-        expected.setSupportedFeaturesList(Arrays.asList(ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY));
+        expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
         when(storage.findPojo(query, VMThreadCapabilities.class)).thenReturn(expected);
         
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
@@ -104,10 +98,6 @@ public class ThreadDaoImplTest {
     @Test
     public void testSaveVMCapabilities() {
         Storage storage = mock(Storage.class);
-        
-        Chunk answer = mock(Chunk.class);
-        when(answer.get(ThreadDao.CONTENTION_MONITOR_KEY)).thenReturn(false);
-        when(answer.get(ThreadDao.CPU_TIME_KEY)).thenReturn(true);
         
         VMThreadCapabilities caps = mock(VMThreadCapabilities.class);
         when(caps.supportContentionMonitor()).thenReturn(true);

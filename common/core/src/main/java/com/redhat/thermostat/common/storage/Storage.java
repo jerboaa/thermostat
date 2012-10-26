@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.storage;
 import java.io.InputStream;
 import java.util.UUID;
 
+import com.redhat.thermostat.common.model.AgentIdPojo;
 import com.redhat.thermostat.common.model.Pojo;
 
 public abstract class Storage {
@@ -51,7 +52,7 @@ public abstract class Storage {
 
     public abstract Connection getConnection();
 
-    public abstract void putPojo(Category category, boolean replace, Pojo pojo);
+    public abstract void putPojo(Category category, boolean replace, AgentIdPojo pojo);
 
     public abstract void updatePojo(Update update);
 

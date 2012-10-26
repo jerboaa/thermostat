@@ -232,21 +232,21 @@ public class HeapDumpController implements VmInformationServiceController {
                 long used = 0l;
                 long capacity = 0l;
                 long max = 0l;
-                List<Generation> generations = memoryStats.getGenerations();
+                Generation[] generations = memoryStats.getGenerations();
                 for (Generation generation : generations) {
                     
                     // non heap
-                    if (generation.name.equals("perm")) {
+                    if (generation.getName().equals("perm")) {
                         continue;
                     }
                     
-                    List<Space> spaces = generation.spaces;
+                    Space[] spaces = generation.getSpaces();
                     for (Space space: spaces) {
-                        used += space.used;
-                        capacity += space.capacity;
+                        used += space.getUsed();
+                        capacity += space.getCapacity();
                         
                         // TODO
-                        max =+ space.maxCapacity;
+                        max =+ space.getMaxCapacity();
                     }
                 }
                 model.addData(memoryStats.getTimeStamp(), used, capacity);

@@ -56,7 +56,6 @@ import org.mockito.stubbing.Answer;
 import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Chunk;
 import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.Query;
@@ -98,14 +97,6 @@ public class HostInfoDAOTest {
 
     @Test
     public void testGetHostInfo() {
-
-        Chunk chunk = new Chunk(HostInfoDAO.hostInfoCategory, false);
-        chunk.put(HostInfoDAO.hostNameKey, HOST_NAME);
-        chunk.put(HostInfoDAO.osNameKey, OS_NAME);
-        chunk.put(HostInfoDAO.osKernelKey, OS_KERNEL);
-        chunk.put(HostInfoDAO.cpuModelKey, CPU_MODEL);
-        chunk.put(HostInfoDAO.cpuCountKey, CPU_NUM);
-        chunk.put(HostInfoDAO.hostMemoryTotalKey, MEMORY_TOTAL);
 
         Storage storage = mock(Storage.class);
         when(storage.createQuery()).thenReturn(new MockQuery());
@@ -304,10 +295,6 @@ public class HostInfoDAOTest {
         AgentInformation agentInfo2 = new AgentInformation();
         agentInfo2.setAgentId("456");
         agentInfo2.setAlive(true);
-
-        Chunk agentConfig3 = new Chunk(AgentInfoDAO.CATEGORY, false);
-        agentConfig3.put(Key.AGENT_ID, "678");
-        agentConfig3.put(AgentInfoDAO.ALIVE_KEY, true);
 
         AgentInformation agentInfo3 = new AgentInformation();
         agentInfo3.setAgentId("678");

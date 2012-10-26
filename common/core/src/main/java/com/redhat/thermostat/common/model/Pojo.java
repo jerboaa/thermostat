@@ -39,9 +39,30 @@ package com.redhat.thermostat.common.model;
 /**
  * All data types should implement this empty interface, to support the
  * generalization of DAO code where possible.
+ *
+ * In order to enable fully automatic serialization and deserialization of
+ * data objects, an implementation of this interface needs to adhere to
+ * a certain set of rules, that essentially boil down to compliance with
+ * JavaBeans specification plus Thermostat's @Entity and @Persist annotation.
+ * In detail those rules are:
+ *
+ * - A Pojo class needs to be annotated with @Entity (in addition to it implementing
+ *   Pojo).
+ * - Only properties will be (de-)serialized, other method or fields will not
+ *   be looked at.
+ * - Properties that should be (de-)serialized need to be annotated with @Persist,
+ *   both on the getter and the setter method.
+ * - Serializable properties need to either be of primitive type, or String or
+ *   other Pojos or arrays (indexed properties) of those types. (The reason for supporting
+ *   only arrays as opposed to collections is that arrays carry type information,
+ *   while collections don't, due to type erasure in Java generics. The type information
+ *   is needed in order to re-construct the objects when deserializing.)
+ * - The properties need to be of the same type that its signatures declare. Specifically,
+ *   they must not be of a subclass of that type. The reason for that is that
+ *   the type information of the signature is used in deserialization. This also implies
+ *   that such properties cannot be of abstract types.
+ * 
  */
 public interface Pojo {
 
-    void setAgentId(String agentId);
-    String getAgentId();
 }

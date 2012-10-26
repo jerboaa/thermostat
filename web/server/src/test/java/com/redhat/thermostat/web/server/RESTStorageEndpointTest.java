@@ -72,7 +72,9 @@ import com.redhat.thermostat.common.model.BasePojo;
 import com.redhat.thermostat.common.storage.Categories;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Persist;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Query.Criteria;
 import com.redhat.thermostat.common.storage.Remove;
@@ -89,18 +91,23 @@ import com.redhat.thermostat.web.common.WebUpdate;
 
 public class RESTStorageEndpointTest {
 
+    @Entity
     public static class TestClass extends BasePojo {
         private String key1;
         private int key2;
+        @Persist
         public String getKey1() {
             return key1;
         }
+        @Persist
         public void setKey1(String key1) {
             this.key1 = key1;
         }
+        @Persist
         public int getKey2() {
             return key2;
         }
+        @Persist
         public void setKey2(int key2) {
             this.key2 = key2;
         }

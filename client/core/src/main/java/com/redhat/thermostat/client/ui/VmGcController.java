@@ -183,8 +183,8 @@ class VmGcController {
         VmMemoryStat info = memDao.getLatestMemoryStat(ref);
 
         for (Generation g: info.getGenerations()) {
-            if (g.collector.equals(collectorName)) {
-                return g.name;
+            if (g.getCollector().equals(collectorName)) {
+                return g.getName();
             }
         }
         return translator.localize(LocaleResources.UNKNOWN_GEN);

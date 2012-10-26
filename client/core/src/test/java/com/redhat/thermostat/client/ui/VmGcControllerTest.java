@@ -98,12 +98,10 @@ public class VmGcControllerTest {
         stats.add(stat2);
 
         Generation gen;
-        List<Generation> gens = new ArrayList<>();
         gen = new Generation();
-        gen.name = "generation 1";
-        gen.collector = "collector1";
-        gens.add(gen);
-        VmMemoryStat memoryStat = new VmMemoryStat(1, 42, gens);
+        gen.setName("generation 1");
+        gen.setCollector("collector1");
+        VmMemoryStat memoryStat = new VmMemoryStat(1, 42, new Generation[] { gen });
 
         // Setup DAO
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);

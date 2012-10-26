@@ -41,7 +41,6 @@ import java.text.DateFormat;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -161,8 +160,8 @@ class VMStatPrinter {
         }
         int i = 0;
         for (VmMemoryStat.Generation gen : vmMemoryStat.getGenerations()) {
-            for (VmMemoryStat.Space space : gen.spaces) {
-                String[] displayableSize = DisplayableValues.bytes(space.used);
+            for (VmMemoryStat.Space space : gen.getSpaces()) {
+                String[] displayableSize = DisplayableValues.bytes(space.getUsed());
                 memoryUsage[i] = translator.localize(LocaleResources.VALUE_AND_UNIT, displayableSize[0], displayableSize[1]);
                 i++;
             }
@@ -178,8 +177,8 @@ class VMStatPrinter {
         VmMemoryStat stat = memStats.get(0);
         int i = 0;
         for (VmMemoryStat.Generation gen : stat.getGenerations()) {
-            for (VmMemoryStat.Space space : gen.spaces) {
-                spacesNames[i] = translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.name);
+            for (VmMemoryStat.Space space : gen.getSpaces()) {
+                spacesNames[i] = translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.getName());
                 i++;
             }
         }
@@ -193,7 +192,7 @@ class VMStatPrinter {
         VmMemoryStat stat = memStats.get(0);
         int numSpaces = 0;
         for (VmMemoryStat.Generation gen : stat.getGenerations()) {
-            numSpaces += gen.spaces.size();
+            numSpaces += gen.getSpaces().length;
         }
         return numSpaces;
     }

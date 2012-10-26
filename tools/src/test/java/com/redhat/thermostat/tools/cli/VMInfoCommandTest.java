@@ -43,7 +43,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -115,7 +114,7 @@ public class VMInfoCommandTest {
         start.set(2012, 5, 7, 15, 32, 0);
         Calendar end = Calendar.getInstance();
         end.set(2013, 10, 1, 1, 22, 0);
-        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new ArrayList<String>());
+        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), end.getTimeInMillis(), "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0]);
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
         when(vmsDAO.getVmInfo(new VmRef(host, 9876, "dummy"))).thenThrow(new DAOException("Unknown VM ID: 9876"));
         when(vmsDAO.getVMs(host)).thenReturn(Arrays.asList(vm));
@@ -191,7 +190,7 @@ public class VMInfoCommandTest {
     public void testStopTime() throws CommandException {
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
-        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new ArrayList<String>());
+        VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0]);
         when(vmsDAO.getVmInfo(vm)).thenReturn(vmInfo);
 
         SimpleArguments args = new SimpleArguments();

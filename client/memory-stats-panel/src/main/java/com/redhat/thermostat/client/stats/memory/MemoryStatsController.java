@@ -79,34 +79,34 @@ class MemoryStatsController implements VmInformationServiceController {
         public void run() {
             List<VmMemoryStat> vmInfo = vmDao.getLatestVmMemoryStats(ref, desiredUpdateTimeStamp);
             for (VmMemoryStat memoryStats: vmInfo) {
-                List<Generation> generations = memoryStats.getGenerations();
+                Generation[] generations = memoryStats.getGenerations();
                 
                 for (Generation generation : generations) {
-                    List<Space> spaces = generation.spaces;
+                    Space[] spaces = generation.getSpaces();
                     for (Space space: spaces) {
-                        Payload payload = regions.get(space.name);
+                        Payload payload = regions.get(space.getName());
                         if (payload == null) {
                             payload = new Payload();
-                            payload.setName(space.name);
+                            payload.setName(space.getName());
                         }
 
-                        Scale usedScale = normalizeScale(space.used, space.capacity);
-                        double used = Scale.convertTo(usedScale, space.used, 100);
-                        double maxUsed = Scale.convertTo(usedScale, space.capacity, 100);
+                        Scale usedScale = normalizeScale(space.getUsed(), space.getCapacity());
+                        double used = Scale.convertTo(usedScale, space.getUsed(), 100);
+                        double maxUsed = Scale.convertTo(usedScale, space.getCapacity(), 100);
                         
                         payload.setUsed(used);
                         payload.setMaxUsed(maxUsed);
                         payload.setUsedUnit(usedScale);
                         
-                        Scale maxScale = normalizeScale(space.capacity, space.maxCapacity);
-                        double capacity = Scale.convertTo(maxScale, space.capacity, 100);
-                        double maxCapacity = Scale.convertTo(maxScale, space.maxCapacity, 100);
+                        Scale maxScale = normalizeScale(space.getCapacity(), space.getMaxCapacity());
+                        double capacity = Scale.convertTo(maxScale, space.getCapacity(), 100);
+                        double maxCapacity = Scale.convertTo(maxScale, space.getMaxCapacity(), 100);
                         
                         payload.setCapacity(capacity);
                         payload.setMaxCapacity(maxCapacity);
                         payload.setCapacityUnit(maxScale);
                         
-                        String tooltip = space.name + ": used: " + used + " " + usedScale +
+                        String tooltip = space.getName() + ": used: " + used + " " + usedScale +
                                 ", capacity: " + capacity + " " + maxScale +
                                 ", max capacity: " + maxCapacity + " " + maxScale;
                         
@@ -115,20 +115,20 @@ class MemoryStatsController implements VmInformationServiceController {
                         StatsModel model = payload.getModel();
                         if (model == null) {
                             model = new StatsModel();
-                            model.setName(space.name);
+                            model.setName(space.getName());
                             model.setRange(3600);
                         }
                         
                         // normalize this always in the same unit
                         model.addData(memoryStats.getTimeStamp(),
-                                      Scale.convertTo(Scale.MiB, space.used, 100));
+                                      Scale.convertTo(Scale.MiB, space.getUsed(), 100));
                         
                         payload.setModel(model);
-                        if (regions.containsKey(space.name)) {
+                        if (regions.containsKey(space.getName())) {
                             view.updateRegion(payload.clone());
                         } else {
                             view.addRegion(payload.clone());
-                            regions.put(space.name, payload);
+                            regions.put(space.getName(), payload);
                         }
                         
                         view.requestRepaint();

@@ -42,8 +42,8 @@ import java.util.Map;
 
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.Update;
 
 public class WebUpdate implements Update {
 
@@ -135,4 +135,5 @@ public class WebUpdate implements Update {
     public List<WebUpdate.UpdateValue> getUpdates() {
         return updateValues;
     }
+
 }

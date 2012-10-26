@@ -113,32 +113,8 @@ public class VmMemoryStatDAOTest {
         assertTrue(keys.contains(new Key<>("agentId", true)));
         assertTrue(keys.contains(new Key<Integer>("vmId", true)));
         assertTrue(keys.contains(new Key<Long>("timeStamp", false)));
-        assertTrue(keys.contains(new Key<String>("eden.gen", false)));
-        assertTrue(keys.contains(new Key<String>("eden.collector", false)));
-        assertTrue(keys.contains(new Key<Long>("eden.capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("eden.max-capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("eden.used", false)));
-        assertTrue(keys.contains(new Key<String>("s0.gen", false)));
-        assertTrue(keys.contains(new Key<String>("s0.collector", false)));
-        assertTrue(keys.contains(new Key<Long>("s0.capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("s0.max-capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("s0.used", false)));
-        assertTrue(keys.contains(new Key<String>("s1.gen", false)));
-        assertTrue(keys.contains(new Key<String>("s1.collector", false)));
-        assertTrue(keys.contains(new Key<Long>("s1.capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("s1.max-capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("s1.used", false)));
-        assertTrue(keys.contains(new Key<String>("old.gen", false)));
-        assertTrue(keys.contains(new Key<String>("old.collector", false)));
-        assertTrue(keys.contains(new Key<Long>("old.capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("old.max-capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("old.used", false)));
-        assertTrue(keys.contains(new Key<String>("perm.gen", false)));
-        assertTrue(keys.contains(new Key<String>("perm.collector", false)));
-        assertTrue(keys.contains(new Key<Long>("perm.capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("perm.max-capacity", false)));
-        assertTrue(keys.contains(new Key<Long>("perm.used", false)));
-        assertEquals(28, keys.size());
+        assertTrue(keys.contains(new Key<Generation[]>("generations", false)));
+        assertEquals(4, keys.size());
     }
 
     @Test
@@ -188,11 +164,10 @@ public class VmMemoryStatDAOTest {
         int i = 0;
         for (String genName: new String[] { "new", "old", "perm" }) {
             Generation gen = new Generation();
-            gen.name = genName;
-            gen.collector = gen.name;
+            gen.setName(genName);
+            gen.setCollector(gen.getName());
             generations.add(gen);
             List<Space> spaces = new ArrayList<Space>();
-            gen.spaces = spaces;
             String[] spaceNames = null;
             if (genName.equals("new")) {
                 spaceNames = new String[] { "eden", "s0", "s1" };
@@ -203,15 +178,16 @@ public class VmMemoryStatDAOTest {
             }
             for (String spaceName: spaceNames) {
                 Space space = new Space();
-                space.name = spaceName;
-                space.index = 0;
-                space.used = i++;
-                space.capacity = i++;
-                space.maxCapacity = i++;
+                space.setName(spaceName);
+                space.setIndex(0);
+                space.setUsed(i++);
+                space.setCapacity(i++);
+                space.setMaxCapacity(i++);
                 spaces.add(space);
             }
+            gen.setSpaces(spaces.toArray(new Space[spaces.size()]));
         }
-        VmMemoryStat stat = new VmMemoryStat(1, 2, generations);
+        VmMemoryStat stat = new VmMemoryStat(1, 2, generations.toArray(new Generation[generations.size()]));
 
         Storage storage = mock(Storage.class);
         VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(storage);

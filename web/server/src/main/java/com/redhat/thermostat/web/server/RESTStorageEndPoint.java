@@ -22,8 +22,10 @@ import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+import com.redhat.thermostat.common.model.AgentIdPojo;
 import com.redhat.thermostat.common.model.Pojo;
 import com.redhat.thermostat.common.storage.Category;
 import com.redhat.thermostat.common.storage.Cursor;
@@ -36,6 +38,7 @@ import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.RESTQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
+import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
@@ -52,7 +55,7 @@ public class RESTStorageEndPoint extends HttpServlet {
     private Map<Integer, Category> categories;
 
     public void init() {
-        gson = new Gson();
+        gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();
     }
@@ -174,9 +177,9 @@ public class RESTStorageEndPoint extends HttpServlet {
         try {
             String insertParam = req.getParameter("insert");
             WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
-            Class<? extends Pojo> pojoCls = (Class<? extends Pojo>) Class.forName(insert.getPojoClass());
+            Class<? extends AgentIdPojo> pojoCls = (Class<? extends AgentIdPojo>) Class.forName(insert.getPojoClass());
             String pojoParam = req.getParameter("pojo");
-            Pojo pojo = gson.fromJson(pojoParam, pojoCls);
+            AgentIdPojo pojo = gson.fromJson(pojoParam, pojoCls);
             int categoryId = insert.getCategoryId();
             Category category = getCategoryFromId(categoryId);
             storage.putPojo(category, insert.isReplace(), pojo);
@@ -213,17 +216,22 @@ public class RESTStorageEndPoint extends HttpServlet {
                 assert (qualifier.getCriteria() == Criteria.EQUALS);
                 targetUpdate = targetUpdate.where(qualifier.getKey(), qualifier.getValue());
             }
-            String valuesParam = req.getParameter("values");
-            JsonParser parser = new JsonParser();
-            JsonArray jsonArray = parser.parse(valuesParam).getAsJsonArray();
             List<WebUpdate.UpdateValue> updates = update.getUpdates();
-            int index = 0;
-            for (WebUpdate.UpdateValue updateValue : updates) {
-                Class valueClass = Class.forName(updateValue.getValueClass());
-                Object value = gson.fromJson(jsonArray.get(index), valueClass);
-                index++;
-                Key key = updateValue.getKey();
-                targetUpdate.set(key, value);
+            if (updates != null) {
+                String valuesParam = req.getParameter("values");
+                JsonParser parser = new JsonParser();
+                JsonArray jsonArray = parser.parse(valuesParam)
+                        .getAsJsonArray();
+                int index = 0;
+                for (WebUpdate.UpdateValue updateValue : updates) {
+                    Class valueClass = Class.forName(updateValue
+                            .getValueClass());
+                    Object value = gson.fromJson(jsonArray.get(index),
+                            valueClass);
+                    index++;
+                    Key key = updateValue.getKey();
+                    targetUpdate.set(key, value);
+                }
             }
             storage.updatePojo(targetUpdate);
             resp.setStatus(HttpServletResponse.SC_OK);

@@ -106,7 +106,7 @@ public class CpuStatBuilderTest {
         CpuStat stat = builder.build();
 
         verify(dataSource, times(2)).getStatReader();
-        assertArrayEquals(new double[] {100, 100}, ArrayUtils.toPrimitiveDoubleArray(stat.getPerProcessorUsage()), 0.01);
+        assertArrayEquals(new double[] {100, 100}, stat.getPerProcessorUsage(), 0.01);
     }
 
 }

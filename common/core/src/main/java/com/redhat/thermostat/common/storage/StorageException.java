@@ -34,14 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.model.Pojo;
-import com.redhat.thermostat.common.storage.Chunk;
+package com.redhat.thermostat.common.storage;
 
-public interface Converter<T extends Pojo> {
+@SuppressWarnings("serial")
+public class StorageException extends RuntimeException {
 
-    Chunk toChunk(T pojo);
+    public StorageException() {
+        super();
+    }
+    public StorageException(String message) {
+        super(message);
+    }
 
-    T fromChunk(Chunk chunk);
+    public StorageException(Throwable cause) {
+        super(cause);
+    }
+
+    public StorageException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

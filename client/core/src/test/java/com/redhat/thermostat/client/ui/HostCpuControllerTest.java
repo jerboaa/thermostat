@@ -71,7 +71,6 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.utils.ArrayUtils;
 
 public class HostCpuControllerTest {
 
@@ -103,8 +102,8 @@ public class HostCpuControllerTest {
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         when(hostInfoDAO.getHostInfo(any(HostRef.class))).thenReturn(hostInfo);
 
-        CpuStat cpuStat1 = new CpuStat(1l, ArrayUtils.toDoubleList(new double[] {10.0, 20.0, 30.0}));
-        CpuStat cpuStat2 = new CpuStat(2l, ArrayUtils.toDoubleList(new double[] {15.0, 25.0, 35.0}));
+        CpuStat cpuStat1 = new CpuStat(1l, new double[] {10.0, 20.0, 30.0});
+        CpuStat cpuStat2 = new CpuStat(2l, new double[] {15.0, 25.0, 35.0});
         CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
         when(cpuStatDAO.getLatestCpuStats(any(HostRef.class), anyLong())).thenReturn(Arrays.asList(cpuStat1, cpuStat2));
 

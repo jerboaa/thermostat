@@ -73,7 +73,7 @@ import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 
 public class MemoryStatsControllerTest {
 
-    private List<Generation> generations = new ArrayList<>();
+    private Generation[] generations = new Generation[2];
     
     private VmMemoryStatDAO memoryStatDao;
     private MemoryStatsView view;
@@ -101,26 +101,28 @@ public class MemoryStatsControllerTest {
         
         for (int i = 0; i < 2; i++) {
             Generation generation = new Generation();
-            generation.name = "fluff" + i;
-            generation.spaces = new ArrayList<>();
+            generation.setName("fluff" + i);
+            VmMemoryStat.Space[] spaces = new VmMemoryStat.Space[2 + (1 - i)]; 
             for (int j = 0; j < 2; j++) {
                 Space space = new Space();
-                space.name = "fluffer" + i + j;
-                space.used = 100;
-                space.capacity = 1000;
-                space.maxCapacity = 10000;
-                
-                generation.spaces.add(space);
+                space.setName("fluffer" + i + j);
+                space.setUsed(100);
+                space.setCapacity(1000);
+                space.setMaxCapacity(10000);
+                spaces[j] = space;
             }
-            generations.add(generation);
+            if (i == 0) {
+                // special payload because the others have all the same values
+                canary = new Space();
+                canary.setName("canary");
+                canary.setUsed(1);
+                canary.setCapacity(2);
+                canary.setMaxCapacity(3);
+                spaces[2] = canary;
+            }
+            generation.setSpaces(spaces);
+            generations[i] = generation;
         }
-        
-        // special payload because the others have all the same values
-        canary = new Space();
-        canary.name = "canary";
-        canary.used = 1;
-        canary.capacity = 2;
-        canary.maxCapacity = 3;
         
         long timestamp = 1;
         int vmID = 1;
@@ -128,8 +130,6 @@ public class MemoryStatsControllerTest {
             VmMemoryStat vmMemory = new VmMemoryStat(timestamp++, vmID, generations);
             vmInfo.add(vmMemory);
         }
-        
-        generations.get(0).spaces.add(canary);
         
         memoryStatDao = mock(VmMemoryStatDAO.class);
         when(memoryStatDao.getLatestVmMemoryStats(any(VmRef.class), anyLong())).thenReturn(vmInfo);
@@ -213,15 +213,15 @@ public class MemoryStatsControllerTest {
 
         final long DATA_TIMESTAMP = System.currentTimeMillis() + 1000000000;
         Space space = new Space();
-        space.capacity = 10;
-        space.maxCapacity = 20;
-        space.used = 5;
+        space.setCapacity(10);
+        space.setMaxCapacity(20);
+        space.setUsed(5);
         Generation gen = new Generation();
-        gen.name = "foobar";
-        gen.spaces = Arrays.asList(space);
+        gen.setName("foobar");
+        gen.setSpaces(new Space[] { space });
         VmMemoryStat stat = new VmMemoryStat();
         stat.setTimeStamp(DATA_TIMESTAMP);
-        stat.setGenerations(Arrays.asList(gen));
+        stat.setGenerations(new Generation[] { gen });
 
         when(memoryStatDao.getLatestVmMemoryStats(isA(VmRef.class), anyLong())).thenReturn(Arrays.asList(stat));
 

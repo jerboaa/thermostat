@@ -37,7 +37,6 @@ package com.redhat.thermostat.thread.client.swing.impl;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
-import java.util.List;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
@@ -76,7 +75,7 @@ class VMCapsSummaryPanel extends JPanel {
         panel.add(list);
     }
     
-    void addInfo(List<String> infos) {
+    void addInfo(String[] infos) {
         listModel.removeAllElements();
         for (String info : infos) {
             listModel.addElement(info);

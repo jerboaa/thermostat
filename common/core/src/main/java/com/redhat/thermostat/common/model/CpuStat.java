@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.common.model;
 
-import java.util.List;
-
 import com.redhat.thermostat.common.storage.Entity;
 import com.redhat.thermostat.common.storage.Persist;
 
@@ -47,24 +45,24 @@ public class CpuStat extends BasePojo implements TimeStampedPojo {
     public static final double INVALID_LOAD = Double.MIN_VALUE;
 
     private long timeStamp;
-    private List<Double> perProcessorUsage;
+    private double[] perProcessorUsage;
 
     public CpuStat() {
         this(-1, null);
     }
 
-    public CpuStat(long timestamp, List<Double> perProcessorUsage) {
+    public CpuStat(long timestamp, double[] perProcessorUsage) {
         this.timeStamp = timestamp;
         this.perProcessorUsage = perProcessorUsage;
     }
 
     @Persist
-    public List<Double> getPerProcessorUsage() {
+    public double[] getPerProcessorUsage() {
         return perProcessorUsage;
     }
 
     @Persist
-    public void setPerProcessorUsage(List<Double> perProcessorUsage) {
+    public void setPerProcessorUsage(double[] perProcessorUsage) {
         this.perProcessorUsage = perProcessorUsage;
     }
 

@@ -326,14 +326,14 @@ public class HeapDumpControllerTest {
         final long CAPACITY = 10;
         final long USED = 5;
         Space space = new Space();
-        space.capacity = CAPACITY;
-        space.maxCapacity = 20;
-        space.used = USED;
+        space.setCapacity(CAPACITY);
+        space.setMaxCapacity(20);
+        space.setUsed(USED);
         Generation gen = new Generation();
-        gen.name = "foobar";
-        gen.spaces = Arrays.asList(space);
+        gen.setName("foobar");
+        gen.setSpaces(new Space[] { space });
         VmMemoryStat stat = new VmMemoryStat();
-        stat.setGenerations(Arrays.asList(gen));
+        stat.setGenerations(new Generation[] { gen });
 
         when(vmDao.getLatestVmMemoryStats(isA(VmRef.class), anyLong())).thenReturn(Arrays.asList(stat));
 
@@ -351,15 +351,15 @@ public class HeapDumpControllerTest {
 
         final long DATA_TIMESTAMP = System.currentTimeMillis() + 1000000000;
         Space space = new Space();
-        space.capacity = 10;
-        space.maxCapacity = 20;
-        space.used = 5;
+        space.setCapacity(10);
+        space.setMaxCapacity(20);
+        space.setUsed(5);
         Generation gen = new Generation();
-        gen.name = "foobar";
-        gen.spaces = Arrays.asList(space);
+        gen.setName("foobar");
+        gen.setSpaces(new Space[] { space });
         VmMemoryStat stat = new VmMemoryStat();
         stat.setTimeStamp(DATA_TIMESTAMP);
-        stat.setGenerations(Arrays.asList(gen));
+        stat.setGenerations(new Generation[] { gen });
 
         when(vmDao.getLatestVmMemoryStats(isA(VmRef.class), anyLong())).thenReturn(Arrays.asList(stat));
 
