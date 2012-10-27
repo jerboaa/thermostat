@@ -434,6 +434,28 @@
         <artifactId>thermostat-system-backend</artifactId>
         <version>${project.version}</version>
     </dependency>
-     
+    
+    <!-- new GC plugin -->
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-gc-remote-collector-common</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-gc-remote-collector-client-common</artifactId>
+        <version>${project.version}</version>
+    </dependency>    
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-gc-remote-collector-client-swing</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-gc-remote-collector-command</artifactId>
+        <version>${project.version}</version>
+    </dependency>
+         
   </dependencies>
 </project>

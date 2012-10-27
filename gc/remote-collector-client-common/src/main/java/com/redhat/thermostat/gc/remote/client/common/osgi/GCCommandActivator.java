@@ -34,34 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester.management;
+package com.redhat.thermostat.gc.remote.client.common.osgi;
 
-import java.io.Closeable;
-import java.io.IOException;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
-import javax.management.MalformedObjectNameException;
-import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
+import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
 
-public class MXBeanConnection implements Closeable {
+@SuppressWarnings({ "rawtypes", "unchecked" })
+public class GCCommandActivator implements BundleActivator {
 
-    private JMXConnector connection;
-    private MBeanServerConnection mbsc;
-    
-    MXBeanConnection(JMXConnector connection, MBeanServerConnection mbsc) {
-        this.connection = connection;
-        this.mbsc = mbsc;
-    }
-    
-    public synchronized <E> E createProxy(String name, Class<? extends E> proxyClass) throws MalformedObjectNameException {
-        ObjectName objectName = new ObjectName(name);
-        return JMX.newMXBeanProxy(mbsc, objectName, proxyClass);
+    private ServiceTracker tracker;
+
+    @Override
+    public void start(final BundleContext context) throws Exception {
+        tracker = new ServiceTracker(context, RequestQueue.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                System.err.println("starting GCCommandActivator");
+                
+                RequestQueue requestqueue = (RequestQueue) context.getService(reference);
+                
+                GCRequest gcRequest = new GCRequest(requestqueue); 
+                context.registerService(GCRequest.class, gcRequest, null);
+                return super.addingService(reference);
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                
+                context.ungetService(reference);
+                super.removedService(reference, service);
+            }
+        };
+        
+        tracker.open();
     }
     
     @Override
-    public void close() throws IOException {
-        connection.close();
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
     }
 }

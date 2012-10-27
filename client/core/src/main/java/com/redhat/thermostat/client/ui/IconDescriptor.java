@@ -40,6 +40,8 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.nio.ByteBuffer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Class that encapsulates an images raw data.
@@ -55,6 +57,8 @@ import java.nio.ByteBuffer;
  * recommended to cache the result when possible.
  */
 public class IconDescriptor {
+
+    private static final Logger logger = Logger.getLogger(IconDescriptor.class.getSimpleName());
 
     private ByteBuffer data;
     private int hash;
@@ -90,6 +94,25 @@ public class IconDescriptor {
         return true;
     }
 
+    /**
+     * Loads an icon by calling
+     * {@link #createFromClassloader(ClassLoader, String)} with the system
+     * {@link ClassLoader}.
+     * 
+     * <br /><br />
+     * 
+     * This method doesn't throw {@link IOException}, it returns {@code null}
+     * on failure and logs the error.
+     */
+    public static IconDescriptor loadIcon(String name) {
+        try {
+            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(), name);
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Can't load " + name, e);
+        }
+        return null;
+    }
+    
     public static IconDescriptor createFromClassloader(ClassLoader classloader,
                                                        String resource) throws IOException
     {

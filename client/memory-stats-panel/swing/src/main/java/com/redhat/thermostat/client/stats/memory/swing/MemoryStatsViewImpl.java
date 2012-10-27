@@ -53,6 +53,10 @@ import com.redhat.thermostat.client.stats.memory.core.Payload;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
+import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;
+import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 
 public class MemoryStatsViewImpl extends MemoryStatsView implements SwingComponent {
 
@@ -63,6 +67,8 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     private JPanel realPanel;
     
     private final Map<String, MemoryGraphPanel> regions;
+    
+    private RequestGCAction toobarButtonAction;
     
     private Dimension preferredSize;
     
@@ -90,6 +96,9 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         realPanel = new JPanel();
         realPanel.setLayout(new BoxLayout(realPanel, BoxLayout.Y_AXIS));
         visiblePanel.setContent(realPanel);
+        
+        toobarButtonAction = new RequestGCAction();
+        visiblePanel.addToolBarButton(new ToolbarGCButton(toobarButtonAction));
     }
     
     @Transient
@@ -106,6 +115,11 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
                 memoryGraphPanel.setMemoryGraphProperties(region);
             }
         });
+    }
+    
+    @Override
+    public void addGCActionListener(ActionListener<GCCommand> listener) {
+        toobarButtonAction.addActionListener(listener);
     }
     
     @Override

@@ -78,6 +78,12 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-agent-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
   </dependencies>
 
   <build>
@@ -93,7 +99,6 @@
             <Bundle-SymbolicName>com.redhat.thermostat.thread.harvester</Bundle-SymbolicName>
             <Private-Package>
               com.redhat.thermostat.thread.harvester,
-              com.redhat.thermostat.thread.harvester.management,
               com.redhat.thermostat.thread.harvester.osgi,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

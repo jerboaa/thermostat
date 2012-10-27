@@ -65,11 +65,14 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
+import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 
 public class MemoryStatsControllerTest {
 
@@ -80,11 +83,16 @@ public class MemoryStatsControllerTest {
     private Timer timer;
     
     private ActionListener<MemoryStatsView.Action> viewListener;
-    
+    private ActionListener<GCCommand> gcActionListener;
+
     private MemoryStatsController controller;
     
     private Space canary;
 
+    private AgentInfoDAO agentDAO;
+    private GCRequest gcRequest;
+    
+    private VmRef ref;
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
@@ -142,11 +150,19 @@ public class MemoryStatsControllerTest {
                 ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
 
-        VmRef ref = mock(VmRef.class);
+        ArgumentCaptor<ActionListener> gcArgumentCaptor =
+                ArgumentCaptor.forClass(ActionListener.class);
+        doNothing().when(view).addGCActionListener(gcArgumentCaptor.capture());
         
-        controller = new MemoryStatsController(memoryStatDao, ref, viewProvider);
+        ref = mock(VmRef.class);
+        
+        agentDAO = mock(AgentInfoDAO.class);
+        gcRequest = mock(GCRequest.class);
+        
+        controller = new MemoryStatsController(memoryStatDao, ref, viewProvider, agentDAO, gcRequest);
         
         viewListener = viewArgumentCaptor.getValue();
+        gcActionListener = gcArgumentCaptor.getValue();
     }
     
     @Test
@@ -161,6 +177,12 @@ public class MemoryStatsControllerTest {
         verify(timer).stop();
     }
 
+    @Test
+    public void testGCInvoked() {
+        gcActionListener.actionPerformed(new ActionEvent<>(view, GCCommand.REQUEST_GC));
+        verify(gcRequest).sendGCRequestToAgent(ref, agentDAO);
+    }
+    
     @Test
     public void testPayloadContainSpaces() {
         MemoryStatsController.VMCollector collettor = controller.getCollector();

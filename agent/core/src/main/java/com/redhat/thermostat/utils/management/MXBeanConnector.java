@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.harvester.management;
+package com.redhat.thermostat.utils.management;
 
 import java.io.Closeable;
 import java.io.File;

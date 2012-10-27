@@ -38,11 +38,15 @@ package com.redhat.thermostat.client.stats.memory.core;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 
 public abstract class MemoryStatsView extends BasicView implements UIComponent {
     
     public abstract void addRegion(Payload region);
     public abstract void updateRegion(Payload region);
     
-    public abstract void requestRepaint();
+    public abstract void addGCActionListener(ActionListener<GCCommand> listener);
+    
+    public abstract void requestRepaint();    
 }

@@ -126,6 +126,7 @@
     <module>killvm</module>
     <module>web</module>
     <module>system-backend</module>
+    <module>gc</module>
   </modules>
 
   <build>

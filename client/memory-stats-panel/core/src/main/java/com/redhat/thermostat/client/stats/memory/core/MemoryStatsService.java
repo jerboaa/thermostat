@@ -40,24 +40,30 @@ import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
 
 public class MemoryStatsService implements VmInformationService {
     
     private VmFilter filter = new AlwaysMatchFilter();
 
     private VmMemoryStatDAO vmMemoryStatDao;
-
-    public MemoryStatsService(VmMemoryStatDAO vmMemoryStatDao) {
+    private AgentInfoDAO agentDAO;
+    private GCRequest gcRequest;
+    
+    public MemoryStatsService(VmMemoryStatDAO vmMemoryStatDao, AgentInfoDAO agentDAO, GCRequest gcRequest) {
         this.vmMemoryStatDao = vmMemoryStatDao;
+        this.gcRequest = gcRequest;
+        this.agentDAO = agentDAO;
     }
     
     @Override
     public VmInformationServiceController getInformationServiceController(VmRef ref) {
         MemoryStatsViewProvider viewProvider = OSGIUtils.getInstance().getService(MemoryStatsViewProvider.class);
-        return new MemoryStatsController(vmMemoryStatDao, ref, viewProvider);
+        return new MemoryStatsController(vmMemoryStatDao, ref, viewProvider, agentDAO, gcRequest);
     }
 
     @Override

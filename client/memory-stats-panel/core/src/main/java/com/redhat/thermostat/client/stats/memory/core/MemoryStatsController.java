@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -58,6 +59,8 @@ import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
+import com.redhat.thermostat.gc.remote.common.GCRequest;
+import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 
 class MemoryStatsController implements VmInformationServiceController {
 
@@ -139,7 +142,9 @@ class MemoryStatsController implements VmInformationServiceController {
         }
     }
     
-    public MemoryStatsController(final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref, MemoryStatsViewProvider viewProvider) {
+    public MemoryStatsController(final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref,
+                                 MemoryStatsViewProvider viewProvider,
+                                 final AgentInfoDAO agentDAO, final GCRequest gcRequest) {
         
         regions = new HashMap<>();
         this.ref = ref;
@@ -171,6 +176,13 @@ class MemoryStatsController implements VmInformationServiceController {
                     default:
                         throw new NotImplementedException("unknown event: " + actionEvent.getActionId());
                 }
+            }
+        });
+        
+        view.addGCActionListener(new ActionListener<GCCommand>() {
+            @Override
+            public void actionPerformed(ActionEvent<GCCommand> actionEvent) {
+                gcRequest.sendGCRequestToAgent(ref, agentDAO);
             }
         });
     }
