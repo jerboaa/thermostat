@@ -75,14 +75,14 @@ public class BackendInfoDAOTest {
         backendInfo1.setDescription("description");
         backendInfo1.setActive(true);
         backendInfo1.setObserveNewJvm(true);
-        backendInfo1.setPids(Arrays.asList(new Integer[] { -1, 0, 1}));
+        backendInfo1.setPids(new int[] { -1, 0, 1});
 
         backend1 = new BackendInformation();
         backend1.setName("backend-name");
         backend1.setDescription("description");
         backend1.setActive(true);
         backend1.setObserveNewJvm(true);
-        backend1.setPids(Arrays.asList(new Integer[] { -1, 0, 1}));
+        backend1.setPids(new int[] { -1, 0, 1});
         
     }
 

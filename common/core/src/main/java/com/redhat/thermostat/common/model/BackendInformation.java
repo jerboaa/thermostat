@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.model;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,7 +52,7 @@ public class BackendInformation extends BasePojo {
     private String description;
     private boolean isActive;
     private boolean observeNewJvm;
-    private List<Integer> pids;
+    private int[] pids;
     private Map<String, String> configuration = new HashMap<String,String>();
 
     @Persist
@@ -85,12 +86,12 @@ public class BackendInformation extends BasePojo {
     }
 
     @Persist
-    public List<Integer> getPids() {
+    public int[] getPids() {
         return pids;
     }
 
     @Persist
-    public void setPids(List<Integer> pids) {
+    public void setPids(int[] pids) {
         this.pids = pids;
     }
 
@@ -125,7 +126,7 @@ public class BackendInformation extends BasePojo {
                 Objects.equals(this.configuration, other.configuration) &&
                 Objects.equals(this.isActive, other.isActive) &&
                 Objects.equals(this.observeNewJvm, other.observeNewJvm) &&
-                Objects.equals(this.pids, other.pids);
+                Arrays.equals(this.pids, other.pids);
     }
 
     @Override

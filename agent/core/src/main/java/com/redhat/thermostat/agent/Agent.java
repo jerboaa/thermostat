@@ -179,7 +179,7 @@ public class Agent {
         backendInfo.setDescription(backend.getDescription());
         backendInfo.setObserveNewJvm(backend.getObserveNewJvm());
         backendInfo.setActive(true);
-        backendInfo.setPids(new ArrayList<Integer>());
+        backendInfo.setPids(new int[0]);
         
         return backendInfo;
     }
