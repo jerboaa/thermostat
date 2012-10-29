@@ -41,7 +41,7 @@ import java.util.Objects;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.launcher.DbService;
@@ -54,7 +54,7 @@ public class DbServiceImpl implements DbService {
     private DAOFactory daoFactory;
     
     DbServiceImpl(String username, String password, String dbUrl) {
-        this(new MongoDAOFactory(new MongoStorageProvider(new ConnectionConfiguration(dbUrl, username, password))));
+        this(new DAOFactoryImpl(new MongoStorageProvider(new ConnectionConfiguration(dbUrl, username, password))));
     }
 
     DbServiceImpl(DAOFactory daoFactory) {

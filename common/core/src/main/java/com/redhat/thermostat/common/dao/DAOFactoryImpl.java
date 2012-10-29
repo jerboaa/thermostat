@@ -48,17 +48,17 @@ import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.StorageProvider;
 
-public class MongoDAOFactory implements DAOFactory {
+public class DAOFactoryImpl implements DAOFactory {
 
     private final Storage storage;
     private final BundleContext bundleContext;
     private final List<ServiceRegistration> registeredServices = new ArrayList<>();
 
-    public MongoDAOFactory(StorageProvider prov) {
-        this(FrameworkUtil.getBundle(MongoDAOFactory.class).getBundleContext(), prov);
+    public DAOFactoryImpl(StorageProvider prov) {
+        this(FrameworkUtil.getBundle(DAOFactoryImpl.class).getBundleContext(), prov);
     }
 
-    public MongoDAOFactory(BundleContext bundleContext, StorageProvider prov) {
+    public DAOFactoryImpl(BundleContext bundleContext, StorageProvider prov) {
         this.bundleContext = bundleContext;
         storage = prov.createStorage();
     }

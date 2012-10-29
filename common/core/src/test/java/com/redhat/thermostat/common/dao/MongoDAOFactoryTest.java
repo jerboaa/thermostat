@@ -72,7 +72,7 @@ public class MongoDAOFactoryTest {
         when(provider.createStorage()).thenReturn(storage);
         hostRef = mock(HostRef.class);
         vmRef = mock(VmRef.class);
-        daoFactory = new MongoDAOFactory(bundleContext, provider);
+        daoFactory = new DAOFactoryImpl(bundleContext, provider);
     }
 
     @Test

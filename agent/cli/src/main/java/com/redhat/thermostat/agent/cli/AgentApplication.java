@@ -63,7 +63,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
@@ -249,7 +249,7 @@ public final class AgentApplication extends BasicCommand {
     static class DAOFactoryCreator {
         public DAOFactory create(AgentStartupConfiguration config) {
             StorageProvider connProv = new MongoStorageProvider(config);
-            final DAOFactory daoFactory = new MongoDAOFactory(connProv);
+            final DAOFactory daoFactory = new DAOFactoryImpl(connProv);
             return daoFactory;
         }
     }

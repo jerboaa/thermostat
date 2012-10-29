@@ -66,7 +66,7 @@ import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.MongoDAOFactory;
+import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
@@ -93,7 +93,7 @@ public class Main {
         StartupConfiguration config = new ConnectionConfiguration(prefs);
         StorageProvider connProv = new MongoStorageProvider(config);
 
-        DAOFactory daoFactory = new MongoDAOFactory(connProv);
+        DAOFactory daoFactory = new DAOFactoryImpl(connProv);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
 
         init(OSGIUtils.getInstance(), uiFacadeFactory, daoFactory, timerFactory);
