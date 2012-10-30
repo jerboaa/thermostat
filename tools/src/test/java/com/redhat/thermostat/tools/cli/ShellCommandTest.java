@@ -69,15 +69,18 @@ import com.redhat.thermostat.tools.cli.ShellCommand.HistoryProvider;
 public class ShellCommandTest {
 
     private ShellCommand cmd;
+    private BundleContext bundleContext;
 
     @Before
     public void setUp() {
-        cmd = new ShellCommand();
+        bundleContext = mock(BundleContext.class);
+        cmd = new ShellCommand(bundleContext, new HistoryProvider());
     }
 
     @After
     public void tearDown() {
         cmd = null;
+        bundleContext = null;
         TerminalFactory.registerFlavor(Flavor.UNIX, UnixTerminal.class);
         TerminalFactory.reset();
     }
@@ -85,8 +88,6 @@ public class ShellCommandTest {
     @Test
     public void testBasic() throws CommandException {
         ServiceReference ref = mock(ServiceReference.class);
-        BundleContext bundleContext = mock(BundleContext.class);
-        cmd.setBundleContext(bundleContext);
         
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
         Launcher launcher = mock(Launcher.class);
@@ -153,16 +154,13 @@ public class ShellCommandTest {
         when(provider.get()).thenReturn(history);
 
         ServiceReference ref = mock(ServiceReference.class);
-        BundleContext bundleContext = mock(BundleContext.class);
-        cmd.setBundleContext(bundleContext);
         
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
 
-        cmd = new ShellCommand(provider);
-        cmd.setBundleContext(bundleContext);
+        cmd = new ShellCommand(bundleContext, provider);
         
         // "\u001b[A" is the escape code for up-arrow. use xxd -p to generate
         ctxFactory.setInput("\u001b[A\nexit\n");
@@ -184,15 +182,12 @@ public class ShellCommandTest {
         when(provider.get()).thenReturn(mockHistory);
 
         ServiceReference ref = mock(ServiceReference.class);
-        BundleContext bundleContext = mock(BundleContext.class);
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        cmd.setBundleContext(bundleContext);
         
-        cmd = new ShellCommand(provider);
-        cmd.setBundleContext(bundleContext);
+        cmd = new ShellCommand(bundleContext, provider);
         
         ctxFactory.setInput("add-to-history\nexit\n");
         Arguments args = new SimpleArguments();

@@ -37,8 +37,16 @@
 package com.redhat.thermostat.client.heap.internal;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.client.heap.cli.DumpHeapCommand;
 import com.redhat.thermostat.client.heap.cli.FindObjectsCommand;
@@ -49,12 +57,26 @@ import com.redhat.thermostat.client.heap.cli.SaveHeapDumpToFileCommand;
 import com.redhat.thermostat.client.heap.cli.ShowHeapHistogramCommand;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.tools.cli.ShellCommand;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(FrameworkUtil.class)
 public class ActivatorTest {
 
     @Test
     public void testCommandsRegistered() throws Exception {
+        /*
+         * ServiceLoader pulls in all commands from bundles on the classpath.
+         * During maven builds the tools bundle is on the classpath which uses
+         * the no-arg constructor of ShellCommand. That in turn uses
+         * FrameworkUtil. We need to mock FrameworkUtil here in order to avoid
+         * that throwing NPEs.
+         */
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle mockBundle = mock(Bundle.class);
+        when(FrameworkUtil.getBundle(ShellCommand.class)).thenReturn(mockBundle);
         StubBundleContext ctx = new StubBundleContext();
+        when(mockBundle.getBundleContext()).thenReturn(ctx);
         Activator activator = new Activator();
         
         activator.start(ctx);

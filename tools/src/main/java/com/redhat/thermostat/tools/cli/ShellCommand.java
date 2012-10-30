@@ -37,7 +37,6 @@
 package com.redhat.thermostat.tools.cli;
 
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -50,18 +49,18 @@ import jline.console.history.History;
 import jline.console.history.PersistentHistory;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.OSGiContext;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
 
-public class ShellCommand extends SimpleCommand implements OSGiContext {
+public class ShellCommand extends SimpleCommand {
 
     private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
 
@@ -88,16 +87,12 @@ public class ShellCommand extends SimpleCommand implements OSGiContext {
     }
 
     public ShellCommand() {
-        this(new HistoryProvider());
+        this(FrameworkUtil.getBundle(ShellCommand.class).getBundleContext(), new HistoryProvider());
     }
 
-    ShellCommand(HistoryProvider provider) {
+    ShellCommand(BundleContext context, HistoryProvider provider) {
         this.historyProvider = provider;
-    }
-
-    @Override
-    public void setBundleContext(BundleContext context) {
-        bundleContext = context;
+        this.bundleContext = context;
     }
     
     @Override

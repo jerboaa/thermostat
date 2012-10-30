@@ -136,7 +136,6 @@ public class ThermostatActivator implements BundleActivator {
                 Main main = new Main(keyring, uiFacadeFactory, new String[0]);
                 
                 GUIClientCommand cmd = new GUIClientCommand(main);
-                cmd.setBundleContext(context);
                 cmdReg.registerCommands(Arrays.asList(cmd));
                 
                 return super.addingService(reference);

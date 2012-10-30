@@ -68,7 +68,8 @@ public class GUIClientCommandTest {
     @Before
     public void setUp() {
         clientMain = mock(Main.class);
-        cmd = new GUIClientCommand(clientMain);
+        BundleContext ctxt = mock(BundleContext.class);
+        cmd = new GUIClientCommand(clientMain, ctxt);
     }
 
     @After
@@ -85,7 +86,7 @@ public class GUIClientCommandTest {
         CommandContext cmdCtx = mock(CommandContext.class);
         when(cmdCtx.getCommandContextFactory()).thenReturn(cmdCtxFactory);
 
-        cmd.setBundleContext(bCtx);
+        cmd = new GUIClientCommand(clientMain, bCtx);
         cmd.run(cmdCtx);
 
         verify(clientMain).run();

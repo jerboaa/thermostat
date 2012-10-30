@@ -63,9 +63,6 @@ public class CommandRegistryImpl implements CommandRegistry {
 
     @Override
     public void registerCommand(Command cmd) {
-        if (cmd instanceof OSGiContext) {
-            ((OSGiContext) cmd).setBundleContext(context);
-        }
         proxy.registerService(cmd, cmd.getName());
         myRegisteredCommands.add(cmd);
     }

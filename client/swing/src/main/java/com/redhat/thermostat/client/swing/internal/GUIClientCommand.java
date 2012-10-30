@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.swing.internal;
 
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
@@ -44,21 +45,20 @@ import com.redhat.thermostat.client.swing.internal.osgi.ApplicationServiceProvid
 import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceProvider;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.OSGiContext;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 
-public class GUIClientCommand extends SimpleCommand implements OSGiContext {
+public class GUIClientCommand extends SimpleCommand {
 
     private BundleContext context;
     private Main clientMain;
 
     public GUIClientCommand(Main clientMain) {
-        this.clientMain = clientMain;
+        this(clientMain, FrameworkUtil.getBundle(GUIClientCommand.class).getBundleContext());
     }
-
-    @Override
-    public void setBundleContext(BundleContext context) {
+    
+    GUIClientCommand(Main clientMain, BundleContext context) {
         this.context = context;
+        this.clientMain = clientMain;
     }
     
     @Override
