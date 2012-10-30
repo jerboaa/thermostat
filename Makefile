@@ -2,6 +2,10 @@ MAVEN           ?= mvn
 SKIP_TESTS      ?= false
 REPO_LOC        ?= $(HOME)/.thermostat/.build/mvn_repository
 MAVEN_FLAGS     ?= 
+USE_VNC         ?= false
+VNC             ?= vncserver
+VNC_DISPLAY     ?= :10
+VNC_FLAGS       ?= -SecurityTypes None
 
 #
 # Do not change anything below
@@ -12,6 +16,10 @@ POM             = pom.xml
 
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_SKIP_TEST = -Dmaven.test.skip=true
+endif
+
+ifeq ($(USE_VNC),true)
+	DISPLAY = $(VNC_DISPLAY)
 endif
 
 # Default to cleaning the local repo and building core + eclipse
@@ -38,7 +46,13 @@ jfreechart-p2: jfreechart-deps
 	$(MAVEN) -f eclipse/jfreechart-p2-repository/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
 eclipse: eclipse-test-p2 jfreechart-p2
-	$(MAVEN) -f eclipse/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
+ifeq ($(USE_VNC),true)
+	$(VNC) $(VNC_DISPLAY) $(VNC_FLAGS)
+endif
+	-$(MAVEN) -f eclipse/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
+ifeq ($(USE_VNC),true)
+	$(VNC) -kill $(VNC_DISPLAY)
+endif
 
 create-repo-dir:
 	mkdir -p $(REPO_LOC)
