@@ -34,45 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.model;
+package com.redhat.thermostat.eclipse.internal.controllers;
 
-import org.eclipse.jface.viewers.LabelProvider;
-import org.eclipse.swt.graphics.Image;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.JobChangeAdapter;
+import org.eclipse.jface.action.Action;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.eclipse.internal.Activator;
+import com.redhat.thermostat.eclipse.internal.views.HostsVmsTreeViewPart;
 
-public class HostsVmsLabelProvider extends LabelProvider {
+public class ConnectionJobListener extends JobChangeAdapter {
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.eclipse.jface.viewers.LabelProvider#getImage(java.lang.Object)
-     */
-    @Override
-    public Image getImage(Object element) {
-        return null;
+    private HostsVmsTreeViewPart view;
+    private Action connectAction;
+    
+    public ConnectionJobListener(Action connectAction, HostsVmsTreeViewPart view) {
+        this.view = view;
+        this.connectAction = connectAction;
     }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see org.eclipse.jface.viewers.LabelProvider#getText(java.lang.Object)
-     */
+    
     @Override
-    public String getText(Object element) {
-        if (element instanceof HostRef) {
-            return ((HostRef) element).getHostName();
-        } else if (element instanceof VmRef) {
-            return ((VmRef) element).getName();
-        } else {
-            throw unknownElement(element);
+    public void done(IJobChangeEvent event) {
+        IStatus result = event.getResult();
+        if (result.isOK()) {
+            connectAction.setImageDescriptor(Activator
+                    .getImageDescriptor("icons/online.png"));
+            connectAction.setEnabled(!Activator.getDefault().isDbConnected());
+            connectAction.setToolTipText("Online");
+            view.showHostVmsPage();
         }
     }
-
-    private RuntimeException unknownElement(Object element) {
-        return new RuntimeException("Unknown type of element in tree of type "
-                + element.getClass().getName());
-    }
-
 }

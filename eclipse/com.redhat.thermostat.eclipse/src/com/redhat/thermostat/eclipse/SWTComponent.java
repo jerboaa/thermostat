@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.views;
+package com.redhat.thermostat.eclipse;
 
 import org.eclipse.swt.widgets.Composite;
 

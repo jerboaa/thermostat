@@ -52,7 +52,6 @@ import org.eclipse.ui.part.ViewPart;
 
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
-import com.redhat.thermostat.eclipse.views.HostsVmsTreeViewPart;
 
 public abstract class RefViewPart<T extends Ref> extends ViewPart implements ISelectionListener {
 
@@ -76,7 +75,7 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements ISe
         // Check for an existing selection
         boolean selected = false;
         IViewPart part = getWorkbenchWindow().getActivePage().findView(ThermostatConstants.VIEW_ID_HOST_VM);
-        if (part != null && part instanceof HostsVmsTreeViewPart) {
+        if (part != null) {
             ISelection selection = part.getSite().getSelectionProvider().getSelection();
             if (selection instanceof IStructuredSelection) {
                 handleSelection(selection);
@@ -113,7 +112,7 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements ISe
         // We must have received createPartControl
         if (parent != null && !parent.isDisposed()) {
             // Check if a HostRef has been selected
-            if (part instanceof HostsVmsTreeViewPart) {
+            if (part.getSite().getId().equals(ThermostatConstants.VIEW_ID_HOST_VM)) {
                 if (selection instanceof IStructuredSelection) {
                     handleSelection(selection);
                 }

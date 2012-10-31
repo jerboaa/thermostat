@@ -42,7 +42,7 @@ import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.views.SWTComponent;
+import com.redhat.thermostat.eclipse.SWTComponent;
 
 public class VmGcViewPart extends VmRefViewPart {
 

@@ -40,6 +40,8 @@ import org.eclipse.core.runtime.ILog;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 
+import com.redhat.thermostat.eclipse.internal.Activator;
+
 public class LoggerFacility {
 
     private ILog log;

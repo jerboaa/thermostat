@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Thermostat Eclipse Client
-Bundle-Activator: com.redhat.thermostat.eclipse.Activator
+Bundle-Activator: com.redhat.thermostat.eclipse.internal.Activator
 Bundle-SymbolicName: com.redhat.thermostat.eclipse;singleton:=true
 Bundle-Version: 0.5.0.qualifier
 Bundle-Vendor: Red Hat Inc.
@@ -21,6 +21,9 @@ Import-Package: com.mongodb,
  com.redhat.thermostat.launcher,
  com.redhat.thermostat.web.client,
  com.redhat.thermostat.web.common
-Export-Package: com.redhat.thermostat.eclipse;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.chart.common,com.redhat.thermostat.eclipse.test.ui",
- com.redhat.thermostat.eclipse.model;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.chart.common,com.redhat.thermostat.eclipse.test.ui",
- com.redhat.thermostat.eclipse.views;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.chart.common,com.redhat.thermostat.eclipse.test.ui"
+Export-Package: com.redhat.thermostat.eclipse,
+ com.redhat.thermostat.eclipse.internal;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
+ com.redhat.thermostat.eclipse.internal.controllers;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
+ com.redhat.thermostat.eclipse.internal.jobs;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
+ com.redhat.thermostat.eclipse.internal.model;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
+ com.redhat.thermostat.eclipse.internal.views;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui"

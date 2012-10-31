@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.jobs;
+package com.redhat.thermostat.eclipse.internal.jobs;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -43,9 +43,9 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.storage.ConnectionException;
-import com.redhat.thermostat.eclipse.Activator;
-import com.redhat.thermostat.eclipse.ConnectionConfiguration;
 import com.redhat.thermostat.eclipse.LoggerFacility;
+import com.redhat.thermostat.eclipse.internal.Activator;
+import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
 import com.redhat.thermostat.launcher.DbService;
 import com.redhat.thermostat.launcher.DbServiceFactory;
 

@@ -34,11 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.model;
+package com.redhat.thermostat.eclipse.internal.controllers;
 
-/**
- * A dummy root object, since the Hosts don't have a real root.
- */
-public class HostsVmsTreeRoot {
-    // nothing
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.action.Action;
+
+public class ConnectDBAction extends Action {
+    
+    private Job connectJob;
+    
+    public ConnectDBAction(Job job) {
+        this.connectJob = job;
+    }
+    
+    @Override
+    public void run() {
+        connectJob.schedule();
+    }
+
 }

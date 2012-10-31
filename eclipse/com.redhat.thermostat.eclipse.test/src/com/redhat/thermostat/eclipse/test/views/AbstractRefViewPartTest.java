@@ -53,10 +53,10 @@ import org.junit.Before;
 
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.RefViewPart;
-import com.redhat.thermostat.eclipse.views.HostsVmsTreeViewPart;
-import com.redhat.thermostat.eclipse.views.SWTComponent;
+import com.redhat.thermostat.eclipse.internal.views.HostsVmsTreeViewPart;
 
 public abstract class AbstractRefViewPartTest<T extends Ref> {
 
@@ -96,7 +96,8 @@ public abstract class AbstractRefViewPartTest<T extends Ref> {
         // Selection mocks
         IWorkbenchPartSite site = mock(IWorkbenchPartSite.class);
         provider = mock(ISelectionProvider.class);
-    
+ 
+        when(site.getId()).thenReturn(ThermostatConstants.VIEW_ID_HOST_VM);
         when(site.getSelectionProvider()).thenReturn(provider);
         when(hostVMView.getSite()).thenReturn(site);
     }

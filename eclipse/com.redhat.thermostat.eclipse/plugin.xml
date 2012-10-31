@@ -46,14 +46,14 @@
       </category>
       <view
             category="com.redhat.thermostat.eclipse.main"
-            class="com.redhat.thermostat.eclipse.views.HostsVmsTreeViewPart"
+            class="com.redhat.thermostat.eclipse.internal.views.HostsVmsTreeViewPart"
             id="com.redhat.thermostat.eclipse.vmtree"
             name="Hosts/VMs"
             restorable="true">
       </view>
       <view
             category="com.redhat.thermostat.eclipse.main"
-            class="com.redhat.thermostat.eclipse.views.HostOverviewViewPart"
+            class="com.redhat.thermostat.eclipse.internal.views.HostOverviewViewPart"
             id="com.redhat.thermostat.eclipse.mainContainer"
             name="Host Overview"
             restorable="true">
@@ -62,7 +62,7 @@
    <extension
          point="org.eclipse.ui.perspectives">
       <perspective
-            class="com.redhat.thermostat.eclipse.views.ThermostatPerspectiveFactory"
+            class="com.redhat.thermostat.eclipse.internal.views.ThermostatPerspectiveFactory"
             id="com.redhat.thermostat.eclipse.perspective"
             name="Thermostat">
       </perspective>

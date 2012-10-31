@@ -50,7 +50,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.eclipse.ThermostatConstants;
-import com.redhat.thermostat.eclipse.views.ThermostatPerspectiveFactory;
+import com.redhat.thermostat.eclipse.internal.views.ThermostatPerspectiveFactory;
 
 public class ThermostatPerspectiveTest {
     

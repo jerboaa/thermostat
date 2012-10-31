@@ -34,22 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.controllers;
+package com.redhat.thermostat.eclipse.internal;
 
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jface.action.Action;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 
-public class ConnectDBAction extends Action {
+public class ConnectionConfiguration implements StartupConfiguration {
+
+    private String dbUrl;
+    private String username;
+    private String password;
     
-    private Job connectJob;
-    
-    public ConnectDBAction(Job job) {
-        this.connectJob = job;
+    public ConnectionConfiguration(String username, String password, String dbUrl) {
+        this.dbUrl = dbUrl;
+        this.username = username;
+        this.password = password;
     }
-    
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
     @Override
-    public void run() {
-        connectJob.schedule();
+    public String getDBConnectionString() {
+        return dbUrl;
     }
 
 }

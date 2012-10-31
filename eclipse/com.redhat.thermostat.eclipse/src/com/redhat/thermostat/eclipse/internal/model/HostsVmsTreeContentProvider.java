@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.model;
+package com.redhat.thermostat.eclipse.internal.model;
 
 import java.util.HashMap;
 import java.util.Map;

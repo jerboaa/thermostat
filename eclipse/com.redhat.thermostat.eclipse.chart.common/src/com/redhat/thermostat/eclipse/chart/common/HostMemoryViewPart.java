@@ -42,7 +42,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.views.SWTComponent;
+import com.redhat.thermostat.eclipse.SWTComponent;
 
 public class HostMemoryViewPart extends HostRefViewPart {
 

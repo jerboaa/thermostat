@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.views;
+package com.redhat.thermostat.eclipse.internal.views;
 
 import org.eclipse.jface.viewers.ArrayContentProvider;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
@@ -68,8 +68,8 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.Activator;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
+import com.redhat.thermostat.eclipse.internal.Activator;
 
 public class HostOverviewViewPart extends ViewPart {
 

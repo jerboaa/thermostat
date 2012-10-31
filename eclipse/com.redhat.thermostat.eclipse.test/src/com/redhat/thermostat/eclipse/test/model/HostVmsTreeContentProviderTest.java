@@ -53,8 +53,8 @@ import org.junit.Test;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.eclipse.model.HostsVmsTreeContentProvider;
-import com.redhat.thermostat.eclipse.model.HostsVmsTreeRoot;
+import com.redhat.thermostat.eclipse.internal.model.HostsVmsTreeContentProvider;
+import com.redhat.thermostat.eclipse.internal.model.HostsVmsTreeRoot;
 
 public class HostVmsTreeContentProviderTest {
 

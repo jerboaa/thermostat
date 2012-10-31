@@ -41,7 +41,7 @@ import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.views.SWTComponent;
+import com.redhat.thermostat.eclipse.SWTComponent;
 
 public class VmCpuViewPart extends VmRefViewPart {
 

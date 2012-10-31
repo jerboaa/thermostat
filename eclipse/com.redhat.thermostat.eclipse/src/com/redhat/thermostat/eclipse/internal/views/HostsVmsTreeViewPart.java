@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.views;
+package com.redhat.thermostat.eclipse.internal.views;
 
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
@@ -56,14 +56,14 @@ import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.Activator;
-import com.redhat.thermostat.eclipse.ConnectionConfiguration;
-import com.redhat.thermostat.eclipse.controllers.ConnectDBAction;
-import com.redhat.thermostat.eclipse.controllers.ConnectionJobListener;
-import com.redhat.thermostat.eclipse.jobs.ConnectDbJob;
-import com.redhat.thermostat.eclipse.model.HostsVmsLabelProvider;
-import com.redhat.thermostat.eclipse.model.HostsVmsTreeContentProvider;
-import com.redhat.thermostat.eclipse.model.HostsVmsTreeRoot;
+import com.redhat.thermostat.eclipse.internal.Activator;
+import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
+import com.redhat.thermostat.eclipse.internal.controllers.ConnectDBAction;
+import com.redhat.thermostat.eclipse.internal.controllers.ConnectionJobListener;
+import com.redhat.thermostat.eclipse.internal.jobs.ConnectDbJob;
+import com.redhat.thermostat.eclipse.internal.model.HostsVmsLabelProvider;
+import com.redhat.thermostat.eclipse.internal.model.HostsVmsTreeContentProvider;
+import com.redhat.thermostat.eclipse.internal.model.HostsVmsTreeRoot;
 
 /**
  * 

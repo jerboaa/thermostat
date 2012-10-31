@@ -34,33 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse;
+package com.redhat.thermostat.eclipse.internal.model;
 
-import com.redhat.thermostat.common.config.StartupConfiguration;
-
-public class ConnectionConfiguration implements StartupConfiguration {
-
-    private String dbUrl;
-    private String username;
-    private String password;
-    
-    public ConnectionConfiguration(String username, String password, String dbUrl) {
-        this.dbUrl = dbUrl;
-        this.username = username;
-        this.password = password;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    @Override
-    public String getDBConnectionString() {
-        return dbUrl;
-    }
-
+/**
+ * A dummy root object, since the Hosts don't have a real root.
+ */
+public class HostsVmsTreeRoot {
+    // nothing
 }
