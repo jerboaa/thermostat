@@ -54,7 +54,6 @@ public class GCCommandActivator implements BundleActivator {
         tracker = new ServiceTracker(context, RequestQueue.class, null) {
             @Override
             public Object addingService(ServiceReference reference) {
-                System.err.println("starting GCCommandActivator");
                 
                 RequestQueue requestqueue = (RequestQueue) context.getService(reference);
                 
