@@ -52,7 +52,7 @@ public class Activator implements BundleActivator {
     
     @Override
     public void start(BundleContext context) throws Exception {        
-        logger.log(Level.FINE, "activating thermostat-process bundles");
+        logger.log(Level.INFO, "activating thermostat-process bundles");
         
         Hashtable<String, String> props = new Hashtable<String, String>();
         props.put(UNIXProcessHandler.ID, UNIXProcessHandler.ID);
