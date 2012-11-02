@@ -1,0 +1,103 @@
+#!/usr/bin/env python
+
+import sys
+import os
+
+ignore_dir_names = [
+    'target',
+    '.hg',
+    '.eclipse',
+    '.cp',
+    '.settings',
+]
+
+ignore_file_extensions = [
+    '~',
+    '.patch',
+    '.log',
+    '.classpath',
+    '.project',
+    '.hgignore',
+    '.hgtags',
+    '.desktop',
+]
+
+text_file_extensions = [
+    '.xml',
+    '.java',
+    '.c',
+    '.text',
+    '.properties',
+    '.MF',
+    '.txt',
+    '.inf',
+    '.sh',
+    'README',
+    'LICENSE',
+    'COPYING',
+    'Makefile',
+]
+
+binary_file_extensions = [
+    '.jar',
+    '.class',
+    '.svg',
+    '.png',
+    '.gif',
+    '.gz',
+]
+
+
+def walk_dir(top_dir, ignore):
+    for dirpath, dirnames, filenames in os.walk(top_dir):
+        dirnames[:] = [dn for dn in dirnames if dn not in ignore ]
+        yield dirpath, dirnames, filenames
+
+def find_all_files():
+    all_files = []
+    for dirname, dirnames, filenames in walk_dir('.', ignore_dir_names):
+        for filename in filenames:
+            if not os.path.isdir(filename):
+                all_files.append(os.path.join(dirname, filename))
+
+    #print('\n'.join(all_files))
+    return all_files
+
+def is_text_file(file_name):
+
+    text_file = len([True for extension in text_file_extensions if file_name.endswith(extension) ]) > 0
+    binary_file = len([True for extension in binary_file_extensions if file_name.endswith(extension) ]) > 0
+    ignore = len([True for extension in ignore_file_extensions if file_name.endswith(extension)]) > 0
+
+    if text_file:
+        return True
+    elif binary_file:
+        return False
+    elif ignore:
+        return False
+    else:
+        print('Warning: No idea about ' + file_name)
+        return True
+
+
+def missing_license(file_name):
+    lines = open(file_name).readlines()
+    return len([ line for line in lines if 'GNU General Public License' in line ]) == 0
+
+def main(args):
+
+    all_files = find_all_files()
+
+    files_to_process = filter(is_text_file, all_files)
+
+    problematic_files = filter(missing_license, files_to_process)
+
+    if len(problematic_files) == 0:
+        return 0
+
+    for file in problematic_files:
+        print(file)
+    return 1
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))
