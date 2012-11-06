@@ -45,15 +45,18 @@ public class MongoStorageProvider implements StorageProvider {
 
     private StartupConfiguration configuration;
 
-    public MongoStorageProvider(StartupConfiguration configuration) {
+    public void setConfig(StartupConfiguration configuration) {
         this.configuration = configuration;
     }
 
     @Override
     public Storage createStorage() {
-        BundleContext ctx = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        Storage restStorage = (Storage) ctx.getService(ctx.getServiceReference("com.redhat.thermostat.web.client.RESTStorage"));
-        return restStorage;
+        return new MongoStorage(configuration);
+    }
+
+    @Override
+    public boolean canHandleProtocol() {
+        return configuration.getDBConnectionString().startsWith("mongodb://");
     }
 
 }

@@ -72,8 +72,8 @@ import com.redhat.thermostat.common.storage.Connection;
 import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.storage.Connection.ConnectionType;
-import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.common.storage.StorageProviderUtil;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -91,7 +91,7 @@ public class Main {
     public Main(Keyring keyring, UiFacadeFactory uiFacadeFactory, String[] args) {
         ClientPreferences prefs = new ClientPreferences(keyring);
         StartupConfiguration config = new ConnectionConfiguration(prefs);
-        StorageProvider connProv = new MongoStorageProvider(config);
+        StorageProvider connProv = StorageProviderUtil.getStorageProvider(config);
 
         DAOFactory daoFactory = new DAOFactoryImpl(connProv);
         TimerFactory timerFactory = new ThreadPoolTimerFactory(1);

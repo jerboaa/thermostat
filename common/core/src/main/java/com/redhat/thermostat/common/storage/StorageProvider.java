@@ -36,8 +36,14 @@
 
 package com.redhat.thermostat.common.storage;
 
+import com.redhat.thermostat.common.config.StartupConfiguration;
+
 public interface StorageProvider {
 
     Storage createStorage();
+    
+    void setConfig(StartupConfiguration config);
+    
+    boolean canHandleProtocol();
 
 }

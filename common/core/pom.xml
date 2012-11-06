@@ -77,6 +77,7 @@
           <instructions>
             <Bundle-SymbolicName>com.redhat.thermostat.common.core</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
+            <Bundle-Activator>com.redhat.thermostat.common.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.common.cli,
               com.redhat.thermostat.common.tools,

@@ -85,6 +85,8 @@ public class RESTStorageEndPoint extends HttpServlet {
     private Storage storage;
     private Gson gson;
 
+    static final String STORAGE_ENDPOINT = "storageEndpoint";
+    
     private int currentCategoryId;
 
     private Map<String, Integer> categoryIds;

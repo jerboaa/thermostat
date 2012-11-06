@@ -82,7 +82,7 @@ public class ClientPreferences {
     }
     
     public String getConnectionUrl() {
-        return prefs.get(CONNECTION_URL, "mongodb://127.0.0.1:27518");
+        return prefs.get(CONNECTION_URL, "http://127.0.0.1:8082");
     }
 
     public String getPassword() {

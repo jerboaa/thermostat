@@ -41,10 +41,12 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.DbService;
+import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.common.storage.ConnectionException;
-import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.common.storage.StorageProviderUtil;
 
 public class DbServiceImpl implements DbService {
     
@@ -55,7 +57,7 @@ public class DbServiceImpl implements DbService {
     private BundleContext context;
     
     DbServiceImpl(String username, String password, String dbUrl) {
-        this(FrameworkUtil.getBundle(DbService.class).getBundleContext(), new DAOFactoryImpl(new MongoStorageProvider(new ConnectionConfiguration(dbUrl, username, password))));
+        this(FrameworkUtil.getBundle(DbService.class).getBundleContext(), getDAOFactory(username, password, dbUrl));
     }
 
     DbServiceImpl(BundleContext context, DAOFactory daoFactory) {
@@ -86,4 +88,11 @@ public class DbServiceImpl implements DbService {
     public static DbService create(String username, String password, String dbUrl) {
         return new DbServiceImpl(username, password, dbUrl);
     }
+
+    private static DAOFactory getDAOFactory(String username, String password, String dbUrl) {
+        StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
+        StorageProvider prov = StorageProviderUtil.getStorageProvider(config);
+        return new DAOFactoryImpl(prov);
+    }
+    
 }

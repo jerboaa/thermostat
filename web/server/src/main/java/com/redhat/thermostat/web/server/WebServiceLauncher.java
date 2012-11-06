@@ -37,31 +37,43 @@
 
 package com.redhat.thermostat.web.server;
 
-import java.util.Arrays;
-
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+class WebServiceLauncher {
 
-public class Activator implements BundleActivator {
+    private Server server;
+    private String storageURL;
+    private int port;
 
-    private CommandRegistry reg;
+    void start() throws Exception {
+        server = new Server(port);
+        ServletHandler handler = new ServletHandler();
+        ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new RESTStorageEndPoint());
+        servletHolder.setInitParameter(RESTStorageEndPoint.STORAGE_ENDPOINT, storageURL);
+        handler.setServlets(new ServletHolder[] { servletHolder });
+        ServletMapping mapping = new ServletMapping();
+        mapping.setPathSpec("/");
+        mapping.setServletName("rest-storage-end-point");
+        handler.setServletMappings(new ServletMapping[] { mapping });
+        server.setHandler(handler); //new WebAppContext("/home/rkennke/src/thermostat/distribution/target/libs/thermostat-web-server-0.5.0-SNAPSHOT.war", "/"));
+        server.start();
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        reg = new CommandRegistryImpl(context);
-        reg.registerCommands(Arrays.asList(new WebServiceCommand()));
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        reg.unregisterCommands();
+    void stop() throws Exception {
+        server.stop();
+        server.join();
+
     }
 
+    public void setStorageURL(String storageURL) {
+        this.storageURL = storageURL;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 }

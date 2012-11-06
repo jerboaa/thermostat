@@ -37,31 +37,40 @@
 
 package com.redhat.thermostat.web.server;
 
-import java.util.Arrays;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleCommand;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlet.ServletMapping;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
+public class WebServiceCommand extends SimpleCommand {
 
-import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-
-public class Activator implements BundleActivator {
-
-    private CommandRegistry reg;
-
-    @Override
-    public void start(BundleContext context) throws Exception {
-        reg = new CommandRegistryImpl(context);
-        reg.registerCommands(Arrays.asList(new WebServiceCommand()));
+    public WebServiceCommand() {
+        // TODO Auto-generated constructor stub
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        reg.unregisterCommands();
+    public void run(CommandContext ctx) throws CommandException {
+        String storageURL = ctx.getArguments().getArgument("storageURL");
+        String port = ctx.getArguments().getArgument("port");
+        WebServiceLauncher webServiceLauncher = new WebServiceLauncher();
+        webServiceLauncher.setStorageURL(storageURL);
+        webServiceLauncher.setPort(Integer.parseInt(port));
+        try {
+            webServiceLauncher.start();
+            synchronized(this) {wait();}
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            throw new CommandException(ex);
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "webservice";
+    }
+
+    @Override
+    public boolean isStorageRequired() {
+        return false;
     }
 
 }

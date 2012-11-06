@@ -69,6 +69,7 @@ import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
 import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.common.storage.StorageProviderUtil;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -248,7 +249,7 @@ public final class AgentApplication extends BasicCommand {
 
     static class DAOFactoryCreator {
         public DAOFactory create(AgentStartupConfiguration config) {
-            StorageProvider connProv = new MongoStorageProvider(config);
+            StorageProvider connProv = StorageProviderUtil.getStorageProvider(config);
             final DAOFactory daoFactory = new DAOFactoryImpl(connProv);
             return daoFactory;
         }

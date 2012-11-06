@@ -40,6 +40,8 @@ package com.redhat.thermostat.web.common;
 import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.storage.MongoStorage;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.common.storage.StorageProviderUtil;
 
 public class StorageWrapper {
 
@@ -55,7 +57,8 @@ public class StorageWrapper {
                 return "mongodb://127.0.0.1:27518";
             }
         };
-        storage = new MongoStorage(conf);
+        StorageProvider provider = StorageProviderUtil.getStorageProvider(conf);
+        storage = provider.createStorage();
         storage.getConnection().connect();
         return storage;
     }
