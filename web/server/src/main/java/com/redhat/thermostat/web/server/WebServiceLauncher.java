@@ -37,19 +37,35 @@
 
 package com.redhat.thermostat.web.server;
 
+import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.nio.SelectChannelConnector;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
+
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 class WebServiceLauncher {
 
     private Server server;
     private String storageURL;
-    private int port;
+    private int port = -1;
+    
+    WebServiceLauncher() {
+        server = new Server();
+    }
+    
+    // Constructor for testing
+    WebServiceLauncher(Server server) {
+        this.server = server;
+    }
 
     void start() throws Exception {
-        server = new Server(port);
+        checkConfig();
+        Connector connector = new SelectChannelConnector();
+        connector.setPort(port);
+        server.setConnectors(new Connector[] { connector } );
         ServletHandler handler = new ServletHandler();
         ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new WebStorageEndPoint());
         servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_ENDPOINT, storageURL);
@@ -58,15 +74,14 @@ class WebServiceLauncher {
         mapping.setPathSpec("/");
         mapping.setServletName("rest-storage-end-point");
         handler.setServletMappings(new ServletMapping[] { mapping });
-        server.setHandler(handler); //new WebAppContext("/home/rkennke/src/thermostat/distribution/target/libs/thermostat-web-server-0.5.0-SNAPSHOT.war", "/"));
+        server.setHandler(handler);
         server.start();
-
+        server.join();
     }
 
     void stop() throws Exception {
         server.stop();
         server.join();
-
     }
 
     public void setStorageURL(String storageURL) {
@@ -75,5 +90,17 @@ class WebServiceLauncher {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    /*
+     * StorageURL, port must have been set
+     */
+    private void checkConfig() throws InvalidConfigurationException {
+        if (port <= 0) {
+            throw new InvalidConfigurationException("Invalid port number: " + port);
+        }
+        if (storageURL == null) {
+            throw new InvalidConfigurationException("Storage URL must be set");
+        }
     }
 }
