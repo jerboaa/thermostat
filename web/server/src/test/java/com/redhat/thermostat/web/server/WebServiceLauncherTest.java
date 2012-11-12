@@ -40,8 +40,12 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jetty.server.Server;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -50,23 +54,32 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 public class WebServiceLauncherTest {
     
     private WebServiceLauncher launcher;
+    private List<IpPortPair> dummyIp;
+    
+    @Before
+    public void setUp() {
+        dummyIp = new ArrayList<IpPortPair>();
+        dummyIp.add(new IpPortPair("127.0.0.1", 8889));
+    }
     
     @After
     public void tearDown() {
         launcher = null;
-    }
-    
-    @Test( expected=InvalidConfigurationException.class )
-    public void unsetPortThrowsException() throws Exception {
-        launcher = new WebServiceLauncher();
-        launcher.setStorageURL("mongodb://127.0.0.1:27518");
-        launcher.start();
+        dummyIp = null;
     }
     
     @Test( expected=InvalidConfigurationException.class )
     public void unsetStorageURLThrowsException() throws Exception {
         launcher = new WebServiceLauncher();
-        launcher.setPort(20);
+        launcher.setIpAddresses(dummyIp);
+        launcher.start();
+    }
+    
+    @Test( expected=InvalidConfigurationException.class )
+    public void unsetIpAddressesThrowsException() throws Exception {
+        launcher = new WebServiceLauncher();
+        launcher.setStorageURL("something not null");
+        launcher.setIpAddresses(null);
         launcher.start();
     }
     
@@ -75,14 +88,18 @@ public class WebServiceLauncherTest {
         int excptnsThrown = 0;
         int excptnsExpected = 2;
         launcher = new WebServiceLauncher();
+        List<IpPortPair> ips = new ArrayList<>();
+        ips.add(new IpPortPair("127.0.0.1", -10));
         try {
-            launcher.setPort(-10);
+            launcher.setIpAddresses(ips);
             launcher.start();
         } catch (InvalidConfigurationException e) {
             excptnsThrown++;
         }
+        ips = new ArrayList<>();
+        ips.add(new IpPortPair("127.0.0.1", 0));
         try {
-            launcher.setPort(0);
+            launcher.setIpAddresses(ips);
             launcher.start();
         } catch (InvalidConfigurationException e) {
             excptnsThrown++;
@@ -95,7 +112,7 @@ public class WebServiceLauncherTest {
     public void verifyStartDoesStartServer() throws Exception {
         Server server = mock(Server.class);
         WebServiceLauncher launcher = new WebServiceLauncher(server);
-        launcher.setPort(50);
+        launcher.setIpAddresses(dummyIp);
         launcher.setStorageURL("mongodb://test.example.org/db");
         launcher.start();
         verify(server).start();

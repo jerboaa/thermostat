@@ -40,6 +40,9 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Matchers.any;
+
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -75,19 +78,20 @@ public class WebServiceCommandTest {
         launcher = null;
     }
     
+    @SuppressWarnings("unchecked")
     @Test
     public void verifyLauncherStart() throws Exception {
         SimpleArguments args = new SimpleArguments();
         String storageUrl = "mongodb://127.0.0.1:27518";
         args.addArgument("storageURL", storageUrl);
-        args.addArgument("port", "8082");
+        args.addArgument("bindAddrs", "127.0.0.1:8888,127.0.0.2:9999");
         try {
             cmd.run(cmdCtxFactory.createContext(args));
         } catch (CommandException e) {
             fail("should not throw exception");
         }
-        verify(launcher).setPort(8082);
         verify(launcher).setStorageURL(storageUrl);
+        verify(launcher).setIpAddresses(any(List.class));
         verify(launcher).start();
     }
 }

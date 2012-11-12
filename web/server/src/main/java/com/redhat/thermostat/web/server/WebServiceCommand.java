@@ -37,9 +37,12 @@
 
 package com.redhat.thermostat.web.server;
 
+import java.util.List;
+
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.web.server.internal.IpPortsParser;
 
 public class WebServiceCommand extends SimpleCommand {
 
@@ -57,9 +60,8 @@ public class WebServiceCommand extends SimpleCommand {
     @Override
     public void run(CommandContext ctx) throws CommandException {
         String storageURL = ctx.getArguments().getArgument("storageURL");
-        String port = ctx.getArguments().getArgument("port");
+        serviceLauncher.setIpAddresses(parseIPsPorts(ctx.getArguments().getArgument("bindAddrs")));
         serviceLauncher.setStorageURL(storageURL);
-        serviceLauncher.setPort(Integer.parseInt(port));
         try {
             // this blocks
             serviceLauncher.start();
@@ -85,6 +87,16 @@ public class WebServiceCommand extends SimpleCommand {
     @Override
     public boolean isStorageRequired() {
         return false;
+    }
+
+    private List<IpPortPair> parseIPsPorts(String rawIpsPorts) throws CommandException {
+        IpPortsParser parser = new IpPortsParser(rawIpsPorts);
+        try {
+           parser.parse(); 
+        } catch (IllegalArgumentException e) {
+            throw new CommandException(e);
+        }
+        return parser.getIpsPorts();
     }
 
 }
