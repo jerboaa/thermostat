@@ -10,7 +10,9 @@ public class WebStorageProvider implements StorageProvider {
     
     @Override
     public Storage createStorage() {
-        return new WebStorage();
+        WebStorage storage = new WebStorage();
+        storage.setEndpoint(config.getDBConnectionString());
+        return storage;
     }
 
     @Override

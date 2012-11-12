@@ -95,8 +95,13 @@ public class WebStorage extends Storage {
 
         @Override
         public void connect() {
-            connected = true;
-            fireChanged(ConnectionStatus.CONNECTED);
+            try {
+                ping();
+                connected = true;
+                fireChanged(ConnectionStatus.CONNECTED);
+            } catch (IOException ex) {
+                fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
+            }
         }
         @Override
         public String getUrl() {
@@ -111,9 +116,18 @@ public class WebStorage extends Storage {
     private Gson gson;
 
     public WebStorage() {
-        endpoint = "http://localhost:8082";
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
+    }
+
+    private void ping() throws IOException {
+        HttpClient httpClient = new DefaultHttpClient();
+        HttpPost httpPost = new HttpPost(endpoint + "/ping");
+        HttpResponse response = httpClient.execute(httpPost);
+        StatusLine status = response.getStatusLine();
+        if (status.getStatusCode() != 200) {
+            throw new IOException("Server returned status: " + status);
+        }
     }
 
     @Override

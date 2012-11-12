@@ -126,7 +126,13 @@ public class WebStorageEndPoint extends HttpServlet {
             loadFile(req, resp);
         } else if (cmd.equals("purge")) {
             purge(req, resp);
+        } else if (cmd.equals("ping")) {
+            ping(req, resp);
         }
+    }
+
+    private void ping(HttpServletRequest req, HttpServletResponse resp) {
+        resp.setStatus(HttpServletResponse.SC_OK);
     }
 
     private void purge(HttpServletRequest req, HttpServletResponse resp) {
