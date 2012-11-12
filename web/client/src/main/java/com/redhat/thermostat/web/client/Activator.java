@@ -50,7 +50,7 @@ public class Activator implements BundleActivator {
     
     @Override
     public void start(BundleContext context) throws Exception {
-        RESTStorageProvider storage = new RESTStorageProvider();
+        WebStorageProvider storage = new WebStorageProvider();
         this.reg = context.registerService(StorageProvider.class.getName(), storage, null);
     }
 

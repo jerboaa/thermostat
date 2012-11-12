@@ -82,14 +82,14 @@ import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
-import com.redhat.thermostat.web.client.RESTStorage;
-import com.redhat.thermostat.web.common.RESTQuery;
+import com.redhat.thermostat.web.client.WebStorage;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
-public class RESTStorageEndpointTest {
+public class WebStorageEndpointTest {
 
     @Entity
     public static class TestClass extends BasePojo {
@@ -183,7 +183,7 @@ public class RESTStorageEndpointTest {
         Query mockQuery = QueryTestHelper.createMockQuery();
         when(mockStorage.createQuery()).thenReturn(mockQuery);
 
-        RESTStorage restStorage = new RESTStorage();
+        WebStorage restStorage = new WebStorage();
         restStorage.setEndpoint(getEndpoint());
         restStorage.registerCategory(category);
         Query query = restStorage.createQuery();
@@ -221,7 +221,7 @@ public class RESTStorageEndpointTest {
         conn.setDoOutput(true);
         Map<Category,Integer> categoryIdMap = new HashMap<>();
         categoryIdMap.put(category, categoryId);
-        RESTQuery query = (RESTQuery) new RESTQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff");
+        WebQuery query = (WebQuery) new WebQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff");
         query.setResultClassName(TestClass.class.getName());
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());

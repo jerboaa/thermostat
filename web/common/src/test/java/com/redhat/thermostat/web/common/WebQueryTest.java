@@ -1,3 +1,19 @@
+package com.redhat.thermostat.web.common;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.common.storage.Category;
+import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.web.common.Qualifier;
+import com.redhat.thermostat.web.common.WebQuery;
+
 /*
  * Copyright 2012 Red Hat, Inc.
  *
@@ -34,70 +50,24 @@
  * to do so, delete this exception statement from your version.
  */
 
+public class WebQueryTest {
 
-package com.redhat.thermostat.web.common;
+    @Test
+    public void test() {
+        Key<String> key1 = new Key<>("testkey", true);
+        Category category = new Category("test", key1);
+        Map<Category,Integer> categoryIdMap = new HashMap<>();
+        categoryIdMap.put(category, 42);
+        WebQuery query = new WebQuery(categoryIdMap);
+        query.from(category).where(key1, Criteria.EQUALS, "fluff");
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+        List<Qualifier<?>> qualifiers = query.getQualifiers();
+        assertEquals(1, qualifiers.size());
+        Qualifier<?> qualifier = qualifiers.get(0);
+        assertEquals(key1, qualifier.getKey());
+        assertEquals(Criteria.EQUALS, qualifier.getCriteria());
+        assertEquals("fluff", qualifier.getValue());
 
-import com.redhat.thermostat.common.storage.AbstractQuery;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-
-public class RESTQuery extends AbstractQuery {
-
-    private List<Qualifier<?>> qualifiers;
-    private String resultClassName;
-
-    private transient Map<Category, Integer> categoryIdMap;
-
-    private int categoryId;
-
-    public RESTQuery() {
-        this(null);
+        assertEquals(42, query.getCategoryId());
     }
-
-    public RESTQuery(Map<Category, Integer> categoryIdMap) {
-        qualifiers = new ArrayList<>();
-        this.categoryIdMap = categoryIdMap;
-    }
-
-    @Override
-    public Query from(Category category) {
-        categoryId = categoryIdMap.get(category);
-        return this;
-    }
-
-    public int getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(int categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    @Override
-    public <T> Query where(Key<T> key, Criteria criteria, T value) {
-        qualifiers.add(new Qualifier<>(key, criteria, value));
-        return this;
-    }
-
-    public List<Qualifier<?>> getQualifiers() {
-        return qualifiers;
-    }
-
-    public void setQualifiers(List<Qualifier<?>> qualifiers) {
-        this.qualifiers = qualifiers;
-    }
-
-    public String getResultClassName() {
-        return resultClassName;
-    }
-
-    public void setResultClassName(String resultClassName) {
-        this.resultClassName = resultClassName;
-    }
-
 }

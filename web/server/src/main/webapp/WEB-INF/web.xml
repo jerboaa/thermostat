@@ -7,7 +7,7 @@
 
   <servlet>
     <servlet-name>reststorage-servlet</servlet-name>
-    <servlet-class>com.redhat.thermostat.web.server.RESTStorageEndPoint</servlet-class>
+    <servlet-class>com.redhat.thermostat.web.server.WebStorageEndPoint</servlet-class>
   </servlet>
 
   <servlet-mapping>

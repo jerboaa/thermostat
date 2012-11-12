@@ -43,10 +43,6 @@ import com.redhat.thermostat.common.cli.SimpleCommand;
 
 public class WebServiceCommand extends SimpleCommand {
 
-    public WebServiceCommand() {
-        // TODO Auto-generated constructor stub
-    }
-
     @Override
     public void run(CommandContext ctx) throws CommandException {
         String storageURL = ctx.getArguments().getArgument("storageURL");

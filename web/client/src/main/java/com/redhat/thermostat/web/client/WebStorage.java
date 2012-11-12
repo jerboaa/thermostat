@@ -75,13 +75,13 @@ import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
-import com.redhat.thermostat.web.common.RESTQuery;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
-public class RESTStorage extends Storage {
+public class WebStorage extends Storage {
 
     private final class WebConnection extends Connection {
         WebConnection() {
@@ -110,7 +110,7 @@ public class RESTStorage extends Storage {
     private Map<Category, Integer> categoryIds;
     private Gson gson;
 
-    public RESTStorage() {
+    public WebStorage() {
         endpoint = "http://localhost:8082";
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
@@ -146,7 +146,7 @@ public class RESTStorage extends Storage {
 
     @Override
     public Query createQuery() {
-        return new RESTQuery(categoryIds);
+        return new WebQuery(categoryIds);
     }
 
     @Override
@@ -169,7 +169,7 @@ public class RESTStorage extends Storage {
             conn.setRequestMethod("POST");
             OutputStream out = conn.getOutputStream();
             OutputStreamWriter writer = new OutputStreamWriter(out);
-            ((RESTQuery) query).setResultClassName(resultClass.getName());
+            ((WebQuery) query).setResultClassName(resultClass.getName());
             gson.toJson(query, writer);
             writer.flush();
 
@@ -184,7 +184,7 @@ public class RESTStorage extends Storage {
     @Override
     public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) {
         try {
-            ((RESTQuery) query).setResultClassName(resultClass.getName());
+            ((WebQuery) query).setResultClassName(resultClass.getName());
             URL url = new URL(endpoint + "/find-pojo");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoInput(true);

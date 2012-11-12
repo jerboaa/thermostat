@@ -4,13 +4,13 @@ import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.StorageProvider;
 
-public class RESTStorageProvider implements StorageProvider {
+public class WebStorageProvider implements StorageProvider {
 
     private StartupConfiguration config;
     
     @Override
     public Storage createStorage() {
-        return new RESTStorage();
+        return new WebStorage();
     }
 
     @Override

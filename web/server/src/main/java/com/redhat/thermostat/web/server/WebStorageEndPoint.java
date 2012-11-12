@@ -72,7 +72,7 @@ import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.web.common.Qualifier;
-import com.redhat.thermostat.web.common.RESTQuery;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
@@ -80,7 +80,7 @@ import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
 @SuppressWarnings("serial")
-public class RESTStorageEndPoint extends HttpServlet {
+public class WebStorageEndPoint extends HttpServlet {
 
     private Storage storage;
     private Gson gson;
@@ -283,7 +283,7 @@ public class RESTStorageEndPoint extends HttpServlet {
     private void findPojo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             Reader in = req.getReader();
-            RESTQuery query = gson.fromJson(in, RESTQuery.class);
+            WebQuery query = gson.fromJson(in, WebQuery.class);
             Class resultClass = Class.forName(query.getResultClassName());
             Query targetQuery = constructTargetQuery(query);
             Object result = storage.findPojo(targetQuery, resultClass);
@@ -298,7 +298,7 @@ public class RESTStorageEndPoint extends HttpServlet {
     private void findAll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             Reader in = req.getReader();
-            RESTQuery query = gson.fromJson(in, RESTQuery.class);
+            WebQuery query = gson.fromJson(in, WebQuery.class);
             Class resultClass = Class.forName(query.getResultClassName());
             Query targetQuery = constructTargetQuery(query);
             ArrayList resultList = new ArrayList();
@@ -313,7 +313,7 @@ public class RESTStorageEndPoint extends HttpServlet {
         }
     }
 
-    private Query constructTargetQuery(RESTQuery query) {
+    private Query constructTargetQuery(WebQuery query) {
         Query targetQuery = storage.createQuery();
         int categoryId = query.getCategoryId();
         Category category = getCategoryFromId(categoryId);

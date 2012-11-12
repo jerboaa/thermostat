@@ -51,8 +51,8 @@ class WebServiceLauncher {
     void start() throws Exception {
         server = new Server(port);
         ServletHandler handler = new ServletHandler();
-        ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new RESTStorageEndPoint());
-        servletHolder.setInitParameter(RESTStorageEndPoint.STORAGE_ENDPOINT, storageURL);
+        ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new WebStorageEndPoint());
+        servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_ENDPOINT, storageURL);
         handler.setServlets(new ServletHolder[] { servletHolder });
         ServletMapping mapping = new ServletMapping();
         mapping.setPathSpec("/");

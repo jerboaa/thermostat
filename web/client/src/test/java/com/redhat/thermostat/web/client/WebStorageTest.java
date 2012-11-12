@@ -86,12 +86,12 @@ import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.Qualifier;
-import com.redhat.thermostat.web.common.RESTQuery;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
-public class RESTStorageTest {
+public class WebStorageTest {
 
     private Server server;
 
@@ -108,7 +108,7 @@ public class RESTStorageTest {
     private static Key<String> key1;
     private static Key<Integer> key2;
 
-    private RESTStorage storage;
+    private WebStorage storage;
 
     @BeforeClass
     public static void setupCategory() {
@@ -134,7 +134,7 @@ public class RESTStorageTest {
             }
         });
 
-        storage = new RESTStorage();
+        storage = new WebStorage();
         storage.setEndpoint("http://localhost:" + port + "/");
         storage.setAgentId(new UUID(123, 456));
         headers = new HashMap<>();
@@ -214,7 +214,7 @@ public class RESTStorageTest {
         Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
 
         TestObj result = storage.findPojo(query, TestObj.class);
-        RESTQuery restQuery = gson.fromJson(requestBody, RESTQuery.class);
+        WebQuery restQuery = gson.fromJson(requestBody, WebQuery.class);
 
         assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
@@ -241,7 +241,7 @@ public class RESTStorageTest {
         Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
 
         Cursor<TestObj> results = storage.findAllPojos(query, TestObj.class);
-        RESTQuery restQuery = gson.fromJson(requestBody, RESTQuery.class);
+        WebQuery restQuery = gson.fromJson(requestBody, WebQuery.class);
 
         assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
