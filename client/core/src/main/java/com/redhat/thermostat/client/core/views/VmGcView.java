@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.core.views;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.model.IntervalTimeData;
+import com.redhat.thermostat.storage.model.IntervalTimeData;
 
 public abstract class VmGcView extends BasicView implements UIComponent {
 

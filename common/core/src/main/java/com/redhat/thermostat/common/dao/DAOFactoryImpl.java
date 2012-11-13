@@ -44,9 +44,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageProvider;
 
 public class DAOFactoryImpl implements DAOFactory {
 

@@ -43,7 +43,7 @@ import java.util.Map.Entry;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Storage;
 
 /**
  * Represents a monitoring back-end.

@@ -39,6 +39,9 @@ package com.redhat.thermostat.common.storage;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Remove;
 
 class MongoRemove implements Remove {
 

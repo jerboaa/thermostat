@@ -45,9 +45,9 @@ import java.util.Map;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.model.BackendInformation;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.BackendInformation;
 
 /**
  * This model sits between the current view and the remote model, and maintains

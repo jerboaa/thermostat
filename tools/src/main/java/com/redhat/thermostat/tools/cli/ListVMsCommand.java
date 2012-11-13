@@ -46,8 +46,8 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.tools.LocaleResources;
 
 public class ListVMsCommand extends SimpleCommand {

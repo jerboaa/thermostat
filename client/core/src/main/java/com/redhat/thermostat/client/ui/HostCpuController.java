@@ -55,9 +55,9 @@ import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.CpuStat;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
-import com.redhat.thermostat.common.model.HostInfo;
+import com.redhat.thermostat.storage.model.CpuStat;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.storage.model.HostInfo;
 
 public class HostCpuController {
 

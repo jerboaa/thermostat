@@ -72,11 +72,11 @@ import com.redhat.thermostat.client.core.views.HostMemoryView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
     public static final String TEST_ID_TOTAL_MEM = "SWTHostMemoryView.totalMemory";

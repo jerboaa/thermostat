@@ -48,8 +48,8 @@ import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HistogramRecord;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.model.HeapInfo;
 
 public class ShowHeapHistogramCommand extends SimpleCommand {
 

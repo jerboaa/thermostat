@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.backend.system;
 
-import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 
 import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;

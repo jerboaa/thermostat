@@ -37,8 +37,8 @@
 
 package com.redhat.thermostat.web.client;
 
-import com.redhat.thermostat.common.model.Pojo;
-import com.redhat.thermostat.common.storage.Cursor;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.model.Pojo;
 
 class WebCursor<T extends Pojo> implements Cursor<T> {
 

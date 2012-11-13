@@ -39,9 +39,9 @@ package com.redhat.thermostat.thread.dao;
 import java.util.List;
 
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;

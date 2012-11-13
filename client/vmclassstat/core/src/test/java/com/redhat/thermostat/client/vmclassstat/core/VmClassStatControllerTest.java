@@ -56,7 +56,7 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmClassStat;
+import com.redhat.thermostat.storage.model.VmClassStat;
 
 public class VmClassStatControllerTest {
 

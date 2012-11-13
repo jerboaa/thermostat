@@ -51,9 +51,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import com.redhat.thermostat.common.model.Pojo;
-import com.redhat.thermostat.common.storage.Entity;
-import com.redhat.thermostat.common.storage.Persist;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class ThermostatGSONConverter implements JsonSerializer<Pojo>, JsonDeserializer<Pojo> {
 

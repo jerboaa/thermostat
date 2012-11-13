@@ -56,10 +56,10 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
-import com.redhat.thermostat.common.model.MemoryStat;
-import com.redhat.thermostat.common.model.MemoryType;
 import com.redhat.thermostat.common.utils.DisplayableValues;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.storage.model.MemoryStat;
+import com.redhat.thermostat.storage.model.MemoryType;
 
 public class HostMemoryController {
 

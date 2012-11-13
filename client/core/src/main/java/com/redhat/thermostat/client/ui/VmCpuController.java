@@ -52,8 +52,8 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
-import com.redhat.thermostat.common.model.VmCpuStat;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.storage.model.VmCpuStat;
 
 public class VmCpuController {
 

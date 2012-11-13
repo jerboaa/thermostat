@@ -50,7 +50,7 @@ import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.storage.Connection;
+import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.test.StubBundleContext;
 
 public class DbServiceTest {

@@ -49,11 +49,11 @@ import sun.jvmstat.monitor.event.VmListener;
 
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
-import com.redhat.thermostat.common.model.VmGcStat;
-import com.redhat.thermostat.common.model.VmMemoryStat;
-import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.model.VmGcStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 
 public class JvmStatVmListener implements VmListener {
 

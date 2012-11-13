@@ -41,7 +41,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 
 public class QueryTestHelper {
 

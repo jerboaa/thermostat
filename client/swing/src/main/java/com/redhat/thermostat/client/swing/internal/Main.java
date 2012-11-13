@@ -63,18 +63,18 @@ import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
-import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
-import com.redhat.thermostat.common.storage.Connection.ConnectionType;
-import com.redhat.thermostat.common.storage.StorageProvider;
-import com.redhat.thermostat.common.storage.StorageProviderUtil;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.StorageProvider;
+import com.redhat.thermostat.storage.core.StorageProviderUtil;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
+import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.core.Connection.ConnectionType;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Main {

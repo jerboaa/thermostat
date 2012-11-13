@@ -46,9 +46,9 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query.Criteria;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;

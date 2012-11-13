@@ -55,8 +55,8 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class SaveHeapDumpToFileCommandTest {

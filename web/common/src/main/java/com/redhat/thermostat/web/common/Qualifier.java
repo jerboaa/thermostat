@@ -37,8 +37,8 @@
 
 package com.redhat.thermostat.web.common;
 
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 
 public class Qualifier<T> {
     private Key<T> key;

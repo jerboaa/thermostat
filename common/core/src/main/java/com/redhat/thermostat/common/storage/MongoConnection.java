@@ -45,7 +45,10 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageConstants;
 
 class MongoConnection extends Connection {
 

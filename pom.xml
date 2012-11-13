@@ -127,6 +127,7 @@
     <module>web</module>
     <module>system-backend</module>
     <module>gc</module>
+    <module>storage</module>
   </modules>
 
   <build>

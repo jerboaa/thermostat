@@ -63,8 +63,8 @@ import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
-import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class JvmStatHostListener implements HostListener, JvmStatusNotifier {

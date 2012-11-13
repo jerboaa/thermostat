@@ -59,9 +59,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostCpuView;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 @RunWith(SWTBotJunit4ClassRunner.class)
 public class SWTHostCpuViewTest {

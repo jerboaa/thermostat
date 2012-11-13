@@ -39,10 +39,10 @@ package com.redhat.thermostat.thread.model;
 import java.lang.Thread.State;
 import java.util.Arrays;
 
-import com.redhat.thermostat.common.model.BasePojo;
-import com.redhat.thermostat.common.model.TimeStampedPojo;
-import com.redhat.thermostat.common.storage.Entity;
-import com.redhat.thermostat.common.storage.Persist;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 
 @Entity

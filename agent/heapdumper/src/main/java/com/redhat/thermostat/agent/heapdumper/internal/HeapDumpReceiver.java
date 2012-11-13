@@ -49,7 +49,7 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HistogramLoader;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
-import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.storage.model.HeapInfo;
 
 public class HeapDumpReceiver implements RequestReceiver {
 

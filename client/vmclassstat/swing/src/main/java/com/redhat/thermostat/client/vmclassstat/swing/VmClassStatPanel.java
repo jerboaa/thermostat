@@ -64,7 +64,7 @@ import com.redhat.thermostat.client.vmclassstat.core.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class VmClassStatPanel extends VmClassStatView implements SwingComponent {
 

@@ -5,7 +5,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.storage.MongoStorageProvider;
-import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.storage.core.StorageProvider;
 
 public class Activator implements BundleActivator {
 

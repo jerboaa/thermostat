@@ -49,7 +49,7 @@ import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.event.VmEvent;
 
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.model.VmClassStat;
+import com.redhat.thermostat.storage.model.VmClassStat;
 
 public class JvmStatVmClassListenerTest {
 

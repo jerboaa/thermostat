@@ -63,8 +63,8 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.model.MemoryStat;
+import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.model.MemoryStat;
 
 public class HostMemoryControllerTest {
 

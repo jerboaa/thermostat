@@ -38,8 +38,8 @@ package com.redhat.thermostat.common.dao;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.model.VmCpuStat;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.VmCpuStat;
 
 class VmCpuStatDAOImpl implements VmCpuStatDAO {
 

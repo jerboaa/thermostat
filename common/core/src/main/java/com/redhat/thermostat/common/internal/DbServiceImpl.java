@@ -41,12 +41,12 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.DbService;
-import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.DAOFactoryImpl;
-import com.redhat.thermostat.common.storage.ConnectionException;
-import com.redhat.thermostat.common.storage.StorageProvider;
-import com.redhat.thermostat.common.storage.StorageProviderUtil;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageProvider;
+import com.redhat.thermostat.storage.core.StorageProviderUtil;
 
 public class DbServiceImpl implements DbService {
     

@@ -37,9 +37,9 @@
 
 package com.redhat.thermostat.web.client;
 
-import com.redhat.thermostat.common.model.BasePojo;
-import com.redhat.thermostat.common.storage.Entity;
-import com.redhat.thermostat.common.storage.Persist;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
 
 @Entity
 public class TestObj extends BasePojo {

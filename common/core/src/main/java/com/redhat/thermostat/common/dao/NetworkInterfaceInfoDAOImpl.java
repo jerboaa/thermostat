@@ -39,12 +39,12 @@ package com.redhat.thermostat.common.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Query.Criteria;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 

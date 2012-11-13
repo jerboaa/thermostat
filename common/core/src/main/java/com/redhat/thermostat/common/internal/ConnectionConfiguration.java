@@ -37,7 +37,7 @@
 package com.redhat.thermostat.common.internal;
 
 import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {
 

@@ -74,7 +74,7 @@ import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class HostCpuPanel extends HostCpuView implements SwingComponent {
 

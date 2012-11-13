@@ -53,13 +53,13 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.test.MockQuery;
 
 public class HostInfoDAOTest {

@@ -42,8 +42,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.model.CpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.model.CpuStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class CpuStatBuilder {

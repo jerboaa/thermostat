@@ -59,10 +59,10 @@ import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
-import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
+import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 
 public class MainTest {
 

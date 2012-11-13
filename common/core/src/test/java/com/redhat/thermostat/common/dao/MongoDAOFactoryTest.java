@@ -45,9 +45,9 @@ import static org.mockito.Mockito.when;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.Storage;
-import com.redhat.thermostat.common.storage.StorageProvider;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.test.StubBundleContext;
 
 public class MongoDAOFactoryTest {

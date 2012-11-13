@@ -40,7 +40,7 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class VmClassStatView extends BasicView implements UIComponent {
 

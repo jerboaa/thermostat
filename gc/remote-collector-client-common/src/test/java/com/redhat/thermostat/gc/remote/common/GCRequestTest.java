@@ -51,8 +51,8 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.AgentInformation;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.storage.model.AgentInformation;
 
 public class GCRequestTest {
 

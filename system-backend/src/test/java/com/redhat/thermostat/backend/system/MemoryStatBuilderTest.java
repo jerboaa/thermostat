@@ -49,7 +49,7 @@ import java.io.StringReader;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.model.MemoryStat;
+import com.redhat.thermostat.storage.model.MemoryStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class MemoryStatBuilderTest {

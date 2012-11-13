@@ -42,7 +42,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.dao.impl.ThreadDaoImpl;
 
