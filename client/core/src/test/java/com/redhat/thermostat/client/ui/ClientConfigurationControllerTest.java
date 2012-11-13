@@ -43,6 +43,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
@@ -51,15 +52,32 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 
 public class ClientConfigurationControllerTest {
 
-    @Test
-    public void verifyShowDialog() {
-        ClientPreferences model = mock(ClientPreferences.class);
+    private ClientPreferences model;
+    private ClientConfigurationView view;
+
+    @Before
+    public void setUp() {
+        model = mock(ClientPreferences.class);
         when(model.getConnectionUrl()).thenReturn("mock-connection-url");
         when(model.getPassword()).thenReturn("mock-password");
         when(model.getUserName()).thenReturn("mock-username");
         when(model.getSaveEntitlements()).thenReturn(false);
+
+        view = mock(ClientConfigurationView.class);
+        when(view.getConnectionUrl()).thenReturn("mock-connection-url");
+        when(view.getPassword()).thenReturn("mock-password");
+        when(view.getUserName()).thenReturn("mock-username");
+        when(view.getSaveEntitlements()).thenReturn(true);
+    }
+
+    public void tearDown() {
+        view = null;
+        model = null;
+    }
+
+    @Test
+    public void verifyShowDialog() {
         
-        ClientConfigurationView view = mock(ClientConfigurationView.class);
         ClientConfigurationController controller = new ClientConfigurationController(model, view);
 
         controller.showDialog();
@@ -74,12 +92,25 @@ public class ClientConfigurationControllerTest {
 
     @Test
     public void verifyCloseCancel() {
-        ClientPreferences model = mock(ClientPreferences.class);
-        ClientConfigurationView view = mock(ClientConfigurationView.class);
         ClientConfigurationController controller = new ClientConfigurationController(model, view);
 
         controller.actionPerformed(new ActionEvent<>(view, ClientConfigurationView.Action.CLOSE_CANCEL));
 
+        verifyCloseCancelCommon();
+    }
+
+    @Test
+    public void verifyCloseCancelWithReconnector() {
+        ClientConfigReconnector reconnector = mock(ClientConfigReconnector.class);
+        ClientConfigurationController controller = new ClientConfigurationController(model, view, reconnector);
+
+        controller.actionPerformed(new ActionEvent<>(view, ClientConfigurationView.Action.CLOSE_CANCEL));
+
+        verifyCloseCancelCommon();
+        verify(reconnector).abort();
+    }
+
+    private void verifyCloseCancelCommon() {
         verify(model, times(0)).setConnectionUrl(any(String.class));
         verify(model, times(0)).setCredentials(any(String.class), any(String.class));
         
@@ -90,17 +121,27 @@ public class ClientConfigurationControllerTest {
 
     @Test
     public void verifyCloseAccept() {
-        ClientPreferences model = mock(ClientPreferences.class);
-        ClientConfigurationView view = mock(ClientConfigurationView.class);
-        when(view.getConnectionUrl()).thenReturn("mock-connection-url");
-        when(view.getPassword()).thenReturn("mock-password");
-        when(view.getUserName()).thenReturn("mock-username");
-        when(view.getSaveEntitlements()).thenReturn(true);
         
         ClientConfigurationController controller = new ClientConfigurationController(model, view);
 
         controller.actionPerformed(new ActionEvent<>(view, ClientConfigurationView.Action.CLOSE_ACCEPT));
 
+        verifyCloseAcceptCommon();
+    }
+
+    @Test
+    public void verifyCloseAcceptWithReconnector() {
+        
+        ClientConfigReconnector reconnector = mock(ClientConfigReconnector.class);
+        ClientConfigurationController controller = new ClientConfigurationController(model, view, reconnector);
+
+        controller.actionPerformed(new ActionEvent<>(view, ClientConfigurationView.Action.CLOSE_ACCEPT));
+
+        verifyCloseAcceptCommon();
+        verify(reconnector).reconnect(model);
+    }
+
+    private void verifyCloseAcceptCommon() {
         verify(model).setConnectionUrl(eq("mock-connection-url"));
         verify(model).setCredentials(eq("mock-username"), eq("mock-password"));
         verify(model).setSaveEntitlements(eq(true));
@@ -110,4 +151,5 @@ public class ClientConfigurationControllerTest {
         verify(view).hideDialog();
     }
 
+    
 }

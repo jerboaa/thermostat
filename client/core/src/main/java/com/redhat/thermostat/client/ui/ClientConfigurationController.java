@@ -53,11 +53,16 @@ public class ClientConfigurationController implements ActionListener<Action> {
 
     private final ClientConfigurationView view;
     private final ClientPreferences model;
+    private final ClientConfigReconnector reconnector;
 
     public ClientConfigurationController(ClientPreferences model, ClientConfigurationView view) {
+        this(model, view, null);
+    }
+
+    public ClientConfigurationController(ClientPreferences model, ClientConfigurationView view, ClientConfigReconnector reconnector) {
         this.model = model;
         this.view = view;
-
+        this.reconnector = reconnector;
         view.addListener(this);
     }
 
@@ -96,9 +101,16 @@ public class ClientConfigurationController implements ActionListener<Action> {
         switch (actionEvent.getActionId()) {
             case CLOSE_ACCEPT:
                 updateModelFromView();
-                /* fall through */
+                view.hideDialog();
+                if (reconnector != null) {
+                    reconnector.reconnect(model);
+                }
+                break;
             case CLOSE_CANCEL:
                 view.hideDialog();
+                if (reconnector != null) {
+                    reconnector.abort();
+                }
                 break;
         }
 

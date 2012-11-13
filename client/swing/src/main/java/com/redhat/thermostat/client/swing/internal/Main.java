@@ -54,11 +54,10 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.swing.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.swing.views.ClientConfigurationSwing;
+import com.redhat.thermostat.client.ui.ClientConfigReconnector;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
@@ -233,26 +232,23 @@ public class Main {
         service.execute(new Connector(connection));
     }
     
-    private class ConfigDialogListener implements ActionListener<ClientConfigurationView.Action> {
+    private class MainClientConfigReconnector implements ClientConfigReconnector {
         private Connection connection;
         private ExecutorService service;
-        public ConfigDialogListener(Connection connection, ExecutorService service) {
+        public MainClientConfigReconnector(Connection connection, ExecutorService service) {
             this.connection = connection;
             this.service = service;
         }
         
         @Override
-        public void actionPerformed(ActionEvent<ClientConfigurationView.Action> actionEvent) {
-            switch (actionEvent.getActionId()) {
-            case CLOSE_CANCEL:
-                uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
-                break;
-            
-            case CLOSE_ACCEPT:
-            default:
-                connect(connection, service);
-                break;
-            }
+        public void reconnect(ClientPreferences prefs) {
+            connection.setUrl(prefs.getConnectionUrl());
+            connect(connection, service);
+        }
+
+        @Override
+        public void abort() {
+            uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
         }
     }
     
@@ -261,9 +257,8 @@ public class Main {
         ClientPreferences prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
         ClientConfigurationView configDialog = new ClientConfigurationSwing();
         ClientConfigurationController controller =
-                new ClientConfigurationController(prefs, configDialog);
+                new ClientConfigurationController(prefs, configDialog, new MainClientConfigReconnector(connection, service));
         
-        configDialog.addListener(new ConfigDialogListener(connection, service));
         controller.showDialog();
     }
     
@@ -284,7 +279,6 @@ public class Main {
         @Override
         public void changed(ConnectionStatus newStatus) {
             if (newStatus == ConnectionStatus.CONNECTED) {
-                
                 // register the storage, so other services can request it
                 daoFactory.registerDAOsAndStorageAsOSGiServices();
                 uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());

@@ -99,10 +99,17 @@ public class WebStorage extends Storage {
                 ping();
                 connected = true;
                 fireChanged(ConnectionStatus.CONNECTED);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             }
         }
+
+        @Override
+        public void setUrl(String url) {
+            super.setUrl(url);
+            endpoint = url;
+        }
+
         @Override
         public String getUrl() {
             return endpoint;
