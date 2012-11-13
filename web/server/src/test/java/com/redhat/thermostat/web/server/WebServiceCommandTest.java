@@ -34,57 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.web.server;
 
-import com.redhat.thermostat.common.cli.CommandContext;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
+
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.test.TestCommandContextFactory;
 
-public class WebServiceCommand extends SimpleCommand {
+public class WebServiceCommandTest {
 
-    private WebServiceLauncher serviceLauncher;
+    private TestCommandContextFactory cmdCtxFactory;
+    private BundleContext bundleContext;
+    private WebServiceLauncher launcher;
+    private WebServiceCommand cmd;
     
-    public WebServiceCommand() {
-        this.serviceLauncher = new WebServiceLauncher();
+    @Before
+    public void setUp() {
+        Bundle sysBundle = mock(Bundle.class);
+        bundleContext = mock(BundleContext.class);
+        when(bundleContext.getBundle(0)).thenReturn(sysBundle);
+        cmdCtxFactory = new TestCommandContextFactory(bundleContext);
+        launcher = mock(WebServiceLauncher.class);
+        cmd = new WebServiceCommand(launcher);
     }
     
-    // Constructor for testing
-    WebServiceCommand(WebServiceLauncher launcher) {
-        this.serviceLauncher = launcher;
+    @After
+    public void tearDown() {
+        cmdCtxFactory = null;
+        cmd = null;
+        launcher = null;
     }
-
-    @Override
-    public void run(CommandContext ctx) throws CommandException {
-        String storageURL = ctx.getArguments().getArgument("storageURL");
-        String port = ctx.getArguments().getArgument("port");
-        serviceLauncher.setStorageURL(storageURL);
-        serviceLauncher.setPort(Integer.parseInt(port));
+    
+    @Test
+    public void verifyLauncherStart() throws Exception {
+        SimpleArguments args = new SimpleArguments();
+        String storageUrl = "mongodb://127.0.0.1:27518";
+        args.addArgument("storageURL", storageUrl);
+        args.addArgument("port", "8082");
         try {
-            // this blocks
-            serviceLauncher.start();
-        } catch (InterruptedException e) {
-            // just shut down cleanly
-            try {
-                serviceLauncher.stop();
-            } catch (Exception ex) {
-                ex.printStackTrace(ctx.getConsole().getError());
-                throw new CommandException(ex);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace(ctx.getConsole().getError());
-            throw new CommandException(ex);
+            cmd.run(cmdCtxFactory.createContext(args));
+        } catch (CommandException e) {
+            fail("should not throw exception");
         }
+        verify(launcher).setPort(8082);
+        verify(launcher).setStorageURL(storageUrl);
+        verify(launcher).start();
     }
-
-    @Override
-    public String getName() {
-        return "webservice";
-    }
-
-    @Override
-    public boolean isStorageRequired() {
-        return false;
-    }
-
 }
