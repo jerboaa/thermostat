@@ -71,7 +71,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
-import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
@@ -86,7 +85,7 @@ import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
-public class WebStorage extends Storage {
+public class WebStorage implements Storage {
 
     private static class CloseableHttpEntity implements Closeable, HttpEntity {
 

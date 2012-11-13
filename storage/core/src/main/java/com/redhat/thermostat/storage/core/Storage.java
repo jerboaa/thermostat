@@ -42,38 +42,38 @@ import java.util.UUID;
 import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
-public abstract class Storage {
+public interface Storage {
 
-    public abstract void setAgentId(UUID id);
+    void setAgentId(UUID id);
 
-    public abstract String getAgentId();
+    String getAgentId();
 
-    public abstract void registerCategory(Category category);
+    void registerCategory(Category category);
 
-    public abstract Connection getConnection();
+    Connection getConnection();
 
-    public abstract void putPojo(Category category, boolean replace, AgentIdPojo pojo);
+    void putPojo(Category category, boolean replace, AgentIdPojo pojo);
 
-    public abstract void updatePojo(Update update);
+    void updatePojo(Update update);
 
-    public abstract void removePojo(Remove remove);
+    void removePojo(Remove remove);
 
     /**
      * Drop all data related to the currently running agent.
      */
-    public abstract void purge();
+    void purge();
 
-    public abstract <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass);
+    <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass);
 
-    public abstract <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
+    <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
 
-    public abstract long getCount(Category category);
+    long getCount(Category category);
 
-    public abstract void saveFile(String filename, InputStream data);
+    void saveFile(String filename, InputStream data);
 
-    public abstract InputStream loadFile(String filename);
+    InputStream loadFile(String filename);
 
-    public abstract Query createQuery();
-    public abstract Update createUpdate();
-    public abstract Remove createRemove();
+    Query createQuery();
+    Update createUpdate();
+    Remove createRemove();
 }
