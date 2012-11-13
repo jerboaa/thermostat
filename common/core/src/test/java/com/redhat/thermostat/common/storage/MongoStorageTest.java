@@ -73,9 +73,20 @@ import com.mongodb.MongoURI;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
-import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.model.BasePojo;
-import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.MongoConnection;
+import com.redhat.thermostat.common.storage.MongoQuery;
+import com.redhat.thermostat.common.storage.MongoStorage;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.model.BasePojo;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ DBCollection.class, DB.class, Mongo.class, MongoStorage.class, MongoConnection.class })

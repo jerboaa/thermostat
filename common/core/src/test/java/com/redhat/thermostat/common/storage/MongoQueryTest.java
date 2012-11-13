@@ -43,7 +43,10 @@ import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.common.storage.MongoQuery;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 
 public class MongoQueryTest {
 

@@ -48,7 +48,7 @@ import com.redhat.thermostat.backend.BackendsProperties;
 import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class AgentStartupConfiguration implements StartupConfiguration, AuthenticationConfiguration {
     

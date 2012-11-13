@@ -39,6 +39,9 @@ package com.redhat.thermostat.common.storage;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Update;
 
 // TODO: For now we utilize the Chunk based conversion, and rely on MongoStorage to
 // actually resolve the $set fields. Eventually, we want to convert to DBObject

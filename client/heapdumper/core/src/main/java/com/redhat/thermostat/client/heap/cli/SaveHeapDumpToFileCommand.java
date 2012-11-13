@@ -51,9 +51,9 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.HeapInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.common.utils.StreamUtils;
+import com.redhat.thermostat.storage.model.HeapInfo;
 
 public class SaveHeapDumpToFileCommand extends SimpleCommand {
 

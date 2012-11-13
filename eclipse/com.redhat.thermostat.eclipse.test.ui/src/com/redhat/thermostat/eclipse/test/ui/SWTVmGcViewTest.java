@@ -56,8 +56,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.model.IntervalTimeData;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcView;
+import com.redhat.thermostat.storage.model.IntervalTimeData;
 
 public class SWTVmGcViewTest {
     private SWTWorkbenchBot bot;

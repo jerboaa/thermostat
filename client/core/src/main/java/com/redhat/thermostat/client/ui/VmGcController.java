@@ -61,11 +61,11 @@ import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.IntervalTimeData;
-import com.redhat.thermostat.common.model.TimeStampedPojoComparator;
-import com.redhat.thermostat.common.model.VmGcStat;
-import com.redhat.thermostat.common.model.VmMemoryStat;
-import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.storage.model.IntervalTimeData;
+import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
+import com.redhat.thermostat.storage.model.VmGcStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 
 public class VmGcController {
 

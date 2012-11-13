@@ -44,8 +44,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.model.HostInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.hostname.HostName;
 

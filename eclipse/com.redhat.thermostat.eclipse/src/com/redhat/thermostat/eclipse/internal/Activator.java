@@ -47,8 +47,8 @@ import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.ConnectionException;
 
 /**
  * The activator class controls the plug-in life cycle

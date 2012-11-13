@@ -39,7 +39,9 @@ package com.redhat.thermostat.common.storage;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageProvider;
 
 public class MongoStorageProvider implements StorageProvider {
 

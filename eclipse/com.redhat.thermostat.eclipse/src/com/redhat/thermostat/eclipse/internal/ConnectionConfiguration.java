@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.eclipse.internal;
 
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class ConnectionConfiguration implements StartupConfiguration {
 

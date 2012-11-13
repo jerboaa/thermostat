@@ -50,7 +50,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Storage;
 
 public class SystemBackendTest {
 

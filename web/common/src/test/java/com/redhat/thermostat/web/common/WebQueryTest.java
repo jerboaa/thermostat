@@ -8,9 +8,9 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query.Criteria;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.WebQuery;
 

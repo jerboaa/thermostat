@@ -49,7 +49,9 @@ import org.apache.commons.beanutils.PropertyUtils;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.model.Pojo;
 
 class MongoPojoConverter {
 

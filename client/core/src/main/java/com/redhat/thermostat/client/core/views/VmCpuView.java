@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.core.views;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.model.DiscreteTimeData;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class VmCpuView extends BasicView implements UIComponent {
 

@@ -41,7 +41,7 @@ import java.io.PrintStream;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.VmInfo;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.tools.LocaleResources;
 
 class VMListFormatter {

@@ -67,7 +67,7 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 
 import com.redhat.thermostat.common.dao.HeapDAO;
-import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.storage.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Snapshot;
 import com.sun.tools.hat.internal.parser.Reader;

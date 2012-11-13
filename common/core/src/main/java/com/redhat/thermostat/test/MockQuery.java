@@ -40,10 +40,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.redhat.thermostat.common.storage.AbstractQuery;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
 import com.redhat.thermostat.common.storage.MongoQuery;
+import com.redhat.thermostat.storage.core.AbstractQuery;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
 
 public class MockQuery extends AbstractQuery {
 

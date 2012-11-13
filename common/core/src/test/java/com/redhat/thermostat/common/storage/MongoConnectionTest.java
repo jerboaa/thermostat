@@ -57,9 +57,13 @@ import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
-import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
-import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
+import com.redhat.thermostat.common.storage.MongoConnection;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageConstants;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
+import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 
 @PrepareForTest(MongoConnection.class)
 @RunWith(PowerMockRunner.class)

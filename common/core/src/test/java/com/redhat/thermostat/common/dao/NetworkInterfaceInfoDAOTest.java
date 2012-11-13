@@ -48,10 +48,10 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.test.MockQuery;
 
 public class NetworkInterfaceInfoDAOTest {

@@ -45,8 +45,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.config.StartupConfiguration;
 import com.redhat.thermostat.common.tools.BasicCommand;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class BasicCommandTest {
 

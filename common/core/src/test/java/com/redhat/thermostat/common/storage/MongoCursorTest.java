@@ -52,7 +52,13 @@ import org.junit.Test;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.model.BasePojo;
+import com.redhat.thermostat.common.storage.MongoCursor;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
 
 public class MongoCursorTest {
 

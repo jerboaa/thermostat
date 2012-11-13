@@ -38,9 +38,9 @@ package com.redhat.thermostat.common.dao;
 
 import java.util.Collection;
 
-import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.model.HostInfo;
 
 public interface HostInfoDAO extends Countable {
 

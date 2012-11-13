@@ -40,9 +40,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.redhat.thermostat.common.model.VmInfo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 public interface VmInfoDAO extends Countable {
 

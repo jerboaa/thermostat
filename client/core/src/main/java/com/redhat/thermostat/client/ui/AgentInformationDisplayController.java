@@ -48,8 +48,8 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.model.BackendInformation;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.BackendInformation;
 
 public class AgentInformationDisplayController implements ActionListener<ConfigurationAction> {
 

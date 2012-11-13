@@ -43,7 +43,7 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.HeapInfo;
+import com.redhat.thermostat.storage.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 class ObjectCommandHelper {

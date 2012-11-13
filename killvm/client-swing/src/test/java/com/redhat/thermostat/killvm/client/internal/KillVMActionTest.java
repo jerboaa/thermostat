@@ -61,10 +61,10 @@ import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.killvm.client.internal.KillVMAction;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(OSGIUtils.class)

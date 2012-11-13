@@ -40,6 +40,9 @@ import java.util.Objects;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import com.redhat.thermostat.storage.core.AbstractQuery;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
 
 public class MongoQuery extends AbstractQuery {
 

@@ -51,12 +51,20 @@ import com.mongodb.DBObject;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
-import com.redhat.thermostat.common.config.StartupConfiguration;
-import com.redhat.thermostat.common.model.AgentIdPojo;
-import com.redhat.thermostat.common.model.Pojo;
-import com.redhat.thermostat.common.storage.AbstractQuery.Sort;
-import com.redhat.thermostat.common.storage.Connection.ConnectionListener;
-import com.redhat.thermostat.common.storage.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.Update;
+import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
+import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.model.AgentIdPojo;
+import com.redhat.thermostat.storage.model.Pojo;
 
 /**
  * Implementation of the Storage interface that uses MongoDB to store the instrumentation data.

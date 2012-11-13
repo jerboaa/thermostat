@@ -68,11 +68,11 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.VmMemoryStat;
-import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.common.model.VmMemoryStat.Space;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.storage.model.VmMemoryStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 
 public class MemoryStatsControllerTest {
 

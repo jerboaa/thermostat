@@ -67,9 +67,9 @@ import com.redhat.thermostat.client.core.views.HostCpuView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class SWTHostCpuView extends HostCpuView implements SWTComponent {
     public static final String TEST_ID_CPU_MODEL = "SWTHostCpuView.cpuModel";

@@ -65,11 +65,11 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.internal.Activator;
+import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class HostOverviewViewPart extends ViewPart {
 

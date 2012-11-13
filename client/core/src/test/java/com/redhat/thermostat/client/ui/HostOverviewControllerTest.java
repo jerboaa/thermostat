@@ -67,8 +67,8 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class HostOverviewControllerTest {
 

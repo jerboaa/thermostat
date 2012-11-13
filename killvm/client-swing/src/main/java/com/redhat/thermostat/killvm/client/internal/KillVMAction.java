@@ -49,9 +49,9 @@ import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.VmInfo;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
+import com.redhat.thermostat.storage.model.VmInfo;
 
 /**
  * Implements the {@link VMContextAction} entry point to provide a kill switch

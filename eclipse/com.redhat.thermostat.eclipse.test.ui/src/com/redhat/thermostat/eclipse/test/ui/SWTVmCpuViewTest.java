@@ -55,8 +55,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.model.DiscreteTimeData;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuView;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class SWTVmCpuViewTest {
     private SWTWorkbenchBot bot;

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.common;
 
-import com.redhat.thermostat.common.storage.ConnectionException;
+import com.redhat.thermostat.storage.core.ConnectionException;
 
 public interface DbService {
 

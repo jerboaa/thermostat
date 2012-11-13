@@ -60,9 +60,9 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.common.model.VmCpuStat;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {

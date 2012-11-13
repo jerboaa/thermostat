@@ -40,7 +40,7 @@ import java.io.File;
 
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class DBStartupConfiguration implements StartupConfiguration {
     

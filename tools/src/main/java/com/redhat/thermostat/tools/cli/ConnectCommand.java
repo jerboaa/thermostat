@@ -43,9 +43,9 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.storage.ConnectionException;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
+import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.tools.LocaleResources;
 import com.redhat.thermostat.utils.keyring.Keyring;
 

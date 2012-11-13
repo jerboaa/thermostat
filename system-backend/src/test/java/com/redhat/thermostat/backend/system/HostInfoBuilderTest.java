@@ -52,7 +52,7 @@ import com.redhat.thermostat.backend.system.HostInfoBuilder.HostCpuInfo;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostMemoryInfo;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostOsInfo;
 import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.model.HostInfo;
+import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class HostInfoBuilderTest {

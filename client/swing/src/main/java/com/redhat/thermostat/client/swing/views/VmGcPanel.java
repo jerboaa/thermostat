@@ -72,7 +72,7 @@ import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.IntervalTimeData;
+import com.redhat.thermostat.storage.model.IntervalTimeData;
 
 public class VmGcPanel extends VmGcView implements SwingComponent {
 

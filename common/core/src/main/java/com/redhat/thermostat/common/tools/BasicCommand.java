@@ -38,7 +38,7 @@ package com.redhat.thermostat.common.tools;
 
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.cli.CommandWithInfo;
-import com.redhat.thermostat.common.config.StartupConfiguration;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 /**
  * Common base class for all daemon and application

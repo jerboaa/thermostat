@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.common.dao;
 
-import com.redhat.thermostat.common.storage.Connection;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.Storage;
 
 public interface DAOFactory {
 

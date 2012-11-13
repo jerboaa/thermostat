@@ -38,9 +38,9 @@ package com.redhat.thermostat.common.dao;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.model.VmClassStat;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Key;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.model.VmClassStat;
 
 public interface VmClassStatDAO {
 

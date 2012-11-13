@@ -51,12 +51,12 @@ import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.TimeStampedPojo;
-import com.redhat.thermostat.common.model.TimeStampedPojoComparator;
-import com.redhat.thermostat.common.model.TimeStampedPojoCorrelator;
-import com.redhat.thermostat.common.model.VmCpuStat;
-import com.redhat.thermostat.common.model.VmMemoryStat;
 import com.redhat.thermostat.common.utils.DisplayableValues;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
+import com.redhat.thermostat.storage.model.TimeStampedPojoCorrelator;
+import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.tools.LocaleResources;
 
 class VMStatPrinter {

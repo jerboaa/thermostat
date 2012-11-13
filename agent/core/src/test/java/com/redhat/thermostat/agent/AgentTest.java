@@ -66,9 +66,9 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.BackendInfoDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.model.AgentInformation;
-import com.redhat.thermostat.common.model.BackendInformation;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.AgentInformation;
+import com.redhat.thermostat.storage.model.BackendInformation;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class AgentTest {

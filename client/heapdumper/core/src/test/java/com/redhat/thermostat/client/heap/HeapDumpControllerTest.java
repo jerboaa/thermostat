@@ -73,10 +73,10 @@ import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.heap.HeapDump;
-import com.redhat.thermostat.common.model.HeapInfo;
-import com.redhat.thermostat.common.model.VmMemoryStat;
-import com.redhat.thermostat.common.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.common.model.VmMemoryStat.Space;
+import com.redhat.thermostat.storage.model.HeapInfo;
+import com.redhat.thermostat.storage.model.VmMemoryStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 
 public class HeapDumpControllerTest {
 

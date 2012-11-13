@@ -1,7 +1,7 @@
 CC         = gcc
 JAVAH      = javah
-CFLAGS     = -c -Wall -fPIC
-LDFLAGS    = -fPIC -shared
+MYCFLAGS   = -c -Wall -fPIC
+MYLDFLAGS  = -fPIC -shared
 COPY       = cp -a
 
 CLASSPATH  = target/classes/
@@ -14,10 +14,10 @@ OBJECTS    = $(TARGET:.c=.o)
 
 EXECUTABLE = libGnomeKeyringWrapper.so
 
-CFLAGS     += `pkg-config --cflags gnome-keyring-1`
-LDFLAGS    += `pkg-config --libs gnome-keyring-1`
+MYCFLAGS   += `pkg-config --cflags gnome-keyring-1`
+MYLDFLAGS  += `pkg-config --libs gnome-keyring-1`
 
-.phoni:
+.PHONY:
 JNI_LIST = com.redhat.thermostat.utils.keyring.GnomeKeyringLibraryNative
 
 $(JNI_LIST):
@@ -25,15 +25,15 @@ $(JNI_LIST):
 
 all: $(JNI_LIST) init $(SOURCES) $(EXECUTABLE)
 
-.phoni:
+.PHONY:
 init:
 	$(COPY) $(SOURCES) $(TARGET)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(OBJECTS) -o  $(TARGET_DIR)/$@ $(LDFLAGS)
+	$(CC) $(OBJECTS) -o $(TARGET_DIR)/$@ $(MYLDFLAGS) $(LDFLAGS)
 
 .c.o:
-	$(CC) $(CFLAGS) $(INCLUDE)  $< -o $@
+	$(CC) $(MYCFLAGS) $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean-lib:
 	rm $(TARGET_DIR)/$(EXECUTABLE)

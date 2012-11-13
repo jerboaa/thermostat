@@ -57,10 +57,10 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.model.HostInfo;
-import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.model.HostInfo;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class HostOverviewController {
 

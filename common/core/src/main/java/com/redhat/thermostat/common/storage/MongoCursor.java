@@ -38,7 +38,8 @@ package com.redhat.thermostat.common.storage;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.model.Pojo;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.model.Pojo;
 
 class MongoCursor<T extends Pojo> implements Cursor<T> {
 

@@ -43,7 +43,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.model.NetworkInterfaceInfo;
+import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 public class NetworkInfoBuilderTest {
 

@@ -180,16 +180,10 @@
     	<artifactId>thermostat-keyring</artifactId>
     	<version>${project.version}</version>
     </dependency>
-
     <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>8.1.5.v20120716</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-webapp</artifactId>
-      <version>8.1.5.v20120716</version>
+        <groupId>com.redhat.thermostat</groupId>
+        <artifactId>thermostat-storage-core</artifactId>
+        <version>${project.version}</version>
     </dependency>
 
   </dependencies>

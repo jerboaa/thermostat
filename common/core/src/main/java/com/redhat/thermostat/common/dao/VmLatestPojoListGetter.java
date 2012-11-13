@@ -39,13 +39,13 @@ package com.redhat.thermostat.common.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.redhat.thermostat.common.model.TimeStampedPojo;
-import com.redhat.thermostat.common.storage.Category;
-import com.redhat.thermostat.common.storage.Cursor;
-import com.redhat.thermostat.common.storage.Key;
-import com.redhat.thermostat.common.storage.Query;
-import com.redhat.thermostat.common.storage.Query.Criteria;
-import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
