@@ -65,7 +65,7 @@ public class WebQuery extends AbstractQuery {
     }
 
     @Override
-    public Query from(Category category) {
+    public WebQuery from(Category category) {
         categoryId = categoryIdMap.get(category);
         return this;
     }
@@ -79,7 +79,7 @@ public class WebQuery extends AbstractQuery {
     }
 
     @Override
-    public <T> Query where(Key<T> key, Criteria criteria, T value) {
+    public <T> WebQuery where(Key<T> key, Criteria criteria, T value) {
         qualifiers.add(new Qualifier<>(key, criteria, value));
         return this;
     }

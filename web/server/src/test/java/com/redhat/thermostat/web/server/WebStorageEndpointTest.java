@@ -53,10 +53,13 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.sound.midi.SysexMessage;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -173,7 +176,7 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testFind() {
+    public void testFind() throws IOException {
         // Configure mock storage.
         TestClass expected = new TestClass();
         expected.setKey1("fluff");
@@ -183,13 +186,24 @@ public class WebStorageEndpointTest {
         Query mockQuery = QueryTestHelper.createMockQuery();
         when(mockStorage.createQuery()).thenReturn(mockQuery);
 
-        WebStorage restStorage = new WebStorage();
-        restStorage.setEndpoint(getEndpoint());
-        restStorage.registerCategory(category);
-        Query query = restStorage.createQuery();
-        query.from(category).where(key1, Criteria.EQUALS, "fluff");
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/find-pojo");
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        Map<Category,Integer> categoryIdMap = new HashMap<>();
+        categoryIdMap.put(category, categoryId);
+        WebQuery query = (WebQuery) new WebQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff");
+        query.setResultClassName(TestClass.class.getName());
+        Gson gson = new Gson();
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("query=");
+        out.write(URLEncoder.encode(gson.toJson(query), "UTF-8"));
+        out.write("\n");
+        out.flush();
 
-        TestClass result = restStorage.findPojo(query, TestClass.class);
+        Reader in = new InputStreamReader(conn.getInputStream());
+        TestClass result = gson.fromJson(in, TestClass.class);
 
         assertEquals("fluff", result.getKey1());
         assertEquals(42, result.getKey2());
@@ -217,15 +231,18 @@ public class WebStorageEndpointTest {
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/find-all");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         conn.setDoInput(true);
         conn.setDoOutput(true);
         Map<Category,Integer> categoryIdMap = new HashMap<>();
         categoryIdMap.put(category, categoryId);
-        WebQuery query = (WebQuery) new WebQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff");
+        WebQuery query = new WebQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff");
         query.setResultClassName(TestClass.class.getName());
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        gson.toJson(query, out);
+        String body = "query=" + URLEncoder.encode(gson.toJson(query), "UTF-8");
+        out.write(body + "\n");
         out.flush();
 
         Reader in = new InputStreamReader(conn.getInputStream());

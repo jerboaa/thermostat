@@ -122,8 +122,8 @@ class HeapDAOImpl implements HeapDAO {
 
     @Override
     public ObjectHistogram getHistogram(HeapInfo heapInfo) {
-        try {
-            InputStream in = storage.loadFile(heapInfo.getHistogramId());
+        
+        try (InputStream in = storage.loadFile(heapInfo.getHistogramId())) {
             ObjectInputStream ois = new ObjectInputStream(in);
             return (ObjectHistogram) ois.readObject();
         } catch (IOException | ClassNotFoundException e) {

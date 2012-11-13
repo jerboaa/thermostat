@@ -37,32 +37,35 @@
 
 package com.redhat.thermostat.web.client;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.lang.reflect.Array;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -74,14 +77,79 @@ import com.redhat.thermostat.common.storage.Cursor;
 import com.redhat.thermostat.common.storage.Query;
 import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
+import com.redhat.thermostat.common.storage.StorageException;
 import com.redhat.thermostat.common.storage.Update;
-import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
 public class WebStorage extends Storage {
+
+    private static class CloseableHttpEntity implements Closeable, HttpEntity {
+
+        private HttpEntity entity;
+
+        CloseableHttpEntity(HttpEntity entity) {
+            this.entity = entity;
+        }
+
+        @Override
+        public void consumeContent() throws IOException {
+            entity.consumeContent();
+        }
+
+        @Override
+        public InputStream getContent() throws IOException, IllegalStateException {
+            return entity.getContent();
+        }
+
+        @Override
+        public Header getContentEncoding() {
+            return entity.getContentEncoding();
+        }
+
+        @Override
+        public long getContentLength() {
+            return entity.getContentLength();
+        }
+
+        @Override
+        public Header getContentType() {
+            return entity.getContentType();
+        }
+
+        @Override
+        public boolean isChunked() {
+            return entity.isChunked();
+        }
+
+        @Override
+        public boolean isRepeatable() {
+            return entity.isRepeatable();
+        }
+
+        @Override
+        public boolean isStreaming() {
+            return entity.isStreaming();
+        }
+
+        @Override
+        public void writeTo(OutputStream out) throws IOException {
+            entity.writeTo(out);
+        }
+
+        @Override
+        public void close() {
+            try {
+                EntityUtils.consume(entity);
+            } catch (IOException ex) {
+                throw new StorageException(ex);
+            }
+        }
+
+    }
 
     private final class WebConnection extends Connection {
         WebConnection() {
@@ -116,53 +184,151 @@ public class WebStorage extends Storage {
         }
     }
 
+    private static class WebDataStream extends InputStream {
+
+        private CloseableHttpEntity entity;
+        private InputStream content;
+
+        WebDataStream(CloseableHttpEntity entity) {
+            this.entity = entity;
+            try {
+                content = entity.getContent();
+            } catch (IllegalStateException | IOException e) {
+                throw new StorageException(e);
+            }
+        }
+
+        @Override
+        public void close() throws IOException {
+            content.close();
+            entity.close();
+        }
+
+        @Override
+        public int read() throws IOException {
+            return content.read();
+        }
+
+        @Override
+        public int available() throws IOException {
+            return content.available();
+        }
+
+        @Override
+        public void mark(int readlimit) {
+            content.mark(readlimit);
+        }
+
+        @Override
+        public boolean markSupported() {
+            return content.markSupported();
+        }
+
+        @Override
+        public int read(byte[] b) throws IOException {
+            return content.read(b);
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            return content.read(b, off, len);
+        }
+
+        @Override
+        public void reset() throws IOException {
+            content.reset();
+        }
+
+        @Override
+        public long skip(long n) throws IOException {
+            return content.skip(n);
+        }
+
+    }
+
     private String endpoint;
     private UUID agentId;
 
     private Map<Category, Integer> categoryIds;
     private Gson gson;
+    private HttpClient httpClient;
 
     public WebStorage() {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
+        ClientConnectionManager connManager = new ThreadSafeClientConnManager();
+        DefaultHttpClient client = new DefaultHttpClient(connManager);
+        httpClient = client;
     }
 
-    private void ping() throws IOException {
-        HttpClient httpClient = new DefaultHttpClient();
-        HttpPost httpPost = new HttpPost(endpoint + "/ping");
+    private void ping() throws StorageException {
+        post(endpoint + "/ping", (HttpEntity) null).close();
+    }
+
+    private CloseableHttpEntity post(String url, List<NameValuePair> formparams) throws StorageException {
+        try {
+            return postImpl(url, formparams);
+        } catch (IOException ex) {
+            throw new StorageException(ex);
+        }
+    }
+
+    private CloseableHttpEntity postImpl(String url, List<NameValuePair> formparams) throws IOException {
+        HttpEntity entity;
+        if (formparams != null) {
+            entity = new UrlEncodedFormEntity(formparams, "UTF-8");
+        } else {
+            entity = null;
+        }
+        return postImpl(url, entity);
+    }
+
+    
+    private CloseableHttpEntity post(String url, HttpEntity entity) throws StorageException {
+        try {
+            return postImpl(url, entity);
+        } catch (IOException ex) {
+            throw new StorageException(ex);
+        }
+    }
+
+    private CloseableHttpEntity postImpl(String url, HttpEntity entity) throws IOException {
+        HttpPost httpPost = new HttpPost(url);
+        if (entity != null) {
+            httpPost.setEntity(entity);
+        }
         HttpResponse response = httpClient.execute(httpPost);
         StatusLine status = response.getStatusLine();
         if (status.getStatusCode() != 200) {
             throw new IOException("Server returned status: " + status);
         }
+
+        return new CloseableHttpEntity(response.getEntity());
+    }
+
+    private static InputStream getContent(HttpEntity entity) {
+        try {
+            return entity.getContent();
+        } catch (IOException ex) {
+            throw new StorageException(ex);
+        }
+    }
+
+    private static Reader getContentAsReader(HttpEntity entity) {
+        InputStream in = getContent(entity);
+        return new InputStreamReader(in);
     }
 
     @Override
-    public void registerCategory(Category category) {
-        try {
-            URL url = new URL(endpoint + "/register-category");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            String enc = "UTF-8";
-            conn.setRequestProperty("Content-Encoding", enc);
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            conn.setRequestMethod("POST");
-            OutputStream out = conn.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            writer.write("name=");
-            writer.write(URLEncoder.encode(category.getName(), enc));
-            writer.write("&category=");
-            writer.write(URLEncoder.encode(gson.toJson(category), enc));
-            writer.flush();
-
-            InputStream in = conn.getInputStream();
-            Reader reader = new InputStreamReader(in);
+    public void registerCategory(Category category) throws StorageException {
+        NameValuePair nameParam = new BasicNameValuePair("name", category.getName());
+        NameValuePair categoryParam = new BasicNameValuePair("category", gson.toJson(category));
+        List<NameValuePair> formparams = Arrays.asList(nameParam, categoryParam);
+        try (CloseableHttpEntity entity = post(endpoint + "/register-category", formparams)) {
+            Reader reader = getContentAsReader(entity);
             Integer id = gson.fromJson(reader, Integer.class);
             categoryIds.put(category, id);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
         }
-
     }
 
     @Override
@@ -181,46 +347,26 @@ public class WebStorage extends Storage {
     }
 
     @Override
-    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
-        try {
-            URL url = new URL(endpoint + "/find-all");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            OutputStream out = conn.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            ((WebQuery) query).setResultClassName(resultClass.getName());
-            gson.toJson(query, writer);
-            writer.flush();
-
-            InputStream in = conn.getInputStream();
-            T[] result = (T[]) gson.fromJson(new InputStreamReader(in), Array.newInstance(resultClass, 0).getClass());
+    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) throws StorageException {
+        ((WebQuery) query).setResultClassName(resultClass.getName());
+        NameValuePair queryParam = new BasicNameValuePair("query", gson.toJson(query));
+        List<NameValuePair> formparams = Arrays.asList(queryParam);
+        try (CloseableHttpEntity entity = post(endpoint + "/find-all", formparams)) {
+            Reader reader = getContentAsReader(entity);
+            T[] result = (T[]) gson.fromJson(reader, Array.newInstance(resultClass, 0).getClass());
             return new WebCursor<T>(result);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
         }
     }
 
     @Override
-    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) {
-        try {
-            ((WebQuery) query).setResultClassName(resultClass.getName());
-            URL url = new URL(endpoint + "/find-pojo");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            OutputStream out = conn.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            gson.toJson(query, writer);
-            writer.flush();
-
-            InputStream in = conn.getInputStream();
-            T result = gson.fromJson(new InputStreamReader(in), resultClass);
+    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) throws StorageException {
+        ((WebQuery) query).setResultClassName(resultClass.getName());
+        NameValuePair queryParam = new BasicNameValuePair("query", gson.toJson(query));
+        List<NameValuePair> formparams = Arrays.asList(queryParam);
+        try (CloseableHttpEntity entity = post(endpoint + "/find-pojo", formparams)) {
+            Reader reader = getContentAsReader(entity);
+            T result = gson.fromJson(reader, resultClass);
             return result;
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
         }
     }
 
@@ -235,128 +381,57 @@ public class WebStorage extends Storage {
     }
 
     @Override
-    public long getCount(Category category) {
-        try {
-            URL url = new URL(endpoint + "/get-count");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoInput(true);
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            OutputStream out = conn.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            writer.write("category=");
-            gson.toJson(categoryIds.get(category), writer);
-            writer.write("\n");
-            writer.flush();
-
-            InputStream in = conn.getInputStream();
-            long result = gson.fromJson(new InputStreamReader(in), Long.class);
+    public long getCount(Category category) throws StorageException {
+        NameValuePair categoryParam = new BasicNameValuePair("category", gson.toJson(categoryIds.get(category)));
+        List<NameValuePair> formparams = Arrays.asList(categoryParam);
+        try (CloseableHttpEntity entity = post(endpoint + "/get-count", formparams)) {
+            Reader reader = getContentAsReader(entity);
+            long result = gson.fromJson(reader, Long.class);
             return result;
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
         }
     }
 
     @Override
-    public InputStream loadFile(String name) {
-        try {
-            HttpClient httpClient = new DefaultHttpClient();
-            HttpPost httpPost = new HttpPost(endpoint + "/load-file");
-            List<NameValuePair> formparams = new ArrayList<NameValuePair>();
-            formparams.add(new BasicNameValuePair("file", name));
-            UrlEncodedFormEntity entity = new UrlEncodedFormEntity(formparams, "UTF-8");
-            httpPost.setEntity(entity);
-            HttpResponse response = httpClient.execute(httpPost);
-            return response.getEntity().getContent();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+    public InputStream loadFile(String name) throws StorageException {
+        NameValuePair fileParam = new BasicNameValuePair("file", name);
+        List<NameValuePair> formparams = Arrays.asList(fileParam);
+        CloseableHttpEntity entity = post(endpoint + "/load-file", formparams);
+        return new WebDataStream(entity);
     }
 
     @Override
-    public void purge() {
-        try {
-            HttpClient httpClient = new DefaultHttpClient();
-            HttpPost httpPost = new HttpPost(endpoint + "/purge");
-            HttpResponse response = httpClient.execute(httpPost);
-            int status = response.getStatusLine().getStatusCode();
-            if (status != 200) {
-                throw new IOException("Server returned status: " + status);
-            }
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+    public void purge() throws StorageException {
+        post(endpoint + "/purge", (HttpEntity) null).close();
     }
 
     @Override
-    public void putPojo(Category category, boolean replace, AgentIdPojo pojo) {
+    public void putPojo(Category category, boolean replace, AgentIdPojo pojo) throws StorageException {
         // TODO: This logic should probably be moved elsewhere. I.e. out of the Storage API.
         if (pojo.getAgentId() == null) {
             pojo.setAgentId(getAgentId());
         }
-        try {
-            int categoryId = categoryIds.get(category);
-            WebInsert insert = new WebInsert(categoryId, replace, pojo.getClass().getName());
-            URL url = new URL(endpoint + "/put-pojo");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            conn.setRequestMethod("POST");
-            OutputStream out = conn.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            writer.write("insert=");
-            writer.write(URLEncoder.encode(gson.toJson(insert), "UTF-8"));
-            writer.write("&pojo=");
-            writer.write(URLEncoder.encode(gson.toJson(pojo), "UTF-8"));
-            writer.flush();
-            checkResponseCode(conn);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
 
-    private void checkResponseCode(HttpURLConnection conn) throws IOException {
-        int responseCode = conn.getResponseCode();
-        if (responseCode != HttpURLConnection.HTTP_OK) {
-            throw new RuntimeException("Web server returned HTTP code: " + responseCode);
-        }
+        int categoryId = categoryIds.get(category);
+        WebInsert insert = new WebInsert(categoryId, replace, pojo.getClass().getName());
+        NameValuePair insertParam = new BasicNameValuePair("insert", gson.toJson(insert));
+        NameValuePair pojoParam = new BasicNameValuePair("pojo", gson.toJson(pojo));
+        List<NameValuePair> formparams = Arrays.asList(insertParam, pojoParam);
+        post(endpoint + "/put-pojo", formparams).close();
     }
 
     @Override
-    public void removePojo(Remove remove) {
-        try {
-            URL url = new URL(endpoint + "/remove-pojo");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.setRequestMethod("POST");
-            OutputStream out = conn.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            writer.write("remove=");
-            writer.write(URLEncoder.encode(gson.toJson(remove), "UTF-8"));
-            writer.flush();
-            checkResponseCode(conn);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+    public void removePojo(Remove remove) throws StorageException {
+        NameValuePair removeParam = new BasicNameValuePair("remove", gson.toJson(remove));
+        List<NameValuePair> formparams = Arrays.asList(removeParam);
+        post(endpoint + "/remove-pojo", formparams).close();
     }
 
     @Override
-    public void saveFile(String name, InputStream in) {
-        try {
-            HttpClient httpClient = new DefaultHttpClient();
-            HttpPost httpPost = new HttpPost(endpoint + "/save-file");
-            InputStreamBody body = new InputStreamBody(in, name);
-            MultipartEntity entity = new MultipartEntity();
-            entity.addPart("file", body);
-            httpPost.setEntity(entity);
-            HttpResponse response = httpClient.execute(httpPost);
-            StatusLine status = response.getStatusLine();
-            if (status.getStatusCode() != 200) {
-                throw new IOException("Server returned status: " + status);
-            }
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
+    public void saveFile(String name, InputStream in) throws StorageException {
+        InputStreamBody body = new InputStreamBody(in, name);
+        MultipartEntity mpEntity = new MultipartEntity();
+        mpEntity.addPart("file", body);
+        post(endpoint + "/save-file", mpEntity).close();
     }
 
     @Override
@@ -365,30 +440,18 @@ public class WebStorage extends Storage {
     }
 
     @Override
-    public void updatePojo(Update update) {
+    public void updatePojo(Update update) throws StorageException {
         WebUpdate webUp = (WebUpdate) update;
-        try {
-            URL url = new URL(endpoint + "/update-pojo");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setDoOutput(true);
-            conn.setDoInput(true);
-            conn.setRequestMethod("POST");
-            OutputStream out = conn.getOutputStream();
-            OutputStreamWriter writer = new OutputStreamWriter(out);
-            writer.write("update=");
-            writer.write(URLEncoder.encode(gson.toJson(webUp), "UTF-8"));
-            List<WebUpdate.UpdateValue> updateValues = webUp.getUpdates();
-            List<Object> values = new ArrayList<>(updateValues.size());
-            for (WebUpdate.UpdateValue updateValue : updateValues) {
-                values.add(updateValue.getValue());
-            }
-            writer.write("&values=");
-            writer.write(URLEncoder.encode(gson.toJson(values), "UTF-8"));
-            writer.flush();
-            checkResponseCode(conn);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+        List<WebUpdate.UpdateValue> updateValues = webUp.getUpdates();
+        List<Object> values = new ArrayList<>(updateValues.size());
+        for (WebUpdate.UpdateValue updateValue : updateValues) {
+            values.add(updateValue.getValue());
         }
+
+        NameValuePair updateParam = new BasicNameValuePair("update", gson.toJson(update));
+        NameValuePair valuesParam = new BasicNameValuePair("values", gson.toJson(values));
+        List<NameValuePair> formparams = Arrays.asList(updateParam, valuesParam);
+        post(endpoint + "/update-pojo", formparams).close();
     }
 
     public void setEndpoint(String endpoint) {

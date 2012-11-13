@@ -204,7 +204,7 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testFindPojo() {
+    public void testFindPojo() throws UnsupportedEncodingException, IOException {
 
         TestObj obj = new TestObj();
         obj.setProperty1("fluffor");
@@ -214,7 +214,12 @@ public class WebStorageTest {
         Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
 
         TestObj result = storage.findPojo(query, TestObj.class);
-        WebQuery restQuery = gson.fromJson(requestBody, WebQuery.class);
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        String[] parts = line.split("=");
+        assertEquals("query", parts[0]);
+        WebQuery restQuery = gson.fromJson(parts[1], WebQuery.class);
 
         assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
@@ -228,7 +233,7 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testFindAllPojos() {
+    public void testFindAllPojos() throws UnsupportedEncodingException, IOException {
 
         TestObj obj1 = new TestObj();
         obj1.setProperty1("fluffor1");
@@ -241,7 +246,12 @@ public class WebStorageTest {
         Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
 
         Cursor<TestObj> results = storage.findAllPojos(query, TestObj.class);
-        WebQuery restQuery = gson.fromJson(requestBody, WebQuery.class);
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        String[] parts = line.split("=");
+        assertEquals("query", parts[0]);
+        WebQuery restQuery = gson.fromJson(parts[1], WebQuery.class);
 
         assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();

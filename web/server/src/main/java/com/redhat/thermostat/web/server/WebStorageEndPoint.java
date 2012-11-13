@@ -39,7 +39,6 @@ package com.redhat.thermostat.web.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,10 +71,10 @@ import com.redhat.thermostat.common.storage.Remove;
 import com.redhat.thermostat.common.storage.Storage;
 import com.redhat.thermostat.common.storage.Update;
 import com.redhat.thermostat.web.common.Qualifier;
-import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
@@ -142,14 +141,15 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private void loadFile(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         String name = req.getParameter("file");
-        InputStream data = storage.loadFile(name);
-        OutputStream out = resp.getOutputStream();
-        byte[] buffer = new byte[512];
-        int read = 0;
-        while (read >= 0) {
-            read = data.read(buffer);
-            if (read > 0) {
-                out.write(buffer, 0, read);
+        try (InputStream data = storage.loadFile(name)) {
+            OutputStream out = resp.getOutputStream();
+            byte[] buffer = new byte[512];
+            int read = 0;
+            while (read >= 0) {
+                read = data.read(buffer);
+                if (read > 0) {
+                    out.write(buffer, 0, read);
+                }
             }
         }
     }
@@ -288,8 +288,8 @@ public class WebStorageEndPoint extends HttpServlet {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findPojo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            Reader in = req.getReader();
-            WebQuery query = gson.fromJson(in, WebQuery.class);
+            String queryParam = req.getParameter("query");
+            WebQuery query = gson.fromJson(queryParam, WebQuery.class);
             Class resultClass = Class.forName(query.getResultClassName());
             Query targetQuery = constructTargetQuery(query);
             Object result = storage.findPojo(targetQuery, resultClass);
@@ -303,8 +303,8 @@ public class WebStorageEndPoint extends HttpServlet {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findAll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
-            Reader in = req.getReader();
-            WebQuery query = gson.fromJson(in, WebQuery.class);
+            String queryParam = req.getParameter("query");
+            WebQuery query = gson.fromJson(queryParam, WebQuery.class);
             Class resultClass = Class.forName(query.getResultClassName());
             Query targetQuery = constructTargetQuery(query);
             ArrayList resultList = new ArrayList();

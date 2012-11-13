@@ -165,8 +165,10 @@ public class HeapDump {
         File tmpDir = getOrCreateHeapDumpDir();
         File tmpFile = new File(tmpDir, filename);
         if (! tmpFile.exists()) {
-            InputStream in = heapDAO.getHeapDumpData(heapInfo);
-            Files.copy(in, tmpFile.toPath());
+            try (InputStream in = heapDAO.getHeapDumpData(heapInfo);) {
+                Files.copy(in, tmpFile.toPath());
+            }
+            
         }
         snapshot = Reader.readFile(tmpFile.getAbsolutePath(), true, 0);
         snapshot.resolve(true);
