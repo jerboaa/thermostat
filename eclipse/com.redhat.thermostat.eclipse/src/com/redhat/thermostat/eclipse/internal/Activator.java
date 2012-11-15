@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.eclipse.internal;
 
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IWorkbenchPage;
@@ -48,6 +49,7 @@ import com.redhat.thermostat.common.ThreadPoolTimerFactory;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.storage.core.ConnectionException;
 
 /**
@@ -91,11 +93,15 @@ public class Activator extends AbstractUIPlugin {
      * )
      */
     public void stop(BundleContext context) throws Exception {
-        DbService dbService = OSGIUtils.getInstance().getService(DbService.class);
-        try {
-            dbService.disconnect();
-        } catch (ConnectionException e) {
-            e.printStackTrace();
+        DbService dbService = OSGIUtils.getInstance().getServiceAllowNull(
+                DbService.class);
+        if (dbService != null) {
+            try {
+                dbService.disconnect();
+            } catch (ConnectionException e) {
+                LoggerFacility.getInstance().log(IStatus.ERROR,
+                        "Error disconnecting from database", e);
+            }
         }
         plugin = null;
         super.stop(context);
@@ -149,9 +155,10 @@ public class Activator extends AbstractUIPlugin {
     public static ImageDescriptor getImageDescriptor(String path) {
         return imageDescriptorFromPlugin(PLUGIN_ID, path);
     }
-    
+
     public boolean isDbConnected() {
-        DbService dbService = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
+        DbService dbService = OSGIUtils.getInstance().getServiceAllowNull(
+                DbService.class);
         return dbService != null;
     }
 
