@@ -76,6 +76,13 @@ public class HostCpuViewPartTest extends AbstractRefViewPartTest<HostRef> {
     }
 
     @Test
+    public void testBadSelection() throws Exception {
+        mockSelection(null);
+        view.createPartControl(parent);
+        verify(view).createNoSelectionLabel();
+    }
+
+    @Test
     public void testSelectionBefore() throws Exception {
         HostRef hostRef = new HostRef("TEST", "Test");
         mockSelection(hostRef);

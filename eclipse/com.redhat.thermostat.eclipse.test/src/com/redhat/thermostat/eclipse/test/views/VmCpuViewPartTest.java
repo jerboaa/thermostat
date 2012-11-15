@@ -72,6 +72,20 @@ public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
     }
 
     @Test
+    public void testSelectionHostRefAfterVmRef() throws Exception {
+        HostRef hostRef = new HostRef("TEST", "Test");
+        VmRef vmRef = new VmRef(hostRef, 0, "Test");
+        mockSelection(vmRef);
+        view.createPartControl(parent);
+
+        IStructuredSelection selection = mockSelection(hostRef);
+        view.selectionChanged(hostVMView, selection);
+
+        // Ensure selection prompt shown
+        verify(view).createNoSelectionLabel();
+    }
+
+    @Test
     public void testSelectionAfter() throws Exception {
         view.createPartControl(parent);
 
