@@ -92,6 +92,7 @@
     <module>com.redhat.thermostat.eclipse.boot</module>
     <module>com.redhat.thermostat.eclipse</module>
     <module>com.redhat.thermostat.eclipse.chart.common</module>
+    <module>com.redhat.thermostat.eclipse.chart.vmclassstat</module>
     <module>com.redhat.thermostat.eclipse.test</module>
     <module>com.redhat.thermostat.eclipse.test.ui</module>
     <module>com.redhat.thermostat.eclipse.feature</module>
