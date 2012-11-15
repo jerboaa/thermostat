@@ -52,7 +52,20 @@ public class DAOFactoryImpl implements DAOFactory {
 
     private final Storage storage;
     private final BundleContext bundleContext;
+    @SuppressWarnings("rawtypes")
     private final List<ServiceRegistration> registeredServices = new ArrayList<>();
+    private AgentInfoDAO agentDAO;
+    private BackendInfoDAO backendInfoDAO;
+    private HostInfoDAO hostInfoDAO;
+    private CpuStatDAO cpuStatDAO;
+    private MemoryStatDAO memoryStatDAO;
+    private NetworkInterfaceInfoDAO networkInfoDAO;
+    private VmInfoDAO vmInfoDAO;
+    private VmCpuStatDAO vmCpuStatDAO;
+    private VmClassStatDAO vmClassStatDAO;
+    private VmMemoryStatDAO vmMemStatDAO;
+    private VmGcStatDAO vmGcStatDAO;
+    private HeapDAO heapDAO;
 
     public DAOFactoryImpl(StorageProvider prov) {
         this(FrameworkUtil.getBundle(DAOFactoryImpl.class).getBundleContext(), prov);
@@ -70,66 +83,68 @@ public class DAOFactoryImpl implements DAOFactory {
 
     @Override
     public AgentInfoDAO getAgentInfoDAO() {
-        return new AgentInfoDAOImpl(storage);
+        ensureStorageConnected();
+        return agentDAO;
     }
 
     @Override
     public BackendInfoDAO getBackendInfoDAO() {
-        return new BackendInfoDAOImpl(storage);
+        ensureStorageConnected();
+        return backendInfoDAO;
     }
 
     @Override
     public HostInfoDAO getHostInfoDAO() {
         ensureStorageConnected();
-        return new HostInfoDAOImpl(storage, new AgentInfoDAOImpl(storage));
+        return hostInfoDAO;
     }
 
     @Override
     public CpuStatDAO getCpuStatDAO() {
         ensureStorageConnected();
-        return new CpuStatDAOImpl(storage);
+        return cpuStatDAO;
     }
 
     @Override
     public MemoryStatDAO getMemoryStatDAO() {
         ensureStorageConnected();
-        return new MemoryStatDAOImpl(storage);
+        return memoryStatDAO;
     }
 
     @Override
     public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO() {
         ensureStorageConnected();
-        return new NetworkInterfaceInfoDAOImpl(storage);
+        return networkInfoDAO;
     }
 
     @Override
     public VmInfoDAO getVmInfoDAO() {
         ensureStorageConnected();
-        return new VmInfoDAOImpl(storage);
+        return vmInfoDAO;
     }
 
     @Override
     public VmCpuStatDAO getVmCpuStatDAO() {
         ensureStorageConnected();
-        return new VmCpuStatDAOImpl(storage);
+        return vmCpuStatDAO;
     }
 
     @Override
     public VmMemoryStatDAO getVmMemoryStatDAO() {
         ensureStorageConnected();
-        return new VmMemoryStatDAOImpl(storage);
+        return vmMemStatDAO;
     }
 
     @Override
     public VmClassStatDAO getVmClassStatsDAO() {
         ensureStorageConnected();
-        return new VmClassStatDAOImpl(storage);
+        return vmClassStatDAO;
     }
 
     @Override
     public VmGcStatDAO getVmGcStatDAO() {
         ensureStorageConnected();
-        return new VmGcStatDAOImpl(storage);
+        return vmGcStatDAO;
     }
 
     @Override
@@ -146,11 +161,13 @@ public class DAOFactoryImpl implements DAOFactory {
     @Override
     public HeapDAO getHeapDAO() {
         ensureStorageConnected();
-        return new HeapDAOImpl(storage);
+        return heapDAO;
     }
 
     @Override
     public void registerDAOsAndStorageAsOSGiServices() {
+        ensureStorageConnected();
+        createDAOs();
         registerAndRecordService(Storage.class, getStorage());
 
         registerAndRecordService(AgentInfoDAO.class, getAgentInfoDAO());
@@ -167,6 +184,24 @@ public class DAOFactoryImpl implements DAOFactory {
         registerAndRecordService(VmGcStatDAO.class, getVmGcStatDAO());
         registerAndRecordService(VmMemoryStatDAO.class, getVmMemoryStatDAO());
         registerAndRecordService(HeapDAO.class, getHeapDAO());
+    }
+
+    /*
+     * Pre: Db connected
+     */
+    void createDAOs() {
+        agentDAO = new AgentInfoDAOImpl(storage);
+        backendInfoDAO = new BackendInfoDAOImpl(storage);
+        hostInfoDAO = new HostInfoDAOImpl(storage, agentDAO);
+        cpuStatDAO = new CpuStatDAOImpl(storage);
+        memoryStatDAO = new MemoryStatDAOImpl(storage);
+        networkInfoDAO = new NetworkInterfaceInfoDAOImpl(storage);
+        vmInfoDAO = new VmInfoDAOImpl(storage);
+        vmCpuStatDAO = new VmCpuStatDAOImpl(storage);
+        vmClassStatDAO = new VmClassStatDAOImpl(storage);
+        vmMemStatDAO = new VmMemoryStatDAOImpl(storage);
+        vmGcStatDAO = new VmGcStatDAOImpl(storage);
+        heapDAO = new HeapDAOImpl(storage);
     }
 
     private <K> void registerAndRecordService(Class<K> serviceType, K serviceImplementation) {
