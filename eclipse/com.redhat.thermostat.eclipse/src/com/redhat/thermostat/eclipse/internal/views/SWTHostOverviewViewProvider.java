@@ -36,39 +36,15 @@
 
 package com.redhat.thermostat.eclipse.internal.views;
 
-import org.eclipse.swt.widgets.Composite;
-
+import com.redhat.thermostat.client.core.views.HostOverviewView;
 import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
-import com.redhat.thermostat.client.ui.HostOverviewController;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.views.HostRefViewPart;
+import com.redhat.thermostat.eclipse.SWTViewProvider;
 
-public class HostOverviewViewPart extends HostRefViewPart {
+public class SWTHostOverviewViewProvider extends SWTViewProvider implements HostOverviewViewProvider {
 
     @Override
-    protected SWTComponent createControllerView(HostRef ref, Composite top) {
-        HostInfoDAO hostInfoDAO = OSGIUtils.getInstance().getService(
-                HostInfoDAO.class);
-        NetworkInterfaceInfoDAO networkInfoDAO = OSGIUtils.getInstance()
-                .getService(NetworkInterfaceInfoDAO.class);
-        SWTHostOverviewViewProvider provider = (SWTHostOverviewViewProvider) OSGIUtils
-                .getInstance().getService(HostOverviewViewProvider.class);
-        provider.setParent(top);
-
-        HostOverviewController controller = createController(ref, hostInfoDAO,
-                networkInfoDAO, provider);
-        return (SWTComponent) controller.getView();
-    }
-
-    public HostOverviewController createController(HostRef ref,
-            HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO,
-            HostOverviewViewProvider provider) {
-        return new HostOverviewController(hostInfoDAO, networkInfoDAO, ref,
-                provider);
+    public HostOverviewView createView() {
+        return new SWTHostOverviewView(getParent());
     }
 
 }
