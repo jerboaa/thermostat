@@ -36,26 +36,29 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import org.eclipse.swt.widgets.Composite;
+
 import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.eclipse.views.VmRefViewPart;
 
 public class VmCpuViewPart extends VmRefViewPart {
 
-    private VmCpuController controller;
-
     @Override
-    protected void createControllerView(VmRef ref) {
+    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
         VmCpuStatDAO vmCpuStatDao = OSGIUtils.getInstance().getService(
                 VmCpuStatDAO.class);
-        VmCpuViewProvider viewProvider = OSGIUtils.getInstance().getService(
-                VmCpuViewProvider.class);
-        controller = createController(vmCpuStatDao, ref, viewProvider);
+        SWTVmCpuViewProvider viewProvider = (SWTVmCpuViewProvider) OSGIUtils
+                .getInstance().getService(VmCpuViewProvider.class);
+        viewProvider.setParent(parent);
+        VmCpuController controller = createController(vmCpuStatDao, ref,
+                viewProvider);
         SWTComponent view = (SWTComponent) controller.getView();
-        view.createControl(top);
+        return view;
     }
 
     public VmCpuController createController(VmCpuStatDAO vmCpuStatDao,

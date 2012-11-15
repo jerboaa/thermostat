@@ -39,13 +39,14 @@ package com.redhat.thermostat.eclipse.test.views;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
+import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.client.ui.VmGcController;
@@ -53,11 +54,16 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.eclipse.chart.common.RefViewPart;
+import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcView;
+import com.redhat.thermostat.eclipse.chart.common.SWTVmGcViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmGcViewPart;
+import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 
 public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
+
+    private SWTVmGcViewProvider viewProvider;
+    private VmGcController controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -68,17 +74,23 @@ public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
         IStructuredSelection selection = mockSelection(vmRef);
         view.selectionChanged(hostVMView, selection);
 
-        verify(thermoView).createControl(any(Composite.class));
+        verifyViewProvider();
+    }
+
+    private void verifyViewProvider() {
+        InOrder order = inOrder(viewProvider, controller);
+        order.verify(viewProvider).setParent(any(Composite.class));
+        order.verify(controller).getView();
     }
 
     @Override
     protected void mockController() {
-        VmGcController controller = mock(VmGcController.class);
+        controller = mock(VmGcController.class);
         thermoView = mock(SWTVmGcView.class);
 
         VmMemoryStatDAO memStatDao = mock(VmMemoryStatDAO.class);
         VmGcStatDAO gcStatDao = mock(VmGcStatDAO.class);
-        VmGcViewProvider viewProvider = mock(VmGcViewProvider.class);
+        viewProvider = mock(SWTVmGcViewProvider.class);
         when(osgi.getService(VmMemoryStatDAO.class)).thenReturn(memStatDao);
         when(osgi.getService(VmGcStatDAO.class)).thenReturn(gcStatDao);
         when(osgi.getService(VmGcViewProvider.class)).thenReturn(viewProvider);
@@ -92,6 +104,11 @@ public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
     @Override
     protected RefViewPart<VmRef> createViewPart() {
         return new VmGcViewPart();
+    }
+
+    @Override
+    protected String getViewID() {
+        return ThermostatConstants.VIEW_ID_VM_GC;
     }
 
 }

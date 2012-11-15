@@ -60,7 +60,6 @@ import com.redhat.thermostat.client.vmclassstat.core.VmClassStatView;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.chart.common.RecentTimeSeriesChartComposite;
-import com.redhat.thermostat.eclipse.chart.common.ViewVisibilityWatcher;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class SWTVmClassStatView extends VmClassStatView implements SWTComponent {
@@ -69,27 +68,20 @@ public class SWTVmClassStatView extends VmClassStatView implements SWTComponent 
 
     private final TimeSeriesCollection dataset;
     
-    private ViewVisibilityWatcher watcher;
-
     private JFreeChart chart;
 
-    public SWTVmClassStatView() {
+    public SWTVmClassStatView(Composite parent) {
         dataset = new TimeSeriesCollection();
-        watcher = new ViewVisibilityWatcher(notifier);
-    }
-    
-    @Override
-    public void createControl(Composite parent) {
         // any name works
         dataset.addSeries(new TimeSeries("class-stat"));
-
+        
         chart = ChartFactory.createTimeSeriesChart(
                 null,
                 translator.localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL),
                 translator.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
                 dataset,
                 false, false, false);
-
+        
         TickUnits tickUnits = new TickUnits();
         tickUnits.add(new NumberTickUnit(1));
         tickUnits.add(new NumberTickUnit(10));
@@ -98,19 +90,17 @@ public class SWTVmClassStatView extends VmClassStatView implements SWTComponent 
         tickUnits.add(new NumberTickUnit(10000));
         tickUnits.add(new NumberTickUnit(100000));
         tickUnits.add(new NumberTickUnit(1000000));
-
+        
         NumberAxis axis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         axis.setStandardTickUnits(tickUnits);
         axis.setRangeType(RangeType.POSITIVE);
         axis.setAutoRangeMinimumSize(10);
-
+        
         Composite chartPanel = new RecentTimeSeriesChartComposite(parent, SWT.NONE, chart);
         chartPanel.setLayout(new GridLayout());
         chartPanel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-
-        watcher.watch(parent, Activator.VIEW_ID_VM_CLASS_STAT);
     }
-
+    
     @Override
     public void addClassCount(List<DiscreteTimeData<Long>> data) {
         final List<DiscreteTimeData<Long>> copy = new ArrayList<>(data);
@@ -142,6 +132,16 @@ public class SWTVmClassStatView extends VmClassStatView implements SWTComponent 
     
     public JFreeChart getChart() {
         return chart;
+    }
+
+    @Override
+    public void show() {
+        notifier.fireAction(Action.VISIBLE);
+    }
+
+    @Override
+    public void hide() {
+        notifier.fireAction(Action.HIDDEN);
     }
 
 }

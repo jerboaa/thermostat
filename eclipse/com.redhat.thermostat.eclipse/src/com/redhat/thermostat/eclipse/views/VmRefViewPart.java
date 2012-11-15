@@ -34,9 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.common;
+package com.redhat.thermostat.eclipse.views;
 
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 
 public abstract class VmRefViewPart extends RefViewPart<VmRef> {
 

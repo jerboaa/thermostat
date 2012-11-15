@@ -38,12 +38,14 @@ package com.redhat.thermostat.eclipse.chart.vmclassstat;
 
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatView;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
+import com.redhat.thermostat.eclipse.SWTViewProvider;
 
-public class SWTVmClassStatViewProvider implements VmClassStatViewProvider {
+public class SWTVmClassStatViewProvider extends SWTViewProvider implements
+        VmClassStatViewProvider {
 
     @Override
     public VmClassStatView createView() {
-        return new SWTVmClassStatView();
+        return new SWTVmClassStatView(getParent());
     }
 
 }

@@ -11,12 +11,15 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui
 Import-Package: com.mongodb,
  com.redhat.thermostat.client.core.views,
+ com.redhat.thermostat.client.locale,
+ com.redhat.thermostat.client.ui,
  com.redhat.thermostat.common,
  com.redhat.thermostat.common.appctx,
  com.redhat.thermostat.storage.config,
  com.redhat.thermostat.common.dao,
  com.redhat.thermostat.storage.model,
  com.redhat.thermostat.storage.core,
+ com.redhat.thermostat.common.locale,
  com.redhat.thermostat.common.utils,
  com.redhat.thermostat.web.client,
  com.redhat.thermostat.web.common
@@ -25,4 +28,5 @@ Export-Package: com.redhat.thermostat.eclipse,
  com.redhat.thermostat.eclipse.internal.controllers;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
  com.redhat.thermostat.eclipse.internal.jobs;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
  com.redhat.thermostat.eclipse.internal.model;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
- com.redhat.thermostat.eclipse.internal.views;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui"
+ com.redhat.thermostat.eclipse.internal.views,
+ com.redhat.thermostat.eclipse.views

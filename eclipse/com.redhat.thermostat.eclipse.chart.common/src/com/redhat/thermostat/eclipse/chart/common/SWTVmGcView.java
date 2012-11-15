@@ -42,7 +42,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Font;
@@ -50,6 +49,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.ui.PlatformUI;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
@@ -68,7 +68,6 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 
 public class SWTVmGcView extends VmGcView implements SWTComponent {
@@ -79,27 +78,13 @@ public class SWTVmGcView extends VmGcView implements SWTComponent {
     private final Map<String, Composite> subPanels;
     private final Map<String, JFreeChart> charts;
     
-    private ViewVisibilityWatcher watcher;
     private Composite parent;
-    private final CountDownLatch latch;
 
-    public SWTVmGcView() {
+    public SWTVmGcView(Composite parent) {
+        this.parent = parent;
         dataset = new HashMap<String, SampledDataset>();
         subPanels = Collections.synchronizedMap(new HashMap<String, Composite>());
-        watcher = new ViewVisibilityWatcher(notifier);
-        latch = new CountDownLatch(1);
         charts = new HashMap<String, JFreeChart>();
-    }
-
-    @Override
-    public void createControl(Composite parent) {
-        this.parent = parent;
-        
-        // Notify threads that controls are created
-        latch.countDown();
-        
-        // Don't start giving updates until controls are created
-        watcher.watch(parent, ThermostatConstants.VIEW_ID_VM_GC);
     }
 
     @Override
@@ -176,9 +161,7 @@ public class SWTVmGcView extends VmGcView implements SWTComponent {
         // An array so we can modify it in the UI thread
         final Composite detailsTop[] = new Composite[1];
         
-        // We need to wait for the controls to be fully constructed
-        // before adding the chart to the composite
-        ChartUtils.runAfterCreated(latch, new Runnable() {
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 
             @Override
             public void run() {
@@ -248,13 +231,11 @@ public class SWTVmGcView extends VmGcView implements SWTComponent {
     }
 
     private void destroyChartComposite(final Composite top) {
-        // We need to wait for the controls to be fully constructed
-        // before removing the chart from the composite
-        ChartUtils.runAfterCreated(latch, new Runnable() {
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 
             @Override
             public void run() {
-                if (!parent.isDisposed()) {
+                if (top != null && !top.isDisposed()) {
                     top.dispose();
                     parent.layout();
                 }
@@ -264,6 +245,16 @@ public class SWTVmGcView extends VmGcView implements SWTComponent {
     
     public JFreeChart getChart(String tag) {
         return charts.get(tag);
+    }
+
+    @Override
+    public void show() {
+        notifier.fireAction(Action.VISIBLE);
+    }
+
+    @Override
+    public void hide() {
+        notifier.fireAction(Action.HIDDEN);
     }
 
 }

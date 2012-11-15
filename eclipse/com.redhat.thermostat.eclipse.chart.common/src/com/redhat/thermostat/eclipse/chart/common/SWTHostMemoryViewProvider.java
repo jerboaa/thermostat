@@ -38,12 +38,14 @@ package com.redhat.thermostat.eclipse.chart.common;
 
 import com.redhat.thermostat.client.core.views.HostMemoryView;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
+import com.redhat.thermostat.eclipse.SWTViewProvider;
 
-public class SWTHostMemoryViewProvider implements HostMemoryViewProvider {
+public class SWTHostMemoryViewProvider extends SWTViewProvider implements
+        HostMemoryViewProvider {
 
     @Override
     public HostMemoryView createView() {
-        return new SWTHostMemoryView();
+        return new SWTHostMemoryView(getParent());
     }
 
 }

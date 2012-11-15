@@ -39,13 +39,14 @@ package com.redhat.thermostat.eclipse.test.views;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
+import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
@@ -53,11 +54,16 @@ import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
+import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.HostMemoryViewPart;
-import com.redhat.thermostat.eclipse.chart.common.RefViewPart;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryView;
+import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryViewProvider;
+import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 
 public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
+
+    private SWTHostMemoryViewProvider viewProvider;
+    private HostMemoryController controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -67,17 +73,23 @@ public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
         IStructuredSelection selection = mockSelection(hostRef);
         view.selectionChanged(hostVMView, selection);
 
-        verify(thermoView).createControl(any(Composite.class));
+        verifyViewProvider();
+    }
+
+    private void verifyViewProvider() {
+        InOrder order = inOrder(viewProvider, controller);
+        order.verify(viewProvider).setParent(any(Composite.class));
+        order.verify(controller).getView();
     }
 
     @Override
     protected void mockController() {
-        HostMemoryController controller = mock(HostMemoryController.class);
+        controller = mock(HostMemoryController.class);
         thermoView = mock(SWTHostMemoryView.class);
 
         HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
         MemoryStatDAO memStatDao = mock(MemoryStatDAO.class);
-        HostMemoryViewProvider viewProvider = mock(HostMemoryViewProvider.class);
+        viewProvider = mock(SWTHostMemoryViewProvider.class);
         when(osgi.getService(HostInfoDAO.class)).thenReturn(hostInfoDao);
         when(osgi.getService(MemoryStatDAO.class)).thenReturn(memStatDao);
         when(osgi.getService(HostMemoryViewProvider.class)).thenReturn(
@@ -92,6 +104,11 @@ public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
     @Override
     protected RefViewPart<HostRef> createViewPart() {
         return new HostMemoryViewPart();
+    }
+
+    @Override
+    protected String getViewID() {
+        return ThermostatConstants.VIEW_ID_HOST_MEMORY;
     }
 
 }

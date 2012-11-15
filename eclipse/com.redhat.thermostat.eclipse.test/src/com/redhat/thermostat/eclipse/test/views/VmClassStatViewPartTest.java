@@ -39,24 +39,30 @@ package com.redhat.thermostat.eclipse.test.views;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
+import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatController;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.eclipse.chart.common.RefViewPart;
+import com.redhat.thermostat.eclipse.chart.vmclassstat.Activator;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatView;
+import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatViewProvider;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.VmClassStatViewPart;
+import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 
 public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
+
+    private SWTVmClassStatViewProvider viewProvider;
+    private VmClassStatController controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -67,16 +73,22 @@ public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
         IStructuredSelection selection = mockSelection(vmRef);
         view.selectionChanged(hostVMView, selection);
         
-        verify(thermoView).createControl(any(Composite.class));
+        verifyViewProvider();
     }
     
+    private void verifyViewProvider() {
+        InOrder order = inOrder(viewProvider, controller);
+        order.verify(viewProvider).setParent(any(Composite.class));
+        order.verify(controller).getView();
+    }
+
     @Override
     protected void mockController() {
-        VmClassStatController controller = mock(VmClassStatController.class);
+        controller = mock(VmClassStatController.class);
         thermoView = mock(SWTVmClassStatView.class);
 
         VmClassStatDAO classStatDao = mock(VmClassStatDAO.class);
-        VmClassStatViewProvider viewProvider = mock(VmClassStatViewProvider.class);
+        viewProvider = mock(SWTVmClassStatViewProvider.class);
         when(osgi.getService(VmClassStatDAO.class)).thenReturn(classStatDao);
         when(osgi.getService(VmClassStatViewProvider.class)).thenReturn(viewProvider);
 
@@ -88,6 +100,11 @@ public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
     @Override
     protected RefViewPart<VmRef> createViewPart() {
         return new VmClassStatViewPart();
+    }
+
+    @Override
+    protected String getViewID() {
+        return Activator.VIEW_ID_VM_CLASS_STAT;
     }
 
 }

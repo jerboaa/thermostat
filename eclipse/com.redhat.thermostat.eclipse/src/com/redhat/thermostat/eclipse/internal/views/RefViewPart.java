@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.common;
+package com.redhat.thermostat.eclipse.internal.views;
 
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -51,6 +51,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 
 public abstract class RefViewPart<T extends Ref> extends ViewPart implements
@@ -70,7 +71,7 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements
         this.parent = parent;
 
         createComposite();
-
+        
         getWorkbenchWindow().getSelectionService().addSelectionListener(this);
 
         // Check for an existing selection
@@ -85,7 +86,7 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements
                 currentSelection = (IStructuredSelection) selection;
                 T ref = handleSelection(selection);
                 if (ref != null) {
-                    createControllerView(ref);
+                    createView(ref);
                     selected = true;
                 }
             }
@@ -108,8 +109,8 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements
     public void setFocus() {
         parent.setFocus();
     }
-
-    protected abstract void createControllerView(T ref);
+    
+    protected abstract SWTComponent createControllerView(T ref, Composite parent);
 
     protected abstract T getRefFromSelection(Object selection);
 
@@ -132,7 +133,7 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements
                     createComposite();
 
                     if (ref != null) {
-                        createControllerView(ref);
+                        createView(ref);
                     } else {
                         // Prompt the user to select a valid ref
                         createNoSelectionLabel();
@@ -154,5 +155,13 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements
         top.setLayout(new GridLayout());
         top.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
     }
+
+    private void createView(T ref) {
+        SWTComponent view = createControllerView(ref, top);
+        ViewVisibilityWatcher watcher = new ViewVisibilityWatcher(view);
+        watcher.watch(top, getSite().getId());
+    }
+    
+    
 
 }

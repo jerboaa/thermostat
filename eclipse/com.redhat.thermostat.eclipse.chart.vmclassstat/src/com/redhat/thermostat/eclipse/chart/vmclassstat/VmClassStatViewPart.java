@@ -36,31 +36,34 @@
 
 package com.redhat.thermostat.eclipse.chart.vmclassstat;
 
+import org.eclipse.swt.widgets.Composite;
+
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatController;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.chart.common.VmRefViewPart;
+import com.redhat.thermostat.eclipse.views.VmRefViewPart;
 
 public class VmClassStatViewPart extends VmRefViewPart {
 
     @Override
-    protected void createControllerView(VmRef ref) {
-        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance()
-                .getService(VmClassStatViewProvider.class);
+    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
+        SWTVmClassStatViewProvider viewProvider = (SWTVmClassStatViewProvider) OSGIUtils
+                .getInstance().getService(VmClassStatViewProvider.class);
+        viewProvider.setParent(parent);
         VmClassStatDAO classStatDAO = OSGIUtils.getInstance().getService(
                 VmClassStatDAO.class);
         VmClassStatController controller = createController(classStatDAO, ref,
                 viewProvider);
         SWTComponent view = (SWTComponent) controller.getView();
-        view.createControl(top);
+        return view;
     }
 
     public VmClassStatController createController(VmClassStatDAO classStatDao,
             VmRef ref, VmClassStatViewProvider viewProvider) {
         return new VmClassStatController(classStatDao, ref, viewProvider);
     }
-    
+
 }

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import org.eclipse.swt.widgets.Composite;
+
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
 import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -43,23 +45,23 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.eclipse.views.HostRefViewPart;
 
 public class HostMemoryViewPart extends HostRefViewPart {
 
-    private HostMemoryController controller;
-
     @Override
-    protected void createControllerView(HostRef ref) {
+    protected SWTComponent createControllerView(HostRef ref, Composite parent) {
         HostInfoDAO hostInfoDao = OSGIUtils.getInstance().getService(
                 HostInfoDAO.class);
         MemoryStatDAO memoryStatDao = OSGIUtils.getInstance().getService(
                 MemoryStatDAO.class);
-        HostMemoryViewProvider viewProvider = OSGIUtils.getInstance()
-                .getService(HostMemoryViewProvider.class);
-        controller = createController(hostInfoDao, memoryStatDao, ref,
-                viewProvider);
+        SWTHostMemoryViewProvider viewProvider = (SWTHostMemoryViewProvider) OSGIUtils
+                .getInstance().getService(HostMemoryViewProvider.class);
+        viewProvider.setParent(parent);
+        HostMemoryController controller = createController(hostInfoDao,
+                memoryStatDao, ref, viewProvider);
         SWTComponent view = (SWTComponent) controller.getView();
-        view.createControl(top);
+        return view;
     }
 
     public HostMemoryController createController(HostInfoDAO hostInfoDao,

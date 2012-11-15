@@ -39,6 +39,7 @@ package com.redhat.thermostat.eclipse.test.views;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -47,17 +48,23 @@ import static org.mockito.Mockito.when;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
+import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.eclipse.chart.common.RefViewPart;
+import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuView;
+import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmCpuViewPart;
+import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 
 public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
+
+    private SWTVmCpuViewProvider viewProvider;
+    private VmCpuController controller;
 
     @Test
     public void testSelectionHostRef() throws Exception {
@@ -68,7 +75,7 @@ public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
         view.selectionChanged(hostVMView, selection);
 
         // Ensure not created
-        verify(thermoView, never()).createControl(any(Composite.class));
+        verify(viewProvider, never()).createView();
     }
 
     @Test
@@ -94,16 +101,22 @@ public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
         IStructuredSelection selection = mockSelection(vmRef);
         view.selectionChanged(hostVMView, selection);
 
-        verify(thermoView).createControl(any(Composite.class));
+        verifyViewProvider();
+    }
+
+    private void verifyViewProvider() {
+        InOrder order = inOrder(viewProvider, controller);
+        order.verify(viewProvider).setParent(any(Composite.class));
+        order.verify(controller).getView();
     }
 
     @Override
     protected void mockController() {
-        VmCpuController controller = mock(VmCpuController.class);
+        controller = mock(VmCpuController.class);
         thermoView = mock(SWTVmCpuView.class);
 
         VmCpuStatDAO cpuStatDao = mock(VmCpuStatDAO.class);
-        VmCpuViewProvider viewProvider = mock(VmCpuViewProvider.class);
+        viewProvider = mock(SWTVmCpuViewProvider.class);
         when(osgi.getService(VmCpuStatDAO.class)).thenReturn(cpuStatDao);
         when(osgi.getService(VmCpuViewProvider.class)).thenReturn(viewProvider);
 
@@ -115,6 +128,11 @@ public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
     @Override
     protected RefViewPart<VmRef> createViewPart() {
         return new VmCpuViewPart();
+    }
+
+    @Override
+    protected String getViewID() {
+        return ThermostatConstants.VIEW_ID_VM_CPU;
     }
 
 }

@@ -40,6 +40,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -55,10 +57,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatView;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class SWTVmClassStatViewTest {
+    private static final long TIMEOUT = 5000L;
     private SWTWorkbenchBot bot;
     private SWTVmClassStatView view;
     private Shell shell;
@@ -76,8 +83,7 @@ public class SWTVmClassStatViewTest {
                 parent.setLayout(new GridLayout());
                 parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                         true));
-                view = new SWTVmClassStatView();
-                view.createControl(parent);
+                view = new SWTVmClassStatView(parent);
                 shell.open();
             }
         });
@@ -160,6 +166,42 @@ public class SWTVmClassStatViewTest {
                 return "Data not added";
             }
         });
+    }
+    
+    @Test
+    public void testShowView() throws Exception {
+        final Action[] action = new Action[1];
+        final CountDownLatch latch = new CountDownLatch(1);
+        view.addActionListener(new ActionListener<BasicView.Action>() {
+            
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                action[0] = actionEvent.getActionId();
+                latch.countDown();
+            }
+        });
+        
+        view.show();
+        latch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+        assertEquals(Action.VISIBLE, action[0]);
+    }
+    
+    @Test
+    public void testHideView() throws Exception {
+        final Action[] action = new Action[1];
+        final CountDownLatch latch = new CountDownLatch(1);
+        view.addActionListener(new ActionListener<BasicView.Action>() {
+            
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                action[0] = actionEvent.getActionId();
+                latch.countDown();
+            }
+        });
+        
+        view.hide();
+        latch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+        assertEquals(Action.HIDDEN, action[0]);
     }
 
 }
