@@ -82,7 +82,9 @@ public class HostsVmsTreeViewPart extends ViewPart {
 
     public HostsVmsTreeViewPart() {
         // FIXME: Get these values from preferences
-        ConnectionConfiguration configuration = new ConnectionConfiguration("dummyUser", "dummyPassword", "mongodb://127.0.0.1:27518");
+        // This circumvents webservice (uses mongo directly). If you want to use webstorage use something like:
+        // ConnectionConfiguration configuration = new ConnectionConfiguration("", "", "http://127.0.0.1:8082");
+        ConnectionConfiguration configuration = new ConnectionConfiguration("", "", "mongodb://127.0.0.1:27518");
         Job connectJob = new ConnectDbJob(
                 "Connecting to Thermostat storage...", configuration);
         connectJob.setSystem(true);
