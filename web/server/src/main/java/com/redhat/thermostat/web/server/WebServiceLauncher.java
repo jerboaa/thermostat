@@ -37,6 +37,8 @@
 
 package com.redhat.thermostat.web.server;
 
+import java.util.List;
+
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
@@ -50,7 +52,8 @@ class WebServiceLauncher {
 
     private Server server;
     private String storageURL;
-    private int port = -1;
+    // IP/Port pairs, keyed by IP
+    private List<IpPortPair> ipsPorts;
     
     WebServiceLauncher() {
         server = new Server();
@@ -63,9 +66,14 @@ class WebServiceLauncher {
 
     void start() throws Exception {
         checkConfig();
-        Connector connector = new SelectChannelConnector();
-        connector.setPort(port);
-        server.setConnectors(new Connector[] { connector } );
+        Connector[] connectors = new Connector[ipsPorts.size()];
+        for (int i = 0; i < ipsPorts.size(); i++) {
+            IpPortPair pair = ipsPorts.get(i);
+            connectors[i] = new SelectChannelConnector();
+            connectors[i].setPort(pair.getPort());
+            connectors[i].setHost(pair.getIp());
+        }
+        server.setConnectors( connectors );
         ServletHandler handler = new ServletHandler();
         ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new WebStorageEndPoint());
         servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_ENDPOINT, storageURL);
@@ -88,19 +96,24 @@ class WebServiceLauncher {
         this.storageURL = storageURL;
     }
 
-    public void setPort(int port) {
-        this.port = port;
+    public void setIpAddresses(List<IpPortPair> ipsPorts) {
+        this.ipsPorts = ipsPorts;
     }
 
     /*
      * StorageURL, port must have been set
      */
     private void checkConfig() throws InvalidConfigurationException {
-        if (port <= 0) {
-            throw new InvalidConfigurationException("Invalid port number: " + port);
-        }
         if (storageURL == null) {
             throw new InvalidConfigurationException("Storage URL must be set");
+        }
+        if (ipsPorts == null) {
+            throw new InvalidConfigurationException("IP adresses to bind to must be set");
+        }
+        for (IpPortPair pair: ipsPorts) {
+            if (pair.getPort() <= 0) {
+                throw new InvalidConfigurationException("Invalid port number " + pair.getPort());
+            }
         }
     }
 }

@@ -36,12 +36,12 @@
 
 package com.redhat.thermostat.eclipse;
 
-import org.eclipse.swt.widgets.Composite;
-
 import com.redhat.thermostat.client.core.views.UIComponent;
 
 public interface SWTComponent extends UIComponent {
-    
-    public void createControl(Composite parent);
 
+    public void show();
+    
+    public void hide();
+    
 }

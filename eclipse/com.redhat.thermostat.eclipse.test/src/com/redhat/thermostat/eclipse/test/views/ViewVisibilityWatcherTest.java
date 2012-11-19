@@ -52,12 +52,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.common.ActionEvent;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.eclipse.chart.common.ViewVisibilityWatcher;
+import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.eclipse.internal.views.ViewVisibilityWatcher;
 
 public class ViewVisibilityWatcherTest {
     private static final Long TIME_OUT_MILLIS = 5000L;
@@ -65,10 +62,32 @@ public class ViewVisibilityWatcherTest {
     private IViewPart view;
     private Shell shell;
     private CountDownLatch latch;
+    private Action action;
+    private ViewVisibilityWatcher watcher;
 
     @Before
     public void beforeTest() throws Exception {
         shell = new Shell(Display.getCurrent());
+        
+        latch = new CountDownLatch(1);
+        action = null;
+        
+        SWTComponent component = new SWTComponent() {
+            
+            @Override
+            public void show() {
+                action = Action.VISIBLE;
+                latch.countDown();
+            }
+            
+            @Override
+            public void hide() {
+                action = Action.HIDDEN;
+                latch.countDown();
+            }
+        };
+        
+        watcher = new ViewVisibilityWatcher(component);
     }
 
     @After
@@ -78,96 +97,51 @@ public class ViewVisibilityWatcherTest {
 
     @Test
     public void testVisibleBeforeAttach() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final Action[] action = new Action[1];
-
-        ActionNotifier<Action> notifier = new ActionNotifier<>(this);
-        notifier.addActionListener(new ActionListener<BasicView.Action>() {
-
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                action[0] = actionEvent.getActionId();
-                latch.countDown();
-            }
-        });
-
-        ViewVisibilityWatcher watcher = new ViewVisibilityWatcher(notifier);
-
         showView();
 
         // Attach
         watcher.watch(shell, VIEW_ID);
 
-        waitForAction(latch);
+        waitForAction();
 
-        assertEquals(Action.VISIBLE, action[0]);
+        assertEquals(Action.VISIBLE, action);
     }
 
     @Test
     public void testVisibleAfterAttach() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final Action[] action = new Action[1];
-
-        ActionNotifier<Action> notifier = new ActionNotifier<>(this);
-        notifier.addActionListener(new ActionListener<BasicView.Action>() {
-
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                action[0] = actionEvent.getActionId();
-                latch.countDown();
-            }
-        });
-
-        ViewVisibilityWatcher watcher = new ViewVisibilityWatcher(notifier);
-
         // Attach
         watcher.watch(shell, VIEW_ID);
 
         showView();
 
-        waitForAction(latch);
+        waitForAction();
 
-        assertEquals(Action.VISIBLE, action[0]);
+        assertEquals(Action.VISIBLE, action);
     }
 
     @Test
     public void testVisibleBeforeAttachHiddenAfter() throws Exception {
-        latch = new CountDownLatch(1);
-
-        final Action[] action = new Action[1];
-
-        ActionNotifier<Action> notifier = new ActionNotifier<>(this);
-        notifier.addActionListener(new ActionListener<BasicView.Action>() {
-
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                action[0] = actionEvent.getActionId();
-                latch.countDown();
-            }
-        });
-
-        ViewVisibilityWatcher watcher = new ViewVisibilityWatcher(notifier);
-
         showView();
 
         // Attach
         watcher.watch(shell, VIEW_ID);
 
-        waitForAction(latch);
+        waitForAction();
 
-        assertEquals(Action.VISIBLE, action[0]);
+        assertEquals(Action.VISIBLE, action);
 
         // Hide view
         latch = new CountDownLatch(1);
+        action = null;
 
         hideView();
 
-        waitForAction(latch);
+        waitForAction();
 
-        assertEquals(Action.HIDDEN, action[0]);
+        assertEquals(Action.HIDDEN, action);
     }
 
-    private void waitForAction(final CountDownLatch latch)
+    private void waitForAction()
             throws InterruptedException {
         if (!latch.await(TIME_OUT_MILLIS, TimeUnit.MILLISECONDS)) {
             fail("Timeout while waiting for action");

@@ -55,8 +55,8 @@ import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
-import com.redhat.thermostat.eclipse.chart.common.RefViewPart;
 import com.redhat.thermostat.eclipse.internal.views.HostsVmsTreeViewPart;
+import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 
 public abstract class AbstractRefViewPartTest<T extends Ref> {
 
@@ -84,27 +84,32 @@ public abstract class AbstractRefViewPartTest<T extends Ref> {
         IWorkbenchWindow window = mock(IWorkbenchWindow.class);
         IWorkbenchPage page = mock(IWorkbenchPage.class);
         ISelectionService service = mock(ISelectionService.class);
+        IWorkbenchPartSite site = mock(IWorkbenchPartSite.class);
         
         when(page.findView(ThermostatConstants.VIEW_ID_HOST_VM)).thenReturn(hostVMView);
         when(window.getSelectionService()).thenReturn(service);
         when(window.getActivePage()).thenReturn(page);
         when(view.getWorkbenchWindow()).thenReturn(window);
+        when(site.getId()).thenReturn(getViewID());
+        when(view.getSite()).thenReturn(site);
         
         // Controller mock
         mockController();
         
         // Selection mocks
-        IWorkbenchPartSite site = mock(IWorkbenchPartSite.class);
+        IWorkbenchPartSite hostVMSite = mock(IWorkbenchPartSite.class);
         provider = mock(ISelectionProvider.class);
  
-        when(site.getId()).thenReturn(ThermostatConstants.VIEW_ID_HOST_VM);
-        when(site.getSelectionProvider()).thenReturn(provider);
-        when(hostVMView.getSite()).thenReturn(site);
+        when(hostVMSite.getId()).thenReturn(ThermostatConstants.VIEW_ID_HOST_VM);
+        when(hostVMSite.getSelectionProvider()).thenReturn(provider);
+        when(hostVMView.getSite()).thenReturn(hostVMSite);
     }
 
     protected abstract void mockController();
 
     protected abstract RefViewPart<T> createViewPart();
+    
+    protected abstract String getViewID();
 
     protected IStructuredSelection mockSelection(Ref ref) {
         IStructuredSelection selection = mock(IStructuredSelection.class);;

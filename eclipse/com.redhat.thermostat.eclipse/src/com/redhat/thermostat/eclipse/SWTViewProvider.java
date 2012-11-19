@@ -34,28 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.common;
+package com.redhat.thermostat.eclipse;
 
-import java.util.concurrent.CountDownLatch;
+import org.eclipse.swt.widgets.Composite;
 
-import org.eclipse.ui.PlatformUI;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public class ChartUtils {
+public abstract class SWTViewProvider implements ViewProvider {
     
-    /**
-     * Executes runnable in the SWT UI thread after the necessary
-     * controls are created.
-     * @param latch - blocks runnable until count is zero
-     * @param runnable - task to execute
-     */
-    public static void runAfterCreated(CountDownLatch latch, Runnable runnable) {
-        try {
-            latch.await();
-            PlatformUI.getWorkbench().getDisplay().syncExec(runnable);
-        } catch (InterruptedException e) {
-            // Restore interrupted status
-            Thread.currentThread().interrupt();
-        }
+    private Composite parent;
+    
+    public Composite getParent() {
+        return parent;
+    }
+    
+    public void setParent(Composite parent) {
+        this.parent = parent;
     }
 
 }

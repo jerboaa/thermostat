@@ -92,19 +92,11 @@
     <module>com.redhat.thermostat.eclipse.boot</module>
     <module>com.redhat.thermostat.eclipse</module>
     <module>com.redhat.thermostat.eclipse.chart.common</module>
-    <module>com.redhat.thermostat.eclipse.test</module>
-    <module>com.redhat.thermostat.eclipse.test.ui</module>
+    <module>com.redhat.thermostat.eclipse.chart.vmclassstat</module>
+    <module>com.redhat.thermostat.client.feature</module>
     <module>com.redhat.thermostat.eclipse.feature</module>
     <module>com.redhat.thermostat.eclipse.p2-repo</module>
-    <module>com.redhat.thermostat.client.feature</module>
     <module>core-p2-repository</module>
-    <module>test-deps-bundle-wrapping</module>
-    <module>jfreechart-bundle-wrapping</module>
-    <!-- Adds p2 metadata and creates repo for plain (wrapped)
-         Java OSGi bundles so they can be found for building and
-         running tycho tests -->
-    <module>test-deps-p2-repository</module>
-    <module>jfreechart-p2-repository</module>
     <module>composite-repo</module>
   </modules>
 

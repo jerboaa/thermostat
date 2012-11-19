@@ -14,36 +14,19 @@
 
   <name>Thermostat Eclipse Client Tests</name>
 
-  <dependencies>
-    <dependency>
-      <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-      <artifactId>com.redhat.thermostat.eclipse</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <!-- using Web storage -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-client</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-common</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <!-- DbService is in the launcher bundle -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-launcher</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-      <artifactId>com.redhat.thermostat.eclipse.test-deps-repo</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-      <type>pom</type>
-    </dependency>
-  </dependencies>
+  <repositories>
+    <repository>
+      <id>local_client</id>
+      <layout>p2</layout>
+      <url>file://${basedir}/../core-p2-repository/target/repository/</url>
+    </repository>
+    <repository>
+      <id>local_eclipse</id>
+      <layout>p2</layout>
+      <url>file://${basedir}/../com.redhat.thermostat.eclipse.p2-repo/target/repository/</url>
+    </repository>
+  </repositories>
+
   <build>
     <plugins>
       <plugin>
@@ -59,6 +42,16 @@
               <type>p2-installable-unit</type>
               <artifactId>org.eclipse.sdk.feature.group</artifactId>
               <version>${sdk-version}</version>
+            </dependency>
+            <dependency>
+              <type>p2-installable-unit</type>
+              <artifactId>com.redhat.thermostat.client.feature.feature.group</artifactId>
+              <version>0.5.0</version>
+            </dependency>
+            <dependency>
+              <type>p2-installable-unit</type>
+              <artifactId>com.redhat.thermostat.eclipse.feature.feature.group</artifactId>
+              <version>0.5.0</version>
             </dependency>
           </dependencies>
           <bundleStartLevel>

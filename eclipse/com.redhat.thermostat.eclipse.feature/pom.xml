@@ -16,25 +16,9 @@
   <dependencies>
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-      <artifactId>com.redhat.thermostat.eclipse</artifactId>
+      <artifactId>com.redhat.thermostat.client.feature</artifactId>
       <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <!-- using Web storage -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-client</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-common</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <!-- DbService is in the launcher bundle -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-launcher</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <type>eclipse-feature</type>
     </dependency>
   </dependencies>
 

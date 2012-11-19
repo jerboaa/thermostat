@@ -44,7 +44,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -93,27 +92,20 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
     private final Map<String, Color> colors;
     private final CopyOnWriteArrayList<GraphVisibilityChangeListener> listeners;
     private final Map<String, Composite> checkboxes;
-    private final CountDownLatch latch;
     
     private Composite parent;
     private Label totalMemory;
-    private ViewVisibilityWatcher watcher;
     private JFreeChart chart;
     private Composite legendTop;
     
-    public SWTHostMemoryView() {
+    public SWTHostMemoryView(Composite parent) {
+        this.parent = parent;
         this.memoryCollection = new TimeSeriesCollection();
         this.dataset = Collections.synchronizedMap(new HashMap<String, TimeSeries>());
         this.colors = new HashMap<String, Color>();
         this.listeners = new CopyOnWriteArrayList<GraphVisibilityChangeListener>();
         this.checkboxes = new HashMap<String, Composite>();
-        this.watcher = new ViewVisibilityWatcher(notifier);
-        this.latch = new CountDownLatch(1);
         this.chart = createMemoryChart();
-    }
-    
-    public void createControl(Composite parent) {
-        this.parent = parent;
         
         Label summaryLabel = new Label(parent, SWT.LEAD);
         Font stdFont = summaryLabel.getFont();
@@ -150,14 +142,8 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
         legendLayout.wrap = false;
         legendLayout.marginHeight = 0;
         legendTop.setLayout(legendLayout);
-        
-        // Notify threads that controls are created
-        latch.countDown();
-        
-        // Don't start giving updates until controls are created
-        watcher.watch(parent, ThermostatConstants.VIEW_ID_HOST_MEMORY);
     }
-
+    
     @Override
     public void setTotalMemory(final String newValue) {
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
@@ -363,9 +349,7 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
     }
 
     private void addLegendItem(final String tag, final String humanReadableName) {
-        // We need to wait for the controls to be fully constructed
-        // before modifying the legend
-        ChartUtils.runAfterCreated(latch, new Runnable() {
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
                 Composite checkbox = createLabelWithLegend(legendTop,
@@ -377,9 +361,7 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
     }
 
     private void removeLegendItem(final String tag) {
-        // We need to wait for the controls to be fully constructed
-        // before modifying the legend
-        ChartUtils.runAfterCreated(latch, new Runnable() {
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
                 Composite checkbox = checkboxes.remove(tag);
@@ -395,6 +377,16 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
     
     public TimeSeries getSeries(String tag) {
         return dataset.get(tag);
+    }
+
+    @Override
+    public void show() {
+        notifier.fireAction(Action.VISIBLE);
+    }
+
+    @Override
+    public void hide() {
+        notifier.fireAction(Action.HIDDEN);
     }
 
 }

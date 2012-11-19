@@ -40,10 +40,10 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.DbServiceFactory;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
@@ -82,8 +82,7 @@ public class ConnectDbJob extends Job {
                 configuration.getPassword(), configuration.getDBConnectionString());
         dbService.connect();
         // register service in order to indicate that we are connected
-        BundleContext ctxt = Activator.getDefault().getBundle().getBundleContext();
-        ctxt.registerService(DbService.class, dbService, null);
+        OSGIUtils.getInstance().registerService(DbService.class, dbService);
     }
 
 }

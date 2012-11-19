@@ -34,32 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.common;
+package com.redhat.thermostat.eclipse.views;
 
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 
-public abstract class HostRefViewPart extends RefViewPart<HostRef> {
+public abstract class VmRefViewPart extends RefViewPart<VmRef> {
 
-    public HostRefViewPart() {
+    public VmRefViewPart() {
         super();
     }
 
     @Override
-    protected HostRef getRefFromSelection(Object selection) {
-        HostRef ref = null;
-        if (selection instanceof HostRef) {
-            ref = (HostRef) selection;
-        }
-        else if (selection instanceof VmRef) {
-            ref = ((VmRef) selection).getAgent();
+    protected VmRef getRefFromSelection(Object selection) {
+        VmRef ref = null;
+        if (selection instanceof VmRef) {
+            ref = (VmRef) selection;
         }
         return ref;
     }
 
     @Override
     protected String getNoSelectionMessage() {
-        return "No host selected";
+        return "No VM selected";
     }
 
 }

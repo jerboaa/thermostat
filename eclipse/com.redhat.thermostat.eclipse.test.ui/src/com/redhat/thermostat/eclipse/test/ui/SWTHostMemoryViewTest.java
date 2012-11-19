@@ -40,6 +40,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -65,13 +67,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.HostMemoryView.GraphVisibilityChangeListener;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryView;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 @RunWith(SWTBotJunit4ClassRunner.class)
 public class SWTHostMemoryViewTest implements GraphVisibilityChangeListener {
+    private static final long TIMEOUT = 5000L;
     private SWTWorkbenchBot bot;
     private SWTHostMemoryView view;
     private Shell shell;
@@ -89,8 +96,7 @@ public class SWTHostMemoryViewTest implements GraphVisibilityChangeListener {
                 parent.setLayout(new GridLayout());
                 parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true,
                         true));
-                view = new SWTHostMemoryView();
-                view.createControl(parent);
+                view = new SWTHostMemoryView(parent);
                 view.addGraphVisibilityListener(SWTHostMemoryViewTest.this);
                 shell.open();
             }
@@ -537,5 +543,41 @@ public class SWTHostMemoryViewTest implements GraphVisibilityChangeListener {
     @Override
     public void hide(String tag) {
         view.hideMemoryChart(tag);
+    }
+    
+    @Test
+    public void testShowView() throws Exception {
+        final Action[] action = new Action[1];
+        final CountDownLatch latch = new CountDownLatch(1);
+        view.addActionListener(new ActionListener<BasicView.Action>() {
+            
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                action[0] = actionEvent.getActionId();
+                latch.countDown();
+            }
+        });
+        
+        view.show();
+        latch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+        assertEquals(Action.VISIBLE, action[0]);
+    }
+    
+    @Test
+    public void testHideView() throws Exception {
+        final Action[] action = new Action[1];
+        final CountDownLatch latch = new CountDownLatch(1);
+        view.addActionListener(new ActionListener<BasicView.Action>() {
+            
+            @Override
+            public void actionPerformed(ActionEvent<Action> actionEvent) {
+                action[0] = actionEvent.getActionId();
+                latch.countDown();
+            }
+        });
+        
+        view.hide();
+        latch.await(TIMEOUT, TimeUnit.MILLISECONDS);
+        assertEquals(Action.HIDDEN, action[0]);
     }
 }

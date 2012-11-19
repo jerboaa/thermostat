@@ -21,12 +21,22 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-vmclassstat-core</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-web-client</artifactId>
       <version>0.5.0-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-web-common</artifactId>
+      <version>0.5.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-core</artifactId>
       <version>0.5.0-SNAPSHOT</version>
     </dependency>
   </dependencies>

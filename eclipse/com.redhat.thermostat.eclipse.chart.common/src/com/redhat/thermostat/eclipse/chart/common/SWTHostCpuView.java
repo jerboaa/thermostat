@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.DisposeEvent;
@@ -91,20 +90,13 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
     private Composite chartTop;
     private Composite legendTop;
     private Composite parent;
-    private ViewVisibilityWatcher watcher;
-    private CountDownLatch latch;
     
-    public SWTHostCpuView() {
+    public SWTHostCpuView(Composite parent) {
+        this.parent = parent;
         datasetCollection = new TimeSeriesCollection();
         datasets = new HashMap<Integer, TimeSeries>();
         colors = new HashMap<String, Color>();
-        watcher = new ViewVisibilityWatcher(notifier);
         chart = createCpuChart();
-        latch = new CountDownLatch(1);
-    }
-    
-    public void createControl(Composite parent) {
-        this.parent = parent;
         
         Label summaryLabel = new Label(parent, SWT.LEAD);
         Font stdFont = summaryLabel.getFont();
@@ -117,7 +109,7 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
         
         Composite detailsTop = new Composite(parent, SWT.NONE);
         detailsTop.setLayout(new GridLayout(3, false));
-
+        
         Label cpuModelLabel = new Label(detailsTop, SWT.TRAIL);
         cpuModelLabel.setText(translator.localize(LocaleResources.HOST_INFO_CPU_MODEL));
         GridData hIndentLayoutData = new GridData();
@@ -130,7 +122,7 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
         cpuModel = new Label(detailsTop, SWT.LEAD);
         cpuModel.setData(ThermostatConstants.TEST_TAG, TEST_ID_CPU_MODEL);
         cpuModel.setText("Unknown");
-
+        
         Label cpuCountLabel = new Label(detailsTop, SWT.TRAIL);
         cpuCountLabel.setText(translator.localize(LocaleResources.HOST_INFO_CPU_COUNT));
         cpuCountLabel.setLayoutData(hIndentLayoutData);
@@ -152,14 +144,8 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
         legendLayout.wrap = false;
         legendLayout.marginHeight = 0;
         legendTop.setLayout(legendLayout);
-        
-        // Notify threads that controls are created
-        latch.countDown();
-        
-        // Don't start giving updates until controls are created
-        watcher.watch(parent, ThermostatConstants.VIEW_ID_HOST_CPU);
     }
-
+    
     private JFreeChart createCpuChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(null,
                 translator.localize(LocaleResources.HOST_CPU_USAGE_CHART_TIME_LABEL),
@@ -295,9 +281,7 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
     }
     
     private void addLegendItem(final String humanReadableName, final Color color) {
-        // We need to wait for the controls to be fully constructed
-        // before modifying the legend
-        ChartUtils.runAfterCreated(latch, new Runnable() {
+        PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
                 createLabelWithLegend(legendTop, humanReadableName,
@@ -309,6 +293,16 @@ public class SWTHostCpuView extends HostCpuView implements SWTComponent {
     
     public JFreeChart getChart() {
         return chart;
+    }
+
+    @Override
+    public void show() {
+        notifier.fireAction(Action.VISIBLE);
+    }
+
+    @Override
+    public void hide() {
+        notifier.fireAction(Action.HIDDEN);
     }
     
 }

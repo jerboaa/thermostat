@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.common;
+package com.redhat.thermostat.eclipse.internal.views;
 
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -46,26 +46,25 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
-import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.eclipse.SWTComponent;
 
 public class ViewVisibilityWatcher {
     
-    private ActionNotifier<Action> notifier;
+    private SWTComponent component;
     private boolean visible;
 
-    public ViewVisibilityWatcher(ActionNotifier<Action> notifier) {
-        this.notifier = notifier;
+    public ViewVisibilityWatcher(SWTComponent component) {
+        this.component = component;
         this.visible = false;
     }
     
     public void watch(Composite parent, final String viewID) {
         // Check if the view is currently visible
         IWorkbenchPage activePage = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-        IViewPart chartView = activePage.findView(viewID);
-        if (activePage.isPartVisible(chartView)) {
+        IViewPart view = activePage.findView(viewID);
+        if (activePage.isPartVisible(view)) {
             visible = true;
-            notifier.fireAction(Action.VISIBLE);
+            component.show();
         }
         
         // Register listener for visibility updates on the Eclipse view
@@ -76,7 +75,7 @@ public class ViewVisibilityWatcher {
                 // The workbench fires a visible event when the view first takes
                 // focus, even if it was already on top
                 if (!visible && viewID.equals(partRef.getId())) {
-                    notifier.fireAction(Action.VISIBLE);
+                    component.show();
                     visible = true;
                 }
             }
@@ -84,7 +83,7 @@ public class ViewVisibilityWatcher {
             @Override
             public void partHidden(IWorkbenchPartReference partRef) {
                 if (visible && viewID.equals(partRef.getId())) {
-                    notifier.fireAction(Action.HIDDEN);
+                    component.hide();
                     visible = false;
                 }
             }

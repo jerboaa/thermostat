@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import org.eclipse.swt.widgets.Composite;
+
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
@@ -43,23 +45,24 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.eclipse.views.HostRefViewPart;
 
 public class HostCpuViewPart extends HostRefViewPart {
 
-    private HostCpuController cpuController;
-
     @Override
-    protected void createControllerView(HostRef ref) {
+    protected SWTComponent createControllerView(HostRef ref, Composite parent) {
         HostInfoDAO hostInfoDao = OSGIUtils.getInstance().getService(
                 HostInfoDAO.class);
         CpuStatDAO cpuStatDao = OSGIUtils.getInstance().getService(
                 CpuStatDAO.class);
-        HostCpuViewProvider viewProvider = OSGIUtils.getInstance().getService(
-                HostCpuViewProvider.class);
-        cpuController = createController(hostInfoDao, cpuStatDao, ref,
-                viewProvider);
+        SWTHostCpuViewProvider viewProvider = (SWTHostCpuViewProvider) OSGIUtils
+                .getInstance().getService(HostCpuViewProvider.class);
+        viewProvider.setParent(parent);
+
+        HostCpuController cpuController = createController(hostInfoDao,
+                cpuStatDao, ref, viewProvider);
         SWTComponent view = (SWTComponent) cpuController.getView();
-        view.createControl(top);
+        return view;
     }
 
     public HostCpuController createController(HostInfoDAO hostInfoDao,

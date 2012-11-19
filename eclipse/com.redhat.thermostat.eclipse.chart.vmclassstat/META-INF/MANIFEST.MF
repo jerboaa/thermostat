@@ -1,0 +1,34 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Thermostat VM Classes View
+Bundle-SymbolicName: com.redhat.thermostat.eclipse.chart.vmclassstat;singleton:=true
+Bundle-Version: 0.5.0.qualifier
+Bundle-Activator: com.redhat.thermostat.eclipse.chart.vmclassstat.Activator
+Bundle-Vendor: Red Hat Inc.
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ActivationPolicy: lazy
+Import-Package: com.redhat.thermostat.client.core.views,
+ com.redhat.thermostat.client.locale,
+ com.redhat.thermostat.client.osgi.service,
+ com.redhat.thermostat.client.ui,
+ com.redhat.thermostat.client.vmclassstat.core,
+ com.redhat.thermostat.common,
+ com.redhat.thermostat.common.appctx,
+ com.redhat.thermostat.common.dao,
+ com.redhat.thermostat.common.locale,
+ com.redhat.thermostat.common.utils,
+ com.redhat.thermostat.eclipse,
+ com.redhat.thermostat.eclipse.chart.common,
+ com.redhat.thermostat.eclipse.internal.views,
+ com.redhat.thermostat.eclipse.views,
+ com.redhat.thermostat.storage.model,
+ org.jfree.chart,
+ org.jfree.chart.axis,
+ org.jfree.chart.plot,
+ org.jfree.data,
+ org.jfree.data.general,
+ org.jfree.data.time,
+ org.jfree.data.xy
+Export-Package: com.redhat.thermostat.eclipse.chart.vmclassstat

@@ -38,12 +38,14 @@ package com.redhat.thermostat.eclipse.chart.common;
 
 import com.redhat.thermostat.client.core.views.HostCpuView;
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
+import com.redhat.thermostat.eclipse.SWTViewProvider;
 
-public class SWTHostCpuViewProvider implements HostCpuViewProvider {
+public class SWTHostCpuViewProvider extends SWTViewProvider implements
+        HostCpuViewProvider {
 
     @Override
     public HostCpuView createView() {
-        return new SWTHostCpuView();
+        return new SWTHostCpuView(getParent());
     }
 
 }

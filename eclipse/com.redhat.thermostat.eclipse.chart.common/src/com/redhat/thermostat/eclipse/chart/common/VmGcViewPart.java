@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import org.eclipse.swt.widgets.Composite;
+
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.client.ui.VmGcController;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
@@ -43,23 +45,23 @@ import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.eclipse.views.VmRefViewPart;
 
 public class VmGcViewPart extends VmRefViewPart {
 
-    private VmGcController controller;
-
     @Override
-    protected void createControllerView(VmRef ref) {
+    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
         VmMemoryStatDAO vmMemoryStatDao = OSGIUtils.getInstance().getService(
                 VmMemoryStatDAO.class);
         VmGcStatDAO vmGcStatDao = OSGIUtils.getInstance().getService(
                 VmGcStatDAO.class);
-        VmGcViewProvider viewProvider = OSGIUtils.getInstance().getService(
+        SWTVmGcViewProvider viewProvider = (SWTVmGcViewProvider) OSGIUtils.getInstance().getService(
                 VmGcViewProvider.class);
-        controller = createController(vmMemoryStatDao, vmGcStatDao, ref,
+        viewProvider.setParent(parent);
+        VmGcController controller = createController(vmMemoryStatDao, vmGcStatDao, ref,
                 viewProvider);
         SWTComponent view = (SWTComponent) controller.getView();
-        view.createControl(top);
+        return view;
     }
 
     public VmGcController createController(VmMemoryStatDAO vmMemoryStatDao,

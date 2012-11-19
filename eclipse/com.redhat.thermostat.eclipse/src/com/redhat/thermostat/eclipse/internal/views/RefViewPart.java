@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.common;
+package com.redhat.thermostat.eclipse.internal.views;
 
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -51,14 +51,16 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 
-public abstract class RefViewPart<T extends Ref> extends ViewPart implements ISelectionListener {
+public abstract class RefViewPart<T extends Ref> extends ViewPart implements
+        ISelectionListener {
 
     protected Composite top;
 
     private Composite parent;
-    private Object selectedElement;
+    private IStructuredSelection currentSelection;
 
     public RefViewPart() {
         super();
@@ -67,19 +69,26 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements ISe
     @Override
     public void createPartControl(Composite parent) {
         this.parent = parent;
-        
+
         createComposite();
         
         getWorkbenchWindow().getSelectionService().addSelectionListener(this);
-        
+
         // Check for an existing selection
         boolean selected = false;
-        IViewPart part = getWorkbenchWindow().getActivePage().findView(ThermostatConstants.VIEW_ID_HOST_VM);
+        IViewPart part = getWorkbenchWindow().getActivePage().findView(
+                ThermostatConstants.VIEW_ID_HOST_VM);
         if (part != null) {
-            ISelection selection = part.getSite().getSelectionProvider().getSelection();
-            if (selection instanceof IStructuredSelection) {
-                handleSelection(selection);
-                selected = true;
+            ISelection selection = part.getSite().getSelectionProvider()
+                    .getSelection();
+            if (selection instanceof IStructuredSelection
+                    && !selection.isEmpty()) {
+                currentSelection = (IStructuredSelection) selection;
+                T ref = handleSelection(selection);
+                if (ref != null) {
+                    createView(ref);
+                    selected = true;
+                }
             }
         }
         if (!selected) {
@@ -95,46 +104,50 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements ISe
     public IWorkbenchWindow getWorkbenchWindow() {
         return PlatformUI.getWorkbench().getActiveWorkbenchWindow();
     }
-    
+
     @Override
     public void setFocus() {
         parent.setFocus();
     }
+    
+    protected abstract SWTComponent createControllerView(T ref, Composite parent);
 
-    protected abstract void createControllerView(T ref);
-    
     protected abstract T getRefFromSelection(Object selection);
-    
+
     protected abstract String getNoSelectionMessage();
-    
+
     @Override
     public void selectionChanged(IWorkbenchPart part, ISelection selection) {
         // We must have received createPartControl
         if (parent != null && !parent.isDisposed()) {
             // Check if a HostRef has been selected
-            if (part.getSite().getId().equals(ThermostatConstants.VIEW_ID_HOST_VM)) {
-                if (selection instanceof IStructuredSelection) {
-                    handleSelection(selection);
+            if (part.getSite().getId()
+                    .equals(ThermostatConstants.VIEW_ID_HOST_VM)) {
+                if (selection instanceof IStructuredSelection
+                        && !selection.isEmpty()
+                        && !selection.equals(currentSelection)) {
+                    currentSelection = (IStructuredSelection) selection;
+                    T ref = handleSelection(selection);
+                    // Replace the existing view
+                    top.dispose();
+                    createComposite();
+
+                    if (ref != null) {
+                        createView(ref);
+                    } else {
+                        // Prompt the user to select a valid ref
+                        createNoSelectionLabel();
+                    }
+                    parent.layout();
                 }
             }
         }
     }
 
-    private void handleSelection(ISelection selection) {
-        Object previous = selectedElement;
-        selectedElement = ((IStructuredSelection) selection).getFirstElement();
-        if (selectedElement != previous) {
-            T ref = getRefFromSelection(selectedElement);
-            if (ref != null) {
-                // Replace the existing view
-                top.dispose();
-                createComposite();
-   
-                createControllerView(ref);
-   
-                parent.layout();
-            }
-        }
+    private T handleSelection(ISelection selection) {
+        Object selectedElement = ((IStructuredSelection) selection)
+                .getFirstElement();
+        return getRefFromSelection(selectedElement);
     }
 
     private void createComposite() {
@@ -142,5 +155,13 @@ public abstract class RefViewPart<T extends Ref> extends ViewPart implements ISe
         top.setLayout(new GridLayout());
         top.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
     }
+
+    private void createView(T ref) {
+        SWTComponent view = createControllerView(ref, top);
+        ViewVisibilityWatcher watcher = new ViewVisibilityWatcher(view);
+        watcher.watch(top, getSite().getId());
+    }
+    
+    
 
 }

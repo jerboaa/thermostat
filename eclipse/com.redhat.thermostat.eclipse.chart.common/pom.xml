@@ -17,14 +17,8 @@
   <dependencies>
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-      <artifactId>com.redhat.thermostat.eclipse</artifactId>
+      <artifactId>com.redhat.thermostat.client.feature</artifactId>
       <version>0.5.0-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-      <artifactId>com.redhat.thermostat.eclipse.jfreechart-repo</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
-      <type>pom</type>
     </dependency>
   </dependencies>
 

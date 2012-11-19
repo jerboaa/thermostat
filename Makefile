@@ -25,13 +25,23 @@ endif
 # Default to cleaning the local repo and building core + eclipse
 # Cleaning the repo prevents things like not seeing build failures
 # after bundles have been renamed.
-all: clean-repo eclipse
+all: clean-repo eclipse eclipse-test
 
 core:
 	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
 core-install: create-repo-dir
 	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
+
+eclipse-test: eclipse eclipse-test-p2
+ifeq ($(USE_VNC),true)
+	$(VNC) $(VNC_DISPLAY) $(VNC_FLAGS)
+endif
+	-$(MAVEN) -f eclipse/com.redhat.thermostat.eclipse.test/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
+	-$(MAVEN) -f eclipse/com.redhat.thermostat.eclipse.test.ui/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
+ifeq ($(USE_VNC),true)
+	$(VNC) -kill $(VNC_DISPLAY)
+endif
 
 eclipse-test-deps: core-install
 	$(MAVEN) -f eclipse/test-deps-bundle-wrapping/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
@@ -45,14 +55,8 @@ jfreechart-deps: core-install
 jfreechart-p2: jfreechart-deps
 	$(MAVEN) -f eclipse/jfreechart-p2-repository/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
-eclipse: eclipse-test-p2 jfreechart-p2
-ifeq ($(USE_VNC),true)
-	$(VNC) $(VNC_DISPLAY) $(VNC_FLAGS)
-endif
-	-$(MAVEN) -f eclipse/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
-ifeq ($(USE_VNC),true)
-	$(VNC) -kill $(VNC_DISPLAY)
-endif
+eclipse: jfreechart-p2
+	$(MAVEN) -f eclipse/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
 create-repo-dir:
 	mkdir -p $(REPO_LOC)

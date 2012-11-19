@@ -102,7 +102,7 @@
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
       <artifactId>com.redhat.thermostat.eclipse.core-p2-repo</artifactId>
       <version>${project.version}</version>
-      <type>pom</type>
+      <type>eclipse-repository</type>
     </dependency>
   </dependencies>
 

@@ -1,0 +1,32 @@
+<archetype-descriptor xmlns="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/plugins/maven-archetype-plugin/archetype-descriptor/1.0.0 http://maven.apache.org/xsd/archetype-descriptor-1.0.0.xsd"
+  name="Thermostat Extension Maven Archetype">
+  <requiredProperties>
+    <requiredProperty key="bundleSymbolicName">
+      <defaultValue>${package}.exampleBundleSymbolicName-core</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="moduleName">
+      <defaultValue>The name of your Thermostat extension goes here</defaultValue>
+    </requiredProperty>
+    <requiredProperty key="thermostatVersion">
+      <defaultValue>0.5.0-SNAPSHOT</defaultValue>
+    </requiredProperty>
+  </requiredProperties>
+
+  <fileSets>
+    <fileSet filtered="true" packaged="true" encoding="UTF-8" >
+      <directory>src/main/java</directory>
+      <includes>
+	<include>internal/Activator.java</include>
+	<include>ExampleCommand.java</include>
+      </includes>
+    </fileSet>
+    <fileSet filtered="true" packaged="true" encoding="UTF-8" >
+      <directory>src/test/java</directory>
+      <includes>
+	<include>internal/ActivatorTest.java</include>
+	<include>ExampleCommandTest.java</include>
+      </includes>
+    </fileSet>
+  </fileSets>
+</archetype-descriptor>

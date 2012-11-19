@@ -128,6 +128,8 @@
     <module>system-backend</module>
     <module>gc</module>
     <module>storage</module>
+    <!-- development related modules -->
+    <module>dev</module>
   </modules>
 
   <build>

@@ -57,8 +57,6 @@ public class MongoDAOFactoryTest {
     private Connection connection;
     private StorageProvider provider;
     private DAOFactory daoFactory;
-    private HostRef hostRef;
-    private VmRef vmRef;
 
     @Before
     public void setUp() {
@@ -70,9 +68,8 @@ public class MongoDAOFactoryTest {
         when(connection.isConnected()).thenReturn(true);
         provider = mock(StorageProvider.class);
         when(provider.createStorage()).thenReturn(storage);
-        hostRef = mock(HostRef.class);
-        vmRef = mock(VmRef.class);
         daoFactory = new DAOFactoryImpl(bundleContext, provider);
+        ((DAOFactoryImpl)daoFactory).createDAOs();
     }
 
     @Test

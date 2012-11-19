@@ -99,6 +99,13 @@ to do so, delete this exception statement from your version.
          unpack="false"/>
 
    <plugin
+         id="com.redhat.thermostat.storage.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
          id="org.apache.servicemix.bundles.lucene"
          download-size="0"
          install-size="0"
@@ -107,6 +114,13 @@ to do so, delete this exception statement from your version.
 
    <plugin
          id="com.google.gson"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.client.classstat.core"
          download-size="0"
          install-size="0"
          version="0.0.0"

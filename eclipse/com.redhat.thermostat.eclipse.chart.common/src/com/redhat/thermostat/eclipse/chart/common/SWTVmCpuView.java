@@ -55,7 +55,6 @@ import com.redhat.thermostat.client.core.views.VmCpuView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public class SWTVmCpuView extends VmCpuView implements SWTComponent {
@@ -66,25 +65,19 @@ public class SWTVmCpuView extends VmCpuView implements SWTComponent {
     private final TimeSeries cpuTimeSeries;
     
     private JFreeChart chart;
-    private ViewVisibilityWatcher watcher;
     
-    public SWTVmCpuView() {
+    public SWTVmCpuView(Composite parent) {
         data = new TimeSeriesCollection();
         cpuTimeSeries = new TimeSeries("cpu-stats");
-        watcher = new ViewVisibilityWatcher(notifier);
         chart = createCpuChart();
         
         data.addSeries(cpuTimeSeries);
-    }
-    
-    public void createControl(Composite parent) {
+        
         Composite chartTop = new RecentTimeSeriesChartComposite(parent, SWT.NONE, chart);
         chartTop.setLayout(new GridLayout());
         chartTop.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-        
-        watcher.watch(parent, ThermostatConstants.VIEW_ID_VM_CPU);
     }
-
+    
     private JFreeChart createCpuChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
@@ -127,6 +120,16 @@ public class SWTVmCpuView extends VmCpuView implements SWTComponent {
     
     public JFreeChart getChart() {
         return chart;
+    }
+
+    @Override
+    public void show() {
+        notifier.fireAction(Action.VISIBLE);
+    }
+
+    @Override
+    public void hide() {
+        notifier.fireAction(Action.HIDDEN);
     }
     
 }
