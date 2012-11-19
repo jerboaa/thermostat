@@ -75,12 +75,6 @@ public class Configuration {
         return home + File.separator + THERMOSTAT_USER_DIR;
     }
 
-    public File getBackendsBaseDirectory() throws ConfigurationException {
-        String loc = getThermostatHome() + File.separatorChar + "backends";
-        File file = new File(loc);
-        return file;
-    }
-
     public File getStorageBaseDirectory() throws ConfigurationException {
         String loc = getThermostatHome() + File.separatorChar + "storage";
         File file = new File(loc);
@@ -107,13 +101,6 @@ public class Configuration {
         File logFile = new File(logDir, "db.pid");
 
         return logFile;
-    }
-
-    public File getBackendPropertyFile(String backendName) throws ConfigurationException {
-        File backendsConfigDir = getBackendsBaseDirectory();
-        File backendConfig = new File(backendsConfigDir, backendName);
-        backendConfig = new File(backendConfig, "backend.properties");
-        return backendConfig;
     }
 
     public File getAgentConfigurationFile() throws ConfigurationException {

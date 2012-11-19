@@ -62,7 +62,6 @@ public class ConfigurationTest {
 
         Assert.assertEquals(path + "agent" + s + "agent.properties",
                             config.getAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(path + "backends", config.getBackendsBaseDirectory().getCanonicalPath());
         Assert.assertEquals(path + "storage", config.getStorageBaseDirectory().getCanonicalPath());
         Assert.assertEquals(path + "storage" + s + "db.properties",
                             config.getStorageConfigurationFile().getCanonicalPath());
@@ -72,9 +71,6 @@ public class ConfigurationTest {
                 config.getStorageLogFile().getCanonicalPath());
         Assert.assertEquals(path + "storage" + s + "run" + s + "db.pid",
                 config.getStoragePidFile().getCanonicalPath());
-
-        Assert.assertEquals(path + "backends" + s + "system" + s + "backend.properties",
-                            config.getBackendPropertyFile("system").getCanonicalPath());
 
     }
 }

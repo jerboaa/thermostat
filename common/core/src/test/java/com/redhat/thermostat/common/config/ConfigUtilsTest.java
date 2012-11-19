@@ -71,10 +71,6 @@ public class ConfigUtilsTest {
         Assert.assertEquals(path + "storage" + s + "logs" + s + "db.log",
                 ConfigUtils.getStorageLogFile().getCanonicalPath());
         Assert.assertEquals(path + "storage" + s + "run" + s + "db.pid",
-                ConfigUtils.getStoragePidFile().getCanonicalPath());
-        
-        Assert.assertEquals(path + "backends" + s + "system" + s + "backend.properties",
-                            ConfigUtils.getBackendPropertyFile("system").getCanonicalPath());
-        
+                ConfigUtils.getStoragePidFile().getCanonicalPath());        
     }
 }

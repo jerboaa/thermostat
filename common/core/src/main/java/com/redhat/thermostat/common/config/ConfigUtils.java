@@ -95,15 +95,6 @@ public class ConfigUtils {
         return logFile;
     }
 
-    public static File getBackendPropertyFile(String backendName)
-            throws InvalidConfigurationException
-    {
-        File backendsConfigDir = ConfigUtils.getBackendsBaseDirectory();
-        File backendConfig = new File(backendsConfigDir, backendName);
-        backendConfig = new File(backendConfig, "backend.properties");
-        return backendConfig;
-    }
-
     public static File getAgentConfigurationFile() throws InvalidConfigurationException {
 
         File agent = new File(getThermostatHome(), "agent");

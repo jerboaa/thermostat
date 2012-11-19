@@ -116,14 +116,6 @@
                 </resource>
                 <resource>
                   <directory>config</directory>
-                  <targetPath>backends</targetPath>
-                  <filtering>true</filtering>
-                  <includes>
-                    <include>system/backend.properties</include>
-                  </includes>
-                </resource>
-                <resource>
-                  <directory>config</directory>
                   <targetPath>etc</targetPath>
                   <filtering>true</filtering>
                   <includes>

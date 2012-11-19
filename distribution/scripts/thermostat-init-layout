@@ -44,7 +44,6 @@ else
     THERMOSTAT_STORAGE="${THERMOSTAT_HOME}/storage/db"
     THERMOSTAT_LOG="${THERMOSTAT_HOME}/storage/logs"
     THERMOSTAT_PID="${THERMOSTAT_HOME}/storage/run"
-    THERMOSTAT_BACKEND="${THERMOSTAT_HOME}/backends/system"
     THERMOSTAT_BIN="${THERMOSTAT_HOME}/bin"
     THERMOSTAT_AGENT_LOG="${THERMOSTAT_HOME}/agent/logs"
     THERMOSTAT_AGENT_RUN="${THERMOSTAT_HOME}/agent/run"
@@ -65,11 +64,6 @@ else
     if [ ! -d "${THERMOSTAT_PID}" ] ; then
         echo "creating ${THERMOSTAT_PID}"
         mkdir -p ${THERMOSTAT_PID}
-    fi
-    
-    if [ ! -d "${THERMOSTAT_BACKEND}" ] ; then
-        echo "creating ${THERMOSTAT_BACKEND}"
-        mkdir -p ${THERMOSTAT_BACKEND}
     fi
     
     if [ ! -e "${THERMOSTAT_BIN}" ] ; then

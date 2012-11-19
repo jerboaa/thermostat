@@ -40,11 +40,11 @@ package com.redhat.thermostat.backend;
  * Properties that any Backend needs to have, at minimum.
  */
 public enum BackendsProperties {
-    
+   
+    // FIXME: Get this info from Bundle metadata and remove this
+    // enum.
     DESCRIPTION,
     VENDOR,
-    VERSION,
-    BACKEND_CLASS;
+    VERSION;
     
-    public static final String PROPERTY_FILE = "backend.properties";
 }
