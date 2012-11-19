@@ -36,10 +36,12 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import java.awt.Frame;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.awt.SWT_AWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -59,6 +61,7 @@ import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 
@@ -79,11 +82,18 @@ public class RecentTimeSeriesChartComposite extends Composite {
     public RecentTimeSeriesChartComposite(Composite parent, int style, JFreeChart chart) {
         super(parent, style);
         this.setLayout(new GridLayout());
-        this.controller = new RecentTimeSeriesChartController(this, chart);
+        
+        Composite top = new Composite(this, SWT.NONE | SWT.EMBEDDED);
+        top.setLayout(new GridLayout());
+        top.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        Frame frame = SWT_AWT.new_Frame(top);
+        this.controller = new RecentTimeSeriesChartController(chart);
 
-        final ChartPanel cp = controller.getChartComposite();
+        ChartPanel cp = controller.getChartPanel();
+        frame.add(cp);
 
         cp.setDisplayToolTips(false);
+        cp.setDoubleBuffered(true);
         cp.setMouseZoomable(false);
         cp.setPopupMenu(null);
 
