@@ -60,6 +60,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
@@ -328,6 +329,10 @@ public class WebStorageEndPoint extends HttpServlet {
         for (Qualifier q : qualifiers) {
             targetQuery = targetQuery.where(q.getKey(), q.getCriteria(), q.getValue());
         }
+        for (Sort s : query.getSorts()) {
+            targetQuery = targetQuery.sort(s.getKey(), s.getDirection());
+        }
+        targetQuery = targetQuery.limit(query.getLimit());
         return targetQuery;
     }
 
