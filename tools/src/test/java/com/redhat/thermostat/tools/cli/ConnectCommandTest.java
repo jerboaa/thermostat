@@ -106,19 +106,21 @@ public class ConnectCommandTest {
     }
 
     @Test
-    public void verifyConnectedThrowsException() {
+    public void verifyConnectedThrowsExceptionWithDiagnosticMessage() {
+        String dbUrl = "fluff";
         DbService dbService = mock(DbService.class);
         OSGIUtils utils = mock(OSGIUtils.class);
         PowerMockito.mockStatic(OSGIUtils.class);
         when(OSGIUtils.getInstance()).thenReturn(utils);
         when(utils.getServiceAllowNull(DbService.class)).thenReturn(dbService);
+        when(dbService.getConnectionUrl()).thenReturn(dbUrl);
 
         SimpleArguments args = new SimpleArguments();
-        args.addArgument("--dbUrl", "fluff");
+        args.addArgument("--dbUrl", dbUrl);
         try {
             cmd.run(cmdCtxFactory.createContext(args));
         } catch (CommandException e) {
-            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED), e.getMessage());
+            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED, dbUrl), e.getMessage());
         }
     }
     

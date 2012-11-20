@@ -71,6 +71,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class LauncherImpl implements Launcher {
@@ -279,12 +280,17 @@ public class LauncherImpl implements Launcher {
                 }
                 String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
                 String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
-                DbService service = dbServiceFactory.createDbService(username, password, dbUrl);
                 try {
+                    // this may throw storage exception
+                    DbService service = dbServiceFactory.createDbService(username, password, dbUrl);
                     // This registers the DbService if all goes well
                     service.connect();
+                } catch (StorageException ex) {
+                    throw new CommandException("Unsupported storage URL: " + dbUrl);
                 } catch (ConnectionException ex) {
-                    throw new CommandException("Could not connect to: " + dbUrl, ex);
+                    String error = ex.getMessage();
+                    String message = ( error == null ? "" : " Error: " + error );
+                    throw new CommandException("Could not connect to: " + dbUrl + message, ex);
                 }
             }
         }

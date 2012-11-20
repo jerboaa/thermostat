@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -68,7 +69,7 @@ public class DbServiceTest {
         daoFactory = mock(DAOFactory.class);
         when(daoFactory.getConnection()).thenReturn(connection);
 
-        dbService = new DbServiceImpl(context, daoFactory);
+        dbService = new DbServiceImpl(context, daoFactory, "http://someUrl.ignored.com");
     }
     
     @After
@@ -121,5 +122,13 @@ public class DbServiceTest {
         verify(connection).disconnect();
         // disconnect unregisters DbService
         assertNull(context.getServiceReference(DbService.class));
+    }
+    
+    @Test
+    public void canGetStorageUrl() {
+        String connectionURL = "http://test.example.com:8082";
+
+        dbService = new DbServiceImpl(context, null, connectionURL);
+        assertEquals(connectionURL, dbService.getConnectionUrl());
     }
 }
