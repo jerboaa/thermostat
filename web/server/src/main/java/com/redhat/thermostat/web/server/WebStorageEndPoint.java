@@ -85,7 +85,8 @@ public class WebStorageEndPoint extends HttpServlet {
     private Storage storage;
     private Gson gson;
 
-    static final String STORAGE_ENDPOINT = "storageEndpoint";
+    public static final String STORAGE_ENDPOINT = "storage.endpoint";
+    public static final String STORAGE_CLASS = "storage.class";
     
     private int currentCategoryId;
 
@@ -101,7 +102,9 @@ public class WebStorageEndPoint extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException, ServletException {
         if (storage == null) {
-            storage = StorageWrapper.getStorage();
+            String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
+            String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
+            storage = StorageWrapper.getStorage(storageClass, storageEndpoint);
         }
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");

@@ -39,13 +39,14 @@ package com.redhat.thermostat.web.common;
 
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.core.StorageProviderUtil;
 
 public class StorageWrapper {
 
     private static Storage storage;
-    public static Storage getStorage() {
+
+    public static Storage getStorage(String storageClass, final String storageEndpoint) {
         if (storage != null) {
             return storage;
         }
@@ -53,13 +54,18 @@ public class StorageWrapper {
             
             @Override
             public String getDBConnectionString() {
-                return "mongodb://127.0.0.1:27518";
+                return storageEndpoint;
             }
         };
-        StorageProvider provider = StorageProviderUtil.getStorageProvider(conf);
-        storage = provider.createStorage();
-        storage.getConnection().connect();
-        return storage;
+        try {
+            StorageProvider provider = (StorageProvider) Class.forName(storageClass).newInstance();
+            provider.setConfig(conf);
+            storage = provider.createStorage();
+            storage.getConnection().connect();
+            return storage;
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            throw new StorageException (e);
+        }
     }
     public static void setStorage(Storage storage) {
         StorageWrapper.storage = storage;

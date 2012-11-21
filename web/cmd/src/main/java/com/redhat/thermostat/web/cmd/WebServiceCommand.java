@@ -35,14 +35,15 @@
  */
 
 
-package com.redhat.thermostat.web.server;
+package com.redhat.thermostat.web.cmd;
 
 import java.util.List;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
-import com.redhat.thermostat.web.server.internal.IpPortsParser;
+import com.redhat.thermostat.web.server.IpPortPair;
+import com.redhat.thermostat.web.server.IpPortsParser;
 
 public class WebServiceCommand extends SimpleCommand {
 

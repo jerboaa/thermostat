@@ -380,7 +380,7 @@
     </dependency>
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-web-server</artifactId>
+        <artifactId>thermostat-web-cmd</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>

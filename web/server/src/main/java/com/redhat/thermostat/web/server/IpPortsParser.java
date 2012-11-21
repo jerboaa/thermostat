@@ -34,12 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.server.internal;
+package com.redhat.thermostat.web.server;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import com.redhat.thermostat.web.server.IpPortPair;
 
 /**
  * Parses IP/Port pairs from a raw string of the form:

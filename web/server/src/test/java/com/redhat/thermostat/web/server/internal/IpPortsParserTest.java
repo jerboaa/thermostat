@@ -43,6 +43,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.redhat.thermostat.web.server.IpPortPair;
+import com.redhat.thermostat.web.server.IpPortsParser;
 
 public class IpPortsParserTest {
 

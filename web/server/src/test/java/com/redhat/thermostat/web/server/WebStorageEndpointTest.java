@@ -88,7 +88,6 @@ import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.test.MockQuery;
-import com.redhat.thermostat.web.client.WebStorage;
 import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;

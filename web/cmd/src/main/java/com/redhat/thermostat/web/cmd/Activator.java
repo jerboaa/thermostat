@@ -35,14 +35,10 @@
  */
 
 
-package com.redhat.thermostat.web.server;
+package com.redhat.thermostat.web.cmd;
 
 import java.util.Arrays;
 
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.servlet.ServletHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlet.ServletMapping;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 

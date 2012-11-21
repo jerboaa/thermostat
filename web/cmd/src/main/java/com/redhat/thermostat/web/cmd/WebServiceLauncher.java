@@ -35,7 +35,7 @@
  */
 
 
-package com.redhat.thermostat.web.server;
+package com.redhat.thermostat.web.cmd;
 
 import java.util.List;
 
@@ -47,6 +47,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.servlet.ServletMapping;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.web.server.WebStorageEndPoint;
+import com.redhat.thermostat.web.server.IpPortPair;
 
 class WebServiceLauncher {
 

@@ -45,10 +45,10 @@
     <version>0.5.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-web-server</artifactId>
+  <artifactId>thermostat-web-cmd</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat Web Server</name>
+  <name>Thermostat Web Service Command</name>
 
   <dependencies>
   
@@ -62,49 +62,22 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
       <version>${jetty.version}</version>
-      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-webapp</artifactId>
       <version>${jetty.version}</version>
-      <scope>test</scope>
     </dependency>
-
 
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-common-core</artifactId>
       <version>${project.version}</version>
-    </dependency>
-
-
-    <dependency>
-      <groupId>javax.servlet</groupId>
-      <artifactId>servlet-api</artifactId>
-      <version>2.5</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.2.2</version>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-fileupload</groupId>
-      <artifactId>commons-fileupload</artifactId>
-      <version>${fileupload.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-      <version>${commons-io.version}</version>
     </dependency>
 
     <dependency>
@@ -115,7 +88,7 @@
 
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-common</artifactId>
+      <artifactId>thermostat-web-server</artifactId>
       <version>${project.version}</version>
     </dependency>
 
@@ -129,26 +102,10 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-SymbolicName>com.redhat.thermostat.web.server</Bundle-SymbolicName>
+            <Bundle-SymbolicName>com.redhat.thermostat.web.cmd</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Export-Package>
-              com.redhat.thermostat.web.server
-            </Export-Package>
-            <!-- TODO: For the thread tab (i.e. thread plug-in) the web server
-                 bundle requires model classes provided by said bundle. Since
-                 no explicit imports (in the Java import sense) are in our code,
-                 the maven bundle plugin seems to fail on us. Therefore we need
-                 these explicit Import-Package instructions. If not there, this
-                 results in class not found exceptions. This may be a problem
-                 for user-provided bundles which contribute DAOs/models in the
-                 same way. -->
-            <Import-Package>
-              com.redhat.thermostat.thread.model,
-              *
-            </Import-Package>
-            <Private-Package>
-              com.redhat.thermostat.web.server.internal
-            </Private-Package>
+            <Bundle-Activator>com.redhat.thermostat.web.cmd.Activator</Bundle-Activator>
+            <Export-Package>com.redhat.thermostat.web.cmd</Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

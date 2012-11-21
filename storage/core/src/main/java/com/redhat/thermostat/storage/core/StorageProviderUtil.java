@@ -1,5 +1,6 @@
 package com.redhat.thermostat.storage.core;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
@@ -14,7 +15,8 @@ public class StorageProviderUtil {
     // specify isStorageRequired() == true and the launcher handles the rest
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static StorageProvider getStorageProvider(StartupConfiguration config) {
-        BundleContext ctxt = FrameworkUtil.getBundle(StorageProviderUtil.class).getBundleContext();
+        Bundle bundle = FrameworkUtil.getBundle(StorageProviderUtil.class);
+        BundleContext ctxt = bundle.getBundleContext();
         try {
             ServiceReference[] refs = ctxt.getServiceReferences(StorageProvider.class.getName(), null);
             for (int i = 0; i < refs.length; i++) {

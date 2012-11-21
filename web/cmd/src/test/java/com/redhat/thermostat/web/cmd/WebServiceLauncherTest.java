@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.server;
+package com.redhat.thermostat.web.cmd;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -50,6 +50,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.web.server.IpPortPair;
 
 public class WebServiceLauncherTest {
     
