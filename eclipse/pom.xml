@@ -112,11 +112,6 @@
       <url>${orbit-site}</url>
     </repository>
     <repository>
-      <id>local_eclipse_test_deps</id>
-      <layout>p2</layout>
-      <url>file://${basedir}/../test-deps-p2-repository/target/repository/</url>
-    </repository>
-    <repository>
       <id>local_jfreechart</id>
       <layout>p2</layout>
       <url>file://${basedir}/../jfreechart-p2-repository/target/repository/</url>

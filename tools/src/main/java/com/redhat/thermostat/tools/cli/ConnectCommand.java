@@ -46,6 +46,7 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.tools.LocaleResources;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -79,7 +80,7 @@ public class ConnectCommand extends SimpleCommand {
         DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
         if (service != null) {
             // Already connected, bail out
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED));
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED, service.getConnectionUrl()));
         }
         if (prefs == null) {
             prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
@@ -90,11 +91,16 @@ public class ConnectCommand extends SimpleCommand {
         }
         String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
         String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
-        service = dbServiceFactory.createDbService(username, password, dbUrl);
         try {
+            // may throw StorageException if storage url is not supported
+            service = dbServiceFactory.createDbService(username, password, dbUrl);
             service.connect();
+        } catch (StorageException ex) {
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_INVALID_STORAGE, dbUrl));
         } catch (ConnectionException ex) {
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl), ex);
+            String error = ex.getMessage();
+            String message = ( error == null ? "" : " " + translator.localize(LocaleResources.COMMAND_CONNECT_ERROR, error) );
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_FAILED_TO_CONNECT, dbUrl + message), ex);
         }
     }
 

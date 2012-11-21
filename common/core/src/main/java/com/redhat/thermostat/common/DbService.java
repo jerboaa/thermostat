@@ -43,15 +43,23 @@ public interface DbService {
     /**
      * Connects to the given database.
      * 
-     * @throws ConnectionException If DB connection cannot be established.
+     * @throws ConnectionException
+     *             If DB connection cannot be established.
      */
     void connect() throws ConnectionException;
-    
-    
+
     /**
      * Disconnects from the database.
      * 
      * @throws ConnectionException
      */
     void disconnect() throws ConnectionException;
-} 
+
+    /**
+     * @returns the storage URL which was used for connection.
+     * 
+     * @throws IllegalStateException
+     *             if not connected to storage.
+     */
+    String getConnectionUrl();
+}

@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.storage.core.StorageProviderUtil;
 
@@ -55,43 +56,64 @@ public class DbServiceImpl implements DbService {
     
     private DAOFactory daoFactory;
     private BundleContext context;
+    private String dbUrl;
     
-    DbServiceImpl(String username, String password, String dbUrl) {
-        this(FrameworkUtil.getBundle(DbService.class).getBundleContext(), getDAOFactory(username, password, dbUrl));
+    DbServiceImpl(String username, String password, String dbUrl) throws StorageException {
+        this(FrameworkUtil.getBundle(DbService.class).getBundleContext(), getDAOFactory(username, password, dbUrl), dbUrl);
     }
 
-    DbServiceImpl(BundleContext context, DAOFactory daoFactory) {
+    // for testing
+    DbServiceImpl(BundleContext context, DAOFactory daoFactory, String dbUrl) {
         this.daoFactory = daoFactory;
         this.context = context;
+        this.dbUrl = dbUrl;
     }
 
     public void connect() throws ConnectionException {
-        daoFactory.getConnection().connect();
-        registration = context.registerService(DbService.class, this, null);
-        daoFactory.registerDAOsAndStorageAsOSGiServices();
+        try {
+            daoFactory.getConnection().connect();
+            registration = context.registerService(DbService.class, this, null);
+            daoFactory.registerDAOsAndStorageAsOSGiServices();
+        } catch (Exception cause) {
+            throw new ConnectionException(cause);
+        }
     }
     
     public void disconnect() throws ConnectionException {
-        daoFactory.unregisterDAOsAndStorageAsOSGiServices();
-        daoFactory.getConnection().disconnect();
-        registration.unregister();
+        try {
+            daoFactory.unregisterDAOsAndStorageAsOSGiServices();
+            daoFactory.getConnection().disconnect();
+            registration.unregister();
+        } catch (Exception cause) {
+            throw new ConnectionException(cause);
+        }
     }
     
+    @Override
+    public String getConnectionUrl() {
+        return dbUrl;
+    }
+
     /**
      * Factory method for creating a DbService instance.
      * 
      * @param username
      * @param password
      * @param dbUrl
-     * @return
+     * @return a DbService instance
+     * @throws StorageException if no storage provider exists for the given {@code dbUrl}.
      */
-    public static DbService create(String username, String password, String dbUrl) {
+    public static DbService create(String username, String password, String dbUrl) throws StorageException {
         return new DbServiceImpl(username, password, dbUrl);
     }
 
-    private static DAOFactory getDAOFactory(String username, String password, String dbUrl) {
+    private static DAOFactory getDAOFactory(String username, String password, String dbUrl) throws StorageException {
         StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
         StorageProvider prov = StorageProviderUtil.getStorageProvider(config);
+        if (prov == null) {
+            // no suitable provider found
+            throw new StorageException("No storage found for URL " + dbUrl);
+        }
         return new DAOFactoryImpl(prov);
     }
     

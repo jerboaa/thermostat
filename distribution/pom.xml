@@ -223,6 +223,14 @@
                          resource="${project.build.directory}/libs/jetty-xml-8.1.5.v20120716.jar" />
                 <symlink link="${project.build.directory}/libs/javax-servlet.jar"
                          resource="${project.build.directory}/libs/javax.servlet-3.0.0.v201112011016.jar" />
+                <symlink link="${project.build.directory}/libs/commons-io.jar"
+                         resource="${project.build.directory}/libs/commons-io-2.4.jar" />
+                <symlink link="${project.build.directory}/libs/commons-fileupload.jar"
+                         resource="${project.build.directory}/libs/commons-fileupload-1.2.2.jar" />
+                <symlink link="${project.build.directory}/libs/httpcomponents-core.jar"
+                         resource="${project.build.directory}/libs/httpcore-osgi-4.1.2.jar" />
+                <symlink link="${project.build.directory}/libs/httpcomponents-client.jar"
+                         resource="${project.build.directory}/libs/httpclient-osgi-4.1.2.jar" />
               </target>
             </configuration>
             <goals>
