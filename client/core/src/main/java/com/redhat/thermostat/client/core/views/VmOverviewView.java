@@ -57,6 +57,4 @@ public abstract class VmOverviewView extends BasicView implements UIComponent {
 
     public abstract void setVmArguments(String vmArguments);
 
-    public abstract void setVmInfo(String string);
-
 }

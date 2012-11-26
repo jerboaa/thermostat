@@ -144,11 +144,6 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     }
 
     @Override
-    public void setVmInfo(String string) {
-        // no-op
-    }
-
-    @Override
     public Component getUiComponent() {
         return visiblePanel;
     }

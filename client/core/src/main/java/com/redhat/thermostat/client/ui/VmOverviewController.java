@@ -114,10 +114,10 @@ class VmOverviewController {
                 view.setMainClass(info.getMainClass());
                 view.setJavaCommandLine(info.getJavaCommandLine());
                 String actualVmName = info.getVmName();
-                view.setVmInfo(info.getVmInfo());
-                String actualVmVersion = info.getVmInfo();
+                String actualVmVersion = info.getVmVersion();
+                String actualVmInfo = info.getVmInfo();
                 view.setVmNameAndVersion(translator.localize(LocaleResources.VM_INFO_VM_NAME_AND_VERSION,
-                        actualVmName, actualVmVersion));
+                        actualVmName, actualVmVersion, actualVmInfo));
                 view.setVmArguments(info.getVmArguments());
             }
         });
