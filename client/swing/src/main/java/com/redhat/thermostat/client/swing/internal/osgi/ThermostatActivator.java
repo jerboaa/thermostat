@@ -47,7 +47,6 @@ import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.osgi.service.HostDecorator;
@@ -59,7 +58,6 @@ import com.redhat.thermostat.client.swing.views.SwingAgentInformationViewProvide
 import com.redhat.thermostat.client.swing.views.SwingClientConfigurationViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingSummaryViewProvider;
-import com.redhat.thermostat.client.swing.views.SwingVmCpuViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmGcViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmInformationViewProvider;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
@@ -91,8 +89,6 @@ public class ThermostatActivator implements BundleActivator {
         context.registerService(VmInformationViewProvider.class.getName(), vmInfoProvider, null);
         VmGcViewProvider vmGcProvider = new SwingVmGcViewProvider();
         context.registerService(VmGcViewProvider.class.getName(), vmGcProvider, null);
-        VmCpuViewProvider vmCpuProvider = new SwingVmCpuViewProvider();
-        context.registerService(VmCpuViewProvider.class.getName(), vmCpuProvider, null);
         
         // Summary view
         SummaryViewProvider summaryViewProvider = new SwingSummaryViewProvider();

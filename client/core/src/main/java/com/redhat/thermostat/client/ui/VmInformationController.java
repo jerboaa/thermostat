@@ -41,12 +41,10 @@ import java.util.Collection;
 import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -59,21 +57,17 @@ public class VmInformationController {
 
     private final VmInformationView view;
 
-    private final VmCpuController cpuController;
     private final VmGcController gcController;
 
-    public VmInformationController(UiFacadeFactory uiFacadeFactory, VmCpuStatDAO vmCpuStatDao, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef vmRef, VmInformationViewProvider provider) {
-        this(OSGIUtils.getInstance(), uiFacadeFactory, vmCpuStatDao, vmMemoryStatDao,  vmGcStatDao, vmRef, provider);
+    public VmInformationController(UiFacadeFactory uiFacadeFactory, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef vmRef, VmInformationViewProvider provider) {
+        this(OSGIUtils.getInstance(), uiFacadeFactory, vmMemoryStatDao,  vmGcStatDao, vmRef, provider);
     }
     
-    VmInformationController(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, VmCpuStatDAO vmCpuStatDao, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef vmRef, VmInformationViewProvider provider) {
-        VmCpuViewProvider vmCpuProvider = serviceProvider.getService(VmCpuViewProvider.class);
-        cpuController = new VmCpuController(vmCpuStatDao, vmRef, vmCpuProvider);
+    VmInformationController(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef vmRef, VmInformationViewProvider provider) {
         VmGcViewProvider vmGCProvider = serviceProvider.getService(VmGcViewProvider.class);
         gcController = new VmGcController(vmMemoryStatDao, vmGcStatDao, vmRef, vmGCProvider);
 
         view = provider.createView();
-        view.addChildView(translator.localize(LocaleResources.VM_INFO_TAB_CPU), cpuController.getView());
         view.addChildView(translator.localize(LocaleResources.VM_INFO_TAB_GC), gcController.getView());
 
         Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();

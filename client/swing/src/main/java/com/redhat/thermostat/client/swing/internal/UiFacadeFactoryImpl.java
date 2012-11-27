@@ -56,7 +56,6 @@ import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
@@ -76,7 +75,6 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     private HostInfoDAO hostInfoDao;
 
     private VmInfoDAO vmInfoDao;
-    private VmCpuStatDAO vmCpuStatDao;
     private VmMemoryStatDAO vmMemoryStatDao;
     private VmGcStatDAO vmGcStatDao;
 
@@ -98,10 +96,6 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     public void setVmInfoDao(VmInfoDAO vmInfoDao) {
         this.vmInfoDao = vmInfoDao;
-    }
-
-    public void setVmCpuStatDao(VmCpuStatDAO vmCpuStatDao) {
-        this.vmCpuStatDao = vmCpuStatDao;
     }
 
     @Override
@@ -136,7 +130,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public VmInformationController getVmController(VmRef ref) {
         VmInformationViewProvider viewProvider = serviceProvider.getService(VmInformationViewProvider.class);
-        return new VmInformationController(this, vmCpuStatDao, vmMemoryStatDao, vmGcStatDao, ref, viewProvider);
+        return new VmInformationController(this, vmMemoryStatDao, vmGcStatDao, ref, viewProvider);
     }
 
     @Override

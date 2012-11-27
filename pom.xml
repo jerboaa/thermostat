@@ -135,6 +135,7 @@
     <module>host-cpu</module>
     <module>host-memory</module>
     <module>vm-overview</module>
+    <module>vm-cpu</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>

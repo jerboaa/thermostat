@@ -38,13 +38,13 @@ package com.redhat.thermostat.eclipse.chart.common;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
-import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.VmRefViewPart;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuController;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class VmCpuViewPart extends VmRefViewPart {
 

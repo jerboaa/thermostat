@@ -110,12 +110,7 @@ public enum LocaleResources {
 
     HOST_INFO_TAB_IO,
 
-    VM_INFO_TAB_CPU,
     VM_INFO_TAB_GC,
-
-    VM_CPU_TITLE,
-    VM_CPU_CHART_LOAD_LABEL,
-    VM_CPU_CHART_TIME_LABEL,
 
     VM_GC_TITLE,
 

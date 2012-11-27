@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import com.redhat.thermostat.client.core.views.VmCpuView;
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.eclipse.SWTViewProvider;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class SWTVmCpuViewProvider extends SWTViewProvider implements
         VmCpuViewProvider {

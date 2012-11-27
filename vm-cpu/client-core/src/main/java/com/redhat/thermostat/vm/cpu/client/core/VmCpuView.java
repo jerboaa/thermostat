@@ -34,10 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.vm.cpu.client.core;
 
 import java.util.List;
 
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
 public abstract class VmCpuView extends BasicView implements UIComponent {

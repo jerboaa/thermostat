@@ -34,10 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.vm.cpu.client.locale;
 
-public interface VmCpuViewProvider extends ViewProvider {
+import com.redhat.thermostat.common.locale.Translate;
 
-    @Override
-    public VmCpuView createView();
+public enum LocaleResources {
+    
+    VM_INFO_TAB_CPU,
+    
+    VM_CPU_TITLE,
+    VM_CPU_CHART_LOAD_LABEL,
+    VM_CPU_CHART_TIME_LABEL,
+    ;
+
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.vm.cpu.client.locale.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    }
 }

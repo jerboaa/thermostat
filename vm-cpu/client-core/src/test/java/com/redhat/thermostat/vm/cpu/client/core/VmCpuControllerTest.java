@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.vm.cpu.client.core;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
@@ -50,8 +50,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.core.views.VmCpuView;
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
@@ -61,6 +59,9 @@ import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuController;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 
 public class VmCpuControllerTest {

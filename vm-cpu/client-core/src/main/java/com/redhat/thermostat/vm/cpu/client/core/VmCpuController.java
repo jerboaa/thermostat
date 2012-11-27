@@ -34,16 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.vm.cpu.client.core;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.views.VmCpuView;
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -52,10 +51,13 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.vm.cpu.client.locale.LocaleResources;
 
-public class VmCpuController {
+public class VmCpuController implements VmInformationServiceController {
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private final VmRef ref;
     private final VmCpuStatDAO dao;
@@ -123,5 +125,10 @@ public class VmCpuController {
 
     public UIComponent getView() {
         return (UIComponent) view;
+    }
+
+    @Override
+    public String getLocalizedName() {
+        return translator.localize(LocaleResources.VM_INFO_TAB_CPU);
     }
 }

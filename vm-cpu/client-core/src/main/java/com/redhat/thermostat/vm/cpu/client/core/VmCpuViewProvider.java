@@ -34,16 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.vm.cpu.client.core;
 
-import com.redhat.thermostat.client.core.views.VmCpuView;
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public class SwingVmCpuViewProvider implements VmCpuViewProvider {
+public interface VmCpuViewProvider extends ViewProvider {
 
     @Override
-    public VmCpuView createView() {
-        return new VmCpuPanel();
-    }
-
+    public VmCpuView createView();
 }
