@@ -45,6 +45,7 @@ import com.redhat.thermostat.client.core.views.HostMemoryView;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.HostMemoryView.GraphVisibilityChangeListener;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -138,7 +139,7 @@ public class HostMemoryController {
         }
     }
 
-    public BasicView getView() {
+    public UIComponent getView() {
         return view;
     }
 

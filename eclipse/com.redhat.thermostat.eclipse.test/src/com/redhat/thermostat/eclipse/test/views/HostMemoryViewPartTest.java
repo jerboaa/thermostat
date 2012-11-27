@@ -48,8 +48,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.ui.HostMemoryController;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -98,7 +98,7 @@ public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
         doReturn(controller).when(((HostMemoryViewPart) view))
                 .createController(same(hostInfoDao), same(memStatDao),
                         any(HostRef.class), same(viewProvider));
-        when(controller.getView()).thenReturn((BasicView) thermoView);
+        when(controller.getView()).thenReturn((UIComponent) thermoView);
     }
 
     @Override

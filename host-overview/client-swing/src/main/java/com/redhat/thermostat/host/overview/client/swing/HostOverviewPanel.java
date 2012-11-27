@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.host.overview.client.swing;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -48,8 +48,6 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
-import com.redhat.thermostat.client.core.views.HostOverviewView;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
@@ -57,6 +55,8 @@ import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
+import com.redhat.thermostat.host.overview.client.locale.LocaleResources;
 
 public class HostOverviewPanel extends HostOverviewView implements SwingComponent {
 

@@ -34,26 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.host.overview.client.core;
 
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public abstract class HostOverviewView extends BasicView implements UIComponent {
+public interface HostOverviewViewProvider extends ViewProvider {
 
-    public abstract void setHostName(String newHostName);
-
-    public abstract void setCpuModel(String newCpuModel);
-
-    public abstract void setCpuCount(String newCpuCount);
-
-    public abstract void setTotalMemory(String newTotalMemory);
-
-    public abstract void setOsName(String newOsName);
-
-    public abstract void setOsKernel(String newOsKernel);
-
-    public abstract void setNetworkTableColumns(Object[] columns);
-
-    public abstract void setInitialNetworkTableData(Object[][] table);
-
-    public abstract void updateNetworkTableData(int row, int column, String data);
+    @Override
+    public HostOverviewView createView();
 }

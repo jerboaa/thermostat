@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.core.views;
 
 public abstract class HostInformationView extends BasicView implements UIComponent {
 
-    public abstract void addChildView(String title, BasicView view);
+    public abstract void addChildView(String title, UIComponent view);
 
     public abstract void removeChildView(String title);
 

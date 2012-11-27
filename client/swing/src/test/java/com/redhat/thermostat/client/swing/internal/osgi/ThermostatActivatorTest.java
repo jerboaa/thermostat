@@ -46,7 +46,6 @@ import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
-import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
@@ -59,7 +58,6 @@ import com.redhat.thermostat.client.swing.views.SwingClientConfigurationViewProv
 import com.redhat.thermostat.client.swing.views.SwingHostCpuViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingHostMemoryViewProvider;
-import com.redhat.thermostat.client.swing.views.SwingHostOverviewViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmCpuViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmGcViewProvider;
@@ -82,7 +80,6 @@ public class ThermostatActivatorTest {
         assertTrue(ctx.isServiceRegistered(HostInformationViewProvider.class.getName(), SwingHostInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(HostMemoryViewProvider.class.getName(), SwingHostMemoryViewProvider.class));
         assertTrue(ctx.isServiceRegistered(HostCpuViewProvider.class.getName(), SwingHostCpuViewProvider.class));
-        assertTrue(ctx.isServiceRegistered(HostOverviewViewProvider.class.getName(), SwingHostOverviewViewProvider.class));
         assertTrue(ctx.isServiceRegistered(VmInformationViewProvider.class.getName(), SwingVmInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(VmCpuViewProvider.class.getName(), SwingVmCpuViewProvider.class));
         assertTrue(ctx.isServiceRegistered(VmGcViewProvider.class.getName(), SwingVmGcViewProvider.class));
@@ -90,6 +87,6 @@ public class ThermostatActivatorTest {
         assertTrue(ctx.isServiceRegistered(AgentInformationViewProvider.class.getName(), SwingAgentInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(ClientConfigViewProvider.class.getName(), SwingClientConfigurationViewProvider.class));
         
-        assertEquals(12, ctx.getAllServices().size());
+        assertEquals(11, ctx.getAllServices().size());
     }
 }

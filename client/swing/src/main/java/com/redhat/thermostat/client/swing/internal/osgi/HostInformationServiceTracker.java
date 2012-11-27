@@ -34,16 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.client.swing.internal.osgi;
 
-import com.redhat.thermostat.client.core.views.HostOverviewView;
-import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-public class SwingHostOverviewViewProvider implements HostOverviewViewProvider {
+import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.client.ui.UiFacadeFactory;
 
-    @Override
-    public HostOverviewView createView() {
-        return new HostOverviewPanel();
+class HostInformationServiceTracker extends ServiceTracker {
+
+    private UiFacadeFactory uiFacadeFactory;
+
+    private BundleContext context;
+
+    HostInformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+        super(context, HostInformationService.class.getName(), null);
+        this.context = context;
+        this.uiFacadeFactory = uiFacadeFactory;
     }
 
+    @Override
+    public Object addingService(ServiceReference reference) {
+        HostInformationService service = (HostInformationService) super.addingService(reference);
+        uiFacadeFactory.addHostInformationService(service);
+        return service;
+    }
+
+    @Override
+    public void removedService(ServiceReference reference, Object service) {
+        uiFacadeFactory.removeHostInformationService((HostInformationService)service);
+        super.removedService(reference, service);
+    }
 }

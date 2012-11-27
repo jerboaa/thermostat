@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.eclipse.internal.views;
 
-import com.redhat.thermostat.client.core.views.HostOverviewView;
-import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
 import com.redhat.thermostat.eclipse.SWTViewProvider;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 
 public class SWTHostOverviewViewProvider extends SWTViewProvider implements HostOverviewViewProvider {
 

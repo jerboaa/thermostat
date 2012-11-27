@@ -38,13 +38,13 @@ package com.redhat.thermostat.client.ui;
 
 import java.util.Collection;
 
+import com.redhat.thermostat.client.core.HostInformationService;
 import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -56,7 +56,6 @@ public interface UiFacadeFactory {
     void setHostInfoDao(HostInfoDAO hostInfoDao);
     void setCpuStatDao(CpuStatDAO cpuStatDAO);
     void setMemoryStatDao(MemoryStatDAO memoryStatDAO);
-    void setNetworkInfoDao(NetworkInterfaceInfoDAO networkInterfaceInfoDAO);
 
     void setVmInfoDao(VmInfoDAO vmInfoDAO);
     void setVmCpuStatDao(VmCpuStatDAO vmCpuStatDAO);
@@ -68,6 +67,12 @@ public interface UiFacadeFactory {
     public SummaryController getSummary();
 
     public HostInformationController getHostController(HostRef ref);
+    
+    Collection<HostInformationService> getHostInformationServices();
+
+    void addHostInformationService(HostInformationService hostInfoService);
+
+    void removeHostInformationService(HostInformationService hostInfoService);
 
     public VmInformationController getVmController(VmRef ref);
 

@@ -52,6 +52,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
 import com.redhat.thermostat.client.swing.views.HostInformationPanel;
 
@@ -106,7 +107,7 @@ public class HostInformationPanelTest {
 
     @Test
     public void testAddTwice() throws InvocationTargetException, InterruptedException {
-        BasicView mock1 = createHostInfoPanel();
+        UIComponent mock1 = createHostInfoPanel();
 
         panel.addChildView("foo1", mock1);
 
@@ -114,7 +115,7 @@ public class HostInformationPanelTest {
         // in order to select the right panel.
         window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1");
 
-        BasicView mock2 = createHostInfoPanel();
+        UIComponent mock2 = createHostInfoPanel();
         panel.addChildView("foo2", mock2);
 
         window.panel("panel").tabbedPane(new TabbedPaneMatcher(JTabbedPane.class)).requireTabTitles("foo1", "foo2");
@@ -122,8 +123,8 @@ public class HostInformationPanelTest {
 
     @Test
     public void testAddRemove() throws InvocationTargetException, InterruptedException {
-        BasicView test1 = createHostInfoPanel();
-        BasicView test2 = createHostInfoPanel();
+        UIComponent test1 = createHostInfoPanel();
+        UIComponent test2 = createHostInfoPanel();
 
         panel.addChildView("test1", test1);
         panel.addChildView("test2", test2);

@@ -34,10 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.host.overview.client.locale;
 
-public interface HostOverviewViewProvider extends ViewProvider {
+import com.redhat.thermostat.common.locale.Translate;
 
-    @Override
-    public HostOverviewView createView();
+public enum LocaleResources {
+    NUMBER_AND_UNIT,
+
+    HOST_INFO_TAB_OVERVIEW,
+    
+    HOST_OVERVIEW_SECTION_BASICS,
+    HOST_OVERVIEW_SECTION_HARDWARE,
+    HOST_OVERVIEW_SECTION_SOFTWARE,
+
+    HOST_INFO_HOSTNAME,
+    HOST_INFO_CPU_COUNT,
+    HOST_INFO_CPU_MODEL,
+    HOST_INFO_OS_NAME,
+    HOST_INFO_OS_KERNEL,
+
+    HOST_INFO_MEMORY_TOTAL,
+    HOST_INFO_NETWORK,
+
+    NETWORK_INTERFACE_COLUMN,
+    NETWORK_IPV4_COLUMN,
+    NETWORK_IPV6_COLUMN,
+    ;
+
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.host.overview.client.locale.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    }
 }

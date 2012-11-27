@@ -48,7 +48,6 @@ import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
-import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
@@ -64,7 +63,6 @@ import com.redhat.thermostat.client.swing.views.SwingClientConfigurationViewProv
 import com.redhat.thermostat.client.swing.views.SwingHostCpuViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingHostMemoryViewProvider;
-import com.redhat.thermostat.client.swing.views.SwingHostOverviewViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmCpuViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmGcViewProvider;
@@ -77,6 +75,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {
 
+    private HostInformationServiceTracker hostInfoServiceTracker;
     private VmInformationServiceTracker vmInfoServiceTracker;
     private VMContextActionServiceTracker contextActionTracker;
 
@@ -94,8 +93,6 @@ public class ThermostatActivator implements BundleActivator {
         context.registerService(HostInformationViewProvider.class.getName(), infoProvider, null);
         HostCpuViewProvider cpuProvider = new SwingHostCpuViewProvider();
         context.registerService(HostCpuViewProvider.class.getName(), cpuProvider, null);
-        HostOverviewViewProvider provider = new SwingHostOverviewViewProvider();
-        context.registerService(HostOverviewViewProvider.class.getName(), provider, null);
         HostMemoryViewProvider memoryProvider = new SwingHostMemoryViewProvider();
         context.registerService(HostMemoryViewProvider.class.getName(), memoryProvider, null);
         
@@ -127,6 +124,8 @@ public class ThermostatActivator implements BundleActivator {
                 
                 UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
 
+                hostInfoServiceTracker = new HostInformationServiceTracker(context, uiFacadeFactory);
+                hostInfoServiceTracker.open();
                 vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
                 vmInfoServiceTracker.open();
                 contextActionTracker = new VMContextActionServiceTracker(context, uiFacadeFactory);
@@ -146,6 +145,7 @@ public class ThermostatActivator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        hostInfoServiceTracker.close();
         vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
         contextActionTracker.close();
         cmdReg.unregisterCommands();

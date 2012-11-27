@@ -36,18 +36,20 @@
 
 package com.redhat.thermostat.client.ui;
 
+import java.util.Collection;
+
+import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
-import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
@@ -55,31 +57,31 @@ public class HostInformationController {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private final HostOverviewController overviewController;
     private final HostCpuController cpuController;
     private final HostMemoryController memoryController;
 
     private final HostInformationView view;
 
-    public HostInformationController(HostInfoDAO hostInfoDao, NetworkInterfaceInfoDAO networkInfoDao, CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao, HostRef ref, HostInformationViewProvider provider) {
+    public HostInformationController(UiFacadeFactory uiFacadeFactory, HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao, HostRef ref, HostInformationViewProvider provider) {
         OSGIUtils utils = OSGIUtils.getInstance();
         HostCpuViewProvider hostCpuProvider = utils.getService(HostCpuViewProvider.class);
-        HostOverviewViewProvider hostOverviewProvider = utils.getService(HostOverviewViewProvider.class);
         HostMemoryViewProvider hostMemoryProvider = utils.getService(HostMemoryViewProvider.class);
-        overviewController = new HostOverviewController(hostInfoDao, networkInfoDao, ref, hostOverviewProvider);
         cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref, hostCpuProvider);
         memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref, hostMemoryProvider);
 
         view = provider.createView();
 
-        view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_OVERVIEW), getOverviewController().getView());
         view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getView());
         view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getView());
-
-    }
-
-    public HostOverviewController getOverviewController() {
-        return overviewController;
+        
+        Collection<HostInformationService> hostInfoServices = uiFacadeFactory.getHostInformationServices();
+        for (HostInformationService hostInfoService : hostInfoServices) {
+            if (hostInfoService.getFilter().matches(ref)) {
+                HostInformationServiceController ctrl = hostInfoService.getInformationServiceController(ref);
+                String name = ctrl.getLocalizedName();
+                view.addChildView(name, ctrl.getView());
+            }
+        }
     }
 
     public HostCpuController getCpuController() {

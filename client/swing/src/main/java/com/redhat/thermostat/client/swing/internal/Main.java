@@ -284,7 +284,6 @@ public class Main {
                 uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
                 uiFacadeFactory.setCpuStatDao(daoFactory.getCpuStatDAO());
                 uiFacadeFactory.setMemoryStatDao(daoFactory.getMemoryStatDAO());
-                uiFacadeFactory.setNetworkInfoDao(daoFactory.getNetworkInterfaceInfoDAO());
 
                 uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
                 uiFacadeFactory.setVmCpuStatDao(daoFactory.getVmCpuStatDAO());

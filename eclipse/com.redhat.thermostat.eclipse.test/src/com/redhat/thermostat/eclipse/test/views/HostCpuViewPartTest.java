@@ -50,8 +50,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -150,7 +150,7 @@ public class HostCpuViewPartTest extends AbstractRefViewPartTest<HostRef> {
         doReturn(controller).when(((HostCpuViewPart) view)).createController(
                 same(hostInfoDao), same(cpuStatDao), any(HostRef.class),
                 same(viewProvider));
-        when(controller.getView()).thenReturn((BasicView) thermoView);
+        when(controller.getView()).thenReturn((UIComponent) thermoView);
     }
 
     @Override

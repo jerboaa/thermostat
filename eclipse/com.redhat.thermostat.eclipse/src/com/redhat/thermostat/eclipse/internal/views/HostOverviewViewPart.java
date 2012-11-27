@@ -38,14 +38,14 @@ package com.redhat.thermostat.eclipse.internal.views;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
-import com.redhat.thermostat.client.ui.HostOverviewController;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewController;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 
 public class HostOverviewViewPart extends HostRefViewPart {
 
