@@ -282,10 +282,7 @@ public class Main {
                 // register the storage, so other services can request it
                 daoFactory.registerDAOsAndStorageAsOSGiServices();
                 uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
-
                 uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
-                uiFacadeFactory.setVmMemoryStatDao(daoFactory.getVmMemoryStatDAO());
-                uiFacadeFactory.setVmGcStatDao(daoFactory.getVmGcStatDAO());
 
                 showMainWindow();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {

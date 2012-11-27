@@ -363,6 +363,16 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-vmclassstat-swing</artifactId>
       <version>${project.version}</version>
     </dependency>

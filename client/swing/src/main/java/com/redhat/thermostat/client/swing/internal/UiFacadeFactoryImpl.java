@@ -56,9 +56,7 @@ import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
@@ -73,10 +71,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     private BundleContext context;
 
     private HostInfoDAO hostInfoDao;
-
     private VmInfoDAO vmInfoDao;
-    private VmMemoryStatDAO vmMemoryStatDao;
-    private VmGcStatDAO vmGcStatDao;
 
     private OSGIUtils serviceProvider;
     
@@ -96,16 +91,6 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     public void setVmInfoDao(VmInfoDAO vmInfoDao) {
         this.vmInfoDao = vmInfoDao;
-    }
-
-    @Override
-    public void setVmMemoryStatDao(VmMemoryStatDAO vmMemoryStatDao) {
-        this.vmMemoryStatDao = vmMemoryStatDao;
-    }
-
-    @Override
-    public void setVmGcStatDao(VmGcStatDAO vmGcStatDao) {
-        this.vmGcStatDao = vmGcStatDao;
     }
 
     @Override
@@ -130,7 +115,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public VmInformationController getVmController(VmRef ref) {
         VmInformationViewProvider viewProvider = serviceProvider.getService(VmInformationViewProvider.class);
-        return new VmInformationController(this, vmMemoryStatDao, vmGcStatDao, ref, viewProvider);
+        return new VmInformationController(this, ref, viewProvider);
     }
 
     @Override

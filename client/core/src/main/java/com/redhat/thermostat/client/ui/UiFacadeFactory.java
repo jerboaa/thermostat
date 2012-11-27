@@ -43,9 +43,7 @@ import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public interface UiFacadeFactory {
@@ -53,8 +51,6 @@ public interface UiFacadeFactory {
     void setHostInfoDao(HostInfoDAO hostInfoDao);
 
     void setVmInfoDao(VmInfoDAO vmInfoDAO);
-    void setVmMemoryStatDao(VmMemoryStatDAO vmMemoryStatDao);
-    void setVmGcStatDao(VmGcStatDAO vmGcStatDao);
 
     public MainWindowController getMainWindow();
 

@@ -41,34 +41,21 @@ import java.util.Collection;
 import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class VmInformationController {
 
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
     private final VmInformationView view;
 
-    private final VmGcController gcController;
-
-    public VmInformationController(UiFacadeFactory uiFacadeFactory, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef vmRef, VmInformationViewProvider provider) {
-        this(OSGIUtils.getInstance(), uiFacadeFactory, vmMemoryStatDao,  vmGcStatDao, vmRef, provider);
+    public VmInformationController(UiFacadeFactory uiFacadeFactory, VmRef vmRef, VmInformationViewProvider provider) {
+        this(OSGIUtils.getInstance(), uiFacadeFactory, vmRef, provider);
     }
     
-    VmInformationController(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef vmRef, VmInformationViewProvider provider) {
-        VmGcViewProvider vmGCProvider = serviceProvider.getService(VmGcViewProvider.class);
-        gcController = new VmGcController(vmMemoryStatDao, vmGcStatDao, vmRef, vmGCProvider);
-
+    VmInformationController(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, VmRef vmRef, VmInformationViewProvider provider) {
         view = provider.createView();
-        view.addChildView(translator.localize(LocaleResources.VM_INFO_TAB_GC), gcController.getView());
 
         Collection<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();
         for (VmInformationService vmInfoService : vmInfoServices) {

@@ -63,12 +63,12 @@ import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
-import com.redhat.thermostat.client.core.views.VmGcView;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
+import com.redhat.thermostat.vm.gc.client.core.VmGcView;
+import com.redhat.thermostat.vm.gc.client.locale.LocaleResources;
 
 public class SWTVmGcView extends VmGcView implements SWTComponent {
     

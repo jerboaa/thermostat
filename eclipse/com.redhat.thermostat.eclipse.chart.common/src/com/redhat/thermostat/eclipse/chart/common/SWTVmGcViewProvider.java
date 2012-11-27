@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import com.redhat.thermostat.client.core.views.VmGcView;
-import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.eclipse.SWTViewProvider;
+import com.redhat.thermostat.vm.gc.client.core.VmGcView;
+import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class SWTVmGcViewProvider extends SWTViewProvider implements
         VmGcViewProvider {
