@@ -48,7 +48,6 @@ import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.core.views.VmOverviewViewProvider;
 import com.redhat.thermostat.client.osgi.service.HostDecorator;
 import com.redhat.thermostat.client.swing.internal.HostIconDecorator;
 import com.redhat.thermostat.client.swing.views.SwingAgentInformationViewProvider;
@@ -58,7 +57,6 @@ import com.redhat.thermostat.client.swing.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmCpuViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmGcViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmInformationViewProvider;
-import com.redhat.thermostat.client.swing.views.SwingVmOverviewViewProvider;
 import com.redhat.thermostat.test.StubBundleContext;
 
 public class ThermostatActivatorTest {
@@ -77,10 +75,9 @@ public class ThermostatActivatorTest {
         assertTrue(ctx.isServiceRegistered(VmInformationViewProvider.class.getName(), SwingVmInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(VmCpuViewProvider.class.getName(), SwingVmCpuViewProvider.class));
         assertTrue(ctx.isServiceRegistered(VmGcViewProvider.class.getName(), SwingVmGcViewProvider.class));
-        assertTrue(ctx.isServiceRegistered(VmOverviewViewProvider.class.getName(), SwingVmOverviewViewProvider.class));
         assertTrue(ctx.isServiceRegistered(AgentInformationViewProvider.class.getName(), SwingAgentInformationViewProvider.class));
         assertTrue(ctx.isServiceRegistered(ClientConfigViewProvider.class.getName(), SwingClientConfigurationViewProvider.class));
         
-        assertEquals(9, ctx.getAllServices().size());
+        assertEquals(8, ctx.getAllServices().size());
     }
 }

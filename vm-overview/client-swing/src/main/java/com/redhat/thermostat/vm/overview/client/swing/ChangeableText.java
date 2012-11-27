@@ -34,11 +34,48 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.vm.overview.client.swing;
 
-public interface VmOverviewViewProvider extends ViewProvider {
+import java.util.HashSet;
+import java.util.Set;
 
-    @Override
-    public VmOverviewView createView();
-    
+public class ChangeableText {
+
+    private final Set<TextListener> listeners = new HashSet<TextListener>();
+    private String text;
+
+    public static interface TextListener {
+        public void textChanged(ChangeableText text);
+    }
+
+    public ChangeableText(String text) {
+        this.text = text;
+    }
+
+    public synchronized void setText(String text) {
+        if (this.text.equals(text)) {
+            return;
+        }
+        this.text = text;
+        fireChanged();
+    }
+
+    public synchronized String getText() {
+        return text;
+    }
+
+    public synchronized void addListener(TextListener listener) {
+        this.listeners.add(listener);
+    }
+
+    public synchronized void removeListener(TextListener listener) {
+        this.listeners.remove(listener);
+    }
+
+    private void fireChanged() {
+        for (TextListener listener: listeners) {
+            listener.textChanged(this);
+        }
+    }
+
 }

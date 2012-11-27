@@ -34,27 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.vm.overview.client.swing;
 
+import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
+import com.redhat.thermostat.vm.overview.client.core.VmOverviewViewProvider;
 
-public abstract class VmOverviewView extends BasicView implements UIComponent {
+public class SwingVmOverviewViewProvider implements VmOverviewViewProvider {
 
-    public abstract void setVmPid(String pid);
-
-    public abstract void setVmStartTimeStamp(String timestamp);
-
-    public abstract void setVmStopTimeStamp(String timeStamp);
-
-    public abstract void setMainClass(String mainClass);
-
-    public abstract void setJavaCommandLine(String javaCommandLine);
-
-    public abstract void setJavaHome(String string);
-
-    public abstract void setJavaVersion(String javaVersion);
-
-    public abstract void setVmNameAndVersion(String vmNameAndVersion);
-
-    public abstract void setVmArguments(String vmArguments);
+    @Override
+    public VmOverviewView createView() {
+        return new VmOverviewPanel();
+    }
 
 }

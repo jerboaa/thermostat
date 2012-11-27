@@ -34,15 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core;
+package com.redhat.thermostat.vm.overview.client.core;
 
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 
-public interface VmInformationService extends InformationService {
+public class VmOverviewService implements VmInformationService {
+    
+    private static final VmFilter FILTER = new AlwaysMatchFilter();
+    
+    private VmInfoDAO vmInfoDAO;
+    
+    public VmOverviewService(VmInfoDAO vmInfoDAO) {
+        this.vmInfoDAO = vmInfoDAO;
+    }
 
     @Override
-    public VmFilter getFilter();
+    public VmInformationServiceController getInformationServiceController(
+            VmRef ref) {
+        VmOverviewViewProvider provider = OSGIUtils.getInstance().getService(VmOverviewViewProvider.class);
+        return new VmOverviewController(vmInfoDAO, ref, provider);
+    }
 
-    public VmInformationServiceController getInformationServiceController(VmRef ref);
+    @Override
+    public VmFilter getFilter() {
+        return FILTER;
+    }
+
 }

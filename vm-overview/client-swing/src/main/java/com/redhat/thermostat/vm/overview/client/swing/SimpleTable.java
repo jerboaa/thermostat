@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.vm.overview.client.swing;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -57,7 +57,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.swing.internal.ChangeableText;
+import com.redhat.thermostat.client.swing.components.Components;
+import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 
 public class SimpleTable implements ChangeableText.TextListener {

@@ -34,16 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.vm.overview.client.locale;
 
-import com.redhat.thermostat.client.core.views.VmOverviewView;
-import com.redhat.thermostat.client.core.views.VmOverviewViewProvider;
+import com.redhat.thermostat.common.locale.Translate;
 
-public class SwingVmOverviewViewProvider implements VmOverviewViewProvider {
+public enum LocaleResources {
+    VM_INFO_TAB_OVERVIEW,
+    
+    VM_INFO_TITLE,
+    VM_INFO_SECTION_PROCESS,
+    VM_INFO_SECTION_JAVA,
 
-    @Override
-    public VmOverviewView createView() {
-        return new VmOverviewPanel();
+    VM_INFO_PROCESS_ID,
+    VM_INFO_START_TIME,
+    VM_INFO_STOP_TIME,
+    VM_INFO_RUNNING,
+    VM_INFO_MAIN_CLASS,
+    VM_INFO_COMMAND_LINE,
+    VM_INFO_JAVA_VERSION,
+    VM_INFO_VM,
+    VM_INFO_VM_ARGUMENTS,
+    VM_INFO_VM_NAME_AND_VERSION,
+    VM_INFO_PROPERTIES,
+    VM_INFO_ENVIRONMENT,
+    VM_INFO_LIBRARIES,
+    ;
+
+    static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.vm.overview.client.locale.strings";
+
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
-
 }

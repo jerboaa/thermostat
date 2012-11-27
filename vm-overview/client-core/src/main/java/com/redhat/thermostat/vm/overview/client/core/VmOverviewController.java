@@ -34,18 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.vm.overview.client.core;
 
 import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.views.VmOverviewView;
-import com.redhat.thermostat.client.core.views.VmOverviewViewProvider;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -56,8 +53,9 @@ import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
 
-class VmOverviewController {
+public class VmOverviewController implements VmInformationServiceController {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -137,5 +135,17 @@ class VmOverviewController {
 
     public UIComponent getView() {
         return (UIComponent) view;
+    }
+
+    @Override
+    public String getLocalizedName() {
+        return translator.localize(LocaleResources.VM_INFO_TAB_OVERVIEW);
+    }
+    
+    /*
+     * For testing purposes only.
+     */
+    DateFormat getDateFormat() {
+        return vmRunningTimeFormat;
     }
 }

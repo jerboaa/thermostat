@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.vm.overview.client.swing;
 
 import java.awt.Component;
 import java.util.ArrayList;
@@ -42,18 +42,16 @@ import java.util.List;
 
 import javax.swing.JPanel;
 
-import com.redhat.thermostat.client.core.views.VmOverviewView;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.Components;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.swing.components.SimpleTable;
-import com.redhat.thermostat.client.swing.components.SimpleTable.Section;
-import com.redhat.thermostat.client.swing.components.SimpleTable.TableEntry;
-import com.redhat.thermostat.client.swing.internal.ChangeableText;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
+import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.overview.client.swing.SimpleTable.Section;
+import com.redhat.thermostat.vm.overview.client.swing.SimpleTable.TableEntry;
 
 public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
 

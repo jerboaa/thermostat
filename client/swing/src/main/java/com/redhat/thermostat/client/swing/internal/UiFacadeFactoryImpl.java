@@ -136,7 +136,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public VmInformationController getVmController(VmRef ref) {
         VmInformationViewProvider viewProvider = serviceProvider.getService(VmInformationViewProvider.class);
-        return new VmInformationController(this, vmInfoDao, vmCpuStatDao, vmMemoryStatDao, vmGcStatDao, ref, viewProvider);
+        return new VmInformationController(this, vmCpuStatDao, vmMemoryStatDao, vmGcStatDao, ref, viewProvider);
     }
 
     @Override

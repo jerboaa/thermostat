@@ -34,15 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core;
+package com.redhat.thermostat.vm.overview.client.core;
 
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 
-public interface VmInformationService extends InformationService {
 
-    @Override
-    public VmFilter getFilter();
+public abstract class VmOverviewView extends BasicView implements UIComponent {
 
-    public VmInformationServiceController getInformationServiceController(VmRef ref);
+    public abstract void setVmPid(String pid);
+
+    public abstract void setVmStartTimeStamp(String timestamp);
+
+    public abstract void setVmStopTimeStamp(String timeStamp);
+
+    public abstract void setMainClass(String mainClass);
+
+    public abstract void setJavaCommandLine(String javaCommandLine);
+
+    public abstract void setJavaHome(String string);
+
+    public abstract void setJavaVersion(String javaVersion);
+
+    public abstract void setVmNameAndVersion(String vmNameAndVersion);
+
+    public abstract void setVmArguments(String vmArguments);
+
 }
