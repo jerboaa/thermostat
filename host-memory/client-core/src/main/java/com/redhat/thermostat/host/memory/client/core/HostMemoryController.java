@@ -34,19 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.host.memory.client.core;
 
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.HostMemoryView;
-import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.client.core.views.HostMemoryView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -58,11 +54,13 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.DisplayableValues;
+import com.redhat.thermostat.host.memory.client.core.HostMemoryView.GraphVisibilityChangeListener;
+import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.storage.model.MemoryStat;
 import com.redhat.thermostat.storage.model.MemoryType;
 
-public class HostMemoryController {
+public class HostMemoryController implements HostInformationServiceController {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -179,5 +177,10 @@ public class HostMemoryController {
         public void hide(String tag) {
             view.hideMemoryChart(tag);
         }
+    }
+
+    @Override
+    public String getLocalizedName() {
+        return translator.localize(LocaleResources.HOST_INFO_TAB_MEMORY);
     }
 }

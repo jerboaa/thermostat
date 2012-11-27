@@ -43,31 +43,15 @@ import com.redhat.thermostat.client.core.controllers.HostInformationServiceContr
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
-import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 
 public class HostInformationController {
 
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
-    private final HostMemoryController memoryController;
-
     private final HostInformationView view;
 
-    public HostInformationController(UiFacadeFactory uiFacadeFactory, HostInfoDAO hostInfoDao, MemoryStatDAO memoryStatDao, HostRef ref, HostInformationViewProvider provider) {
-        OSGIUtils utils = OSGIUtils.getInstance();
-        HostMemoryViewProvider hostMemoryProvider = utils.getService(HostMemoryViewProvider.class);
-        memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref, hostMemoryProvider);
-
+    public HostInformationController(UiFacadeFactory uiFacadeFactory, HostRef ref, HostInformationViewProvider provider) {
         view = provider.createView();
 
-        view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getView());
-        
         Collection<HostInformationService> hostInfoServices = uiFacadeFactory.getHostInformationServices();
         for (HostInformationService hostInfoService : hostInfoServices) {
             if (hostInfoService.getFilter().matches(ref)) {
@@ -78,10 +62,6 @@ public class HostInformationController {
         }
     }
 
-    public HostMemoryController getMemoryController() {
-        return memoryController;
-    }
-    
     public BasicView getView() {
         return view;
     }

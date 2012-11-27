@@ -39,11 +39,11 @@ package com.redhat.thermostat.eclipse.chart.common;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
 import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
+import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 
 public class Activator extends AbstractUIPlugin {
 

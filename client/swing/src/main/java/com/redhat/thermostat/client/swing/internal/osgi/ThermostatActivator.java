@@ -46,7 +46,6 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
 import com.redhat.thermostat.client.core.views.VmGcViewProvider;
@@ -60,7 +59,6 @@ import com.redhat.thermostat.client.swing.internal.UiFacadeFactoryImpl;
 import com.redhat.thermostat.client.swing.views.SwingAgentInformationViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingClientConfigurationViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingHostInformationViewProvider;
-import com.redhat.thermostat.client.swing.views.SwingHostMemoryViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmCpuViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmGcViewProvider;
@@ -89,8 +87,6 @@ public class ThermostatActivator implements BundleActivator {
         // Host views
         HostInformationViewProvider infoProvider = new SwingHostInformationViewProvider();
         context.registerService(HostInformationViewProvider.class.getName(), infoProvider, null);
-        HostMemoryViewProvider memoryProvider = new SwingHostMemoryViewProvider();
-        context.registerService(HostMemoryViewProvider.class.getName(), memoryProvider, null);
         
         // Vm views
         VmInformationViewProvider vmInfoProvider = new SwingVmInformationViewProvider();

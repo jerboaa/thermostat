@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.host.memory.client.swing;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -63,8 +63,6 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.core.views.HostMemoryView;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.Components;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
@@ -76,6 +74,8 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
+import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
+import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.swing.components.experimental.WrapLayout;
 

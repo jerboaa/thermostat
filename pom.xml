@@ -133,6 +133,7 @@
     <module>storage</module>
     <module>host-overview</module>
     <module>host-cpu</module>
+    <module>host-memory</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>

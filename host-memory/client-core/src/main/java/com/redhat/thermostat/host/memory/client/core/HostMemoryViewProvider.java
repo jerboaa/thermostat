@@ -34,36 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.host.memory.client.core;
 
-import java.util.List;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
+public interface HostMemoryViewProvider extends ViewProvider {
 
-public abstract class HostMemoryView extends BasicView implements UIComponent {
-
-    public interface GraphVisibilityChangeListener {
-        public void show(String tag);
-
-        public void hide(String tag);
-    }
-
-    public abstract void setTotalMemory(String totalMemory);
-
-    public abstract void addMemoryChart(String tag, String humanReadableName);
-
-    public abstract void removeMemoryChart(String tag);
-
-    public abstract void showMemoryChart(String tag);
-
-    public abstract void hideMemoryChart(String tag);
-
-    public abstract void addMemoryData(String tag, List<DiscreteTimeData<? extends Number>> data);
-
-    public abstract void clearMemoryData(String tag);
-
-    public abstract void addGraphVisibilityListener(GraphVisibilityChangeListener listener);
-
-    public abstract void removeGraphVisibilityListener(GraphVisibilityChangeListener listener);
+    @Override
+    public HostMemoryView createView();
 
 }

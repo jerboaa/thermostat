@@ -282,7 +282,6 @@ public class Main {
                 // register the storage, so other services can request it
                 daoFactory.registerDAOsAndStorageAsOSGiServices();
                 uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
-                uiFacadeFactory.setMemoryStatDao(daoFactory.getMemoryStatDAO());
 
                 uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
                 uiFacadeFactory.setVmCpuStatDao(daoFactory.getVmCpuStatDAO());

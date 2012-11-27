@@ -34,11 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.host.memory.client.core;
 
-public interface HostMemoryViewProvider extends ViewProvider {
+import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.MemoryStatDAO;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+
+public class HostMemoryService implements HostInformationService {
+    
+    private static final HostFilter FILTER = new HostFilter() {
+        @Override
+        public boolean matches(HostRef toMatch) {
+            return true;
+        }
+    };
+    
+    private HostInfoDAO hostInfoDAO;
+    private MemoryStatDAO memoryStatDAO;
+    
+    public HostMemoryService(HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO) {
+        this.hostInfoDAO = hostInfoDAO;
+        this.memoryStatDAO = memoryStatDAO;
+    }
 
     @Override
-    public HostMemoryView createView();
+    public HostFilter getFilter() {
+        return FILTER;
+    }
+
+    @Override
+    public HostInformationServiceController getInformationServiceController(
+            HostRef ref) {
+        HostMemoryViewProvider provider = OSGIUtils.getInstance().getService(HostMemoryViewProvider.class);
+        return new HostMemoryController(hostInfoDAO, memoryStatDAO, ref, provider);
+    }
 
 }

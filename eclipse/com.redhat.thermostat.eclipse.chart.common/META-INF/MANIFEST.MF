@@ -9,6 +9,8 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: com.redhat.thermostat.client.core.views,
  com.redhat.thermostat.host.cpu.client.core,
  com.redhat.thermostat.host.cpu.client.locale,
+ com.redhat.thermostat.host.memory.client.core,
+ com.redhat.thermostat.host.memory.client.locale,
  com.redhat.thermostat.client.locale,
  com.redhat.thermostat.client.osgi.service,
  com.redhat.thermostat.client.ui,
