@@ -68,4 +68,4 @@ echo-repo:
 	echo "Using private Maven repository: $(REPO_LOC)"
 
 # We only have phony targets
-.PHONY:	all core eclipse-test-deps eclipse-test-p2 eclipse create-repo-dir clean-repo echo-repo
+.PHONY:	all core core-install eclipse-test eclipse-test-p2 eclipse-test-deps jfreechart-deps jfreechart-p2 eclipse create-repo-dir clean-repo echo-repo

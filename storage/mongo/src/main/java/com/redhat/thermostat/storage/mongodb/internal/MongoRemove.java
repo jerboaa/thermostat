@@ -34,31 +34,44 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
+package com.redhat.thermostat.storage.mongodb.internal;
 
-import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageProvider;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Remove;
 
-public class MongoStorageProvider implements StorageProvider {
+class MongoRemove implements Remove {
 
-    private StartupConfiguration configuration;
+    private Category category;
+    private DBObject query;
 
-    public void setConfig(StartupConfiguration configuration) {
-        this.configuration = configuration;
+    @Override
+    public Remove from(Category category) {
+        if (query != null) {
+            throw new IllegalStateException();
+        }
+        this.category = category;
+        return this;
+    }
+
+    Category getCategory() {
+        return category;
     }
 
     @Override
-    public Storage createStorage() {
-        return new MongoStorage(configuration);
+    public <T> Remove where(Key<T> key, T value) {
+        if (query == null) {
+            query = new BasicDBObject();
+        }
+        query.put(key.getName(), value);
+        return this;
     }
 
-    @Override
-    public boolean canHandleProtocol() {
-        return configuration.getDBConnectionString().startsWith("mongodb://");
+    DBObject getQuery() {
+        return query;
     }
 
 }

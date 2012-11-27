@@ -1,14 +1,14 @@
-package com.redhat.thermostat.common.internal;
+package com.redhat.thermostat.storage.mongodb.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.storage.core.StorageProvider;
 
 public class Activator implements BundleActivator {
 
+    @SuppressWarnings("rawtypes")
     private ServiceRegistration reg;
     
     @Override

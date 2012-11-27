@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -43,8 +43,7 @@ import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
-import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
+import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.ConnectionException;
@@ -69,7 +68,7 @@ class MongoConnection extends Connection {
             testConnection();
             connected = true;
 
-        } catch (IOException | MongoException | NotImplementedException | IllegalArgumentException e) {
+        } catch (IOException | MongoException | IllegalArgumentException e) {
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             throw new ConnectionException(e.getMessage(), e);
         }

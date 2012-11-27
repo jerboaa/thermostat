@@ -35,7 +35,7 @@
  */
 
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.common.dao;
 
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;

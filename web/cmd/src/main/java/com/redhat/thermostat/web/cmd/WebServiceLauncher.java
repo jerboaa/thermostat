@@ -54,7 +54,7 @@ import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.storage.MongoStorageProvider;
+import com.redhat.thermostat.storage.mongodb.internal.MongoStorageProvider;
 import com.redhat.thermostat.web.server.IpPortPair;
 import com.redhat.thermostat.web.server.WebStorageEndPoint;
 

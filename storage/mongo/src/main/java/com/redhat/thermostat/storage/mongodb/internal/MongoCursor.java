@@ -34,10 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.storage.mongodb.internal;
 
-public interface AuthenticationConfiguration {
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.model.Pojo;
 
-    String getUsername();
-    String getPassword();
+class MongoCursor<T extends Pojo> implements Cursor<T> {
+
+    private DBCursor cursor;
+    private Class<T> resultClass;
+
+    MongoCursor(DBCursor cursor, Class<T> resultClass) {
+        this.cursor = cursor;
+        this.resultClass = resultClass;
+    }
+
+    @Override
+    public boolean hasNext() {
+        return cursor.hasNext();
+    }
+
+    @Override
+    public T next() {
+        DBObject next = cursor.next();
+        if (next == null) {
+            return null;
+        }
+        MongoPojoConverter converter = new MongoPojoConverter();
+        return converter.convertMongoToPojo(next, resultClass);
+    }
+
 }

@@ -1,6 +1,6 @@
 package com.redhat.thermostat.web.client;
 
-import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
+import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;

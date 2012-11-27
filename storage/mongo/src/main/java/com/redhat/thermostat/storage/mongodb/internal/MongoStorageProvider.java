@@ -34,36 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.storage.mongodb.internal;
 
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.model.Pojo;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
-class MongoCursor<T extends Pojo> implements Cursor<T> {
+import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageProvider;
 
-    private DBCursor cursor;
-    private Class<T> resultClass;
+public class MongoStorageProvider implements StorageProvider {
 
-    MongoCursor(DBCursor cursor, Class<T> resultClass) {
-        this.cursor = cursor;
-        this.resultClass = resultClass;
+    private StartupConfiguration configuration;
+
+    public void setConfig(StartupConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     @Override
-    public boolean hasNext() {
-        return cursor.hasNext();
+    public Storage createStorage() {
+        return new MongoStorage(configuration);
     }
 
     @Override
-    public T next() {
-        DBObject next = cursor.next();
-        if (next == null) {
-            return null;
-        }
-        MongoPojoConverter converter = new MongoPojoConverter();
-        return converter.convertMongoToPojo(next, resultClass);
+    public boolean canHandleProtocol() {
+        return configuration.getDBConnectionString().startsWith("mongodb://");
     }
 
 }

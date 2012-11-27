@@ -43,6 +43,7 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.DAOFactoryImpl;
+import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.StorageException;

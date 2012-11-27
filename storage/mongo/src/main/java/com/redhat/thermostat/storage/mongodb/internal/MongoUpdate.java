@@ -34,35 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.internal;
 
-import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
+package com.redhat.thermostat.storage.mongodb.internal;
 
-class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Update;
 
-    private String dbUrl;
-    private String username;
-    private String password;
+// TODO: For now we utilize the Chunk based conversion, and rely on MongoStorage to
+// actually resolve the $set fields. Eventually, we want to convert to DBObject
+// directly, and take advantage of improved semantics of this class.
+class MongoUpdate implements Update {
 
-    ConnectionConfiguration(String dbUrl, String username, String password) {
-        this.dbUrl = dbUrl;
-        this.username = username;
-        this.password = password;
+    private DBObject query;
+    private DBObject values;
+    private Category category;
+
+    @Override
+    public Update from(Category category) {
+        if (query != null || values != null) {
+            throw new IllegalStateException();
+        }
+        this.category = category;
+        return this;
+    }
+
+    Category getCategory() {
+        return category;
     }
 
     @Override
-    public String getDBConnectionString() {
-        return dbUrl;
+    public <T> Update where(Key<T> key, T value) {
+        if (query == null) {
+            query = new BasicDBObject();
+        }
+        query.put(key.getName(), value);
+        return this;
+    }
+
+    DBObject getQuery() {
+        return query;
     }
 
     @Override
-    public String getUsername() {
-        return username;
+    public <T> Update set(Key<T> key, T value) {
+        if (values == null) {
+            values = new BasicDBObject();
+        }
+        values.put(key.getName(), value);
+        return this;
     }
 
-    @Override
-    public String getPassword() {
-        return password;
+    DBObject getValues() {
+        return new BasicDBObject("$set", values);
     }
 }

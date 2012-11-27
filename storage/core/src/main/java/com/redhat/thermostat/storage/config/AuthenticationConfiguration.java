@@ -34,60 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.storage.config;
 
-package com.redhat.thermostat.common.storage;
+public interface AuthenticationConfiguration {
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Update;
-
-// TODO: For now we utilize the Chunk based conversion, and rely on MongoStorage to
-// actually resolve the $set fields. Eventually, we want to convert to DBObject
-// directly, and take advantage of improved semantics of this class.
-class MongoUpdate implements Update {
-
-    private DBObject query;
-    private DBObject values;
-    private Category category;
-
-    @Override
-    public Update from(Category category) {
-        if (query != null || values != null) {
-            throw new IllegalStateException();
-        }
-        this.category = category;
-        return this;
-    }
-
-    Category getCategory() {
-        return category;
-    }
-
-    @Override
-    public <T> Update where(Key<T> key, T value) {
-        if (query == null) {
-            query = new BasicDBObject();
-        }
-        query.put(key.getName(), value);
-        return this;
-    }
-
-    DBObject getQuery() {
-        return query;
-    }
-
-    @Override
-    public <T> Update set(Key<T> key, T value) {
-        if (values == null) {
-            values = new BasicDBObject();
-        }
-        values.put(key.getName(), value);
-        return this;
-    }
-
-    DBObject getValues() {
-        return new BasicDBObject("$set", values);
-    }
+    String getUsername();
+    String getPassword();
 }

@@ -40,7 +40,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import com.redhat.thermostat.common.storage.MongoQuery;
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;

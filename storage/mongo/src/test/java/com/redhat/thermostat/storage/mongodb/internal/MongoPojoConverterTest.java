@@ -35,7 +35,7 @@
  */
 
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.storage.mongodb.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -48,11 +48,11 @@ import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.common.storage.MongoPojoConverter;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.mongodb.internal.MongoPojoConverter;
 
 public class MongoPojoConverterTest {
 

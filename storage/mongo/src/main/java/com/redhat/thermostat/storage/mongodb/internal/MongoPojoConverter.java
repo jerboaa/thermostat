@@ -35,7 +35,7 @@
  */
 
 
-package com.redhat.thermostat.common.storage;
+package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Array;

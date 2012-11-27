@@ -9,7 +9,7 @@
   <servlet>
     <init-param>
       <param-name>storage.class</param-name>
-      <param-value>com.redhat.thermostat.common.storage.MongoStorageProvider</param-value>
+      <param-value>com.redhat.thermostat.storage.mongodb.internal.MongoStorageProvider</param-value>
     </init-param>
     <init-param>
       <param-name>storage.endpoint</param-name>

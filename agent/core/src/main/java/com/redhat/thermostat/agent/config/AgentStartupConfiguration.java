@@ -36,18 +36,7 @@
 
 package com.redhat.thermostat.agent.config;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
-import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
-import com.redhat.thermostat.common.config.ConfigUtils;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
 public class AgentStartupConfiguration implements StartupConfiguration, AuthenticationConfiguration {

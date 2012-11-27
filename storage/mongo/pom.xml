@@ -41,63 +41,15 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat-web</artifactId>
+    <artifactId>thermostat-storage</artifactId>
     <version>0.5.0-SNAPSHOT</version>
   </parent>
-
-  <artifactId>thermostat-web-cmd</artifactId>
+  
+  <artifactId>thermostat-storage-mongodb</artifactId>
   <packaging>bundle</packaging>
 
-  <name>Thermostat Web Service Command</name>
-
-  <dependencies>
-  
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.mockito</groupId>
-      <artifactId>mockito-core</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-webapp</artifactId>
-      <version>${jetty.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.osgi</groupId>
-      <artifactId>org.osgi.core</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-server</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-storage-mongodb</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-
-  </dependencies>
+  <name>Thermostat Storage Library for MongoDB</name>
+  <url>${project.parent.url}</url>
 
   <build>
     <plugins>
@@ -107,10 +59,12 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Bundle-SymbolicName>com.redhat.thermostat.web.cmd</Bundle-SymbolicName>
+            <Bundle-SymbolicName>com.redhat.thermostat.storage.mongodb</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.web.cmd.Activator</Bundle-Activator>
-            <Export-Package>com.redhat.thermostat.web.cmd</Export-Package>
+            <Bundle-Activator>com.redhat.thermostat.storage.mongodb.internal.Activator</Bundle-Activator>
+            <Private-Package>
+              com.redhat.thermostat.storage.mongodb.internal
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
@@ -118,4 +72,48 @@
       </plugin>
     </plugins>
   </build>
+  
+  <dependencies>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-beanutils</groupId>
+      <artifactId>commons-beanutils</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>com.springsource.org.apache.commons.logging</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+    	<groupId>com.redhat.thermostat</groupId>
+    	<artifactId>thermostat-storage-core</artifactId>
+    	<version>${project.version}</version>
+    </dependency>
+  </dependencies>
+
 </project>

@@ -34,44 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.storage.config;
 
-package com.redhat.thermostat.common.storage;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Remove;
+public class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {
 
-class MongoRemove implements Remove {
+    private String dbUrl;
+    private String username;
+    private String password;
 
-    private Category category;
-    private DBObject query;
-
-    @Override
-    public Remove from(Category category) {
-        if (query != null) {
-            throw new IllegalStateException();
-        }
-        this.category = category;
-        return this;
-    }
-
-    Category getCategory() {
-        return category;
+    public ConnectionConfiguration(String dbUrl, String username, String password) {
+        this.dbUrl = dbUrl;
+        this.username = username;
+        this.password = password;
     }
 
     @Override
-    public <T> Remove where(Key<T> key, T value) {
-        if (query == null) {
-            query = new BasicDBObject();
-        }
-        query.put(key.getName(), value);
-        return this;
+    public String getDBConnectionString() {
+        return dbUrl;
     }
 
-    DBObject getQuery() {
-        return query;
+    @Override
+    public String getUsername() {
+        return username;
     }
 
+    @Override
+    public String getPassword() {
+        return password;
+    }
 }
