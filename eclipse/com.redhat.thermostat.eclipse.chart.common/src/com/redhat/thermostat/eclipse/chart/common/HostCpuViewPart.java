@@ -38,14 +38,14 @@ package com.redhat.thermostat.eclipse.chart.common;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
-import com.redhat.thermostat.client.ui.HostCpuController;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuController;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 
 public class HostCpuViewPart extends HostRefViewPart {
 

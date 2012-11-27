@@ -43,7 +43,7 @@
  * but not in any way mandatory."
  */
 
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.swing.components.experimental;
 
 import java.awt.*;
 import javax.swing.JScrollPane;

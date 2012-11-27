@@ -13,6 +13,7 @@ Require-Bundle: org.eclipse.ui,
  com.redhat.thermostat.bundles.org.mockito.mockito-core;resolution:=optional
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Import-Package: com.redhat.thermostat.client.core.views,
+ com.redhat.thermostat.host.cpu.client.core,
  com.redhat.thermostat.host.overview.client.core,
  com.redhat.thermostat.client.osgi.service,
  com.redhat.thermostat.client.ui,

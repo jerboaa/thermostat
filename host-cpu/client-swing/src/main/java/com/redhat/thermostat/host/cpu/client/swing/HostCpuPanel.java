@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.host.cpu.client.swing;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -61,20 +61,20 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
-import com.redhat.thermostat.client.core.views.HostCpuView;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
-import com.redhat.thermostat.client.swing.internal.WrapLayout;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
+import com.redhat.thermostat.host.cpu.client.locale.LocaleResources;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.swing.components.experimental.WrapLayout;
 
 public class HostCpuPanel extends HostCpuView implements SwingComponent {
 

@@ -303,6 +303,11 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-swing-components</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-command</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -314,6 +319,16 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-host-overview-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-cpu-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-cpu-client-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

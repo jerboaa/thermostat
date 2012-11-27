@@ -34,10 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.host.cpu.client.core;
 
-public interface HostCpuViewProvider extends ViewProvider {
+import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.common.dao.CpuStatDAO;
+import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+
+public class HostCpuService implements HostInformationService {
+    
+    private static final HostFilter FILTER = new HostFilter() {
+        @Override
+        public boolean matches(HostRef toMatch) {
+            return true;
+        }
+    };
+    
+    private HostInfoDAO hostInfoDAO;
+    private CpuStatDAO cpuStatDAO;
+    
+    public HostCpuService(HostInfoDAO hostInfoDAO, CpuStatDAO cpuStatDAO) {
+        this.hostInfoDAO = hostInfoDAO;
+        this.cpuStatDAO = cpuStatDAO;
+    }
 
     @Override
-    HostCpuView createView();
+    public HostFilter getFilter() {
+        return FILTER;
+    }
+
+    @Override
+    public HostInformationServiceController getInformationServiceController(
+            HostRef ref) {
+        HostCpuViewProvider provider = OSGIUtils.getInstance().getService(HostCpuViewProvider.class);
+        return new HostCpuController(hostInfoDAO, cpuStatDAO, ref, provider);
+    }
+
 }

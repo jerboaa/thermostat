@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import com.redhat.thermostat.client.core.views.HostCpuView;
-import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.eclipse.SWTViewProvider;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 
 public class SWTHostCpuViewProvider extends SWTViewProvider implements
         HostCpuViewProvider {

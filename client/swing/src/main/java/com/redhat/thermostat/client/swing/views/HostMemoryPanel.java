@@ -69,7 +69,6 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.Components;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.ValueField;
-import com.redhat.thermostat.client.swing.internal.WrapLayout;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
@@ -78,6 +77,7 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
+import com.redhat.thermostat.swing.components.experimental.WrapLayout;
 
 public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 

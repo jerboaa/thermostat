@@ -41,12 +41,10 @@ import java.util.Collection;
 import com.redhat.thermostat.client.core.HostInformationService;
 import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.HostMemoryViewProvider;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
@@ -57,21 +55,17 @@ public class HostInformationController {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private final HostCpuController cpuController;
     private final HostMemoryController memoryController;
 
     private final HostInformationView view;
 
-    public HostInformationController(UiFacadeFactory uiFacadeFactory, HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDao, MemoryStatDAO memoryStatDao, HostRef ref, HostInformationViewProvider provider) {
+    public HostInformationController(UiFacadeFactory uiFacadeFactory, HostInfoDAO hostInfoDao, MemoryStatDAO memoryStatDao, HostRef ref, HostInformationViewProvider provider) {
         OSGIUtils utils = OSGIUtils.getInstance();
-        HostCpuViewProvider hostCpuProvider = utils.getService(HostCpuViewProvider.class);
         HostMemoryViewProvider hostMemoryProvider = utils.getService(HostMemoryViewProvider.class);
-        cpuController = new HostCpuController(hostInfoDao, cpuStatDao, ref, hostCpuProvider);
         memoryController = new HostMemoryController(hostInfoDao, memoryStatDao, ref, hostMemoryProvider);
 
         view = provider.createView();
 
-        view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_CPU), getCpuController().getView());
         view.addChildView(translator.localize(LocaleResources.HOST_INFO_TAB_MEMORY), getMemoryController().getView());
         
         Collection<HostInformationService> hostInfoServices = uiFacadeFactory.getHostInformationServices();
@@ -82,10 +76,6 @@ public class HostInformationController {
                 view.addChildView(name, ctrl.getView());
             }
         }
-    }
-
-    public HostCpuController getCpuController() {
-        return cpuController;
     }
 
     public HostMemoryController getMemoryController() {

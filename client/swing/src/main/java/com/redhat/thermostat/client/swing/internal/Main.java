@@ -70,11 +70,11 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.core.StorageProviderUtil;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Connection.ConnectionType;
+import com.redhat.thermostat.storage.core.StorageProvider;
+import com.redhat.thermostat.storage.core.StorageProviderUtil;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Main {
@@ -282,7 +282,6 @@ public class Main {
                 // register the storage, so other services can request it
                 daoFactory.registerDAOsAndStorageAsOSGiServices();
                 uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
-                uiFacadeFactory.setCpuStatDao(daoFactory.getCpuStatDAO());
                 uiFacadeFactory.setMemoryStatDao(daoFactory.getMemoryStatDAO());
 
                 uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());

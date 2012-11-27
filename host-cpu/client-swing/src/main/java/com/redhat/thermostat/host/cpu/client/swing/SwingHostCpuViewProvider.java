@@ -34,22 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.host.cpu.client.swing;
 
-import java.util.List;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuView;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
+public class SwingHostCpuViewProvider implements HostCpuViewProvider {
 
-public abstract class HostCpuView extends BasicView implements UIComponent {
-
-    public abstract void setCpuCount(String count);
-
-    public abstract void setCpuModel(String model);
-
-    public abstract void clearCpuUsageData();
-
-    public abstract void addCpuUsageChart(int cpuIndex, String humanReadableName);
-
-    public abstract void addCpuUsageData(int cpuIndex, List<DiscreteTimeData<Double>> data);
+    @Override
+    public HostCpuView createView() {
+        return new HostCpuPanel();
+    }
 
 }

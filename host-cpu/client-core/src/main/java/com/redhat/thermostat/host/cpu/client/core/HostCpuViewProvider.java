@@ -34,16 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.host.cpu.client.core;
 
-import com.redhat.thermostat.client.core.views.HostCpuView;
-import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 
-public class SwingHostCpuViewProvider implements HostCpuViewProvider {
+public interface HostCpuViewProvider extends ViewProvider {
 
     @Override
-    public HostCpuView createView() {
-        return new HostCpuPanel();
-    }
-
+    HostCpuView createView();
 }

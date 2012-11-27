@@ -34,18 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.host.cpu.client.core;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.HostCpuView;
-import com.redhat.thermostat.client.core.views.HostCpuViewProvider;
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.NotImplementedException;
@@ -56,11 +53,12 @@ import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.host.cpu.client.locale.LocaleResources;
 import com.redhat.thermostat.storage.model.CpuStat;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.storage.model.HostInfo;
 
-public class HostCpuController {
+public class HostCpuController implements HostInformationServiceController {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -156,6 +154,11 @@ public class HostCpuController {
 
     public UIComponent getView() {
         return view;
+    }
+
+    @Override
+    public String getLocalizedName() {
+        return translator.localize(LocaleResources.HOST_INFO_TAB_CPU);
     }
 
 }
