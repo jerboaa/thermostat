@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.locale;
+package com.redhat.thermostat.vm.gc.client.locale;
 
 import com.redhat.thermostat.test.locale.AbstractLocaleResourcesTest;
 
