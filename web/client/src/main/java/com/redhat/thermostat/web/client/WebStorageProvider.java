@@ -1,5 +1,6 @@
 package com.redhat.thermostat.web.client;
 
+import com.redhat.thermostat.common.cli.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;
@@ -12,6 +13,10 @@ public class WebStorageProvider implements StorageProvider {
     public Storage createStorage() {
         WebStorage storage = new WebStorage();
         storage.setEndpoint(config.getDBConnectionString());
+        if (config instanceof AuthenticationConfiguration) {
+            AuthenticationConfiguration authConf = (AuthenticationConfiguration) config;
+            storage.setAuthConfig(authConf.getUsername(), authConf.getPassword());
+        }
         return storage;
     }
 

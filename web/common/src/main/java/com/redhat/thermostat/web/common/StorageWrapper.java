@@ -37,9 +37,9 @@
 
 package com.redhat.thermostat.web.common;
 
+import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.StorageProvider;
 
 public class StorageWrapper {
@@ -64,7 +64,15 @@ public class StorageWrapper {
             storage.getConnection().connect();
             return storage;
         } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
-            throw new StorageException (e);
+            // This fallback should infact not be used. But it gives us an automatic
+            // Import-Package in the OSGi descriptor, which actually *prevents* this same
+            // exception from happening (a recursive self-defeating catch-block) :-)
+            System.err.println("could not instantiate provider: " + storageClass + ", falling back to MongoStorage");
+            e.printStackTrace();
+            StorageProvider provider = new MongoStorageProvider();
+            provider.setConfig(conf);
+            storage = provider.createStorage();
+            return storage;
         }
     }
     public static void setStorage(Storage storage) {

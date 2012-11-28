@@ -82,6 +82,7 @@ import com.redhat.thermostat.web.common.WebUpdate;
 @SuppressWarnings("serial")
 public class WebStorageEndPoint extends HttpServlet {
 
+    private static final String ROLE_THERMOSTAT_AGENT = "thermostat-agent";
     private Storage storage;
     private Gson gson;
 
@@ -222,6 +223,10 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void putPojo(HttpServletRequest req, HttpServletResponse resp) {
+        if (! req.isUserInRole(ROLE_THERMOSTAT_AGENT)) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
         try {
             String insertParam = req.getParameter("insert");
             WebInsert insert = gson.fromJson(insertParam, WebInsert.class);

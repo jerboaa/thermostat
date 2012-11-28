@@ -54,15 +54,16 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.sound.midi.SysexMessage;
-
+import org.eclipse.jetty.security.DefaultUserIdentity;
+import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.UserIdentity;
+import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -70,6 +71,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
+
+import sun.misc.BASE64Encoder;
 
 import com.google.gson.Gson;
 import com.redhat.thermostat.storage.core.Categories;
@@ -79,18 +82,18 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.test.MockQuery;
-import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
@@ -167,7 +170,21 @@ public class WebStorageEndpointTest {
 
     private void startServer(int port) throws Exception {
         server = new Server(port);
-        server.setHandler(new WebAppContext("src/main/webapp", "/"));
+        WebAppContext ctx = new WebAppContext("src/main/webapp", "/");
+        ctx.getSecurityHandler().setAuthMethod("BASIC");
+        ctx.getSecurityHandler().setLoginService(new MappedLoginService() {
+            
+            @Override
+            protected void loadUsers() throws IOException {
+                putUser("testname", new Password("testpasswd"), new String[] { "thermostat-agent" });
+            }
+            
+            @Override
+            protected UserIdentity loadUser(String username) {
+                return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent" });
+            }
+        });
+        server.setHandler(ctx);
         server.start();
     }
 
@@ -271,6 +288,12 @@ public class WebStorageEndpointTest {
 
         URL url = new URL(endpoint + "/put-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        BASE64Encoder enc = new BASE64Encoder();
+        String userpassword = "testname:testpasswd";
+        String encodedAuthorization = enc.encode( userpassword.getBytes() );
+        conn.setRequestProperty("Authorization", "Basic "+ encodedAuthorization);
+
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
         WebInsert insert = new WebInsert(categoryId, true, TestClass.class.getName());
@@ -487,6 +510,6 @@ public class WebStorageEndpointTest {
     }
 
     private String getEndpoint() {
-        return "http://localhost:" + port + "/storage";
+        return "http://testname:testpasswd@localhost:" + port + "/storage";
     }
 }

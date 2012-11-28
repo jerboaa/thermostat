@@ -37,18 +37,26 @@
 
 package com.redhat.thermostat.web.cmd;
 
+import java.io.IOException;
 import java.util.List;
 
+import org.eclipse.jetty.security.ConstraintMapping;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.DefaultUserIdentity;
+import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.UserIdentity;
 import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.servlet.ServletMapping;
+import org.eclipse.jetty.util.security.Constraint;
+import org.eclipse.jetty.util.security.Password;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.web.server.WebStorageEndPoint;
+import com.redhat.thermostat.common.storage.MongoStorageProvider;
 import com.redhat.thermostat.web.server.IpPortPair;
+import com.redhat.thermostat.web.server.WebStorageEndPoint;
 
 class WebServiceLauncher {
 
@@ -76,17 +84,52 @@ class WebServiceLauncher {
             connectors[i].setHost(pair.getIp());
         }
         server.setConnectors( connectors );
-        ServletHandler handler = new ServletHandler();
+
+        WebAppContext ctx = new WebAppContext();
+        ctx.setContextPath("/");
+        // This prevents useless classloading, which could fail in the face of OSGi.
+        ctx.setConfigurations(new org.eclipse.jetty.webapp.Configuration[0]);
+
         ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new WebStorageEndPoint());
         servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_ENDPOINT, storageURL);
-        handler.setServlets(new ServletHolder[] { servletHolder });
-        ServletMapping mapping = new ServletMapping();
-        mapping.setPathSpec("/");
-        mapping.setServletName("rest-storage-end-point");
-        handler.setServletMappings(new ServletMapping[] { mapping });
-        server.setHandler(handler);
+        servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_CLASS, MongoStorageProvider.class.getName());
+        ctx.addServlet(servletHolder, "/");
+
+        configureSecurity(ctx);
+
+        server.setHandler(ctx);
         server.start();
         server.join();
+    }
+
+    private void configureSecurity(WebAppContext ctx) {
+        ConstraintSecurityHandler secHandler = new ConstraintSecurityHandler();
+        ConstraintMapping constraintMap = new ConstraintMapping();
+        Constraint constraint = new Constraint();
+        constraint.setAuthenticate(true);
+        constraint.setRoles(new String[] { "thermostat-client", "thermostat-agent" });
+        constraint.setName("Entire Application");
+        constraintMap.setPathSpec("/*");
+        constraintMap.setConstraint(constraint);
+        
+        secHandler.setRealmName("Thermostat Realm");
+        secHandler.setAuthMethod("BASIC");
+        secHandler.addConstraintMapping(constraintMap);
+        secHandler.addRole("thermostat-agent");
+        secHandler.addRole("thermostat-client");
+        secHandler.setLoginService(new MappedLoginService() {
+            
+            @Override
+            protected void loadUsers() throws IOException {
+                putUser("thermostat", new Password("thermostat"), new String[] { "thermostat-agent", "thermostat-client" });
+            }
+
+            @Override
+            protected UserIdentity loadUser(String username) {
+                return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent", "thermostat-client" });
+            }
+        });
+        ctx.setSecurityHandler(secHandler);
     }
 
     void stop() throws Exception {

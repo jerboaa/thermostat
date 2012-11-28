@@ -44,6 +44,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.lang.reflect.Array;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -56,7 +58,9 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpClient;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.Credentials;
+import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ClientConnectionManager;
@@ -164,6 +168,7 @@ public class WebStorage implements Storage {
         @Override
         public void connect() {
             try {
+                initAuthentication(httpClient);
                 ping();
                 connected = true;
                 fireChanged(ConnectionStatus.CONNECTED);
@@ -251,7 +256,9 @@ public class WebStorage implements Storage {
 
     private Map<Category, Integer> categoryIds;
     private Gson gson;
-    private HttpClient httpClient;
+    private DefaultHttpClient httpClient;
+    private String username;
+    private String password;
 
     public WebStorage() {
         categoryIds = new HashMap<>();
@@ -259,6 +266,16 @@ public class WebStorage implements Storage {
         ClientConnectionManager connManager = new ThreadSafeClientConnManager();
         DefaultHttpClient client = new DefaultHttpClient(connManager);
         httpClient = client;
+    }
+
+    private void initAuthentication(DefaultHttpClient client) throws MalformedURLException {
+        if (username != null && password != null) {
+            URL endpointURL = new URL(endpoint);
+            // TODO: Maybe also limit to realm like 'Thermostat Realm' or such?
+            AuthScope scope = new AuthScope(endpointURL.getHost(), endpointURL.getPort());
+            Credentials creds = new UsernamePasswordCredentials(username, password);
+            client.getCredentialsProvider().setCredentials(scope, creds);
+        }
     }
 
     private void ping() throws StorageException {
@@ -456,6 +473,11 @@ public class WebStorage implements Storage {
 
     public void setEndpoint(String endpoint) {
         this.endpoint = endpoint;
+    }
+
+    public void setAuthConfig(String username, String password) {
+        this.username = username;
+        this.password = password;
     }
 
 }
