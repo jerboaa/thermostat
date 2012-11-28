@@ -51,9 +51,14 @@
   <name>Thermostat Swing Client</name>
 
   <dependencies>
-      <dependency>
+    <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-swing-components</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

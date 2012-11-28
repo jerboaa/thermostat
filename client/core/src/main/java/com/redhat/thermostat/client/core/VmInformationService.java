@@ -42,7 +42,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 public interface VmInformationService extends InformationService {
 
     @Override
-    VmFilter getFilter();
+    public VmFilter getFilter();
 
-    VmInformationServiceController getInformationServiceController(VmRef ref);
+    public VmInformationServiceController getInformationServiceController(VmRef ref);
 }

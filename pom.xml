@@ -129,8 +129,13 @@
     <module>killvm</module>
     <module>web</module>
     <module>system-backend</module>
-    <module>gc</module>
     <module>storage</module>
+    <module>host-overview</module>
+    <module>host-cpu</module>
+    <module>host-memory</module>
+    <module>vm-overview</module>
+    <module>vm-cpu</module>
+    <module>vm-gc</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>

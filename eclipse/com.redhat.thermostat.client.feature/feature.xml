@@ -126,4 +126,39 @@ to do so, delete this exception statement from your version.
          version="0.0.0"
          unpack="false"/>
 
+   <plugin
+         id="com.redhat.thermostat.host.overview.client.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.host.cpu.client.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.host.memory.client.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.vm.cpu.client.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.vm.gc.client.core"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
 </feature>

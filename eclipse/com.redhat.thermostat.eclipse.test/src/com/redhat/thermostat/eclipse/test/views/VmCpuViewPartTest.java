@@ -50,8 +50,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.views.VmCpuViewProvider;
-import com.redhat.thermostat.client.ui.VmCpuController;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -60,6 +58,8 @@ import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuView;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmCpuViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuController;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
 

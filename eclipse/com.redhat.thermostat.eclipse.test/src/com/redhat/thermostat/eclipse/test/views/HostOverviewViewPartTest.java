@@ -48,9 +48,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.HostOverviewViewProvider;
-import com.redhat.thermostat.client.ui.HostOverviewController;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -59,6 +57,8 @@ import com.redhat.thermostat.eclipse.internal.views.HostOverviewViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewView;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewController;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 
 public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
@@ -99,7 +99,7 @@ public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
         doReturn(controller).when(((HostOverviewViewPart) view))
                 .createController(any(HostRef.class), same(hostInfoDao),
                         same(netIfaceDao), same(viewProvider));
-        when(controller.getView()).thenReturn((BasicView) thermoView);
+        when(controller.getView()).thenReturn((UIComponent) thermoView);
     }
 
     @Override

@@ -38,14 +38,14 @@ package com.redhat.thermostat.eclipse.chart.common;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.client.core.views.VmGcViewProvider;
-import com.redhat.thermostat.client.ui.VmGcController;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.VmRefViewPart;
+import com.redhat.thermostat.vm.gc.client.core.VmGcController;
+import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class VmGcViewPart extends VmRefViewPart {
 

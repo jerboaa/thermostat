@@ -45,6 +45,7 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostInformationView;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.SwingComponent;
 
 public class HostInformationPanel extends HostInformationView implements SwingComponent {
@@ -63,7 +64,7 @@ public class HostInformationPanel extends HostInformationView implements SwingCo
     }
 
     @Override
-    public void addChildView(final String title, final BasicView view) {
+    public void addChildView(final String title, final UIComponent view) {
         if (view instanceof SwingComponent) {
             final SwingComponent component = (SwingComponent)view;
             SwingUtilities.invokeLater(new Runnable() {

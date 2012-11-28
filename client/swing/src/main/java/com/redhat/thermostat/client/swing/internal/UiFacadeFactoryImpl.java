@@ -42,6 +42,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.client.core.HostInformationService;
 import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
@@ -53,15 +54,9 @@ import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
@@ -69,20 +64,14 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     private CountDownLatch shutdown = new CountDownLatch(1);
 
+    private Collection<HostInformationService> hostInformationServices = new ArrayList<>();
     private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
     private Collection<VMContextAction> contextAction = new ArrayList<>();
 
     private BundleContext context;
 
     private HostInfoDAO hostInfoDao;
-    private CpuStatDAO cpuStatDao;
-    private MemoryStatDAO memoryStatDao;
-    private NetworkInterfaceInfoDAO networkInfoDao;
-
     private VmInfoDAO vmInfoDao;
-    private VmCpuStatDAO vmCpuStatDao;
-    private VmMemoryStatDAO vmMemoryStatDao;
-    private VmGcStatDAO vmGcStatDao;
 
     private OSGIUtils serviceProvider;
     
@@ -100,34 +89,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
         this.hostInfoDao = hostInfoDao;
     }
 
-    public void setCpuStatDao(CpuStatDAO cpuStatDao) {
-        this.cpuStatDao = cpuStatDao;
-    }
-
-    public void setMemoryStatDao(MemoryStatDAO memoryStatDao) {
-        this.memoryStatDao = memoryStatDao;
-    }
-
-    public void setNetworkInfoDao(NetworkInterfaceInfoDAO networkInfoDao) {
-        this.networkInfoDao = networkInfoDao;
-    }
-
     public void setVmInfoDao(VmInfoDAO vmInfoDao) {
         this.vmInfoDao = vmInfoDao;
-    }
-
-    public void setVmCpuStatDao(VmCpuStatDAO vmCpuStatDao) {
-        this.vmCpuStatDao = vmCpuStatDao;
-    }
-
-    @Override
-    public void setVmMemoryStatDao(VmMemoryStatDAO vmMemoryStatDao) {
-        this.vmMemoryStatDao = vmMemoryStatDao;
-    }
-
-    @Override
-    public void setVmGcStatDao(VmGcStatDAO vmGcStatDao) {
-        this.vmGcStatDao = vmGcStatDao;
     }
 
     @Override
@@ -146,13 +109,13 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public HostInformationController getHostController(HostRef ref) {
         HostInformationViewProvider viewProvider = serviceProvider.getService(HostInformationViewProvider.class);
-        return new HostInformationController(hostInfoDao, networkInfoDao, cpuStatDao, memoryStatDao, ref, viewProvider);
+        return new HostInformationController(this, ref, viewProvider);
     }
 
     @Override
     public VmInformationController getVmController(VmRef ref) {
         VmInformationViewProvider viewProvider = serviceProvider.getService(VmInformationViewProvider.class);
-        return new VmInformationController(this, vmInfoDao, vmCpuStatDao, vmMemoryStatDao, vmGcStatDao, ref, viewProvider);
+        return new VmInformationController(this, ref, viewProvider);
     }
 
     @Override
@@ -194,6 +157,21 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     @Override
     public void awaitShutdown() throws InterruptedException {
         shutdown.await();
+    }
+
+    @Override
+    public Collection<HostInformationService> getHostInformationServices() {
+        return hostInformationServices;
+    }
+
+    @Override
+    public void addHostInformationService(HostInformationService hostInfoService) {
+        hostInformationServices.add(hostInfoService);
+    }
+
+    @Override
+    public void removeHostInformationService(HostInformationService hostInfoService) {
+        hostInformationServices.remove(hostInfoService);
     }
 
 }

@@ -51,8 +51,8 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.PlatformUI;
 
-import com.redhat.thermostat.client.core.views.HostOverviewView;
-import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
+import com.redhat.thermostat.host.overview.client.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
