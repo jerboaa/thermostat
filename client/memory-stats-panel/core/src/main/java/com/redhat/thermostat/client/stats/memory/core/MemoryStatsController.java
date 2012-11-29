@@ -47,10 +47,10 @@ import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.stats.memory.core.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -142,8 +142,8 @@ class MemoryStatsController implements VmInformationServiceController {
         }
     }
     
-    public MemoryStatsController(final VmMemoryStatDAO vmMemoryStatDao, final VmRef ref,
-                                 MemoryStatsViewProvider viewProvider,
+    public MemoryStatsController(ApplicationService appSvc, final VmMemoryStatDAO vmMemoryStatDao,
+                                 final VmRef ref, MemoryStatsViewProvider viewProvider,
                                  final AgentInfoDAO agentDAO, final GCRequest gcRequest) {
         
         regions = new HashMap<>();
@@ -151,7 +151,7 @@ class MemoryStatsController implements VmInformationServiceController {
         vmDao = vmMemoryStatDao;
         view = viewProvider.createView();
         
-        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        timer = appSvc.getTimerFactory().createTimer();
         
         collector = new VMCollector();
         timer.setAction(collector);

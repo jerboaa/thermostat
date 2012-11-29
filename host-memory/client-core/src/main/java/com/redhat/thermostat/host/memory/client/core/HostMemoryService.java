@@ -39,6 +39,7 @@ package com.redhat.thermostat.host.memory.client.core;
 import com.redhat.thermostat.client.core.HostFilter;
 import com.redhat.thermostat.client.core.HostInformationService;
 import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
@@ -52,11 +53,13 @@ public class HostMemoryService implements HostInformationService {
             return true;
         }
     };
-    
+
+    private ApplicationService appSvc;
     private HostInfoDAO hostInfoDAO;
     private MemoryStatDAO memoryStatDAO;
     
-    public HostMemoryService(HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO) {
+    public HostMemoryService(ApplicationService appSvc, HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO) {
+        this.appSvc = appSvc;
         this.hostInfoDAO = hostInfoDAO;
         this.memoryStatDAO = memoryStatDAO;
     }
@@ -70,7 +73,7 @@ public class HostMemoryService implements HostInformationService {
     public HostInformationServiceController getInformationServiceController(
             HostRef ref) {
         HostMemoryViewProvider provider = OSGIUtils.getInstance().getService(HostMemoryViewProvider.class);
-        return new HostMemoryController(hostInfoDAO, memoryStatDAO, ref, provider);
+        return new HostMemoryController(appSvc, hostInfoDAO, memoryStatDAO, ref, provider);
     }
 
 }

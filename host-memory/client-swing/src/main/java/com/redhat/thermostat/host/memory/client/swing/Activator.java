@@ -44,6 +44,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -62,6 +63,7 @@ public class Activator implements BundleActivator {
         context.registerService(HostMemoryViewProvider.class.getName(), viewProvider, null);
 
         Class<?>[] deps = new Class<?>[] {
+            ApplicationService.class,
             HostInfoDAO.class,
             MemoryStatDAO.class,
         };
@@ -74,7 +76,9 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(hostInfoDAO);
                 MemoryStatDAO memoryStatDAO = (MemoryStatDAO) services.get(MemoryStatDAO.class.getName());
                 Objects.requireNonNull(memoryStatDAO);
-                HostMemoryService service = new HostMemoryService(hostInfoDAO, memoryStatDAO);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
+                HostMemoryService service = new HostMemoryService(appSvc, hostInfoDAO, memoryStatDAO);
                 reg = context.registerService(HostInformationService.class.getName(), service, null);
             }
 

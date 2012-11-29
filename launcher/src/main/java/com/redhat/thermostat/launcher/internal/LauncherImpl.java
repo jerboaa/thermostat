@@ -51,11 +51,10 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.DbServiceFactory;
-import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -68,6 +67,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.storage.core.ConnectionException;
@@ -153,10 +153,10 @@ public class LauncherImpl implements Launcher {
 
     private void shutdown() throws InternalError {
         try {
-            TimerFactory tf = ApplicationContext.getInstance().getTimerFactory();
-            if (tf != null) {
-                tf.shutdown();
-            }
+            ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
+            appSvc.getApplicationExecutor().shutdown();
+            appSvc.getTimerFactory().shutdown();
+
             context.getBundle(0).stop();
         } catch (BundleException e) {
             throw (InternalError) new InternalError().initCause(e);

@@ -42,19 +42,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationCache;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationCache;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
@@ -85,14 +82,9 @@ public class ThreadInformationControllerTest {
     
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
+        appService = mock(ApplicationService.class);
         setUpTimers();
         setUpView();
-    }
-    
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     private void setUpView() {
@@ -116,7 +108,7 @@ public class ThreadInformationControllerTest {
 
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        when(appService.getTimerFactory()).thenReturn(timerFactory);
     }
     
     private void setUpListeners() {        
@@ -134,7 +126,6 @@ public class ThreadInformationControllerTest {
     
     private void createController() {
         ApplicationCache cache = mock(ApplicationCache.class);
-        appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
         
         VmRef ref = mock(VmRef.class);
@@ -181,7 +172,6 @@ public class ThreadInformationControllerTest {
         when(collectorFactory.getCollector(ref)).thenReturn(collector);
         
         ApplicationCache cache = mock(ApplicationCache.class);
-        appService = mock(ApplicationService.class);
         when(appService.getApplicationCache()).thenReturn(cache);
                 
         controller = new ThreadInformationController(ref, appService, collectorFactory, viewFactory);

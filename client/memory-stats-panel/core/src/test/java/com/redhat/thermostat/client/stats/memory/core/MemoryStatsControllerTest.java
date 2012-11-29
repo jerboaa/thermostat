@@ -53,18 +53,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -103,7 +101,8 @@ public class MemoryStatsControllerTest {
         
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
         
         List<VmMemoryStat> vmInfo = new ArrayList<>();
         
@@ -159,7 +158,7 @@ public class MemoryStatsControllerTest {
         agentDAO = mock(AgentInfoDAO.class);
         gcRequest = mock(GCRequest.class);
         
-        controller = new MemoryStatsController(memoryStatDao, ref, viewProvider, agentDAO, gcRequest);
+        controller = new MemoryStatsController(appSvc, memoryStatDao, ref, viewProvider, agentDAO, gcRequest);
         
         viewListener = viewArgumentCaptor.getValue();
         gcActionListener = gcArgumentCaptor.getValue();
@@ -282,10 +281,5 @@ public class MemoryStatsControllerTest {
     private void assertTimeStampIsAround(long expected, long actual) {
         assertTrue(actual <= expected + 1000);
         assertTrue(actual >= expected - 1000);
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
 }

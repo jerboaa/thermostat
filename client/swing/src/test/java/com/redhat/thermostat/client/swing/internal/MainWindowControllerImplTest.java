@@ -75,14 +75,13 @@ import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -130,14 +129,13 @@ public class MainWindowControllerImplTest {
     @SuppressWarnings({ "unchecked", "rawtypes" }) // ActionListener fluff
     @Before
     public void setUp() throws Exception {
-        ApplicationContextUtil.resetApplicationContext();
-
         // Setup timers
         mainWindowTimer = mock(Timer.class);
         Timer otherTimer = mock(Timer.class); // FIXME needed for SummaryView; remove later
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(mainWindowTimer).thenReturn(otherTimer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when (appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         SummaryController summaryController = mock(SummaryController.class);
 
@@ -182,7 +180,7 @@ public class MainWindowControllerImplTest {
 
         setUpVMContextActions();
 
-        controller = new MainWindowControllerImpl(uiFacadeFactory, view, registryFactory, mockHostsDAO, mockVmsDAO);
+        controller = new MainWindowControllerImpl(appSvc, uiFacadeFactory, view, registryFactory, mockHostsDAO, mockVmsDAO);
         l = grabListener.getValue();
         
         hostFiltersListener = grabHostFiltersListener.getValue();
@@ -221,7 +219,6 @@ public class MainWindowControllerImplTest {
         mockHostsDAO = null;
         mockVmsDAO = null;
         l = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @SuppressWarnings("unchecked")

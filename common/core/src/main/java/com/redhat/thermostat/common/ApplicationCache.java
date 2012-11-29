@@ -34,13 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
+package com.redhat.thermostat.common;
 
-import java.util.concurrent.ExecutorService;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public interface ApplicationService {
+public class ApplicationCache {
+    @SuppressWarnings("rawtypes")
+    private Map cache = new ConcurrentHashMap();
+    
 
-    ApplicationCache getApplicationCache();
-
-    ExecutorService getApplicationExecutor();
+    @SuppressWarnings("unchecked")
+    public void addAttribute(Object key, Object value) {
+        cache.put(key, value);
+    }
+    
+    public Object getAttribute(Object key) {
+        return cache.get(key);
+    }
 }

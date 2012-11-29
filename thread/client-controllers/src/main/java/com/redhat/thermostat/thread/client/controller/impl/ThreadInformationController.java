@@ -44,13 +44,13 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
@@ -69,7 +69,8 @@ public class ThreadInformationController implements VmInformationServiceControll
     
     private ThreadView view;
     private ThreadCollector collector;
-    
+
+    private ApplicationService appService;
     private Timer timer;
     
     private LivingDaemonThreadDifferenceChart model;
@@ -78,6 +79,7 @@ public class ThreadInformationController implements VmInformationServiceControll
                                        ThreadCollectorFactory collectorFactory, 
                                        ThreadViewProvider viewFactory)
     {
+        this.appService = appService;
         view = viewFactory.createView();
         view.setApplicationService(appService, ref.getIdString() + "-" + ref.getAgent().getAgentId());
         
@@ -85,7 +87,7 @@ public class ThreadInformationController implements VmInformationServiceControll
         
         initControllers();
         
-        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        timer = appService.getTimerFactory().createTimer();
         
         timer.setInitialDelay(0);
         timer.setDelay(1000);
@@ -204,14 +206,14 @@ public class ThreadInformationController implements VmInformationServiceControll
         
         ThreadTableView threadTableView = view.createThreadTableView();
         threadTableView.addThreadSelectionActionListener(new ThreadSelectionActionListener());
+        TimerFactory tf = appService.getTimerFactory();
         CommonController threadTableController =
-                new ThreadTableController(threadTableView, collector,
-                                          ApplicationContext.getInstance().getTimerFactory().createTimer());
+                new ThreadTableController(threadTableView, collector, tf.createTimer());
         threadTableController.initialize();
         
         CommonController threadTimeline =
                 new ThreadTimelineController(view.createThreadTimelineView(), collector,
-                                             ApplicationContext.getInstance().getTimerFactory().createTimer());
+                                             tf.createTimer());
         threadTimeline.initialize();
     }
 }

@@ -41,14 +41,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -63,18 +61,12 @@ public class VMThreadCapabilitiesControllerTest {
     
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
         collector = mock(ThreadCollector.class);
         caps = mock(VMThreadCapabilities.class);
         
         when(collector.getVMThreadCapabilities()).thenReturn(caps);
         
         vmThreadCapsView = mock(VMThreadCapabilitiesView.class);
-    }
-    
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
     
     @Test

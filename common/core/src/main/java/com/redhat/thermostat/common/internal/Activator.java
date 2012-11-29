@@ -34,18 +34,23 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
+package com.redhat.thermostat.common.internal;
 
-import static org.junit.Assert.*;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
-import org.junit.Test;
+import com.redhat.thermostat.common.ApplicationService;
 
-public class ApplicationCacheTest {
+public class Activator implements BundleActivator {
 
-    @Test
-    public void verityCache() {
-        ApplicationCache cache = new ApplicationCache();
-        cache.addAttribute("test", "fluff");
-        assertEquals("fluff", cache.getAttribute("test"));
+    @Override
+    public void start(BundleContext context) throws Exception {
+        ApplicationService service = new ApplicationServiceImpl();
+        context.registerService(ApplicationService.class.getName(), service, null);
+    }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        // Nothing to do here.
     }
 }

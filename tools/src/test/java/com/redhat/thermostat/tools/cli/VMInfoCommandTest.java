@@ -56,7 +56,6 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.DAOException;
@@ -90,7 +89,6 @@ public class VMInfoCommandTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
         setupCommandContextFactory();
 
         vmsDAO = mock(VmInfoDAO.class);

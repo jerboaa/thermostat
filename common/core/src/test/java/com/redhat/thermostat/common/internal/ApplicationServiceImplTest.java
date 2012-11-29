@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.osgi;
+package com.redhat.thermostat.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -47,13 +47,15 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ApplicationServiceProviderTest {
+import com.redhat.thermostat.common.internal.ApplicationServiceImpl;
 
-    private ApplicationServiceProvider provider;
+public class ApplicationServiceImplTest {
+
+    private ApplicationServiceImpl provider;
 
     @Before
     public void setUp() {
-        provider = new ApplicationServiceProvider();
+        provider = new ApplicationServiceImpl();
     }
 
     @After
@@ -80,5 +82,10 @@ public class ApplicationServiceProviderTest {
         });
         String result = future.get();
         assertSame(result, obj);
+    }
+
+    @Test
+    public void testTimerFactory() {
+        assertNotNull(provider.getTimerFactory());
     }
 }

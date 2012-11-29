@@ -44,9 +44,9 @@ import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 
@@ -59,7 +59,7 @@ public class SummaryController {
 
     private final Timer backgroundUpdateTimer;
 
-    public SummaryController(HostInfoDAO hostInfoDao, VmInfoDAO vmInfoDao, SummaryViewProvider viewProvider) {
+    public SummaryController(ApplicationService appSvc, HostInfoDAO hostInfoDao, VmInfoDAO vmInfoDao, SummaryViewProvider viewProvider) {
 
         this.view = viewProvider.createView();
 
@@ -82,7 +82,7 @@ public class SummaryController {
         hostsDAO = hostInfoDao;
         vmsDAO = vmInfoDao;
 
-        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        backgroundUpdateTimer = appSvc.getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
             @Override
             public void run() {

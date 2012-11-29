@@ -55,9 +55,6 @@ import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
-import com.redhat.thermostat.common.ThreadPoolTimerFactory;
-import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -114,8 +111,6 @@ public final class AgentApplication extends BasicCommand {
         final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
         final DAOFactory daoFactory = daoFactoryCreator.create(configuration);
-        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
 
         Connection connection = daoFactory.getConnection();
         ConnectionListener connectionListener = new ConnectionListener() {

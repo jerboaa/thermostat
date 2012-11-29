@@ -45,7 +45,6 @@ import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -56,7 +55,6 @@ import com.redhat.thermostat.client.heap.cli.HeapPath;
 import com.redhat.thermostat.client.heap.internal.ObjectRootsController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -76,8 +74,6 @@ public class ObjectRootsControllerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
         // Set up views
         view = mock(ObjectRootsView.class);
 
@@ -104,11 +100,6 @@ public class ObjectRootsControllerTest {
         verify(view).addActionListener(listenerCaptor.capture());
 
         listener = listenerCaptor.getValue();
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
 
 

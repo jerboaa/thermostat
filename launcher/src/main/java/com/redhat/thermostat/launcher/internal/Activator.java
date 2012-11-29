@@ -90,6 +90,7 @@ public class Activator extends CommandLoadingBundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
+
         tracker = new MultipleServiceTracker(context, new Class[] {OSGiRegistry.class, Keyring.class}, new RegisterLauncherAction(context));
         tracker.open();
     }

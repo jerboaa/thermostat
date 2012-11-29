@@ -45,10 +45,10 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -67,10 +67,10 @@ public class VmCpuController implements VmInformationServiceController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmCpuController(VmCpuStatDAO vmCpuStatDao, VmRef ref, VmCpuViewProvider provider) {
+    public VmCpuController(ApplicationService appSvc, VmCpuStatDAO vmCpuStatDao, VmRef ref, VmCpuViewProvider provider) {
         this.ref = ref;
         dao = vmCpuStatDao;
-        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        timer = appSvc.getTimerFactory().createTimer();
 
         timer.setAction(new Runnable() {
             @Override

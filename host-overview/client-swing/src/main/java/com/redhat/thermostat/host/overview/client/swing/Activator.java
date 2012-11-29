@@ -44,6 +44,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
@@ -62,6 +63,7 @@ public class Activator implements BundleActivator {
         context.registerService(HostOverviewViewProvider.class.getName(), viewProvider, null);
 
         Class<?>[] deps = new Class<?>[] {
+            ApplicationService.class,
             HostInfoDAO.class,
             NetworkInterfaceInfoDAO.class,
         };
@@ -75,7 +77,9 @@ public class Activator implements BundleActivator {
                 NetworkInterfaceInfoDAO networkInfoDAO = (NetworkInterfaceInfoDAO) 
                         services.get(NetworkInterfaceInfoDAO.class.getName());
                 Objects.requireNonNull(networkInfoDAO);
-                HostOverviewService service = new HostOverviewService(hostInfoDAO, networkInfoDAO);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
+                HostOverviewService service = new HostOverviewService(appSvc, hostInfoDAO, networkInfoDAO);
                 reg = context.registerService(HostInformationService.class.getName(), service, null);
             }
 

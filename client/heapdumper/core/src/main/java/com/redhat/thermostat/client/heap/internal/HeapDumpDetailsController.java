@@ -49,7 +49,7 @@ import com.redhat.thermostat.client.heap.LocaleResources;
 import com.redhat.thermostat.client.heap.ObjectDetailsView;
 import com.redhat.thermostat.client.heap.ObjectDetailsViewProvider;
 import com.redhat.thermostat.client.heap.ObjectRootsViewProvider;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;

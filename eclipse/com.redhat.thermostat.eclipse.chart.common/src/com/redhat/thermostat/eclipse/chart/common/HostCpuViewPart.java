@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import java.util.Objects;
+
 import org.eclipse.swt.widgets.Composite;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -67,7 +70,9 @@ public class HostCpuViewPart extends HostRefViewPart {
 
     public HostCpuController createController(HostInfoDAO hostInfoDao,
             CpuStatDAO cpuStatDao, HostRef ref, HostCpuViewProvider viewProvider) {
-        return new HostCpuController(hostInfoDao, cpuStatDao, ref, viewProvider);
+        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
+        Objects.requireNonNull(appSvc);
+        return new HostCpuController(appSvc, hostInfoDao, cpuStatDao, ref, viewProvider);
     }
 
 }

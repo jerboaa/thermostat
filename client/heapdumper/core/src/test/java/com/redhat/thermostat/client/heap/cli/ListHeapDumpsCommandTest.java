@@ -47,14 +47,11 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.apache.commons.cli.Options;
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -80,17 +77,6 @@ public class ListHeapDumpsCommandTest {
     @AfterClass
     public static void tearDownClass() {
         TimeZone.setDefault(defaultTimezone);
-    }
-
-    @Before
-    public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
-
     }
 
     @Test

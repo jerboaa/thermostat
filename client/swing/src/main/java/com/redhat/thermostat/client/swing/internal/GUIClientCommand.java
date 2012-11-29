@@ -39,9 +39,7 @@ package com.redhat.thermostat.client.swing.internal;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.swing.internal.osgi.ApplicationServiceProvider;
 import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceProvider;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -63,15 +61,11 @@ public class GUIClientCommand extends SimpleCommand {
     
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        ApplicationService service = new ApplicationServiceProvider();
-        
-        context.registerService(ApplicationService.class.getName(), service, null);
         context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
         
         // this blocks, everything else needs to be done before
         clientMain.run();
 
-        service.getApplicationExecutor().shutdown();
     }
 
     @Override

@@ -45,10 +45,10 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -72,14 +72,14 @@ public class HostCpuController implements HostInformationServiceController {
     private int chartsAdded = 0;
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public HostCpuController(HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDAO, HostRef ref, HostCpuViewProvider provider) {
+    public HostCpuController(ApplicationService appSvc, HostInfoDAO hostInfoDao, CpuStatDAO cpuStatDAO, HostRef ref, HostCpuViewProvider provider) {
         this.ref = ref;
         view = provider.createView();
         view.clearCpuUsageData();
         this.hostInfoDAO = hostInfoDao;
         this.cpuStatDAO = cpuStatDAO;
 
-        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        backgroundUpdateTimer = appSvc.getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
 
             @Override

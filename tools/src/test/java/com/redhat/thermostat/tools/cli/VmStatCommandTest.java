@@ -59,9 +59,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -103,9 +102,9 @@ public class VmStatCommandTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
         timerFactory = new TestTimerFactory();
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
         setupCommandContextFactory();
 
         setupDAOs();
@@ -113,6 +112,7 @@ public class VmStatCommandTest {
         OSGIUtils serviceProvider = mock(OSGIUtils.class);
         when(serviceProvider.getServiceAllowNull(VmCpuStatDAO.class)).thenReturn(vmCpuStatDAO);
         when(serviceProvider.getServiceAllowNull(VmMemoryStatDAO.class)).thenReturn(vmMemoryStatDAO);
+        when(serviceProvider.getService(ApplicationService.class)).thenReturn(appSvc);
 
         cmd = new VMStatCommand(serviceProvider);
     }
@@ -123,7 +123,6 @@ public class VmStatCommandTest {
         cmdCtxFactory = null;
         cmd = null;
         timerFactory = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     private void setupCommandContextFactory() {

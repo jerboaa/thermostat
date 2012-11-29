@@ -44,6 +44,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
@@ -64,6 +65,7 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
             HostInfoDAO.class,
             CpuStatDAO.class,
+            ApplicationService.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -74,7 +76,9 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(hostInfoDAO);
                 CpuStatDAO cpuStatDAO = (CpuStatDAO) services.get(CpuStatDAO.class.getName());
                 Objects.requireNonNull(cpuStatDAO);
-                HostCpuService service = new HostCpuService(hostInfoDAO, cpuStatDAO);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
+                HostCpuService service = new HostCpuService(appSvc, hostInfoDAO, cpuStatDAO);
                 reg = context.registerService(HostInformationService.class.getName(), service, null);
             }
 

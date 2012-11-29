@@ -45,7 +45,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.heap.HeapDumperService;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;

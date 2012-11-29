@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import java.util.Objects;
+
 import org.eclipse.swt.widgets.Composite;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -66,7 +69,9 @@ public class VmGcViewPart extends VmRefViewPart {
 
     public VmGcController createController(VmMemoryStatDAO vmMemoryStatDao,
             VmGcStatDAO vmGcStatDao, VmRef ref, VmGcViewProvider viewProvider) {
-        return new VmGcController(vmMemoryStatDao, vmGcStatDao, ref,
+        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
+        Objects.requireNonNull(appSvc);
+        return new VmGcController(appSvc, vmMemoryStatDao, vmGcStatDao, ref,
                 viewProvider);
     }
 

@@ -44,7 +44,6 @@ import java.io.PrintStream;
 
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.cli.AppContextSetup;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;

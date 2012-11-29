@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
@@ -76,9 +77,11 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         NetworkInterfaceInfoDAO networkInfoDAO = mock(NetworkInterfaceInfoDAO.class);
+        ApplicationService appSvc = mock(ApplicationService.class);
 
         context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         context.registerService(NetworkInterfaceInfoDAO.class, networkInfoDAO, null);
+        context.registerService(ApplicationService.class, appSvc, null);
 
         Activator activator = new Activator();
 
@@ -89,7 +92,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(3, context.getAllServices().size());
+        assertEquals(4, context.getAllServices().size());
     }
 
     @Test

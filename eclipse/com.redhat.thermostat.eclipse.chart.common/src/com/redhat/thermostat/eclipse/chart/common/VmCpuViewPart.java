@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import java.util.Objects;
+
 import org.eclipse.swt.widgets.Composite;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -63,7 +66,9 @@ public class VmCpuViewPart extends VmRefViewPart {
 
     public VmCpuController createController(VmCpuStatDAO vmCpuStatDao,
             VmRef ref, VmCpuViewProvider viewProvider) {
-        return new VmCpuController(vmCpuStatDao, ref, viewProvider);
+        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
+        Objects.requireNonNull(appSvc);
+        return new VmCpuController(appSvc, vmCpuStatDao, ref, viewProvider);
     }
 
 }

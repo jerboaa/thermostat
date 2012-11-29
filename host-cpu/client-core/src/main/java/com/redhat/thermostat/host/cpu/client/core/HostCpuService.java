@@ -39,6 +39,7 @@ package com.redhat.thermostat.host.cpu.client.core;
 import com.redhat.thermostat.client.core.HostFilter;
 import com.redhat.thermostat.client.core.HostInformationService;
 import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -52,11 +53,13 @@ public class HostCpuService implements HostInformationService {
             return true;
         }
     };
-    
+
+    private ApplicationService appSvc;
     private HostInfoDAO hostInfoDAO;
     private CpuStatDAO cpuStatDAO;
     
-    public HostCpuService(HostInfoDAO hostInfoDAO, CpuStatDAO cpuStatDAO) {
+    public HostCpuService(ApplicationService appSvc, HostInfoDAO hostInfoDAO, CpuStatDAO cpuStatDAO) {
+        this.appSvc = appSvc;
         this.hostInfoDAO = hostInfoDAO;
         this.cpuStatDAO = cpuStatDAO;
     }
@@ -70,7 +73,7 @@ public class HostCpuService implements HostInformationService {
     public HostInformationServiceController getInformationServiceController(
             HostRef ref) {
         HostCpuViewProvider provider = OSGIUtils.getInstance().getService(HostCpuViewProvider.class);
-        return new HostCpuController(hostInfoDAO, cpuStatDAO, ref, provider);
+        return new HostCpuController(appSvc, hostInfoDAO, cpuStatDAO, ref, provider);
     }
 
 }

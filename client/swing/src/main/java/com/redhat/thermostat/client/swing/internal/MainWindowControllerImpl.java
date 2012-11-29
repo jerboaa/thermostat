@@ -71,12 +71,12 @@ import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.DefaultHostsVMsLoader;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -97,6 +97,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     private final CopyOnWriteArrayList<HostDecorator> hostTreeDecorators = new CopyOnWriteArrayList<>();
     private final CopyOnWriteArrayList<VmDecorator> vmTreeDecorators = new CopyOnWriteArrayList<>();
 
+    private ApplicationService appSvc;
     private Timer backgroundUpdater;
 
     private MainView view;
@@ -162,8 +163,9 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private VmInformationControllerProvider vmInfoControllerProvider;
 
-    public MainWindowControllerImpl(UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory, HostInfoDAO hostsDao, VmInfoDAO vmsDAO)
+    public MainWindowControllerImpl(ApplicationService appSvc, UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory, HostInfoDAO hostsDao, VmInfoDAO vmsDAO)
     {
+        this.appSvc = appSvc;
         try {
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
             hostFilterRegistry = registryFactory.createHostFilterRegistry();
@@ -220,8 +222,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
     
     private void initializeTimer() {
-        ApplicationContext ctx = ApplicationContext.getInstance();
-        backgroundUpdater = ctx.getTimerFactory().createTimer();
+        backgroundUpdater = appSvc.getTimerFactory().createTimer();
         backgroundUpdater.setAction(new Runnable() {
             @Override
             public void run() {
@@ -307,7 +308,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         uninstallListenersAndStopRegistries();
 
         view.hideMainWindow();
-        ApplicationContext.getInstance().getTimerFactory().shutdown();
+        appSvc.getTimerFactory().shutdown();
         shutdownOSGiFramework();
     }
 

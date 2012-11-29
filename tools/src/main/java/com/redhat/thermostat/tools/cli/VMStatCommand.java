@@ -42,8 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
@@ -101,7 +101,8 @@ public class VMStatCommand extends SimpleCommand {
     private void startContinuousStats(final CommandContext ctx, final VMStatPrinter statPrinter) {
 
         final CountDownLatch latch = new CountDownLatch(1);
-        Timer timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        ApplicationService appSvc = serviceProvider.getService(ApplicationService.class);
+        Timer timer = appSvc.getTimerFactory().createTimer();
         timer.setDelay(1);
         timer.setInitialDelay(1);
         timer.setSchedulingType(Timer.SchedulingType.FIXED_RATE);

@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.eclipse.internal.views;
 
+import java.util.Objects;
+
 import org.eclipse.swt.widgets.Composite;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -67,7 +70,9 @@ public class HostOverviewViewPart extends HostRefViewPart {
     public HostOverviewController createController(HostRef ref,
             HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO,
             HostOverviewViewProvider provider) {
-        return new HostOverviewController(hostInfoDAO, networkInfoDAO, ref,
+        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
+        Objects.requireNonNull(appSvc);
+        return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO, ref,
                 provider);
     }
 

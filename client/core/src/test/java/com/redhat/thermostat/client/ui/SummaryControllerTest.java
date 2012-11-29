@@ -54,11 +54,10 @@ import com.redhat.thermostat.client.core.views.SummaryView;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 
@@ -72,8 +71,6 @@ public class SummaryControllerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-        ApplicationContext ctx = ApplicationContext.getInstance();
 
         // Setup timer
         timer = mock(Timer.class);
@@ -81,7 +78,8 @@ public class SummaryControllerTest {
         when(timerFactory.createTimer()).thenReturn(timer);
         ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(actionCaptor.capture());
-        ctx.setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         // setup dao
         HostInfoDAO hDAO = mock(HostInfoDAO.class);
@@ -98,7 +96,7 @@ public class SummaryControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        SummaryController summaryCtrl = new SummaryController(hDAO, vDAO, viewProvider);
+        SummaryController summaryCtrl = new SummaryController(appSvc, hDAO, vDAO, viewProvider);
 
         timerAction = actionCaptor.getValue();
         viewListener = viewArgumentCaptor.getValue();
@@ -110,7 +108,6 @@ public class SummaryControllerTest {
         timerAction = null;
         view = null;
         viewListener = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
@@ -74,9 +75,11 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
+        ApplicationService appSvc = mock(ApplicationService.class);
 
         context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
         context.registerService(VmGcStatDAO.class, vmGcStatDAO, null);
+        context.registerService(ApplicationService.class, appSvc, null);
 
         Activator activator = new Activator();
 
@@ -87,7 +90,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(3, context.getAllServices().size());
+        assertEquals(4, context.getAllServices().size());
     }
 
     @Test

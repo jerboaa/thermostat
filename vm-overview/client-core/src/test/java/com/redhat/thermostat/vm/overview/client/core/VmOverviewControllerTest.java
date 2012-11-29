@@ -51,7 +51,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -59,11 +58,10 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -97,8 +95,6 @@ public class VmOverviewControllerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
         // Setup timer
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor
@@ -107,7 +103,8 @@ public class VmOverviewControllerTest {
 
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         // Setup DAOs
         VmInfo vmInfo = new VmInfo(VM_PID, START_TIME, STOP_TIME, JAVA_VERSION,
@@ -127,15 +124,10 @@ public class VmOverviewControllerTest {
         VmOverviewViewProvider viewProvider = mock(VmOverviewViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 
-        controller = new VmOverviewController(vmInfoDao, ref, viewProvider);
+        controller = new VmOverviewController(appSvc, vmInfoDao, ref, viewProvider);
 
         listener = listenerCaptor.getValue();
         timerAction = timerActionCaptor.getValue();
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

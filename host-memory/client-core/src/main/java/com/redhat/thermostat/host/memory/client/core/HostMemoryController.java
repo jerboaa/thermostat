@@ -45,10 +45,10 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
@@ -75,7 +75,7 @@ public class HostMemoryController implements HostInformationServiceController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public HostMemoryController(HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO, final HostRef ref, HostMemoryViewProvider provider) {
+    public HostMemoryController(ApplicationService appSvc, HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO, final HostRef ref, HostMemoryViewProvider provider) {
         this.ref = ref;
         this.hostInfoDAO = hostInfoDAO;
         this.memoryStatDAO = memoryStatDAO;
@@ -106,7 +106,7 @@ public class HostMemoryController implements HostInformationServiceController {
             }
         });
 
-        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        backgroundUpdateTimer = appSvc.getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
             @Override
             public void run() {

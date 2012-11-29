@@ -46,16 +46,14 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.VmCpuStat;
@@ -65,11 +63,6 @@ import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 
 public class VmCpuControllerTest {
-
-    @Before
-    public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
@@ -90,7 +83,8 @@ public class VmCpuControllerTest {
 
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         final VmCpuView view = mock(VmCpuView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -100,7 +94,7 @@ public class VmCpuControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        VmCpuController controller = new VmCpuController(vmCpuStatDAO, ref, viewProvider);
+        VmCpuController controller = new VmCpuController(appSvc, vmCpuStatDAO, ref, viewProvider);
 
         ActionListener<VmCpuView.Action> l = viewArgumentCaptor.getValue();
 

@@ -52,7 +52,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
@@ -74,8 +73,6 @@ public class HeapDumperCommandTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
         reqQueue = mock(RequestQueue.class);
         OSGIUtils osgiUtils = mock(OSGIUtils.class);
         when(osgiUtils.getService(RequestQueue.class)).thenReturn(reqQueue);
@@ -103,7 +100,6 @@ public class HeapDumperCommandTest {
         vmRef = null;
         cmd = null;
         reqQueue = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

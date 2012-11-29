@@ -36,8 +36,11 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
+import java.util.Objects;
+
 import org.eclipse.swt.widgets.Composite;
 
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
@@ -67,7 +70,9 @@ public class HostMemoryViewPart extends HostRefViewPart {
     public HostMemoryController createController(HostInfoDAO hostInfoDao,
             MemoryStatDAO memoryStatDao, HostRef ref,
             HostMemoryViewProvider viewProvider) {
-        return new HostMemoryController(hostInfoDao, memoryStatDao, ref,
+        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
+        Objects.requireNonNull(appSvc);
+        return new HostMemoryController(appSvc, hostInfoDao, memoryStatDao, ref,
                 viewProvider);
     }
 

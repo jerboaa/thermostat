@@ -44,9 +44,9 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatService;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
 

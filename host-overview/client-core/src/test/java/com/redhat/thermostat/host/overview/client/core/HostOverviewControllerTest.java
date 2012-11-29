@@ -57,11 +57,10 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -91,8 +90,6 @@ public class HostOverviewControllerTest {
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
         // Setup timer
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> timerActionCaptor = ArgumentCaptor.forClass(Runnable.class);
@@ -100,7 +97,8 @@ public class HostOverviewControllerTest {
 
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         // Setup DAOs
         HostInfo hostInfo = new HostInfo(HOST_NAME, OS_NAME, KERNEL_NAME, CPU_MODEL, CPU_COUNT, TOTAL_MEMORY);
@@ -127,15 +125,10 @@ public class HostOverviewControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        HostOverviewController controller = new HostOverviewController(hostInfoDao, networkInfoDao, ref, viewProvider);
+        HostOverviewController controller = new HostOverviewController(appSvc, hostInfoDao, networkInfoDao, ref, viewProvider);
 
         listener = listenerCaptor.getValue();
         timerAction = timerActionCaptor.getValue();
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

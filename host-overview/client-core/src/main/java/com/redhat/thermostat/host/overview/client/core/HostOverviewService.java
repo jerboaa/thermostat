@@ -39,6 +39,7 @@ package com.redhat.thermostat.host.overview.client.core;
 import com.redhat.thermostat.client.core.HostFilter;
 import com.redhat.thermostat.client.core.HostInformationService;
 import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -52,11 +53,13 @@ public class HostOverviewService implements HostInformationService {
             return true;
         }
     };
-    
+
+    private ApplicationService appSvc;
     private HostInfoDAO hostInfoDAO;
     private NetworkInterfaceInfoDAO networkInfoDAO;
     
-    public HostOverviewService(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO) {
+    public HostOverviewService(ApplicationService appSvc, HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO) {
+        this.appSvc = appSvc;
         this.hostInfoDAO = hostInfoDAO;
         this.networkInfoDAO = networkInfoDAO;
     }
@@ -70,7 +73,7 @@ public class HostOverviewService implements HostInformationService {
     public HostInformationServiceController getInformationServiceController(
             HostRef ref) {
         HostOverviewViewProvider provider = OSGIUtils.getInstance().getService(HostOverviewViewProvider.class);
-        return new HostOverviewController(hostInfoDAO, networkInfoDAO, ref, provider);
+        return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO, ref, provider);
     }
 
 }

@@ -51,9 +51,9 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.VmClassStat;
@@ -79,7 +79,8 @@ public class VmClassStatControllerTest {
 
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         VmClassStatView view = mock(VmClassStatView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
@@ -89,7 +90,7 @@ public class VmClassStatControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        VmClassStatController controller = new VmClassStatController(vmClassStatDAO, ref, viewProvider);
+        VmClassStatController controller = new VmClassStatController(appSvc, vmClassStatDAO, ref, viewProvider);
 
         ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
 

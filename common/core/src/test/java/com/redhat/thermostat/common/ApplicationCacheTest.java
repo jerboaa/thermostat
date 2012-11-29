@@ -34,62 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.appctx;
+package com.redhat.thermostat.common;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-
-public class ApplicationContextTest {
-
-    @Before
-    public void setUp() {
-        ApplicationContext.reset();
-    }
-
-    @After
-    public void tearDown() {
-        ApplicationContext.reset();
-    }
+public class ApplicationCacheTest {
 
     @Test
-    public void verifyGetInstanceNotNull() {
-        ApplicationContext ctx = ApplicationContext.getInstance();
-        assertNotNull(ctx);
-    }
-
-    @Test
-    public void  testTimerFactorySetGet() {
-        TimerFactory timerFactory = mock(TimerFactory.class);
-        ApplicationContext ctx = ApplicationContext.getInstance();
-        ctx.setTimerFactory(timerFactory);
-
-        TimerFactory actual1 = ctx.getTimerFactory();
-        assertSame(timerFactory, actual1);
-    }
-
-    @Test
-    public void  verifyTimerFactoryIsNullWhenNotInitialized() {
-        ApplicationContext ctx = ApplicationContext.getInstance();
-
-        TimerFactory actual = ctx.getTimerFactory();
-        assertNull(actual);
-    }
-
-    @Test
-    public void  verifyTimerFactoryStaysSame() {
-        TimerFactory timerFactory = mock(TimerFactory.class);
-        ApplicationContext ctx = ApplicationContext.getInstance();
-        ctx.setTimerFactory(timerFactory);
-
-        ApplicationContext ctx2 = ApplicationContext.getInstance();
-        TimerFactory actual2 = ctx2.getTimerFactory();
-        assertSame(timerFactory, actual2);
+    public void verityCache() {
+        ApplicationCache cache = new ApplicationCache();
+        cache.addAttribute("test", "fluff");
+        assertEquals("fluff", cache.getAttribute("test"));
     }
 }

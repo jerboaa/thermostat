@@ -40,7 +40,6 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -48,7 +47,6 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 
@@ -64,7 +62,6 @@ public class ThreadTableControllerTest {
     
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
         collector = mock(ThreadCollector.class);
         
         timer = mock(Timer.class);
@@ -72,11 +69,6 @@ public class ThreadTableControllerTest {
         view = mock(ThreadTableView.class);
         
         setUpTimers();
-    }
-    
-    @After
-    public void tearDown() {
-        ApplicationContextUtil.resetApplicationContext();
     }
     
     private void setUpTimers() {

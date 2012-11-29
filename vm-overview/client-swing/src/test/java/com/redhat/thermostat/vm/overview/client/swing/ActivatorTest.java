@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewService;
@@ -62,7 +63,7 @@ public class ActivatorTest {
 
         // View provider registers unconditionally
         assertEquals(1, context.getAllServices().size());
-        assertEquals(1, context.getServiceListeners().size());
+        assertEquals(2, context.getServiceListeners().size());
         
         activator.stop(context);
 
@@ -73,19 +74,22 @@ public class ActivatorTest {
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        ApplicationService appSvc = mock(ApplicationService.class);
 
         context.registerService(VmInfoDAO.class, vmInfoDAO, null);
+        context.registerService(ApplicationService.class, appSvc, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
+        assertTrue(context.isServiceRegistered(VmOverviewViewProvider.class.getName(), SwingVmOverviewViewProvider.class));
         assertTrue(context.isServiceRegistered(VmInformationService.class.getName(), VmOverviewService.class));
 
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(3, context.getAllServices().size());
     }
 
     @Test

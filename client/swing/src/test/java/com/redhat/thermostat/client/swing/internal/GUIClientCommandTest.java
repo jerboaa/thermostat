@@ -54,8 +54,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -90,7 +90,6 @@ public class GUIClientCommandTest {
         cmd.run(cmdCtx);
 
         verify(clientMain).run();
-        verify(bCtx).registerService(eq(ApplicationService.class.getName()), isNotNull(), any(Dictionary.class));
         verify(bCtx).registerService(eq(ContextAction.class.getName()), isNotNull(), any(Dictionary.class));
     }
 

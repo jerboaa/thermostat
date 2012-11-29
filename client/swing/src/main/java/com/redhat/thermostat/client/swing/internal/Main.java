@@ -51,17 +51,14 @@ import javax.swing.UnsupportedLookAndFeelException;
 import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.swing.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.swing.views.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigReconnector;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.ThreadPoolTimerFactory;
-import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.DAOFactoryImpl;
@@ -93,20 +90,18 @@ public class Main {
         StorageProvider connProv = StorageProviderUtil.getStorageProvider(config);
 
         DAOFactory daoFactory = new DAOFactoryImpl(connProv);
-        TimerFactory timerFactory = new ThreadPoolTimerFactory(1);
 
-        init(OSGIUtils.getInstance(), uiFacadeFactory, daoFactory, timerFactory);
+        init(OSGIUtils.getInstance(), uiFacadeFactory, daoFactory);
     }
 
-    Main(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory, TimerFactory timerFactory) {
-        init(serviceProvider, uiFacadeFactory, daoFactory, timerFactory);
+    Main(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory) {
+        init(serviceProvider, uiFacadeFactory, daoFactory);
     }
 
-    private void init(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory, TimerFactory timerFactory) {
+    private void init(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory) {
         this.serviceProvider = serviceProvider;
         this.uiFacadeFactory = uiFacadeFactory;
         this.daoFactory = daoFactory;
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
     }
 
     public void run() {

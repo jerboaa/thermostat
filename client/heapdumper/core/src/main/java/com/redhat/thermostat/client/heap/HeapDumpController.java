@@ -50,13 +50,12 @@ import com.redhat.thermostat.client.heap.HeapView.HeapDumperAction;
 import com.redhat.thermostat.client.heap.chart.OverviewChart;
 import com.redhat.thermostat.client.heap.cli.HeapDumperCommand;
 import com.redhat.thermostat.client.heap.internal.HeapDumpDetailsController;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
@@ -110,7 +109,7 @@ public class HeapDumpController implements VmInformationServiceController {
                     translator.localize(LocaleResources.HEAP_CHART_CAPACITY),
                     translator.localize(LocaleResources.HEAP_CHART_USED));
         
-        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        timer = appService.getTimerFactory().createTimer();
         timer.setAction(new HeapOverviewDataCollector());
         
         timer.setInitialDelay(0);

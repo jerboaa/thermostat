@@ -34,20 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.appctx;
+package com.redhat.thermostat.common.internal;
 
-import com.redhat.thermostat.common.appctx.ApplicationContext;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class ApplicationContextUtil {
+import com.redhat.thermostat.common.ApplicationCache;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.ThreadPoolTimerFactory;
+import com.redhat.thermostat.common.TimerFactory;
 
-    /**
-     * This is here to allow tests to reset the ApplicationContext, while
-     * preventing real code the same (ApplicationContext.reset() is package private).
-     *
-     * It is vital that tests call this from their setUp() and tearDown() methods,
-     * to avoid leaking mocks and stuff from test to test.
-     */
-    public static void resetApplicationContext() {
-        ApplicationContext.reset();
+public class ApplicationServiceImpl implements ApplicationService {
+
+    private ApplicationCache cache = new ApplicationCache();
+
+    // NOTE: When merging with ApplicationContext, this could be provided by the same
+    // thread pool that does the timer scheduling. Not sure we want this though,
+    // as scheduled thread pools are always limited in number of threads (could lead to deadlocks
+    // when used carelessly).
+    private ExecutorService executor = Executors.newCachedThreadPool();
+
+    private TimerFactory timers = new ThreadPoolTimerFactory(1);
+
+    @Override
+    public ApplicationCache getApplicationCache() {
+        return cache;
+    }
+
+    @Override
+    public ExecutorService getApplicationExecutor() {
+        return executor;
+    }
+
+    @Override
+    public TimerFactory getTimerFactory() {
+        return timers;
     }
 }

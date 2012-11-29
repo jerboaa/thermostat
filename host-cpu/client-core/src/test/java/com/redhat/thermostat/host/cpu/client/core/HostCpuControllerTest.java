@@ -58,11 +58,10 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -89,14 +88,14 @@ public class HostCpuControllerTest {
     @Before
     public void setUp() {
         // Setup timer.
-        ApplicationContextUtil.resetApplicationContext();
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(actionCaptor.capture());
 
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         // Setup DAOs.
         HostInfo hostInfo = new HostInfo("fluffhost1", "fluffOs1", "fluffKernel1", "fluffCpu1", 12345, 98765);
@@ -116,7 +115,7 @@ public class HostCpuControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         HostRef host = new HostRef("123", "fluffhost");
-        controller = new HostCpuController(hostInfoDAO, cpuStatDAO, host, viewProvider);
+        controller = new HostCpuController(appSvc, hostInfoDAO, cpuStatDAO, host, viewProvider);
 
         timerAction = actionCaptor.getValue();
         viewListener = viewArgumentCaptor.getValue();
@@ -128,7 +127,6 @@ public class HostCpuControllerTest {
         controller = null;
         view = null;
         timer = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

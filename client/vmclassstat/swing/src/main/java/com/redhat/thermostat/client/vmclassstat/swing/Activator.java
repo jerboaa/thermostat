@@ -44,9 +44,9 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatService;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
@@ -71,8 +71,9 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmClassStatDAO dao = (VmClassStatDAO) services.get(VmClassStatDAO.class.getName());
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(dao);
-                VmClassStatService service = new VmClassStatService(dao);
+                VmClassStatService service = new VmClassStatService(appSvc, dao);
                 classStatRegistration = context.registerService(VmInformationService.class.getName(), service, null);
             }
 

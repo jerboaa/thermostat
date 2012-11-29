@@ -50,6 +50,7 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -75,11 +76,10 @@ import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationInfo;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.DbServiceFactory;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -92,6 +92,7 @@ import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
+import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
 import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.test.TestCommandContextFactory;
@@ -101,7 +102,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FrameworkUtil.class, HelpCommand.class})
+@PrepareForTest({FrameworkUtil.class, HelpCommand.class, OSGIUtils.class})
 public class LauncherTest {
     
     private static String defaultKeyringProvider;
@@ -152,10 +153,6 @@ public class LauncherTest {
 
     @Before
     public void setUp() {
-
-        ApplicationContextUtil.resetApplicationContext();
-        timerFactory = new TestTimerFactory();
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
         setupCommandContextFactory();
 
         TestCommand cmd1 = new TestCommand(name1, new TestCmd1());
@@ -238,6 +235,16 @@ public class LauncherTest {
         when(bCtx.getService(infosRef)).thenReturn(infos);
         when(FrameworkUtil.getBundle(isA(HelpCommand.class.getClass()))).thenReturn(bundle);
 
+        timerFactory = new TestTimerFactory();
+        ExecutorService exec = mock(ExecutorService.class);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
+        when(appSvc.getApplicationExecutor()).thenReturn(exec);
+        OSGIUtils osgi = mock(OSGIUtils.class);
+        when(osgi.getService(ApplicationService.class)).thenReturn(appSvc);
+        PowerMockito.mockStatic(OSGIUtils.class);
+        when(OSGIUtils.getInstance()).thenReturn(osgi);
+
         loggingInitializer = mock(LoggingInitializer.class);
         dbServiceFactory = mock(DbServiceFactory.class);
 
@@ -259,7 +266,6 @@ public class LauncherTest {
     public void tearDown() {
         ctxFactory = null;
         bundleContext = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

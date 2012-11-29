@@ -54,9 +54,9 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -111,6 +111,7 @@ public class MainTest {
         when(daoFactory.getConnection()).thenReturn(connection);
 
         timerFactory = mock(TimerFactory.class);
+        when(appService.getTimerFactory()).thenReturn(timerFactory);
     }
 
     /**
@@ -128,7 +129,7 @@ public class MainTest {
 
     @Test
     public void verifyRunWaitsForShutdown() throws Exception {
-        Main main = new Main(serviceProvider, uiFactory, daoFactory, timerFactory);
+        Main main = new Main(serviceProvider, uiFactory, daoFactory);
 
         main.run();
 
@@ -139,7 +140,7 @@ public class MainTest {
 
     @Test
     public void verifyConnectionIsMade() throws Exception {
-        Main main = new Main(serviceProvider, uiFactory, daoFactory, timerFactory);
+        Main main = new Main(serviceProvider, uiFactory, daoFactory);
 
         main.run();
 
@@ -151,7 +152,7 @@ public class MainTest {
 
     @Test
     public void verifySuccessfulConnectionTriggersMainWindowToBeShown() throws Exception {
-        Main main = new Main(serviceProvider, uiFactory, daoFactory, timerFactory);
+        Main main = new Main(serviceProvider, uiFactory, daoFactory);
 
         main.run();
 
@@ -168,7 +169,7 @@ public class MainTest {
     @Test
     public void verifySuccessfulConnectionRegistersDAOs() throws Exception {
 
-        Main main = new Main(serviceProvider, uiFactory, daoFactory, timerFactory);
+        Main main = new Main(serviceProvider, uiFactory, daoFactory);
 
         main.run();
 
@@ -186,7 +187,7 @@ public class MainTest {
     @Test
     public void verifyFailedConnectionTriggersShutdown() throws Exception {
 
-        Main main = new Main(serviceProvider, uiFactory, daoFactory, timerFactory);
+        Main main = new Main(serviceProvider, uiFactory, daoFactory);
 
         main.run();
 

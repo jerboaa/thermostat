@@ -46,10 +46,10 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -71,7 +71,7 @@ public class HostOverviewController implements HostInformationServiceController 
 
     private final HostOverviewView view;
 
-    public HostOverviewController(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO, final HostRef ref, HostOverviewViewProvider provider) {
+    public HostOverviewController(ApplicationService appSvc, HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO, final HostRef ref, HostOverviewViewProvider provider) {
         this.hostInfoDAO = hostInfoDAO;
         this.networkInfoDAO = networkInfoDAO;
 
@@ -81,7 +81,7 @@ public class HostOverviewController implements HostInformationServiceController 
         networkTableColumnVector.add(translator.localize(LocaleResources.NETWORK_IPV4_COLUMN));
         networkTableColumnVector.add(translator.localize(LocaleResources.NETWORK_IPV6_COLUMN));
 
-        backgroundUpdateTimer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        backgroundUpdateTimer = appSvc.getTimerFactory().createTimer();
         backgroundUpdateTimer.setAction(new Runnable() {
             @Override
             public void run() {

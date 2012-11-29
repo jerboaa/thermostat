@@ -46,10 +46,10 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.vmclassstat.core.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -57,8 +57,6 @@ import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.storage.model.VmClassStat;
 
 public class VmClassStatController implements VmInformationServiceController {
-
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private class UpdateChartData implements Runnable {
         @Override
@@ -83,10 +81,10 @@ public class VmClassStatController implements VmInformationServiceController {
 
     private volatile long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmClassStatController(VmClassStatDAO vmClassStatDao, VmRef ref, VmClassStatViewProvider viewProvider) {
+    public VmClassStatController(ApplicationService appSvc, VmClassStatDAO vmClassStatDao, VmRef ref, VmClassStatViewProvider viewProvider) {
         this.ref = ref;
         dao = vmClassStatDao;
-        timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        timer = appSvc.getTimerFactory().createTimer();
 
         timer.setAction(new UpdateChartData());
         timer.setSchedulingType(SchedulingType.FIXED_RATE);

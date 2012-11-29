@@ -49,7 +49,7 @@ import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.heap.HeapDumperService;
 import com.redhat.thermostat.client.heap.swing.Activator;
 import com.redhat.thermostat.client.heap.swing.Activator.ServicesAvailableAction;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;

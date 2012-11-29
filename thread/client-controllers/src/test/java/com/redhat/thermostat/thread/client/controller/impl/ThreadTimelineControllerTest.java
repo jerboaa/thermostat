@@ -40,7 +40,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.when;
 
@@ -56,7 +55,6 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
@@ -75,7 +73,6 @@ public class ThreadTimelineControllerTest {
     
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
         collector = mock(ThreadCollector.class);
         
         timer = mock(Timer.class);

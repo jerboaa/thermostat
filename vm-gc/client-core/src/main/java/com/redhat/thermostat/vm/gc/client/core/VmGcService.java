@@ -40,6 +40,7 @@ import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.client.core.VmInformationService;
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -48,11 +49,13 @@ import com.redhat.thermostat.common.utils.OSGIUtils;
 public class VmGcService implements VmInformationService {
     
     private static final VmFilter FILTER = new AlwaysMatchFilter();
-    
+
+    private ApplicationService appSvc;
     private VmMemoryStatDAO vmMemoryStatDAO;
     private VmGcStatDAO vmGcStatDAO;
     
-    public VmGcService(VmMemoryStatDAO vmMemoryStatDAO, VmGcStatDAO vmGcStatDAO) {
+    public VmGcService(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDAO, VmGcStatDAO vmGcStatDAO) {
+        this.appSvc = appSvc;
         this.vmMemoryStatDAO = vmMemoryStatDAO;
         this.vmGcStatDAO = vmGcStatDAO;
     }
@@ -61,7 +64,7 @@ public class VmGcService implements VmInformationService {
     public VmInformationServiceController getInformationServiceController(
             VmRef ref) {
         VmGcViewProvider provider = OSGIUtils.getInstance().getService(VmGcViewProvider.class);
-        return new VmGcController(vmMemoryStatDAO, vmGcStatDAO, ref, provider);
+        return new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, ref, provider);
     }
 
     @Override

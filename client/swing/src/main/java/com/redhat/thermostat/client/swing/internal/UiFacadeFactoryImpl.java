@@ -54,6 +54,7 @@ import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
@@ -69,6 +70,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     private Collection<VMContextAction> contextAction = new ArrayList<>();
 
     private BundleContext context;
+    private ApplicationService appSvc;
 
     private HostInfoDAO hostInfoDao;
     private VmInfoDAO vmInfoDao;
@@ -78,6 +80,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     UiFacadeFactoryImpl(OSGIUtils serviceProvider, BundleContext context) {
         this.context = context;
         this.serviceProvider = serviceProvider;
+        appSvc = serviceProvider.getService(ApplicationService.class);
     }
     
     public UiFacadeFactoryImpl(BundleContext context) {
@@ -97,13 +100,13 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     public MainWindowController getMainWindow() {
         MainView mainView = new MainWindow();
         RegistryFactory registryFactory = new RegistryFactory(context);
-        return new MainWindowControllerImpl(this, mainView, registryFactory, hostInfoDao, vmInfoDao);
+        return new MainWindowControllerImpl(appSvc, this, mainView, registryFactory, hostInfoDao, vmInfoDao);
     }
 
     @Override
     public SummaryController getSummary() {
         SummaryViewProvider viewProvider = serviceProvider.getService(SummaryViewProvider.class);
-        return new SummaryController(hostInfoDao, vmInfoDao, viewProvider);
+        return new SummaryController(appSvc, hostInfoDao, vmInfoDao, viewProvider);
     }
 
     @Override

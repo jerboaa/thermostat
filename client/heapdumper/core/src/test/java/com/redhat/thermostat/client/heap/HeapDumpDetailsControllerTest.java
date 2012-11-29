@@ -49,8 +49,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.heap.internal.HeapDumpDetailsController;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
 
@@ -64,8 +63,6 @@ public class HeapDumpDetailsControllerTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
         viewProvider = mock(HeapDumpDetailsViewProvider.class);
         view = mock(HeapDumpDetailsView.class);
         when(viewProvider.createView()).thenReturn(view);
@@ -89,7 +86,6 @@ public class HeapDumpDetailsControllerTest {
         histogramProvider = null;
         objectDetailsProvider = null;
         objectRootsProvider = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

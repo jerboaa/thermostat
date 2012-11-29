@@ -51,10 +51,10 @@ import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -84,10 +84,10 @@ public class VmGcController implements VmInformationServiceController {
 
     private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmGcController(VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef ref, VmGcViewProvider provider) {
+    public VmGcController(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, VmRef ref, VmGcViewProvider provider) {
         this.ref = ref;
         this.view = provider.createView();
-        this.timer = ApplicationContext.getInstance().getTimerFactory().createTimer();
+        this.timer = appSvc.getTimerFactory().createTimer();
 
         gcDao = vmGcStatDao;
         memDao = vmMemoryStatDao;

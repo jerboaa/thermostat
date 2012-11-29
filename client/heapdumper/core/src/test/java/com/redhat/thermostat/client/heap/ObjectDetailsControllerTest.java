@@ -62,10 +62,9 @@ import org.mockito.stubbing.OngoingStubbing;
 
 import com.redhat.thermostat.client.heap.ObjectDetailsView.ObjectAction;
 import com.redhat.thermostat.client.heap.internal.ObjectDetailsController;
-import com.redhat.thermostat.client.osgi.service.ApplicationService;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
@@ -81,8 +80,6 @@ public class ObjectDetailsControllerTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-
         view = mock(ObjectDetailsView.class);
         objectDetailsProvider = mock(ObjectDetailsViewProvider.class);
         when(objectDetailsProvider.createView()).thenReturn(view);
@@ -102,7 +99,6 @@ public class ObjectDetailsControllerTest {
         view = null;
         objectDetailsProvider = null;
         objectRootsProvider = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

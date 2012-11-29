@@ -60,7 +60,6 @@ import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.DbServiceFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
@@ -83,7 +82,6 @@ public class ConnectCommandTest {
 
     @Before
     public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
         setupCommandContextFactory();
 
         dbServiceFactory = mock(DbServiceFactory.class);
@@ -102,7 +100,6 @@ public class ConnectCommandTest {
     public void tearDown() {
         cmdCtxFactory = null;
         cmd = null;
-        ApplicationContextUtil.resetApplicationContext();
     }
 
     @Test

@@ -41,7 +41,7 @@ package com.redhat.thermostat.client.osgi.service;
  * <br /><br />
  * 
  * Each specific subclass defines the selected entry points for the context
- * menues.
+ * menus.
  * <br /><br />
  * 
  * Context actions are executed once the user select the appropriate UI elements

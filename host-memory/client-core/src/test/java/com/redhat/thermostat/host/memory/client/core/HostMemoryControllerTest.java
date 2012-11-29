@@ -48,16 +48,14 @@ import static org.mockito.Mockito.when;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.appctx.ApplicationContext;
-import com.redhat.thermostat.common.appctx.ApplicationContextUtil;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
@@ -68,11 +66,6 @@ import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.MemoryStat;
 
 public class HostMemoryControllerTest {
-
-    @Before
-    public void setUp() {
-        ApplicationContextUtil.resetApplicationContext();
-    }
 
     @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
@@ -94,7 +87,8 @@ public class HostMemoryControllerTest {
 
         TimerFactory timerFactory = mock(TimerFactory.class);
         when(timerFactory.createTimer()).thenReturn(timer);
-        ApplicationContext.getInstance().setTimerFactory(timerFactory);
+        ApplicationService appSvc = mock(ApplicationService.class);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
         HostRef ref = mock(HostRef.class);
 
@@ -106,7 +100,7 @@ public class HostMemoryControllerTest {
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        HostMemoryController controller = new HostMemoryController(hostInfoDAO, memoryStatDAO, ref, viewProvider);
+        HostMemoryController controller = new HostMemoryController(appSvc, hostInfoDAO, memoryStatDAO, ref, viewProvider);
 
         ActionListener<HostMemoryView.Action> l = viewArgumentCaptor.getValue();
 

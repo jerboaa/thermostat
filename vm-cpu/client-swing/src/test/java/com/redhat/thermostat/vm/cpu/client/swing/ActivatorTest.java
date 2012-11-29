@@ -43,6 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
@@ -60,7 +61,7 @@ public class ActivatorTest {
 
         // View provider registers unconditionally
         assertEquals(1, context.getAllServices().size());
-        assertEquals(1, context.getServiceListeners().size());
+        assertEquals(2, context.getServiceListeners().size());
         
         activator.stop(context);
 
@@ -71,8 +72,10 @@ public class ActivatorTest {
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
         VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
+        ApplicationService appSvc = mock(ApplicationService.class);
 
         context.registerService(VmCpuStatDAO.class, vmCpuStatDAO, null);
+        context.registerService(ApplicationService.class, appSvc, null);
 
         Activator activator = new Activator();
 
@@ -83,7 +86,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(3, context.getAllServices().size());
     }
 
     @Test

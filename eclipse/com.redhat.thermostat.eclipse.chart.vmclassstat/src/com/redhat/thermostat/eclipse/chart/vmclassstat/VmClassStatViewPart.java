@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.eclipse.chart.vmclassstat;
 
+import java.util.Objects;
+
 import org.eclipse.swt.widgets.Composite;
 
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatController;
 import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -63,7 +66,9 @@ public class VmClassStatViewPart extends VmRefViewPart {
 
     public VmClassStatController createController(VmClassStatDAO classStatDao,
             VmRef ref, VmClassStatViewProvider viewProvider) {
-        return new VmClassStatController(classStatDao, ref, viewProvider);
+        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
+        Objects.requireNonNull(appSvc);
+        return new VmClassStatController(appSvc, classStatDao, ref, viewProvider);
     }
 
 }
