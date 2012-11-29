@@ -45,10 +45,11 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class Activator implements BundleActivator {
 
-    private static final Logger logger = Logger.getLogger(Activator.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
 
     private ServiceRegistration confServerRegistration;
     private ReceiverRegistry receivers;

@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.utils;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Properties;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -57,8 +58,14 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
  */
 public final class LoggingUtils {
 
-    private static Logger root = null;
-    private static final String ROOTNAME = "com.redhat.thermostat";
+    // package private for testing
+    static Logger root = null;
+    // package private for testing
+    static final String ROOTNAME = "com.redhat.thermostat";
+    private static final String HANDLER_PROP = ROOTNAME + ".handlers";
+    private static final String LOG_LEVEL_PROP = ROOTNAME + ".level";
+    private static final String DEFAULT_LOG_HANDLER = "java.util.logging.ConsoleHandler";
+    private static final Level DEFAULT_LOG_LEVEL = Level.INFO;
 
     private LoggingUtils() {
         /* should not be instantiated */
@@ -114,14 +121,18 @@ public final class LoggingUtils {
     public static void loadGlobalLoggingConfig() throws InvalidConfigurationException {
         File thermostatEtcDir = new File(ConfigUtils.getThermostatHome(), "etc");
         File loggingPropertiesFile = new File(thermostatEtcDir, "logging.properties");
-        if (loggingPropertiesFile.isFile()) {
-            readLoggingProperties(loggingPropertiesFile);
-        }
+        loadConfig(loggingPropertiesFile);
     }
+    
 
     public static void loadUserLoggingConfig() throws InvalidConfigurationException {
         File thermostatUserDir = new File(ConfigUtils.getThermostatUserHome());
         File loggingPropertiesFile = new File(thermostatUserDir, "logging.properties");
+        loadConfig(loggingPropertiesFile);
+    }
+
+    // for testing
+    static void loadConfig(File loggingPropertiesFile) throws InvalidConfigurationException {
         if (loggingPropertiesFile.isFile()) {
             readLoggingProperties(loggingPropertiesFile);
         }
@@ -129,11 +140,49 @@ public final class LoggingUtils {
 
     private static void readLoggingProperties(File loggingPropertiesFile)
             throws InvalidConfigurationException {
+        // Make sure root logger exists
+        ensureRootLogger();
         try (FileInputStream fis = new FileInputStream(loggingPropertiesFile)){
+            // Set basic logger configs. Note that this does NOT add handlers.
+            // It also resets() handlers. I.e. removes any existing handlers
+            // for the root logger.
             LogManager.getLogManager().readConfiguration(fis);
         } catch (SecurityException | IOException e) {
             throw new InvalidConfigurationException("Could not read logging.properties", e);
         }
+        try (FileInputStream fis = new FileInputStream(loggingPropertiesFile)) {
+            // Finally add handlers as specified in the property file, with
+            // ConsoleHandler and level INFO as default
+            configureLogging(getDefaultProps(), fis);
+        } catch (SecurityException | IOException e) {
+            throw new InvalidConfigurationException("Could not read logging.properties", e);
+        }
+    }
+
+    private static void configureLogging(Properties defaultProps, FileInputStream fis) throws IOException {
+        Properties props = new Properties(defaultProps);
+        props.load(fis);
+        String handlers = props.getProperty(HANDLER_PROP);
+        for (String clazzName: handlers.split(",")) {
+            clazzName = clazzName.trim();
+            try {
+                // JVM provided class. Using system class loader is safe.
+                @SuppressWarnings("rawtypes")
+                Class clazz = ClassLoader.getSystemClassLoader().loadClass(clazzName);
+                Handler handler = (Handler)clazz.newInstance();
+                root.addHandler(handler);
+            } catch (Exception e) {
+                System.err.print("Could not load log-handler '" + clazzName + "'");
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static Properties getDefaultProps() {
+        Properties defaultProps = new Properties();
+        defaultProps.put(HANDLER_PROP, DEFAULT_LOG_HANDLER);
+        defaultProps.put(LOG_LEVEL_PROP, DEFAULT_LOG_LEVEL);
+        return defaultProps;
     }
 
 }

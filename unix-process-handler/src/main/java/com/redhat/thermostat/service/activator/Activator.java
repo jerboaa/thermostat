@@ -43,12 +43,13 @@ import java.util.logging.Logger;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.service.process.UnixProcessUtilities;
 
 public class Activator implements BundleActivator {
 
-    private static final Logger logger = Logger.getLogger(Activator.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(Activator.class);
     
     @Override
     public void start(BundleContext context) throws Exception {        
