@@ -37,7 +37,7 @@
 
 package com.redhat.thermostat.web.common;
 
-import com.redhat.thermostat.storage.mongodb.internal.MongoStorageProvider;
+import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;

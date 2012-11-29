@@ -62,6 +62,9 @@
             <Bundle-SymbolicName>com.redhat.thermostat.storage.mongodb</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.storage.mongodb.internal.Activator</Bundle-Activator>
+            <Export-Package>
+              com.redhat.thermostat.storage.mongodb
+            </Export-Package>
             <Private-Package>
               com.redhat.thermostat.storage.mongodb.internal
             </Private-Package>

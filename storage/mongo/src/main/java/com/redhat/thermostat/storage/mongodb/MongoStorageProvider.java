@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.mongodb.internal;
+package com.redhat.thermostat.storage.mongodb;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
@@ -42,6 +42,7 @@ import org.osgi.framework.FrameworkUtil;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;
+import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 
 public class MongoStorageProvider implements StorageProvider {
 
