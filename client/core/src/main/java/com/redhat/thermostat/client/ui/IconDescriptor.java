@@ -43,6 +43,8 @@ import java.nio.ByteBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+
 /**
  * Class that encapsulates an images raw data.
  * 
@@ -58,7 +60,7 @@ import java.util.logging.Logger;
  */
 public class IconDescriptor {
 
-    private static final Logger logger = Logger.getLogger(IconDescriptor.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(IconDescriptor.class);
 
     private ByteBuffer data;
     private int hash;

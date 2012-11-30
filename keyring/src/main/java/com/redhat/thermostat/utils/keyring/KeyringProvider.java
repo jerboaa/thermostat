@@ -45,7 +45,8 @@ import java.util.logging.Logger;
 
 public class KeyringProvider {
 
-    private static final Logger logger = Logger.getLogger(KeyringProvider.class.getSimpleName());
+    // Does not depend on common-core. Use java.util.logging.Logger
+    private static final Logger logger = Logger.getLogger(KeyringProvider.class.getName());
     
     public static final String DEFAULT_KEYRING = "com.redhat.thermostat.utils.keyring.GnomeKeyringLibraryNative";
     public static final String MEMORY_KEYRING = "com.redhat.thermostat.utils.keyring.MemoryKeyring";

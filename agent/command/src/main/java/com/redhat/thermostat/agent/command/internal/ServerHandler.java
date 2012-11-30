@@ -53,6 +53,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class ServerHandler extends SimpleChannelHandler {
 
@@ -62,7 +63,7 @@ class ServerHandler extends SimpleChannelHandler {
         this.receivers = receivers;
     }
 
-    private static final Logger logger = Logger.getLogger(ServerHandler.class.getName());
+    private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
 
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {

@@ -51,6 +51,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.heap.HeapDump;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
@@ -60,7 +61,7 @@ import com.redhat.thermostat.storage.model.HeapInfo;
 
 class HeapDAOImpl implements HeapDAO {
 
-    private static final Logger log = Logger.getLogger(HeapDAOImpl.class.getName());
+    private static final Logger log = LoggingUtils.getLogger(HeapDAOImpl.class);
 
     private final Storage storage;
 

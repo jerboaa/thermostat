@@ -42,13 +42,14 @@ import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
 import com.redhat.thermostat.service.process.UNIXSignal;
 
 public class KillVmReceiver implements RequestReceiver {
 
     private final UNIXProcessHandler unixService;
-    private static final Logger log = Logger.getLogger(KillVmReceiver.class.getName());
+    private static final Logger log = LoggingUtils.getLogger(KillVmReceiver.class);
     
     public KillVmReceiver(UNIXProcessHandler unixService) {
         this.unixService = unixService;

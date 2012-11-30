@@ -50,6 +50,7 @@ import java.util.logging.Logger;
 
 import javax.management.MalformedObjectNameException;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
 import com.redhat.thermostat.thread.model.ThreadInfoData;
@@ -61,7 +62,7 @@ import com.redhat.thermostat.utils.management.MXBeanConnector;
 @SuppressWarnings("restriction")
 class Harvester {
     
-    private static final Logger logger = Logger.getLogger(Harvester.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(Harvester.class);
     
     private boolean isConnected;
     private ScheduledExecutorService threadPool;

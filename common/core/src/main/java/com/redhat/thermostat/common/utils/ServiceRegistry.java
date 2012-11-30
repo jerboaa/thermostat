@@ -65,7 +65,7 @@ public class ServiceRegistry<T> {
     @SuppressWarnings("rawtypes")
     private final List<ServiceRegistration> ourRegistrations;
 
-    private static final Logger log = Logger.getLogger(ServiceRegistry.class.getName());
+    private static final Logger log = LoggingUtils.getLogger(ServiceRegistry.class);
 
     public ServiceRegistry(BundleContext ctx, String registrationClassName) {
         context = ctx;

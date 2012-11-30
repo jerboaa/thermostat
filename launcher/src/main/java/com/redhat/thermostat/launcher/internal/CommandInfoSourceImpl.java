@@ -49,10 +49,11 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class CommandInfoSourceImpl implements CommandInfoSource {
 
-    private static final Logger logger = Logger.getLogger(CommandInfoSourceImpl.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(CommandInfoSourceImpl.class);
     private Map<String, CommandInfo> commands;
 
     CommandInfoSourceImpl(String thermostatHome) {

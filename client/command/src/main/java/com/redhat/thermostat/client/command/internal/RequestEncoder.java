@@ -52,10 +52,11 @@ import org.jboss.netty.channel.MessageEvent;
 import com.redhat.thermostat.common.command.EncodingHelper;
 import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class RequestEncoder extends MessageEncoder {
 
-    private static final Logger logger = Logger.getLogger(RequestEncoder.class.getName());
+    private static final Logger logger = LoggingUtils.getLogger(RequestEncoder.class);
     
     @Override
     public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) {

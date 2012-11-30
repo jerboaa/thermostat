@@ -46,13 +46,14 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
 
 public class SwingVMKilledListener implements RequestResponseListener {
 
     private final Translate<LocaleResources> t;
-    private static final Logger logger = Logger
-            .getLogger(SwingVMKilledListener.class.getName());
+    private static final Logger logger = LoggingUtils
+            .getLogger(SwingVMKilledListener.class);
 
     public SwingVMKilledListener() {
         this.t = LocaleResources.createLocalizer();

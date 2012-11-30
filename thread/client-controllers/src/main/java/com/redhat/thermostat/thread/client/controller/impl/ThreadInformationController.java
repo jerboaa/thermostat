@@ -52,6 +52,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadTableView.ThreadSelectionAction;
@@ -65,7 +66,7 @@ import com.redhat.thermostat.thread.model.ThreadSummary;
 
 public class ThreadInformationController implements VmInformationServiceController {
 
-    private static final Logger logger = Logger.getLogger(ThreadInformationController.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(ThreadInformationController.class);
     
     private ThreadView view;
     private ThreadCollector collector;

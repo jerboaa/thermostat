@@ -47,10 +47,11 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ProcessStartException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class UnixProcessUtilities implements UNIXProcessHandler {
 
-    private static final Logger logger = Logger.getLogger(UnixProcessUtilities.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(UnixProcessUtilities.class);
     
     private static final UNIXProcessHandler instance = new UnixProcessUtilities();
     public static UNIXProcessHandler getInstance() {

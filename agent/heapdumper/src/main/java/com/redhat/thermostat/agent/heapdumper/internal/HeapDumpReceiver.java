@@ -49,11 +49,12 @@ import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.HeapDAO;
 import com.redhat.thermostat.common.heap.HistogramLoader;
 import com.redhat.thermostat.common.heap.ObjectHistogram;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.HeapInfo;
 
 public class HeapDumpReceiver implements RequestReceiver {
 
-    private static final Logger log = Logger.getLogger(HeapDumpReceiver.class.getName());
+    private static final Logger log = LoggingUtils.getLogger(HeapDumpReceiver.class);
 
     private final HeapDAO heapDao;
 

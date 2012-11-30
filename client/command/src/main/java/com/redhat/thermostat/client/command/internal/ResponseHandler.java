@@ -47,11 +47,12 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ResponseHandler extends SimpleChannelUpstreamHandler {
 
-    private static final Logger logger = Logger.getLogger(
-            ResponseHandler.class.getName());
+    private static final Logger logger = LoggingUtils
+            .getLogger(ResponseHandler.class);
 
     private final Request request;
 

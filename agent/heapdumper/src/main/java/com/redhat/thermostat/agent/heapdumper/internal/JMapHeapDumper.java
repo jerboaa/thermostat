@@ -40,9 +40,11 @@ package com.redhat.thermostat.agent.heapdumper.internal;
 import java.io.IOException;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
+
 class JMapHeapDumper {
 
-    private static final Logger log = Logger.getLogger(JMapHeapDumper.class.getName());
+    private static final Logger log = LoggingUtils.getLogger(JMapHeapDumper.class);
 
     void dumpHeap(String vmId, String filename) throws HeapDumpException {
         try {

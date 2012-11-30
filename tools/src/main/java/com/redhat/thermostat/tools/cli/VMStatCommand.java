@@ -52,6 +52,7 @@ import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.tools.LocaleResources;
 
@@ -59,7 +60,7 @@ public class VMStatCommand extends SimpleCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final Logger log = Logger.getLogger(VMStatCommand.class.getName());
+    private static final Logger log = LoggingUtils.getLogger(VMStatCommand.class);
 
     private static final String CMD_NAME = "vm-stat";
 

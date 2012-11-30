@@ -41,12 +41,13 @@ import java.lang.management.MemoryMXBean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.utils.management.MXBeanConnection;
 import com.redhat.thermostat.utils.management.MXBeanConnector;
 
 public class GC {
 
-    private static final Logger logger = Logger.getLogger(GC.class.getSimpleName());
+    private static final Logger logger = LoggingUtils.getLogger(GC.class);
 
     private MXBeanConnector connector;
     public GC(MXBeanConnector connector) {

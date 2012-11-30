@@ -67,6 +67,7 @@ import org.apache.lucene.store.RAMDirectory;
 import org.apache.lucene.util.Version;
 
 import com.redhat.thermostat.common.dao.HeapDAO;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.Snapshot;
@@ -81,7 +82,7 @@ public class HeapDump {
 
     private static final String INDEX_FIELD_CLASSNAME = "classname";
 
-    private static final Logger log = Logger.getLogger(HeapDump.class.getName());
+    private static final Logger log = LoggingUtils.getLogger(HeapDump.class);
 
     private final HeapInfo heapInfo;
 
