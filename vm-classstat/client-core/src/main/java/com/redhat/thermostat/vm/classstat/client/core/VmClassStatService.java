@@ -34,41 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.vmclassstat;
+package com.redhat.thermostat.vm.classstat.client.core;
 
-import java.util.Objects;
-
-import org.eclipse.swt.widgets.Composite;
-
+import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
-public class VmClassStatViewPart extends VmRefViewPart {
+public class VmClassStatService implements VmInformationService {
+
+    private VmFilter filter = new AlwaysMatchFilter();
+
+    private ApplicationService appSvc;
+    private VmClassStatDAO vmClassStatDao;
+
+    public VmClassStatService(ApplicationService appSvc, VmClassStatDAO vmClassStatDao) {
+        this.appSvc = appSvc;
+        this.vmClassStatDao = vmClassStatDao;
+    }
+    
+    @Override
+    public VmInformationServiceController getInformationServiceController(VmRef ref) {
+        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance().getService(VmClassStatViewProvider.class);
+        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
+    }
 
     @Override
-    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        SWTVmClassStatViewProvider viewProvider = (SWTVmClassStatViewProvider) OSGIUtils
-                .getInstance().getService(VmClassStatViewProvider.class);
-        viewProvider.setParent(parent);
-        VmClassStatDAO classStatDAO = OSGIUtils.getInstance().getService(
-                VmClassStatDAO.class);
-        VmClassStatController controller = createController(classStatDAO, ref,
-                viewProvider);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
+    public VmFilter getFilter() {
+        return filter;
     }
-
-    public VmClassStatController createController(VmClassStatDAO classStatDao,
-            VmRef ref, VmClassStatViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new VmClassStatController(appSvc, classStatDao, ref, viewProvider);
-    }
-
 }

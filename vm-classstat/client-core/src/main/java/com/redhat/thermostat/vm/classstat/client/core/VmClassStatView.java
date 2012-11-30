@@ -34,41 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.vmclassstat;
+package com.redhat.thermostat.vm.classstat.client.core;
 
-import java.util.Objects;
+import java.util.List;
 
-import org.eclipse.swt.widgets.Composite;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
+public abstract class VmClassStatView extends BasicView implements UIComponent {
 
-public class VmClassStatViewPart extends VmRefViewPart {
+    public abstract void clearClassCount();
 
-    @Override
-    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        SWTVmClassStatViewProvider viewProvider = (SWTVmClassStatViewProvider) OSGIUtils
-                .getInstance().getService(VmClassStatViewProvider.class);
-        viewProvider.setParent(parent);
-        VmClassStatDAO classStatDAO = OSGIUtils.getInstance().getService(
-                VmClassStatDAO.class);
-        VmClassStatController controller = createController(classStatDAO, ref,
-                viewProvider);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
-    }
-
-    public VmClassStatController createController(VmClassStatDAO classStatDao,
-            VmRef ref, VmClassStatViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new VmClassStatController(appSvc, classStatDao, ref, viewProvider);
-    }
+    public abstract void addClassCount(List<DiscreteTimeData<Long>> data);
 
 }

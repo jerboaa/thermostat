@@ -136,6 +136,7 @@
     <module>vm-overview</module>
     <module>vm-cpu</module>
     <module>vm-gc</module>
+    <module>vm-classstat</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>

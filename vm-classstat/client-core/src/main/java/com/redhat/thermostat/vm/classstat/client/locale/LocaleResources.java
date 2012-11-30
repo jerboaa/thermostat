@@ -34,41 +34,22 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.vmclassstat;
+package com.redhat.thermostat.vm.classstat.client.locale;
 
-import java.util.Objects;
+import com.redhat.thermostat.common.locale.Translate;
 
-import org.eclipse.swt.widgets.Composite;
+public enum LocaleResources {
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
-
-public class VmClassStatViewPart extends VmRefViewPart {
-
-    @Override
-    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        SWTVmClassStatViewProvider viewProvider = (SWTVmClassStatViewProvider) OSGIUtils
-                .getInstance().getService(VmClassStatViewProvider.class);
-        viewProvider.setParent(parent);
-        VmClassStatDAO classStatDAO = OSGIUtils.getInstance().getService(
-                VmClassStatDAO.class);
-        VmClassStatController controller = createController(classStatDAO, ref,
-                viewProvider);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
+    VM_LOADED_CLASSES,
+    VM_CLASSES_CHART_REAL_TIME_LABEL,
+    VM_CLASSES_CHART_LOADED_CLASSES_LABEL,
+    VM_INFO_TAB_CLASSES,
+    ;
+    
+    public static final String RESOURCE_BUNDLE =
+            "com.redhat.thermostat.vm.classstat.client.locale.strings";
+    
+    public static Translate<LocaleResources> createLocalizer() {
+        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
     }
-
-    public VmClassStatController createController(VmClassStatDAO classStatDao,
-            VmRef ref, VmClassStatViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new VmClassStatController(appSvc, classStatDao, ref, viewProvider);
-    }
-
 }

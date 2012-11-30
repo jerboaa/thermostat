@@ -34,16 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.vmclassstat;
+package com.redhat.thermostat.vm.classstat.client.swing;
 
-import java.awt.EventQueue;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Composite;
+import javax.swing.JComponent;
+import javax.swing.SwingUtilities;
+
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -55,33 +54,42 @@ import org.jfree.data.time.RegularTimePeriod;
 import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
+import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
+import com.redhat.thermostat.client.ui.ComponentVisibleListener;
+import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
 import com.redhat.thermostat.vm.classstat.client.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.chart.common.RecentTimeSeriesChartComposite;
-import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
-public class SWTVmClassStatView extends VmClassStatView implements SWTComponent {
+public class VmClassStatPanel extends VmClassStatView implements SwingComponent {
+
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
+    private HeaderPanel visiblePanel;
     
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    private final TimeSeriesCollection dataset = new TimeSeriesCollection();
 
-    private final TimeSeriesCollection dataset;
-    
-    private JFreeChart chart;
+    private final ActionNotifier<Action> notifier = new ActionNotifier<Action>(this);
 
-    public SWTVmClassStatView(Composite parent) {
-        dataset = new TimeSeriesCollection();
+    public VmClassStatPanel() {
+        visiblePanel = new HeaderPanel();
         // any name works
         dataset.addSeries(new TimeSeries("class-stat"));
-        
-        chart = ChartFactory.createTimeSeriesChart(
+
+        visiblePanel.setHeader(t.localize(LocaleResources.VM_LOADED_CLASSES));
+
+        JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null,
-                translator.localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL),
-                translator.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
+                t.localize(LocaleResources.VM_CLASSES_CHART_REAL_TIME_LABEL),
+                t.localize(LocaleResources.VM_CLASSES_CHART_LOADED_CLASSES_LABEL),
                 dataset,
                 false, false, false);
-        
+
         TickUnits tickUnits = new TickUnits();
         tickUnits.add(new NumberTickUnit(1));
         tickUnits.add(new NumberTickUnit(10));
@@ -90,21 +98,43 @@ public class SWTVmClassStatView extends VmClassStatView implements SWTComponent 
         tickUnits.add(new NumberTickUnit(10000));
         tickUnits.add(new NumberTickUnit(100000));
         tickUnits.add(new NumberTickUnit(1000000));
-        
+
         NumberAxis axis = (NumberAxis) chart.getXYPlot().getRangeAxis();
         axis.setStandardTickUnits(tickUnits);
         axis.setRangeType(RangeType.POSITIVE);
         axis.setAutoRangeMinimumSize(10);
-        
-        Composite chartPanel = new RecentTimeSeriesChartComposite(parent, SWT.NONE, chart);
-        chartPanel.setLayout(new GridLayout());
-        chartPanel.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+
+        JComponent chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
+
+        visiblePanel.setContent(chartPanel);
+
+        visiblePanel.addHierarchyListener(new ComponentVisibleListener() {
+            @Override
+            public void componentShown(Component component) {
+                notifier.fireAction(Action.VISIBLE);
+            }
+
+            @Override
+            public void componentHidden(Component component) {
+                notifier.fireAction(Action.HIDDEN);
+            }
+        });
     }
-    
+
+    @Override
+    public void addActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+
+    @Override
+    public void removeActionListener(ActionListener<Action> listener) {
+        notifier.addActionListener(listener);
+    }
+
     @Override
     public void addClassCount(List<DiscreteTimeData<Long>> data) {
         final List<DiscreteTimeData<Long>> copy = new ArrayList<>(data);
-        EventQueue.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 TimeSeries series = dataset.getSeries(0);
@@ -117,11 +147,12 @@ public class SWTVmClassStatView extends VmClassStatView implements SWTComponent 
                 series.fireSeriesChanged();
             }
         });
+
     }
 
     @Override
     public void clearClassCount() {
-        EventQueue.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
                 TimeSeries series = dataset.getSeries(0);
@@ -129,19 +160,9 @@ public class SWTVmClassStatView extends VmClassStatView implements SWTComponent 
             }
         });
     }
-    
-    public JFreeChart getChart() {
-        return chart;
-    }
 
     @Override
-    public void show() {
-        notifier.fireAction(Action.VISIBLE);
+    public Component getUiComponent() {
+        return visiblePanel;
     }
-
-    @Override
-    public void hide() {
-        notifier.fireAction(Action.HIDDEN);
-    }
-
 }

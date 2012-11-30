@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.eclipse.chart.vmclassstat;
 
-import com.redhat.thermostat.client.vmclassstat.core.VmClassStatView;
-import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
 import com.redhat.thermostat.eclipse.SWTViewProvider;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 public class SWTVmClassStatViewProvider extends SWTViewProvider implements
         VmClassStatViewProvider {

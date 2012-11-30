@@ -127,13 +127,6 @@ to do so, delete this exception statement from your version.
          unpack="false"/>
 
    <plugin
-         id="com.redhat.thermostat.client.classstat.core"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
          id="com.redhat.thermostat.host.overview.client.core"
          download-size="0"
          install-size="0"
@@ -170,6 +163,13 @@ to do so, delete this exception statement from your version.
 
    <plugin
          id="com.redhat.thermostat.storage.mongodb"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.redhat.thermostat.vm.classstat.client.core"
          download-size="0"
          install-size="0"
          version="0.0.0"

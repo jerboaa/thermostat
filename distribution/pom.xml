@@ -373,7 +373,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-vmclassstat-swing</artifactId>
+      <artifactId>thermostat-vm-classstat-client-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

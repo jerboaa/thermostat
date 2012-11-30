@@ -39,8 +39,8 @@ package com.redhat.thermostat.eclipse.chart.vmclassstat;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 /**
  * The activator class controls the plug-in life cycle

@@ -34,41 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.vmclassstat;
+package com.redhat.thermostat.vm.classstat.client.swing;
 
-import java.util.Objects;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import org.eclipse.swt.widgets.Composite;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
-import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
+import javax.swing.JPanel;
 
-public class VmClassStatViewPart extends VmRefViewPart {
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
-    @Override
-    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        SWTVmClassStatViewProvider viewProvider = (SWTVmClassStatViewProvider) OSGIUtils
-                .getInstance().getService(VmClassStatViewProvider.class);
-        viewProvider.setParent(parent);
-        VmClassStatDAO classStatDAO = OSGIUtils.getInstance().getService(
-                VmClassStatDAO.class);
-        VmClassStatController controller = createController(classStatDAO, ref,
-                viewProvider);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
+import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
+import org.fest.swing.edt.GuiActionRunner;
+import org.fest.swing.edt.GuiTask;
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
+
+@RunWith(CacioFESTRunner.class)
+public class VmClassStatPanelTest {
+
+    @BeforeClass
+    public static void setUpOnce() {
+        FailOnThreadViolationRepaintManager.install();
     }
 
-    public VmClassStatController createController(VmClassStatDAO classStatDao,
-            VmRef ref, VmClassStatViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new VmClassStatController(appSvc, classStatDao, ref, viewProvider);
+    @Test
+    public void testAddDataTwice() {
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                VmClassStatPanel panel = new VmClassStatPanel();
+                List<DiscreteTimeData<Long>> data = new ArrayList<>();
+                panel.addClassCount(data);
+                int numComponents = ((JPanel)panel.getUiComponent()).getComponentCount();
+                assertTrue(numComponents > 0);
+                panel.addClassCount(data);
+                assertEquals(numComponents, ((JPanel)panel.getUiComponent()).getComponentCount());
+            }
+        });
     }
 
 }

@@ -48,8 +48,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.vmclassstat.core.VmClassStatController;
-import com.redhat.thermostat.client.vmclassstat.core.VmClassStatViewProvider;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -58,6 +56,8 @@ import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatView;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatViewProvider;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.VmClassStatViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatController;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
