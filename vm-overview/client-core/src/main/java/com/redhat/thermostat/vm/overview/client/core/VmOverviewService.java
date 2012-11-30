@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.vm.overview.client.core.internal.VmOverviewController;
 
 public class VmOverviewService implements VmInformationService {
     

@@ -36,65 +36,22 @@
 
 package com.redhat.thermostat.host.overview.client.swing;
 
-import java.util.Map;
-import java.util.Objects;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 
 public class Activator implements BundleActivator {
     
-    private MultipleServiceTracker tracker;
-    private ServiceRegistration reg;
-
     @Override
     public void start(final BundleContext context) throws Exception {
         HostOverviewViewProvider viewProvider = new SwingHostOverviewViewProvider();
+        // Unregistered on Activator.stop
         context.registerService(HostOverviewViewProvider.class.getName(), viewProvider, null);
-
-        Class<?>[] deps = new Class<?>[] {
-            ApplicationService.class,
-            HostInfoDAO.class,
-            NetworkInterfaceInfoDAO.class,
-        };
-
-        tracker = new MultipleServiceTracker(context, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                NetworkInterfaceInfoDAO networkInfoDAO = (NetworkInterfaceInfoDAO) 
-                        services.get(NetworkInterfaceInfoDAO.class.getName());
-                Objects.requireNonNull(networkInfoDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                HostOverviewService service = new HostOverviewService(appSvc, hostInfoDAO, networkInfoDAO);
-                reg = context.registerService(HostInformationService.class.getName(), service, null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                reg.unregister();
-            }
-
-        });
-        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
     }
 
 }

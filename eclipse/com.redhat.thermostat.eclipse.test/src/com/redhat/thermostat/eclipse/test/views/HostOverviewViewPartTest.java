@@ -37,8 +37,6 @@
 package com.redhat.thermostat.eclipse.test.views;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,21 +46,20 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.internal.views.HostOverviewViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewView;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
-import com.redhat.thermostat.host.overview.client.core.HostOverviewController;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 
 public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
-    private HostOverviewController controller;
+    private HostInformationServiceController controller;
     private SWTHostOverviewViewProvider viewProvider;
     
     @Test
@@ -84,22 +81,17 @@ public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
     @Override
     protected void mockController() {
-        controller = mock(HostOverviewController.class);
+        HostOverviewService service = mock(HostOverviewService.class);
+        controller = mock(HostInformationServiceController.class);
         thermoView = mock(SWTHostOverviewView.class);
 
-        HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
-        NetworkInterfaceInfoDAO netIfaceDao = mock(NetworkInterfaceInfoDAO.class);
+        when(osgi.getService(HostOverviewService.class)).thenReturn(service);
+        when(service.getInformationServiceController(any(HostRef.class))).thenReturn(controller);
+        when(controller.getView()).thenReturn((UIComponent) thermoView);
+        
         viewProvider = mock(SWTHostOverviewViewProvider.class);
-        when(osgi.getService(HostInfoDAO.class)).thenReturn(hostInfoDao);
-        when(osgi.getService(NetworkInterfaceInfoDAO.class)).thenReturn(
-                netIfaceDao);
         when(osgi.getService(HostOverviewViewProvider.class)).thenReturn(
                 viewProvider);
-
-        doReturn(controller).when(((HostOverviewViewPart) view))
-                .createController(any(HostRef.class), same(hostInfoDao),
-                        same(netIfaceDao), same(viewProvider));
-        when(controller.getView()).thenReturn((UIComponent) thermoView);
     }
 
     @Override

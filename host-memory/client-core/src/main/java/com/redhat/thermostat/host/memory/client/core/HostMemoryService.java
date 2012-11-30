@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.host.memory.client.core.internal.HostMemoryController;
 
 public class HostMemoryService implements HostInformationService {
     

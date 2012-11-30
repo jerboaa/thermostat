@@ -36,44 +36,28 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import java.util.Objects;
-
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
-import com.redhat.thermostat.host.memory.client.core.HostMemoryController;
+import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 
 public class HostMemoryViewPart extends HostRefViewPart {
 
     @Override
     protected SWTComponent createControllerView(HostRef ref, Composite parent) {
-        HostInfoDAO hostInfoDao = OSGIUtils.getInstance().getService(
-                HostInfoDAO.class);
-        MemoryStatDAO memoryStatDao = OSGIUtils.getInstance().getService(
-                MemoryStatDAO.class);
         SWTHostMemoryViewProvider viewProvider = (SWTHostMemoryViewProvider) OSGIUtils
                 .getInstance().getService(HostMemoryViewProvider.class);
         viewProvider.setParent(parent);
-        HostMemoryController controller = createController(hostInfoDao,
-                memoryStatDao, ref, viewProvider);
+        
+        HostMemoryService service = OSGIUtils.getInstance().getService(HostMemoryService.class);
+        HostInformationServiceController controller = service.getInformationServiceController(ref);
         SWTComponent view = (SWTComponent) controller.getView();
         return view;
-    }
-
-    public HostMemoryController createController(HostInfoDAO hostInfoDao,
-            MemoryStatDAO memoryStatDao, HostRef ref,
-            HostMemoryViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new HostMemoryController(appSvc, hostInfoDao, memoryStatDao, ref,
-                viewProvider);
     }
 
 }

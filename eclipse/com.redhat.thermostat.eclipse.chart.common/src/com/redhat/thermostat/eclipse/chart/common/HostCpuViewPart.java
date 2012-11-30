@@ -36,43 +36,28 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import java.util.Objects;
-
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
-import com.redhat.thermostat.host.cpu.client.core.HostCpuController;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 
 public class HostCpuViewPart extends HostRefViewPart {
 
     @Override
     protected SWTComponent createControllerView(HostRef ref, Composite parent) {
-        HostInfoDAO hostInfoDao = OSGIUtils.getInstance().getService(
-                HostInfoDAO.class);
-        CpuStatDAO cpuStatDao = OSGIUtils.getInstance().getService(
-                CpuStatDAO.class);
         SWTHostCpuViewProvider viewProvider = (SWTHostCpuViewProvider) OSGIUtils
                 .getInstance().getService(HostCpuViewProvider.class);
         viewProvider.setParent(parent);
 
-        HostCpuController cpuController = createController(hostInfoDao,
-                cpuStatDao, ref, viewProvider);
-        SWTComponent view = (SWTComponent) cpuController.getView();
+        HostCpuService service = OSGIUtils.getInstance().getService(HostCpuService.class);
+        HostInformationServiceController controller = service.getInformationServiceController(ref);
+        SWTComponent view = (SWTComponent) controller.getView();
         return view;
-    }
-
-    public HostCpuController createController(HostInfoDAO hostInfoDao,
-            CpuStatDAO cpuStatDao, HostRef ref, HostCpuViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new HostCpuController(appSvc, hostInfoDao, cpuStatDao, ref, viewProvider);
     }
 
 }

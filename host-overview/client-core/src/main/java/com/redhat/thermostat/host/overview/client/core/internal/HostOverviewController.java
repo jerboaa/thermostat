@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.overview.client.core;
+package com.redhat.thermostat.host.overview.client.core.internal;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +55,8 @@ import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.DisplayableValues;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.locale.LocaleResources;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;

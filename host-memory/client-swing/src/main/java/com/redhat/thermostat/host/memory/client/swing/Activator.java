@@ -36,64 +36,23 @@
 
 package com.redhat.thermostat.host.memory.client.swing;
 
-import java.util.Map;
-import java.util.Objects;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.MemoryStatDAO;
-import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 
 public class Activator implements BundleActivator {
     
-    private MultipleServiceTracker tracker;
-    private ServiceRegistration reg;
 
     @Override
     public void start(final BundleContext context) throws Exception {
         HostMemoryViewProvider viewProvider = new SwingHostMemoryViewProvider();
+        // Unregistered on Activator.stop
         context.registerService(HostMemoryViewProvider.class.getName(), viewProvider, null);
-
-        Class<?>[] deps = new Class<?>[] {
-            ApplicationService.class,
-            HostInfoDAO.class,
-            MemoryStatDAO.class,
-        };
-
-        tracker = new MultipleServiceTracker(context, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                MemoryStatDAO memoryStatDAO = (MemoryStatDAO) services.get(MemoryStatDAO.class.getName());
-                Objects.requireNonNull(memoryStatDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                HostMemoryService service = new HostMemoryService(appSvc, hostInfoDAO, memoryStatDAO);
-                reg = context.registerService(HostInformationService.class.getName(), service, null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                reg.unregister();
-            }
-
-        });
-        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
     }
 
 }

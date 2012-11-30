@@ -34,10 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.cpu.client.core;
+package com.redhat.thermostat.vm.classstat.client.core.internal;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -54,26 +54,24 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.storage.model.VmCpuStat;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuController;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
+import com.redhat.thermostat.storage.model.VmClassStat;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
-
-public class VmCpuControllerTest {
+public class VmClassStatControllerTest {
 
     @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
     public void testChartUpdate() {
 
-        VmCpuStat stat1 = new VmCpuStat(123, 12345, 50.5);
-        List<VmCpuStat> stats = new ArrayList<VmCpuStat>();
+        VmClassStat stat1 = new VmClassStat(123, 12345, 1234);
+        List<VmClassStat> stats = new ArrayList<VmClassStat>();
         stats.add(stat1);
 
-        VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
-        when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
+        VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
+        when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), anyInt())).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
 
         VmRef ref = mock(VmRef.class);
 
@@ -86,29 +84,27 @@ public class VmCpuControllerTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
-        final VmCpuView view = mock(VmCpuView.class);
+        VmClassStatView view = mock(VmClassStatView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         
-        VmCpuViewProvider viewProvider = mock(VmCpuViewProvider.class);
+        VmClassStatViewProvider viewProvider = mock(VmClassStatViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        VmCpuController controller = new VmCpuController(appSvc, vmCpuStatDAO, ref, viewProvider);
+        VmClassStatController controller = new VmClassStatController(appSvc, vmClassStatDAO, ref, viewProvider);
 
-        ActionListener<VmCpuView.Action> l = viewArgumentCaptor.getValue();
+        ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
 
-        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.VISIBLE));
+        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.VISIBLE));
 
         verify(timer).start();
-
         timerActionCaptor.getValue().run();
+        verify(view).addClassCount(any(List.class));
 
-        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.HIDDEN));
+        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.HIDDEN));
 
         verify(timer).stop();
-
-        verify(view).addData(any(List.class));
-        // We don't verify atMost() since we might increase the update rate in the future.
     }
+
 }

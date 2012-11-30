@@ -37,8 +37,6 @@
 package com.redhat.thermostat.eclipse.test.views;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,22 +46,21 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcView;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmGcViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
-import com.redhat.thermostat.vm.gc.client.core.VmGcController;
+import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmGcViewProvider viewProvider;
-    private VmGcController controller;
+    private VmInformationServiceController controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -85,20 +82,16 @@ public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     @Override
     protected void mockController() {
-        controller = mock(VmGcController.class);
+        VmGcService service = mock(VmGcService.class);
+        controller = mock(VmInformationServiceController.class);
         thermoView = mock(SWTVmGcView.class);
 
-        VmMemoryStatDAO memStatDao = mock(VmMemoryStatDAO.class);
-        VmGcStatDAO gcStatDao = mock(VmGcStatDAO.class);
-        viewProvider = mock(SWTVmGcViewProvider.class);
-        when(osgi.getService(VmMemoryStatDAO.class)).thenReturn(memStatDao);
-        when(osgi.getService(VmGcStatDAO.class)).thenReturn(gcStatDao);
-        when(osgi.getService(VmGcViewProvider.class)).thenReturn(viewProvider);
-
-        doReturn(controller).when(((VmGcViewPart) view)).createController(
-                same(memStatDao), same(gcStatDao), any(VmRef.class),
-                same(viewProvider));
+        when(osgi.getService(VmGcService.class)).thenReturn(service);
+        when(service.getInformationServiceController(any(VmRef.class))).thenReturn(controller);
         when(controller.getView()).thenReturn(thermoView);
+
+        viewProvider = mock(SWTVmGcViewProvider.class);
+        when(osgi.getService(VmGcViewProvider.class)).thenReturn(viewProvider);
     }
 
     @Override

@@ -37,8 +37,6 @@
 package com.redhat.thermostat.eclipse.test.views;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -50,21 +48,21 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuView;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmCpuViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuController;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmCpuViewProvider viewProvider;
-    private VmCpuController controller;
+    private VmInformationServiceController controller;
 
     @Test
     public void testSelectionHostRef() throws Exception {
@@ -112,17 +110,16 @@ public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     @Override
     protected void mockController() {
-        controller = mock(VmCpuController.class);
+        VmCpuService service = mock(VmCpuService.class);
+        controller = mock(VmInformationServiceController.class);
         thermoView = mock(SWTVmCpuView.class);
-
-        VmCpuStatDAO cpuStatDao = mock(VmCpuStatDAO.class);
-        viewProvider = mock(SWTVmCpuViewProvider.class);
-        when(osgi.getService(VmCpuStatDAO.class)).thenReturn(cpuStatDao);
-        when(osgi.getService(VmCpuViewProvider.class)).thenReturn(viewProvider);
-
-        doReturn(controller).when(((VmCpuViewPart) view)).createController(
-                same(cpuStatDao), any(VmRef.class), same(viewProvider));
+        
+        when(osgi.getService(VmCpuService.class)).thenReturn(service);
+        when(service.getInformationServiceController(any(VmRef.class))).thenReturn(controller);
         when(controller.getView()).thenReturn(thermoView);
+
+        viewProvider = mock(SWTVmCpuViewProvider.class);
+        when(osgi.getService(VmCpuViewProvider.class)).thenReturn(viewProvider);
     }
 
     @Override

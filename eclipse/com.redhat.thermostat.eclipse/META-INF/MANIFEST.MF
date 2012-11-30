@@ -10,6 +10,7 @@ Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui
 Import-Package: com.redhat.thermostat.client.core.views,
+ com.redhat.thermostat.client.core.controllers,
  com.redhat.thermostat.client.locale,
  com.redhat.thermostat.client.ui,
  com.redhat.thermostat.common,

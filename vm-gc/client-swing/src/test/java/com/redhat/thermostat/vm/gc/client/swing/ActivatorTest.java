@@ -37,62 +37,15 @@
 package com.redhat.thermostat.vm.gc.client.swing;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
-import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class ActivatorTest {
     
-    @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        // View provider registers unconditionally
-        assertEquals(1, context.getAllServices().size());
-        assertNotSame(1, context.getServiceListeners().size());
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-    }
-
-    @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
-        VmGcStatDAO vmGcStatDAO = mock(VmGcStatDAO.class);
-        ApplicationService appSvc = mock(ApplicationService.class);
-
-        context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
-        context.registerService(VmGcStatDAO.class, vmGcStatDAO, null);
-        context.registerService(ApplicationService.class, appSvc, null);
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(VmInformationService.class.getName(), VmGcService.class));
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-        assertEquals(4, context.getAllServices().size());
-    }
-
     @Test
     public void verifyStartRegistersViewProvider() throws Exception {
         StubBundleContext ctx = new StubBundleContext();

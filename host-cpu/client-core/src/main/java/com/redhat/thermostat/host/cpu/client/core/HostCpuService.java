@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.host.cpu.client.core.internal.HostCpuController;
 
 public class HostCpuService implements HostInformationService {
     

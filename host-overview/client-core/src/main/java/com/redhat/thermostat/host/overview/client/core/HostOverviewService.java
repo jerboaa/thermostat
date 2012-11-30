@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.host.overview.client.core.internal.HostOverviewController;
 
 public class HostOverviewService implements HostInformationService {
     

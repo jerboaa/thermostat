@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
 
 public class VmCpuService implements VmInformationService {
     

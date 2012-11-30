@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.vm.gc.client.core.internal.VmGcController;
 
 public class VmGcService implements VmInformationService {
     

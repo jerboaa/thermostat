@@ -34,71 +34,63 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.vm.cpu.client.core.internal;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
-import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
+import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
-import com.redhat.thermostat.storage.model.VmClassStat;
-import com.redhat.thermostat.vm.classstat.client.locale.LocaleResources;
+import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
+import com.redhat.thermostat.vm.cpu.client.locale.LocaleResources;
 
-public class VmClassStatController implements VmInformationServiceController {
-
+public class VmCpuController implements VmInformationServiceController {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private class UpdateChartData implements Runnable {
-        @Override
-        public void run() {
-            long timeStamp = lastSeenTimeStamp;
-            List<VmClassStat> latestClassStats = dao.getLatestClassStats(ref, timeStamp);
-            List<DiscreteTimeData<Long>> timeData = new ArrayList<>();
-            for (VmClassStat stat : latestClassStats) {
-                timeData.add(new DiscreteTimeData<Long>(stat.getTimeStamp(), stat.getLoadedClasses()));
-                timeStamp = Math.max(timeStamp, stat.getTimeStamp());
-            }
-            classesView.addClassCount(timeData);
-            lastSeenTimeStamp = timeStamp;
-        }
-    }
-
-    private final VmClassStatView classesView;
     private final VmRef ref;
-    private final VmClassStatDAO dao;
+    private final VmCpuStatDAO dao;
+    private final VmCpuView view;
+
     private final Timer timer;
 
-    private volatile long lastSeenTimeStamp = Long.MIN_VALUE;
+    private long lastSeenTimeStamp = Long.MIN_VALUE;
 
-    public VmClassStatController(ApplicationService appSvc, VmClassStatDAO vmClassStatDao, VmRef ref, VmClassStatViewProvider viewProvider) {
+    public VmCpuController(ApplicationService appSvc, VmCpuStatDAO vmCpuStatDao, VmRef ref, VmCpuViewProvider provider) {
         this.ref = ref;
-        dao = vmClassStatDao;
+        dao = vmCpuStatDao;
         timer = appSvc.getTimerFactory().createTimer();
 
-        timer.setAction(new UpdateChartData());
-        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+        timer.setAction(new Runnable() {
+            @Override
+            public void run() {
+                doUpdateVmCpuCharts();
+            }
+        });
         timer.setTimeUnit(TimeUnit.SECONDS);
         timer.setDelay(5);
         timer.setInitialDelay(0);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
 
-        classesView = viewProvider.createView();
+        view = provider.createView();
 
-        classesView.addActionListener(new ActionListener<VmClassStatView.Action>() {
+        view.addActionListener(new ActionListener<VmCpuView.Action>() {
             @Override
             public void actionPerformed(ActionEvent<Action> actionEvent) {
-                switch(actionEvent.getActionId()) {
+                switch (actionEvent.getActionId()) {
                     case HIDDEN:
                         stop();
                         break;
@@ -106,7 +98,7 @@ public class VmClassStatController implements VmInformationServiceController {
                         start();
                         break;
                     default:
-                        throw new NotImplementedException("unknown action: " + actionEvent.getActionId());
+                        throw new NotImplementedException("unknown event : " + actionEvent.getActionId());
                 }
             }
         });
@@ -116,18 +108,29 @@ public class VmClassStatController implements VmInformationServiceController {
         timer.start();
     }
 
+    private void doUpdateVmCpuCharts() {
+        List<VmCpuStat> stats = dao.getLatestVmCpuStats(ref, lastSeenTimeStamp);
+        List<DiscreteTimeData<? extends Number>> toDisplay = new ArrayList<>(stats.size());
+        for (VmCpuStat stat: stats) {
+            DiscreteTimeData<? extends Number> data =
+                    new DiscreteTimeData<Number>(stat.getTimeStamp(), stat.getCpuLoad());
+            toDisplay.add(data);
+            lastSeenTimeStamp = Math.max(lastSeenTimeStamp, stat.getTimeStamp());
+        }
+
+        view.addData(toDisplay);
+    }
+
     private void stop() {
         timer.stop();
     }
 
+    public UIComponent getView() {
+        return (UIComponent) view;
+    }
+
     @Override
     public String getLocalizedName() {
-        return translator.localize(LocaleResources.VM_INFO_TAB_CLASSES);
+        return translator.localize(LocaleResources.VM_INFO_TAB_CPU);
     }
-
-    @Override
-    public UIComponent getView() {
-        return (UIComponent) classesView;
-    }
-
 }

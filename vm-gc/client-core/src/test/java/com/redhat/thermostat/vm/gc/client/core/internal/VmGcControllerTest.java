@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.client.core;
+package com.redhat.thermostat.vm.gc.client.core.internal;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -64,9 +64,9 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.VmGcStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.vm.gc.client.core.VmGcController;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
+import com.redhat.thermostat.vm.gc.client.core.internal.VmGcController;
 
 public class VmGcControllerTest {
 

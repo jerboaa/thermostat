@@ -37,8 +37,6 @@
 package com.redhat.thermostat.eclipse.test.views;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -48,21 +46,21 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.Activator;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatView;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatViewProvider;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.VmClassStatViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatController;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmClassStatViewProvider viewProvider;
-    private VmClassStatController controller;
+    private VmInformationServiceController controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -84,17 +82,16 @@ public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     @Override
     protected void mockController() {
-        controller = mock(VmClassStatController.class);
+        VmClassStatService service = mock(VmClassStatService.class);
+        controller = mock(VmInformationServiceController.class);
         thermoView = mock(SWTVmClassStatView.class);
 
-        VmClassStatDAO classStatDao = mock(VmClassStatDAO.class);
-        viewProvider = mock(SWTVmClassStatViewProvider.class);
-        when(osgi.getService(VmClassStatDAO.class)).thenReturn(classStatDao);
-        when(osgi.getService(VmClassStatViewProvider.class)).thenReturn(viewProvider);
-
-        doReturn(controller).when(((VmClassStatViewPart) view)).createController(
-                same(classStatDao), any(VmRef.class), same(viewProvider));
+        when(osgi.getService(VmClassStatService.class)).thenReturn(service);
+        when(service.getInformationServiceController(any(VmRef.class))).thenReturn(controller);
         when(controller.getView()).thenReturn(thermoView);
+        
+        viewProvider = mock(SWTVmClassStatViewProvider.class);
+        when(osgi.getService(VmClassStatViewProvider.class)).thenReturn(viewProvider);
     }
 
     @Override

@@ -6,7 +6,8 @@ Bundle-Version: 0.5.0.qualifier
 Bundle-Activator: com.redhat.thermostat.eclipse.chart.common.Activator
 Bundle-Vendor: Red Hat Inc.
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
-Import-Package: com.redhat.thermostat.client.core.views,
+Import-Package: com.redhat.thermostat.client.core.controllers,
+ com.redhat.thermostat.client.core.views,
  com.redhat.thermostat.client.locale,
  com.redhat.thermostat.client.osgi.service,
  com.redhat.thermostat.client.ui,

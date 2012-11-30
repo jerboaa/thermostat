@@ -36,64 +36,22 @@
 
 package com.redhat.thermostat.host.cpu.client.swing;
 
-import java.util.Map;
-import java.util.Objects;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 
 public class Activator implements BundleActivator {
     
-    private MultipleServiceTracker tracker;
-    private ServiceRegistration reg;
-
     @Override
-    public void start(final BundleContext context) throws Exception {
+    public void start(BundleContext context) throws Exception {
         HostCpuViewProvider viewProvider = new SwingHostCpuViewProvider();
+        // Unregistered on Activator.stop
         context.registerService(HostCpuViewProvider.class.getName(), viewProvider, null);
-
-        Class<?>[] deps = new Class<?>[] {
-            HostInfoDAO.class,
-            CpuStatDAO.class,
-            ApplicationService.class
-        };
-
-        tracker = new MultipleServiceTracker(context, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                CpuStatDAO cpuStatDAO = (CpuStatDAO) services.get(CpuStatDAO.class.getName());
-                Objects.requireNonNull(cpuStatDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                HostCpuService service = new HostCpuService(appSvc, hostInfoDAO, cpuStatDAO);
-                reg = context.registerService(HostInformationService.class.getName(), service, null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                reg.unregister();
-            }
-
-        });
-        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
     }
 
 }

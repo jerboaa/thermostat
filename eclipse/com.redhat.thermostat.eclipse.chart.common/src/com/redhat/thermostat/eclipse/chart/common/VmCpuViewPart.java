@@ -36,39 +36,28 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import java.util.Objects;
-
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuController;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class VmCpuViewPart extends VmRefViewPart {
 
     @Override
     protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        VmCpuStatDAO vmCpuStatDao = OSGIUtils.getInstance().getService(
-                VmCpuStatDAO.class);
         SWTVmCpuViewProvider viewProvider = (SWTVmCpuViewProvider) OSGIUtils
                 .getInstance().getService(VmCpuViewProvider.class);
         viewProvider.setParent(parent);
-        VmCpuController controller = createController(vmCpuStatDao, ref,
-                viewProvider);
+        
+        VmCpuService service = OSGIUtils.getInstance().getService(VmCpuService.class);
+        VmInformationServiceController controller = service.getInformationServiceController(ref);
         SWTComponent view = (SWTComponent) controller.getView();
         return view;
-    }
-
-    public VmCpuController createController(VmCpuStatDAO vmCpuStatDao,
-            VmRef ref, VmCpuViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new VmCpuController(appSvc, vmCpuStatDao, ref, viewProvider);
     }
 
 }

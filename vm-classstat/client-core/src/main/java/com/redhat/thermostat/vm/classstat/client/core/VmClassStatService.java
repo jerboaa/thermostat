@@ -44,6 +44,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatController;
 
 public class VmClassStatService implements VmInformationService {
 

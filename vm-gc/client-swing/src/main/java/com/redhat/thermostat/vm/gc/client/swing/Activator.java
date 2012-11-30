@@ -36,63 +36,22 @@
 
 package com.redhat.thermostat.vm.gc.client.swing;
 
-import java.util.Map;
-import java.util.Objects;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class Activator implements BundleActivator {
 
-    private MultipleServiceTracker tracker;
-    private ServiceRegistration reg;
-
     @Override
     public void start(final BundleContext context) throws Exception {
         VmGcViewProvider viewProvider = new SwingVmGcViewProvider();
+        // Unregistered on Activator.stop
         context.registerService(VmGcViewProvider.class.getName(), viewProvider, null);
-
-        Class<?>[] deps = new Class<?>[] {
-            ApplicationService.class,
-            VmMemoryStatDAO.class,
-            VmGcStatDAO.class,
-        };
-
-        tracker = new MultipleServiceTracker(context, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmMemoryStatDAO vmMemoryStatDAO = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
-                Objects.requireNonNull(vmMemoryStatDAO);
-                VmGcStatDAO vmGcStatDAO = (VmGcStatDAO) services.get(VmGcStatDAO.class.getName());
-                Objects.requireNonNull(vmGcStatDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                VmGcService service = new VmGcService(appSvc, vmMemoryStatDAO, vmGcStatDAO);
-                reg = context.registerService(VmInformationService.class.getName(), service, null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                reg.unregister();
-            }
-
-        });
-        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
     }
 
 }

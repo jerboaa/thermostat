@@ -36,58 +36,21 @@
 
 package com.redhat.thermostat.vm.classstat.client.swing;
 
-import java.util.Map;
-import java.util.Objects;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 public class Activator implements BundleActivator {
 
-    private MultipleServiceTracker classStatTracker;
-    private ServiceRegistration classStatRegistration;
-
     @Override
     public void start(final BundleContext context) throws Exception {
         VmClassStatViewProvider viewProvider = new SwingVmClassStatViewProvider();
+        // Unregistered on Activator.stop
         context.registerService(VmClassStatViewProvider.class.getName(), viewProvider, null);
-
-        Class<?>[] deps = new Class<?>[] {
-            ApplicationService.class,
-            VmClassStatDAO.class,
-        };
-
-        classStatTracker = new MultipleServiceTracker(context, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmClassStatDAO dao = (VmClassStatDAO) services.get(VmClassStatDAO.class.getName());
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(dao);
-                VmClassStatService service = new VmClassStatService(appSvc, dao);
-                classStatRegistration = context.registerService(VmInformationService.class.getName(), service, null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                classStatRegistration.unregister();
-            }
-
-        });
-        classStatTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        classStatTracker.close();
     }
 }

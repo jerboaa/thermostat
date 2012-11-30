@@ -36,60 +36,22 @@
 
 package com.redhat.thermostat.vm.cpu.client.swing;
 
-import java.util.Map;
-import java.util.Objects;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class Activator implements BundleActivator {
     
-    private MultipleServiceTracker tracker;
-    private ServiceRegistration reg;
-
     @Override
     public void start(final BundleContext context) throws Exception {
         VmCpuViewProvider viewProvider = new SwingVmCpuViewProvider();
+        // Unregistered on Activator.stop
         context.registerService(VmCpuViewProvider.class.getName(), viewProvider, null);
-
-        Class<?>[] deps = new Class<?>[] {
-                VmCpuStatDAO.class,
-                ApplicationService.class
-            };
-
-        tracker = new MultipleServiceTracker(context, deps, new Action() {
-
-            @Override
-            public void dependenciesAvailable(Map<String, Object> services) {
-                VmCpuStatDAO vmCpuStatDAO = (VmCpuStatDAO) services.get(VmCpuStatDAO.class.getName());
-                Objects.requireNonNull(vmCpuStatDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                VmCpuService service = new VmCpuService(appSvc, vmCpuStatDAO);
-                reg = context.registerService(VmInformationService.class.getName(), service, null);
-            }
-
-            @Override
-            public void dependenciesUnavailable() {
-                reg.unregister();
-            }
-
-        });
-        tracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        tracker.close();
     }
 
 }

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.overview.client.core;
+package com.redhat.thermostat.vm.overview.client.core.internal;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -53,6 +53,8 @@ import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
+import com.redhat.thermostat.vm.overview.client.core.VmOverviewViewProvider;
 import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
 
 public class VmOverviewController implements VmInformationServiceController {

@@ -34,10 +34,10 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.vm.cpu.client.core.internal;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -54,25 +54,26 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
+import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.storage.model.VmClassStat;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
+import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
+import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
+import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
 
-public class VmClassStatControllerTest {
+
+public class VmCpuControllerTest {
 
     @SuppressWarnings({ "unchecked", "rawtypes" }) // any(List.class)
     @Test
     public void testChartUpdate() {
 
-        VmClassStat stat1 = new VmClassStat(123, 12345, 1234);
-        List<VmClassStat> stats = new ArrayList<VmClassStat>();
+        VmCpuStat stat1 = new VmCpuStat(123, 12345, 50.5);
+        List<VmCpuStat> stats = new ArrayList<VmCpuStat>();
         stats.add(stat1);
 
-        VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
-        when(vmClassStatDAO.getLatestClassStats(any(VmRef.class), anyInt())).thenReturn(stats).thenReturn(new ArrayList<VmClassStat>());
+        VmCpuStatDAO vmCpuStatDAO = mock(VmCpuStatDAO.class);
+        when(vmCpuStatDAO.getLatestVmCpuStats(any(VmRef.class), eq(Long.MIN_VALUE))).thenReturn(stats).thenReturn(new ArrayList<VmCpuStat>());
 
         VmRef ref = mock(VmRef.class);
 
@@ -85,27 +86,29 @@ public class VmClassStatControllerTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
 
-        VmClassStatView view = mock(VmClassStatView.class);
+        final VmCpuView view = mock(VmCpuView.class);
         ArgumentCaptor<ActionListener> viewArgumentCaptor = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(view).addActionListener(viewArgumentCaptor.capture());
         
-        VmClassStatViewProvider viewProvider = mock(VmClassStatViewProvider.class);
+        VmCpuViewProvider viewProvider = mock(VmCpuViewProvider.class);
         when(viewProvider.createView()).thenReturn(view);
 
         @SuppressWarnings("unused")
-        VmClassStatController controller = new VmClassStatController(appSvc, vmClassStatDAO, ref, viewProvider);
+        VmCpuController controller = new VmCpuController(appSvc, vmCpuStatDAO, ref, viewProvider);
 
-        ActionListener<VmClassStatView.Action> l = viewArgumentCaptor.getValue();
+        ActionListener<VmCpuView.Action> l = viewArgumentCaptor.getValue();
 
-        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.VISIBLE));
+        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.VISIBLE));
 
         verify(timer).start();
-        timerActionCaptor.getValue().run();
-        verify(view).addClassCount(any(List.class));
 
-        l.actionPerformed(new ActionEvent<>(view, VmClassStatView.Action.HIDDEN));
+        timerActionCaptor.getValue().run();
+
+        l.actionPerformed(new ActionEvent<>(view, VmCpuView.Action.HIDDEN));
 
         verify(timer).stop();
-    }
 
+        verify(view).addData(any(List.class));
+        // We don't verify atMost() since we might increase the update rate in the future.
+    }
 }

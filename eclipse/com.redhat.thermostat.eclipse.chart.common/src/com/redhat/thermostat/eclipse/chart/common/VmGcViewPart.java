@@ -36,43 +36,28 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import java.util.Objects;
-
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
+import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.vm.gc.client.core.VmGcController;
+import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class VmGcViewPart extends VmRefViewPart {
 
     @Override
     protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        VmMemoryStatDAO vmMemoryStatDao = OSGIUtils.getInstance().getService(
-                VmMemoryStatDAO.class);
-        VmGcStatDAO vmGcStatDao = OSGIUtils.getInstance().getService(
-                VmGcStatDAO.class);
         SWTVmGcViewProvider viewProvider = (SWTVmGcViewProvider) OSGIUtils.getInstance().getService(
                 VmGcViewProvider.class);
         viewProvider.setParent(parent);
-        VmGcController controller = createController(vmMemoryStatDao, vmGcStatDao, ref,
-                viewProvider);
+        
+        VmGcService service = OSGIUtils.getInstance().getService(VmGcService.class);
+        VmInformationServiceController controller = service.getInformationServiceController(ref);
         SWTComponent view = (SWTComponent) controller.getView();
         return view;
-    }
-
-    public VmGcController createController(VmMemoryStatDAO vmMemoryStatDao,
-            VmGcStatDAO vmGcStatDao, VmRef ref, VmGcViewProvider viewProvider) {
-        ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-        Objects.requireNonNull(appSvc);
-        return new VmGcController(appSvc, vmMemoryStatDao, vmGcStatDao, ref,
-                viewProvider);
     }
 
 }

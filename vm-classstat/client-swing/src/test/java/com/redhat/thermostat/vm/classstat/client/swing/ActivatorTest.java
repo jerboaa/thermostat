@@ -37,58 +37,14 @@
 package com.redhat.thermostat.vm.classstat.client.swing;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 public class ActivatorTest {
-
-    @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        // View provider registers unconditionally
-        assertEquals(1, context.getAllServices().size());
-        assertNotSame(1, context.getServiceListeners().size());
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-    }
-
-    @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        ApplicationService appService = mock(ApplicationService.class);
-        VmClassStatDAO daoService = mock(VmClassStatDAO.class);
-
-        context.registerService(ApplicationService.class, appService, null);
-        context.registerService(VmClassStatDAO.class, daoService, null);
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(VmInformationService.class.getName(), VmClassStatService.class));
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-        assertEquals(3, context.getAllServices().size());
-    }
 
     @Test
     public void verifyStartRegistersViewProvider() throws Exception {

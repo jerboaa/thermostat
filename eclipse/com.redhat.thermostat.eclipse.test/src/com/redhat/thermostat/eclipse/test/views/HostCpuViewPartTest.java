@@ -37,8 +37,6 @@
 package com.redhat.thermostat.eclipse.test.views;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -50,9 +48,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -60,13 +57,13 @@ import com.redhat.thermostat.eclipse.chart.common.HostCpuViewPart;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostCpuView;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostCpuViewProvider;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
-import com.redhat.thermostat.host.cpu.client.core.HostCpuController;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 
 public class HostCpuViewPartTest extends AbstractRefViewPartTest<HostRef> {
     
     private SWTHostCpuViewProvider viewProvider;
-    private HostCpuController controller;
+    private HostInformationServiceController controller;
 
     @Test
     public void testSetFocus() throws Exception {
@@ -136,21 +133,17 @@ public class HostCpuViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
     @Override
     protected void mockController() {
-        controller = mock(HostCpuController.class);
+        HostCpuService service = mock(HostCpuService.class);
+        controller = mock(HostInformationServiceController.class);
         thermoView = mock(SWTHostCpuView.class);
-
-        HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
-        CpuStatDAO cpuStatDao = mock(CpuStatDAO.class);
+        
+        when(osgi.getService(HostCpuService.class)).thenReturn(service);
+        when(service.getInformationServiceController(any(HostRef.class))).thenReturn(controller);
+        when(controller.getView()).thenReturn((UIComponent) thermoView);
+        
         viewProvider = mock(SWTHostCpuViewProvider.class);
-        when(osgi.getService(HostInfoDAO.class)).thenReturn(hostInfoDao);
-        when(osgi.getService(CpuStatDAO.class)).thenReturn(cpuStatDao);
         when(osgi.getService(HostCpuViewProvider.class)).thenReturn(
                 viewProvider);
-
-        doReturn(controller).when(((HostCpuViewPart) view)).createController(
-                same(hostInfoDao), same(cpuStatDao), any(HostRef.class),
-                same(viewProvider));
-        when(controller.getView()).thenReturn((UIComponent) thermoView);
     }
 
     @Override

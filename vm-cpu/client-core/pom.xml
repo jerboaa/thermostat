@@ -17,13 +17,16 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package></Private-Package>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.cpu.client.core</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.vm.cpu.client.core.internal.Activator</Bundle-Activator>
             <Export-Package>
               com.redhat.thermostat.vm.cpu.client.core,
               com.redhat.thermostat.vm.cpu.client.locale
             </Export-Package>
+            <Private-Package>
+              com.redhat.thermostat.vm.cpu.client.core.internal
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
