@@ -34,53 +34,30 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.cpu.client.core;
+package com.redhat.thermostat.client.core.internal;
 
-import com.redhat.thermostat.client.core.HostFilter;
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.host.cpu.client.core.internal.HostCpuController;
+import java.util.Comparator;
 
-public class HostCpuService implements HostInformationService {
-    
-    private static final int PRIORITY = PRIORITY_CPU_GROUP;
-    private static final HostFilter FILTER = new HostFilter() {
-        @Override
-        public boolean matches(HostRef toMatch) {
-            return true;
+import com.redhat.thermostat.client.core.InformationService;
+
+public class InformationServiceComparator<T extends InformationService>
+        implements Comparator<T> {
+
+    @Override
+    public int compare(T o1, T o2) {
+        int result = o1.getPriority() - o2.getPriority();
+        // Break ties using class name
+        if (result == 0) {
+            result = getName(o1).compareTo(getName(o2));
         }
-    };
-
-    private ApplicationService appSvc;
-    private HostInfoDAO hostInfoDAO;
-    private CpuStatDAO cpuStatDAO;
+        return result;
+    }
     
-    public HostCpuService(ApplicationService appSvc, HostInfoDAO hostInfoDAO, CpuStatDAO cpuStatDAO) {
-        this.appSvc = appSvc;
-        this.hostInfoDAO = hostInfoDAO;
-        this.cpuStatDAO = cpuStatDAO;
-    }
-
-    @Override
-    public HostFilter getFilter() {
-        return FILTER;
-    }
-
-    @Override
-    public HostInformationServiceController getInformationServiceController(
-            HostRef ref) {
-        HostCpuViewProvider provider = OSGIUtils.getInstance().getService(HostCpuViewProvider.class);
-        return new HostCpuController(appSvc, hostInfoDAO, cpuStatDAO, ref, provider);
-    }
-
-    @Override
-    public int getPriority() {
-        return PRIORITY;
+    /*
+     * Extracted for testing purposes.
+     */
+    String getName(T object) {
+        return object.getClass().getName();
     }
 
 }

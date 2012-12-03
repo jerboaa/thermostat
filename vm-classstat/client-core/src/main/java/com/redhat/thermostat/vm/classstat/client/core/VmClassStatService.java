@@ -48,6 +48,7 @@ import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatContro
 
 public class VmClassStatService implements VmInformationService {
 
+    private static final int PRIORITY = PRIORITY_MEMORY_GROUP + 20;
     private VmFilter filter = new AlwaysMatchFilter();
 
     private ApplicationService appSvc;
@@ -67,5 +68,10 @@ public class VmClassStatService implements VmInformationService {
     @Override
     public VmFilter getFilter() {
         return filter;
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY;
     }
 }

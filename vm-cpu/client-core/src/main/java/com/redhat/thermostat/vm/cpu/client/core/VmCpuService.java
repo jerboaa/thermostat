@@ -48,6 +48,7 @@ import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
 
 public class VmCpuService implements VmInformationService {
     
+    private static final int PRIORITY = PRIORITY_CPU_GROUP;
     private static final VmFilter FILTER = new AlwaysMatchFilter();
 
     private ApplicationService appSvc;
@@ -68,6 +69,11 @@ public class VmCpuService implements VmInformationService {
     @Override
     public VmFilter getFilter() {
         return FILTER;
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY;
     }
 
 }

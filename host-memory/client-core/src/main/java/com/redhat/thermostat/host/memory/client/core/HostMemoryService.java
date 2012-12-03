@@ -48,6 +48,7 @@ import com.redhat.thermostat.host.memory.client.core.internal.HostMemoryControll
 
 public class HostMemoryService implements HostInformationService {
     
+    private static final int PRIORITY = PRIORITY_MEMORY_GROUP;
     private static final HostFilter FILTER = new HostFilter() {
         @Override
         public boolean matches(HostRef toMatch) {
@@ -75,6 +76,11 @@ public class HostMemoryService implements HostInformationService {
             HostRef ref) {
         HostMemoryViewProvider provider = OSGIUtils.getInstance().getService(HostMemoryViewProvider.class);
         return new HostMemoryController(appSvc, hostInfoDAO, memoryStatDAO, ref, provider);
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY;
     }
 
 }

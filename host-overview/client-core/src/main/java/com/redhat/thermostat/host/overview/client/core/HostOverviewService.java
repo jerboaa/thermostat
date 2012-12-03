@@ -48,6 +48,7 @@ import com.redhat.thermostat.host.overview.client.core.internal.HostOverviewCont
 
 public class HostOverviewService implements HostInformationService {
     
+    private static final int PRIORITY = PRIORITY_DEFAULT_GROUP;
     private static final HostFilter FILTER = new HostFilter() {
         @Override
         public boolean matches(HostRef toMatch) {
@@ -75,6 +76,11 @@ public class HostOverviewService implements HostInformationService {
             HostRef ref) {
         HostOverviewViewProvider provider = OSGIUtils.getInstance().getService(HostOverviewViewProvider.class);
         return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO, ref, provider);
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY;
     }
 
 }

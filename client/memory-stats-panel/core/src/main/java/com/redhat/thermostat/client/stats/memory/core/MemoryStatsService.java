@@ -49,6 +49,7 @@ import com.redhat.thermostat.gc.remote.common.GCRequest;
 
 public class MemoryStatsService implements VmInformationService {
     
+    private static final int PRIORITY = PRIORITY_MEMORY_GROUP + 40;
     private VmFilter filter = new AlwaysMatchFilter();
 
     private ApplicationService appSvc;
@@ -72,5 +73,10 @@ public class MemoryStatsService implements VmInformationService {
     @Override
     public VmFilter getFilter() {
         return filter;
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY;
     }
 }

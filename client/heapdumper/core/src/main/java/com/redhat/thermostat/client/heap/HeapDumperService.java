@@ -48,6 +48,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 
 public class HeapDumperService implements VmInformationService {
     
+    private static final int PRIORITY = PRIORITY_MEMORY_GROUP + 60;
     private ApplicationService appService;
     private AgentInfoDAO agentInfoDao;
     private VmMemoryStatDAO vmMemoryStatDao;
@@ -80,5 +81,10 @@ public class HeapDumperService implements VmInformationService {
     @Override
     public VmFilter getFilter() {
         return filter;
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY;
     }
 }

@@ -41,7 +41,6 @@ import com.redhat.thermostat.common.dao.HostRef;
 
 public interface HostInformationService extends InformationService {
 
-    @Override
     public HostFilter getFilter();
 
     public HostInformationServiceController getInformationServiceController(HostRef ref);

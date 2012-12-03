@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.ui;
 
 import java.util.Collection;
+import java.util.List;
 
 import com.redhat.thermostat.client.core.HostInformationService;
 import com.redhat.thermostat.client.core.VmInformationService;
@@ -58,7 +59,7 @@ public interface UiFacadeFactory {
 
     public HostInformationController getHostController(HostRef ref);
     
-    Collection<HostInformationService> getHostInformationServices();
+    List<HostInformationService> getHostInformationServices();
 
     void addHostInformationService(HostInformationService hostInfoService);
 
@@ -66,7 +67,7 @@ public interface UiFacadeFactory {
 
     public VmInformationController getVmController(VmRef ref);
 
-    Collection<VmInformationService> getVmInformationServices();
+    List<VmInformationService> getVmInformationServices();
 
     void addVmInformationService(VmInformationService vmInfoService);
 

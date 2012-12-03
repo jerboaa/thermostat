@@ -48,6 +48,7 @@ import com.redhat.thermostat.vm.overview.client.core.internal.VmOverviewControll
 
 public class VmOverviewService implements VmInformationService {
     
+    private static final int PRIORITY = PRIORITY_DEFAULT_GROUP;
     private static final VmFilter FILTER = new AlwaysMatchFilter();
 
     private ApplicationService appSvc;
@@ -68,6 +69,11 @@ public class VmOverviewService implements VmInformationService {
     @Override
     public VmFilter getFilter() {
         return FILTER;
+    }
+
+    @Override
+    public int getPriority() {
+        return PRIORITY;
     }
 
 }

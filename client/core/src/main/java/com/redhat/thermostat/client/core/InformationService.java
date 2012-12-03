@@ -42,7 +42,55 @@ package com.redhat.thermostat.client.core;
  *
  */
 public interface InformationService {
+    
+    /**
+     * Priority group for services that provide generic overview information
+     * about a Host or VM.
+     */
+    public static final int PRIORITY_DEFAULT_GROUP = 0;
+    /**
+     * Priority group for services that provide information about a Host
+     * or VM's CPU usage.
+     */
+    public static final int PRIORITY_CPU_GROUP = 100;
+    /**
+     * Priority group for services that provide information about a Host
+     * or VM's memory usage.
+     */
+    public static final int PRIORITY_MEMORY_GROUP = 200;
+    /**
+     * Priority group for services that provide information about a Host
+     * or VM's network usage.
+     */
+    public static final int PRIORITY_NETWORK_GROUP = 300;
+    /**
+     * Priority group for services that provide information about a Host
+     * or VM's I/O usage.
+     */
+    public static final int PRIORITY_IO_GROUP = 400;
+    /**
+     * Priority group for services that provide information about a Host
+     * or VM's threads.
+     */
+    public static final int PRIORITY_THREAD_GROUP = 500;
+    /**
+     * Priority group for user-defined services. This should always be
+     * the last priority group.
+     */
+    public static final int PRIORITY_USER_GROUP = 5000;
 
-    Filter getFilter();
+    /**
+     * Defines a priority to be used for assigning an order to
+     * InformationServices. A service with a lower-valued priority will
+     * be processed before a service of a higher-valued priority. This
+     * ordering is used, for example, to sort views in a client's UI.
+     * 
+     * The priority value should be offset from one of the provided
+     * constants in this class. Such as {@link #PRIORITY_DEFAULT_GROUP}.
+     * @return the priority value
+     */
+    public int getPriority();
+
+    public Filter getFilter();
 
 }

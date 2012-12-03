@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.internal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import org.osgi.framework.BundleContext;
@@ -65,8 +66,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     private CountDownLatch shutdown = new CountDownLatch(1);
 
-    private Collection<HostInformationService> hostInformationServices = new ArrayList<>();
-    private Collection<VmInformationService> vmInformationServices = new ArrayList<>();
+    private List<HostInformationService> hostInformationServices = new ArrayList<>();
+    private List<VmInformationService> vmInformationServices = new ArrayList<>();
     private Collection<VMContextAction> contextAction = new ArrayList<>();
 
     private BundleContext context;
@@ -122,7 +123,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
-    public Collection<VmInformationService> getVmInformationServices() {
+    public List<VmInformationService> getVmInformationServices() {
         return vmInformationServices;
     }
 
@@ -163,7 +164,7 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
-    public Collection<HostInformationService> getHostInformationServices() {
+    public List<HostInformationService> getHostInformationServices() {
         return hostInformationServices;
     }
 
