@@ -61,8 +61,12 @@ eclipse: jfreechart-p2
 create-repo-dir:
 	mkdir -p $(REPO_LOC)
 
+# This is basically in bash speak:
+#
+# for i in $(find | grep thermostat); do rm -rf $i; done;
+# rm -rf .cache/tycho
 clean-repo:
-	find $(REPO_LOC)/com/redhat/thermostat -print0 | xargs -0 rm -rf
+	done=$(shell bash -c 'cd $(REPO_LOC); for i in $$(find | grep thermostat); do rm -rf $$i; done; rm -rf .cache/tycho/; echo true' )
 
 echo-repo:
 	echo "Using private Maven repository: $(REPO_LOC)"
