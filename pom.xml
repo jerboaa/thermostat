@@ -66,6 +66,7 @@
     <fest.version>1.2.1</fest.version>
     <powermock.version>1.4.11</powermock.version>
     <easymock.version>3.1</easymock.version>
+    <expectj.version>2.0.7</expectj.version>
 
     <jdktools.version>1.7.0</jdktools.version>
     <jfreechart.version>1.0.14</jfreechart.version>
@@ -285,6 +286,11 @@
         <groupId>net.java.openjdk.cacio</groupId>
         <artifactId>cacio-tta</artifactId>
         <version>1.2</version>
+      </dependency>
+      <dependency>
+        <groupId>net.sourceforge.expectj</groupId>
+        <artifactId>expectj</artifactId>
+        <version>${expectj.version}</version>
       </dependency>
       <dependency>
         <groupId>org.jboss.netty</groupId>

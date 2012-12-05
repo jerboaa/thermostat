@@ -11,7 +11,7 @@ VNC_FLAGS       ?= -SecurityTypes None
 # Do not change anything below
 #
 REPO_FLAG       = -Dmaven.repo.local=$(REPO_LOC)
-GOAL            = package
+GOAL            = integration-test
 POM             = pom.xml
 
 ifeq ($(SKIP_TESTS),true)

@@ -57,6 +57,26 @@
 
   <build>
     <plugins>
+      <!-- skip unit test run, tests to be executed during integration-test -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skip>true</skip>
+        </configuration>
+        <executions>
+          <execution>
+            <id>run-integration-tests</id>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <skip>false</skip>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>2.4</version>
@@ -271,11 +291,20 @@
     </pluginManagement>
   </build>
   <dependencies>
+
+    <!-- integration tests -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>net.sourceforge.expectj</groupId>
+      <artifactId>expectj</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <!-- thermostat parts -->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-main</artifactId>

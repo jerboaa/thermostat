@@ -1,0 +1,196 @@
+/*
+ * Copyright 2012 Red Hat, Inc.
+ *
+ * This file is part of Thermostat.
+ *
+ * Thermostat is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation; either version 2, or (at your
+ * option) any later version.
+ *
+ * Thermostat is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Thermostat; see the file COPYING.  If not see
+ * <http://www.gnu.org/licenses/>.
+ *
+ * Linking this code with other modules is making a combined work
+ * based on this code.  Thus, the terms and conditions of the GNU
+ * General Public License cover the whole combination.
+ *
+ * As a special exception, the copyright holders of this code give
+ * you permission to link this code with independent modules to
+ * produce an executable, regardless of the license terms of these
+ * independent modules, and to copy and distribute the resulting
+ * executable under terms of your choice, provided that you also
+ * meet, for each linked independent module, the terms and conditions
+ * of the license of that module.  An independent module is a module
+ * which is not derived from or based on this code.  If you modify
+ * this code, you may extend this exception to your version of the
+ * library, but you are not obligated to do so.  If you do not wish
+ * to do so, delete this exception statement from your version.
+ */
+
+package com.redhat.thermostat.distribution;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+import java.io.IOException;
+
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import expectj.ExpectJ;
+import expectj.Spawn;
+
+public class CliTest {
+
+    private static final long TIMEOUT_IN_SECONDS = 2;
+
+    private ExpectJ expect;
+
+    @Before
+    public void setUp() throws IOException {
+        expect = new ExpectJ(TIMEOUT_IN_SECONDS);
+    }
+
+    @Test
+    public void testExpectIsSane() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable());
+
+        try {
+            shell.expect("some-random-text-that-is-not-really-possible");
+            fail("should never match");
+        } catch (IOException endOfStream) {
+            assertTrue(endOfStream.getMessage().contains("End of stream reached, no match found"));
+        }
+        shell.expectClose();
+    }
+
+    @Test
+    public void testSimpleInvocationPrintsHelp() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable());
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+
+        assertMatchesHelpCommandList(stdOut);
+
+        String stdErr = shell.getCurrentStandardErrContents();
+        assertEquals(stdErr, "");
+    }
+
+    @Test
+    public void testHelpCommandInvocation() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable() + " help");
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        String stdErr = shell.getCurrentStandardErrContents();
+
+        assertMatchesHelpCommandList(stdOut);
+        assertEquals(stdErr, "");
+    }
+
+    @Ignore("this is currently broken; help's usage includes stuff about usernames and passwords")
+    @Test
+    public void testHelpOnHelp() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable() + " help help");
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        String stdErr = shell.getCurrentStandardErrContents();
+
+        String[] lines = stdOut.split("\n");
+        String usage = lines[0];
+        assertEquals("usage: help [command-name]", usage);
+
+        assertEquals(stdErr, "");
+    }
+
+    @Test
+    public void testVersionArgument() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable() + " --version");
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        String stdErr = shell.getCurrentStandardErrContents();
+
+        assertTrue(stdOut.matches("Thermostat version \\d+\\.\\d+\\.\\d+\n"));
+        assertEquals(stdErr, "");
+    }
+
+    @Test
+    public void testShell() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable() + " shell");
+
+        shell.expect("Thermostat >");
+        shell.send("help\n");
+
+        shell.expect("Thermostat >");
+
+        assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
+
+        shell.send("exit\n");
+
+        shell.expectClose();
+    }
+
+    @Test
+    public void testShellHelp() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable() + " help shell");
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+
+        String[] lines = stdOut.split("\n");
+        String usage = lines[0];
+        assertTrue(usage.matches("^usage: shell \\[.*\\]$"));
+        String description = lines[1];
+
+        for (int i = 2; i < lines.length; i++) {
+            String argLine = lines[i];
+            assertTrue(argLine.matches("^\\s+--\\w+\\s.*$"));
+        }
+    }
+
+    @Test
+    public void testShellUnrecognizedArgument() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable() + " shell --foo");
+        shell.expectErr("Unrecognized option: --foo");
+        shell.expectClose();
+    }
+
+    @Test
+    public void testInvalidCommand() throws Exception {
+        Spawn shell = expect.spawn(getThermostatExecutable() + " foobar baz");
+
+        // TODO should this be stderr?
+        shell.expect("unknown command 'foobar'");
+        shell.expectClose();
+
+        String stdOut = shell.getCurrentStandardOutContents();
+
+        assertMatchesHelpCommandList(stdOut);
+    }
+
+    public String getThermostatExecutable() {
+        return "target/bin/thermostat";
+    }
+
+    private static void assertMatchesHelpCommandList(String actual) {
+        assertTrue(actual.contains("list of commands"));
+        assertTrue(actual.contains("help"));
+        assertTrue(actual.contains("agent"));
+        assertTrue(actual.contains("gui"));
+        assertTrue(actual.contains("ping"));
+        assertTrue(actual.contains("shell"));
+    }
+
+}
