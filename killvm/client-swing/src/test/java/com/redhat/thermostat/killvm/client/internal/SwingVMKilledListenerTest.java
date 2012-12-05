@@ -53,15 +53,6 @@ import com.redhat.thermostat.killvm.client.internal.SwingVMKilledListener;
 public class SwingVMKilledListenerTest {
     
     @Test
-    public void exceptionShowsError() {
-        ResponseActionListener listener = new ResponseActionListener();
-        Request request = mock(Request.class); 
-        Response resp = new Response(ResponseType.EXCEPTION);
-        listener.fireComplete(request, resp);
-        assertTrue(listener.isActionPerformed());
-    }
-    
-    @Test
     public void errorShowsError() {
         ResponseActionListener listener = new ResponseActionListener();
         Request request = mock(Request.class); 

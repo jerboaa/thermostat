@@ -79,13 +79,9 @@ public class PingCommand extends SimpleCommand {
             case ERROR:
                 out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_ERROR, request.getTarget().toString()));
                 break;
-            case PONG:
             case OK:
             case NOOP:
                 out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_OK, request.getTarget().toString()));
-                break;
-            case EXCEPTION:
-                out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_EXCEPTION));
                 break;
             case NOK:
                 out.println(translator.localize(LocaleResources.COMMAND_PING_RESPONSE_REFUSED));

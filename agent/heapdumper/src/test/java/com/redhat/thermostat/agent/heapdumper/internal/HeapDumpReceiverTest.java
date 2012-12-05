@@ -127,7 +127,7 @@ public class HeapDumpReceiverTest {
         doThrow(new HeapDumpException()).when(jmapDumper).dumpHeap(anyString(), anyString());
         Response response = receiver.receive(request);
 
-        assertEquals(ResponseType.EXCEPTION, response.getType());
+        assertEquals(ResponseType.ERROR, response.getType());
         
     }
 
@@ -137,7 +137,7 @@ public class HeapDumpReceiverTest {
 
         Response response = receiver.receive(request);
 
-        assertEquals(ResponseType.EXCEPTION, response.getType());
+        assertEquals(ResponseType.ERROR, response.getType());
         
     }
 }

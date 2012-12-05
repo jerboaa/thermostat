@@ -45,7 +45,7 @@ public class PingReceiver implements RequestReceiver {
 
     @Override
     public Response receive(Request request) {
-        return new Response(ResponseType.PONG);
+        return new Response(ResponseType.OK);
     }
 
 }

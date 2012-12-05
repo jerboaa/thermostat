@@ -62,11 +62,6 @@ public class SwingVMKilledListener implements RequestResponseListener {
     @Override
     public void fireComplete(Request request, Response response) {
         switch (response.getType()) {
-        case EXCEPTION:
-            logger.log(Level.SEVERE,
-                    "Exception response from kill VM request. Command channel failure?");
-            showErrorMessage(t.localize(LocaleResources.KILL_ACTION_EXCEPTION_RESPONSE_MSG));
-            break;
         case ERROR:
             String vmId = request.getParameter("vm-id");
             logger.log(Level.SEVERE,
@@ -74,7 +69,6 @@ public class SwingVMKilledListener implements RequestResponseListener {
                             + vmId);
             showErrorMessage(t.localize(LocaleResources.KILL_ACTION_ERROR_RESPONSE_MSG, vmId));
             break;
-        case PONG: // fall-through, also OK :)
         case OK:
             logger.log(Level.INFO,
                     "VM with id " + request.getParameter("vm-id")
