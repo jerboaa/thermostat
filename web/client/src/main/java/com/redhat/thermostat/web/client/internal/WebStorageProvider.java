@@ -11,7 +11,7 @@ public class WebStorageProvider implements StorageProvider {
     
     @Override
     public Storage createStorage() {
-        WebStorage storage = new WebStorage();
+        WebStorage storage = new WebStorage(config);
         storage.setEndpoint(config.getDBConnectionString());
         if (config instanceof AuthenticationConfiguration) {
             AuthenticationConfiguration authConf = (AuthenticationConfiguration) config;

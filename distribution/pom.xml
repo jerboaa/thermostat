@@ -128,6 +128,14 @@
                 </resource>
                 <resource>
                   <directory>config</directory>
+                  <targetPath>etc</targetPath>
+                  <filtering>true</filtering>
+                  <includes>
+                    <include>client.properties</include>
+                  </includes>
+                </resource>
+                <resource>
+                  <directory>config</directory>
                   <targetPath>storage</targetPath>
                   <filtering>true</filtering>
                   <includes>

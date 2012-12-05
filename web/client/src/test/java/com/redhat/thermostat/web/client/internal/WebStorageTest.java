@@ -63,6 +63,9 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.http.client.HttpClient;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.scheme.SchemeRegistry;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -76,19 +79,19 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
-import com.redhat.thermostat.web.client.internal.WebStorage;
 import com.redhat.thermostat.web.common.Qualifier;
-import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebInsert;
+import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebRemove;
 import com.redhat.thermostat.web.common.WebUpdate;
 
@@ -135,7 +138,14 @@ public class WebStorageTest {
             }
         });
 
-        storage = new WebStorage();
+        StartupConfiguration config = new StartupConfiguration() {
+            
+            @Override
+            public String getDBConnectionString() {
+                return "http://fluff.example.org";
+            }
+        };
+        storage = new WebStorage(config);
         storage.setEndpoint("http://localhost:" + port + "/");
         storage.setAgentId(new UUID(123, 456));
         headers = new HashMap<>();
@@ -469,5 +479,22 @@ public class WebStorageTest {
         storage.purge();
         assertEquals("POST", method);
         assertTrue(requestURI.endsWith("/purge"));
+    }
+    
+    @Test
+    public void canSSLEnableClient() {
+        StartupConfiguration config = new StartupConfiguration() {
+            
+            @Override
+            public String getDBConnectionString() {
+                return "https://onlyHttpsPrefixUsed.example.com";
+            }
+        };
+        storage = new WebStorage(config);
+        HttpClient client = storage.httpClient;
+        SchemeRegistry schemeReg = client.getConnectionManager().getSchemeRegistry();
+        Scheme scheme = schemeReg.getScheme("https");
+        assertNotNull(scheme);
+        assertEquals(443, scheme.getDefaultPort());
     }
 }

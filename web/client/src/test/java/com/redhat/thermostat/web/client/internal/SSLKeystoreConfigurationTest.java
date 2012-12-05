@@ -34,29 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.mongodb;
+package com.redhat.thermostat.web.client.internal;
 
-import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-public class MongoStorageProvider implements StorageProvider {
+import java.io.File;
 
-    private StartupConfiguration configuration;
+import org.junit.Test;
 
-    public void setConfig(StartupConfiguration configuration) {
-        this.configuration = configuration;
+import com.redhat.thermostat.web.client.internal.SSLKeystoreConfiguration;
+
+public class SSLKeystoreConfigurationTest {
+
+    @Test
+    public void canGetKeystoreFileFromProps() throws Exception {
+        File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
+        SSLKeystoreConfiguration.initClientProperties(clientProps);
+        String keystorePath = "/path/to/thermostat.keystore";
+        String keystorePwd = "some password";
+        assertEquals(keystorePath, SSLKeystoreConfiguration.getKeystoreFile().getAbsolutePath());
+        assertEquals(keystorePwd, SSLKeystoreConfiguration.getKeyStorePassword());
     }
-
-    @Override
-    public Storage createStorage() {
-        return new MongoStorage(configuration);
+    
+    @Test
+    public void notExistingPropertiesFileReturnsNull() throws Exception {
+        File clientProps = new File("i/am/not/there/file.txt");
+        SSLKeystoreConfiguration.initClientProperties(clientProps);
+        assertTrue(SSLKeystoreConfiguration.getKeystoreFile() == null);
+        assertEquals("", SSLKeystoreConfiguration.getKeyStorePassword());
     }
-
-    @Override
-    public boolean canHandleProtocol() {
-        return configuration.getDBConnectionString().startsWith("mongodb://");
-    }
-
 }

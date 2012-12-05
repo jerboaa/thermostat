@@ -34,7 +34,6 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.web.client.internal;
 
 import java.io.Closeable;
@@ -46,12 +45,20 @@ import java.io.Reader;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -64,6 +71,8 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.conn.ClientConnectionManager;
+import org.apache.http.conn.scheme.Scheme;
+import org.apache.http.conn.ssl.SSLSocketFactory;
 import org.apache.http.entity.mime.MultipartEntity;
 import org.apache.http.entity.mime.content.InputStreamBody;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -73,6 +82,8 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -91,6 +102,9 @@ import com.redhat.thermostat.web.common.WebUpdate;
 
 public class WebStorage implements Storage {
 
+    private static final String HTTPS_PREFIX = "https";
+    final Logger logger = LoggingUtils.getLogger(WebStorage.class);
+
     private static class CloseableHttpEntity implements Closeable, HttpEntity {
 
         private HttpEntity entity;
@@ -101,11 +115,12 @@ public class WebStorage implements Storage {
 
         @Override
         public void consumeContent() throws IOException {
-            entity.consumeContent();
+            EntityUtils.consume(entity);
         }
 
         @Override
-        public InputStream getContent() throws IOException, IllegalStateException {
+        public InputStream getContent() throws IOException,
+                IllegalStateException {
             return entity.getContent();
         }
 
@@ -159,6 +174,7 @@ public class WebStorage implements Storage {
         WebConnection() {
             connected = true;
         }
+
         @Override
         public void disconnect() {
             connected = false;
@@ -171,8 +187,10 @@ public class WebStorage implements Storage {
                 initAuthentication(httpClient);
                 ping();
                 connected = true;
+                logger.fine("Connected to storage");
                 fireChanged(ConnectionStatus.CONNECTED);
             } catch (Exception ex) {
+                logger.log(Level.WARNING, "Could not connect to storage!", ex);
                 fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             }
         }
@@ -256,24 +274,53 @@ public class WebStorage implements Storage {
 
     private Map<Category, Integer> categoryIds;
     private Gson gson;
-    private DefaultHttpClient httpClient;
+    // package private for testing
+    DefaultHttpClient httpClient;
     private String username;
     private String password;
 
-    public WebStorage() {
+    public WebStorage(StartupConfiguration config) throws StorageException {
         categoryIds = new HashMap<>();
-        gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
+        gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
+                new ThermostatGSONConverter()).create();
         ClientConnectionManager connManager = new ThreadSafeClientConnManager();
         DefaultHttpClient client = new DefaultHttpClient(connManager);
         httpClient = client;
+        // setup SSL if necessary
+        if (config.getDBConnectionString().startsWith(HTTPS_PREFIX)) {
+            registerSSLScheme(connManager);
+        }
     }
 
-    private void initAuthentication(DefaultHttpClient client) throws MalformedURLException {
+    private void registerSSLScheme(ClientConnectionManager conManager)
+            throws StorageException {
+        try {
+            SSLContext sc = SSLContext.getInstance("TLS");
+            X509TrustManager ourTm;
+            try {
+                ourTm = new CustomX509TrustManager();
+            } catch (Exception e) {
+                throw new StorageException(e);
+            }
+            TrustManager[] tms = new TrustManager[] { ourTm };
+            sc.init(null, tms, new SecureRandom());
+            SSLSocketFactory socketFactory = new SSLSocketFactory(sc);
+            Scheme sch = new Scheme("https", 443, socketFactory);
+            conManager.getSchemeRegistry().register(sch);
+        } catch ( GeneralSecurityException e) {
+            throw new StorageException(e);
+        }
+    }
+
+    private void initAuthentication(DefaultHttpClient client)
+            throws MalformedURLException {
         if (username != null && password != null) {
             URL endpointURL = new URL(endpoint);
             // TODO: Maybe also limit to realm like 'Thermostat Realm' or such?
-            AuthScope scope = new AuthScope(endpointURL.getHost(), endpointURL.getPort());
-            Credentials creds = new UsernamePasswordCredentials(username, password);
+            AuthScope scope = new AuthScope(endpointURL.getHost(),
+                    endpointURL.getPort());
+            Credentials creds = new UsernamePasswordCredentials(username,
+                    password);
             client.getCredentialsProvider().setCredentials(scope, creds);
         }
     }
@@ -282,7 +329,8 @@ public class WebStorage implements Storage {
         post(endpoint + "/ping", (HttpEntity) null).close();
     }
 
-    private CloseableHttpEntity post(String url, List<NameValuePair> formparams) throws StorageException {
+    private CloseableHttpEntity post(String url, List<NameValuePair> formparams)
+            throws StorageException {
         try {
             return postImpl(url, formparams);
         } catch (IOException ex) {
@@ -290,7 +338,8 @@ public class WebStorage implements Storage {
         }
     }
 
-    private CloseableHttpEntity postImpl(String url, List<NameValuePair> formparams) throws IOException {
+    private CloseableHttpEntity postImpl(String url,
+            List<NameValuePair> formparams) throws IOException {
         HttpEntity entity;
         if (formparams != null) {
             entity = new UrlEncodedFormEntity(formparams, "UTF-8");
@@ -300,8 +349,8 @@ public class WebStorage implements Storage {
         return postImpl(url, entity);
     }
 
-    
-    private CloseableHttpEntity post(String url, HttpEntity entity) throws StorageException {
+    private CloseableHttpEntity post(String url, HttpEntity entity)
+            throws StorageException {
         try {
             return postImpl(url, entity);
         } catch (IOException ex) {
@@ -309,7 +358,8 @@ public class WebStorage implements Storage {
         }
     }
 
-    private CloseableHttpEntity postImpl(String url, HttpEntity entity) throws IOException {
+    private CloseableHttpEntity postImpl(String url, HttpEntity entity)
+            throws IOException {
         HttpPost httpPost = new HttpPost(url);
         if (entity != null) {
             httpPost.setEntity(entity);
@@ -338,10 +388,14 @@ public class WebStorage implements Storage {
 
     @Override
     public void registerCategory(Category category) throws StorageException {
-        NameValuePair nameParam = new BasicNameValuePair("name", category.getName());
-        NameValuePair categoryParam = new BasicNameValuePair("category", gson.toJson(category));
-        List<NameValuePair> formparams = Arrays.asList(nameParam, categoryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/register-category", formparams)) {
+        NameValuePair nameParam = new BasicNameValuePair("name",
+                category.getName());
+        NameValuePair categoryParam = new BasicNameValuePair("category",
+                gson.toJson(category));
+        List<NameValuePair> formparams = Arrays
+                .asList(nameParam, categoryParam);
+        try (CloseableHttpEntity entity = post(endpoint + "/register-category",
+                formparams)) {
             Reader reader = getContentAsReader(entity);
             Integer id = gson.fromJson(reader, Integer.class);
             categoryIds.put(category, id);
@@ -363,24 +417,32 @@ public class WebStorage implements Storage {
         return new WebUpdate(categoryIds);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
-    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) throws StorageException {
+    public <T extends Pojo> Cursor<T> findAllPojos(Query query,
+            Class<T> resultClass) throws StorageException {
         ((WebQuery) query).setResultClassName(resultClass.getName());
-        NameValuePair queryParam = new BasicNameValuePair("query", gson.toJson(query));
+        NameValuePair queryParam = new BasicNameValuePair("query",
+                gson.toJson(query));
         List<NameValuePair> formparams = Arrays.asList(queryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/find-all", formparams)) {
+        try (CloseableHttpEntity entity = post(endpoint + "/find-all",
+                formparams)) {
             Reader reader = getContentAsReader(entity);
-            T[] result = (T[]) gson.fromJson(reader, Array.newInstance(resultClass, 0).getClass());
+            T[] result = (T[]) gson.fromJson(reader,
+                    Array.newInstance(resultClass, 0).getClass());
             return new WebCursor<T>(result);
         }
     }
 
     @Override
-    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) throws StorageException {
+    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass)
+            throws StorageException {
         ((WebQuery) query).setResultClassName(resultClass.getName());
-        NameValuePair queryParam = new BasicNameValuePair("query", gson.toJson(query));
+        NameValuePair queryParam = new BasicNameValuePair("query",
+                gson.toJson(query));
         List<NameValuePair> formparams = Arrays.asList(queryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/find-pojo", formparams)) {
+        try (CloseableHttpEntity entity = post(endpoint + "/find-pojo",
+                formparams)) {
             Reader reader = getContentAsReader(entity);
             T result = gson.fromJson(reader, resultClass);
             return result;
@@ -399,9 +461,11 @@ public class WebStorage implements Storage {
 
     @Override
     public long getCount(Category category) throws StorageException {
-        NameValuePair categoryParam = new BasicNameValuePair("category", gson.toJson(categoryIds.get(category)));
+        NameValuePair categoryParam = new BasicNameValuePair("category",
+                gson.toJson(categoryIds.get(category)));
         List<NameValuePair> formparams = Arrays.asList(categoryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/get-count", formparams)) {
+        try (CloseableHttpEntity entity = post(endpoint + "/get-count",
+                formparams)) {
             Reader reader = getContentAsReader(entity);
             long result = gson.fromJson(reader, Long.class);
             return result;
@@ -422,23 +486,29 @@ public class WebStorage implements Storage {
     }
 
     @Override
-    public void putPojo(Category category, boolean replace, AgentIdPojo pojo) throws StorageException {
-        // TODO: This logic should probably be moved elsewhere. I.e. out of the Storage API.
+    public void putPojo(Category category, boolean replace, AgentIdPojo pojo)
+            throws StorageException {
+        // TODO: This logic should probably be moved elsewhere. I.e. out of the
+        // Storage API.
         if (pojo.getAgentId() == null) {
             pojo.setAgentId(getAgentId());
         }
 
         int categoryId = categoryIds.get(category);
-        WebInsert insert = new WebInsert(categoryId, replace, pojo.getClass().getName());
-        NameValuePair insertParam = new BasicNameValuePair("insert", gson.toJson(insert));
-        NameValuePair pojoParam = new BasicNameValuePair("pojo", gson.toJson(pojo));
+        WebInsert insert = new WebInsert(categoryId, replace, pojo.getClass()
+                .getName());
+        NameValuePair insertParam = new BasicNameValuePair("insert",
+                gson.toJson(insert));
+        NameValuePair pojoParam = new BasicNameValuePair("pojo",
+                gson.toJson(pojo));
         List<NameValuePair> formparams = Arrays.asList(insertParam, pojoParam);
         post(endpoint + "/put-pojo", formparams).close();
     }
 
     @Override
     public void removePojo(Remove remove) throws StorageException {
-        NameValuePair removeParam = new BasicNameValuePair("remove", gson.toJson(remove));
+        NameValuePair removeParam = new BasicNameValuePair("remove",
+                gson.toJson(remove));
         List<NameValuePair> formparams = Arrays.asList(removeParam);
         post(endpoint + "/remove-pojo", formparams).close();
     }
@@ -465,9 +535,12 @@ public class WebStorage implements Storage {
             values.add(updateValue.getValue());
         }
 
-        NameValuePair updateParam = new BasicNameValuePair("update", gson.toJson(update));
-        NameValuePair valuesParam = new BasicNameValuePair("values", gson.toJson(values));
-        List<NameValuePair> formparams = Arrays.asList(updateParam, valuesParam);
+        NameValuePair updateParam = new BasicNameValuePair("update",
+                gson.toJson(update));
+        NameValuePair valuesParam = new BasicNameValuePair("values",
+                gson.toJson(values));
+        List<NameValuePair> formparams = Arrays
+                .asList(updateParam, valuesParam);
         post(endpoint + "/update-pojo", formparams).close();
     }
 
