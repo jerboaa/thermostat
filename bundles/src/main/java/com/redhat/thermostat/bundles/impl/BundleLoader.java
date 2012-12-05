@@ -42,6 +42,7 @@ import java.util.List;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 
 public class BundleLoader {
@@ -78,6 +79,14 @@ public class BundleLoader {
 
     private void startBundles(List<Bundle> bundles) throws BundleException {
         for (Bundle bundle : bundles) {
+
+            if (bundle.getHeaders().get(Constants.FRAGMENT_HOST) != null) {
+                if (printOSGiInfo) {
+                    System.out.println("BundleLoader: bundle \"" + bundle.getBundleId() + "\" is a fragment; not starting it");
+                }
+                continue;
+            }
+
             if (printOSGiInfo) {
                 System.out.println("BundleLoader: starting bundle: \"" + bundle.getBundleId() + "\"");
             }
