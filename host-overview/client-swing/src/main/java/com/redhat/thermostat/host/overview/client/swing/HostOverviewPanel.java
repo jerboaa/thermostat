@@ -42,6 +42,7 @@ import java.awt.Component;
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
@@ -63,6 +64,7 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private JPanel visiblePanel;
+    private JScrollPane scrollPane;
 
     private final ValueField hostname = new ValueField("${hostname}");
     private final ValueField cpuModel = new ValueField("${cpu-model}");
@@ -202,7 +204,7 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
 
     @Override
     public Component getUiComponent() {
-        return visiblePanel;
+        return scrollPane;
     }
 
     private void initializePanel() {
@@ -304,6 +306,9 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
         panel.add(networkTable);
         JTableHeader header = networkTable.getTableHeader();
         panel.add(header, BorderLayout.PAGE_START);
+
         visiblePanel.setLayout(gl_visiblePanel);
+
+        scrollPane = new JScrollPane(visiblePanel, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
     }
 }

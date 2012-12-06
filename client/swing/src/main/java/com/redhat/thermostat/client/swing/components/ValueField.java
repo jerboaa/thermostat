@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.swing.components;
 
 import javax.swing.JEditorPane;
 import javax.swing.UIManager;
+import javax.swing.text.DefaultCaret;
 
 /**
  * A custom swing component meant for showing values. Use it like you would use
@@ -54,6 +55,17 @@ public class ValueField extends JEditorPane {
         setForeground(UIManager.getColor("Label.foreground"));
         setFont(UIManager.getFont("Label.font"));
         setEditable(false);
+
+        /*
+         * The default caret update policy forces any scroll pane this
+         * component is added to to scroll so that this component is visible.
+         * Normally, the caret is placed in the last instance of this
+         * component created which is normally at the bottom of a scroll pane.
+         * This forces the scroll pane to scroll to the bottom, unexpectedly.
+         * This field is not meant to be editable in the first place so this
+         * behaviour makes no sense; turn off the scroll updates.
+         */
+        ((DefaultCaret) getCaret()).setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
     }
 
 }
