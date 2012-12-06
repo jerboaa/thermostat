@@ -170,6 +170,7 @@ public final class LoggingUtils {
                 @SuppressWarnings("rawtypes")
                 Class clazz = ClassLoader.getSystemClassLoader().loadClass(clazzName);
                 Handler handler = (Handler)clazz.newInstance();
+                handler.setLevel(root.getLevel());
                 root.addHandler(handler);
             } catch (Exception e) {
                 System.err.print("Could not load log-handler '" + clazzName + "'");
