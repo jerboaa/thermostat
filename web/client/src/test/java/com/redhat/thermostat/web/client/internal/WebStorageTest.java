@@ -35,7 +35,7 @@
  */
 
 
-package com.redhat.thermostat.web.client;
+package com.redhat.thermostat.web.client.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -85,6 +85,7 @@ import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
+import com.redhat.thermostat.web.client.internal.WebStorage;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.WebQuery;
 import com.redhat.thermostat.web.common.WebInsert;

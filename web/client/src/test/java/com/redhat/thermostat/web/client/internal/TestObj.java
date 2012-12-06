@@ -35,31 +35,33 @@
  */
 
 
-package com.redhat.thermostat.web.client;
+package com.redhat.thermostat.web.client.internal;
 
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.model.Pojo;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
 
-class WebCursor<T extends Pojo> implements Cursor<T> {
+@Entity
+public class TestObj extends BasePojo {
 
-    private T[] data;
-    private int index;
+    
+    private String property1;
 
-    WebCursor(T[] data) {
-        this.data = data;
-        index = 0;
+    @Persist
+    public void setProperty1(String property1) {
+        this.property1 = property1;
     }
 
-    @Override
-    public boolean hasNext() {
-        return index < data.length;
+    @Persist
+    public String getProperty1() {
+        return property1;
     }
 
-    @Override
-    public T next() {
-        T result = data[index];
-        index++;
-        return result;
+    public boolean equals(Object o) {
+        if (! (o instanceof TestObj)) {
+            return false;
+        }
+        TestObj other = (TestObj) o;
+        return property1.equals(other.property1);
     }
-
 }

@@ -35,33 +35,27 @@
  */
 
 
-package com.redhat.thermostat.web.client;
+package com.redhat.thermostat.web.client.internal;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-@Entity
-public class TestObj extends BasePojo {
+import com.redhat.thermostat.storage.core.StorageProvider;
 
+public class Activator implements BundleActivator {
+
+    private ServiceRegistration reg;
     
-    private String property1;
-
-    @Persist
-    public void setProperty1(String property1) {
-        this.property1 = property1;
+    @Override
+    public void start(BundleContext context) throws Exception {
+        WebStorageProvider storage = new WebStorageProvider();
+        this.reg = context.registerService(StorageProvider.class.getName(), storage, null);
     }
 
-    @Persist
-    public String getProperty1() {
-        return property1;
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        reg.unregister();
     }
 
-    public boolean equals(Object o) {
-        if (! (o instanceof TestObj)) {
-            return false;
-        }
-        TestObj other = (TestObj) o;
-        return property1.equals(other.property1);
-    }
 }

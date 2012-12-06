@@ -9,8 +9,8 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.ui
-Import-Package: com.redhat.thermostat.client.core.views,
- com.redhat.thermostat.client.core.controllers,
+Import-Package: com.redhat.thermostat.client.core.controllers,
+ com.redhat.thermostat.client.core.views,
  com.redhat.thermostat.client.locale,
  com.redhat.thermostat.client.ui,
  com.redhat.thermostat.common,
@@ -21,9 +21,7 @@ Import-Package: com.redhat.thermostat.client.core.views,
  com.redhat.thermostat.host.overview.client.locale,
  com.redhat.thermostat.storage.config,
  com.redhat.thermostat.storage.core,
- com.redhat.thermostat.storage.model,
- com.redhat.thermostat.web.client,
- com.redhat.thermostat.web.common
+ com.redhat.thermostat.storage.model
 Export-Package: com.redhat.thermostat.eclipse,
  com.redhat.thermostat.eclipse.internal;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
  com.redhat.thermostat.eclipse.internal.controllers;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",

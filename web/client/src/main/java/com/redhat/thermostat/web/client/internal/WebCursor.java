@@ -35,28 +35,31 @@
  */
 
 
-package com.redhat.thermostat.web.client;
+package com.redhat.thermostat.web.client.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.model.Pojo;
 
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.StorageProvider;
+class WebCursor<T extends Pojo> implements Cursor<T> {
 
-public class Activator implements BundleActivator {
+    private T[] data;
+    private int index;
 
-    private ServiceRegistration reg;
-    
-    @Override
-    public void start(BundleContext context) throws Exception {
-        WebStorageProvider storage = new WebStorageProvider();
-        this.reg = context.registerService(StorageProvider.class.getName(), storage, null);
+    WebCursor(T[] data) {
+        this.data = data;
+        index = 0;
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        reg.unregister();
+    public boolean hasNext() {
+        return index < data.length;
+    }
+
+    @Override
+    public T next() {
+        T result = data[index];
+        index++;
+        return result;
     }
 
 }

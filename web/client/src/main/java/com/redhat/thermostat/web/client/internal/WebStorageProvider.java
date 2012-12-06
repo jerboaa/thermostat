@@ -1,4 +1,4 @@
-package com.redhat.thermostat.web.client;
+package com.redhat.thermostat.web.client.internal;
 
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;

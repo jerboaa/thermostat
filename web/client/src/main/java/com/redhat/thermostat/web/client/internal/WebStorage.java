@@ -35,7 +35,7 @@
  */
 
 
-package com.redhat.thermostat.web.client;
+package com.redhat.thermostat.web.client.internal;
 
 import java.io.Closeable;
 import java.io.IOException;
