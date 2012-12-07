@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli;
+package com.redhat.thermostat.agent.cli.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -61,10 +61,10 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.cli.StorageCommand;
 import com.redhat.thermostat.agent.cli.db.DBConfig;
 import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
 import com.redhat.thermostat.agent.cli.db.MongoProcessRunner;
+import com.redhat.thermostat.agent.cli.impl.StorageCommand;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -74,7 +74,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 
-public class DBServiceTest {
+public class StorageCommandTest {
     
     private static final String PORT = "27518";
     private static final String BIND = "127.0.0.1";

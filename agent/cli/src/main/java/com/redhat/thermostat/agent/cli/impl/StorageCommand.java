@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli;
+package com.redhat.thermostat.agent.cli.impl;
 
 import java.io.File;
 import java.io.FileInputStream;

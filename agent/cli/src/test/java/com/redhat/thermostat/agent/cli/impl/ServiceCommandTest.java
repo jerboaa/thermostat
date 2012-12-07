@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli;
+package com.redhat.thermostat.agent.cli.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -44,9 +44,9 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.cli.ServiceCommand;
+import com.redhat.thermostat.agent.cli.impl.ServiceCommand;
 
-public class ThermostatServiceTest {
+public class ServiceCommandTest {
 
     private ServiceCommand thermostatService;
 

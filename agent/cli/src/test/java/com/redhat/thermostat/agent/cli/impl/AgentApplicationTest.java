@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli;
+package com.redhat.thermostat.agent.cli.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -50,8 +50,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.agent.cli.AgentApplication.ConfigurationCreator;
-import com.redhat.thermostat.agent.cli.AgentApplication.DAOFactoryCreator;
+import com.redhat.thermostat.agent.cli.impl.AgentApplication;
+import com.redhat.thermostat.agent.cli.impl.AgentApplication.ConfigurationCreator;
+import com.redhat.thermostat.agent.cli.impl.AgentApplication.DAOFactoryCreator;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;

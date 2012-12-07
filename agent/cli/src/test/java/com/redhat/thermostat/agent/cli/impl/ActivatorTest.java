@@ -34,16 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.db;
+package com.redhat.thermostat.agent.cli.impl;
 
-import com.redhat.thermostat.agent.cli.impl.StorageCommand;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-/**
- * Set of configuration option that the {@link StorageCommand} understands.
- */
-public enum DBConfig {
+import org.junit.Test;
 
-    BIND,
-    PORT,
-    PROTOCOL,
+import com.redhat.thermostat.common.cli.Command;
+import com.redhat.thermostat.test.StubBundleContext;
+
+public class ActivatorTest {
+
+    @Test
+    public void verifyActivatorRegistersCommands() throws Exception {
+
+        StubBundleContext bundleContext = new StubBundleContext();
+
+        Activator activator = new Activator();
+
+        activator.start(bundleContext);
+
+        assertTrue(bundleContext.isServiceRegistered(Command.class.getName(), AgentApplication.class));
+        assertTrue(bundleContext.isServiceRegistered(Command.class.getName(), ServiceCommand.class));
+        assertTrue(bundleContext.isServiceRegistered(Command.class.getName(), StorageCommand.class));
+
+        activator.stop(bundleContext);
+
+        assertEquals(0, bundleContext.getAllServices().size());
+    }
 }
