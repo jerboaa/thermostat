@@ -34,50 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.heap;
+package com.redhat.thermostat.gc.remote.command.internal;
 
-import java.util.List;
+public class GCException extends Exception {
 
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.heap.chart.OverviewChart;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.heap.HeapDump;
-
-public abstract class HeapView extends BasicView implements UIComponent {
-    
-    public enum HeapDumperAction {
-        DUMP_REQUESTED,
-        ANALYSE,
-        REQUEST_ABORTED
+    public GCException(String message, Throwable cause) {
+        super(message, cause);
     }
-   
-    protected final ActionNotifier<HeapDumperAction> heapDumperNotifier;
-    protected HeapView() {
-        heapDumperNotifier = new ActionNotifier<HeapDumperAction>(this);
-    }
-    
-    public void addDumperListener(ActionListener<HeapDumperAction> listener) {
-        heapDumperNotifier.addActionListener(listener);
-    }
-    
-    public void removeDumperListener(ActionListener<HeapDumperAction> listener) {
-        heapDumperNotifier.removeActionListener(listener);
-    }
-
-    abstract public void updateUsedAndCapacity(String used, String capacity);
-    /** View updates automatically based on the model */
-    abstract public void setModel(OverviewChart model);
-    abstract public void addHeapDump(HeapDump dump);
-    abstract public void clearHeapDumpList();
-    
-    abstract public void openDumpView();
-    abstract public void setChildView(BasicView childView);
-    public abstract void notifyHeapDumpComplete();
-
-    public abstract void updateHeapDumpList(List<HeapDump> heapDumps);
-
-    public abstract void displayWarning(String string);
-
 }

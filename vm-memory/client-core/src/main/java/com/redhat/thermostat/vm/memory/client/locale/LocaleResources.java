@@ -41,6 +41,8 @@ import com.redhat.thermostat.common.locale.Translate;
 public enum LocaleResources {
 
     VM_INFO_TAB_MEMORY,
+    ERROR_PERFORMING_GC,
+
     RESOURCE_MISSING;
     
     public static final String RESOURCE_BUNDLE =

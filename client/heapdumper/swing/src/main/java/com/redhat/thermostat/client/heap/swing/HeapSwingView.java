@@ -43,6 +43,7 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
@@ -226,5 +227,10 @@ public class HeapSwingView extends HeapView implements SwingComponent {
                 stats.updateHeapDumpList(heapDumps);
             }
         });
+    }
+
+    @Override
+    public void displayWarning(String string) {
+        JOptionPane.showMessageDialog(visiblePane, string, "Warning", JOptionPane.WARNING_MESSAGE);
     }
 }

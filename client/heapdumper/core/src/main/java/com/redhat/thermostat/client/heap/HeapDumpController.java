@@ -163,6 +163,14 @@ public class HeapDumpController implements VmInformationServiceController {
                         public void run() {
                             view.notifyHeapDumpComplete();
                         }
+                    }, new Runnable() {
+                        @Override
+                        public void run() {
+                            view.displayWarning(translator.localize(
+                                    LocaleResources.HEAP_DUMP_ERROR,
+                                    ref.getAgent().getAgentId(),
+                                    ref.getIdString()));
+                        }
                     });
                     
                     break;

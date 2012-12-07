@@ -57,6 +57,7 @@ public enum LocaleResources {
     HEAP_ID_NOT_FOUND,
     HEAP_ID_REQUIRED,
     SEARCH_TERM_REQUIRED,
+    HEAP_DUMP_ERROR,
 
     COMMAND_HEAP_DUMP_DONE,
 

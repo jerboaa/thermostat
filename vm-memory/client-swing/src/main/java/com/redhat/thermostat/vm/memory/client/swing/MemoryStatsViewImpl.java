@@ -44,6 +44,7 @@ import java.util.Map;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -145,6 +146,11 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
                 realPanel.revalidate();
             }
         });
+    }
+
+    @Override
+    public void displayWarning(String string) {
+        JOptionPane.showMessageDialog(visiblePanel, string, "Warning", JOptionPane.WARNING_MESSAGE);
     }
 
     @Override

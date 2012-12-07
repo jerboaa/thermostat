@@ -48,5 +48,8 @@ public abstract class MemoryStatsView extends BasicView implements UIComponent {
     
     public abstract void addGCActionListener(ActionListener<GCCommand> listener);
     
-    public abstract void requestRepaint();    
+    public abstract void requestRepaint();
+
+    public abstract void displayWarning(String string);
+
 }

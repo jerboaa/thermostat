@@ -54,7 +54,8 @@ public class GC {
         this.connector = connector;
     }
     
-    public void gc() {
+    public void gc() throws GCException {
+        Exception exceptionInGc = null;
         boolean closeAfter = false;
         if (!connector.isAttached()) {
             closeAfter = true; 
@@ -75,11 +76,16 @@ public class GC {
             bean.gc();
 
         } catch (Exception ex) {
+            exceptionInGc = ex;
             logger.log(Level.SEVERE, "can't get MXBeanConnection connection", ex);
         }
         
         if (closeAfter) {
             closeConnection();
+        }
+
+        if (exceptionInGc != null) {
+            throw new GCException("error performing gc", exceptionInGc);
         }
     }
     

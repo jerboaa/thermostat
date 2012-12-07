@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -63,6 +64,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -182,7 +184,7 @@ public class MemoryStatsControllerTest {
     @Test
     public void testGCInvoked() {
         gcActionListener.actionPerformed(new ActionEvent<>(view, GCCommand.REQUEST_GC));
-        verify(gcRequest).sendGCRequestToAgent(ref, agentDAO);
+        verify(gcRequest).sendGCRequestToAgent(eq(ref), eq(agentDAO), isA(RequestResponseListener.class));
     }
     
     @Test

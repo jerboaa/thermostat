@@ -50,6 +50,10 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
+import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -67,6 +71,8 @@ import com.redhat.thermostat.vm.memory.client.core.StatsModel;
 import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
 
 public class MemoryStatsController implements VmInformationServiceController {
+
+    private static final Translate<LocaleResources> translate = LocaleResources.createLocalizer();
 
     private final MemoryStatsView view;
     private final VmMemoryStatDAO vmDao;
@@ -186,7 +192,18 @@ public class MemoryStatsController implements VmInformationServiceController {
         view.addGCActionListener(new ActionListener<GCCommand>() {
             @Override
             public void actionPerformed(ActionEvent<GCCommand> actionEvent) {
-                gcRequest.sendGCRequestToAgent(ref, agentDAO);
+                RequestResponseListener listener = new RequestResponseListener() {
+                    @Override
+                    public void fireComplete(Request request, Response response) {
+                        if (response.getType() == ResponseType.ERROR) {
+                            view.displayWarning(translate.localize(
+                                    LocaleResources.ERROR_PERFORMING_GC,
+                                    ref.getAgent().getAgentId(),
+                                    ref.getIdString()));
+                        }
+                    }
+                };
+                gcRequest.sendGCRequestToAgent(ref, agentDAO, listener);
             }
         });
     }

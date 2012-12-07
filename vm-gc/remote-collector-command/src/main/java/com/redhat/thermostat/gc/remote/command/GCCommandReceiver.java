@@ -41,6 +41,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.gc.remote.command.internal.GC;
+import com.redhat.thermostat.gc.remote.command.internal.GCException;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 import com.redhat.thermostat.utils.management.MXBeanConnector;
 
@@ -48,18 +49,22 @@ public class GCCommandReceiver implements RequestReceiver {
 
     @Override
     public Response receive(Request request) {
+        Response response = new Response(ResponseType.OK);
         
         String command = request.getParameter(GCCommand.class.getName());
         switch (GCCommand.valueOf(command)) {
         case REQUEST_GC:
-            String vmId = request.getParameter(GCCommand.VM_ID);
-            MXBeanConnector connector = new MXBeanConnector(vmId);
-            new GC(connector).gc();
+            try {
+                String vmId = request.getParameter(GCCommand.VM_ID);
+                MXBeanConnector connector = new MXBeanConnector(vmId);
+                new GC(connector).gc();
+            } catch (GCException gce) {
+                response = new Response(ResponseType.ERROR);
+            }
             break;
-        
         default:
             break;
         }
-        return new Response(ResponseType.OK);
+        return response;
     }
 }

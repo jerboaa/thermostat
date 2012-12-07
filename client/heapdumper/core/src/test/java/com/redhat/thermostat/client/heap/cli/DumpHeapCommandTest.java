@@ -77,15 +77,15 @@ public class DumpHeapCommandTest {
         when(osgi.getService(AgentInfoDAO.class)).thenReturn(agentInfoDao);
 
         HeapDumperCommand impl = mock(HeapDumperCommand.class);
-        final ArgumentCaptor<Runnable> arg = ArgumentCaptor.forClass(Runnable.class);
+        final ArgumentCaptor<Runnable> successHandler = ArgumentCaptor.forClass(Runnable.class);
         doAnswer(new Answer<Void>() {
 
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
-                arg.getValue().run();
+                successHandler.getValue().run();
                 return null;
             }
-        }).when(impl).execute(eq(agentInfoDao), any(VmRef.class), arg.capture());
+        }).when(impl).execute(eq(agentInfoDao), any(VmRef.class), successHandler.capture(), any(Runnable.class));
 
         DumpHeapCommand command = new DumpHeapCommand(osgi, impl);
 
@@ -97,7 +97,7 @@ public class DumpHeapCommandTest {
 
         command.run(factory.createContext(args));
 
-        verify(impl).execute(eq(agentInfoDao), isA(VmRef.class), any(Runnable.class));
+        verify(impl).execute(eq(agentInfoDao), isA(VmRef.class), any(Runnable.class), any(Runnable.class));
         assertEquals("Done\n", factory.getOutput());
     }
 

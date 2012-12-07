@@ -48,6 +48,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -62,6 +63,7 @@ public class GCRequestTest {
 
     private GCRequest gcRequest;
     private Request request;
+    private RequestResponseListener listener;
     
     @Before
     public void setUp() {
@@ -70,6 +72,8 @@ public class GCRequestTest {
 
         request = mock(Request.class);
         
+        listener = mock(RequestResponseListener.class);
+
         HostRef ref = mock(HostRef.class);        
         when(vm.getAgent()).thenReturn(ref);
         when(vm.getIdString()).thenReturn("123456");
@@ -101,7 +105,7 @@ public class GCRequestTest {
             }
         };
         
-        gcRequest.sendGCRequestToAgent(vm, agentDAO);
+        gcRequest.sendGCRequestToAgent(vm, agentDAO, listener);
         verify(vm).getAgent();
         verify(vm).getIdString();
         
@@ -112,6 +116,7 @@ public class GCRequestTest {
         verify(request).setReceiver(GCCommand.RECEIVER);
         verify(request).setParameter(GCCommand.class.getName(), GCCommand.REQUEST_GC.name());
         verify(request).setParameter(GCCommand.VM_ID, "123456");
+        verify(request).addListener(listener);
         
         verify(queue).putRequest(request);
     }
