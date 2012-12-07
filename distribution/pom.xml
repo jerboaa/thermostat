@@ -415,7 +415,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-osgi-memory-stats-panel-swing</artifactId>
+      <artifactId>thermostat-vm-memory-client-swing</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

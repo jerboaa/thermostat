@@ -45,26 +45,14 @@
     <version>0.5.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-client</artifactId>
+  <artifactId>thermostat-vm-memory</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Client</name>
-
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-  </dependencies>
+  <name>Thermostat VM Memory plugin</name>
 
   <modules>
-    <module>core</module>
-    <module>heapdumper</module>
-    <module>living-vm-filter</module>
-    <module>command</module>
-    <module>swing</module>
-    <module>swing-components</module>
+    <module>client-core</module>
+    <module>client-swing</module>
   </modules>
 
 </project>
