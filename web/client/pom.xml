@@ -110,6 +110,11 @@
       <version>${project.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.commons-codec</artifactId>
+      <version>${commons-codec.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -126,6 +131,8 @@
             <Private-Package>
               com.redhat.thermostat.web.client.internal
             </Private-Package>
+            <!-- Eclipse needs v1.3 -->
+            <Import-Package>org.apache.commons.codec.*;version="[1.3,2)",*</Import-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
