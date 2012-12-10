@@ -41,9 +41,6 @@ import java.util.Arrays;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.agent.cli.AgentApplication;
-import com.redhat.thermostat.agent.cli.StorageCommand;
-import com.redhat.thermostat.agent.cli.ServiceCommand;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 

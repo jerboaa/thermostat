@@ -125,14 +125,4 @@ class ServerHandler extends SimpleChannelHandler {
         e.getChannel().close();
     }
 
-    private Response doRequest(Request request) {
-        Response response = new Response(ResponseType.ERROR);
-        switch ((RequestType) request.getType()) {
-        case RESPONSE_EXPECTED:
-            response = new Response(ResponseType.PONG);
-            break;
-        default:
-        }
-        return response;
-    }
 }

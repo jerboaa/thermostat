@@ -43,6 +43,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -55,20 +56,30 @@ public class HeapDumperCommand {
 
     private class HeapDumpListener implements RequestResponseListener {
 
-        private Runnable heapDumpCompleteAction;
+        private Runnable successAction;
+        private Runnable failureAction;
 
-        private HeapDumpListener(Runnable heapDumpCompleteAction) {
-            this.heapDumpCompleteAction = heapDumpCompleteAction;
+        private HeapDumpListener(Runnable heapDumpSuccessfulAction, Runnable heapDumpFailureAction) {
+            this.successAction = heapDumpSuccessfulAction;
+            this.failureAction = heapDumpFailureAction;
         }
 
         @Override
         public void fireComplete(Request request, Response response) {
-            heapDumpCompleteAction.run();
+            if (response.getType() == ResponseType.ERROR) {
+                if (failureAction != null) {
+                    failureAction.run();
+                }
+            } else {
+                if (successAction != null) {
+                    successAction.run();
+                }
+            }
         }
-        
+
     }
 
-    public void execute(AgentInfoDAO agentInfoDAO, VmRef reference, Runnable heapDumpCompleteAction) {
+    public void execute(AgentInfoDAO agentInfoDAO, VmRef reference, Runnable heapDumpSuccessAction, Runnable heapDumpFailureAction) {
 
         HostRef targetHostRef = reference.getAgent();
         String address = agentInfoDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
@@ -78,7 +89,7 @@ public class HeapDumperCommand {
         Request req = new Request(RequestType.RESPONSE_EXPECTED, target);
         req.setReceiver(RECEIVER_CLASS_NAME);
         req.setParameter(VM_ID_PARAM, reference.getIdString());
-        req.addListener(new HeapDumpListener(heapDumpCompleteAction));
+        req.addListener(new HeapDumpListener(heapDumpSuccessAction, heapDumpFailureAction));
 
         RequestQueue queue = OSGIUtils.getInstance().getService(RequestQueue.class);
         queue.putRequest(req);

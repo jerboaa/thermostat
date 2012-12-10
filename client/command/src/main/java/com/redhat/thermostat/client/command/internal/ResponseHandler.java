@@ -72,7 +72,7 @@ public class ResponseHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         // TODO when response has support for parameters, provide the exception as well.
-        Response response = new Response(ResponseType.EXCEPTION);
+        Response response = new Response(ResponseType.ERROR);
         notifyListeners(response);
     }
 

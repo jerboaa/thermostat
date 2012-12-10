@@ -47,8 +47,8 @@ public class ResponseTest {
 
     @Test
     public void testGetType() {
-        Response r = new Response(ResponseType.PONG);
-        assertEquals(ResponseType.PONG, r.getType());
+        Response r = new Response(ResponseType.OK);
+        assertEquals(ResponseType.OK, r.getType());
         r = new Response(ResponseType.ERROR);
         assertEquals(ResponseType.ERROR, r.getType());
     }

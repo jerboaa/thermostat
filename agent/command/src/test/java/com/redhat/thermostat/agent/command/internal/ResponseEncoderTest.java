@@ -68,7 +68,7 @@ public class ResponseEncoderTest {
 
     @Before
     public void setUp() {
-        Response r = new Response(ResponseType.PONG);
+        Response r = new Response(ResponseType.OK);
         e = mock(MessageEvent.class);
         when(e.getMessage()).thenReturn(r);
         when(e.getFuture()).thenReturn(null);
@@ -89,10 +89,10 @@ public class ResponseEncoderTest {
 
         ChannelBuffer buf = (ChannelBuffer) argument.getValue();
         int messageLength = buf.readInt();
-        assertEquals(4, messageLength);
+        assertEquals(2, messageLength);
         ByteBuffer bbuf = ByteBuffer.allocate(buf.readableBytes());
         buf.readBytes(bbuf);
         String message = new String(bbuf.array());
-        assertEquals("PONG", message);
+        assertEquals("OK", message);
     }
 }

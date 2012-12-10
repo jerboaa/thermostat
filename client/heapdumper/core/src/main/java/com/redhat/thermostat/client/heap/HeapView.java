@@ -78,4 +78,6 @@ public abstract class HeapView extends BasicView implements UIComponent {
 
     public abstract void updateHeapDumpList(List<HeapDump> heapDumps);
 
+    public abstract void displayWarning(String string);
+
 }

@@ -84,10 +84,10 @@ public class HeapDumpReceiver implements RequestReceiver {
             
         } catch (IOException e) {
             log.log(Level.SEVERE, "Unexpected IO problem while writing heap dump", e);
-            return new Response(ResponseType.EXCEPTION);
+            return new Response(ResponseType.ERROR);
         } catch (HeapDumpException e) {
             log.log(Level.SEVERE, "Unexpected problem while writing heap dump", e);
-            return new Response(ResponseType.EXCEPTION);
+            return new Response(ResponseType.ERROR);
         }
         return new Response(ResponseType.OK);
     }

@@ -85,7 +85,20 @@ public class LoggingUtilsTest {
         assertEquals(SimpleFormatter.class.getName(), handler.getFormatter().getClass().getName());
         assertEquals(Level.WARNING.getName(), rootLogger.getLevel().getName());
         assertEquals(Level.OFF.getName(), mongodbLogger.getLevel().getName());
-        
+    }
+    
+    @Test
+    public void testHandlersHaveSameLogLevelAsRoot() throws Exception {
+        LoggingUtils.loadConfig(GLOBAL_CONFIG);
+        Logger rootLogger = logManager.getLogger(LoggingUtils.ROOTNAME);
+        FileHandler handler = (FileHandler)getLogHandler(rootLogger, FileHandler.class);
+        assertEquals(Level.WARNING, rootLogger.getLevel());
+        assertEquals(rootLogger.getLevel(), handler.getLevel());
+        LoggingUtils.loadConfig(USER_CONFIG);
+        rootLogger = logManager.getLogger(LoggingUtils.ROOTNAME);
+        ConsoleHandler handler2 = (ConsoleHandler)getLogHandler(rootLogger, ConsoleHandler.class);
+        assertEquals(Level.FINEST, rootLogger.getLevel());
+        assertEquals(rootLogger.getLevel(), handler2.getLevel());
     }
     
     @Test

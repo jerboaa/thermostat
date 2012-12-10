@@ -140,6 +140,7 @@
     <module>vm-cpu</module>
     <module>vm-gc</module>
     <module>vm-classstat</module>
+    <module>vm-memory</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>

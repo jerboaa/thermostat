@@ -40,6 +40,7 @@ import java.net.InetSocketAddress;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -53,7 +54,7 @@ public class GCRequest {
         this.queue = queue;
     }
         
-    public void sendGCRequestToAgent(VmRef vm, AgentInfoDAO agentDAO) {
+    public void sendGCRequestToAgent(VmRef vm, AgentInfoDAO agentDAO, RequestResponseListener responseListener) {
                 
         HostRef targetHostRef = vm.getAgent();
 
@@ -68,6 +69,8 @@ public class GCRequest {
         gcRequest.setParameter(GCCommand.class.getName(), GCCommand.REQUEST_GC.name());
         gcRequest.setParameter(GCCommand.VM_ID, vm.getIdString());
         
+        gcRequest.addListener(responseListener);
+
         queue.putRequest(gcRequest);
     }
     

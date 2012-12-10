@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.heap.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -70,6 +71,7 @@ public class HeapDumperCommandTest {
     private VmRef vmRef;
     private RequestQueue reqQueue;
     private Runnable heapDumpCompleteAction;
+    private Runnable heapDumpFailedAction;
 
     @Before
     public void setUp() {
@@ -91,7 +93,7 @@ public class HeapDumperCommandTest {
         when(vmRef.getIdString()).thenReturn("123");
         when(vmRef.getAgent()).thenReturn(host);
         heapDumpCompleteAction = mock(Runnable.class);
-
+        heapDumpFailedAction = mock(Runnable.class);
     }
 
     @After
@@ -105,7 +107,7 @@ public class HeapDumperCommandTest {
     @Test
 	public void testExecute() {
 
-        cmd.execute(agentInfoDao, vmRef, heapDumpCompleteAction);
+        cmd.execute(agentInfoDao, vmRef, heapDumpCompleteAction, heapDumpFailedAction);
 
 		ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
 		verify(reqQueue).putRequest(reqArg.capture());
@@ -121,6 +123,29 @@ public class HeapDumperCommandTest {
 		    l.fireComplete(req, new Response(ResponseType.OK));
 		}
 		verify(heapDumpCompleteAction).run();
+		verify(heapDumpFailedAction, times(0)).run();
+    }
+
+    @Test
+    public void testExecuteFailure() {
+
+        cmd.execute(agentInfoDao, vmRef, heapDumpCompleteAction, heapDumpFailedAction);
+
+        ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
+        verify(reqQueue).putRequest(reqArg.capture());
+        Request req = reqArg.getValue();
+        assertEquals("com.redhat.thermostat.agent.heapdumper.internal.HeapDumpReceiver", req.getReceiver());
+        verifyClassExists(req.getReceiver());
+        assertEquals(RequestType.RESPONSE_EXPECTED, req.getType());
+        assertEquals("123", req.getParameter("vmId"));
+        assertEquals(new InetSocketAddress("test", 123), req.getTarget());
+
+        Collection<RequestResponseListener> ls = req.getListeners();
+        for (RequestResponseListener l : ls) {
+            l.fireComplete(req, new Response(ResponseType.ERROR));
+        }
+        verify(heapDumpCompleteAction, times(0)).run();
+        verify(heapDumpFailedAction).run();
     }
 
     private void verifyClassExists(String receiver) {

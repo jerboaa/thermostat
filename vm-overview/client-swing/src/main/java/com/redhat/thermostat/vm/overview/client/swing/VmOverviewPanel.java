@@ -37,10 +37,16 @@
 package com.redhat.thermostat.vm.overview.client.swing;
 
 import java.awt.Component;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.Components;
@@ -58,6 +64,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     
     private HeaderPanel visiblePanel;
+    private JScrollPane container;
 
     private final ChangeableText pid = new ChangeableText("");
     private final ChangeableText startTimeStamp = new ChangeableText("");
@@ -68,6 +75,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     private final ChangeableText javaVersion = new ChangeableText("");
     private final ChangeableText vmNameAndVersion = new ChangeableText("");
     private final ChangeableText vmArguments = new ChangeableText("");
+
 
     public VmOverviewPanel() {
         super();
@@ -181,6 +189,9 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
         SimpleTable simpleTable = new SimpleTable();
         JPanel table = simpleTable.createTable(allSections);
         table.setBorder(Components.smallBorder());
-        visiblePanel.setContent(table);
+
+        container = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+
+        visiblePanel.setContent(container);
     }
 }

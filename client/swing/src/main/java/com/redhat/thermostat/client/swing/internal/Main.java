@@ -121,8 +121,12 @@ public class Main {
                     }
                 }
 
-                // TODO: move them in an appropriate place
+                // Thermostat JPopupMenu instances should all be
+                // ThermostatPopupmenu, so this is redundant, but done in case
+                // some client code doesn't use the internal popup
                 JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+                
+                // TODO: move them in an appropriate place
                 UIManager.getDefaults().put("OptionPane.buttonOrientation", SwingConstants.RIGHT);
                 UIManager.getDefaults().put("OptionPane.isYesLast", true);
                 UIManager.getDefaults().put("OptionPane.sameSizeButtons", true);

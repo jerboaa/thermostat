@@ -103,6 +103,7 @@ import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.swing.components.EdtHelper;
 import com.redhat.thermostat.client.swing.components.HtmlTextBuilder;
 import com.redhat.thermostat.client.swing.components.StatusBar;
+import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.MainView;
 import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMutableTreeNode;
 import com.redhat.thermostat.client.swing.views.SearchFieldSwingView;
@@ -326,7 +327,7 @@ public class MainWindow extends JFrame implements MainView {
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
-    private JPopupMenu vmContextMenu;
+    private ThermostatPopupMenu vmContextMenu;
     private StatusBar statusBar;
     
     private final DefaultMutableTreeNode publishedRoot =
@@ -501,7 +502,7 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     private void registerContextActionListener(JTree agentVmTree2) {
-        vmContextMenu = new JPopupMenu();
+        vmContextMenu = new ThermostatPopupMenu();
         agentVmTree2.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {

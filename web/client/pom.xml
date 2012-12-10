@@ -122,10 +122,10 @@
           <instructions>
             <Bundle-SymbolicName>com.redhat.thermostat.web.client</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.web.client.Activator</Bundle-Activator>
-            <Export-Package>
-              com.redhat.thermostat.web.client
-            </Export-Package>
+            <Bundle-Activator>com.redhat.thermostat.web.client.internal.Activator</Bundle-Activator>
+            <Private-Package>
+              com.redhat.thermostat.web.client.internal
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

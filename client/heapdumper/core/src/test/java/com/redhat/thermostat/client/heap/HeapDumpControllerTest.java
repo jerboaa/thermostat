@@ -68,6 +68,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.HeapDAO;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.heap.HeapDump;
@@ -162,7 +163,14 @@ public class HeapDumpControllerTest {
         ApplicationCache cache = mock(ApplicationCache.class);
         when(appService.getApplicationCache()).thenReturn(cache);
         setUpTimers();
+
+        HostRef hostRef = mock(HostRef.class);
+        when(hostRef.getAgentId()).thenReturn("agent-id");
+
         VmRef ref = mock(VmRef.class);
+        when(ref.getIdString()).thenReturn("vm-id");
+        when(ref.getAgent()).thenReturn(hostRef);
+
         heapDumperCommand = mock(HeapDumperCommand.class);
         controller = new HeapDumpController(agentDao, vmDao, heapDao, ref, appService,
                 heapDumperCommand, viewProvider, detailsViewProvider,
@@ -285,12 +293,23 @@ public class HeapDumpControllerTest {
         heapDumperListener.actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.DUMP_REQUESTED));
 
         ArgumentCaptor<Runnable> heapDumpCompleteAction = ArgumentCaptor.forClass(Runnable.class);
-        verify(heapDumperCommand).execute(same(agentDao), any(VmRef.class), heapDumpCompleteAction.capture());
+        verify(heapDumperCommand).execute(same(agentDao), any(VmRef.class), heapDumpCompleteAction.capture(), any(Runnable.class));
         heapDumpCompleteAction.getValue().run();
         verify(view).notifyHeapDumpComplete();
-
     }
- 
+
+    @Test
+    public void testRequestHeapDumpFails() {
+        setUpListeners();
+
+        heapDumperListener.actionPerformed(new ActionEvent<HeapDumperAction>(view, HeapDumperAction.DUMP_REQUESTED));
+
+        ArgumentCaptor<Runnable> heapDumpFailedAction = ArgumentCaptor.forClass(Runnable.class);
+        verify(heapDumperCommand).execute(same(agentDao), any(VmRef.class), any(Runnable.class), heapDumpFailedAction.capture());
+        heapDumpFailedAction.getValue().run();
+        verify(view).displayWarning("Error dumping heap (agent: agent-id, vm: vm-id)");
+    }
+
     @SuppressWarnings("unchecked")
 	@Test
     public void testTimerChecksForNewHeapDumps() {

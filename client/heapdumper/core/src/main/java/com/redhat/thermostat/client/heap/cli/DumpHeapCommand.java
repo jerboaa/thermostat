@@ -71,28 +71,33 @@ public class DumpHeapCommand extends SimpleCommand {
     }
 
     @Override
-    public void run(CommandContext ctx) throws CommandException {
+    public void run(final CommandContext ctx) throws CommandException {
         HostVMArguments args = new HostVMArguments(ctx.getArguments());
 
         final Semaphore s = new Semaphore(0);
-        Runnable r = new Runnable() {
-            
+        Runnable successHandler = new Runnable() {
             @Override
             public void run() {
+                ctx.getConsole().getOutput().println(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
                 s.release();
             }
         };
+        Runnable errorHandler = new Runnable() {
+            public void run() {
+                ctx.getConsole().getError().println(translator.localize(LocaleResources.HEAP_DUMP_ERROR));
+                s.release();
+            }
+        };
+
         AgentInfoDAO service = serviceProvider.getService(AgentInfoDAO.class);
         if (service == null) {
             throw new CommandException("Unable to access agent information");
         }
-        implementation.execute(service, args.getVM(), r);
+        implementation.execute(service, args.getVM(), successHandler, errorHandler);
         serviceProvider.ungetService(AgentInfoDAO.class, service);
 
         try {
             s.acquire();
-            ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HEAP_DUMP_DONE));
-            ctx.getConsole().getOutput().print("\n");
         } catch (InterruptedException ex) {
             // Nothing to do here, just return ASAP.
         }

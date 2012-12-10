@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.agent.cli.db;
 
-import com.redhat.thermostat.agent.cli.StorageCommand;
+import com.redhat.thermostat.agent.cli.impl.StorageCommand;
 
 /**
  * Set of configuration option that the {@link StorageCommand} understands.

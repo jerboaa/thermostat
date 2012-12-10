@@ -98,9 +98,6 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.agent.cli.impl.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.agent.cli</Bundle-SymbolicName>
-            <Export-Package>
-              com.redhat.thermostat.agent.cli,
-            </Export-Package>
             <Private-Package>
               com.redhat.thermostat.agent.cli.impl,
               com.redhat.thermostat.agent.cli.impl.locale,
