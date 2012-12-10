@@ -11,3 +11,5 @@ syntax: glob
 target/*
 bin/*
 *~
+nbactions*.xml
+nb-configuration.xml
