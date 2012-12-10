@@ -179,7 +179,7 @@ public class HeaderPanel extends JPanel {
         hasButtons = true;
     }
     
-    class PreferencesPopup extends JPopupMenu {
+    class PreferencesPopup extends ThermostatPopupMenu {
         JMenuItem preferencesMenu;
         public PreferencesPopup() {
             // TODO: localize
