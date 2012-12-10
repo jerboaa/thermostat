@@ -17,8 +17,8 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
-            <Private-Package>com.redhat.thermostat.vm.overview.client.swing</Private-Package>
-            <Bundle-Activator>com.redhat.thermostat.vm.overview.client.swing.Activator</Bundle-Activator>
+            <Private-Package>com.redhat.thermostat.vm.overview.client.swing.internal</Private-Package>
+            <Bundle-Activator>com.redhat.thermostat.vm.overview.client.swing.internal.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.overview.client.swing</Bundle-SymbolicName>
             <!-- Do not autogenerate uses clauses in Manifests -->

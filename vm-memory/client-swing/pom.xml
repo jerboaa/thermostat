@@ -18,9 +18,9 @@
         <configuration>
           <instructions>
             <Private-Package>
-              com.redhat.thermostat.vm.memory.client.swing
+              com.redhat.thermostat.vm.memory.client.swing.internal
             </Private-Package>
-            <Bundle-Activator>com.redhat.thermostat.vm.memory.client.swing.Activator</Bundle-Activator>
+            <Bundle-Activator>com.redhat.thermostat.vm.memory.client.swing.internal.Activator</Bundle-Activator>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.memory.client.swing</Bundle-SymbolicName>
             <!-- Do not autogenerate uses clauses in Manifests -->
