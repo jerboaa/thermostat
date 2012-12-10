@@ -52,6 +52,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -63,6 +64,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -76,6 +78,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
+import com.redhat.thermostat.storage.core.AuthToken;
+import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -103,6 +107,7 @@ public class WebStorageTest {
     private Map<String,String> headers;
     private String method;
     private String requestURI;
+    private int responseStatus;
 
     private static Category category;
     private static Key<String> key1;
@@ -140,6 +145,7 @@ public class WebStorageTest {
         headers = new HashMap<>();
         requestURI = null;
         method = null;
+        responseStatus = HttpServletResponse.SC_OK;
         registerCategory();
     }
 
@@ -172,7 +178,7 @@ public class WebStorageTest {
                 }
                 requestBody = body.toString();
                 // Send response body.
-                response.setStatus(HttpServletResponse.SC_OK);
+                response.setStatus(responseStatus);
                 if (responseBody != null) {
                     response.getWriter().write(responseBody);
                 }
@@ -322,7 +328,6 @@ public class WebStorageTest {
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        System.err.println("line: " + line);
         String[] parts = line.split("=");
         assertEquals("remove", parts[0]);
         WebRemove actualRemove = gson.fromJson(parts[1], WebRemove.class);
@@ -468,5 +473,71 @@ public class WebStorageTest {
         storage.purge();
         assertEquals("POST", method);
         assertTrue(requestURI.endsWith("/purge"));
+    }
+
+    @Test
+    public void testGenerateToken() throws UnsupportedEncodingException {
+        responseBody = "flufftoken";
+
+        AuthToken authToken = storage.generateToken();
+
+        assertTrue(requestURI.endsWith("/generate-token"));
+        assertEquals("POST", method);
+
+        String[] requestParts = requestBody.split("=");
+        assertEquals("client-token", requestParts[0]);
+        String clientTokenParam = URLDecoder.decode(requestParts[1], "UTF-8");
+        byte[] clientToken = Base64.decodeBase64(clientTokenParam);
+        assertEquals(256, clientToken.length);
+
+        assertTrue(authToken instanceof AuthToken);
+        AuthToken token = (AuthToken) authToken;
+        byte[] tokenBytes = token.getToken();
+        assertEquals("flufftoken", new String(tokenBytes));
+
+        assertTrue(Arrays.equals(clientToken, token.getClientToken()));
+
+        // Send another request and verify that we send a different client-token every time.
+        storage.generateToken();
+
+        requestParts = requestBody.split("=");
+        assertEquals("client-token", requestParts[0]);
+        clientTokenParam = URLDecoder.decode(requestParts[1], "UTF-8");
+        byte[] clientToken2 = Base64.decodeBase64(clientTokenParam);
+        assertFalse(Arrays.equals(clientToken, clientToken2));
+
+    }
+
+    @Test
+    public void testVerifyToken() throws UnsupportedEncodingException {
+        byte[] token = "stuff".getBytes();
+        byte[] clientToken = "fluff".getBytes();
+        AuthToken authToken = new AuthToken(token, clientToken);
+
+        responseStatus = 200;
+        boolean ok = storage.verifyToken(authToken);
+        assertTrue(requestURI.endsWith("/verify-token"));
+        assertEquals("POST", method);
+        String[] requestParts = requestBody.split("&");
+        assertEquals(2, requestParts.length);
+        String[] clientTokenParts = requestParts[0].split("=");
+        assertEquals(2, clientTokenParts.length);
+        assertEquals("client-token", clientTokenParts[0]);
+        String urlDecoded = URLDecoder.decode(clientTokenParts[1], "UTF-8");
+        String base64decoded = new String(Base64.decodeBase64(urlDecoded));
+        assertEquals("fluff", base64decoded);
+        String[] authTokenParts = requestParts[1].split("=");
+        assertEquals(2, authTokenParts.length);
+        assertEquals("token", authTokenParts[0]);
+        urlDecoded = URLDecoder.decode(authTokenParts[1], "UTF-8");
+        base64decoded = new String(Base64.decodeBase64(urlDecoded));
+        assertEquals("stuff", base64decoded);
+        assertTrue(ok);
+
+        // Try another one in which verification fails.
+        responseStatus = 401;
+        ok = storage.verifyToken(authToken);
+        assertFalse(ok);
+        
     }
 }

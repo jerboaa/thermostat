@@ -107,7 +107,7 @@ class WebServiceLauncher {
         ConstraintMapping constraintMap = new ConstraintMapping();
         Constraint constraint = new Constraint();
         constraint.setAuthenticate(true);
-        constraint.setRoles(new String[] { "thermostat-client", "thermostat-agent" });
+        constraint.setRoles(new String[] { "thermostat-client", "thermostat-agent", "thermostat-cmd-channel" });
         constraint.setName("Entire Application");
         constraintMap.setPathSpec("/*");
         constraintMap.setConstraint(constraint);
@@ -121,12 +121,12 @@ class WebServiceLauncher {
             
             @Override
             protected void loadUsers() throws IOException {
-                putUser("thermostat", new Password("thermostat"), new String[] { "thermostat-agent", "thermostat-client" });
+                putUser("thermostat", new Password("thermostat"), new String[] { "thermostat-agent", "thermostat-client", "thermostat-cmd-channel" });
             }
 
             @Override
             protected UserIdentity loadUser(String username) {
-                return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent", "thermostat-client" });
+                return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent", "thermostat-client", "thermostat-cmd-channel" });
             }
         });
         ctx.setSecurityHandler(secHandler);

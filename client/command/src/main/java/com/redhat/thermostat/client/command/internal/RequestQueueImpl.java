@@ -39,15 +39,23 @@ package com.redhat.thermostat.client.command.internal;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.commons.codec.binary.Base64;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.storage.core.AuthToken;
+import com.redhat.thermostat.storage.core.SecureStorage;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageException;
 
 class RequestQueueImpl implements RequestQueue {
 
@@ -64,7 +72,27 @@ class RequestQueueImpl implements RequestQueue {
 
     @Override
     public void putRequest(Request request) {
+        authenticateRequest(request);
         queue.add(request);
+    }
+
+    private void authenticateRequest(Request request) {
+        BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference storageRef = bCtx.getServiceReference(Storage.class.getName());
+        Storage storage = (Storage) bCtx.getService(storageRef);
+        if (storage instanceof SecureStorage) {
+            authenticateRequest(request, (SecureStorage) storage);
+        }
+    }
+
+    private void authenticateRequest(Request request, SecureStorage storage) {
+        try {
+            AuthToken token = storage.generateToken();
+            request.setParameter(Request.CLIENT_TOKEN, Base64.encodeBase64String(token.getClientToken()));
+            request.setParameter(Request.AUTH_TOKEN, Base64.encodeBase64String(token.getToken()));
+        } catch (StorageException ex) {
+            fireComplete(request, new Response(ResponseType.AUTH_FAILED));
+        }
     }
 
     synchronized void startProcessingRequests() {
@@ -112,12 +140,17 @@ class RequestQueueImpl implements RequestQueue {
                 	c.write(request);
                 } else {
                 	Response response  = new Response(ResponseType.ERROR);
-                	// TODO add more information once Response supports parameters.
-                	for (RequestResponseListener listener : request.getListeners()) {
-                		listener.fireComplete(request, response);
-                	}
+                	fireComplete(request, response);
                 }
             }
+        }
+
+    }
+
+    private void fireComplete(Request request, Response response) {
+        // TODO add more information once Response supports parameters.
+        for (RequestResponseListener listener : request.getListeners()) {
+            listener.fireComplete(request, response);
         }
     }
 }

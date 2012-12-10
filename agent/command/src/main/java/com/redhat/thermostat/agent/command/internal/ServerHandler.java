@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.command.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.codec.binary.Base64;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
@@ -46,14 +47,20 @@ import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
 import org.jboss.netty.channel.SimpleChannelHandler;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.AuthToken;
+import com.redhat.thermostat.storage.core.SecureStorage;
+import com.redhat.thermostat.storage.core.Storage;
 
 class ServerHandler extends SimpleChannelHandler {
 
@@ -68,13 +75,19 @@ class ServerHandler extends SimpleChannelHandler {
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
         Request request = (Request) e.getMessage();
-        logger.info("Request received: " + request.getType().toString());
-        RequestReceiver receiver = receivers.getReceiver(request.getReceiver());
+        boolean authSucceeded = authenticateRequestIfNecessary(request);
         Response response = null;
-        if (receiver != null) {
-            response = receiver.receive(request);
+        if (! authSucceeded) {
+            response = new Response(ResponseType.AUTH_FAILED);
         } else {
-            response = new Response(ResponseType.ERROR);
+            logger.info("Request received: " + request.getType().toString());
+            RequestReceiver receiver = receivers.getReceiver(request
+                    .getReceiver());
+            if (receiver != null) {
+                response = receiver.receive(request);
+            } else {
+                response = new Response(ResponseType.ERROR);
+            }
         }
         Channel channel = ctx.getChannel();
         if (channel.isConnected()) {
@@ -84,6 +97,26 @@ class ServerHandler extends SimpleChannelHandler {
         } else {
             logger.warning("Channel not connected.");
         }
+    }
+
+    private boolean authenticateRequestIfNecessary(Request request) {
+        BundleContext bCtx = FrameworkUtil.getBundle(getClass()).getBundleContext();
+        ServiceReference storageRef = bCtx.getServiceReference(Storage.class.getName());
+        Storage storage = (Storage) bCtx.getService(storageRef);
+        if (storage instanceof SecureStorage) {
+            return authenticateRequest(request, (SecureStorage) storage);
+        } else {
+            return true;
+        }
+    }
+
+    private boolean authenticateRequest(Request request, SecureStorage storage) {
+        String clientTokenStr = request.getParameter(Request.CLIENT_TOKEN);
+        byte[] clientToken = Base64.decodeBase64(clientTokenStr);
+        String authTokenStr = request.getParameter(Request.AUTH_TOKEN);
+        byte[] authToken = Base64.decodeBase64(authTokenStr);
+        AuthToken token = new AuthToken(authToken, clientToken);
+        return storage.verifyToken(token);
     }
 
     @Override

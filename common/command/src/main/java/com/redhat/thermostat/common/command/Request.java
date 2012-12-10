@@ -59,6 +59,9 @@ public class Request implements Message {
 
     private static final String RECEIVER = "receiver";
 
+    public static final String CLIENT_TOKEN = "client-token";
+    public static final String AUTH_TOKEN = "auth-token";
+
     public Request(RequestType type, SocketAddress target) {
         this.type = type;
         parameters = new TreeMap<>();

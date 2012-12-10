@@ -59,6 +59,7 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.codec.binary.Base64;
 import org.eclipse.jetty.security.DefaultUserIdentity;
 import org.eclipse.jetty.security.MappedLoginService;
 import org.eclipse.jetty.server.Server;
@@ -177,10 +178,15 @@ public class WebStorageEndpointTest {
             @Override
             protected void loadUsers() throws IOException {
                 putUser("testname", new Password("testpasswd"), new String[] { "thermostat-agent" });
+                putUser("test-no-role", new Password("testpasswd"), new String[] { "fluff" });
+                putUser("test-cmd-channel", new Password("testpasswd"), new String[] { "thermostat-cmd-channel" });
             }
             
             @Override
             protected UserIdentity loadUser(String username) {
+                if (username.equals("test-cmd-channel")) {
+                    return new DefaultUserIdentity(null, null, new String[] { "thermostat-cmd-channel" });
+                }
                 return new DefaultUserIdentity(null, null, new String[] { "thermostat-agent" });
             }
         });
@@ -289,10 +295,7 @@ public class WebStorageEndpointTest {
         URL url = new URL(endpoint + "/put-pojo");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        BASE64Encoder enc = new BASE64Encoder();
-        String userpassword = "testname:testpasswd";
-        String encodedAuthorization = enc.encode( userpassword.getBytes() );
-        conn.setRequestProperty("Authorization", "Basic "+ encodedAuthorization);
+        sendAuthorization(conn, "testname", "testpasswd");
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
@@ -308,6 +311,13 @@ public class WebStorageEndpointTest {
         out.flush();
         assertEquals(200, conn.getResponseCode());
         verify(mockStorage).putPojo(category, true, expected1);
+    }
+
+    private void sendAuthorization(HttpURLConnection conn, String username, String passwd) {
+        BASE64Encoder enc = new BASE64Encoder();
+        String userpassword = username + ":" + passwd;
+        String encodedAuthorization = enc.encode( userpassword.getBytes() );
+        conn.setRequestProperty("Authorization", "Basic "+ encodedAuthorization);
     }
 
     @Test
@@ -423,7 +433,6 @@ public class WebStorageEndpointTest {
         out.write("--fluff--\r\n");
         out.flush();
         int status = conn.getResponseCode();
-        System.err.println("status: " + status);
         ArgumentCaptor<InputStream> inCaptor = ArgumentCaptor.forClass(InputStream.class);
         verify(mockStorage).saveFile(eq("fluff"), inCaptor.capture());
         InputStream in = inCaptor.getValue();
@@ -510,6 +519,118 @@ public class WebStorageEndpointTest {
     }
 
     private String getEndpoint() {
-        return "http://testname:testpasswd@localhost:" + port + "/storage";
+        return "http://localhost:" + port + "/storage";
+    }
+
+    @Test
+    public void testBasicGenerateToken() throws IOException {
+        
+        verifyGenerateToken();
+    }
+
+    @Test
+    public void testGenerateTokenWithoutAuth() throws IOException {
+        
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/generate-token");
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthorization(conn, "test-no-role", "testpasswd");
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("client-token=fluff");
+        out.flush();
+        assertEquals(401, conn.getResponseCode());
+    }
+
+    @Test
+    public void testBasicGenerateVerifyToken() throws IOException {
+        
+        byte[] token = verifyGenerateToken();
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/verify-token");
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
+        out.flush();
+        assertEquals(200, conn.getResponseCode());
+    }
+
+    @Test
+    public void testTokenTimeout() throws IOException, InterruptedException {
+        
+        byte[] token = verifyGenerateToken();
+
+        Thread.sleep(700); // Timeout is set to 500ms for tests, 700ms should be enough for everybody. ;-)
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/verify-token");
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
+        out.flush();
+        assertEquals(401, conn.getResponseCode());
+    }
+
+    @Test
+    public void testVerifyNonExistentToken() throws IOException {
+        
+        byte[] token = "fluff".getBytes();
+
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/verify-token");
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
+        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
+        out.flush();
+        assertEquals(401, conn.getResponseCode());
+    }
+
+    private byte[] verifyGenerateToken() throws IOException {
+        String endpoint = getEndpoint();
+        URL url = new URL(endpoint + "/generate-token");
+
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        sendAuthorization(conn, "test-cmd-channel", "testpasswd");
+        conn.setDoOutput(true);
+        conn.setDoInput(true);
+        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
+        out.write("client-token=fluff");
+        out.flush();
+        InputStream in = conn.getInputStream();
+        int length = conn.getContentLength();
+        byte[] token  = new byte[length];
+        assertEquals(256, length);
+        int totalRead = 0;
+        while (totalRead < length) {
+            int read = in.read(token, totalRead, length - totalRead);
+            if (read < 0) {
+                fail();
+            }
+            totalRead += read;
+        }
+        return token;
     }
 }

@@ -50,6 +50,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileItemFactory;
 import org.apache.commons.fileupload.FileUploadException;
@@ -65,10 +66,10 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.Qualifier;
@@ -82,7 +83,12 @@ import com.redhat.thermostat.web.common.WebUpdate;
 @SuppressWarnings("serial")
 public class WebStorageEndPoint extends HttpServlet {
 
+    private static final String TOKEN_MANAGER_TIMEOUT_PARAM = "token-manager-timeout";
+    private static final String TOKEN_MANAGER_KEY = "token-manager";
     private static final String ROLE_THERMOSTAT_AGENT = "thermostat-agent";
+    private static final String ROLE_THERMOSTAT_CLIENT = "thermostat-client";
+    private static final String ROLE_CMD_CHANNEL = "thermostat-cmd-channel";
+
     private Storage storage;
     private Gson gson;
 
@@ -98,6 +104,12 @@ public class WebStorageEndPoint extends HttpServlet {
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();
+        TokenManager tokenManager = new TokenManager();
+        String timeoutParam = getInitParameter(TOKEN_MANAGER_TIMEOUT_PARAM);
+        if (timeoutParam != null) {
+            tokenManager.setTimeout(Integer.parseInt(timeoutParam));
+        }
+        getServletContext().setAttribute(TOKEN_MANAGER_KEY, tokenManager);
     }
 
     @Override
@@ -132,6 +144,10 @@ public class WebStorageEndPoint extends HttpServlet {
             purge(req, resp);
         } else if (cmd.equals("ping")) {
             ping(req, resp);
+        } else if (cmd.equals("generate-token")) {
+            generateToken(req, resp);
+        } else if (cmd.equals("verify-token")) {
+            verifyToken(req, resp);
         }
     }
 
@@ -355,5 +371,37 @@ public class WebStorageEndPoint extends HttpServlet {
         gson.toJson(result, resp.getWriter());
         resp.flushBuffer();
     }
+
+    private void generateToken(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        if (! req.isUserInRole(ROLE_CMD_CHANNEL)) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        TokenManager tokenManager = (TokenManager) getServletContext().getAttribute(TOKEN_MANAGER_KEY);
+        assert tokenManager != null;
+        String clientToken = req.getParameter("client-token");
+        byte[] token = tokenManager.generateToken(clientToken);
+        resp.setContentType("application/octet-stream");
+        resp.setContentLength(token.length);
+        resp.getOutputStream().write(token);
+    }
+
+    private void verifyToken(HttpServletRequest req, HttpServletResponse resp) {
+        if (! req.isUserInRole(ROLE_CMD_CHANNEL)) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        TokenManager tokenManager = (TokenManager) getServletContext().getAttribute(TOKEN_MANAGER_KEY);
+        assert tokenManager != null;
+        String clientToken = req.getParameter("client-token");
+        byte[] token = Base64.decodeBase64(req.getParameter("token"));
+        boolean verified = tokenManager.verifyToken(clientToken, token);
+        if (! verified) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        } else {
+            resp.setStatus(HttpServletResponse.SC_OK);
+        }
+    }
+
 
 }

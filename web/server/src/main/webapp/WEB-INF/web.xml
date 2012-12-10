@@ -8,6 +8,11 @@
   <servlet>
     <servlet-name>reststorage-servlet</servlet-name>
     <servlet-class>com.redhat.thermostat.web.server.WebStorageEndPoint</servlet-class>
+    <!-- The timeout of the token manager in ms. We use 500ms for testing. -->
+    <init-param>
+      <param-name>token-manager-timeout</param-name>
+      <param-value>500</param-value>
+    </init-param>
   </servlet>
 
   <servlet-mapping>

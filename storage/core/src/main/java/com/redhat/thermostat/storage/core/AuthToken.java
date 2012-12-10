@@ -34,33 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.command;
+
+package com.redhat.thermostat.storage.core;
+
+import java.util.Arrays;
 
 
+public class AuthToken {
 
+    private byte[] token;
+    private byte[] clientToken;
 
-public class Response implements Message {
-
-    // TODO add parameter support to provide more information in some of these types.
-    public enum ResponseType implements MessageType {
-        PONG,      // Just here as response to PING.
-        OK,        // Request has been acknowledged and completed agent-side.
-        NOK,       // Request has been acknowledged and refused agent-side.
-        NOOP,      // Request has been acknowledged, but no action deemed necessary agent-side.
-        ERROR,     // An error on the agent side.
-        EXCEPTION, // Exception caught by channel handler.  Agent-side status unknown.
-        AUTH_FAILED; // When authentication fails in SecureStorage.
+    public AuthToken(byte[] token, byte[] clientToken) {
+        this.token = token;
+        this.clientToken = clientToken;
     }
 
-    ResponseType type;
-
-    public Response (ResponseType type) {
-        this.type = type;
+    public byte[] getToken() {
+        return token;
     }
 
-    @Override
-    public ResponseType getType() {
-        return type;
+    public byte[] getClientToken() {
+        return clientToken;
     }
 
+    public String toString() {
+        return "AuthToken: client-token: " + Arrays.toString(clientToken) + ", token: " + Arrays.toString(token);
+    }
 }
