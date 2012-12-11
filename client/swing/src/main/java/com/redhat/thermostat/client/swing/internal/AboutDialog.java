@@ -60,6 +60,7 @@ import javax.swing.border.TitledBorder;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.swing.ThermostatSwingUtils;
 import com.redhat.thermostat.client.swing.UIResources;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.locale.Translate;
@@ -86,6 +87,9 @@ public class AboutDialog extends JDialog {
      * @param applicationInfo 
      */
     public AboutDialog(ApplicationInfo appInfo) {
+        
+        super(ThermostatSwingUtils.getMainFrame(), true);
+        
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setResizable(false);
         
@@ -99,6 +103,14 @@ public class AboutDialog extends JDialog {
         email = appInfo.getEmail();
         
         initComponents();
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        if (b) {
+            setLocationRelativeTo(ThermostatSwingUtils.getMainFrame());
+        }
+        super.setVisible(b);
     }
     
     private void initComponents() {
