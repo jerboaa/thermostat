@@ -47,8 +47,8 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
-import com.redhat.swing.laf.dolphin.DolphinLookAndFeel;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.internal.config.ConnectionConfiguration;
@@ -104,22 +104,50 @@ public class Main {
         this.daoFactory = daoFactory;
     }
 
+    private void setLAF() {
+        
+        boolean useDefault = false;
+        
+        // check if the user has other preferences...
+        String laf = System.getProperty("swing.defaultlaf");
+        if (laf == null) {
+            useDefault = true;
+            
+        } else if (laf.equalsIgnoreCase("dolphin")) {
+            try {
+                UIManager.setLookAndFeel("com.redhat.swing.laf.dolphin.DolphinLookAndFeel");
+            } catch (UnsupportedLookAndFeelException | ClassNotFoundException |
+                     InstantiationException | IllegalAccessException e) {
+                useDefault = true;
+                logger.log(Level.WARNING, "cannot set DolphinLookAndFeel");
+            }
+        } else if (laf.equalsIgnoreCase("system")) {
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (UnsupportedLookAndFeelException | ClassNotFoundException |
+                     InstantiationException | IllegalAccessException e) {
+                useDefault = true;
+                logger.log(Level.WARNING, "cannot set System LookAndFeel");
+            }
+        }
+        
+        if (useDefault) {
+            try {
+                UIManager.setLookAndFeel(new NimbusLookAndFeel());
+            } catch (UnsupportedLookAndFeelException e) {
+                // well, whatever...
+                logger.log(Level.WARNING, "cannot set NimbusLookAndFeel");
+            }
+        }
+    }
+    
     public void run() {
         EventQueue.invokeLater(new Runnable() {
 
             @Override
             public void run() {
 
-                // check if the user has other preferences...
-                // not that there is any reason!
-                String laf = System.getProperty("swing.defaultlaf");
-                if (laf == null) {
-                    try {
-                        UIManager.setLookAndFeel(new DolphinLookAndFeel());
-                    } catch (UnsupportedLookAndFeelException e) {
-                        logger.log(Level.WARNING, "cannot use DolphinLookAndFeel");
-                    }
-                }
+                setLAF();
 
                 // Thermostat JPopupMenu instances should all be
                 // ThermostatPopupmenu, so this is redundant, but done in case
