@@ -69,7 +69,6 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTree;
@@ -120,6 +119,8 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.StringUtils;
 
 public class MainWindow extends JFrame implements MainView {
+    
+    public static final String MAIN_WINDOW_NAME = "Thermostat_mainWindo_JFrame_parent#1";
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -338,6 +339,8 @@ public class MainWindow extends JFrame implements MainView {
     public MainWindow() {
         super();
 
+        setName(MAIN_WINDOW_NAME);
+        
         shutdownAction = new ShutdownClient();
 
         searchField.addActionListener(new ActionListener<SearchAction>() {
