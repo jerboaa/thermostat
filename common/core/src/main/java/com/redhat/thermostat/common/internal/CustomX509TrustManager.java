@@ -34,12 +34,9 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.client.internal;
+package com.redhat.thermostat.common.internal;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -98,7 +95,7 @@ class CustomX509TrustManager implements X509TrustManager {
     }
 
     /*
-     * Main constructor. Others are used for testing.
+     * Main constructor, which uses ssl.properties as config if present.
      */
     CustomX509TrustManager() {
         this(SSLKeystoreConfiguration.getKeystoreFile(), SSLKeystoreConfiguration.getKeyStorePassword());
@@ -140,18 +137,10 @@ class CustomX509TrustManager implements X509TrustManager {
      */
     private X509TrustManager getOurTrustManager(File trustStoreFile,
             String keyStorePassword) {
-        KeyStore trustStore = null;
-        if (trustStoreFile != null && trustStoreFile.exists()) {
+        KeyStore trustStore  = KeyStoreProvider.getKeyStore(trustStoreFile, keyStorePassword);
+        if (trustStore != null) {
+            // backing keystore file existed and initialization was successful.
             try {
-                trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                try (InputStream is = new FileInputStream(trustStoreFile)) {
-                    trustStore.load(is, keyStorePassword.toCharArray());
-                } catch (IOException | CertificateException
-                        | NoSuchAlgorithmException e) {
-                    logger.log(Level.WARNING,
-                            "Could not load Thermostat trust manager");
-                    return null;
-                }
                 TrustManagerFactory tmf = null;
                 tmf = TrustManagerFactory.getInstance("SunX509", "SunJSSE");
                 tmf.init(trustStore);

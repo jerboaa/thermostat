@@ -34,34 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.client.internal;
+package com.redhat.thermostat.common.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import java.io.File;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.web.client.internal.SSLKeystoreConfiguration;
-
-public class SSLKeystoreConfigurationTest {
+public class KeyStoreProviderTest {
 
     @Test
-    public void canGetKeystoreFileFromProps() throws Exception {
-        File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
-        SSLKeystoreConfiguration.initClientProperties(clientProps);
-        String keystorePath = "/path/to/thermostat.keystore";
-        String keystorePwd = "some password";
-        assertEquals(keystorePath, SSLKeystoreConfiguration.getKeystoreFile().getAbsolutePath());
-        assertEquals(keystorePwd, SSLKeystoreConfiguration.getKeyStorePassword());
+    public void nonExistentFileReturnsNull() {
+        File notThere = new File("/some/path/that/doesnt/exists");
+        assertNull(KeyStoreProvider.getKeyStore(notThere, "ignored"));
     }
     
     @Test
-    public void notExistingPropertiesFileReturnsNull() throws Exception {
-        File clientProps = new File("i/am/not/there/file.txt");
-        SSLKeystoreConfiguration.initClientProperties(clientProps);
-        assertTrue(SSLKeystoreConfiguration.getKeystoreFile() == null);
-        assertEquals("", SSLKeystoreConfiguration.getKeyStorePassword());
+    public void nullFileReturnsNull() {
+        assertNull(KeyStoreProvider.getKeyStore(null, "ignored"));
+    }
+    
+    @Test
+    public void existingFileWithWrongPwdReturnsNull() {
+        File keystore = new File(this.getClass()
+                .getResource("/test_ca.keystore").getFile());
+        assertNull(KeyStoreProvider.getKeyStore(keystore, "wrong password"));
+    }
+    
+    @Test
+    public void existingFileWithCorrectPasswordWorks() {
+        File keystore = new File(this.getClass()
+                .getResource("/test_ca.keystore").getFile());
+        assertNotNull("Should have been able to retrieve and load keystore", KeyStoreProvider.getKeyStore(keystore, "testpassword"));
     }
 }

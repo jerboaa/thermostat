@@ -45,7 +45,6 @@ import java.io.Reader;
 import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,8 +56,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
@@ -83,9 +80,11 @@ import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.redhat.thermostat.storage.core.AuthToken;
+import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -301,19 +300,11 @@ public class WebStorage implements Storage, SecureStorage {
     private void registerSSLScheme(ClientConnectionManager conManager)
             throws StorageException {
         try {
-            SSLContext sc = SSLContext.getInstance("TLS");
-            X509TrustManager ourTm;
-            try {
-                ourTm = new CustomX509TrustManager();
-            } catch (Exception e) {
-                throw new StorageException(e);
-            }
-            TrustManager[] tms = new TrustManager[] { ourTm };
-            sc.init(null, tms, new SecureRandom());
+            SSLContext sc = SSLContextFactory.getClientContext();
             SSLSocketFactory socketFactory = new SSLSocketFactory(sc);
             Scheme sch = new Scheme("https", 443, socketFactory);
             conManager.getSchemeRegistry().register(sch);
-        } catch ( GeneralSecurityException e) {
+        } catch ( SslInitException e) {
             throw new StorageException(e);
         }
     }

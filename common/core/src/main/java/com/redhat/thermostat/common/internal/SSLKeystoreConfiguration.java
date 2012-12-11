@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.client.internal;
+package com.redhat.thermostat.common.internal;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,7 +53,7 @@ public class SSLKeystoreConfiguration {
     /**
      * 
      * @return The keystore file as specified in
-     *         $THERMOSTAT_HOME/client.properties if any. null otherwise.
+     *         $THERMOSTAT_HOME/ssl.properties if any. null otherwise.
      */
     public static File getKeystoreFile() {
         try {
@@ -74,7 +74,7 @@ public class SSLKeystoreConfiguration {
     /**
      * 
      * @return The keystore file as specified in
-     *         $THERMOSTAT_HOME/client.properties if any. The empty string
+     *         $THERMOSTAT_HOME/ssl.properties if any. The empty string
      *         otherwise.
      * @throws InvalidConfigurationException
      */
@@ -99,8 +99,8 @@ public class SSLKeystoreConfiguration {
         try {
             clientProps.load(new FileInputStream(clientPropertiesFile));
         } catch (IOException | IllegalArgumentException e) {
-            // Could not load client properties file. This is fine as it's
-            // an optional config after all.
+            // Could not load ssl properties file. This is fine as it's
+            // an optional config.
         }
     }
 
@@ -110,7 +110,7 @@ public class SSLKeystoreConfiguration {
             File thermostatEtcDir = new File(ConfigUtils.getThermostatHome(),
                     "etc");
             File clientPropertiesFile = new File(thermostatEtcDir,
-                    "client.properties");
+                    "ssl.properties");
             initClientProperties(clientPropertiesFile);
         }
     }

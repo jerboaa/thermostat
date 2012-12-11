@@ -131,7 +131,7 @@
                   <targetPath>etc</targetPath>
                   <filtering>true</filtering>
                   <includes>
-                    <include>client.properties</include>
+                    <include>ssl.properties</include>
                   </includes>
                 </resource>
                 <resource>

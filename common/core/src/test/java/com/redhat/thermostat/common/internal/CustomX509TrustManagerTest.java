@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.client.internal;
+package com.redhat.thermostat.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -49,7 +49,7 @@ import javax.net.ssl.X509TrustManager;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.web.client.internal.CustomX509TrustManager;
+import com.redhat.thermostat.common.internal.CustomX509TrustManager;
 
 /**
  * This trust manager test uses files in src/test/resources. Files are as
