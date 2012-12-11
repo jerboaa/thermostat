@@ -39,6 +39,8 @@ package com.redhat.thermostat.client.swing.internal;
 import java.awt.event.MouseEvent;
 import java.util.List;
 
+import javax.swing.JFrame;
+
 import com.redhat.thermostat.client.core.HostFilter;
 import com.redhat.thermostat.client.core.VmFilter;
 import com.redhat.thermostat.client.core.views.BasicView;
@@ -99,4 +101,6 @@ public interface MainView {
     void removeMenu(MenuAction action);
 
     void showVMContextActions(List<VMContextAction> actions, MouseEvent e);
+    
+    JFrame getTopFrame();
 }

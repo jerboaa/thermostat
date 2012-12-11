@@ -398,6 +398,7 @@ public class MainWindowControllerImpl implements MainWindowController {
         AboutDialog aboutDialog = new AboutDialog(appInfo);
         aboutDialog.setModal(true);
         aboutDialog.pack();
+        aboutDialog.setLocationRelativeTo(view.getTopFrame());
         aboutDialog.setVisible(true);
     }
 

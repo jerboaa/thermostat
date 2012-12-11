@@ -678,6 +678,11 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     @Override
+    public JFrame getTopFrame() {
+        return this;
+    }
+    
+    @Override
     public void addActionListener(ActionListener<Action> l) {
         actionNotifier.addActionListener(l);
     }

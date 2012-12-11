@@ -51,6 +51,7 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
@@ -60,7 +61,6 @@ import javax.swing.border.TitledBorder;
 
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.IconResource;
-import com.redhat.thermostat.client.swing.ThermostatSwingUtils;
 import com.redhat.thermostat.client.swing.UIResources;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.locale.Translate;
@@ -87,9 +87,7 @@ public class AboutDialog extends JDialog {
      * @param applicationInfo 
      */
     public AboutDialog(ApplicationInfo appInfo) {
-        
-        super(ThermostatSwingUtils.getMainFrame(), true);
-        
+       
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setResizable(false);
         
@@ -105,14 +103,6 @@ public class AboutDialog extends JDialog {
         initComponents();
     }
 
-    @Override
-    public void setVisible(boolean b) {
-        if (b) {
-            setLocationRelativeTo(ThermostatSwingUtils.getMainFrame());
-        }
-        super.setVisible(b);
-    }
-    
     private void initComponents() {
         setBounds(100, 100, 450, 338);
         
