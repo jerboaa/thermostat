@@ -115,10 +115,11 @@
             <Bundle-SymbolicName>com.redhat.thermostat.tools</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.tools,
-              com.redhat.thermostat.tools.cli,
-              com.redhat.thermostat.tools.db,
             </Export-Package>
-            <Private-Package>META_INF.services</Private-Package>
+            <Private-Package>
+              META_INF.services,
+              com.redhat.thermostat.tools.cli,
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

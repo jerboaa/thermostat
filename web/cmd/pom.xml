@@ -110,7 +110,7 @@
             <Bundle-SymbolicName>com.redhat.thermostat.web.cmd</Bundle-SymbolicName>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.web.cmd.Activator</Bundle-Activator>
-            <Export-Package>com.redhat.thermostat.web.cmd</Export-Package>
+            <Private-Package>com.redhat.thermostat.web.cmd</Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

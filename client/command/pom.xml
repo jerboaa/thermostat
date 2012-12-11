@@ -103,10 +103,10 @@
             <Bundle-SymbolicName>com.redhat.thermostat.client.command</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.client.command,
-              com.redhat.thermostat.client.command.cli
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.client.command.internal
+              com.redhat.thermostat.client.command.cli,
+              com.redhat.thermostat.client.command.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
