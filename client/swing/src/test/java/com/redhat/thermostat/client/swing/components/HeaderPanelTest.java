@@ -81,7 +81,7 @@ public class HeaderPanelTest {
     
     @Before
     public void setUp() {
-        
+        try {
         Random random = new Random(); 
         prefs = Preferences.userRoot().node(HeaderPanelTest.class.getName() + "." + random.nextInt());
         
@@ -120,7 +120,12 @@ public class HeaderPanelTest {
                 frame.setMinimumSize(new Dimension(800, 300));
             }
         });
+	System.out.println("finished GUI task, about to create frameFixture");
         frameFixture = new FrameFixture(frame);
+	System.out.println("created frameFixture: " + frameFixture);
+	} catch (Throwable e) {
+	    e.printStackTrace(System.out);
+	}
     }
     
     @After
