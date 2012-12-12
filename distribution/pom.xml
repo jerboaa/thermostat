@@ -421,6 +421,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-heap-analysis-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-osgi-living-vm-filter-swing</artifactId>
         <version>${project.version}</version>
@@ -442,7 +447,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-agent-heapdumper</artifactId>
+      <artifactId>thermostat-vm-heap-analysis-agent</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -468,11 +473,6 @@
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-osgi-process-handler</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-client-heapdumper-swing</artifactId>
         <version>${project.version}</version>
     </dependency>
     <dependency>

@@ -140,6 +140,7 @@
     <module>vm-gc</module>
     <module>vm-classstat</module>
     <module>vm-memory</module>
+    <module>vm-heap-analysis</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>

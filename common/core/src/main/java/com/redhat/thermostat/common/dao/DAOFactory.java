@@ -68,8 +68,6 @@ public interface DAOFactory {
 
     public VmGcStatDAO getVmGcStatDAO();
 
-    public HeapDAO getHeapDAO();
-
     public void registerDAOsAndStorageAsOSGiServices();
     public void unregisterDAOsAndStorageAsOSGiServices();
 

@@ -138,19 +138,13 @@ public class MongoDAOFactoryTest {
     }
 
     @Test
-    public void testGetHeapDAO() {
-        HeapDAO dao = daoFactory.getHeapDAO();
-        assertNotNull(dao);
-    }
-
-    @Test
     public void testServiceRegistration() {
         assertEquals(0, bundleContext.getAllServices().size());
 
         daoFactory.registerDAOsAndStorageAsOSGiServices();
 
         // currently 12 DAOs and Storage are registered
-        assertEquals(13, bundleContext.getAllServices().size());
+        assertEquals(12, bundleContext.getAllServices().size());
     }
 
     @Test

@@ -62,7 +62,6 @@
     <module>cli</module>
     <module>core</module>
     <module>command</module>
-    <module>heapdumper</module>
   </modules>
 
 </project>

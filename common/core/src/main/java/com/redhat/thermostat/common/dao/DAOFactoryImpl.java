@@ -65,7 +65,6 @@ public class DAOFactoryImpl implements DAOFactory {
     private VmClassStatDAO vmClassStatDAO;
     private VmMemoryStatDAO vmMemStatDAO;
     private VmGcStatDAO vmGcStatDAO;
-    private HeapDAO heapDAO;
 
     public DAOFactoryImpl(StorageProvider prov) {
         this(FrameworkUtil.getBundle(DAOFactoryImpl.class).getBundleContext(), prov);
@@ -159,12 +158,6 @@ public class DAOFactoryImpl implements DAOFactory {
     }
 
     @Override
-    public HeapDAO getHeapDAO() {
-        ensureStorageConnected();
-        return heapDAO;
-    }
-
-    @Override
     public void registerDAOsAndStorageAsOSGiServices() {
         ensureStorageConnected();
         createDAOs();
@@ -183,7 +176,6 @@ public class DAOFactoryImpl implements DAOFactory {
         registerAndRecordService(VmCpuStatDAO.class, getVmCpuStatDAO());
         registerAndRecordService(VmGcStatDAO.class, getVmGcStatDAO());
         registerAndRecordService(VmMemoryStatDAO.class, getVmMemoryStatDAO());
-        registerAndRecordService(HeapDAO.class, getHeapDAO());
     }
 
     /*
@@ -201,7 +193,6 @@ public class DAOFactoryImpl implements DAOFactory {
         vmClassStatDAO = new VmClassStatDAOImpl(storage);
         vmMemStatDAO = new VmMemoryStatDAOImpl(storage);
         vmGcStatDAO = new VmGcStatDAOImpl(storage);
-        heapDAO = new HeapDAOImpl(storage);
     }
 
     private <K> void registerAndRecordService(Class<K> serviceType, K serviceImplementation) {
