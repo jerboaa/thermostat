@@ -54,10 +54,10 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -112,9 +112,9 @@ class ServerHandler extends SimpleChannelHandler {
 
     private boolean authenticateRequest(Request request, SecureStorage storage) {
         String clientTokenStr = request.getParameter(Request.CLIENT_TOKEN);
-        byte[] clientToken = Base64.decodeBase64(StringUtils.fromUtf8String((clientTokenStr)));
+        byte[] clientToken = Base64.decodeBase64(clientTokenStr);
         String authTokenStr = request.getParameter(Request.AUTH_TOKEN);
-        byte[] authToken = Base64.decodeBase64(StringUtils.fromUtf8String((authTokenStr)));
+        byte[] authToken = Base64.decodeBase64(authTokenStr);
         AuthToken token = new AuthToken(authToken, clientToken);
         return storage.verifyToken(token);
     }
@@ -124,5 +124,5 @@ class ServerHandler extends SimpleChannelHandler {
         logger.log(Level.WARNING, "Unexpected exception from downstream.", e.getCause());
         e.getChannel().close();
     }
-    
+
 }

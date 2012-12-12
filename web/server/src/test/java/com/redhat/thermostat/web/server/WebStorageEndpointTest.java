@@ -76,7 +76,6 @@ import org.mockito.ArgumentCaptor;
 import sun.misc.BASE64Encoder;
 
 import com.google.gson.Gson;
-import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -561,9 +560,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-		out.write("client-token=fluff&token="
-				+ URLEncoder.encode(StringUtils.toUtf8String(Base64
-						.encodeBase64Chunked(token)), "UTF-8"));
+        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
         assertEquals(200, conn.getResponseCode());
     }
@@ -585,9 +582,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-		out.write("client-token=fluff&token="
-				+ URLEncoder.encode(StringUtils.toUtf8String(Base64
-						.encodeBase64Chunked(token)), "UTF-8"));
+        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
         assertEquals(401, conn.getResponseCode());
     }
@@ -607,9 +602,7 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         conn.setDoInput(true);
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-		out.write("client-token=fluff&token="
-				+ URLEncoder.encode(StringUtils.toUtf8String(Base64
-						.encodeBase64Chunked(token)), "UTF-8"));
+        out.write("client-token=fluff&token=" + URLEncoder.encode(Base64.encodeBase64String(token), "UTF-8"));
         out.flush();
         assertEquals(401, conn.getResponseCode());
     }

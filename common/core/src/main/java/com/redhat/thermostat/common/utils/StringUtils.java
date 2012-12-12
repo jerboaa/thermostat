@@ -39,7 +39,6 @@ package com.redhat.thermostat.common.utils;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
 
 public class StringUtils {
 
@@ -65,14 +64,6 @@ public class StringUtils {
             builder.append(text);
         }
         return builder.toString();
-    }
-    
-    public static String toUtf8String(byte[] data) {
-    	return new String(data, Charset.forName("UTF-8"));
-    }
-    
-    public static byte[] fromUtf8String(String str) {
-    	return str.getBytes(Charset.forName("UTF-8"));
     }
 
 }

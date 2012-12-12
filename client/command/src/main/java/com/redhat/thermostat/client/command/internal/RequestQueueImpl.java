@@ -52,7 +52,6 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -89,8 +88,8 @@ class RequestQueueImpl implements RequestQueue {
     private void authenticateRequest(Request request, SecureStorage storage) {
         try {
             AuthToken token = storage.generateToken();
-            request.setParameter(Request.CLIENT_TOKEN, StringUtils.toUtf8String(Base64.encodeBase64Chunked(token.getClientToken())));
-            request.setParameter(Request.AUTH_TOKEN, StringUtils.toUtf8String(Base64.encodeBase64Chunked(token.getToken())));
+            request.setParameter(Request.CLIENT_TOKEN, Base64.encodeBase64String(token.getClientToken()));
+            request.setParameter(Request.AUTH_TOKEN, Base64.encodeBase64String(token.getToken()));
         } catch (StorageException ex) {
             fireComplete(request, new Response(ResponseType.AUTH_FAILED));
         }
@@ -154,5 +153,4 @@ class RequestQueueImpl implements RequestQueue {
             listener.fireComplete(request, response);
         }
     }
-    
 }

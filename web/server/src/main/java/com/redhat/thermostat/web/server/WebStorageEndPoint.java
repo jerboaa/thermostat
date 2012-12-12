@@ -61,7 +61,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
-import com.redhat.thermostat.common.utils.StringUtils;
 import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -395,7 +394,7 @@ public class WebStorageEndPoint extends HttpServlet {
         TokenManager tokenManager = (TokenManager) getServletContext().getAttribute(TOKEN_MANAGER_KEY);
         assert tokenManager != null;
         String clientToken = req.getParameter("client-token");
-        byte[] token = Base64.decodeBase64(StringUtils.fromUtf8String(req.getParameter("token")));
+        byte[] token = Base64.decodeBase64(req.getParameter("token"));
         boolean verified = tokenManager.verifyToken(clientToken, token);
         if (! verified) {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
