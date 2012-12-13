@@ -42,8 +42,6 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
-import com.redhat.thermostat.host.overview.client.swing.internal.Activator;
-import com.redhat.thermostat.host.overview.client.swing.internal.SwingHostOverviewViewProvider;
 import com.redhat.thermostat.test.StubBundleContext;
 
 public class ActivatorTest {

@@ -40,14 +40,19 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.common.dao.HostRef;
 
-class HostTreeDecoratorRegistry extends ThermostatExtensionRegistry<HostDecorator> {
+@SuppressWarnings("rawtypes")
+class HostTreeDecoratorRegistry extends ThermostatExtensionRegistry<DecoratorProvider> {
 
-    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + HostDecorator.class.getName() + ")";
+    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
+            DecoratorProvider.class.getName() + ")&(" +
+            com.redhat.thermostat.common.Constants.GENERIC_SERVICE_CLASSNAME + "=" +
+            HostRef.class.getName() + "))";
 
     public HostTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, HostDecorator.class);
+        super(context, FILTER, DecoratorProvider.class);
     }
 }

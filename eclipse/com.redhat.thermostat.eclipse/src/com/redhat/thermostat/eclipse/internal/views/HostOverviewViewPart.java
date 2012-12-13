@@ -38,7 +38,7 @@ package com.redhat.thermostat.eclipse.internal.views;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
@@ -55,7 +55,7 @@ public class HostOverviewViewPart extends HostRefViewPart {
         provider.setParent(top);
 
         HostOverviewService service = OSGIUtils.getInstance().getService(HostOverviewService.class);
-        HostInformationServiceController controller = service.getInformationServiceController(ref);
+        InformationServiceController<HostRef> controller = service.getInformationServiceController(ref);
         return (SWTComponent) controller.getView();
     }
 

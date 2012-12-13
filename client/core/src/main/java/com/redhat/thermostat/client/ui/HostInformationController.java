@@ -39,8 +39,8 @@ package com.redhat.thermostat.client.ui;
 import java.util.Collections;
 import java.util.List;
 
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.internal.InformationServiceComparator;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostInformationView;
@@ -54,11 +54,11 @@ public class HostInformationController {
     public HostInformationController(UiFacadeFactory uiFacadeFactory, HostRef ref, HostInformationViewProvider provider) {
         view = provider.createView();
 
-        List<HostInformationService> hostInfoServices = uiFacadeFactory.getHostInformationServices();
-        Collections.sort(hostInfoServices, new InformationServiceComparator<HostInformationService>());
-        for (HostInformationService hostInfoService : hostInfoServices) {
+        List<InformationService<HostRef>> hostInfoServices = uiFacadeFactory.getHostInformationServices();
+        Collections.sort(hostInfoServices, new InformationServiceComparator<InformationService<HostRef>>());
+        for (InformationService<HostRef> hostInfoService : hostInfoServices) {
             if (hostInfoService.getFilter().matches(ref)) {
-                HostInformationServiceController ctrl = hostInfoService.getInformationServiceController(ref);
+                InformationServiceController<HostRef> ctrl = hostInfoService.getInformationServiceController(ref);
                 String name = ctrl.getLocalizedName();
                 view.addChildView(name, ctrl.getView());
             }

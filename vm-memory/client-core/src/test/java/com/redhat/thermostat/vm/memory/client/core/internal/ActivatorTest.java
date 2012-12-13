@@ -43,7 +43,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
@@ -86,7 +86,7 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(VmInformationService.class.getName(), MemoryStatsService.class));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), MemoryStatsService.class));
 
         activator.stop(context);
 

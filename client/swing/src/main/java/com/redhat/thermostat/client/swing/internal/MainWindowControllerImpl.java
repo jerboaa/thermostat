@@ -48,22 +48,20 @@ import java.util.logging.Logger;
 
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.core.HostFilter;
-import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
-import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.swing.internal.MainView.Action;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayController;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayModel;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.HostInformationController;
-import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
@@ -91,11 +89,11 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private static final Logger logger = LoggingUtils.getLogger(MainWindowControllerImpl.class);
 
-    private final CopyOnWriteArrayList<HostFilter> hostFilters = new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<VmFilter> vmFilters = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Filter<HostRef>> hostFilters = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Filter<VmRef>> vmFilters = new CopyOnWriteArrayList<>();
 
-    private final CopyOnWriteArrayList<HostDecorator> hostTreeDecorators = new CopyOnWriteArrayList<>();
-    private final CopyOnWriteArrayList<VmDecorator> vmTreeDecorators = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<DecoratorProvider<HostRef>> hostTreeDecorators = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<DecoratorProvider<VmRef>> vmTreeDecorators = new CopyOnWriteArrayList<>();
 
     private ApplicationService appSvc;
     private Timer backgroundUpdater;
@@ -135,18 +133,19 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     };
 
-    private HostVmFilter searchFilter;
+    private NameMatchingRefFilter<HostRef> hostFilter;
+    private NameMatchingRefFilter<VmRef> vmFilter;
     private VmFilterRegistry vmFilterRegistry;
     private HostFilterRegistry hostFilterRegistry;
 
-    private ActionListener<ThermostatExtensionRegistry.Action> hostFilterListener = new UpdateListAndTree<>(HostFilter.class, hostFilters);
-    private ActionListener<ThermostatExtensionRegistry.Action> vmFilterListener = new UpdateListAndTree<>(VmFilter.class, vmFilters);
+    private ActionListener<ThermostatExtensionRegistry.Action> hostFilterListener = new FilterExtensionListener<HostRef>(hostFilters);
+    private ActionListener<ThermostatExtensionRegistry.Action> vmFilterListener = new FilterExtensionListener<VmRef>(vmFilters);
 
     private HostTreeDecoratorRegistry hostDecoratorRegistry;
     private VMTreeDecoratorRegistry vmDecoratorRegistry;
 
-    private ActionListener<ThermostatExtensionRegistry.Action> hostDecoratorListener = new UpdateListAndTree<>(HostDecorator.class, hostTreeDecorators);
-    private ActionListener<ThermostatExtensionRegistry.Action> vmDecoratorListener = new UpdateListAndTree<>(VmDecorator.class, vmTreeDecorators);
+    private ActionListener<ThermostatExtensionRegistry.Action> hostDecoratorListener = new DecoratorProviderExtensionListener<HostRef>(hostTreeDecorators);
+    private ActionListener<ThermostatExtensionRegistry.Action> vmDecoratorListener = new DecoratorProviderExtensionListener<VmRef>(vmTreeDecorators);
 
     private VMInformationRegistry vmInfoRegistry;
     private ActionListener<ThermostatExtensionRegistry.Action> vmInfoRegistryListener =
@@ -178,9 +177,11 @@ public class MainWindowControllerImpl implements MainWindowController {
             throw new RuntimeException(e);
         }
 
-        searchFilter = new HostVmFilter();
-        hostFilters.add(searchFilter);
-        vmFilters.add(searchFilter);
+        hostFilter = new NameMatchingRefFilter<>();
+        vmFilter = new NameMatchingRefFilter<>();
+        
+        hostFilters.add(hostFilter);
+        vmFilters.add(vmFilter);
         
         this.facadeFactory = facadeFactory;
 
@@ -200,17 +201,23 @@ public class MainWindowControllerImpl implements MainWindowController {
         installListenersAndStartRegistries();
     }
 
-    /**
+    /*
      * This method is for testing purposes only
      */
-    HostVmFilter getSearchFilter() {
-        return searchFilter;
+    Filter<HostRef> getHostFilter() {
+        return hostFilter;
+    }
+    /*
+     * This also is for testing purposes.
+     */
+    Filter<VmRef> getVmFilter() {
+        return vmFilter;
     }
     
     /**
      * This method is for testing purposes only
      */ 
-    List<VmDecorator> getVmTreeDecorators() {
+    List<DecoratorProvider<VmRef>> getVmTreeDecorators() {
         return vmTreeDecorators;
     }
     
@@ -245,7 +252,8 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     @Override
     public void setHostVmTreeFilter(String filter) {
-        this.searchFilter.setFilter(filter);
+        this.hostFilter.setPattern(filter);
+        this.vmFilter.setPattern(filter);
         doUpdateTreeAsync();
     }
 
@@ -447,26 +455,28 @@ public class MainWindowControllerImpl implements MainWindowController {
         }
     }
 
-    private class UpdateListAndTree<T> implements ActionListener<ThermostatExtensionRegistry.Action> {
+    private class FilterExtensionListener<T> implements ActionListener<ThermostatExtensionRegistry.Action> {
 
-        private final Class<T> extensionClass;
-        private final CopyOnWriteArrayList<T> extensionList;
+        private final CopyOnWriteArrayList<Filter<T>> extensionList;
 
-        public UpdateListAndTree(Class<T> extensionClass, CopyOnWriteArrayList<T> addRemoveExtensionsFrom) {
-            this.extensionClass = extensionClass;
+        public FilterExtensionListener(CopyOnWriteArrayList<Filter<T>> addRemoveExtensionsFrom) {
             this.extensionList = addRemoveExtensionsFrom;
         }
 
         @SuppressWarnings("unchecked")
         @Override
-        public void actionPerformed(ActionEvent<com.redhat.thermostat.common.ThermostatExtensionRegistry.Action> actionEvent) {
+        public void actionPerformed(ActionEvent<ThermostatExtensionRegistry.Action> actionEvent) {
 
             Object payload = actionEvent.getPayload();
-            if (!extensionClass.isInstance(payload)) {
-                throw new IllegalArgumentException("unexpected payload type. expected a " + extensionClass.getName() + " but got " + payload.getClass().getName());
-            }
+            Filter<T> filter = null;
 
-            T filter = (T) payload;
+            try {
+                filter = (Filter<T>) payload;
+            } catch (ClassCastException cce) {
+                throw new IllegalArgumentException("unexpected payload type. " +
+                            payload.getClass().getName() + " not allowed here.", cce);
+            }
+        
 
             switch (actionEvent.getActionId()) {
             case SERVICE_ADDED:
@@ -476,6 +486,47 @@ public class MainWindowControllerImpl implements MainWindowController {
 
             case SERVICE_REMOVED:
                 extensionList.remove(filter);
+                doUpdateTreeAsync();
+                break;
+
+            default:
+                logger.log(Level.WARNING, "received unknown event from ExtensionRegistry: " +
+                                           actionEvent.getActionId());
+                break;
+            }
+        }
+    }
+
+    private class DecoratorProviderExtensionListener<T extends Ref> implements ActionListener<ThermostatExtensionRegistry.Action> {
+
+        private final CopyOnWriteArrayList<DecoratorProvider<T>> extensionList;
+
+        public DecoratorProviderExtensionListener(CopyOnWriteArrayList<DecoratorProvider<T>> addRemoveExtensionsFrom) {
+            this.extensionList = addRemoveExtensionsFrom;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public void actionPerformed(ActionEvent<com.redhat.thermostat.common.ThermostatExtensionRegistry.Action> actionEvent) {
+
+            Object payload = actionEvent.getPayload();
+            DecoratorProvider<T> decorator = null;
+
+            try {
+                decorator = (DecoratorProvider<T>) payload;
+            } catch (ClassCastException cce) {
+                throw new IllegalArgumentException("unexpected payload type. " + payload.getClass().getName() + "not allowed here.", cce);
+            }
+        
+
+            switch (actionEvent.getActionId()) {
+            case SERVICE_ADDED:
+                extensionList.add(decorator);
+                doUpdateTreeAsync();
+                break;
+
+            case SERVICE_REMOVED:
+                extensionList.remove(decorator);
                 doUpdateTreeAsync();
                 break;
 

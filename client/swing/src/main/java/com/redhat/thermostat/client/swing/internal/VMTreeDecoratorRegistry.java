@@ -40,14 +40,19 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.common.dao.VmRef;
 
-class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<VmDecorator> {
+@SuppressWarnings("rawtypes")
+class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<DecoratorProvider> {
 
-    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + VmDecorator.class.getName() + ")";
-    
+    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
+            DecoratorProvider.class.getName() + ")&(" +
+            com.redhat.thermostat.common.Constants.GENERIC_SERVICE_CLASSNAME + "=" +
+            VmRef.class.getName() + "))";
+
     public VMTreeDecoratorRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, VmDecorator.class);
+        super(context, FILTER, DecoratorProvider.class);
     }
 }

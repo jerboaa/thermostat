@@ -36,12 +36,15 @@
 
 package com.redhat.thermostat.client.core;
 
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.dao.Ref;
+
 
 /**
  * Marker interface for information services.
  *
  */
-public interface InformationService {
+public interface InformationService<T extends Ref> {
     
     /**
      * Priority group for services that provide generic overview information
@@ -91,6 +94,8 @@ public interface InformationService {
      */
     public int getPriority();
 
-    public Filter getFilter();
+    public Filter<T> getFilter();
+
+    public InformationServiceController<T> getInformationServiceController(T ref);
 
 }

@@ -34,57 +34,66 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.swing;
+package com.redhat.thermostat.client.swing.internal;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
 
-import com.redhat.thermostat.client.core.VmFilter;
-import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.utils.StreamUtils;
 
-public class VMDecorator implements VmDecorator {
-    
-    private class LivingVMDecorator implements Decorator {
-        @Override
-        public IconDescriptor getIconDescriptor() {
+public class HostIconDecoratorProvider implements DecoratorProvider<HostRef> {
+
+    private final Filter<HostRef> anyHost = new NameMatchingRefFilter<HostRef>();
+
+    @Override
+    public Decorator getDecorator() {
+        return new IconDecorator();
+    }
+
+    @Override
+    public Filter<HostRef> getFilter() {
+        return anyHost;
+    }
+
+    private static class IconDecorator implements Decorator {
+
+        private final IconDescriptor icon;
+
+        public IconDecorator() {
+            IconDescriptor icon = null;
             try {
-                return IconDescriptor.createFromClassloader(IconResource.class.getClassLoader(), IconResource.JAVA_APPLICATION.getPath());
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
+                InputStream in = new FileInputStream(IconResource.HOST.getPath());
+                icon = new IconDescriptor(ByteBuffer.wrap(StreamUtils.readAll(in)));
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
             }
+            this.icon = icon;
         }
-        
+
         @Override
         public String getLabel(String originalLabel) {
             return originalLabel;
         }
-        
+
+        @Override
+        public IconDescriptor getIconDescriptor() {
+            return icon;
+        }
+
         @Override
         public Quadrant getQuadrant() {
             return Quadrant.MAIN;
         }
+
     }
 
-    private LivingVMFilter decoratorFilter;
-    private LivingVMDecorator decorator;
-    
-    public VMDecorator(VmInfoDAO dao) {
-        decorator = new LivingVMDecorator();
-        decoratorFilter = new LivingVMFilter(dao);
-    }
-    
-    @Override
-    public Decorator getDecorator() {
-        return decorator;
-    }
-    
-    @Override
-    public VmFilter getFilter() {
-        return decoratorFilter;
-    }
 }

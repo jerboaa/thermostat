@@ -43,7 +43,7 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -81,7 +81,7 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(HostInformationService.class.getName(), HostOverviewService.class));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), HostOverviewService.class));
 
         activator.stop(context);
 

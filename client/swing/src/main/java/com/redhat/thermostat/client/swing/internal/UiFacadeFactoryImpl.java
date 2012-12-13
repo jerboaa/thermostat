@@ -43,8 +43,7 @@ import java.util.concurrent.CountDownLatch;
 
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
@@ -66,8 +65,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     private CountDownLatch shutdown = new CountDownLatch(1);
 
-    private List<HostInformationService> hostInformationServices = new ArrayList<>();
-    private List<VmInformationService> vmInformationServices = new ArrayList<>();
+    private List<InformationService<HostRef>> hostInformationServices = new ArrayList<>();
+    private List<InformationService<VmRef>> vmInformationServices = new ArrayList<>();
     private Collection<VMContextAction> contextAction = new ArrayList<>();
 
     private BundleContext context;
@@ -123,17 +122,17 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
-    public List<VmInformationService> getVmInformationServices() {
+    public List<InformationService<VmRef>> getVmInformationServices() {
         return vmInformationServices;
     }
 
     @Override
-    public void addVmInformationService(VmInformationService vmInfoService) {
+    public void addVmInformationService(InformationService<VmRef> vmInfoService) {
         vmInformationServices.add(vmInfoService);
     }
 
     @Override
-    public void removeVmInformationService(VmInformationService vmInfoService) {
+    public void removeVmInformationService(InformationService<VmRef> vmInfoService) {
         vmInformationServices.remove(vmInfoService);
     }
 
@@ -164,17 +163,17 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
-    public List<HostInformationService> getHostInformationServices() {
+    public List<InformationService<HostRef>> getHostInformationServices() {
         return hostInformationServices;
     }
 
     @Override
-    public void addHostInformationService(HostInformationService hostInfoService) {
+    public void addHostInformationService(InformationService<HostRef> hostInfoService) {
         hostInformationServices.add(hostInfoService);
     }
 
     @Override
-    public void removeHostInformationService(HostInformationService hostInfoService) {
+    public void removeHostInformationService(InformationService<HostRef> hostInfoService) {
         hostInformationServices.remove(hostInfoService);
     }
 

@@ -36,20 +36,20 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import com.redhat.thermostat.client.core.VmFilter;
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
-import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 
-public class ThreadInformationService implements VmInformationService {
+public class ThreadInformationService implements InformationService<VmRef> {
 
     private static final int PRIORITY = PRIORITY_THREAD_GROUP;
     
-    private VmFilter filter = new AlwaysMatchFilter();
+    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
     private ApplicationService service;
     private ThreadCollectorFactory collectorFactory;
     private ThreadViewProvider viewFactory;
@@ -63,12 +63,12 @@ public class ThreadInformationService implements VmInformationService {
     }
     
     @Override
-    public VmFilter getFilter() {
+    public Filter<VmRef> getFilter() {
         return filter;
     }
 
     @Override
-    public VmInformationServiceController getInformationServiceController(VmRef ref) {
+    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
         return new ThreadInformationController(ref, service, collectorFactory, viewFactory);
     }
 

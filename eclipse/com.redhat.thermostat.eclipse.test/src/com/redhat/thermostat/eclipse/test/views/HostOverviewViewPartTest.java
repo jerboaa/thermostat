@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -59,7 +59,7 @@ import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 
 public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
-    private HostInformationServiceController controller;
+    private InformationServiceController<HostRef> controller;
     private SWTHostOverviewViewProvider viewProvider;
     
     @Test
@@ -82,7 +82,7 @@ public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
     @Override
     protected void mockController() {
         HostOverviewService service = mock(HostOverviewService.class);
-        controller = mock(HostInformationServiceController.class);
+        controller = mock(InformationServiceController.class);
         thermoView = mock(SWTHostOverviewView.class);
 
         when(osgi.getService(HostOverviewService.class)).thenReturn(service);

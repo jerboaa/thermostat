@@ -36,35 +36,59 @@
 
 package com.redhat.thermostat.client.swing.internal.osgi;
 
+import java.util.logging.Logger;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-class VmInformationServiceTracker extends ServiceTracker {
+@SuppressWarnings("rawtypes")
+public class InformationServiceTracker extends ServiceTracker {
 
     private UiFacadeFactory uiFacadeFactory;
+    private static final Logger logger = LoggingUtils.getLogger(InformationServiceTracker.class);
 
-    private BundleContext context;
-
-    VmInformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
-        super(context, VmInformationService.class.getName(), null);
-        this.context = context;
+    @SuppressWarnings("unchecked")
+    public InformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+        super(context, InformationService.class.getName(), null);
         this.uiFacadeFactory = uiFacadeFactory;
     }
 
     @Override
     public Object addingService(ServiceReference reference) {
-        VmInformationService service = (VmInformationService) super.addingService(reference);
-        uiFacadeFactory.addVmInformationService(service);
+        Object service = super.addingService(reference);
+        String genericType = (String) reference.getProperty(Constants.GENERIC_SERVICE_CLASSNAME);
+        if (genericType.equals(HostRef.class.getName())) {
+            uiFacadeFactory.addHostInformationService((InformationService<HostRef>) service);
+        } else if (genericType.equals(VmRef.class.getName())) {
+            uiFacadeFactory.addVmInformationService((InformationService<VmRef>) service);
+        } else {
+            logUnknownGenericServiceType(genericType);
+        }
         return service;
     }
 
     @Override
     public void removedService(ServiceReference reference, Object service) {
-        uiFacadeFactory.removeVmInformationService((VmInformationService)service);
+        String genericType = (String) reference.getProperty(Constants.GENERIC_SERVICE_CLASSNAME);
+        if (genericType.equals(HostRef.class.getName())) {
+            uiFacadeFactory.removeHostInformationService((InformationService<HostRef>) service);
+        } else if (genericType.equals(VmRef.class.getName())) {
+            uiFacadeFactory.removeVmInformationService((InformationService<VmRef>) service);
+        } else {
+            logUnknownGenericServiceType(genericType);
+        }
         super.removedService(reference, service);
+    }
+
+    private void logUnknownGenericServiceType(String genericType) {
+        logger.warning("InformationServiceTracker encountered an unknown generic type: " + genericType);
     }
 }

@@ -47,22 +47,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.VmFilter;
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.common.dao.VmRef;
 
 public class VmInformationControllerTest {
 
-    private static final VmFilter FILTER = new VmFilter() {
-        
-        @Override
-        public boolean matches(VmRef toMatch) {
-            return true;
-        }
-    };
+    private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private UiFacadeFactory uiFacadeFactory;
     private VmRef ref;
@@ -83,7 +78,7 @@ public class VmInformationControllerTest {
         int[] priorities = { 45, 20, 0, 90, 53 };
 
         // Mock services
-        List<VmInformationService> services = mockServices(priorities);
+        List<InformationService<VmRef>> services = mockServices(priorities);
 
         new VmInformationController(uiFacadeFactory, ref, provider);
 
@@ -96,11 +91,11 @@ public class VmInformationControllerTest {
         verifyService(services.get(3), order);
     }
 
-    private List<VmInformationService> mockServices(int[] priorities) {
-        List<VmInformationService> services = new ArrayList<>();
+    private List<InformationService<VmRef>> mockServices(int[] priorities) {
+        List<InformationService<VmRef>> services = new ArrayList<>();
         for (int priority : priorities) {
-            VmInformationService service = mock(VmInformationService.class);
-            VmInformationServiceController controller = mock(VmInformationServiceController.class);
+            InformationService<VmRef> service = mock(InformationService.class);
+            InformationServiceController<VmRef> controller = mock(InformationServiceController.class);
             when(service.getFilter()).thenReturn(FILTER);
             when(service.getInformationServiceController(ref)).thenReturn(
                     controller);
@@ -112,7 +107,7 @@ public class VmInformationControllerTest {
         return services;
     }
 
-    private void verifyService(VmInformationService service, InOrder order) {
+    private void verifyService(InformationService<VmRef> service, InOrder order) {
         order.verify(service).getInformationServiceController(ref);
     }
 

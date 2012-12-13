@@ -40,7 +40,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -60,7 +60,7 @@ import com.redhat.thermostat.storage.model.CpuStat;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
 import com.redhat.thermostat.storage.model.HostInfo;
 
-public class HostCpuController implements HostInformationServiceController {
+public class HostCpuController implements InformationServiceController<HostRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 

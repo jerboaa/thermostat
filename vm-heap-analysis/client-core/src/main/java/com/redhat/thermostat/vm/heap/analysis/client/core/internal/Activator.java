@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,11 +45,13 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
@@ -76,7 +80,9 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(heapDao);
 
                 HeapDumperService service = new HeapDumperService(appSvc, vmMemoryStatDao, heapDao);
-                reg = context.registerService(VmInformationService.class.getName(), service , null);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                reg = context.registerService(InformationService.class.getName(), service , properties);
             }
 
             @Override

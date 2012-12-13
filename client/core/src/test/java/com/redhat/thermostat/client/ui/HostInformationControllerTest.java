@@ -47,22 +47,17 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.HostFilter;
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.common.dao.HostRef;
 
 public class HostInformationControllerTest {
 
-    private static final HostFilter FILTER = new HostFilter() {
-
-        @Override
-        public boolean matches(HostRef toMatch) {
-            return true;
-        }
-    };
+    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
     private UiFacadeFactory uiFacadeFactory;
     private HostRef ref;
@@ -83,7 +78,7 @@ public class HostInformationControllerTest {
         int[] priorities = { 45, 20, 0, 90, 53 };
 
         // Mock services
-        List<HostInformationService> services = mockServices(priorities);
+        List<InformationService<HostRef>> services = mockServices(priorities);
 
         new HostInformationController(uiFacadeFactory, ref, provider);
 
@@ -96,11 +91,11 @@ public class HostInformationControllerTest {
         verifyService(services.get(3), order);
     }
 
-    private List<HostInformationService> mockServices(int[] priorities) {
-        List<HostInformationService> services = new ArrayList<>();
+    private List<InformationService<HostRef>> mockServices(int[] priorities) {
+        List<InformationService<HostRef>> services = new ArrayList<>();
         for (int priority : priorities) {
-            HostInformationService service = mock(HostInformationService.class);
-            HostInformationServiceController controller = mock(HostInformationServiceController.class);
+            InformationService<HostRef> service = mock(InformationService.class);
+            InformationServiceController<HostRef> controller = mock(InformationServiceController.class);
             when(service.getFilter()).thenReturn(FILTER);
             when(service.getInformationServiceController(ref)).thenReturn(
                     controller);
@@ -112,7 +107,7 @@ public class HostInformationControllerTest {
         return services;
     }
 
-    private void verifyService(HostInformationService service, InOrder order) {
+    private void verifyService(InformationService<HostRef> service, InOrder order) {
         order.verify(service).getInformationServiceController(ref);
     }
 

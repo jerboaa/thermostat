@@ -64,12 +64,11 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
-import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
-import com.redhat.thermostat.client.ui.HostVmFilter;
 import com.redhat.thermostat.client.ui.SummaryController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
@@ -190,7 +189,7 @@ public class MainWindowControllerImplTest {
 
     private void setUpVMContextActions() {
         action1 = mock(VMContextAction.class);
-        VmFilter action1Filter = mock(VmFilter.class);
+        Filter action1Filter = mock(Filter.class);
         when(action1Filter.matches(isA(VmRef.class))).thenReturn(true);
 
         when(action1.getName()).thenReturn("action1");
@@ -198,7 +197,7 @@ public class MainWindowControllerImplTest {
         when(action1.getFilter()).thenReturn(action1Filter);
         
         action2 = mock(VMContextAction.class);
-        VmFilter action2Filter = mock(VmFilter.class);
+        Filter action2Filter = mock(Filter.class);
         when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
 
         when(action2.getName()).thenReturn("action2");
@@ -225,14 +224,14 @@ public class MainWindowControllerImplTest {
     @Test
     public void verifyDecoratorsAdded() {
 
-        List<VmDecorator> currentDecoratros = controller.getVmTreeDecorators();
+        List<DecoratorProvider<VmRef>> currentDecoratros = controller.getVmTreeDecorators();
         assertEquals(0, currentDecoratros.size());
         
         ActionEvent<ThermostatExtensionRegistry.Action> event =
                 new ActionEvent<ThermostatExtensionRegistry.Action>(vmDecoratorRegistry,
                         ThermostatExtensionRegistry.Action.SERVICE_ADDED);
         
-        VmDecorator payload = mock(VmDecorator.class);
+        DecoratorProvider<VmRef> payload = mock(DecoratorProvider.class);
         event.setPayload(payload);
         
         decoratorsListener.actionPerformed(event);
@@ -372,7 +371,7 @@ public class MainWindowControllerImplTest {
         
         controller.setHostVmTreeFilter("test1");
                 
-        HostVmFilter filter = controller.getSearchFilter();
+        Filter<VmRef> filter = controller.getVmFilter();
         assertTrue(filter.matches(ref1));
         assertFalse(filter.matches(ref2));
     }

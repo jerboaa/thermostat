@@ -36,10 +36,10 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core;
 
-import com.redhat.thermostat.client.core.VmFilter;
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
-import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -47,14 +47,14 @@ import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.heap.analysis.client.core.internal.HeapDumpController;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
-public class HeapDumperService implements VmInformationService {
+public class HeapDumperService implements InformationService<VmRef> {
     
     private static final int PRIORITY = PRIORITY_MEMORY_GROUP + 60;
     private ApplicationService appService;
     private VmMemoryStatDAO vmMemoryStatDao;
     private HeapDAO heapDao;
 
-    private VmFilter filter = new AlwaysMatchFilter();
+    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
     public HeapDumperService(ApplicationService appService, VmMemoryStatDAO vmMemoryStatDao, HeapDAO heapDao) {
         this.vmMemoryStatDao = vmMemoryStatDao;
@@ -63,7 +63,7 @@ public class HeapDumperService implements VmInformationService {
     }
 
     @Override
-    public VmInformationServiceController getInformationServiceController(VmRef ref) {
+    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
         HeapViewProvider viewProvider = OSGIUtils.getInstance().getService(HeapViewProvider.class);
         HeapDumpDetailsViewProvider detailsViewProvider = OSGIUtils.getInstance().getService(HeapDumpDetailsViewProvider.class);
         HeapHistogramViewProvider histogramViewProvider = OSGIUtils.getInstance().getService(HeapHistogramViewProvider.class);
@@ -73,7 +73,7 @@ public class HeapDumperService implements VmInformationService {
     }
 
     @Override
-    public VmFilter getFilter() {
+    public Filter<VmRef> getFilter() {
         return filter;
     }
 

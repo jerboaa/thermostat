@@ -39,8 +39,7 @@ package com.redhat.thermostat.client.ui;
 import java.util.Collection;
 import java.util.List;
 
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -59,19 +58,19 @@ public interface UiFacadeFactory {
 
     public HostInformationController getHostController(HostRef ref);
     
-    List<HostInformationService> getHostInformationServices();
+    List<InformationService<HostRef>> getHostInformationServices();
 
-    void addHostInformationService(HostInformationService hostInfoService);
+    void addHostInformationService(InformationService<HostRef> hostInfoService);
 
-    void removeHostInformationService(HostInformationService hostInfoService);
+    void removeHostInformationService(InformationService<HostRef> hostInfoService);
 
     public VmInformationController getVmController(VmRef ref);
 
-    List<VmInformationService> getVmInformationServices();
+    List<InformationService<VmRef>> getVmInformationServices();
 
-    void addVmInformationService(VmInformationService vmInfoService);
+    void addVmInformationService(InformationService<VmRef> vmInfoService);
 
-    void removeVmInformationService(VmInformationService vmInfoService);
+    void removeVmInformationService(InformationService<VmRef> vmInfoService);
 
     Collection<VMContextAction> getVMContextActions();
     void addVMContextAction(VMContextAction service);

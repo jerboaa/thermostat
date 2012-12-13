@@ -36,9 +36,10 @@
 
 package com.redhat.thermostat.host.overview.client.core;
 
-import com.redhat.thermostat.client.core.HostFilter;
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -46,15 +47,10 @@ import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.host.overview.client.core.internal.HostOverviewController;
 
-public class HostOverviewService implements HostInformationService {
+public class HostOverviewService implements InformationService<HostRef> {
     
     private static final int PRIORITY = PRIORITY_DEFAULT_GROUP;
-    private static final HostFilter FILTER = new HostFilter() {
-        @Override
-        public boolean matches(HostRef toMatch) {
-            return true;
-        }
-    };
+    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
     private HostInfoDAO hostInfoDAO;
@@ -67,12 +63,12 @@ public class HostOverviewService implements HostInformationService {
     }
 
     @Override
-    public HostFilter getFilter() {
+    public Filter<HostRef> getFilter() {
         return FILTER;
     }
 
     @Override
-    public HostInformationServiceController getInformationServiceController(
+    public InformationServiceController<HostRef> getInformationServiceController(
             HostRef ref) {
         HostOverviewViewProvider provider = OSGIUtils.getInstance().getService(HostOverviewViewProvider.class);
         return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO, ref, provider);

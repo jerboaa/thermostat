@@ -36,18 +36,22 @@
 
 package com.redhat.thermostat.vm.memory.client.core.internal;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsService;
 
@@ -81,7 +85,9 @@ public class Activator implements BundleActivator {
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
 
                 MemoryStatsService impl = new MemoryStatsService(appSvc, memoryStatDao, agentDAO, gcRequest);
-                memoryStatRegistration = context.registerService(VmInformationService.class.getName(), impl , null);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                memoryStatRegistration = context.registerService(InformationService.class.getName(), impl , properties);
             }
         });
         tracker.open();

@@ -34,37 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal.osgi;
+package com.redhat.thermostat.client.filter.vm.swing;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+import java.io.IOException;
 
-import com.redhat.thermostat.client.core.HostInformationService;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
+import com.redhat.thermostat.client.swing.IconResource;
+import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.IconDescriptor;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 
-class HostInformationServiceTracker extends ServiceTracker {
-
-    private UiFacadeFactory uiFacadeFactory;
-
-    private BundleContext context;
-
-    HostInformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
-        super(context, HostInformationService.class.getName(), null);
-        this.context = context;
-        this.uiFacadeFactory = uiFacadeFactory;
+public class LivingVMDecoratorProvider implements DecoratorProvider<VmRef> {
+    
+    private class LivingVMDecorator implements Decorator {
+        @Override
+        public IconDescriptor getIconDescriptor() {
+            try {
+                return IconDescriptor.createFromClassloader(IconResource.class.getClassLoader(), IconResource.JAVA_APPLICATION.getPath());
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        
+        @Override
+        public String getLabel(String originalLabel) {
+            return originalLabel;
+        }
+        
+        @Override
+        public Quadrant getQuadrant() {
+            return Quadrant.MAIN;
+        }
     }
 
-    @Override
-    public Object addingService(ServiceReference reference) {
-        HostInformationService service = (HostInformationService) super.addingService(reference);
-        uiFacadeFactory.addHostInformationService(service);
-        return service;
+    private LivingVMFilter decoratorFilter;
+    private LivingVMDecorator decorator;
+    
+    public LivingVMDecoratorProvider(VmInfoDAO dao) {
+        decorator = new LivingVMDecorator();
+        decoratorFilter = new LivingVMFilter(dao);
     }
-
+    
     @Override
-    public void removedService(ServiceReference reference, Object service) {
-        uiFacadeFactory.removeHostInformationService((HostInformationService)service);
-        super.removedService(reference, service);
+    public Decorator getDecorator() {
+        return decorator;
+    }
+    
+    @Override
+    public Filter<VmRef> getFilter() {
+        return decoratorFilter;
     }
 }

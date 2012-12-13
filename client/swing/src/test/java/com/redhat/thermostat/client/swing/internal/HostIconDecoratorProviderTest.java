@@ -34,22 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
+package com.redhat.thermostat.client.swing.internal;
 
-import com.redhat.thermostat.client.core.VmFilter;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.common.dao.HostRef;
 
-/**
- * This interface allows plugins to install a custom {@link Decorator} into
- * the Reference List view.
- * 
- * <br /><br />
- * 
- * Active {@link VmDecorator}s are first queried against their filters
- * and then installed into the view if the filter passes. 
- */
-public interface VmDecorator {
+public class HostIconDecoratorProviderTest {
 
-    Decorator getDecorator();
-    VmFilter getFilter();
+    @Test
+    public void verifyFilter() {
+        HostIconDecoratorProvider decorator = new HostIconDecoratorProvider();
+
+        Filter<HostRef> filter = decorator.getFilter();
+        HostRef aHost = mock(HostRef.class);
+
+        assertTrue(filter.matches(aHost));
+    }
+
+    @Test
+    public void verifyHostDecoratorDoesNotModifyLabel() {
+        HostIconDecoratorProvider iconDecorator = new HostIconDecoratorProvider();
+
+        Decorator decorator = iconDecorator.getDecorator();
+
+        String INPUT = "testfoobarbaz";
+
+        assertEquals(INPUT, decorator.getLabel(INPUT));
+    }
+
+    @Test
+    public void verifyHostDecoratorHasAnIcon() throws IOException {
+        HostIconDecoratorProvider iconDecorator = new HostIconDecoratorProvider();
+
+        Decorator decorator = iconDecorator.getDecorator();
+
+        BufferedImage icon = ImageIO.read(new ByteArrayInputStream(decorator.getIconDescriptor().getData().array()));
+
+        assertNotNull(icon);
+    }
 }

@@ -36,16 +36,20 @@
 
 package com.redhat.thermostat.thread.client.controller.osgi;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.controller.impl.ThreadInformationService;
@@ -72,9 +76,12 @@ public class Activator implements BundleActivator {
                 ApplicationService applicationService = (ApplicationService) services.get(ApplicationService.class.getName());
                 ThreadViewProvider viewFactory = (ThreadViewProvider) services.get(ThreadViewProvider.class.getName());
                 
-                VmInformationService vmInfoService = new ThreadInformationService(applicationService, collectorFactory, viewFactory);
-                registration = context.registerService(VmInformationService.class.getName(), vmInfoService, null);
+                InformationService<VmRef> vmInfoService = new ThreadInformationService(applicationService, collectorFactory, viewFactory);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                registration = context.registerService(InformationService.class.getName(), vmInfoService, properties);
             }
+
             @Override
             public void dependenciesUnavailable() {
                 registration.unregister();

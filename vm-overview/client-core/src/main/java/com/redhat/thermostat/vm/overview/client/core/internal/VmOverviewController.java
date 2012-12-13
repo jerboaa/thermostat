@@ -40,7 +40,7 @@ import java.text.DateFormat;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionEvent;
@@ -57,7 +57,7 @@ import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewViewProvider;
 import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
 
-public class VmOverviewController implements VmInformationServiceController {
+public class VmOverviewController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 

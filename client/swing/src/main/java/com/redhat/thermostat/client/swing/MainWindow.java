@@ -90,15 +90,13 @@ import javax.swing.tree.TreeSelectionModel;
 
 import sun.misc.Signal;
 
-import com.redhat.thermostat.client.core.HostFilter;
-import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.SearchFieldView.SearchAction;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
 import com.redhat.thermostat.client.swing.components.EdtHelper;
 import com.redhat.thermostat.client.swing.components.HtmlTextBuilder;
 import com.redhat.thermostat.client.swing.components.StatusBar;
@@ -134,16 +132,17 @@ public class MainWindow extends JFrame implements MainView {
         private final DefaultTreeModel treeModel;
         private DefaultMutableTreeNode treeRoot;
         
-        private List<HostFilter> hostFilters;
-        private List<VmFilter> vmFilters;
-        private List<HostDecorator> hostDecorators;
-        private List<VmDecorator> vmDecorators;
+        private List<Filter<HostRef>> hostFilters;
+        private List<Filter<VmRef>> vmFilters;
+        private List<DecoratorProvider<HostRef>> hostDecorators;
+        private List<DecoratorProvider<VmRef>> vmDecorators;
         
         private HostsVMsLoader hostsVMsLoader;
 
         public BackgroundTreeModelWorker(DefaultTreeModel model, DefaultMutableTreeNode root,
-                                         List<HostFilter> hostFilters, List<VmFilter> vmFilters,
-                                         List<HostDecorator> hostDecorators, List<VmDecorator> vmDecorators,
+                                         List<Filter<HostRef>> hostFilters, List<Filter<VmRef>> vmFilters,
+                                         List<DecoratorProvider<HostRef>> hostDecorators,
+                                         List<DecoratorProvider<VmRef>> vmDecorators,
                                          HostsVMsLoader hostsVMsLoader, JTree tree)
         {
             this.hostFilters = hostFilters;
@@ -178,7 +177,7 @@ public class MainWindow extends JFrame implements MainView {
                     shouldInsert = true;
                 } else {
                     shouldInsert = true;
-                    for (HostFilter filter : hostFilters) {
+                    for (Filter<HostRef> filter : hostFilters) {
                         if (!filter.matches(inRemoteModel)) {
                             shouldInsert = false;
                             break;
@@ -193,8 +192,8 @@ public class MainWindow extends JFrame implements MainView {
                 }
 
                 if (shouldInsert) {
-                    for (HostDecorator decorator : hostDecorators) {
-                        HostFilter filter = decorator.getFilter();
+                    for (DecoratorProvider<HostRef> decorator : hostDecorators) {
+                        Filter<HostRef> filter = decorator.getFilter();
                         if (filter != null && filter.matches(inRemoteModel)) {
                             inTreeNode.addDecorator(decorator.getDecorator());
                         }
@@ -219,7 +218,7 @@ public class MainWindow extends JFrame implements MainView {
                     shouldInsert = true;
                 } else {
                     shouldInsert = true;
-                    for (VmFilter filter : vmFilters) {
+                    for (Filter<VmRef> filter : vmFilters) {
                         if (!filter.matches(inRemoteModel)) {
                             shouldInsert = false;
                             break;
@@ -228,8 +227,8 @@ public class MainWindow extends JFrame implements MainView {
                 }
 
                 if (shouldInsert) {
-                    for (VmDecorator decorator : vmDecorators) {
-                        VmFilter filter = decorator.getFilter();
+                    for (DecoratorProvider<VmRef> decorator : vmDecorators) {
+                        Filter<VmRef> filter = decorator.getFilter();
                         if (filter != null && filter.matches(inRemoteModel)) {
                             inTreeNode.addDecorator(decorator.getDecorator());
                         }
@@ -700,8 +699,9 @@ public class MainWindow extends JFrame implements MainView {
     }
     
     @Override
-    public void updateTree(List<HostFilter> hostFilters, List<VmFilter> vmFilters,
-            List<HostDecorator> hostDecorators, List<VmDecorator> vmDecorators,
+    public void updateTree(List<Filter<HostRef>> hostFilters, List<Filter<VmRef>> vmFilters,
+            List<DecoratorProvider<HostRef>> hostDecorators,
+            List<DecoratorProvider<VmRef>> vmDecorators,
             HostsVMsLoader hostsVMsLoader)
     {
         BackgroundTreeModelWorker worker =

@@ -40,6 +40,7 @@ import java.util.Comparator;
 
 import com.redhat.thermostat.client.core.InformationService;
 
+@SuppressWarnings("rawtypes")
 public class InformationServiceComparator<T extends InformationService>
         implements Comparator<T> {
 

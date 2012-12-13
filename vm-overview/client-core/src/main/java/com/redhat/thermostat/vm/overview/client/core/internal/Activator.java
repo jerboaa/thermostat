@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.overview.client.core.internal;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,11 +45,13 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewService;
 
 public class Activator implements BundleActivator {
@@ -58,26 +62,28 @@ public class Activator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         Class<?>[] deps = new Class<?>[] {
-        	VmInfoDAO.class,
-        	ApplicationService.class
+                VmInfoDAO.class,
+                ApplicationService.class
         };
-        
-		tracker = new MultipleServiceTracker(context, deps , new Action() {
-            
-			@Override
-			public void dependenciesAvailable(Map<String, Object> services) {
-				VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-				Objects.requireNonNull(vmInfoDAO);
-				ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-				Objects.requireNonNull(appSvc);
-				VmOverviewService service = new VmOverviewService(appSvc, vmInfoDAO);
-				reg = context.registerService(VmInformationService.class.getName(), service, null);
-			}
 
-			@Override
-			public void dependenciesUnavailable() {
-				reg.unregister();
-			}
+        tracker = new MultipleServiceTracker(context, deps , new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                Objects.requireNonNull(vmInfoDAO);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
+                VmOverviewService service = new VmOverviewService(appSvc, vmInfoDAO);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                reg = context.registerService(InformationService.class.getName(), service, properties);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                reg.unregister();
+            }
         });
         tracker.open();
     }

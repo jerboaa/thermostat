@@ -37,6 +37,8 @@
 package com.redhat.thermostat.client.swing.internal.osgi;
 
 import java.util.Arrays;
+import java.util.Dictionary;
+import java.util.Hashtable;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -48,9 +50,9 @@ import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.swing.internal.GUIClientCommand;
-import com.redhat.thermostat.client.swing.internal.HostIconDecorator;
+import com.redhat.thermostat.client.swing.internal.HostIconDecoratorProvider;
 import com.redhat.thermostat.client.swing.internal.Main;
 import com.redhat.thermostat.client.swing.internal.UiFacadeFactoryImpl;
 import com.redhat.thermostat.client.swing.views.SwingAgentInformationViewProvider;
@@ -59,14 +61,15 @@ import com.redhat.thermostat.client.swing.views.SwingHostInformationViewProvider
 import com.redhat.thermostat.client.swing.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.views.SwingVmInformationViewProvider;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {
 
-    private HostInformationServiceTracker hostInfoServiceTracker;
-    private VmInformationServiceTracker vmInfoServiceTracker;
+    private InformationServiceTracker infoServiceTracker;
     private VMContextActionServiceTracker contextActionTracker;
 
     private CommandRegistry cmdReg;
@@ -75,8 +78,10 @@ public class ThermostatActivator implements BundleActivator {
     @Override
     public void start(final BundleContext context) throws Exception {
         
-        HostDecorator hostDecorator = new HostIconDecorator();
-        context.registerService(HostDecorator.class.getName(), hostDecorator, null);
+        HostIconDecoratorProvider hostDecorator = new HostIconDecoratorProvider();
+        Dictionary<String, String> decoratorProperties = new Hashtable<>();
+        decoratorProperties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+        context.registerService(DecoratorProvider.class.getName(), hostDecorator, decoratorProperties);
         
         // Host views
         HostInformationViewProvider infoProvider = new SwingHostInformationViewProvider();
@@ -104,10 +109,9 @@ public class ThermostatActivator implements BundleActivator {
                 
                 UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
 
-                hostInfoServiceTracker = new HostInformationServiceTracker(context, uiFacadeFactory);
-                hostInfoServiceTracker.open();
-                vmInfoServiceTracker = new VmInformationServiceTracker(context, uiFacadeFactory);
-                vmInfoServiceTracker.open();
+                uiFacadeFactory.getMainWindow();
+                infoServiceTracker = new InformationServiceTracker(context, uiFacadeFactory);
+                infoServiceTracker.open();
                 contextActionTracker = new VMContextActionServiceTracker(context, uiFacadeFactory);
                 contextActionTracker.open();
 
@@ -125,8 +129,7 @@ public class ThermostatActivator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        hostInfoServiceTracker.close();
-        vmInfoServiceTracker.close(); //context.removeServiceListener(vmInfoServiceTracker);
+        infoServiceTracker.close();
         contextActionTracker.close();
         cmdReg.unregisterCommands();
     }

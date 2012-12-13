@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.controllers.HostInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -60,7 +60,7 @@ import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
     private SWTHostMemoryViewProvider viewProvider;
-    private HostInformationServiceController controller;
+    private InformationServiceController<HostRef> controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -82,7 +82,7 @@ public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
     @Override
     protected void mockController() {
         HostMemoryService service = mock(HostMemoryService.class);
-        controller = mock(HostInformationServiceController.class);
+        controller = mock(InformationServiceController.class);
         thermoView = mock(SWTHostMemoryView.class);
 
         when(osgi.getService(HostMemoryService.class)).thenReturn(service);

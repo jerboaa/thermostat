@@ -36,12 +36,41 @@
 
 package com.redhat.thermostat.client.core;
 
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
-import com.redhat.thermostat.common.dao.VmRef;
+import java.util.Objects;
 
-public interface VmInformationService extends InformationService {
+import com.redhat.thermostat.common.dao.Ref;
 
-    public VmFilter getFilter();
+public class NameMatchingRefFilter<T extends Ref> implements Filter<T> {
 
-    public VmInformationServiceController getInformationServiceController(VmRef ref);
+    private String pattern;
+
+    public NameMatchingRefFilter() {
+        this(null);
+    }
+
+    public NameMatchingRefFilter(String pattern) {
+        setPattern(pattern);
+    }
+
+    @Override
+    public boolean matches(T toMatch) {
+        if (pattern == null || pattern.isEmpty()) {
+            return true;
+        } else {
+            return matchesPattern(toMatch);
+        }
+    }
+
+    public void setPattern(String pattern) {
+        this.pattern = pattern;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    protected boolean matchesPattern(Ref ref) {
+        Objects.requireNonNull(pattern);
+        return ref.getName().contains(pattern) || ref.getStringID().contains(pattern);
+    }
 }

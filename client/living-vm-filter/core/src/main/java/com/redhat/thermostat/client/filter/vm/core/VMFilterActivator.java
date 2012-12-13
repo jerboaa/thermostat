@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.filter.vm.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -47,9 +49,11 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 
 public class VMFilterActivator implements BundleActivator {
 
@@ -74,7 +78,9 @@ public class VMFilterActivator implements BundleActivator {
                 registration = context.registerService(MenuAction.class.getName(), menu, null);
                 registeredServices.add(registration);
 
-                registration = context.registerService(VmFilter.class.getName(), filter, null);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                registration = context.registerService(Filter.class.getName(), filter, properties);
                 registeredServices.add(registration);
 
                 return super.addingService(reference);

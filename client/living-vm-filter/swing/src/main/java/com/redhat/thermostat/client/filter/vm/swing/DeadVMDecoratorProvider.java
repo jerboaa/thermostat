@@ -34,45 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.filter.vm.swing;
 
-import com.redhat.thermostat.client.core.HostFilter;
-import com.redhat.thermostat.client.core.VmFilter;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.Ref;
+import java.io.IOException;
+
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
+import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.IconDescriptor;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.model.VmInfo;
 
-public class HostVmFilter implements HostFilter, VmFilter {
+public class DeadVMDecoratorProvider implements DecoratorProvider<VmRef> {
     
-    private String filter;
-
-    public HostVmFilter() {
-    }
-
-    public void setFilter(String filter) {
-        this.filter = filter;
-    }
-
-    @Override
-    public boolean matches(HostRef toMatch) {
-        return matchesRef(toMatch);
-    }
-
-    @Override
-    public boolean matches(VmRef toMatch) {
-        return matchesRef(toMatch);
-    }
-
-    public boolean matchesRef(Ref ref) {
-        if (filter == null || filter.isEmpty()) {
-            return true;
-            
-        } else {
-            return matchesRef(ref, filter);
+    private class DeadVMDecorator implements Decorator {
+        @Override
+        public IconDescriptor getIconDescriptor() {
+            try {
+                return IconDescriptor.createFromClassloader(getClass().getClassLoader(), "deadvm.png");
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+        
+        @Override
+        public String getLabel(String originalLabel) {
+            return "[not running] " + originalLabel;
+        }
+        
+        @Override
+        public Quadrant getQuadrant() {
+            return Quadrant.BOTTOM_LEFT;
         }
     }
 
-    public boolean matchesRef(Ref ref, String filter) {
-      return ref.getName().contains(filter) || ref.getStringID().contains(filter);
+    private Filter<VmRef> decoratorFilter;
+    private DeadVMDecorator decorator;
+    
+    public DeadVMDecoratorProvider(final VmInfoDAO dao) {
+        decorator = new DeadVMDecorator();
+        decoratorFilter = new Filter<VmRef>() {
+            @Override
+            public boolean matches(VmRef vm) {
+                VmInfo vmInfo = dao.getVmInfo(vm);
+
+                return !vmInfo.isAlive();
+            }
+        };
+    }
+    
+    @Override
+    public Decorator getDecorator() {
+        return decorator;
+    }
+    
+    @Override
+    public Filter<VmRef> getFilter() {
+        return decoratorFilter;
     }
 }

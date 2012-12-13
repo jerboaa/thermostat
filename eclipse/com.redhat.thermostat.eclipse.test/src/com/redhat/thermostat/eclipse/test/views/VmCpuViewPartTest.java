@@ -48,7 +48,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -62,7 +62,7 @@ import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmCpuViewProvider viewProvider;
-    private VmInformationServiceController controller;
+    private InformationServiceController<VmRef> controller;
 
     @Test
     public void testSelectionHostRef() throws Exception {
@@ -111,7 +111,7 @@ public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
     @Override
     protected void mockController() {
         VmCpuService service = mock(VmCpuService.class);
-        controller = mock(VmInformationServiceController.class);
+        controller = mock(InformationServiceController.class);
         thermoView = mock(SWTVmCpuView.class);
         
         when(osgi.getService(VmCpuService.class)).thenReturn(service);

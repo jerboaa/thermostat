@@ -38,6 +38,8 @@ package com.redhat.thermostat.client.filter.vm.swing;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
@@ -47,8 +49,10 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.osgi.service.VmDecorator;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 
 public class VMFilterActivator implements BundleActivator {
 
@@ -64,15 +68,18 @@ public class VMFilterActivator implements BundleActivator {
             public Object addingService(ServiceReference reference) {
                 VmInfoDAO dao = (VmInfoDAO) context.getService(reference);
 
-                VMDecorator decorator = new VMDecorator(dao);
-                DeadVMDecorator deadDecorator = new DeadVMDecorator(dao);
+                LivingVMDecoratorProvider decorator = new LivingVMDecoratorProvider(dao);
+                DeadVMDecoratorProvider deadDecorator = new DeadVMDecoratorProvider(dao);
                 
                 ServiceRegistration registration = null;
+
+                Dictionary<String, String> decoratorProperties = new Hashtable<>();
+                decoratorProperties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 
-                registration = context.registerService(VmDecorator.class.getName(), deadDecorator, null);
+                registration = context.registerService(DecoratorProvider.class.getName(), deadDecorator, decoratorProperties);
                 registeredServices.add(registration);
 
-                registration = context.registerService(VmDecorator.class.getName(), decorator, null);
+                registration = context.registerService(DecoratorProvider.class.getName(), decorator, decoratorProperties);
                 registeredServices.add(registration);
 
                 return super.addingService(reference);

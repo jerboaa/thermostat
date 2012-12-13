@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.vm.cpu.client.core.internal;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,41 +45,45 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.VmInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
 
 public class Activator implements BundleActivator {
-    
+
     private MultipleServiceTracker tracker;
     private ServiceRegistration reg;
 
     @Override
     public void start(final BundleContext context) throws Exception {
         Class<?>[] deps = new Class<?>[] {
-        	VmCpuStatDAO.class,
-        	ApplicationService.class
+                VmCpuStatDAO.class,
+                ApplicationService.class
         };
-        
-		tracker = new MultipleServiceTracker(context, deps , new Action() {
-            
-			@Override
-			public void dependenciesAvailable(Map<String, Object> services) {
-				VmCpuStatDAO vmCpuStatDAO = (VmCpuStatDAO) services.get(VmCpuStatDAO.class.getName());
-				Objects.requireNonNull(vmCpuStatDAO);
-				ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-				Objects.requireNonNull(appSvc);
-				VmCpuService service = new VmCpuService(appSvc, vmCpuStatDAO);
-				reg = context.registerService(VmInformationService.class.getName(), service, null);
-			}
 
-			@Override
-			public void dependenciesUnavailable() {
-				reg.unregister();
-			}
+        tracker = new MultipleServiceTracker(context, deps , new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                VmCpuStatDAO vmCpuStatDAO = (VmCpuStatDAO) services.get(VmCpuStatDAO.class.getName());
+                Objects.requireNonNull(vmCpuStatDAO);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
+                VmCpuService service = new VmCpuService(appSvc, vmCpuStatDAO);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                reg = context.registerService(InformationService.class.getName(), service, properties);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                reg.unregister();
+            }
         });
         tracker.open();
     }
@@ -88,4 +94,3 @@ public class Activator implements BundleActivator {
     }
 
 }
-

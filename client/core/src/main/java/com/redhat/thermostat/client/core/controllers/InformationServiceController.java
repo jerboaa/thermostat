@@ -37,12 +37,13 @@
 package com.redhat.thermostat.client.core.controllers;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.common.dao.Ref;
 
 /**
  * Marker interface for service controllers (VMs, Hosts, etc.)
  *
  */
-public interface InformationServiceController {
+public interface InformationServiceController<T extends Ref> {
 
     UIComponent getView();
     String getLocalizedName();

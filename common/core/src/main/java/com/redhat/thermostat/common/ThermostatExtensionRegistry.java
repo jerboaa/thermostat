@@ -73,7 +73,7 @@ public class ThermostatExtensionRegistry<E> {
             @Override
             public void removedService(ServiceReference reference, Object service) {
                 if (!classType.isAssignableFrom(service.getClass())) {
-                    throw new AssertionError("removing a non-Filter service");
+                    throw new AssertionError("removing a service of not matching type.");
                 }
                 
                 actionNotifier.fireAction(Action.SERVICE_REMOVED, service);

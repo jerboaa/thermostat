@@ -72,9 +72,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.SearchFieldView;
-import com.redhat.thermostat.client.osgi.service.HostDecorator;
+import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.swing.internal.MainView;
 import com.redhat.thermostat.client.ui.Decorator;
@@ -134,14 +134,16 @@ public class MainWindowTest {
     @Test
     public void testHostVmDecoratorsAdded() throws InterruptedException {
         
-        List<HostDecorator> decorators = new ArrayList<>();
-        HostDecorator refDecorator = mock(HostDecorator.class);
+        List<DecoratorProvider<HostRef>> decorators = new ArrayList<>();
+        @SuppressWarnings("unchecked")
+        DecoratorProvider<HostRef> refDecorator = mock(DecoratorProvider.class);
         final Decorator decorator = mock(Decorator.class);
         when(decorator.getLabel(anyString())).thenReturn("fluff");
         
         when(refDecorator.getDecorator()).thenReturn(decorator);
         
-        HostFilter filter = mock(HostFilter.class);
+        @SuppressWarnings("unchecked")
+        Filter<HostRef> filter = mock(Filter.class);
         when(filter.matches(isA(HostRef.class))).thenReturn(false).thenReturn(true);
 
         when(refDecorator.getFilter()).thenReturn(filter);

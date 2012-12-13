@@ -39,8 +39,8 @@ package com.redhat.thermostat.client.ui;
 import java.util.Collections;
 import java.util.List;
 
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.internal.InformationServiceComparator;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.VmInformationView;
@@ -59,11 +59,11 @@ public class VmInformationController {
     VmInformationController(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, VmRef vmRef, VmInformationViewProvider provider) {
         view = provider.createView();
 
-        List<VmInformationService> vmInfoServices = uiFacadeFactory.getVmInformationServices();
-        Collections.sort(vmInfoServices, new InformationServiceComparator<VmInformationService>());
-        for (VmInformationService vmInfoService : vmInfoServices) {
+        List<InformationService<VmRef>> vmInfoServices = uiFacadeFactory.getVmInformationServices();
+        Collections.sort(vmInfoServices, new InformationServiceComparator<InformationService<VmRef>>());
+        for (InformationService<VmRef> vmInfoService : vmInfoServices) {
             if (vmInfoService.getFilter().matches(vmRef)) {
-                VmInformationServiceController ctrl = vmInfoService.getInformationServiceController(vmRef);
+                InformationServiceController<VmRef> ctrl = vmInfoService.getInformationServiceController(vmRef);
                 String name = ctrl.getLocalizedName();
                 view.addChildView(name, ctrl.getView());
             }

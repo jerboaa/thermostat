@@ -40,7 +40,7 @@ import java.net.InetSocketAddress;
 import java.util.Objects;
 
 import com.redhat.thermostat.client.command.RequestQueue;
-import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
@@ -104,11 +104,11 @@ public class KillVMAction implements VMContextAction {
     }
 
     @Override
-    public VmFilter getFilter() {
+    public Filter<VmRef> getFilter() {
         return new LocalAndAliveFilter();
     }
 
-    private class LocalAndAliveFilter implements VmFilter {
+    private class LocalAndAliveFilter implements Filter<VmRef> {
 
         @Override
         public boolean matches(VmRef ref) {

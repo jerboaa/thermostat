@@ -54,7 +54,6 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -80,9 +79,9 @@ class ServerHandler extends SimpleChannelHandler {
         if (! authSucceeded) {
             response = new Response(ResponseType.AUTH_FAILED);
         } else {
-            logger.info("Request received: " + request.getType().toString());
-            RequestReceiver receiver = receivers.getReceiver(request
-                    .getReceiver());
+            String receiverName = request.getReceiver();
+            logger.info("Request received: " + request.getType().toString() + " for " + receiverName);
+            RequestReceiver receiver = receivers.getReceiver(receiverName);
             if (receiver != null) {
                 response = receiver.receive(request);
             } else {

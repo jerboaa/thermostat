@@ -36,8 +36,9 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.client.core.HostFilter;
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.common.dao.Ref;
 
 /**
  * This interface allows plugins to install a custom {@link Decorator} into
@@ -45,11 +46,12 @@ import com.redhat.thermostat.client.ui.Decorator;
  * 
  * <br /><br />
  * 
- * Active {@link HostDecorator}s are first queried against their filters
+ * Active {@link Decorator}s are first queried against their filters
  * and then installed into the view if the filter passes. 
  */
-public interface HostDecorator {
+public interface DecoratorProvider<T extends Ref> {
 
     Decorator getDecorator();
-    HostFilter getFilter();
+    Filter<T> getFilter();
+
 }

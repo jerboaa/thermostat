@@ -38,7 +38,7 @@ package com.redhat.thermostat.eclipse.chart.vmclassstat;
 
 import org.eclipse.swt.widgets.Composite;
 
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
@@ -55,7 +55,7 @@ public class VmClassStatViewPart extends VmRefViewPart {
         viewProvider.setParent(parent);
         
         VmClassStatService service = OSGIUtils.getInstance().getService(VmClassStatService.class);
-        VmInformationServiceController controller = service.getInformationServiceController(ref);
+        InformationServiceController<VmRef> controller = service.getInformationServiceController(ref);
         SWTComponent view = (SWTComponent) controller.getView();
         return view;
     }

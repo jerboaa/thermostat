@@ -55,8 +55,6 @@ public class Constants {
 
     public static final long KILOBYTES_TO_BYTES = 1000;
 
-    public static final int HOST_INFO_NETWORK_IPV4_INDEX = 0;
-    public static final int HOST_INFO_NETWORK_IPV6_INDEX = 1;
-
+    public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
 
 }

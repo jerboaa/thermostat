@@ -46,7 +46,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
 
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
@@ -60,7 +60,7 @@ import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmGcViewProvider viewProvider;
-    private VmInformationServiceController controller;
+    private InformationServiceController<VmRef> controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -83,7 +83,7 @@ public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
     @Override
     protected void mockController() {
         VmGcService service = mock(VmGcService.class);
-        controller = mock(VmInformationServiceController.class);
+        controller = mock(InformationServiceController.class);
         thermoView = mock(SWTVmGcView.class);
 
         when(osgi.getService(VmGcService.class)).thenReturn(service);

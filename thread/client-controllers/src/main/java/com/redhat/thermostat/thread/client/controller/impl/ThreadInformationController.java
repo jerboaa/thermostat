@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
@@ -64,7 +64,7 @@ import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 
-public class ThreadInformationController implements VmInformationServiceController {
+public class ThreadInformationController implements InformationServiceController<VmRef> {
 
     private static final Logger logger = LoggingUtils.getLogger(ThreadInformationController.class);
     

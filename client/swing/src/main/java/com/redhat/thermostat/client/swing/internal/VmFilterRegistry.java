@@ -40,14 +40,18 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.core.VmFilter;
+import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.common.dao.VmRef;
 
-class VmFilterRegistry extends ThermostatExtensionRegistry<VmFilter> {
+class VmFilterRegistry extends ThermostatExtensionRegistry<Filter> {
 
-    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + VmFilter.class.getName() + ")";
+    private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
+            Filter.class.getName() + ")&(" +
+            com.redhat.thermostat.common.Constants.GENERIC_SERVICE_CLASSNAME + "=" +
+            VmRef.class.getName() + "))";
 
     public VmFilterRegistry(BundleContext context) throws InvalidSyntaxException {
-        super(context, FILTER, VmFilter.class);
+        super(context, FILTER, Filter.class);
     }
 }

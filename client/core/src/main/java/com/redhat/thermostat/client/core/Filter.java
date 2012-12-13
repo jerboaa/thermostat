@@ -36,11 +36,12 @@
 
 package com.redhat.thermostat.client.core;
 
-
 /**
  * Marker interface for filters of information sources (VMs, Hosts, etc.)
  *
  */
-public interface Filter {
+public interface Filter<T> {
+
+    boolean matches(T toMatch);
 
 }

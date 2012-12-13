@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.host.memory.client.core.internal;
 
+import java.util.Dictionary;
+import java.util.Hashtable;
 import java.util.Map;
 import java.util.Objects;
 
@@ -43,11 +45,13 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.HostInformationService;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 
@@ -75,7 +79,9 @@ public class Activator implements BundleActivator {
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
                 HostMemoryService service = new HostMemoryService(appSvc, hostInfoDAO, memoryStatDAO);
-                reg = context.registerService(HostInformationService.class.getName(), service, null);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+                reg = context.registerService(InformationService.class.getName(), service, properties);
             }
 
             @Override

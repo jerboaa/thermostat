@@ -36,20 +36,20 @@
 
 package com.redhat.thermostat.vm.cpu.client.core;
 
-import com.redhat.thermostat.client.core.VmFilter;
-import com.redhat.thermostat.client.core.VmInformationService;
-import com.redhat.thermostat.client.core.controllers.VmInformationServiceController;
-import com.redhat.thermostat.client.osgi.service.AlwaysMatchFilter;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
 
-public class VmCpuService implements VmInformationService {
+public class VmCpuService implements InformationService<VmRef> {
     
     private static final int PRIORITY = PRIORITY_CPU_GROUP;
-    private static final VmFilter FILTER = new AlwaysMatchFilter();
+    private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
     private VmCpuStatDAO vmCpuStatDAO;
@@ -60,14 +60,14 @@ public class VmCpuService implements VmInformationService {
     }
 
     @Override
-    public VmInformationServiceController getInformationServiceController(
+    public InformationServiceController<VmRef> getInformationServiceController(
             VmRef ref) {
         VmCpuViewProvider provider = OSGIUtils.getInstance().getService(VmCpuViewProvider.class);
         return new VmCpuController(appSvc, vmCpuStatDAO, ref, provider);
     }
 
     @Override
-    public VmFilter getFilter() {
+    public Filter<VmRef> getFilter() {
         return FILTER;
     }
 
