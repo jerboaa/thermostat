@@ -42,27 +42,19 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import expectj.ExpectJ;
 import expectj.Spawn;
 
-public class CliTest {
-
-    private static final long TIMEOUT_IN_SECONDS = 2;
-
-    private ExpectJ expect;
-
-    @Before
-    public void setUp() throws IOException {
-        expect = new ExpectJ(TIMEOUT_IN_SECONDS);
-    }
+/**
+ * Integration tests to exercise the basics of the thermostat command line.
+ */
+public class CliTest extends IntegrationTest {
 
     @Test
     public void testExpectIsSane() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable());
+        Spawn shell = spawnThermostat();
 
         try {
             shell.expect("some-random-text-that-is-not-really-possible");
@@ -75,7 +67,7 @@ public class CliTest {
 
     @Test
     public void testSimpleInvocationPrintsHelp() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable());
+        Spawn shell = spawnThermostat();
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
@@ -88,7 +80,7 @@ public class CliTest {
 
     @Test
     public void testHelpCommandInvocation() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable() + " help");
+        Spawn shell = spawnThermostat("help");
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
@@ -101,7 +93,7 @@ public class CliTest {
     @Ignore("this is currently broken; help's usage includes stuff about usernames and passwords")
     @Test
     public void testHelpOnHelp() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable() + " help help");
+        Spawn shell = spawnThermostat("help", "help");
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
@@ -116,7 +108,7 @@ public class CliTest {
 
     @Test
     public void testVersionArgument() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable() + " --version");
+        Spawn shell = spawnThermostat("--version");
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
@@ -128,7 +120,7 @@ public class CliTest {
 
     @Test
     public void testShell() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable() + " shell");
+        Spawn shell = spawnThermostat("shell");
 
         shell.expect("Thermostat >");
         shell.send("help\n");
@@ -144,7 +136,7 @@ public class CliTest {
 
     @Test
     public void testShellHelp() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable() + " help shell");
+        Spawn shell = spawnThermostat("help", "shell");
         shell.expectClose();
 
         String stdOut = shell.getCurrentStandardOutContents();
@@ -162,14 +154,14 @@ public class CliTest {
 
     @Test
     public void testShellUnrecognizedArgument() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable() + " shell --foo");
+        Spawn shell = spawnThermostat("shell", "--foo");
         shell.expectErr("Unrecognized option: --foo");
         shell.expectClose();
     }
 
     @Test
     public void testInvalidCommand() throws Exception {
-        Spawn shell = expect.spawn(getThermostatExecutable() + " foobar baz");
+        Spawn shell = spawnThermostat("foobar", "baz");
 
         // TODO should this be stderr?
         shell.expect("unknown command 'foobar'");
@@ -178,10 +170,6 @@ public class CliTest {
         String stdOut = shell.getCurrentStandardOutContents();
 
         assertMatchesHelpCommandList(stdOut);
-    }
-
-    public String getThermostatExecutable() {
-        return "target/bin/thermostat";
     }
 
     private static void assertMatchesHelpCommandList(String actual) {
