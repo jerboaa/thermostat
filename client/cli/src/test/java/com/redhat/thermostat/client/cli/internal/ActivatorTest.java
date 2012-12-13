@@ -34,32 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.command.internal;
+package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.test.StubBundleContext;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(FrameworkUtil.class)
 public class ActivatorTest {
 
     @Test
     public void testCommandsRegistered() throws Exception {
+        // Need to mock FrameworkUtil to avoid NPE in ShellCommand's no-arg constructor
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle mockBundle = mock(Bundle.class);
+        when(FrameworkUtil.getBundle(ShellCommand.class)).thenReturn(mockBundle);
         StubBundleContext ctx = new StubBundleContext();
+        when(mockBundle.getBundleContext()).thenReturn(ctx);
+        
         Activator activator = new Activator();
         
         activator.start(ctx);
         
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), DumpHeapCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindObjectsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindRootCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ListHeapDumpsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ObjectInfoCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), SaveHeapDumpToFileCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ShowHeapHistogramCommand.class));
+        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ConnectCommand.class));
+        assertTrue(ctx.isServiceRegistered(Command.class.getName(), DisconnectCommand.class));
+        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ListVMsCommand.class));
+        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ShellCommand.class));
+        assertTrue(ctx.isServiceRegistered(Command.class.getName(), VMInfoCommand.class));
+        assertTrue(ctx.isServiceRegistered(Command.class.getName(), VMStatCommand.class));
         
         activator.stop(ctx);
         

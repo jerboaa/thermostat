@@ -34,35 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.command.internal;
+package com.redhat.thermostat.client.cli.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import java.util.ServiceLoader;
 
-import org.junit.Test;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.common.cli.CommandRegistry;
+import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
-public class ActivatorTest {
+public class Activator implements BundleActivator {
 
-    @Test
-    public void testCommandsRegistered() throws Exception {
-        StubBundleContext ctx = new StubBundleContext();
-        Activator activator = new Activator();
-        
-        activator.start(ctx);
-        
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), DumpHeapCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindObjectsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindRootCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ListHeapDumpsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ObjectInfoCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), SaveHeapDumpToFileCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ShowHeapHistogramCommand.class));
-        
-        activator.stop(ctx);
-        
-        assertEquals(0, ctx.getAllServices().size());
+    private CommandRegistry reg;
+
+    @Override
+    public void start(BundleContext context) throws Exception {
+        reg = new CommandRegistryImpl(context);
+        ServiceLoader<Command> cmds = ServiceLoader.load(Command.class, getClass().getClassLoader());
+        reg.registerCommands(cmds);
     }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        reg.unregisterCommands();
+    }
+
 }

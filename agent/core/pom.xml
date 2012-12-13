@@ -72,11 +72,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-tools</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
     </dependency>

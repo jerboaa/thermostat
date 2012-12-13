@@ -34,35 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.command.internal;
+package com.redhat.thermostat.client.cli.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import com.redhat.thermostat.test.locale.AbstractLocaleResourcesTest;
 
-import org.junit.Test;
+public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 
-import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.test.StubBundleContext;
-
-public class ActivatorTest {
-
-    @Test
-    public void testCommandsRegistered() throws Exception {
-        StubBundleContext ctx = new StubBundleContext();
-        Activator activator = new Activator();
-        
-        activator.start(ctx);
-        
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), DumpHeapCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindObjectsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindRootCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ListHeapDumpsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ObjectInfoCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), SaveHeapDumpToFileCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ShowHeapHistogramCommand.class));
-        
-        activator.stop(ctx);
-        
-        assertEquals(0, ctx.getAllServices().size());
+    @Override
+    protected Class<LocaleResources> getEnumClass() {
+        return LocaleResources.class;
     }
+
+    @Override
+    protected String getResourceBundle() {
+        return LocaleResources.RESOURCE_BUNDLE;
+    }
+
 }

@@ -327,11 +327,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-tools</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-launcher</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -348,6 +343,11 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-client-command</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-client-cli</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

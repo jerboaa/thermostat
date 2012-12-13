@@ -34,35 +34,56 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.heap.analysis.command.internal;
+package com.redhat.thermostat.client.cli.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.apache.commons.cli.Options;
 
-import org.junit.Test;
+import com.redhat.thermostat.common.DbService;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.ConnectionException;
 
-import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.test.StubBundleContext;
+public class DisconnectCommand extends SimpleCommand {
 
-public class ActivatorTest {
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    @Test
-    public void testCommandsRegistered() throws Exception {
-        StubBundleContext ctx = new StubBundleContext();
-        Activator activator = new Activator();
-        
-        activator.start(ctx);
-        
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), DumpHeapCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindObjectsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), FindRootCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ListHeapDumpsCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ObjectInfoCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), SaveHeapDumpToFileCommand.class));
-        assertTrue(ctx.isServiceRegistered(Command.class.getName(), ShowHeapHistogramCommand.class));
-        
-        activator.stop(ctx);
-        
-        assertEquals(0, ctx.getAllServices().size());
+    private static final String NAME = "disconnect";
+
+    @Override
+    public void run(CommandContext ctx) throws CommandException {
+        DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
+        if (service == null) {
+            // not connected
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED));
+        }
+        try {
+            service.disconnect();
+        } catch (ConnectionException e) {
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_ERROR));
+        }
     }
+
+    @Override
+    public String getName() {
+        return NAME;
+    }
+
+    @Override
+    public Options getOptions() {
+        return new Options();
+    }
+    
+    @Override
+    public boolean isAvailableOutsideShell() {
+        return false;
+    }
+    
+    @Override
+    public boolean isStorageRequired() {
+        return false;
+    }
+
 }

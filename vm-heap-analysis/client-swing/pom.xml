@@ -112,12 +112,6 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-tools</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-heap-analysis-common</artifactId>
       <version>${project.version}</version>
     </dependency>

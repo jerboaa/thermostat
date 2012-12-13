@@ -120,7 +120,6 @@
     <module>distribution</module>
     <module>main</module>
     <module>launcher</module>
-    <module>tools</module>
     <module>bundles</module>
     <module>common</module>
     <module>agent</module>
