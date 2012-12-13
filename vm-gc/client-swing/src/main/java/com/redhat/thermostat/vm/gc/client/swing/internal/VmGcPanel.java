@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
@@ -62,9 +63,9 @@ import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.Components;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
+import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
@@ -133,10 +134,10 @@ public class VmGcPanel extends VmGcView implements SwingComponent {
 
     private JPanel createCollectorDetailsPanel(IntervalXYDataset collectorData, String title, String units) {
         JPanel detailsPanel = new JPanel();
-        detailsPanel.setBorder(Components.smallBorder());
+        detailsPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
         detailsPanel.setLayout(new BorderLayout());
 
-        detailsPanel.add(Components.header(title), BorderLayout.NORTH);
+        detailsPanel.add(new SectionHeader(title), BorderLayout.NORTH);
 
         JFreeChart chart = ChartFactory.createHistogram(
             null,

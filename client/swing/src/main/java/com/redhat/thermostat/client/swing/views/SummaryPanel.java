@@ -55,7 +55,7 @@ import javax.swing.text.JTextComponent;
 import com.redhat.thermostat.client.core.views.SummaryView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.Components;
+import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ActionListener;
@@ -75,7 +75,7 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
     public SummaryPanel() {
         super();
         visiblePanel = new JPanel();
-        JLabel lblHomepanel = Components.header(translator.localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
+        JLabel lblHomepanel = new SectionHeader(translator.localize(LocaleResources.HOME_PANEL_SECTION_SUMMARY));
 
         JLabel lblTotalHosts = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
 
@@ -85,7 +85,7 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
 
         totalMonitoredVms = new ValueField("${TOTAL_MONITORED_VMS}");
 
-        JLabel lblIssues = Components.header(translator.localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
+        JLabel lblIssues = new SectionHeader(translator.localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
 
         JScrollPane scrollPane = new JScrollPane();
 

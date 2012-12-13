@@ -37,19 +37,14 @@
 package com.redhat.thermostat.vm.overview.client.swing.internal;
 
 import java.awt.Component;
-import java.awt.Point;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.Components;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ActionListener;
@@ -188,7 +183,7 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
 
         SimpleTable simpleTable = new SimpleTable();
         JPanel table = simpleTable.createTable(allSections);
-        table.setBorder(Components.smallBorder());
+        table.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
 
         container = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 

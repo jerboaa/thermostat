@@ -64,8 +64,9 @@ import org.jfree.data.time.TimeSeries;
 import org.jfree.data.time.TimeSeriesCollection;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.Components;
+import com.redhat.thermostat.client.swing.components.LabelField;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
+import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
@@ -258,9 +259,9 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         JPanel chartPanel = new RecentTimeSeriesChartPanel(new RecentTimeSeriesChartController(chart));
         chartPanel.setOpaque(false);
 
-        JLabel lblMemory = Components.header(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
+        JLabel lblMemory = new SectionHeader(translator.localize(LocaleResources.HOST_MEMORY_SECTION_OVERVIEW));
 
-        JLabel totalMemoryLabel = Components.label(translator.localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
+        JLabel totalMemoryLabel = new LabelField(translator.localize(LocaleResources.HOST_INFO_MEMORY_TOTAL));
 
         memoryCheckBoxPanel.setOpaque(false);
 

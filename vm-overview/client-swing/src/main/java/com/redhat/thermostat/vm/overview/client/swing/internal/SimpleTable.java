@@ -57,7 +57,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 
-import com.redhat.thermostat.client.swing.components.Components;
+import com.redhat.thermostat.client.swing.components.LabelField;
+import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 
@@ -190,10 +191,10 @@ public class SimpleTable implements ChangeableText.TextListener {
 
         for (Section section : sections) {
             sectionHeaderConstraints.gridy = keyConstraints.gridy = ++valueConstraints.gridy;
-            container.add(Components.header(section.getText()), sectionHeaderConstraints);
+            container.add(new SectionHeader(section.getText()), sectionHeaderConstraints);
             for (TableEntry tableEntry : section.getEntries()) {
                 keyConstraints.gridy = ++valueConstraints.gridy;
-                container.add(Components.label(tableEntry.getKey().getText()), keyConstraints);
+                container.add(new LabelField(tableEntry.getKey().getText()), keyConstraints);
 
                 for (Value value : tableEntry.getValues()) {
                     if (value.getComponent() == null) {
