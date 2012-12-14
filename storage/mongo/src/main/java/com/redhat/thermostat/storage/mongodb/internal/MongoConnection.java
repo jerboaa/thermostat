@@ -47,9 +47,10 @@ import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.ConnectionException;
-import com.redhat.thermostat.storage.core.StorageConstants;
 
 class MongoConnection extends Connection {
+
+    static final String THERMOSTAT_DB_NAME = "thermostat";
 
     private Mongo m = null;
     private DB db = null;
@@ -106,7 +107,7 @@ class MongoConnection extends Connection {
 
     private void createConnection() throws MongoException, UnknownHostException {
         this.m = new Mongo(getMongoURI());
-        this.db = m.getDB(StorageConstants.THERMOSTAT_DB_NAME);
+        this.db = m.getDB(THERMOSTAT_DB_NAME);
     }
 
     private MongoURI getMongoURI() {

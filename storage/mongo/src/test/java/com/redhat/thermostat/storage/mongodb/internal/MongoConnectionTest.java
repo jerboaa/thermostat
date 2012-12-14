@@ -59,7 +59,6 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoURI;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.ConnectionException;
-import com.redhat.thermostat.storage.core.StorageConstants;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.mongodb.internal.MongoConnection;
@@ -91,7 +90,7 @@ public class MongoConnectionTest {
         DB db = mock(DB.class);
         when(db.getCollection("agent-config")).thenReturn(collection);
         Mongo m = mock(Mongo.class);
-        when(m.getDB(StorageConstants.THERMOSTAT_DB_NAME)).thenReturn(db);
+        when(m.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         conn.connect();
 
