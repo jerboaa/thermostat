@@ -34,43 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.common.command;
 
-import static org.junit.Assert.assertEquals;
+/**
+ * Exception thrown when an improperly encoded {@link Message} has been received.
+ *
+ */
+@SuppressWarnings("serial")
+public class InvalidMessageException extends Exception {
 
-import java.nio.charset.Charset;
-
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.junit.Test;
-
-import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Response.ResponseType;
-
-public class ResponseEncoderTest {
-
-    private static final boolean DEBUG = false;
-    
-    @Test
-    public void testEncode() throws Exception {
-        ResponseEncoder encoder = new ResponseEncoder();
-        String responseExp = "OK";
-        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
-        ChannelBuffer buf = ChannelBuffers.buffer(4);
-        buf.writeInt(responseExp.getBytes().length);
-        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(buf, stringBuf);
-        Response ok = new Response(ResponseType.OK);
-        ChannelBuffer actual = (ChannelBuffer)encoder.encode(ok);
-        if (DEBUG) {
-            printBuffers(actual, expected);
-        }
-        assertEquals(0, ChannelBuffers.compare(expected, actual));
-    }
-    
-    private void printBuffers(ChannelBuffer actual, ChannelBuffer expected) {
-        System.out.println("hexdump expected\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(expected));
-        System.out.println("\nhexdump actual\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(actual) + "\n\n");
+    public InvalidMessageException(String message) {
+        super(message);
     }
 }

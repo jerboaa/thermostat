@@ -36,34 +36,99 @@
 
 package com.redhat.thermostat.client.command.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.mockito.Matchers.isA;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ExceptionEvent;
+import java.net.SocketAddress;
+import java.nio.charset.Charset;
+
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
+
+import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Request.RequestType;
 
 public class RequestEncoderTest {
 
-    /**
-     * This test verifies that exception events are forwarded upstream. This is to ensure that
-     * fireComplete() events get delivered in case of Exceptions.
-     * 
-     * @throws Exception
-     */
+    private static final boolean DEBUG = false;
+    
     @Test
-    public void exceptionCaughtCallsFireComplete() throws Exception {
+    public void canEncodeSimpleRequestWithNoParams() throws Exception {
         RequestEncoder encoder = new RequestEncoder();
-        ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
-        ExceptionEvent evt = mock(ExceptionEvent.class);
-        when(evt.getCause()).thenReturn(new Exception());
-        Channel channel = mock(Channel.class);
-        when(ctx.getChannel()).thenReturn(channel);
-        encoder.exceptionCaught(ctx, evt);
-        // Channels.fireExceptionCaught implicitly calls this
-        verify(ctx).sendUpstream(isA(ExceptionEvent.class));
+        String responseExp = "RESPONSE_EXPECTED";
+        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
+        ChannelBuffer buf = ChannelBuffers.buffer(4);
+        buf.writeInt(responseExp.getBytes().length);
+        ChannelBuffer buf2 = ChannelBuffers.wrappedBuffer(buf, stringBuf);
+        buf = ChannelBuffers.buffer(4);
+        buf.writeInt(0);
+        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(buf2, buf);
+        SocketAddress addr = mock(SocketAddress.class);
+        Request item = new Request(RequestType.RESPONSE_EXPECTED, addr);
+        ChannelBuffer actual = encoder.encode(item);
+        if (DEBUG) {
+            printBuffers(actual, expected);
+        }
+        assertEquals(0, ChannelBuffers.compare(expected, actual));
+    }
+    
+    @Test
+    public void canEncodeRequestWithParams() throws Exception {
+        SocketAddress addr = mock(SocketAddress.class);
+
+        // Prepare request we'd like to encode
+        Request item = new Request(RequestType.RESPONSE_EXPECTED, addr);
+        String param1Name = "param1";
+        String param1Value = "value1";
+        String param2Name = "param2";
+        String param2Value = "value2";
+        item.setParameter(param1Name, param1Value);
+        item.setParameter(param2Name, param2Value);
+        RequestEncoder encoder = new RequestEncoder();
+        
+        // build expected
+        String responseExp = "RESPONSE_EXPECTED";
+        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
+        ChannelBuffer buf = ChannelBuffers.buffer(4);
+        buf.writeInt(responseExp.getBytes().length);
+        ChannelBuffer buf2 = ChannelBuffers.wrappedBuffer(buf, stringBuf);
+        buf = ChannelBuffers.buffer(4);
+        buf.writeInt(2);
+        ChannelBuffer request = ChannelBuffers.wrappedBuffer(buf2, buf);
+        ChannelBuffer nameLen = ChannelBuffers.buffer(4);
+        nameLen.writeInt(param1Name.getBytes().length);
+        ChannelBuffer valueLen = ChannelBuffers.buffer(4);
+        valueLen.writeInt(param1Value.getBytes().length);
+        ChannelBuffer lens = ChannelBuffers.wrappedBuffer(nameLen, valueLen);
+        ChannelBuffer nameBuf = ChannelBuffers.copiedBuffer(param1Name, Charset.defaultCharset());
+        ChannelBuffer valueBuf = ChannelBuffers.copiedBuffer(param1Value, Charset.defaultCharset());
+        ChannelBuffer payload = ChannelBuffers.wrappedBuffer(nameBuf, valueBuf);
+        ChannelBuffer param1Buf = ChannelBuffers.wrappedBuffer(lens, payload);
+        nameLen = ChannelBuffers.buffer(4);
+        nameLen.writeInt(param2Name.getBytes().length);
+        valueLen = ChannelBuffers.buffer(4);
+        valueLen.writeInt(param2Value.getBytes().length);
+        lens = ChannelBuffers.wrappedBuffer(nameLen, valueLen);
+        nameBuf = ChannelBuffers.copiedBuffer(param2Name, Charset.defaultCharset());
+        valueBuf = ChannelBuffers.copiedBuffer(param2Value, Charset.defaultCharset());
+        payload = ChannelBuffers.wrappedBuffer(nameBuf, valueBuf);
+        ChannelBuffer param2Buf = ChannelBuffers.wrappedBuffer(lens, payload);
+        ChannelBuffer params = ChannelBuffers.wrappedBuffer(param1Buf, param2Buf);
+        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(request, params);
+        
+        // Encode item for actual
+        ChannelBuffer actual = encoder.encode(item);
+        if (DEBUG) {
+            printBuffers(actual, expected);
+        }
+        assertEquals(0, ChannelBuffers.compare(expected, actual));
+    }
+
+    private void printBuffers(ChannelBuffer actual, ChannelBuffer expected) {
+        System.out.println("hexdump expected\n-------------------------------------");
+        System.out.println(ChannelBuffers.hexDump(expected));
+        System.out.println("\nhexdump actual\n-------------------------------------");
+        System.out.println(ChannelBuffers.hexDump(actual) + "\n\n");
     }
 }

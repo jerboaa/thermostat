@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 
 public class ResponseTest {

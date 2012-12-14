@@ -36,30 +36,42 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
 
 import com.redhat.thermostat.common.command.DecodingHelper;
+import com.redhat.thermostat.common.command.InvalidMessageException;
+import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.MessageDecoder;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class RequestDecoder extends MessageDecoder {
+    
+    private static final Logger logger = LoggingUtils.getLogger(RequestDecoder.class);
 
+    /*
+     * See the javadoc of Request for a description of the encoding.
+     */
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel,
-            ChannelBuffer buffer) {
+    protected Message decode(Channel channel, ChannelBuffer msg) throws InvalidMessageException {
+        logger.log(Level.FINEST, "agent: decoding Request object");
+        ChannelBuffer buffer = (ChannelBuffer) msg;
         buffer.markReaderIndex();
         String typeAsString = DecodingHelper.decodeString(buffer);
         if (typeAsString == null) {
             buffer.resetReaderIndex();
-            return null;
+            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
         }
         Request request = new Request(RequestType.valueOf(typeAsString), channel.getRemoteAddress());
         if (!DecodingHelper.decodeParameters(buffer, request)) {
             buffer.resetReaderIndex();
-            return null;
+            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
         }
         return request;
     }

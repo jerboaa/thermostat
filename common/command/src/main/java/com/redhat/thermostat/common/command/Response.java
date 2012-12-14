@@ -36,6 +36,23 @@
 
 package com.redhat.thermostat.common.command;
 
+
+/**
+ * A Response object represents a response message passed from an agent
+ * to a client.
+ * 
+ * 
+ * Response objects are serialized over the command channel in the following
+ * format:
+ * 
+ * ------------
+ * | A | TYPE |
+ * ------------
+ * 
+ * A is an 32 bit integer representing the length - in bytes - of TYPE. TYPE
+ * is a byte array representing the string of the response type (e.g.
+ * "OK").
+ */
 public class Response implements Message {
 
     // TODO add parameter support to provide more information in some of these types.

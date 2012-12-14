@@ -36,8 +36,48 @@
 
 package com.redhat.thermostat.common.command;
 
-import org.jboss.netty.channel.SimpleChannelHandler;
+import static org.jboss.netty.channel.Channels.write;
 
-public abstract class MessageEncoder extends SimpleChannelHandler {
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelDownstreamHandler;
 
+public abstract class MessageEncoder extends SimpleChannelDownstreamHandler {
+
+    protected MessageEncoder() {
+        super();
+    }
+
+    @Override
+    public void handleDownstream(
+            ChannelHandlerContext ctx, ChannelEvent evt) throws Exception {
+        if (!(evt instanceof MessageEvent)) {
+            ctx.sendDownstream(evt);
+            return;
+        }
+
+        MessageEvent e = (MessageEvent) evt;
+        Object originalMessage = e.getMessage();
+        // We only know how to encode Messages. Non-message types
+        // get sent downstream verbatim.
+        if (!(originalMessage instanceof Message)) {
+            ctx.sendDownstream(evt);
+        }
+        ChannelBuffer encodedMessage = encode((Message)originalMessage);
+        if (encodedMessage != null) {
+            write(ctx, e.getFuture(), encodedMessage, e.getRemoteAddress());
+        }
+    }
+
+    /**
+     * Transforms the specified message into another message and return the
+     * transformed message. Note that you can not return {@code null}, unlike
+     * you can in
+     * {@link MessageDecoder#decode(org.jboss.netty.buffer.ChannelBuffer)}; you
+     * must return something, at least {@link ChannelBuffers#EMPTY_BUFFER}.
+     */
+    protected abstract ChannelBuffer encode(Message originalMessage);
 }

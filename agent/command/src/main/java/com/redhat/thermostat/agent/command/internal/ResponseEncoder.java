@@ -36,23 +36,34 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import org.jboss.netty.buffer.ChannelBuffer;
 import static org.jboss.netty.buffer.ChannelBuffers.wrappedBuffer;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.MessageEvent;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.jboss.netty.buffer.ChannelBuffer;
 
 import com.redhat.thermostat.common.command.EncodingHelper;
+import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.MessageEncoder;
 import com.redhat.thermostat.common.command.Response;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 
 class ResponseEncoder extends MessageEncoder {
 
+    private static final Logger logger = LoggingUtils.getLogger(ResponseEncoder.class);
+    
+    /*
+     * See javadoc of Response for a description of the encoding.
+     */
     @Override
-    public void writeRequested(ChannelHandlerContext ctx, MessageEvent e) {
-
-        Response response = (Response) e.getMessage();
+    protected ChannelBuffer encode(Message msg) {
+        // At this point we are only getting Messages. Since our only
+        // registered MessageEncoder is the one for Responses a cast
+        // to Response should be safe.
+        logger.log(Level.FINEST, "agent: encoding Response object");
+        Response response = (Response) msg;
 
         // Response Type
         String responseType = EncodingHelper.trimType(response.getType().toString());
@@ -60,8 +71,7 @@ class ResponseEncoder extends MessageEncoder {
 
         // Compose the full message.
         ChannelBuffer buf = wrappedBuffer(typeBuffer);
-        Channels.write(ctx, e.getFuture(), buf);
-        
+        return buf;
     }
 
 }

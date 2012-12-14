@@ -34,43 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.client.command.internal;
 
-import static org.junit.Assert.assertEquals;
-
-import java.nio.charset.Charset;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.command.InvalidMessageException;
+import com.redhat.thermostat.common.command.Message;
+import com.redhat.thermostat.common.command.Messages;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 
-public class ResponseEncoderTest {
+public class ResponseDecoderTest {
 
-    private static final boolean DEBUG = false;
+    private static final byte[] ENCODED_OK_RESP = new byte[] {
+        0x00, 0x00, 0x00, 0x02, 0x4f, 0x4b  
+    };
+    
+    private static final byte[] GARBAGE_AS_RESPONSE = new byte[] {
+        0x0d, 0x0b, 0x0e, 0x0e, 0x0f  
+    };
     
     @Test
-    public void testEncode() throws Exception {
-        ResponseEncoder encoder = new ResponseEncoder();
-        String responseExp = "OK";
-        ChannelBuffer stringBuf = ChannelBuffers.copiedBuffer(responseExp, Charset.defaultCharset());
-        ChannelBuffer buf = ChannelBuffers.buffer(4);
-        buf.writeInt(responseExp.getBytes().length);
-        ChannelBuffer expected = ChannelBuffers.wrappedBuffer(buf, stringBuf);
-        Response ok = new Response(ResponseType.OK);
-        ChannelBuffer actual = (ChannelBuffer)encoder.encode(ok);
-        if (DEBUG) {
-            printBuffers(actual, expected);
-        }
-        assertEquals(0, ChannelBuffers.compare(expected, actual));
+    public void testDecode() throws InvalidMessageException {
+        ChannelBuffer buffer = ChannelBuffers.copiedBuffer(ENCODED_OK_RESP);
+        Response expected = new Response(ResponseType.OK);
+        ResponseDecoder decoder = new ResponseDecoder();
+        Message actual = decoder.decode(null, buffer);
+        assertTrue(actual instanceof Response);
+        assertTrue(Messages.equal(expected, (Response)actual));
     }
     
-    private void printBuffers(ChannelBuffer actual, ChannelBuffer expected) {
-        System.out.println("hexdump expected\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(expected));
-        System.out.println("\nhexdump actual\n-------------------------------------");
-        System.out.println(ChannelBuffers.hexDump(actual) + "\n\n");
+    @Test
+    public void verifyInvalidEncodingThrowsException() {
+        ResponseDecoder decoder = new ResponseDecoder();
+        ChannelBuffer garbage = ChannelBuffers.copiedBuffer(GARBAGE_AS_RESPONSE);
+        try {
+            decoder.decode(null, garbage);
+            fail("Should have thrown decoding exception!");
+        } catch (InvalidMessageException e) {
+            // pass
+        }
     }
 }

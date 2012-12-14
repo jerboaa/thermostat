@@ -37,22 +37,26 @@
 package com.redhat.thermostat.client.command.internal;
 
 import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
 
 import com.redhat.thermostat.common.command.DecodingHelper;
+import com.redhat.thermostat.common.command.InvalidMessageException;
+import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.MessageDecoder;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 
 class ResponseDecoder extends MessageDecoder {
 
+    /*
+     * See javadoc of Response for a description of the encoding.
+     */
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel,
-            ChannelBuffer buffer) {
-        String typeAsString = DecodingHelper.decodeString(buffer);
+    protected Message decode(Channel channel, ChannelBuffer originalMessage) throws InvalidMessageException {
+        String typeAsString = DecodingHelper.decodeString(originalMessage);
         if (typeAsString == null) {
-            return null;
+            throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(originalMessage));
         }
         return new Response(ResponseType.valueOf(typeAsString));
     }

@@ -37,7 +37,7 @@
 package com.redhat.thermostat.common.command;
 
 
-interface Message {
+public interface Message {
 
     interface MessageType {
     }

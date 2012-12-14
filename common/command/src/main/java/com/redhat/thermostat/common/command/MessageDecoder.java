@@ -36,8 +36,64 @@
 
 package com.redhat.thermostat.common.command;
 
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
+import static org.jboss.netty.channel.Channels.fireMessageReceived;
 
-public abstract class MessageDecoder extends FrameDecoder {
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.jboss.netty.buffer.ChannelBuffer;
+import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.MessageEvent;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+
+import com.redhat.thermostat.common.utils.LoggingUtils;
+
+public abstract class MessageDecoder extends SimpleChannelUpstreamHandler {
+
+    // testing hook
+    boolean exceptionCaught = false;
+    
+    private static final Logger logger = LoggingUtils.getLogger(MessageDecoder.class);
+    
+    protected MessageDecoder() {
+        super();
+    }
+
+    @Override
+    public void handleUpstream(
+            ChannelHandlerContext ctx, ChannelEvent evt) throws Exception {
+        if (!(evt instanceof MessageEvent)) {
+            ctx.sendUpstream(evt);
+            return;
+        }
+
+        MessageEvent e = (MessageEvent) evt;
+        Object originalMessage = e.getMessage();
+        if (!(originalMessage instanceof ChannelBuffer)) {
+            // Skip decoding, since we've received something
+            // we don't know how to deal with anyway.
+            ctx.sendUpstream(evt);
+        }
+        Message decodedMessage = null;
+        try {
+            decodedMessage = decode(e.getChannel(), (ChannelBuffer)originalMessage);
+        } catch (InvalidMessageException ex) {
+            logger.log(Level.WARNING, "Decoding failed on received message. Possible DoS attack!", ex);
+            exceptionCaught = true;
+        }
+        if (decodedMessage != null) {
+            fireMessageReceived(ctx, decodedMessage, e.getRemoteAddress());
+        }
+    }
+
+    /**
+     * Transforms the specified received message into another message and return
+     * the transformed message.  Return {@code null} if the received message
+     * is supposed to be discarded.
+     * 
+     * @throws InvalidMessageException If the received message was not properly encoded.
+     */
+    protected abstract Message decode(Channel channel, ChannelBuffer msg) throws InvalidMessageException;
 }
