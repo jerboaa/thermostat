@@ -73,7 +73,9 @@ public class IntegrationTest {
                 result.append(" ").append(arg);
             }
         }
-        return expect.spawn(result.toString());
+        String toExecute = result.toString();
+        //System.out.println("executing: '" + toExecute + "'");
+        return expect.spawn(toExecute);
     }
 
     public static Spawn spawn(List<String> args) throws IOException {

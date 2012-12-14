@@ -39,6 +39,9 @@ package com.redhat.thermostat.distribution;
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -68,7 +71,7 @@ public class VmCommandsTest extends IntegrationTest {
 
     @Test
     public void testListVms() throws Exception {
-        Spawn vmList = spawnThermostat("list-vms");
+        Spawn vmList = commandAgainstMongo("list-vms");
         vmList.expectClose();
 
         assertEquals("HOST_ID HOST VM_ID STATUS VM_NAME\n", vmList.getCurrentStandardOutContents());
@@ -76,7 +79,7 @@ public class VmCommandsTest extends IntegrationTest {
 
     @Test
     public void testVmStat() throws Exception {
-        Spawn vmStat = spawnThermostat("vm-stat");
+        Spawn vmStat = commandAgainstMongo("vm-stat");
         vmStat.expectClose();
 
         System.out.println(vmStat.getCurrentStandardOutContents());
@@ -86,7 +89,7 @@ public class VmCommandsTest extends IntegrationTest {
 
     @Test
     public void testVmInfo() throws Exception {
-        Spawn vmInfo = spawnThermostat("vm-info");
+        Spawn vmInfo = commandAgainstMongo("vm-info");
         vmInfo.expectClose();
 
         assertNoExceptions(vmInfo.getCurrentStandardOutContents(), vmInfo.getCurrentStandardErrContents());
@@ -105,7 +108,7 @@ public class VmCommandsTest extends IntegrationTest {
         };
 
         for (String command : commands) {
-            Spawn heapCommand = spawnThermostat(command);
+            Spawn heapCommand = commandAgainstMongo(command);
             heapCommand.expectClose();
 
             assertCommandIsFound(
@@ -116,4 +119,16 @@ public class VmCommandsTest extends IntegrationTest {
                     heapCommand.getCurrentStandardErrContents());
         }
     }
+
+    private static Spawn commandAgainstMongo(String... args) throws IOException {
+        if (args == null || args.length == 0) {
+            throw new IllegalArgumentException("args must be an array with something");
+        }
+        List<String> completeArgs = new ArrayList<>();
+        completeArgs.addAll(Arrays.asList(args));
+        completeArgs.add("-d");
+        completeArgs.add("mongodb://127.0.0.1:27518");
+        return spawnThermostat(completeArgs.toArray(new String[0]));
+    }
+
 }
