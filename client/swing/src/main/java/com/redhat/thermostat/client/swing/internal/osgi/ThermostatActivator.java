@@ -109,7 +109,6 @@ public class ThermostatActivator implements BundleActivator {
                 
                 UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
 
-                uiFacadeFactory.getMainWindow();
                 infoServiceTracker = new InformationServiceTracker(context, uiFacadeFactory);
                 infoServiceTracker.open();
                 contextActionTracker = new VMContextActionServiceTracker(context, uiFacadeFactory);
