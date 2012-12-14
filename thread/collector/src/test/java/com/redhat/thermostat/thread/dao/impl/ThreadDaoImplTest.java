@@ -56,7 +56,7 @@ import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 public class ThreadDaoImplTest {
 
     @Test
-    public void testCreateConnectionKey() {
+    public void testThreadDaoCategoryRegistration() {
         Storage storage = mock(Storage.class);
         
         @SuppressWarnings("unused")
