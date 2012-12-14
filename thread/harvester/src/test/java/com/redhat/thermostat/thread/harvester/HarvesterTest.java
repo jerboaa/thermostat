@@ -99,8 +99,8 @@ public class HarvesterTest {
         verify(executor).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
         
         assertTrue(arg1.getValue() == 0);
-        assertTrue(arg2.getValue() == 1);
-        assertEquals(TimeUnit.SECONDS, arg3.getValue());
+        assertTrue(arg2.getValue() == 250);
+        assertEquals(TimeUnit.MILLISECONDS, arg3.getValue());
         
         Runnable action = arg0.getValue();
         assertNotNull(action);
@@ -148,8 +148,8 @@ public class HarvesterTest {
         verify(executor, times(1)).scheduleAtFixedRate(any(Runnable.class), anyLong(), anyLong(), any(TimeUnit.class));
         
         assertTrue(arg1.getValue() == 0);
-        assertTrue(arg2.getValue() == 1);
-        assertEquals(TimeUnit.SECONDS, arg3.getValue());
+        assertTrue(arg2.getValue() == 250);
+        assertEquals(TimeUnit.MILLISECONDS, arg3.getValue());
         
         Runnable action = arg0.getValue();
         assertNotNull(action);

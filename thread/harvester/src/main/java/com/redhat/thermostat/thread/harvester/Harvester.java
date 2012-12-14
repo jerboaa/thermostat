@@ -104,7 +104,7 @@ class Harvester {
         }
         
         isConnected = true;
-        harvester = threadPool.scheduleAtFixedRate(new HarvesterAction(), 0, 1, TimeUnit.SECONDS);
+        harvester = threadPool.scheduleAtFixedRate(new HarvesterAction(), 0, 250, TimeUnit.MILLISECONDS);
         
         return isConnected;
     }
@@ -119,6 +119,11 @@ class Harvester {
         }
         
         harvester.cancel(false);
+        
+        if (collectorBean != null) {
+            collectorBean = null;
+        }
+        
         isConnected = false;
 
         boolean stillConnected = false;
@@ -166,7 +171,9 @@ class Harvester {
           
           ThreadSummary summary = new ThreadSummary();
           
-          collectorBean = getDataCollectorBean(connection);
+          if (collectorBean == null) {
+              collectorBean = getDataCollectorBean(connection);
+          }
           
           summary.setCurrentLiveThreads(collectorBean.getThreadCount());
           summary.setCurrentDaemonThreads(collectorBean.getDaemonThreadCount());
