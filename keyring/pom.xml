@@ -37,7 +37,7 @@
             <systemPropertyVariables>
               <com.redhat.thermostat.utils.keyring.provider>com.redhat.thermostat.utils.keyring.MemoryKeyring</com.redhat.thermostat.utils.keyring.provider>
             </systemPropertyVariables>
-            <argLine>-Djava.library.path=${project.build.directory}/</argLine>
+            <argLine>-Djava.library.path=${project.build.directory}/ ${coverageAgent}</argLine>
           </configuration>
       </plugin>
       

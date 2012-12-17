@@ -113,7 +113,7 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <configuration>
             <!-- FIXME: the test need to link to agent-core native libraries -->
-            <argLine>-Djava.library.path=${project.build.directory}/../../agent/core/target/</argLine>
+            <argLine>-Djava.library.path=${project.build.directory}/../../agent/core/target/ ${coverageAgent}</argLine>
           </configuration>
       </plugin>      
       
