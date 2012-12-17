@@ -37,26 +37,21 @@
 
 package com.redhat.thermostat.web.common;
 
-import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
+import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;
+import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
 
 public class StorageWrapper {
 
     private static Storage storage;
 
-    public static Storage getStorage(String storageClass, final String storageEndpoint) {
+    public static Storage getStorage(String storageClass, final String storageEndpoint, final String username, final String password) {
         if (storage != null) {
             return storage;
         }
-        StartupConfiguration conf = new StartupConfiguration() {
-            
-            @Override
-            public String getDBConnectionString() {
-                return storageEndpoint;
-            }
-        };
+        StartupConfiguration conf = new ConnectionConfiguration(storageEndpoint, username, password);;
         try {
             StorageProvider provider = (StorageProvider) Class.forName(storageClass).newInstance();
             provider.setConfig(conf);

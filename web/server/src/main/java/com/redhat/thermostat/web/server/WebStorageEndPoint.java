@@ -93,6 +93,8 @@ public class WebStorageEndPoint extends HttpServlet {
     private Gson gson;
 
     public static final String STORAGE_ENDPOINT = "storage.endpoint";
+    public static final String STORAGE_USERNAME = "storage.username";
+    public static final String STORAGE_PASSWORD = "storage.password";
     public static final String STORAGE_CLASS = "storage.class";
     
     private int currentCategoryId;
@@ -117,7 +119,9 @@ public class WebStorageEndPoint extends HttpServlet {
         if (storage == null) {
             String storageClass = getServletConfig().getInitParameter(STORAGE_CLASS);
             String storageEndpoint = getServletConfig().getInitParameter(STORAGE_ENDPOINT);
-            storage = StorageWrapper.getStorage(storageClass, storageEndpoint);
+            String username = getServletConfig().getInitParameter(STORAGE_USERNAME);
+            String password = getServletConfig().getInitParameter(STORAGE_PASSWORD);
+            storage = StorageWrapper.getStorage(storageClass, storageEndpoint, username, password);
         }
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");

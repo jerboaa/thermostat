@@ -91,6 +91,29 @@ public class WebServiceCommandTest {
             fail("should not throw exception");
         }
         verify(launcher).setStorageURL(storageUrl);
+        verify(launcher).setStorageUsername(null);
+        verify(launcher).setStoragePassword(null);
+        verify(launcher).setIpAddresses(any(List.class));
+        verify(launcher).start();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void verifyLauncherStartWithAuth() throws Exception {
+        SimpleArguments args = new SimpleArguments();
+        String storageUrl = "mongodb://127.0.0.1:27518";
+        args.addArgument("storageURL", storageUrl);
+        args.addArgument("bindAddrs", "127.0.0.1:8888,127.0.0.2:9999");
+        args.addArgument("username", "testuser");
+        args.addArgument("password", "testpasswd");
+        try {
+            cmd.run(cmdCtxFactory.createContext(args));
+        } catch (CommandException e) {
+            fail("should not throw exception");
+        }
+        verify(launcher).setStorageURL(storageUrl);
+        verify(launcher).setStorageUsername("testuser");
+        verify(launcher).setStoragePassword("testpasswd");
         verify(launcher).setIpAddresses(any(List.class));
         verify(launcher).start();
     }

@@ -62,6 +62,8 @@ class WebServiceLauncher {
 
     private Server server;
     private String storageURL;
+    private String storageUsername;
+    private String storagePassword;
     // IP/Port pairs, keyed by IP
     private List<IpPortPair> ipsPorts;
     
@@ -92,6 +94,8 @@ class WebServiceLauncher {
 
         ServletHolder servletHolder = new ServletHolder("rest-storage-end-point", new WebStorageEndPoint());
         servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_ENDPOINT, storageURL);
+        servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_USERNAME, storageUsername);
+        servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_PASSWORD, storagePassword);
         servletHolder.setInitParameter(WebStorageEndPoint.STORAGE_CLASS, MongoStorageProvider.class.getName());
         ctx.addServlet(servletHolder, "/");
 
@@ -139,6 +143,14 @@ class WebServiceLauncher {
 
     public void setStorageURL(String storageURL) {
         this.storageURL = storageURL;
+    }
+
+    public void setStorageUsername(String storageUsername) {
+        this.storageUsername = storageUsername;
+    }
+
+    public void setStoragePassword(String storagePassword) {
+        this.storagePassword = storagePassword;
     }
 
     public void setIpAddresses(List<IpPortPair> ipsPorts) {
