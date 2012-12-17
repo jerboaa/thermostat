@@ -59,9 +59,9 @@ import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.swing.components.GradientRoundBorder;
 import com.redhat.thermostat.client.swing.components.GraphicsUtils;
-import com.redhat.thermostat.client.swing.components.models.LongRange;
-import com.redhat.thermostat.client.swing.components.models.LongRangeNormalizer;
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.LongRangeNormalizer;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
 import com.redhat.thermostat.thread.client.common.chart.ChartColors;
 

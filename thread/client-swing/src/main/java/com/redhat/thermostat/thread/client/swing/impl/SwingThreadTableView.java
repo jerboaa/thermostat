@@ -53,9 +53,9 @@ import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.ThreadTableView;
 
 public class SwingThreadTableView extends ThreadTableView implements SwingComponent {
 

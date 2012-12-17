@@ -34,13 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.thread.client.common.view;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 
 public abstract class ThreadView extends BasicView implements UIComponent {
@@ -68,13 +69,10 @@ public abstract class ThreadView extends BasicView implements UIComponent {
     
     public abstract void setRecording(boolean recording, boolean notify);
     
-    public abstract void setDaemonThreads(String daemonThreads);
-    public abstract void setLiveThreads(String liveThreads);
-    public abstract void updateLivingDaemonTimeline(LivingDaemonThreadDifferenceChart model);
-    
     public abstract VMThreadCapabilitiesView createVMThreadCapabilitiesView();
     public abstract ThreadTableView createThreadTableView();
     public abstract ThreadTimelineView createThreadTimelineView();
+    public abstract ThreadCountView createThreadCountView();
     
     public abstract void displayWarning(String warning);
 

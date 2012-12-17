@@ -34,12 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
+package com.redhat.thermostat.thread.client.common.view;
 
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.client.ui.IconDescriptor;
+import com.redhat.thermostat.thread.client.common.IconResources;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
 
-public abstract class VMThreadCapabilitiesView extends BasicView {
-
-    public abstract void setVMThreadCapabilities(VMThreadCapabilities caps);
+public abstract class ThreadDetailsView extends BasicView {
+        
+    public IconDescriptor getEmptyDetailsIcon() {
+        return IconResources.getMonitorIcon();
+    }
+    
+    public abstract void setDetails(ThreadTableBean thread);
 }

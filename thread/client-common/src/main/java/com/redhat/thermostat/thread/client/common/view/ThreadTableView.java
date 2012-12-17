@@ -34,27 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components.models;
+package com.redhat.thermostat.thread.client.common.view;
 
-public class LongRange {
+import java.util.List;
 
-    long min;
-    long max;
-    
-    public void setMax(long max) {
-        this.max = max;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.thread.client.common.ThreadTableBean;
+
+public abstract class ThreadTableView extends BasicView {
+
+    public static enum ThreadSelectionAction {
+        SHOW_THREAD_DETAILS
     }
     
-    public long getMax() {
-        return max;
+    protected final ActionNotifier<ThreadSelectionAction> threadTableNotifier;
+    public ThreadTableView() {
+        threadTableNotifier = new ActionNotifier<>(this);
     }
     
-    public void setMin(long min) {
-        this.min = min;
+    public void addThreadSelectionActionListener(ActionListener<ThreadSelectionAction> listener) {
+        threadTableNotifier.addActionListener(listener);
     }
     
-    
-    public long getMin() {
-        return min;
+    public void removeThreadSelectionActionListener(ActionListener<ThreadSelectionAction> listener) {
+        threadTableNotifier.removeActionListener(listener);
     }
+    
+    public abstract void display(List<ThreadTableBean> arrayList);
 }

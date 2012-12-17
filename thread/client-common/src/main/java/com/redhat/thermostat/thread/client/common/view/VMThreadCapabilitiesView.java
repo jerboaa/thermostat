@@ -34,36 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
-
-import java.util.List;
-import java.util.Map;
+package com.redhat.thermostat.thread.client.common.view;
 
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
-public abstract class ThreadTimelineView extends BasicView {
+public abstract class VMThreadCapabilitiesView extends BasicView {
 
-    public static enum ThreadTimelineViewAction {
-        THREAD_TIMELINE_SELECTED
-    }
-    
-    protected final ActionNotifier<ThreadTimelineViewAction> threadTimelineNotifier;
-    public ThreadTimelineView() {
-        threadTimelineNotifier = new ActionNotifier<>(this);
-    }
-    
-    public void addThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
-        threadTimelineNotifier.addActionListener(listener);
-    }
-    
-    public void removeThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
-        threadTimelineNotifier.removeActionListener(listener);
-    }
-    
-    public abstract void displayStats(Map<ThreadInfoData, List<ThreadTimelineBean>> timelines, long start, long stop);
-    public abstract void setMarkersMessage(String left, String right);
-    public abstract void resetMarkerMessage();
+    public abstract void setVMThreadCapabilities(VMThreadCapabilities caps);
 }

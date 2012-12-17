@@ -34,32 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common;
-
-import java.util.List;
+package com.redhat.thermostat.thread.client.common.view;
 
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 
-public abstract class ThreadTableView extends BasicView {
-
-    public static enum ThreadSelectionAction {
-        SHOW_THREAD_DETAILS
-    }
-    
-    protected final ActionNotifier<ThreadSelectionAction> threadTableNotifier;
-    public ThreadTableView() {
-        threadTableNotifier = new ActionNotifier<>(this);
-    }
-    
-    public void addThreadSelectionActionListener(ActionListener<ThreadSelectionAction> listener) {
-        threadTableNotifier.addActionListener(listener);
-    }
-    
-    public void removeThreadSelectionActionListener(ActionListener<ThreadSelectionAction> listener) {
-        threadTableNotifier.removeActionListener(listener);
-    }
-    
-    public abstract void display(List<ThreadTableBean> arrayList);
+public abstract class ThreadCountView extends BasicView {
+    public abstract void setDaemonThreads(String daemonThreads);
+    public abstract void setLiveThreads(String liveThreads);
+    public abstract void updateLivingDaemonTimeline(LivingDaemonThreadDifferenceChart model);
 }

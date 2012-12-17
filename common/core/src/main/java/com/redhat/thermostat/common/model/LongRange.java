@@ -34,16 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing;
+package com.redhat.thermostat.common.model;
 
-import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.common.view.ThreadView;
-import com.redhat.thermostat.thread.client.swing.impl.SwingThreadView;
 
-public class SwingThreadViewService implements ThreadViewProvider {
+/**
+ * A class representing a span of units from min to max. <br /><br />
+ * 
+ * The units and the meaning of the range are left to the user, including the
+ * fact that the range are inclusive or exclusive of the extremes.
+ */
+public class LongRange {
+
+    long min;
+    long max;
+    
+    /**
+     * Creates a new LongRange with a span of 0 units.
+     */
+    public LongRange() {
+    }
+    
+    /**
+     * Creates a new Range that span from min to max.
+     */
+    public LongRange(long min, long max) {
+        this.min = min;
+        this.max = max;
+    }
+    
+    public void setMax(long max) {
+        this.max = max;
+    }
+    
+    public long getMax() {
+        return max;
+    }
+    
+    public void setMin(long min) {
+        this.min = min;
+    }
+    
+    public long getMin() {
+        return min;
+    }
     
     @Override
-    public ThreadView createView() {
-        return new SwingThreadView();
+    public String toString() {
+        return "[" + min + " ->" + max +  "("+ (max - min) + ")]";
     }
 }

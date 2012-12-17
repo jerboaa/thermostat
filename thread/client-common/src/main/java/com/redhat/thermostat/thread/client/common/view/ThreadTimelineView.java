@@ -34,48 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components.models;
+package com.redhat.thermostat.thread.client.common.view;
 
-public class LongRangeNormalizer {
+import java.util.List;
+import java.util.Map;
 
-    private long minNormalized;
-    
-    private long maxNormalized;
- 
-    private long value;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
+import com.redhat.thermostat.thread.model.ThreadInfoData;
 
-    private LongRange range;
-    
-    public LongRangeNormalizer(LongRange range) {
-        this.range = range;
-    }
+public abstract class ThreadTimelineView extends BasicView {
 
-    public void setMaxNormalized(long maxNormalized) {
-        this.maxNormalized = maxNormalized;
+    public static enum ThreadTimelineViewAction {
+        THREAD_TIMELINE_SELECTED
     }
     
-    public void setMinNormalized(long minNormalized) {
-        this.minNormalized = minNormalized;
+    protected final ActionNotifier<ThreadTimelineViewAction> threadTimelineNotifier;
+    public ThreadTimelineView() {
+        threadTimelineNotifier = new ActionNotifier<>(this);
     }
     
-    public long getValue() {
-        return value;
-    }
-
-    public void setValue(long newValue) {
-        this.value = newValue;
+    public void addThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
+        threadTimelineNotifier.addActionListener(listener);
     }
     
-    public long getMaxNormalized() {
-        return maxNormalized;
+    public void removeThreadSelectionActionListener(ActionListener<ThreadTimelineViewAction> listener) {
+        threadTimelineNotifier.removeActionListener(listener);
     }
     
-    public long getMinNormalized() {
-        return minNormalized;
-    }
-    
-    public long getValueNormalized() {
-        double normalized = ((value - range.min) * (double)(maxNormalized - minNormalized)/(range.max - range.min)) + minNormalized;
-        return Math.round(normalized);
-    }
+    public abstract void displayStats(Map<ThreadInfoData, List<ThreadTimelineBean>> timelines, long start, long stop);
+    public abstract void setMarkersMessage(String left, String right);
+    public abstract void resetMarkerMessage();
 }

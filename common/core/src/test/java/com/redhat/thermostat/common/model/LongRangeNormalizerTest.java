@@ -34,12 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components.models;
+package com.redhat.thermostat.common.model;
 
 import static org.junit.Assert.*;
 import junit.framework.Assert;
 
 import org.junit.Test;
+
+import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.common.model.LongRangeNormalizer;
 
 public class LongRangeNormalizerTest {
 
