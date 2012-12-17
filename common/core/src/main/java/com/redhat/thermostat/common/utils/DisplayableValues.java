@@ -73,6 +73,10 @@ public class DisplayableValues {
             return result;
         }
 
+        public static long convertToBytes(final long originalValue, Scale originalScale) {
+            return originalValue * originalScale.numBytes;
+        }
+
         public static Scale getScale(final long bytes) {
             if (bytes < BYTES_IN_KB) {
                 return Scale.B;

@@ -43,7 +43,7 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
@@ -52,6 +52,8 @@ import com.redhat.thermostat.utils.hostname.HostName;
 public class HostInfoBuilder {
 
     private static final Logger logger = LoggingUtils.getLogger(HostInfoBuilder.class);
+
+    public static final String FALLBACK_LOCAL_HOSTNAME = "localhost";
 
     static class HostCpuInfo {
         public final String model;
@@ -127,7 +129,7 @@ public class HostInfoBuilder {
             long data = Long.valueOf(memTotalParts[1]);
             String units = memTotalParts[2];
             if (units.equals("kB")) {
-                totalMemory = data * Constants.KILOBYTES_TO_BYTES;
+                totalMemory = Scale.convertToBytes(data, Scale.KiB);
             }
         } catch (IOException ioe) {
             logger.log(Level.WARNING, "unable to read memory info");
@@ -169,7 +171,8 @@ public class HostInfoBuilder {
         
         // still null, use localhost
         if (hostname == null) {
-            hostname = Constants.AGENT_LOCAL_HOSTNAME;
+            hostname = FALLBACK_LOCAL_HOSTNAME;
+
         }
         
         return hostname;

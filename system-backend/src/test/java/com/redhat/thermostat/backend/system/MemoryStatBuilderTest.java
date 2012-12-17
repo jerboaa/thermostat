@@ -48,11 +48,12 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.storage.model.MemoryStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class MemoryStatBuilderTest {
+
+    private static final int KILOBYTES_TO_BYTES = 1024;
 
     @Test
     public void testSimpleBuild() {
@@ -98,13 +99,13 @@ public class MemoryStatBuilderTest {
 
         MemoryStat stat = new MemoryStatBuilder(dataSource).build();
 
-        assertEquals(BUFFERS * Constants.KILOBYTES_TO_BYTES, stat.getBuffers());
-        assertEquals(CACHED * Constants.KILOBYTES_TO_BYTES, stat.getCached());
-        assertEquals(COMMIT_LIMIT * Constants.KILOBYTES_TO_BYTES, stat.getCommitLimit());
-        assertEquals(FREE * Constants.KILOBYTES_TO_BYTES, stat.getFree());
-        assertEquals(SWAP_FREE * Constants.KILOBYTES_TO_BYTES, stat.getSwapFree());
-        assertEquals(SWAP_TOTAL * Constants.KILOBYTES_TO_BYTES, stat.getSwapTotal());
-        assertEquals(TOTAL * Constants.KILOBYTES_TO_BYTES, stat.getTotal());
+        assertEquals(BUFFERS * KILOBYTES_TO_BYTES, stat.getBuffers());
+        assertEquals(CACHED * KILOBYTES_TO_BYTES, stat.getCached());
+        assertEquals(COMMIT_LIMIT * KILOBYTES_TO_BYTES, stat.getCommitLimit());
+        assertEquals(FREE * KILOBYTES_TO_BYTES, stat.getFree());
+        assertEquals(SWAP_FREE * KILOBYTES_TO_BYTES, stat.getSwapFree());
+        assertEquals(SWAP_TOTAL * KILOBYTES_TO_BYTES, stat.getSwapTotal());
+        assertEquals(TOTAL * KILOBYTES_TO_BYTES, stat.getTotal());
         assertTrue(stat.getTimeStamp() != 0 && stat.getTimeStamp() != Long.MIN_VALUE);
         assertTrue(stat.getTimeStamp() <= System.currentTimeMillis());
         verify(dataSource).getMemInfoReader();

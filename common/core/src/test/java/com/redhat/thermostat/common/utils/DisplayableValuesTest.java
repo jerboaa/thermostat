@@ -102,5 +102,8 @@ public class DisplayableValuesTest {
         
         value = Scale.convertTo(Scale.MiB, 524_288_000);
         assertEquals(500, value, 0);
+
+        long longValue = Scale.convertToBytes(1, Scale.MiB);
+        assertEquals(1024l * 1024, longValue);
     }
 }

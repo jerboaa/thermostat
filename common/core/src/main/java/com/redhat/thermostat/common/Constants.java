@@ -49,12 +49,6 @@ public class Constants {
     public static final int EXIT_BACKEND_LOAD_ERROR = 5;
     public static final int EXIT_BACKEND_START_ERROR = 6;
 
-    public static final int SAMPLING_INTERVAL_UNKNOWN = -1;
-
-    public static final String AGENT_LOCAL_HOSTNAME = "localhost";
-
-    public static final long KILOBYTES_TO_BYTES = 1000;
-
     public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
 
 }

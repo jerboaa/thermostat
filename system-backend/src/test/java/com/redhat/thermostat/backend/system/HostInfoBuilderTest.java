@@ -51,11 +51,12 @@ import org.junit.Test;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostCpuInfo;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostMemoryInfo;
 import com.redhat.thermostat.backend.system.HostInfoBuilder.HostOsInfo;
-import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class HostInfoBuilderTest {
+
+    final int KILOBYTES_TO_BYTES = 1024;
 
     @Test
     public void testSimpleBuild() {
@@ -93,7 +94,7 @@ public class HostInfoBuilderTest {
 
         HostMemoryInfo memoryInfo = new HostInfoBuilder(dataSource).getMemoryInfo();
         assertNotNull(memoryInfo);
-        assertEquals(12345 * Constants.KILOBYTES_TO_BYTES, memoryInfo.totalMemory);
+        assertEquals(12345 * KILOBYTES_TO_BYTES, memoryInfo.totalMemory);
         verify(dataSource).getMemInfoReader();
 
     }
