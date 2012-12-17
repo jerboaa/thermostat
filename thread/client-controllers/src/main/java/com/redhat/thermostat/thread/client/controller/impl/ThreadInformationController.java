@@ -36,33 +36,25 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.client.core.views.BasicView.Action;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.ThreadTableView;
-import com.redhat.thermostat.thread.client.common.ThreadTableView.ThreadSelectionAction;
-import com.redhat.thermostat.thread.client.common.ThreadView;
-import com.redhat.thermostat.thread.client.common.ThreadView.ThreadAction;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.model.ThreadSummary;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.view.ThreadView;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
+import com.redhat.thermostat.thread.client.common.view.ThreadView.ThreadAction;
 
 public class ThreadInformationController implements InformationServiceController<VmRef> {
 
@@ -72,10 +64,7 @@ public class ThreadInformationController implements InformationServiceController
     private ThreadCollector collector;
 
     private ApplicationService appService;
-    private Timer timer;
-    
-    private LivingDaemonThreadDifferenceChart model;
-        
+            
     public ThreadInformationController(VmRef ref, ApplicationService appService,
                                        ThreadCollectorFactory collectorFactory, 
                                        ThreadViewProvider viewFactory)
@@ -87,38 +76,6 @@ public class ThreadInformationController implements InformationServiceController
         collector = collectorFactory.getCollector(ref);
         
         initControllers();
-        
-        timer = appService.getTimerFactory().createTimer();
-        
-        timer.setInitialDelay(0);
-        timer.setDelay(1000);
-        timer.setTimeUnit(TimeUnit.MILLISECONDS);
-        timer.setSchedulingType(SchedulingType.FIXED_RATE);
-        
-        timer.setAction(new ThreadInformationDataCollector());
-        
-        model = new LivingDaemonThreadDifferenceChart("Living Threads vs. Daemon Threads",
-                                                      "time", "threads", "Living Threads",
-                                                      "Daemon Threads");
-        model.setMaximumItemCount(3600);
-        
-        view.addActionListener(new ActionListener<Action>() {
-            @Override
-            public void actionPerformed(ActionEvent<Action> actionEvent) {
-                switch (actionEvent.getActionId()) {
-                case HIDDEN:
-                    timer.stop();
-                    break;
-                
-                case VISIBLE:
-                    timer.start();
-                    break;
-
-                default:
-                    throw new NotImplementedException("unknown event: " + actionEvent.getActionId());
-                }
-            }
-        });
         
         view.setRecording(isRecording(), false);
         view.addThreadActionListener(new ThreadActionListener());
@@ -137,28 +94,6 @@ public class ThreadInformationController implements InformationServiceController
     @Override
     public UIComponent getView() {
         return view;
-    }
-    
-    private class ThreadInformationDataCollector implements Runnable {
-        @Override
-        public void run() {
-
-            // load the very latest thread summary
-            ThreadSummary latestSummary = collector.getLatestThreadSummary();
-            if (latestSummary.getTimeStamp() != 0) {
-                view.setLiveThreads(Long.toString(latestSummary.getCurrentLiveThreads()));
-                view.setDaemonThreads(Long.toString(latestSummary.getCurrentDaemonThreads()));
-            }
-            
-            long lastHour = System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1);
-            List<ThreadSummary> summaries = collector.getThreadSummary(lastHour);
-            if (summaries.size() != 0) {
-                for (ThreadSummary summary : summaries) {
-                    model.addData(summary.getTimeStamp(), summary.getCurrentLiveThreads(), summary.getCurrentDaemonThreads());
-                }
-                view.updateLivingDaemonTimeline(model);
-            }
-        }
     }
     
     private class ThreadActionListener implements ActionListener<ThreadAction> {
@@ -200,7 +135,7 @@ public class ThreadInformationController implements InformationServiceController
     }
     
     private void initControllers() {
-        
+                
         VMThreadCapabilitiesController capsController =
                 new VMThreadCapabilitiesController(view.createVMThreadCapabilitiesView(), collector);
         capsController.initialize();
@@ -208,6 +143,11 @@ public class ThreadInformationController implements InformationServiceController
         ThreadTableView threadTableView = view.createThreadTableView();
         threadTableView.addThreadSelectionActionListener(new ThreadSelectionActionListener());
         TimerFactory tf = appService.getTimerFactory();
+        
+        CommonController threadCountController =
+                new ThreadCountController(view.createThreadCountView(), collector, tf.createTimer());
+        threadCountController.initialize();
+        
         CommonController threadTableController =
                 new ThreadTableController(threadTableView, collector, tf.createTimer());
         threadTableController.initialize();

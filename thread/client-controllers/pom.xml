@@ -96,6 +96,17 @@
       <version>${project.version}</version>
     </dependency>
     
+    <dependency>
+      <groupId>org.easytesting</groupId>
+      <artifactId>fest-swing</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.java.openjdk.cacio</groupId>
+      <artifactId>cacio-tta</artifactId>
+      <scope>test</scope>
+    </dependency>
+    
   </dependencies>
 
   <build>

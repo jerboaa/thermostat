@@ -34,16 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.swing;
+package com.redhat.thermostat.thread.client.common.view;
 
-import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.common.view.ThreadView;
-import com.redhat.thermostat.thread.client.swing.impl.SwingThreadView;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 
-public class SwingThreadViewService implements ThreadViewProvider {
-    
-    @Override
-    public ThreadView createView() {
-        return new SwingThreadView();
-    }
+public abstract class ThreadCountView extends BasicView {
+    public abstract void setDaemonThreads(String daemonThreads);
+    public abstract void setLiveThreads(String liveThreads);
+    public abstract void updateLivingDaemonTimeline(LivingDaemonThreadDifferenceChart model);
 }

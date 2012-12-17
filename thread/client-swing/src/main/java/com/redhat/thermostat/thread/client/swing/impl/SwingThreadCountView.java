@@ -37,61 +37,74 @@
 package com.redhat.thermostat.thread.client.swing.impl;
 
 import java.awt.Component;
+import java.awt.event.HierarchyEvent;
+import java.awt.event.HierarchyListener;
 
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.ChartPanel;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
-import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
-import com.redhat.thermostat.thread.model.VMThreadCapabilities;
+import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
+import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
 
-public class SwingVMThreadCapabilitiesView extends VMThreadCapabilitiesView implements SwingComponent {
-
-    private VMCapsSummaryPanel panel;
+public class SwingThreadCountView extends ThreadCountView implements SwingComponent {
     
-    public SwingVMThreadCapabilitiesView() {
-        panel = new VMCapsSummaryPanel();
-        panel.addHierarchyListener(new ComponentVisibleListener() {
-            
+    private ThreadAliveDaemonTimelinePanel timelinePanel;
+
+    public SwingThreadCountView() {
+        timelinePanel = new ThreadAliveDaemonTimelinePanel();
+        timelinePanel.addHierarchyListener(new ComponentVisibleListener() {
             @Override
             public void componentShown(Component component) {
-                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        SwingVMThreadCapabilitiesView.this.notify(Action.VISIBLE);
-                        return null;
-                    }
-                };
-                worker.execute();
+                SwingThreadCountView.this.notify(Action.VISIBLE);
             }
-            
             @Override
             public void componentHidden(Component component) {
-                SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
-                    @Override
-                    protected Void doInBackground() throws Exception {
-                        SwingVMThreadCapabilitiesView.this.notify(Action.HIDDEN);
-                        return null;
-                    }
-                };
-                worker.execute();
+                SwingThreadCountView.this.notify(Action.HIDDEN);
+            }
+        });
+    }
+    
+    public void setLiveThreads(final String liveThreads) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                timelinePanel.getLiveThreads().setText(liveThreads);
+            }
+        });
+    };
+    
+    @Override
+    public void updateLivingDaemonTimeline(final LivingDaemonThreadDifferenceChart model)
+    {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JPanel pane = timelinePanel.getTimelinePanel();
+                pane.removeAll();
+                
+                ChartPanel charts = new ChartPanel(model.createChart(pane.getWidth(), pane.getBackground()));
+                pane.add(charts);
+                pane.revalidate();
+                pane.repaint();
             }
         });
     }
     
     @Override
-    public void setVMThreadCapabilities(final VMThreadCapabilities caps) {
+    public void setDaemonThreads(final String daemonThreads) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                panel.addInfo(caps.getSupportedFeaturesList());
+                timelinePanel.getDaemonThreads().setText(daemonThreads);
             }
         });
     }
     
     @Override
     public Component getUiComponent() {
-        return panel;
+        return timelinePanel;
     }
 }

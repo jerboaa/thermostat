@@ -55,10 +55,10 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.thread.client.common.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
-import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public class ThreadTimelineControllerTest {

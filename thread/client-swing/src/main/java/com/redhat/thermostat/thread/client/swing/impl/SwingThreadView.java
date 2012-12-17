@@ -55,26 +55,28 @@ import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.ThreadTableView;
-import com.redhat.thermostat.thread.client.common.ThreadTimelineView;
-import com.redhat.thermostat.thread.client.common.ThreadView;
-import com.redhat.thermostat.thread.client.common.VMThreadCapabilitiesView;
 import com.redhat.thermostat.thread.client.common.chart.LivingDaemonThreadDifferenceChart;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.thread.client.common.view.ThreadCountView;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
+import com.redhat.thermostat.thread.client.common.view.ThreadView;
+import com.redhat.thermostat.thread.client.common.view.VMThreadCapabilitiesView;
 
 public class SwingThreadView extends ThreadView implements SwingComponent {
     
     private String DIVIDER_LOCATION_KEY;
     
     private ThreadMainPanel panel;
-    private ThreadAliveDaemonTimelinePanel timelinePanel;
     
+    private SwingThreadCountView threadCountView;
     private SwingThreadTableView threadTableView;
     private SwingVMThreadCapabilitiesView vmCapsView;
     private SwingThreadTimelineView threadTimelineView;
     private SwingThreadDetailsView threadDetailsView;
 
-    private JTabbedPane pane;
+    private JTabbedPane topPane;
+    private JTabbedPane bottomPane;
     
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
@@ -109,7 +111,6 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             }
         });
         
-        timelinePanel = new ThreadAliveDaemonTimelinePanel();
         panel.getToggleButton().setToolTipText(t.localize(LocaleResources.START_RECORDING));
         panel.getToggleButton().setText(t.localize(LocaleResources.THREAD_MONITOR_SWITCH));
         panel.getToggleButton().addItemListener(new ItemListener()
@@ -140,25 +141,38 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
             }
         });
 
-        panel.getSplitPane().setTopComponent(timelinePanel);
-        
-        vmCapsView = new SwingVMThreadCapabilitiesView();
-        pane = new JTabbedPane();
-        pane.setName("tabbedPane");
-        
-        pane.addTab(t.localize(LocaleResources.VM_CAPABILITIES), vmCapsView.getUiComponent());
-        
-        threadTableView = new SwingThreadTableView();
-        pane.addTab(t.localize(LocaleResources.TABLE), threadTableView.getUiComponent());
-        
-        threadDetailsView = new SwingThreadDetailsView();
-        pane.addTab(t.localize(LocaleResources.DETAILS), threadDetailsView.getUiComponent());
-        threadDetailsPaneID = 2;
+        setupTopPane();
+        setupBottomPane();
+    }
+    
+    private void setupTopPane() {
+        topPane = new JTabbedPane();
+        topPane.setName("topTabbedPane");
         
         threadTimelineView = new SwingThreadTimelineView();
-        pane.addTab(t.localize(LocaleResources.TIMELINE), threadTimelineView.getUiComponent());
+        topPane.addTab(t.localize(LocaleResources.TIMELINE), threadTimelineView.getUiComponent());
         
-        panel.getSplitPane().setBottomComponent(pane);
+        threadCountView = new SwingThreadCountView();
+        topPane.addTab(t.localize(LocaleResources.THREAD_COUNT), threadCountView.getUiComponent());
+        
+        panel.getSplitPane().setTopComponent(topPane);
+    }
+    
+    private void setupBottomPane() {
+        bottomPane = new JTabbedPane();
+        bottomPane.setName("bottomTabbedPane");
+        
+        threadTableView = new SwingThreadTableView();
+        bottomPane.addTab(t.localize(LocaleResources.TABLE), threadTableView.getUiComponent());
+        
+        threadDetailsView = new SwingThreadDetailsView();
+        bottomPane.addTab(t.localize(LocaleResources.DETAILS), threadDetailsView.getUiComponent());
+        threadDetailsPaneID = 1;
+
+        vmCapsView = new SwingVMThreadCapabilitiesView();
+        bottomPane.addTab(t.localize(LocaleResources.VM_CAPABILITIES), vmCapsView.getUiComponent());
+
+        panel.getSplitPane().setBottomComponent(bottomPane);
     }
     
     @Override
@@ -180,42 +194,6 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
                 if (!notify) skipNotification = true;
                 panel.getToggleButton().setSelected(recording);
                 if (!notify) skipNotification = false;
-            }
-        });
-    }
-    
-    @Override
-    public void setDaemonThreads(final String daemonThreads) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                timelinePanel.getDaemonThreads().setText(daemonThreads);
-            }
-        });
-    }
-    
-    public void setLiveThreads(final String liveThreads) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                timelinePanel.getLiveThreads().setText(liveThreads);
-            }
-        });
-    };
-    
-    @Override
-    public void updateLivingDaemonTimeline(final LivingDaemonThreadDifferenceChart model)
-    {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                JPanel pane = timelinePanel.getTimelinePanel();
-                pane.removeAll();
-                
-                ChartPanel charts = new ChartPanel(model.createChart(pane.getWidth(), pane.getBackground()));
-                pane.add(charts);
-                pane.revalidate();
-                pane.repaint();
             }
         });
     }
@@ -262,7 +240,7 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                pane.setSelectedIndex(threadDetailsPaneID);
+                bottomPane.setSelectedIndex(threadDetailsPaneID);
                 threadDetailsView.setDetails(thread);
             }
         });
@@ -271,5 +249,10 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
     @Override
     public ThreadTimelineView createThreadTimelineView() {
         return threadTimelineView;
+    }
+
+    @Override
+    public ThreadCountView createThreadCountView() {
+        return threadCountView;
     }
 }

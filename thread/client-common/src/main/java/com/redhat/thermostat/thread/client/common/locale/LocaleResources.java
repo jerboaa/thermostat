@@ -59,6 +59,7 @@ public enum LocaleResources {
     TABLE,
     DETAILS,
     TIMELINE,
+    THREAD_COUNT,
     
     LIVE_THREADS,
     DAEMON_THREADS,

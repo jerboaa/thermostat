@@ -69,9 +69,9 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
-import com.redhat.thermostat.thread.client.common.ThreadTableView;
-import com.redhat.thermostat.thread.client.common.ThreadTableView.ThreadSelectionAction;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
+import com.redhat.thermostat.thread.client.common.view.ThreadTableView.ThreadSelectionAction;
 
 @RunWith(CacioFESTRunner.class)
 public class SwingThreadViewTest {
@@ -159,7 +159,7 @@ public class SwingThreadViewTest {
         frameFixture.show();
         
         frameFixture.splitPane("threadMainPanelSplitPane").moveDividerTo(0);
-        frameFixture.tabbedPane("tabbedPane").selectTab(1);
+        frameFixture.tabbedPane("bottomTabbedPane").selectTab(0);
         
         final Semaphore sem = new Semaphore(1);
         ThreadTableView tableView = view.createThreadTableView();
@@ -178,6 +178,6 @@ public class SwingThreadViewTest {
         sem.acquire();
         
         assertTrue(listenerCalled[0]);
-        assertEquals(2, frameFixture.tabbedPane("tabbedPane").target.getSelectedIndex());
+        assertEquals(1, frameFixture.tabbedPane("bottomTabbedPane").target.getSelectedIndex());
     }
 }
