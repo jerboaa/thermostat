@@ -34,8 +34,15 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components.models;
+package com.redhat.thermostat.common.model;
 
+/**
+ * A class that normalizes {@link LongRange} values to another given range.
+ * 
+ * <br /><br />
+ * 
+ * The range of normalization is inclusive of the extremes.
+ */
 public class LongRangeNormalizer {
 
     private long minNormalized;
@@ -50,6 +57,18 @@ public class LongRangeNormalizer {
         this.range = range;
     }
 
+    public LongRangeNormalizer(LongRange range, long minNormalized, long maxNormalized) {
+        this.range = range;
+        this.maxNormalized = maxNormalized;
+        this.minNormalized = minNormalized;
+    }
+    
+    public LongRangeNormalizer(LongRange range, LongRange normilizedRange) {
+        this.range = range;
+        maxNormalized = normilizedRange.max;
+        minNormalized = normilizedRange.min;
+    }
+    
     public void setMaxNormalized(long maxNormalized) {
         this.maxNormalized = maxNormalized;
     }

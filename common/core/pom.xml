@@ -89,6 +89,7 @@
               com.redhat.thermostat.common.heap,
               com.redhat.thermostat.common.locale,
               com.redhat.thermostat.common.ssl,
+              com.redhat.thermostat.common.model,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.test,

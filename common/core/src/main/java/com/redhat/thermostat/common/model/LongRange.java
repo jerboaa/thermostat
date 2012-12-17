@@ -34,12 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components.models;
+package com.redhat.thermostat.common.model;
 
+
+/**
+ * A class representing a span of units from min to max. <br /><br />
+ * 
+ * The units and the meaning of the range are left to the user, including the
+ * fact that the range are inclusive or exclusive of the extremes.
+ */
 public class LongRange {
 
     long min;
     long max;
+    
+    /**
+     * Creates a new LongRange with a span of 0 units.
+     */
+    public LongRange() {
+    }
+    
+    /**
+     * Creates a new Range that span from min to max.
+     */
+    public LongRange(long min, long max) {
+        this.min = min;
+        this.max = max;
+    }
     
     public void setMax(long max) {
         this.max = max;
@@ -53,8 +74,12 @@ public class LongRange {
         this.min = min;
     }
     
-    
     public long getMin() {
         return min;
+    }
+    
+    @Override
+    public String toString() {
+        return "[" + min + " ->" + max +  "("+ (max - min) + ")]";
     }
 }
