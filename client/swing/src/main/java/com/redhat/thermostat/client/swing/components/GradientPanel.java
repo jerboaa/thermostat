@@ -41,6 +41,7 @@ import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Paint;
+import java.awt.Rectangle;
 
 import javax.swing.JPanel;
 
@@ -61,9 +62,11 @@ public class GradientPanel extends JPanel {
         
         Graphics2D graphics = GraphicsUtils.getInstance().createAAGraphics(g);
         
+        Rectangle bounds = g.getClipBounds();
+        
         Paint gradient = new GradientPaint(0, 0, top, 0, getHeight(), bottom);
         graphics.setPaint(gradient);
-        graphics.fillRect(0, 0, getWidth(), getHeight());
+        graphics.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
         graphics.dispose();
     }
 }
