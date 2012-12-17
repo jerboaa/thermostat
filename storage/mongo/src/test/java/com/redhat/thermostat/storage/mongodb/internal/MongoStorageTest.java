@@ -53,6 +53,7 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.UUID;
+import java.util.concurrent.Executor;
 
 import org.junit.After;
 import org.junit.Before;
@@ -156,7 +157,13 @@ public class MongoStorageTest {
     private DBCursor cursor;
 
     private MongoStorage makeStorage() {
-        MongoStorage storage = new MongoStorage(conf);
+        Executor exec = new Executor() {
+            @Override
+            public void execute(Runnable command) {
+                command.run();
+            }
+        };
+        MongoStorage storage = new MongoStorage(conf, exec);
         storage.mapCategoryToDBCollection(testCategory, testCollection);
         storage.mapCategoryToDBCollection(emptyTestCategory, emptyTestCollection);
         return storage;

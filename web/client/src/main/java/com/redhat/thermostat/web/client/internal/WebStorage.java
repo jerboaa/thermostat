@@ -52,6 +52,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -282,7 +284,14 @@ public class WebStorage implements Storage, SecureStorage {
     private String password;
     private SecureRandom random;
 
+    private Executor threadpool;
+
     public WebStorage(StartupConfiguration config) throws StorageException {
+        this(config, Executors.newCachedThreadPool());
+    }
+
+    // Used for testing.
+    WebStorage(StartupConfiguration config, Executor threadpool) {
         categoryIds = new HashMap<>();
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
                 new ThermostatGSONConverter()).create();
@@ -295,6 +304,8 @@ public class WebStorage implements Storage, SecureStorage {
         if (config.getDBConnectionString().startsWith(HTTPS_PREFIX)) {
             registerSSLScheme(connManager);
         }
+
+        this.threadpool = threadpool;
     }
 
     private void registerSSLScheme(ClientConnectionManager conManager)
@@ -483,8 +494,19 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public void putPojo(Category category, boolean replace, AgentIdPojo pojo)
+    public void putPojo(final Category category, final boolean replace, final AgentIdPojo pojo)
             throws StorageException {
+
+        threadpool.execute(new Runnable() {
+            
+            @Override
+            public void run() {
+                putImpl(category, replace, pojo);
+            }
+        });
+    }
+
+    private void putImpl(Category category, boolean replace, AgentIdPojo pojo) {
         // TODO: This logic should probably be moved elsewhere. I.e. out of the
         // Storage API.
         if (pojo.getAgentId() == null) {
