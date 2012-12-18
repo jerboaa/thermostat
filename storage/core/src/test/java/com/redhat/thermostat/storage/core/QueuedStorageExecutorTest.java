@@ -136,4 +136,10 @@ public class QueuedStorageExecutorTest {
     }
 
 
+    @Test
+    public void testShutdown() {
+        queuedStorage.shutdown();
+        assertTrue(queuedStorage.getExecutor().isShutdown());
+        assertTrue(queuedStorage.getFileExecutor().isShutdown());
+    }
 }

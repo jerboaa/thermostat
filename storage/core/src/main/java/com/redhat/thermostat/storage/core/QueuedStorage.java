@@ -39,7 +39,7 @@ package com.redhat.thermostat.storage.core;
 
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import com.redhat.thermostat.storage.model.AgentIdPojo;
@@ -48,8 +48,8 @@ import com.redhat.thermostat.storage.model.Pojo;
 public final class QueuedStorage implements Storage {
 
     private Storage delegate;
-    private Executor executor;
-    private Executor fileExecutor;
+    private ExecutorService executor;
+    private ExecutorService fileExecutor;
 
     /*
      * NOTE: We intentially use single-thread executor. All updates are put into a queue, from which
@@ -64,17 +64,17 @@ public final class QueuedStorage implements Storage {
     /*
      * This is here solely for use by tests.
      */
-    QueuedStorage(Storage delegate, Executor executor, Executor fileExecutor) {
+    QueuedStorage(Storage delegate, ExecutorService executor, ExecutorService fileExecutor) {
         this.delegate = delegate;
         this.executor = executor;
         this.fileExecutor = fileExecutor;
     }
 
-    Executor getExecutor() {
+    ExecutorService getExecutor() {
         return executor;
     }
 
-    Executor getFileExecutor() {
+    ExecutorService getFileExecutor() {
         return fileExecutor;
     }
 
@@ -219,6 +219,12 @@ public final class QueuedStorage implements Storage {
     @Override
     public Connection getConnection() {
         return delegate.getConnection();
+    }
+
+    @Override
+    public void shutdown() {
+        executor.shutdown();
+        fileExecutor.shutdown();
     }
 
 }

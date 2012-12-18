@@ -594,4 +594,9 @@ public class WebStorage implements Storage, SecureStorage {
         }
     }
 
+    @Override
+    public void shutdown() {
+        // Nothing to do here.
+    }
+
 }

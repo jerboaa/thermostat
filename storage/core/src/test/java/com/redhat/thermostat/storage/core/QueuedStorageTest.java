@@ -53,8 +53,15 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Executor;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.junit.After;
 import org.junit.Before;
@@ -66,9 +73,10 @@ import com.redhat.thermostat.storage.model.Pojo;
 
 public class QueuedStorageTest {
 
-    private static class TestExecutor implements Executor {
+    private static class TestExecutor implements ExecutorService {
 
         private Runnable task;
+        private boolean shutdown;
 
         @Override
         public void execute(Runnable task) {
@@ -77,6 +85,85 @@ public class QueuedStorageTest {
 
         Runnable getTask() {
             return task;
+        }
+
+        @Override
+        public void shutdown() {
+            shutdown = true;
+        }
+
+        @Override
+        public List<Runnable> shutdownNow() {
+            // Not used.
+            shutdown = true;
+            return null;
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return shutdown;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            // Not used.
+            return shutdown;
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit)
+                throws InterruptedException {
+            // Not used.
+            return true;
+        }
+
+        @Override
+        public <T> Future<T> submit(Callable<T> task) {
+            // Not used.
+            return null;
+        }
+
+        @Override
+        public <T> Future<T> submit(Runnable task, T result) {
+            // Not used.
+            return null;
+        }
+
+        @Override
+        public Future<?> submit(Runnable task) {
+            // Not used.
+            return null;
+        }
+
+        @Override
+        public <T> List<Future<T>> invokeAll(
+                Collection<? extends Callable<T>> tasks)
+                throws InterruptedException {
+            // Not used.
+            return null;
+        }
+
+        @Override
+        public <T> List<Future<T>> invokeAll(
+                Collection<? extends Callable<T>> tasks, long timeout,
+                TimeUnit unit) throws InterruptedException {
+            // Not used.
+            return null;
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks)
+                throws InterruptedException, ExecutionException {
+            // Not used.
+            return null;
+        }
+
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks,
+                long timeout, TimeUnit unit) throws InterruptedException,
+                ExecutionException, TimeoutException {
+            // Not used.
+            return null;
         }
     }
 

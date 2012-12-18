@@ -83,4 +83,7 @@ public interface Storage {
     Query createQuery();
     Update createUpdate();
     Remove createRemove();
+
+    void shutdown();
+
 }

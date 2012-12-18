@@ -94,6 +94,7 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
@@ -150,6 +151,7 @@ public class LauncherTest {
     private ActionNotifier<ApplicationState> notifier;
 
     private LauncherImpl launcher;
+    private Storage storage;
 
     @Before
     public void setUp() {
@@ -234,6 +236,15 @@ public class LauncherTest {
         when(bCtx.getServiceReference(CommandInfoSource.class)).thenReturn(infosRef);
         when(bCtx.getService(infosRef)).thenReturn(infos);
         when(FrameworkUtil.getBundle(isA(HelpCommand.class.getClass()))).thenReturn(bundle);
+
+        storage = mock(Storage.class);
+        ServiceReference storageRef = mock(ServiceReference.class);
+        Bundle launcherBundle = mock(Bundle.class);
+        BundleContext launcherBundleCtx = mock(BundleContext.class);
+        when(launcherBundleCtx.getServiceReference(Storage.class)).thenReturn(storageRef);
+        when(launcherBundleCtx.getService(storageRef)).thenReturn(storage);
+        when(launcherBundle.getBundleContext()).thenReturn(launcherBundleCtx);
+        when(FrameworkUtil.getBundle(LauncherImpl.class)).thenReturn(launcherBundle);
 
         timerFactory = new TestTimerFactory();
         ExecutorService exec = mock(ExecutorService.class);
@@ -451,7 +462,6 @@ public class LauncherTest {
         
         PowerMockito.mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(Version.class)).thenReturn(sysBundle);
-        
         launcher.setArgs(new String[] {Version.VERSION_OPTION});
         launcher.run();
 

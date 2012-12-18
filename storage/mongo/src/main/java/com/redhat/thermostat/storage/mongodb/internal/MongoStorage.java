@@ -312,4 +312,9 @@ public class MongoStorage implements Storage {
         }
     }
 
+    @Override
+    public void shutdown() {
+        // Nothing to do here.
+    }
+
 }

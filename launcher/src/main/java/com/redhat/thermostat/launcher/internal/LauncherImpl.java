@@ -44,8 +44,10 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 
 import org.apache.commons.cli.Options;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.bundles.OSGiRegistry;
@@ -71,6 +73,7 @@ import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
@@ -110,6 +113,7 @@ public class LauncherImpl implements Launcher {
 
     @Override
     public synchronized void run(Collection<ActionListener<ApplicationState>> listeners) {
+
         usageCount++;
         waitForArgs();
 
@@ -156,6 +160,20 @@ public class LauncherImpl implements Launcher {
             ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
             appSvc.getApplicationExecutor().shutdown();
             appSvc.getTimerFactory().shutdown();
+
+            Bundle bundle = FrameworkUtil.getBundle(LauncherImpl.class);
+            if (bundle != null) {
+                BundleContext ctx = bundle.getBundleContext();
+                if (ctx != null) {
+                    ServiceReference storageRef = ctx.getServiceReference(Storage.class);
+                    if (storageRef != null) {
+                        Storage storage = (Storage) ctx.getService(storageRef);
+                        if (storage != null) {
+                            storage.shutdown();
+                        }
+                    }
+                }
+            }
 
             context.getBundle(0).stop();
         } catch (BundleException e) {
