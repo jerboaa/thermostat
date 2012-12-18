@@ -38,6 +38,13 @@ package com.redhat.thermostat.client.command;
 
 import com.redhat.thermostat.common.command.Request;
 
+/**
+ * Service for sending commands to an agent.
+ * <p>
+ * This uses the command-channel to send a request to the agent. The request
+ * and response (if any) are processed asynchronously. An instance of this can
+ * be obtained from OSGi.
+ */
 public interface RequestQueue {
 
     public void putRequest(Request request);

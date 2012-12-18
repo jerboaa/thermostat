@@ -36,7 +36,12 @@
 
 package com.redhat.thermostat.client.core.views;
 
-
+/**
+ * A {@link View} that shows host information. It does not display
+ * this information directly. It relies on child views.
+ *
+ * @see VmInformationView
+ */
 public abstract class HostInformationView extends BasicView implements UIComponent {
 
     public abstract void addChildView(String title, UIComponent view);

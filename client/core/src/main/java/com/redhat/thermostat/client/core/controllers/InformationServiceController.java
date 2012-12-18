@@ -40,8 +40,7 @@ import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.common.dao.Ref;
 
 /**
- * Marker interface for service controllers (VMs, Hosts, etc.)
- *
+ * The UI controller for a view that provides some information about a Host or a VM.
  */
 public interface InformationServiceController<T extends Ref> {
 

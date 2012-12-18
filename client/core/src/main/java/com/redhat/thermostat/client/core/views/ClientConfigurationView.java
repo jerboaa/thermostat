@@ -38,6 +38,9 @@ package com.redhat.thermostat.client.core.views;
 
 import com.redhat.thermostat.common.ActionListener;
 
+/**
+ * A {@link View} for displaying and modifying client configuration.
+ */
 public interface ClientConfigurationView extends View, UIComponent {
 
     enum Action {

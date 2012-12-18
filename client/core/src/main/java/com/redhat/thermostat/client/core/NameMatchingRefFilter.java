@@ -40,6 +40,10 @@ import java.util.Objects;
 
 import com.redhat.thermostat.common.dao.Ref;
 
+/**
+ * A {@link Filter} that checks if the name of a {@link Ref} contains
+ * the supplied character substring. This is case sensitive.
+ */
 public class NameMatchingRefFilter<T extends Ref> implements Filter<T> {
 
     private String pattern;

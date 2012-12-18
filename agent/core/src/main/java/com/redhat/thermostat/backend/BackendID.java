@@ -36,10 +36,13 @@
 
 package com.redhat.thermostat.backend;
 
+/**
+ * The unique identifier that identifies a backend.
+ */
 public class BackendID {
 
-    private String simpleName;
-    private String className;
+    private final String simpleName;
+    private final String className;
     
     public BackendID(String simpleName, String className) {
         this.simpleName = simpleName;

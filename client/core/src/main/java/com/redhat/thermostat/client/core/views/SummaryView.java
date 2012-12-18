@@ -36,7 +36,9 @@
 
 package com.redhat.thermostat.client.core.views;
 
-
+/**
+ * A {@link View} that displays a summary of everything in thermostat.
+ */
 public abstract class SummaryView extends BasicView implements UIComponent {
 
     public abstract void setTotalHosts(String count);

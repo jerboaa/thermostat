@@ -40,6 +40,15 @@ import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.Callable;
 
+import javax.swing.SwingUtilities;
+
+/**
+ * Allows operations to be performed consistently on the Swing EDT
+ * irrespective of whether the caller is running on the EDT or not.
+ * 
+ * @see SwingUtilities#invokeAndWait(Runnable)
+ * @see SwingUtilities#invokeLater(Runnable)
+ */
 public class EdtHelper {
 
     @SuppressWarnings("serial")
@@ -74,6 +83,13 @@ public class EdtHelper {
         }
     }
 
+    /**
+     * Invoke the supplied {@link Runnable} on the EDT.
+     * @param r encapsulates the code to run
+     * @throws InvocationTargetException encapsulates the actual exception
+     * that occurs when executing this code.
+     * @throws InterruptedException
+     */
     public void callAndWait(Runnable r) throws InvocationTargetException, InterruptedException {
         if (EventQueue.isDispatchThread()) {
             try {
@@ -86,6 +102,14 @@ public class EdtHelper {
         }
     }
 
+    /**
+     * Invokes the supplied {@link Callable} on the EDT, waits until it is
+     * finished execution and returns the result of invoking {@link Callable#call()}.
+     * @param c encapsulates the code to execute
+     * @return the result produce by c
+     * @throws InvocationTargetException indicates an exception occurred when executing the callable
+     * @throws InterruptedException
+     */
     public <T> T callAndWait(Callable<T> c) throws InvocationTargetException, InterruptedException {
         CallableWrapper<T> w = new CallableWrapper<>(c);
         callAndWait(w);

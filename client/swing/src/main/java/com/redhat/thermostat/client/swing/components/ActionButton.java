@@ -47,6 +47,9 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
+/**
+ * A swing implementation of {@link ToolbarButton}.
+ */
 @SuppressWarnings("serial")
 public class ActionButton extends JButton implements ToolbarButton {
     

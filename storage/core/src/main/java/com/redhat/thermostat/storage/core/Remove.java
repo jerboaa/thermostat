@@ -37,7 +37,9 @@
 
 package com.redhat.thermostat.storage.core;
 
-
+/**
+ * Describes what data should be removed from storage.
+ */
 public interface Remove {
 
     Remove from(Category category);

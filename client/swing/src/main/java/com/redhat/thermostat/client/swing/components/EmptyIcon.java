@@ -39,8 +39,12 @@ package com.redhat.thermostat.client.swing.components;
 import java.awt.Component;
 import java.awt.Graphics;
 
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+/**
+ * A blank {@link Icon}.
+ */
 @SuppressWarnings("serial")
 public class EmptyIcon extends ImageIcon  {
 

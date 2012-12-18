@@ -39,6 +39,10 @@ package com.redhat.thermostat.client.swing.components;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+/**
+ * A {@link JLabel} that is appropriate to use as a label for grouping
+ * the following information together.
+ */
 @SuppressWarnings("serial")
 public class SectionHeader extends JLabel {
 

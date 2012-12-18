@@ -39,6 +39,10 @@ package com.redhat.thermostat.client.core.views;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 
+/**
+ * A {@link View} with support for notifying listeners on visibility
+ * changes.
+ */
 public abstract class BasicView implements View {
     public enum Action {
         VISIBLE,

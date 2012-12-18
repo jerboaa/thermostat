@@ -37,8 +37,8 @@
 package com.redhat.thermostat.client.core;
 
 /**
- * Marker interface for filters of information sources (VMs, Hosts, etc.)
- *
+ * A {@link Filter} decides if some information matches what this
+ * {@link Filter} is designed to work with.
  */
 public interface Filter<T> {
 

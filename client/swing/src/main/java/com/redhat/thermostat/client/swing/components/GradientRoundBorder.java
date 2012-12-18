@@ -47,10 +47,14 @@ import java.io.Serializable;
 
 import javax.swing.UIManager;
 import javax.swing.border.AbstractBorder;
+import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
 
 import com.redhat.thermostat.client.ui.Palette;
 
+/**
+ * A round {@link Border} filled with a grandient paint.
+ */
 @SuppressWarnings("serial")
 public class GradientRoundBorder extends AbstractBorder implements UIResource, Serializable {
 

@@ -40,6 +40,10 @@ import java.awt.Component;
 
 import com.redhat.thermostat.client.core.views.UIComponent;
 
+/**
+ * A {@link UIComponent} that uses the swing toolkit to display
+ * widgets and components.
+ */
 public interface SwingComponent extends UIComponent {
 
     Component getUiComponent();

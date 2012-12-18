@@ -45,9 +45,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * A Request object represents a request passed from a client
- * to an agent.
- * 
- * 
+ * to an agent. Each request is separate, complete and unordered. The
+ * agent may or may not take an action when it receives a request.
+ * <p>
+ * Requests are meant for controlling the agent, not for asking an
+ * agent nor sending an agent any sort of data.
+ * <p>
+ * The following implementation details of this class are subject to
+ * change at any time.
+ * <p>
  * Request objects are serialized over the command channel in the following
  * format:
  * 

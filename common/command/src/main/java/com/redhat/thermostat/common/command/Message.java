@@ -36,7 +36,12 @@
 
 package com.redhat.thermostat.common.command;
 
-
+/**
+ * Base interface for the various message types.
+ *
+ * @see Request
+ * @see Response
+ */
 public interface Message {
 
     interface MessageType {

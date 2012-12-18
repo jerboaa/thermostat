@@ -42,6 +42,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * A bag of data
+ */
 public class Category {
     private String name;
     private final Map<String, Key<?>> keys;

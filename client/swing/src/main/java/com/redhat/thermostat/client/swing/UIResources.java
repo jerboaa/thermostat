@@ -42,6 +42,9 @@ import java.awt.Font;
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
 
+/**
+ * Encapsulates a standard selection of colors and fonts.
+ */
 public class UIResources {
 
     private static final UIResources resource = new UIResources();

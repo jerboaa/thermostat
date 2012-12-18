@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.command;
 
+// FIXME document this class
 public interface ConfigurationServer {
 
     void startListening(String address);

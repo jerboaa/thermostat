@@ -44,6 +44,11 @@ import javax.swing.JPanel;
 import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.JFreeChart;
 
+/**
+ * A swing component that displays charts. 
+ *
+ * @see org.jfree.chart.ChartPanel
+ */
 @SuppressWarnings("serial")
 public class ChartPanel extends JPanel {
 

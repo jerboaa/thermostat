@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client.core.views;
 
+/**
+ * Provides an AgentInformationViewProvider
+ */
 public interface AgentInformationViewProvider extends ViewProvider {
 
     @Override

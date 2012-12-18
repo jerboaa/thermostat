@@ -43,6 +43,9 @@ import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.plaf.metal.MetalLabelUI;
 
+/**
+ * A {@link JLabel} that has a shadow.
+ */
 @SuppressWarnings("serial")
 public class ShadowLabel extends JLabel {
 

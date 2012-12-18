@@ -37,9 +37,14 @@
 package com.redhat.thermostat.client.ui;
 
 import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.TickUnit;
 
 import com.redhat.thermostat.common.utils.DisplayableValues;
 
+/**
+ * A {@link TickUnit} that displays a byte value with an appropriate
+ * unit.
+ */
 @SuppressWarnings("serial")
 public class BytesTickUnit extends NumberTickUnit {
 

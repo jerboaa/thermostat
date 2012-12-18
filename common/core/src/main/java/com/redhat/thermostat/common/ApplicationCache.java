@@ -39,12 +39,16 @@ package com.redhat.thermostat.common;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * A simple cache to keep resources in.
+ */
 public class ApplicationCache {
-    @SuppressWarnings("rawtypes")
-    private Map cache = new ConcurrentHashMap();
-    
 
-    @SuppressWarnings("unchecked")
+    // FIXME: Add some sort of support for evication of resources
+    // otherwise this 'cache' will become a memory leak
+
+    private final Map<Object, Object> cache = new ConcurrentHashMap<>();
+    
     public void addAttribute(Object key, Object value) {
         cache.put(key, value);
     }

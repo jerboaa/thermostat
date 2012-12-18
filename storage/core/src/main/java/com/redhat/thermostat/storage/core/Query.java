@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.storage.core;
 
+/**
+ * Describes what data should be fetched.
+ */
 public interface Query {
 
     enum Criteria {

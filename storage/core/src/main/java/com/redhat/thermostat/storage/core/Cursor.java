@@ -38,6 +38,9 @@ package com.redhat.thermostat.storage.core;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
+/**
+ * Allows traversing over objects obtained from Storage.
+ */
 public interface Cursor<T extends Pojo> {
 
     boolean hasNext();

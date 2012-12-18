@@ -39,6 +39,9 @@ package com.redhat.thermostat.client.swing.components;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+/**
+ * A {@link JLabel} appropriate for labelling other components.
+ */
 @SuppressWarnings("serial")
 public class LabelField extends JLabel {
 

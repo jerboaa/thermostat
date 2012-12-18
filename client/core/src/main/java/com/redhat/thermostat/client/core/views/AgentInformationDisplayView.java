@@ -40,6 +40,9 @@ import java.util.Map;
 
 import com.redhat.thermostat.common.ActionListener;
 
+/**
+ * A view that displays an agent's information
+ */
 public abstract class AgentInformationDisplayView extends BasicView implements UIComponent {
 
     public enum ConfigurationAction {

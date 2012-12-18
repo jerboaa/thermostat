@@ -101,9 +101,6 @@
               com.redhat.thermostat.utils,
               com.redhat.thermostat.utils.management,
             </Export-Package>
-            <Private-Package>
-              com.redhat.thermostat.backend.sample,
-            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

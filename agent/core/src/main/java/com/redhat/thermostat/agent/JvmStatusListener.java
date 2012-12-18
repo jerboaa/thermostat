@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.agent;
 
+/**
+ * A listener that is notified when a JVM starts or is stopped.
+ */
 public interface JvmStatusListener {
 
     public void jvmStarted(int pid);

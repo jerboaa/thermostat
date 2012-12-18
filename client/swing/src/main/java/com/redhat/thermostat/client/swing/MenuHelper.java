@@ -54,6 +54,11 @@ import com.redhat.thermostat.client.swing.components.EdtHelper;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
 
+/**
+ * Helps adding or removing {@link MenuAction} from {@link JMenuBar}s.
+ * <p>
+ * This automatically handles creation and removal of submenus as appropriate.
+ */
 public class MenuHelper {
 
     private static final Logger logger = LoggingUtils.getLogger(MenuHelper.class);

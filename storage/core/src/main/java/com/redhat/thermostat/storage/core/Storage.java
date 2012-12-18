@@ -42,6 +42,11 @@ import java.util.UUID;
 import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
+/**
+ * A storage can be used to store, query, update and remove data.
+ * Implementations may use memory, a file, some database or even a network
+ * server as the backing store.
+ */
 public interface Storage {
 
     void setAgentId(UUID id);
@@ -51,6 +56,8 @@ public interface Storage {
     void registerCategory(Category category);
 
     Connection getConnection();
+
+    // TODO why does putPojo have an agent id param but not updatePojo and removePojo?
 
     void putPojo(Category category, boolean replace, AgentIdPojo pojo);
 

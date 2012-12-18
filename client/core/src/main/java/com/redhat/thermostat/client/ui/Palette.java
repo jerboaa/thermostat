@@ -38,6 +38,10 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Color;
 
+/**
+ * A set of preselected colors suitable for using to draw custom
+ * painting of charts graphs and figures.
+ */
 public enum Palette {
 
     THERMOSTAT_BLU(new Color(74, 93, 117)),

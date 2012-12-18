@@ -39,16 +39,18 @@ package com.redhat.thermostat.common.command;
 
 /**
  * A Response object represents a response message passed from an agent
- * to a client.
- * 
- * 
+ * to a client.  Responses must not be used to send data; they reach only a
+ * specific client and are not recorded.
+ * <p>
+ * The implementation details of this class are subject to change at any time.
+ * <p>
  * Response objects are serialized over the command channel in the following
  * format:
- * 
+ * <pre>
  * ------------
  * | A | TYPE |
  * ------------
- * 
+ * </pre>
  * A is an 32 bit integer representing the length - in bytes - of TYPE. TYPE
  * is a byte array representing the string of the response type (e.g.
  * "OK").
@@ -80,7 +82,7 @@ public class Response implements Message {
 	AUTH_FAILED;
     }
 
-    ResponseType type;
+    private ResponseType type;
 
     public Response (ResponseType type) {
         this.type = type;

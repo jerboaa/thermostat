@@ -46,6 +46,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+/**
+ * A status bar used to display relevant information and status.
+ * <p>
+ * A status bar is normally displayed at the bottom of the main window.
+ * It may contain one or more areas displaying text and icons.
+ */
 @SuppressWarnings("serial")
 public class StatusBar extends JPanel {
 

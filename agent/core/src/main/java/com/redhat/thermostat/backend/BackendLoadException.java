@@ -36,15 +36,26 @@
 
 package com.redhat.thermostat.backend;
 
+/**
+ * An error occurred when loading or initializing a backend
+ */
 public class BackendLoadException extends Exception {
 
     private static final long serialVersionUID = 4057881401012295723L;
 
-    public BackendLoadException(String message) {
+    private final BackendID backendId;
+
+    public BackendLoadException(BackendID backendId, String message) {
         super(message);
+        this.backendId = backendId;
     }
 
-    public BackendLoadException(String message, Throwable cause) {
+    public BackendLoadException(BackendID backendId, String message, Throwable cause) {
         super(message, cause);
+        this.backendId = backendId;
+    }
+
+    public BackendID getBackend() {
+        return backendId;
     }
 }

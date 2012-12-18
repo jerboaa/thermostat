@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.utils.hostname;
 
+/**
+ * Finds the current host name without doing a DNS lookup
+ */
 public class HostName {
 
     static {

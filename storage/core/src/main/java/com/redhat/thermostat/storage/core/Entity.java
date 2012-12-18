@@ -41,6 +41,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * The presence of this annotation indicates that a class maybe serialized
+ * and stored into a {@link Storage}. Entities must be valid Java Beans.
+ *
+ * @see Persist
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Entity {

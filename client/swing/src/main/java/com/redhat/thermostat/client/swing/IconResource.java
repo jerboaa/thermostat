@@ -41,6 +41,9 @@ import java.io.File;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 
+/**
+ * Provides asscess to various icons.
+ */
 public class IconResource {
     /* FIXME we need to pick up the icons dynamically */
 

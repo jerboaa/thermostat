@@ -45,7 +45,9 @@ import java.awt.Rectangle;
 
 import javax.swing.JPanel;
 
-
+/**
+ * A {@link JPanel} filled with a gradient color as the background.
+ */
 @SuppressWarnings("serial")
 public class GradientPanel extends JPanel {
 

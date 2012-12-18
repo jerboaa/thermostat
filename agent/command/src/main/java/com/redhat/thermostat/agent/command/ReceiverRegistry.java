@@ -40,6 +40,9 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.utils.ServiceRegistry;
 
+/**
+ * Handles registering {@link RequestReceiver}s into the framework.
+ */
 public class ReceiverRegistry {
 
     private ServiceRegistry<RequestReceiver> proxy;

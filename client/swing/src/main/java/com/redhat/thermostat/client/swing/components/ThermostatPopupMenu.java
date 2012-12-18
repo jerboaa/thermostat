@@ -41,6 +41,9 @@ import java.awt.Window;
 import javax.swing.JPopupMenu;
 import javax.swing.SwingUtilities;
 
+/**
+ * A {@link JPopupMenu} with (optional) transparency.
+ */
 @SuppressWarnings("serial")
 public class ThermostatPopupMenu extends JPopupMenu {
     

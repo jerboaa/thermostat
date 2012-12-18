@@ -47,7 +47,9 @@ import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 
-
+/**
+ * A Service that provides features to load bundles for given command names.
+ */
 public abstract class OSGiRegistry {
 
     public abstract void setPrintOSGiInfo(boolean printOSGiInfo);

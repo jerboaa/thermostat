@@ -38,7 +38,9 @@ package com.redhat.thermostat.client.core.views;
 
 /**
  * Interface for View plugins to notify the controllers that the
- * appropriate view have been registered in the framework.
+ * appropriate view have been registered in the framework. This allows
+ * creating {@link UIComponent}s appropriate for the widget toolkit in
+ * use.
  * 
  * <br /><br />
  * 

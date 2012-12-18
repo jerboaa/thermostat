@@ -38,6 +38,9 @@ package com.redhat.thermostat.client.swing.components;
 
 import javax.swing.AbstractButton;
 
+/**
+ * A button that can be added to a toolbar.
+ */
 public interface ToolbarButton {
     AbstractButton getToolbarButton();
     void toggleText(boolean showText);

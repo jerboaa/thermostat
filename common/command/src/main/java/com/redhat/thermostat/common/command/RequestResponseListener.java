@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common.command;
 
+/**
+ * A listener that is notified of the response to given request.
+ */
 public interface RequestResponseListener {
 
     public void fireComplete(Request request, Response response);

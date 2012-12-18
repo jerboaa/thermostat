@@ -42,6 +42,10 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
+/**
+ * A table that tries to look and behave sensibly by default without
+ * requiring too much extra code from each plugin.
+ */
 @SuppressWarnings("serial")
 public class ThermostatTable extends JTable {
     

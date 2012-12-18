@@ -42,7 +42,9 @@ import com.redhat.thermostat.common.dao.Ref;
 
 /**
  * Marker interface for information services.
- *
+ * <p>
+ * An {@code InformationService} provides some sort of information about
+ * something. Plug-ins should normally implement this as a entry point.
  */
 public interface InformationService<T extends Ref> {
     
@@ -94,8 +96,15 @@ public interface InformationService<T extends Ref> {
      */
     public int getPriority();
 
+    /**
+     * Returns a {@link Filter} that is used to determine if this information
+     * source can provide information for a given target.
+     */
     public Filter<T> getFilter();
 
+    /**
+     * Returns the controller for this plugin's UI.
+     */
     public InformationServiceController<T> getInformationServiceController(T ref);
 
 }

@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.utils.keyring;
 
+/**
+ * Manages sensitive data, like {@link Credentials}, securely.
+ */
 public interface Keyring {
 
     /**

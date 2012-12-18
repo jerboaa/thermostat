@@ -40,9 +40,13 @@ import java.awt.Component;
 
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 import com.redhat.thermostat.client.ui.Palette;
 
+/**
+ * A {@link TableCellRenderer} that colors rows to make them easier to read.
+ */
 @SuppressWarnings("serial")
 public class ThermostatTableRenderer extends DefaultTableCellRenderer {
 

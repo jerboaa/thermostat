@@ -38,7 +38,9 @@ package com.redhat.thermostat.client.ui;
 
 import java.awt.Color;
 
-
+/**
+ * Provides access to a preselected set of colors for charts and graphs.
+ */
 public class ChartColors {
     private static final Palette[] SERIES_COLORS = {
         Palette.PALE_RED,

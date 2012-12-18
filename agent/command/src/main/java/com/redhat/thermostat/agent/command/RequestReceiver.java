@@ -39,6 +39,15 @@ package com.redhat.thermostat.agent.command;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 
+/**
+ * Handles requests coming in through the command-channel.
+ * <p/>
+ * Classes wishing to handle requests coming in through the command channel
+ * should implement this class and register it using a
+ * {@link ReceiverRegistry}.
+ *
+ * @see ReceiverRegistry#registerReceiver(RequestReceiver)
+ */
 public interface RequestReceiver {
 
     public Response receive(Request request);

@@ -39,6 +39,9 @@ package com.redhat.thermostat.client.swing.components.models;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionListener;
 
+/**
+ * Makes a JList non-selectable.
+ */
 public class NullSelectionModel implements ListSelectionModel {
 
     @Override

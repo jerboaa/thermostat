@@ -40,13 +40,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.storage.core.Storage;
 
 /**
- * Represents a monitoring back-end.
+ * Represents a plugin that runs on the agent and performs monitoring of host
+ * and applications.
  */
 public abstract class Backend {
 
@@ -72,7 +72,7 @@ public abstract class Backend {
      */
     protected final void setInitialConfiguration(Map<String, String> configMap) throws BackendLoadException {
         if (initialConfigurationComplete) {
-            throw new BackendLoadException("A backend may only receive initial configuration once.");
+            throw new BackendLoadException(id, "The backend " + id.toString() + "may only receive initial configuration once.");
         }
         for (Entry<String, String> e : configMap.entrySet()) {
             String key = e.getKey();
@@ -80,7 +80,7 @@ public abstract class Backend {
             try {
                 setConfigurationValue(key, value);
             } catch (IllegalArgumentException iae) {
-                throw new BackendLoadException("Attempt to set invalid backend configuration for " + getName()
+                throw new BackendLoadException(id, "Attempt to set invalid backend configuration for " + getName()
                         + " backend.  Key: " + key + "   Value: " + value, iae);
             }
         }

@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common;
 
+/**
+ * A {@link Clock} that corresponds to the time as measured on the system.
+ */
 public class SystemClock implements Clock {
 
     @Override

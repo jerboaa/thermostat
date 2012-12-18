@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common;
 
+/**
+ * A clock. Useful for separating the source of time from a piece of code.
+ */
 public interface Clock {
 
     /**

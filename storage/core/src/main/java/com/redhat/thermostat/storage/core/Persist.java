@@ -41,6 +41,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Indicates that the annotated JavaBean property should be persisted into some
+ * form of storage when needed. Properties without this annotation will not be
+ * persisted.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Persist {

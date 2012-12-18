@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.utils.keyring;
 
+/**
+ * Data used to identify and authenticate a user.
+ */
 public class Credentials implements Cloneable {
 
     private String userName;

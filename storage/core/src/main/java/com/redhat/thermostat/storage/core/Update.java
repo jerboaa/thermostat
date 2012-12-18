@@ -34,9 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.storage.core;
 
+/**
+ * Describes which data should be updated with what values
+ */
 public interface Update {
 
     Update from(Category category);

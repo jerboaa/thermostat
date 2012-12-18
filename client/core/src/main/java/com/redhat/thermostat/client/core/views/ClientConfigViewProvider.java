@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client.core.views;
 
+/**
+ * A services that provides {@link ClientConfigurationView}s.
+ */
 public interface ClientConfigViewProvider extends ViewProvider {
 
     @Override
