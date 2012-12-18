@@ -148,9 +148,9 @@
               com.redhat.thermostat.client.swing,
               com.redhat.thermostat.client.swing.components,
               com.redhat.thermostat.client.swing.components.models,
+              com.redhat.thermostat.client.swing.views,
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.client.swing.views,
               com.redhat.thermostat.client.swing.internal,
               com.redhat.thermostat.client.swing.internal.components,
               com.redhat.thermostat.client.swing.internal.osgi,
