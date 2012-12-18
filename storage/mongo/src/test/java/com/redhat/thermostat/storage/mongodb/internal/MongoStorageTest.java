@@ -53,7 +53,6 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.concurrent.Executor;
 
 import org.junit.After;
 import org.junit.Before;
@@ -81,13 +80,9 @@ import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.core.Query.SortDirection;
+import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.mongodb.internal.MongoConnection;
-import com.redhat.thermostat.storage.mongodb.internal.MongoQuery;
-import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ DBCollection.class, DB.class, Mongo.class, MongoStorage.class, MongoConnection.class })
@@ -157,13 +152,7 @@ public class MongoStorageTest {
     private DBCursor cursor;
 
     private MongoStorage makeStorage() {
-        Executor exec = new Executor() {
-            @Override
-            public void execute(Runnable command) {
-                command.run();
-            }
-        };
-        MongoStorage storage = new MongoStorage(conf, exec);
+        MongoStorage storage = new MongoStorage(conf);
         storage.mapCategoryToDBCollection(testCategory, testCollection);
         storage.mapCategoryToDBCollection(emptyTestCategory, emptyTestCollection);
         return storage;

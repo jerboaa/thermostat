@@ -2,6 +2,7 @@ package com.redhat.thermostat.web.client.internal;
 
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;
 
@@ -17,7 +18,7 @@ public class WebStorageProvider implements StorageProvider {
             AuthenticationConfiguration authConf = (AuthenticationConfiguration) config;
             storage.setAuthConfig(authConf.getUsername(), authConf.getPassword());
         }
-        return storage;
+        return new QueuedStorage(storage);
     }
 
     @Override

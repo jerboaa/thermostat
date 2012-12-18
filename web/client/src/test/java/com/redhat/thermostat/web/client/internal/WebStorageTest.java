@@ -58,7 +58,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Executor;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -149,13 +148,7 @@ public class WebStorageTest {
                 return "http://fluff.example.org";
             }
         };
-        Executor exec = new Executor() {
-            @Override
-            public void execute(Runnable command) {
-                command.run();
-            }
-        };
-        storage = new WebStorage(config, exec);
+        storage = new WebStorage(config);
         storage.setEndpoint("http://localhost:" + port + "/");
         storage.setAgentId(new UUID(123, 456));
         headers = new HashMap<>();

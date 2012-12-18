@@ -42,8 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -83,13 +81,7 @@ public class MongoStorage implements Storage {
 
     private UUID agentId;
 
-    private Executor threadpool;
-
     public MongoStorage(StartupConfiguration conf) {
-        this(conf, Executors.newCachedThreadPool());
-    }
-
-    MongoStorage(StartupConfiguration conf, Executor threadpool) {
         conn = new MongoConnection(conf);
         conn.addListener(new ConnectionListener() {
             @Override
@@ -104,8 +96,6 @@ public class MongoStorage implements Storage {
                 }
             }
         });
-
-        this.threadpool = threadpool;
     }
 
     @Override
@@ -142,16 +132,6 @@ public class MongoStorage implements Storage {
 
     @Override
     public void putPojo(final Category cat, final boolean replace, final AgentIdPojo pojo) {
-        threadpool.execute(new Runnable() {
-            
-            @Override
-            public void run() {
-                putImpl(cat, replace, pojo);
-            }
-        });
-    }
-
-    private void putImpl(Category cat, boolean replace, AgentIdPojo pojo) {
         DBCollection coll = getCachedCollection(cat);
         MongoPojoConverter converter = new MongoPojoConverter();
         DBObject toInsert = converter.convertPojoToMongo(pojo);

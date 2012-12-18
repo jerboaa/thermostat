@@ -37,6 +37,7 @@
 package com.redhat.thermostat.storage.mongodb;
 
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.QueuedStorage;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.storage.mongodb.internal.MongoStorage;
@@ -51,7 +52,8 @@ public class MongoStorageProvider implements StorageProvider {
 
     @Override
     public Storage createStorage() {
-        return new MongoStorage(configuration);
+        MongoStorage storage = new MongoStorage(configuration);
+        return new QueuedStorage(storage);
     }
 
     @Override
