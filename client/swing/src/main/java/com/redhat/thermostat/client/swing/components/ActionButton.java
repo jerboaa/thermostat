@@ -99,45 +99,5 @@ public class ActionButton extends JButton implements ToolbarButton {
         }
     }
     
-    public static void main(String[] args) throws InvocationTargetException, InterruptedException {
-        SwingUtilities.invokeAndWait(new Runnable() {
-            
-            @Override
-            public void run() {
-               JFrame frame = new JFrame();
-               frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-               
-               HeaderPanel header = new HeaderPanel();
-               header.setHeader("Test");
-               
-               Icon icon = new Icon() {
-                
-                @Override
-                public void paintIcon(Component c, Graphics g, int x, int y) {
-                    g.setColor(Color.CYAN);
-                    g.fillRect(x, y, 16, 16);
 
-                }
-                
-                @Override
-                public int getIconWidth() {
-                    // TODO Auto-generated method stub
-                    return 16;
-                }
-                
-                @Override
-                public int getIconHeight() {
-                    // TODO Auto-generated method stub
-                    return 16;
-                }
-            }; 
-               
-               header.addToolBarButton(new ActionButton(icon, "Fluff"));
-               
-               frame.getContentPane().add(header);
-               frame.setSize(500, 500);
-               frame.setVisible(true);
-            }
-        });
-    }      
 }

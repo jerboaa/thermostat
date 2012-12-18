@@ -55,8 +55,8 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 
 import com.redhat.thermostat.client.core.views.SearchFieldView.SearchAction;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.components.EdtHelper;
 import com.redhat.thermostat.client.swing.views.SearchFieldSwingView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionEvent;

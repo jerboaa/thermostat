@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing;
+package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -97,11 +97,12 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.swing.components.EdtHelper;
-import com.redhat.thermostat.client.swing.components.HtmlTextBuilder;
+import com.redhat.thermostat.client.swing.EdtHelper;
+import com.redhat.thermostat.client.swing.HtmlTextBuilder;
+import com.redhat.thermostat.client.swing.MenuHelper;
+import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.StatusBar;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
-import com.redhat.thermostat.client.swing.internal.MainView;
 import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMutableTreeNode;
 import com.redhat.thermostat.client.swing.views.SearchFieldSwingView;
 import com.redhat.thermostat.client.ui.Decorator;

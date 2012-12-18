@@ -39,6 +39,8 @@ package com.redhat.thermostat.client.swing.components;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
+import com.redhat.thermostat.client.swing.HtmlTextBuilder;
+
 /**
  * A {@link JLabel} that is appropriate to use as a label for grouping
  * the following information together.

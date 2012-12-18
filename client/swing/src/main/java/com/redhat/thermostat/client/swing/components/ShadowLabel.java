@@ -43,6 +43,8 @@ import javax.swing.Icon;
 import javax.swing.JLabel;
 import javax.swing.plaf.metal.MetalLabelUI;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
+
 /**
  * A {@link JLabel} that has a shadow.
  */

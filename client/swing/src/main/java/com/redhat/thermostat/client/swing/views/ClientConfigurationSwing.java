@@ -52,7 +52,7 @@ import javax.swing.WindowConstants;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.components.EdtHelper;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;

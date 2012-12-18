@@ -57,8 +57,8 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.swing.components.GradientRoundBorder;
-import com.redhat.thermostat.client.swing.components.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.model.LongRange;
 import com.redhat.thermostat.common.model.LongRangeNormalizer;

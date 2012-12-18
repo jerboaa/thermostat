@@ -47,6 +47,7 @@ import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
 import javax.swing.plaf.UIResource;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
 
 @SuppressWarnings("serial")

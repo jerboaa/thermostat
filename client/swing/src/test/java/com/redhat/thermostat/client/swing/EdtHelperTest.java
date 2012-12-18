@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -48,6 +48,8 @@ import javax.swing.SwingUtilities;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.redhat.thermostat.client.swing.EdtHelper;
 
 public class EdtHelperTest {
 

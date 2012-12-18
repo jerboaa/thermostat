@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing;
+package com.redhat.thermostat.client.swing.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -77,6 +77,7 @@ import com.redhat.thermostat.client.core.views.SearchFieldView;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.swing.internal.MainView;
+import com.redhat.thermostat.client.swing.internal.MainWindow;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;

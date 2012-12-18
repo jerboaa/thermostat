@@ -50,6 +50,7 @@ import javax.swing.border.AbstractBorder;
 import javax.swing.border.Border;
 import javax.swing.plaf.UIResource;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
 
 /**

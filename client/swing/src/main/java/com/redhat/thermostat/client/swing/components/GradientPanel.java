@@ -45,6 +45,8 @@ import java.awt.Rectangle;
 
 import javax.swing.JPanel;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
+
 /**
  * A {@link JPanel} filled with a gradient color as the background.
  */

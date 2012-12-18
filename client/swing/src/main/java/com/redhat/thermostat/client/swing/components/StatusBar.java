@@ -125,22 +125,5 @@ public class StatusBar extends JPanel {
     public String getPrimaryStatus() {
         return primaryStatus;
     }
-        
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            
-            @Override
-            public void run() {
-                JFrame frame = new JFrame();
-                frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                frame.getContentPane().setLayout(new BorderLayout());
-                
-                StatusBar statusBar = new StatusBar();
-                frame.getContentPane().add(statusBar, BorderLayout.SOUTH);
-                
-                frame.setSize(500, 500);
-                frame.setVisible(true);
-            }
-        });
-    }
+
 }

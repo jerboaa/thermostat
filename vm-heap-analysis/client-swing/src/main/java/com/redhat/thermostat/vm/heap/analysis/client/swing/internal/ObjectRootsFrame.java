@@ -58,7 +58,7 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.MutableTreeNode;
 import javax.swing.tree.TreePath;
 
-import com.redhat.thermostat.client.swing.components.EdtHelper;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.locale.Translate;

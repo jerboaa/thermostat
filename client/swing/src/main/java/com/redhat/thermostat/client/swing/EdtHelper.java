@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.components;
+package com.redhat.thermostat.client.swing;
 
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;

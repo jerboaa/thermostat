@@ -48,7 +48,6 @@ import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.swing.MainWindow;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.SummaryController;

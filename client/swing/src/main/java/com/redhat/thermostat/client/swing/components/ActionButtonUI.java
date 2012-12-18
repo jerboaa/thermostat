@@ -52,6 +52,7 @@ import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.plaf.metal.MetalButtonUI;
 
+import com.redhat.thermostat.client.swing.GraphicsUtils;
 import com.redhat.thermostat.client.ui.Palette;
 
 class ActionButtonUI extends MetalButtonUI {

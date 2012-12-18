@@ -59,8 +59,8 @@ import javax.swing.text.Document;
 
 import com.redhat.thermostat.client.core.views.SearchFieldView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.IconResource;
-import com.redhat.thermostat.client.swing.components.EdtHelper;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.locale.Translate;
