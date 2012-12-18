@@ -37,6 +37,10 @@
 package com.redhat.thermostat.agent.command.internal;
 
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.net.ssl.SSLEngine;
 
 import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.bootstrap.ServerBootstrap;
@@ -46,13 +50,21 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.DefaultChannelGroup;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SslInitException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class ConfigurationServerContext implements ConfigurationCommandContext {
 
+    private static final Logger logger = LoggingUtils.getLogger(ConfigurationServerContext.class);
+    
     private final ServerBootstrap bootstrap;
     private final ChannelGroup channels;
     private final BundleContext context;
@@ -95,6 +107,18 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
         @Override
         public ChannelPipeline getPipeline() throws Exception {
             ChannelPipeline pipeline = Channels.pipeline();
+            if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+                SSLEngine engine = null;
+                try {
+                    engine = SSLContextFactory.getServerContext()
+                            .createSSLEngine();
+                    engine.setUseClientMode(false);
+                } catch (SslInitException | InvalidConfigurationException e) {
+                    logger.log(Level.SEVERE,
+                            "Failed to initiate command channel endpoint", e);
+                }
+                pipeline.addLast("ssl", new SslHandler(engine));
+            }
             pipeline.addLast("decoder", new RequestDecoder());
             pipeline.addLast("encoder", new ResponseEncoder());
             pipeline.addLast("handler", new ServerHandler(new ReceiverRegistry(context)));

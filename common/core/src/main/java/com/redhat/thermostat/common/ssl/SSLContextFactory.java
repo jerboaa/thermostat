@@ -36,23 +36,50 @@
 
 package com.redhat.thermostat.common.ssl;
 
+import java.io.File;
+import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.internal.KeyStoreProvider;
 import com.redhat.thermostat.common.internal.TrustManagerFactory;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class SSLContextFactory {
 
+    private static final Logger logger = LoggingUtils.getLogger(SSLContextFactory.class);
     private static final String PROTOCOL = "TLS";
+    private static final String ALGORITHM = "SunX509";
+    private static SSLContext serverContext;
     private static SSLContext clientContext;
+    
+    /**
+     * 
+     * @return An initialized SSLContext 
+     * @throws SslInitException
+     * @throws InvalidConfigurationException
+     */
+    public static SSLContext getServerContext() throws SslInitException,
+            InvalidConfigurationException {
+        if (serverContext != null) {
+            return serverContext;
+        }
+        initServerContext();
+        return serverContext;
+    }
 
     /**
      * 
-     * @return An initialized SSLContext with Thermostat's own X509TrustManager
+     * @return An initialized SSLContext with Thermostat's only X509TrustManager
      *         registered.
      * @throws SslInitException if SSL initialization failed.
      */
@@ -75,5 +102,47 @@ public class SSLContextFactory {
             e.printStackTrace();
         }
         clientContext = clientCtxt;
+    }
+
+    private static void initServerContext() throws SslInitException,
+            InvalidConfigurationException {
+        SSLContext serverCtxt = null;
+        File trustStoreFile = SSLKeystoreConfiguration.getKeystoreFile();
+        String keyStorePassword = SSLKeystoreConfiguration
+                .getKeyStorePassword();
+        KeyStore ks = KeyStoreProvider.getKeyStore(trustStoreFile,
+                keyStorePassword);
+        if (ks == null) {
+            // This is bad news. We need a proper key store for retrieving the
+            // server certificate.
+            logReason(trustStoreFile);
+            throw new SslInitException(
+                    "Failed to initialize server side SSL context");
+        }
+        try {
+            // Set up key manager factory to use our key store
+            KeyManagerFactory kmf = KeyManagerFactory.getInstance(ALGORITHM);
+            String keystorePassword = SSLKeystoreConfiguration.getKeyStorePassword();
+            kmf.init(ks, keystorePassword.toCharArray());
+
+            // Initialize the SSLContext to work with our key managers.
+            serverCtxt = SSLContext.getInstance(PROTOCOL);
+            serverCtxt.init(kmf.getKeyManagers(), null, new SecureRandom());
+        } catch (GeneralSecurityException e) {
+            throw new SslInitException(e);
+        }
+        serverContext = serverCtxt;
+    }
+
+    private static void logReason(File trustStoreFile) {
+        String detail = "Reason: no keystore file specified!";
+        if (trustStoreFile != null) {
+            if (!trustStoreFile.exists()) {
+                detail = "Reason: keystore file '" + trustStoreFile.toString() + "' does not exist!";
+            } else {
+                detail = "Reason: illegal keystore password!";
+            }
+        }
+        logger.log(Level.SEVERE, "Failed to load keystore. " + detail);
     }
 }

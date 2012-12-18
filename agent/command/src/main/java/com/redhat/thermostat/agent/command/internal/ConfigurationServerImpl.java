@@ -37,14 +37,18 @@
 package com.redhat.thermostat.agent.command.internal;
 
 import java.net.InetSocketAddress;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 class ConfigurationServerImpl implements ConfigurationServer {
 
     private final ConfigurationServerContext ctx;
+    private static final Logger logger = LoggingUtils.getLogger(ConfigurationServerImpl.class);
 
     ConfigurationServerImpl(ConfigurationServerContext ctx) {
         this.ctx = ctx;
@@ -55,13 +59,16 @@ class ConfigurationServerImpl implements ConfigurationServer {
         ServerBootstrap bootstrap = (ServerBootstrap) ctx.getBootstrap();
 
         String [] host = address.split(":");
+        InetSocketAddress addr = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         
+        logger.log(Level.FINE, "Starting command channel server on " + addr.toString());
         // Bind and start to accept incoming connections.
-        bootstrap.bind(new InetSocketAddress(host[0], Integer.parseInt(host[1])));
+        bootstrap.bind(addr);
     }
 
     @Override
     public void stopListening() {
+        logger.log(Level.FINE, "Stopping command channel server");
         ctx.getChannelGroup().close().awaitUninterruptibly();
         ctx.getChannelGroup().clear();
         ctx.getBootstrap().releaseExternalResources();

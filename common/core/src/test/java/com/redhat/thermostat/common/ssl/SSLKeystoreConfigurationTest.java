@@ -34,16 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.internal;
+package com.redhat.thermostat.common.ssl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.internal.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
 
 public class SSLKeystoreConfigurationTest {
 
@@ -63,5 +64,15 @@ public class SSLKeystoreConfigurationTest {
         SSLKeystoreConfiguration.initClientProperties(clientProps);
         assertTrue(SSLKeystoreConfiguration.getKeystoreFile() == null);
         assertEquals("", SSLKeystoreConfiguration.getKeyStorePassword());
+    }
+    
+    @Test
+    public void canGetSSLEnabledConfig() {
+        File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
+        SSLKeystoreConfiguration.initClientProperties(clientProps);
+        assertTrue(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
+        clientProps = new File(this.getClass().getResource("/ssl.properties").getFile());
+        SSLKeystoreConfiguration.initClientProperties(clientProps);
+        assertFalse(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
     }
 }

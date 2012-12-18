@@ -53,6 +53,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**

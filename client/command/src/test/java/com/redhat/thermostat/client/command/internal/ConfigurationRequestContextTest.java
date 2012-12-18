@@ -34,12 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.command.internal;
+package com.redhat.thermostat.client.command.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import javax.net.ssl.SSLContext;
@@ -49,13 +48,12 @@ import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.channel.ChannelHandler;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
-import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.ssl.SslHandler;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.osgi.framework.BundleContext;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
@@ -65,27 +63,63 @@ import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ SSLKeystoreConfiguration.class, SSLContextFactory.class,
-        SSLEngine.class, SSLContext.class })
-public class ConfigurationServerContextTest {
+        SSLContext.class, SSLEngine.class })
+public class ConfigurationRequestContextTest {
 
-    ConfigurationServerContext ctx;
+    ConfigurationRequestContext ctx;
 
     @Before
     public void setUp() {
-        BundleContext bCtx = mock(BundleContext.class);
-        ctx = new ConfigurationServerContext(bCtx);
+        ctx = new ConfigurationRequestContext();
+    }
+
+    @After
+    public void tearDown() {
+        ctx = null;
     }
 
     @Test
-    public void testBootstrap() {
+    public void testSSLHandlersAdded() throws Exception {
+        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
+        when(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()).thenReturn(
+                true);
+        PowerMockito.mockStatic(SSLContextFactory.class);
+        // SSL classes need to be mocked with PowerMockito
+        SSLContext context = PowerMockito.mock(SSLContext.class);
+        when(SSLContextFactory.getClientContext()).thenReturn(context);
+        SSLEngine engine = PowerMockito.mock(SSLEngine.class);
+        when(context.createSSLEngine()).thenReturn(engine);
+
         Bootstrap bootstrap = ctx.getBootstrap();
         assertNotNull(bootstrap);
 
-        assertTrue((Boolean) bootstrap.getOption("child.tcpNoDelay"));
-        assertTrue((Boolean) bootstrap.getOption("child.keepAlive"));
-        assertTrue((Boolean) bootstrap.getOption("child.reuseAddress"));
-        assertEquals(100, bootstrap.getOption("child.connectTimeoutMillis"));
-        assertTrue((Boolean) bootstrap.getOption("child.readWriteFair"));
+        ChannelPipelineFactory pf = bootstrap.getPipelineFactory();
+        assertNotNull(pf);
+
+        ChannelPipeline p = null;
+        try {
+            p = pf.getPipeline();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        assertNotNull(p);
+
+        ChannelHandler sslHandler = p.get("ssl");
+        assertNotNull(sslHandler);
+        assertTrue(sslHandler instanceof SslHandler);
+        Mockito.verify(engine).setUseClientMode(true);
+    }
+
+    @Test
+    public void testBootstrapAndHandlers() {
+        Bootstrap bootstrap = ctx.getBootstrap();
+        assertNotNull(bootstrap);
+
+        assertTrue((Boolean) bootstrap.getOption("tcpNoDelay"));
+        assertTrue((Boolean) bootstrap.getOption("keepAlive"));
+        assertTrue((Boolean) bootstrap.getOption("reuseAddress"));
+        assertEquals(100, bootstrap.getOption("connectTimeoutMillis"));
+        assertTrue((Boolean) bootstrap.getOption("readWriteFair"));
 
         ChannelPipelineFactory pf = bootstrap.getPipelineFactory();
         assertNotNull(pf);
@@ -100,52 +134,10 @@ public class ConfigurationServerContextTest {
 
         ChannelHandler encoder = p.get("encoder");
         assertNotNull(encoder);
-        assertTrue(encoder instanceof ResponseEncoder);
+        assertTrue(encoder instanceof RequestEncoder);
 
         ChannelHandler decoder = p.get("decoder");
         assertNotNull(decoder);
-        assertTrue(decoder instanceof RequestDecoder);
-
-        ChannelHandler handler = p.get("handler");
-        assertNotNull(handler);
-        assertTrue(handler instanceof ServerHandler);
-    }
-    
-    @Test
-    public void testBootstrapSSL() throws Exception {
-        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
-        when(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()).thenReturn(true);
-        PowerMockito.mockStatic(SSLContextFactory.class);
-        // SSL classes need to be mocked with PowerMockito
-        SSLContext context = PowerMockito.mock(SSLContext.class);
-        when(SSLContextFactory.getServerContext()).thenReturn(context);
-        SSLEngine engine = PowerMockito.mock(SSLEngine.class);
-        when(context.createSSLEngine()).thenReturn(engine);
-        
-        Bootstrap bootstrap = ctx.getBootstrap();
-        assertNotNull(bootstrap);
-
-        ChannelPipelineFactory pf = bootstrap.getPipelineFactory();
-        assertNotNull(pf);
-
-        ChannelPipeline p = null;
-        try {
-            p = pf.getPipeline();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        assertNotNull(p);
-
-        ChannelHandler encoder = p.get("ssl");
-        assertNotNull(encoder);
-        assertTrue(encoder instanceof SslHandler);
-        Mockito.verify(engine).setUseClientMode(false);
-    }
-
-    @Test
-    public void testChannelGroup() {
-        ChannelGroup cg = ctx.getChannelGroup();
-        assertNotNull(cg);
-        assertEquals(ConfigurationServerImpl.class.getName(), cg.getName());
+        assertTrue(decoder instanceof ResponseDecoder);
     }
 }

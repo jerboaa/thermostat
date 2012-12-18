@@ -38,14 +38,19 @@ package com.redhat.thermostat.client.command.internal;
 
 import java.util.concurrent.Executors;
 
+import javax.net.ssl.SSLEngine;
+
 import org.jboss.netty.bootstrap.Bootstrap;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
+import org.jboss.netty.handler.ssl.SslHandler;
 
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
+import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
 
 public class ConfigurationRequestContext implements ConfigurationCommandContext {
 
@@ -84,6 +89,12 @@ public class ConfigurationRequestContext implements ConfigurationCommandContext 
         @Override
         public ChannelPipeline getPipeline() throws Exception {
             ChannelPipeline pipeline = Channels.pipeline();
+            if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+                SSLEngine engine = SSLContextFactory.getClientContext()
+                        .createSSLEngine();
+                engine.setUseClientMode(true);
+                pipeline.addLast("ssl", new SslHandler(engine));
+            }
             pipeline.addLast("decoder", new ResponseDecoder());
             pipeline.addLast("encoder", new RequestEncoder());
             return pipeline;

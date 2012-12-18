@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.internal;
+package com.redhat.thermostat.common.ssl;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -49,11 +49,12 @@ public class SSLKeystoreConfiguration {
     private static Properties clientProps = null;
     private static final String KEYSTORE_FILE_KEY = "KEYSTORE_FILE";
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
+    private static final String CMD_CHANNEL_SSL_KEY = "COMMAND_CHANNEL_USE_SSL";
 
     /**
      * 
-     * @return The keystore file as specified in
-     *         $THERMOSTAT_HOME/ssl.properties if any. null otherwise.
+     * @return The keystore file as specified in $THERMOSTAT_HOME/etc/ssl.properties
+     *         if any. null otherwise.
      */
     public static File getKeystoreFile() {
         try {
@@ -73,10 +74,8 @@ public class SSLKeystoreConfiguration {
 
     /**
      * 
-     * @return The keystore file as specified in
-     *         $THERMOSTAT_HOME/ssl.properties if any. The empty string
-     *         otherwise.
-     * @throws InvalidConfigurationException
+     * @return The keystore file as specified in $THERMOSTAT_HOME/etc/ssl.properties
+     *         if any. The empty string otherwise.
      */
     public static String getKeyStorePassword() {
         try {
@@ -91,6 +90,28 @@ public class SSLKeystoreConfiguration {
         } else {
             return pwd;
         }
+    }
+    
+    /**
+     * 
+     * @return true if and only if SSL should be enabled for command channel
+     *         communication between agent and client. I.e. if
+     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
+     *         been added. false otherwise.
+     */
+    public static boolean shouldSSLEnableCmdChannel() {
+        boolean result = false;
+        try {
+            loadClientProperties();
+        } catch (InvalidConfigurationException e) {
+            // Thermostat home not set? Do something reasonable
+            return result;
+        }
+        String token = clientProps.getProperty(CMD_CHANNEL_SSL_KEY);
+        if (token != null) {
+            result = Boolean.parseBoolean(token);
+        }
+        return result;
     }
 
     // testing hook

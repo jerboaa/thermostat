@@ -38,11 +38,16 @@ package com.redhat.thermostat.client.command.internal;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
+import org.jboss.netty.channel.ChannelFutureListener;
+import org.jboss.netty.channel.ChannelPipeline;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -52,6 +57,8 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
@@ -59,6 +66,7 @@ import com.redhat.thermostat.storage.core.StorageException;
 
 class RequestQueueImpl implements RequestQueue {
 
+    private static final Logger logger = LoggingUtils.getLogger(RequestQueueImpl.class);
     private final BlockingQueue<Request> queue;
     private final ConfigurationRequestContext ctx;
     private volatile boolean processing;
@@ -136,7 +144,11 @@ class RequestQueueImpl implements RequestQueue {
                 f.awaitUninterruptibly();
                 if (f.isSuccess()) {
                 	Channel c = f.getChannel();
-                	c.getPipeline().addLast("responseHandler", new ResponseHandler(request));
+                	ChannelPipeline pipeline = c.getPipeline();
+                	if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+                	    doSSLHandShake(pipeline, request);
+                	}
+                	pipeline.addLast("responseHandler", new ResponseHandler(request));
                 	c.write(request);
                 } else {
                 	Response response  = new Response(ResponseType.ERROR);
@@ -146,11 +158,44 @@ class RequestQueueImpl implements RequestQueue {
         }
 
     }
-
+    
     private void fireComplete(Request request, Response response) {
         // TODO add more information once Response supports parameters.
         for (RequestResponseListener listener : request.getListeners()) {
             listener.fireComplete(request, response);
+        }
+    }
+
+    private void doSSLHandShake(ChannelPipeline pipeline, Request request) {
+        // Get the SslHandler from the pipeline
+        // which was added in ConfigurationRequestContext$ClientPipelineFactory
+        SslHandler sslHandler = pipeline.get(SslHandler.class);
+        
+        logger.log(Level.FINE, "Starting SSL handshake");
+        // Begin handshake.
+        ChannelFuture future = sslHandler.handshake();
+        
+        // Register a future listener, since it gives us a way to
+        // report an error on client side.
+        future.addListener(new SSLErrorReporter(request));
+    }
+
+    private class SSLErrorReporter implements ChannelFutureListener {
+        
+        private final Request request;
+        
+        private SSLErrorReporter(Request request) {
+            this.request = request;
+        }
+        
+        @Override
+        public void operationComplete(ChannelFuture future) throws Exception {
+            if (!future.isSuccess()) {
+                logger.log(Level.WARNING,
+                        "SSL handshake failed check agent logs for details!",
+                        future.getCause());
+                fireComplete(request, new Response(ResponseType.ERROR));
+            }
         }
     }
 }

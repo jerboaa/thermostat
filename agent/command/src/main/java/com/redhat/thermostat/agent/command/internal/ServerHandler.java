@@ -41,12 +41,15 @@ import java.util.logging.Logger;
 
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.netty.channel.Channel;
+import org.jboss.netty.channel.ChannelEvent;
 import org.jboss.netty.channel.ChannelFuture;
 import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelHandlerContext;
+import org.jboss.netty.channel.ChannelStateEvent;
 import org.jboss.netty.channel.ExceptionEvent;
 import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelHandler;
+import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import org.jboss.netty.handler.ssl.SslHandler;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -56,21 +59,45 @@ import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
 
-class ServerHandler extends SimpleChannelHandler {
+class ServerHandler extends SimpleChannelUpstreamHandler {
 
+    private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
     private ReceiverRegistry receivers;
 
     public ServerHandler(ReceiverRegistry receivers) {
         this.receivers = receivers;
     }
 
-    private static final Logger logger = LoggingUtils.getLogger(ServerHandler.class);
+    @Override
+    public void handleUpstream(
+            ChannelHandlerContext ctx, ChannelEvent e) throws Exception {
+        if (e instanceof ChannelStateEvent) {
+            logger.log(Level.FINEST, e.toString());
+        }
+        super.handleUpstream(ctx, e);
+    }
+    
+    @Override
+    public void channelConnected(
+            ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
+        if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+            // Get the SslHandler in the current pipeline.
+            // We added it in ConfigurationServerContext$ServerPipelineFactory.
+            final SslHandler sslHandler = ctx.getPipeline().get(
+                    SslHandler.class);
 
+            // Get notified when SSL handshake is done.
+            ChannelFuture handshakeFuture = sslHandler.handshake();
+            handshakeFuture.addListener(new SSLHandshakeDoneListener());
+        }
+    }
+    
     @Override
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
         Request request = (Request) e.getMessage();
@@ -123,5 +150,20 @@ class ServerHandler extends SimpleChannelHandler {
         logger.log(Level.WARNING, "Unexpected exception from downstream.", e.getCause());
         e.getChannel().close();
     }
+    
+    /*
+     * Only registered if SSL is enabled
+     */
+    static final class SSLHandshakeDoneListener implements ChannelFutureListener {
 
+        @Override
+        public void operationComplete(ChannelFuture future) throws Exception {
+            if (future.isSuccess()) {
+                logger.log(Level.FINE, "Finished SSL handshake.");
+            } else {
+                logger.log(Level.WARNING, "SSL handshake failed!");
+                future.getChannel().close();
+            }
+        }
+    }
 }

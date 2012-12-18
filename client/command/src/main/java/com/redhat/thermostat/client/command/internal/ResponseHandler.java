@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.command.internal;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jboss.netty.channel.ChannelHandlerContext;
@@ -72,6 +73,7 @@ public class ResponseHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent e) throws Exception {
         // TODO when response has support for parameters, provide the exception as well.
+        logger.log(Level.WARNING, "exception caught: ", e.getCause());
         Response response = new Response(ResponseType.ERROR);
         notifyListeners(response);
     }
