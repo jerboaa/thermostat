@@ -384,11 +384,9 @@ public class QueuedStorageTest {
 
         queuedStorage.registerCategory(category);
 
-        Runnable task = executor.getTask();
-        verifyZeroInteractions(delegateStorage);
-        task.run();
         verify(delegateStorage).registerCategory(category);
 
+        assertNull(executor.getTask());
         assertNull(fileExecutor.getTask());
     }
 

@@ -204,16 +204,7 @@ public final class QueuedStorage implements Storage {
 
     @Override
     public void registerCategory(final Category category) {
-
-        executor.execute(new Runnable() {
-            
-            @Override
-            public void run() {
-                delegate.registerCategory(category);
-            }
-
-        });
-
+        delegate.registerCategory(category);
     }
 
     @Override
