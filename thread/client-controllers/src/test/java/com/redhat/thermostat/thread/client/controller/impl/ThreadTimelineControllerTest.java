@@ -55,7 +55,11 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
+import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.thread.client.common.Timeline;
+import com.redhat.thermostat.thread.client.common.TimelineInfo;
+import com.redhat.thermostat.thread.client.common.chart.ChartColors;
+//import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
@@ -140,32 +144,36 @@ public class ThreadTimelineControllerTest {
         Runnable action = timerCaptor.getValue();
         action.run();
         
-        ArgumentCaptor<Map> mapCaptor = ArgumentCaptor.forClass(Map.class);
+        ArgumentCaptor<List> listCaptor = ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<LongRange> rangeCaptor = ArgumentCaptor.forClass(LongRange.class);
+
+        verify(view).displayStats(listCaptor.capture(), rangeCaptor.capture());
         
-        verify(view).displayStats(mapCaptor.capture(), anyLong(), anyLong());
-        
-        Map viewResult = mapCaptor.getValue();
+        List viewResult = listCaptor.getValue();
+        LongRange rangeResult = rangeCaptor.getValue();
         assertEquals(2, viewResult.size());
-        
-        List<ThreadTimelineBean> beanList = (List<ThreadTimelineBean>) viewResult.get(data1);
-        
-        assertEquals(2, beanList.size());
-        
-        assertEquals("test1", beanList.get(0).getName());
-        assertEquals("test1", beanList.get(1).getName());
+        assertEquals(100, rangeResult.getMin());
+        assertEquals(3000, rangeResult.getMax());
 
-        beanList = (List<ThreadTimelineBean>) viewResult.get(data2);
-        assertEquals(2, beanList.size());
+        Timeline timeline = (Timeline) viewResult.get(0);
+        assertEquals(2, timeline.getId());
+        assertEquals("test2", timeline.getName());
+        assertEquals(3, timeline.size());
         
-        assertEquals("test2", beanList.get(0).getName());
-        assertEquals("test2", beanList.get(1).getName());
+        TimelineInfo [] timelineInfos = timeline.toArray();
+        assertEquals(ChartColors.getPaletteColor(data2.getState()), timelineInfos[0].getColor());
+        assertEquals(ChartColors.getPaletteColor(data4.getState()), timelineInfos[1].getColor());
+        assertEquals(ChartColors.getPaletteColor(data5.getState()), timelineInfos[2].getColor());
 
-        assertEquals(1000, beanList.get(0).getStartTime());
-        assertEquals(3000, beanList.get(0).getStopTime());
-        assertEquals(Thread.State.BLOCKED, beanList.get(0).getState());
-
-        assertEquals(3000, beanList.get(1).getStartTime());
-        assertEquals(Thread.State.BLOCKED, beanList.get(0).getState());        
+        
+        timeline = (Timeline) viewResult.get(1);
+        assertEquals(1, timeline.getId());
+        assertEquals("test1", timeline.getName());
+        assertEquals(2, timeline.size());
+        
+        timelineInfos = timeline.toArray();
+        assertEquals(ChartColors.getPaletteColor(data1.getState()), timelineInfos[0].getColor());
+        assertEquals(ChartColors.getPaletteColor(data3.getState()), timelineInfos[1].getColor());        
     }
 
     @Test

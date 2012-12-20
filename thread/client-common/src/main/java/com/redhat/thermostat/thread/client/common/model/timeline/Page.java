@@ -34,54 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.chart;
+package com.redhat.thermostat.thread.client.common.model.timeline;
 
-import java.awt.Color;
+import com.redhat.thermostat.common.model.LongRange;
 
-import com.redhat.thermostat.client.ui.Palette;
+public class Page {
 
-public class ChartColors {
-    
-    public static Color getColor(String state) {
-        return getColor(Thread.State.valueOf(state));
+    private LongRange range;
+    public Page(LongRange range) {
+        this.range = range;
     }
     
-    public static Palette getPaletteColor(Thread.State state) {
-        Palette result = null;
-        
-        switch (state) {
-        case TIMED_WAITING:
-            result = Palette.PALE_RED;
-            break;
-            
-        case NEW:
-            result = Palette.POMP_AND_POWER_VIOLET;
-            break;
-
-        case RUNNABLE:
-            result = Palette.PRUSSIAN_BLUE;
-            break;
-
-        case TERMINATED:
-            result = Palette.GRAY;
-            break;
-
-        case BLOCKED:
-            result = Palette.RED;            
-            break;
-
-        case WAITING:
-            result = Palette.GRANITA_ORANGE;            
-            break;
-
-        default:
-            result = Palette.BLACK;            
-            break;
-        }
-        return result;
-    }
-    
-    public static Color getColor(Thread.State state) {
-        return getPaletteColor(state).getColor();
+    public LongRange getSpan() {
+        return range;
     }
 }

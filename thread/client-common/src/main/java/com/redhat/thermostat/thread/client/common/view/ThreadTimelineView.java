@@ -37,13 +37,12 @@
 package com.redhat.thermostat.thread.client.common.view;
 
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.thread.client.common.Timeline;
 
 public abstract class ThreadTimelineView extends BasicView {
 
@@ -64,7 +63,5 @@ public abstract class ThreadTimelineView extends BasicView {
         threadTimelineNotifier.removeActionListener(listener);
     }
     
-    public abstract void displayStats(Map<ThreadInfoData, List<ThreadTimelineBean>> timelines, long start, long stop);
-    public abstract void setMarkersMessage(String left, String right);
-    public abstract void resetMarkerMessage();
+    public abstract void displayStats(List<Timeline> timelines, LongRange range);
 }

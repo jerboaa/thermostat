@@ -34,54 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.chart;
+package com.redhat.thermostat.thread.client.common;
 
-import java.awt.Color;
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Iterator;
 
-import com.redhat.thermostat.client.ui.Palette;
+public class Timeline implements Iterable<TimelineInfo> {
 
-public class ChartColors {
+    private Deque<TimelineInfo> infos;
     
-    public static Color getColor(String state) {
-        return getColor(Thread.State.valueOf(state));
+    private String name;
+    private long id;
+    
+    public Timeline(String name, long id) {
+        this.name = name;
+        this.id = id;
+        infos = new ArrayDeque<>();
+    }
+
+    public String getName() {
+        return name;
     }
     
-    public static Palette getPaletteColor(Thread.State state) {
-        Palette result = null;
-        
-        switch (state) {
-        case TIMED_WAITING:
-            result = Palette.PALE_RED;
-            break;
-            
-        case NEW:
-            result = Palette.POMP_AND_POWER_VIOLET;
-            break;
-
-        case RUNNABLE:
-            result = Palette.PRUSSIAN_BLUE;
-            break;
-
-        case TERMINATED:
-            result = Palette.GRAY;
-            break;
-
-        case BLOCKED:
-            result = Palette.RED;            
-            break;
-
-        case WAITING:
-            result = Palette.GRANITA_ORANGE;            
-            break;
-
-        default:
-            result = Palette.BLACK;            
-            break;
+    public long getId() {
+        return id;
+    }
+    
+    @Override
+    public Iterator<TimelineInfo> iterator() {
+        return infos.descendingIterator();
+    }
+    
+    public TimelineInfo[] toArray() {
+        TimelineInfo[] result = new TimelineInfo[size()];
+        int i = 0;
+        for (TimelineInfo info : this) {
+            result[i++] = info;
         }
         return result;
     }
     
-    public static Color getColor(Thread.State state) {
-        return getPaletteColor(state).getColor();
+    public void add(TimelineInfo info) {
+        infos.add(info);
+    }
+    
+    public int size() {
+        return infos.size();
     }
 }

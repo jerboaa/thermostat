@@ -36,16 +36,21 @@
 
 package com.redhat.thermostat.thread.client.controller.impl;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import com.redhat.thermostat.client.ui.Palette;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Timer;
-import com.redhat.thermostat.thread.client.common.ThreadTimelineBean;
+import com.redhat.thermostat.common.model.LongRange;
+import com.redhat.thermostat.thread.client.common.Timeline;
+import com.redhat.thermostat.thread.client.common.TimelineInfo;
+import com.redhat.thermostat.thread.client.common.chart.ChartColors;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView.ThreadTimelineViewAction;
@@ -57,7 +62,6 @@ public class ThreadTimelineController extends CommonController {
     private ThreadCollector collector;
     
     private final String lock = new String("ThreadTimelineController"); 
-    private ThreadTimelineBean latestSelected;
     
     public ThreadTimelineController(ThreadTimelineView view, ThreadCollector collector, Timer timer) {
         super(timer, view);
@@ -71,96 +75,40 @@ public class ThreadTimelineController extends CommonController {
         
         @Override
         public void actionPerformed(ActionEvent<ThreadTimelineViewAction> actionEvent) {
-            synchronized (lock) {
-                latestSelected = (ThreadTimelineBean) actionEvent.getPayload();
-            }
+            // TODO
         }
     }
     
     private class ThreadTimelineControllerAction implements Runnable {
         @Override
         public void run() {
-            ThreadTimelineBean _latestSelected = null;
-            synchronized (lock) {
-                if (latestSelected != null) {
-                    _latestSelected = latestSelected.clone();
-                }
-            }
             
-            List<ThreadInfoData> infos = collector.getThreadInfo();
-            if(infos.size() > 0) {
-                
-                Map<ThreadInfoData, List<ThreadTimelineBean>> timelines = new HashMap<>();
-                
-                Map<ThreadInfoData, List<ThreadInfoData>> stats =
-                        ThreadInfoHelper.getThreadInfoDataMap(infos);
-                for (List<ThreadInfoData> beanList : stats.values()) {
-                    
-                    // the list is ordered in most recent first
-                    // the first element is the latest sample we have of this
-                    // thread, so we use it as stop time. 
-                    
-                    ThreadInfoData lastThreadInfo = beanList.get(beanList.size() - 1);
-                    Thread.State lastState = lastThreadInfo.getState();
-                    
-                    ThreadTimelineBean timeline = new ThreadTimelineBean();
-                    timeline.setName(lastThreadInfo.getThreadName());
-                    timeline.setState(lastThreadInfo.getState());
-                    timeline.setStartTime(lastThreadInfo.getTimeStamp()); 
-                    
-                    long stopTime = beanList.get(0).getTimeStamp();
-                    timeline.setStopTime(stopTime);
-                    
-                    Stack<ThreadTimelineBean> threadTimelines = new Stack<ThreadTimelineBean>();
-                    timelines.put(lastThreadInfo, threadTimelines);
-                    
-                    if (_latestSelected != null && _latestSelected.contains(timeline)) {
-                        timeline.setHighlight(true);
-                    }                    
-                    threadTimelines.push(timeline);
-                    
-                    for (int i = beanList.size() - 1; i >= 0; i--) {
-                        ThreadInfoData threadInfo = beanList.get(i);
-                        
-                        Thread.State currentState = threadInfo.getState();
-                        if (currentState != lastState) {
-                            lastState = currentState;
-                            
-                            timeline = threadTimelines.pop();
-                            timeline.setStopTime(threadInfo.getTimeStamp());
-                            
-                            if (_latestSelected != null && _latestSelected.contains(timeline)) {
-                                timeline.setHighlight(true);
-                            }
-                            
-                            threadTimelines.push(timeline);
-                            
-                            timeline = new ThreadTimelineBean();
-                            timeline.setName(threadInfo.getThreadName());
-                            timeline.setState(threadInfo.getState());
-                            timeline.setStartTime(threadInfo.getTimeStamp());
-                            timeline.setStopTime(stopTime);
+            synchronized (lock) {
+                // FIXME: only load latest, not all the info all the time
+                LongRange range = new LongRange(Long.MAX_VALUE, Long.MIN_VALUE);
+                List<ThreadInfoData> infos = collector.getThreadInfo();
+                if(infos.size() > 0) {
+                    Map<ThreadInfoData, List<ThreadInfoData>> stats = ThreadInfoHelper.getThreadInfoDataMap(infos);
+                    List<Timeline> timelines =  new ArrayList<>();
+                    for (List<ThreadInfoData> beanList : stats.values()) {
+                        Timeline timeline = new Timeline(beanList.get(0).getThreadName(), beanList.get(0).getThreadId());
+ 
+                        for (ThreadInfoData data : beanList) {
+                            Palette palette = ChartColors.getPaletteColor(data.getState());
+                            long timestamp = data.getTimeStamp();
+                            TimelineInfo info = new TimelineInfo(palette, timestamp);
+                            timeline.add(info);
 
-                            lastThreadInfo = threadInfo;
-                            lastState = currentState;
-                            
-                            if (_latestSelected != null && _latestSelected.contains(timeline)) {
-                                timeline.setHighlight(true);
+                            if (range.getMin() > timestamp) {
+                                range.setMin(timestamp);
                             }
-
-                            // add the new thread stat
-                            threadTimelines.push(timeline);
+                            if (range.getMax() < timestamp) {
+                                range.setMax(timestamp);
+                            }
                         }
+                        timelines.add(timeline);
                     }
-                }
-                
-                view.displayStats(timelines, infos.get(infos.size() - 1).getTimeStamp(), infos.get(0).getTimeStamp());
-
-                if (_latestSelected != null) {
-                    view.setMarkersMessage(new Date(_latestSelected.getStartTime()).toString(),
-                                           new Date(_latestSelected.getStopTime()).toString());
-                } else {
-                    view.resetMarkerMessage();
+                    view.displayStats(timelines, range);
                 }
             }
         }

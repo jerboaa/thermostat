@@ -39,6 +39,9 @@ package com.redhat.thermostat.client.swing.components;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.util.Random;
+import java.util.prefs.BackingStoreException;
+import java.util.prefs.Preferences;
 
 import javax.swing.Icon;
 import javax.swing.JFrame;
@@ -51,6 +54,7 @@ import org.fest.swing.edt.GuiQuery;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JButtonFixture;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,17 +63,26 @@ import org.junit.runner.RunWith;
 public class ActionButtonTest {
 
     private FrameFixture frameFixture;
+    private Preferences prefs;
 
     @BeforeClass
     public static void setUpOnce() {
         FailOnThreadViolationRepaintManager.install();
     }
 
+    
+    @Before
+    public void setUp() {
+        Random random = new Random(); 
+        prefs = Preferences.userRoot().node(HeaderPanelTest.class.getName() + "." + random.nextInt());
+    }
+    
     @After
-    public void tearDown() {
+    public void tearDown() throws BackingStoreException {
         if (frameFixture != null) {
             frameFixture.cleanUp();
         }
+        prefs.removeNode();
     }
 
     @Test
@@ -81,7 +94,7 @@ public class ActionButtonTest {
                 JFrame frame = new JFrame();
                 frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-                HeaderPanel header = new HeaderPanel();
+                HeaderPanel header = new HeaderPanel(prefs, "wrong");
                 header.setHeader("Test");
 
                 Icon icon = new Icon() {

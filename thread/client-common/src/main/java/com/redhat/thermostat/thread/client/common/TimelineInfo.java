@@ -34,54 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.chart;
-
-import java.awt.Color;
+package com.redhat.thermostat.thread.client.common;
 
 import com.redhat.thermostat.client.ui.Palette;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-public class ChartColors {
+public class TimelineInfo implements TimeStampedPojo {
+
+    private Palette colour;
+    private long timeStamp;
     
-    public static Color getColor(String state) {
-        return getColor(Thread.State.valueOf(state));
+    public TimelineInfo() {
+        timeStamp = 0;
+        colour = Palette.BLACK; 
     }
     
-    public static Palette getPaletteColor(Thread.State state) {
-        Palette result = null;
-        
-        switch (state) {
-        case TIMED_WAITING:
-            result = Palette.PALE_RED;
-            break;
-            
-        case NEW:
-            result = Palette.POMP_AND_POWER_VIOLET;
-            break;
-
-        case RUNNABLE:
-            result = Palette.PRUSSIAN_BLUE;
-            break;
-
-        case TERMINATED:
-            result = Palette.GRAY;
-            break;
-
-        case BLOCKED:
-            result = Palette.RED;            
-            break;
-
-        case WAITING:
-            result = Palette.GRANITA_ORANGE;            
-            break;
-
-        default:
-            result = Palette.BLACK;            
-            break;
-        }
-        return result;
+    public TimelineInfo(Palette colour, long timeStamp) {
+        this.timeStamp = timeStamp;
+        this.colour = colour;
     }
     
-    public static Color getColor(Thread.State state) {
-        return getPaletteColor(state).getColor();
+    public Palette getColor() {
+        return colour;
+    }
+    
+    public void setColor(Palette colour) {
+        this.colour = colour;
+    }
+    
+    public void setTimeStamp(long timestamp) {
+        this.timeStamp = timestamp;
+    }
+
+    @Override
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    @Override
+    public String toString() {
+        return "TimelineInfo [colour=" + colour + ", timeStamp=" + timeStamp + "]";
     }
 }

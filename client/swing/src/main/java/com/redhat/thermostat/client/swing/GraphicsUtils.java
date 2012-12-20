@@ -92,4 +92,8 @@ public class GraphicsUtils {
         Paint paint = new GradientPaint(x, 0, start, 0, height, stop);
         g.setPaint(paint);
     }
+    
+    public Color deriveWithAlpha(Color color, int alpha) {
+        return new Color(color.getRed(), color.getGreen(), color.getBlue(), alpha);
+    }
 }

@@ -111,6 +111,7 @@
             <Export-Package>
               com.redhat.thermostat.thread.client.common,
               com.redhat.thermostat.thread.client.common.view,
+              com.redhat.thermostat.thread.client.common.model.timeline,
               com.redhat.thermostat.thread.client.common.locale,
               com.redhat.thermostat.thread.client.common.chart,
               com.redhat.thermostat.thread.client.common.collector,
