@@ -131,13 +131,6 @@ public class StorageCommand extends BasicCommand {
             throw new InvalidConfigurationException(DBConfig.PORT + " property missing");
         }
         
-        if (properties.containsKey(DBConfig.PROTOCOL.name())) {
-            String url = (String) properties.get(DBConfig.PROTOCOL.name());
-            configuration.setProtocol(url);
-        } else {
-            throw new InvalidConfigurationException(DBConfig.PROTOCOL + " property missing");
-        }
-        
         if (properties.containsKey(DBConfig.BIND.name())) {
             String ip = (String) properties.get(DBConfig.BIND.name());
             configuration.setBindIP(ip);

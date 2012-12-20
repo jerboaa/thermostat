@@ -45,5 +45,5 @@ public enum DBConfig {
 
     BIND,
     PORT,
-    PROTOCOL,
+    
 }

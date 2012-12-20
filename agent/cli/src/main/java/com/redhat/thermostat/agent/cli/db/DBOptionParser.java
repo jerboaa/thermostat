@@ -82,10 +82,9 @@ public class DBOptionParser implements ThermostatOptionParser {
         }
         
         // leave at the end, since it depends on the previous settings
-        String urlPrefix = configuration.getProtocol();
         String address = configuration.getBindIP();
         long port = configuration.getPort();
-        configuration.setDBConnectionString(urlPrefix + "://" + address + ":" + port);
+        configuration.setDBConnectionString("mongodb://" + address + ":" + port);
     }
 
     public boolean isDryRun() {

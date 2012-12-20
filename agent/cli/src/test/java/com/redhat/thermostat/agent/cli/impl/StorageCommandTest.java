@@ -64,7 +64,6 @@ import org.junit.Test;
 import com.redhat.thermostat.agent.cli.db.DBConfig;
 import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
 import com.redhat.thermostat.agent.cli.db.MongoProcessRunner;
-import com.redhat.thermostat.agent.cli.impl.StorageCommand;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -78,7 +77,6 @@ public class StorageCommandTest {
     
     private static final String PORT = "27518";
     private static final String BIND = "127.0.0.1";
-    private static final String PROTOCOL = "mongodb";
     private static final String DB = "storage/db";
 
     private String tmpDir;
@@ -106,7 +104,6 @@ public class StorageCommandTest {
             
             props.setProperty(DBConfig.BIND.name(), BIND);
             props.setProperty(DBConfig.PORT.name(), PORT);
-            props.setProperty(DBConfig.PROTOCOL.name(), PROTOCOL);
 
             props.store(new FileOutputStream(tmpConfigs), "thermostat test properties");
             
@@ -137,7 +134,7 @@ public class StorageCommandTest {
         
         Assert.assertEquals(tmpDir + DB, conf.getDBPath().getPath());
         Assert.assertEquals(Integer.parseInt(PORT), conf.getPort());
-        Assert.assertEquals(PROTOCOL, conf.getProtocol());
+        Assert.assertEquals("mongodb://" + BIND + ":" + PORT , conf.getDBConnectionString());
     }
     
     private StorageCommand prepareService(boolean startSuccess) throws IOException,
@@ -170,6 +167,7 @@ public class StorageCommandTest {
         
         final boolean[] result = new boolean[2];
         service.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
             @Override
             public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
                 switch (actionEvent.getActionId()) {
@@ -207,6 +205,7 @@ public class StorageCommandTest {
         final CountDownLatch latch = new CountDownLatch(1);
         final boolean[] result = new boolean[1];
         service.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
             @Override
             public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
                 switch (actionEvent.getActionId()) {

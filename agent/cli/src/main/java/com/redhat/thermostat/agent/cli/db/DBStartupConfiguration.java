@@ -50,8 +50,6 @@ public class DBStartupConfiguration implements StartupConfiguration {
         
     private long localPort;
     
-    private String protocol;
-    
     private String dbConnectionString;
     
     private String ip;
@@ -80,14 +78,6 @@ public class DBStartupConfiguration implements StartupConfiguration {
     
     public long getPort() {
         return localPort;
-    }
-    
-    public void setProtocol(String protocol) {
-        this.protocol = protocol;
-    }
-    
-    public String getProtocol() {
-        return protocol;
     }
     
     void setDBConnectionString(String dbConnectionString) {
