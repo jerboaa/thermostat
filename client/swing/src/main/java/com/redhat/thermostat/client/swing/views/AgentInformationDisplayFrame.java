@@ -452,7 +452,8 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
                 return;
             }
 
-            int rowIndex = e.getFirstIndex();
+            ListSelectionModel model = (ListSelectionModel) e.getSource();
+            int rowIndex = model.getMinSelectionIndex();
             String backendName = (String) backendsTableModel.getValueAt(rowIndex, 0);
             ActionEvent<ConfigurationAction> event = new ActionEvent<>(AgentInformationDisplayFrame.this,
                     ConfigurationAction.SHOW_BACKEND_DESCRIPTION);

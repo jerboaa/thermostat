@@ -40,10 +40,12 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
@@ -61,10 +63,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView.ConfigurationAction;
-import com.redhat.thermostat.client.swing.views.AgentInformationDisplayFrame;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
@@ -236,29 +239,62 @@ public class AgentInformationDisplayFrameTest {
     @GUITest
     @Test
     public void testBackendDescriptionIsQueriedAndDisplayed() {
-        final String BACKEND_NAME = "foo";
-        final String BACKEND_STATUS = "bar";
-        final String BACKEND_DESCRIPTION = "baz";
+        final ActionEvent<ConfigurationAction> action = 
+                new ActionEvent<>(agentConfigFrame, ConfigurationAction.SHOW_BACKEND_DESCRIPTION);
+        final String[] BACKEND_NAMES = { "foo1", "foo2", "foo3" };
+        final String[] BACKEND_STATUSES = { "bar1", "bar2", "bar3" };
+        final String[] BACKEND_DESCRIPTIONS = { "baz1", "baz2", "baz3" };
 
-        Map<String, String> statusMap = new HashMap<>();
-        statusMap.put(BACKEND_NAME, BACKEND_STATUS);
+        // Ordered by insertion
+        Map<String, String> statusMap = new LinkedHashMap<>();
+        statusMap.put(BACKEND_NAMES[0], BACKEND_STATUSES[0]);
+        statusMap.put(BACKEND_NAMES[1], BACKEND_STATUSES[1]);
+        statusMap.put(BACKEND_NAMES[2], BACKEND_STATUSES[2]);
+        
+        final Map<String, String> descMap = new HashMap<>();
+        descMap.put(BACKEND_NAMES[0], BACKEND_DESCRIPTIONS[0]);
+        descMap.put(BACKEND_NAMES[1], BACKEND_DESCRIPTIONS[1]);
+        descMap.put(BACKEND_NAMES[2], BACKEND_DESCRIPTIONS[2]);
+        
+        // Add hook for ActionListener
+        doAnswer(new Answer<Object>() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Object arg = invocation.getArguments()[0];
+                ActionEvent<?> event = (ActionEvent<?>) arg;
+                String backendName = (String) event.getPayload();
+                String description = descMap.get(backendName);
+                agentConfigFrame.setSelectedAgentBackendDescription(description);
+                return null;
+            }
+        }).when(l).actionPerformed(eq(action));
 
         fixture.show();
 
         agentConfigFrame.setSelectedAgentBackendStatus(statusMap);
 
-        assertEquals(1, fixture.table("backends").rowCount());
+        assertEquals(3, fixture.table("backends").rowCount());
 
         String[] rowContents = fixture.table("backends").contents()[0];
-        assertArrayEquals(new String[] { BACKEND_NAME, BACKEND_STATUS }, rowContents);
+        assertArrayEquals(new String[] { BACKEND_NAMES[0], BACKEND_STATUSES[0] }, rowContents);
+        rowContents = fixture.table("backends").contents()[1];
+        assertArrayEquals(new String[] { BACKEND_NAMES[1], BACKEND_STATUSES[1] }, rowContents);
+        rowContents = fixture.table("backends").contents()[2];
+        assertArrayEquals(new String[] { BACKEND_NAMES[2], BACKEND_STATUSES[2] }, rowContents);
 
+        // selectRows(0) doesn't trigger listener, since it is selected by default
+        // so start with row 1
+        fixture.table("backends").selectRows(1);
+        fixture.robot.waitForIdle();
+        assertEquals(BACKEND_DESCRIPTIONS[1], fixture.textBox("backendDescription").text());
+        
+        fixture.table("backends").selectRows(2);
+        fixture.robot.waitForIdle();
+        assertEquals(BACKEND_DESCRIPTIONS[2], fixture.textBox("backendDescription").text());
+        
         fixture.table("backends").selectRows(0);
-
-        verify(l).actionPerformed(new ActionEvent<ConfigurationAction>(agentConfigFrame, ConfigurationAction.SHOW_BACKEND_DESCRIPTION));
-
-        agentConfigFrame.setSelectedAgentBackendDescription(BACKEND_DESCRIPTION);
-
-        assertEquals(BACKEND_DESCRIPTION, fixture.textBox("backendDescription").text());
+        fixture.robot.waitForIdle();
+        assertEquals(BACKEND_DESCRIPTIONS[0], fixture.textBox("backendDescription").text());
     }
 
 }
