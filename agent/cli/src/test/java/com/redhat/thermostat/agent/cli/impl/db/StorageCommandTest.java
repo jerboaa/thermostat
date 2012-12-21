@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl;
+package com.redhat.thermostat.agent.cli.impl.db;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -61,9 +61,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.cli.db.DBConfig;
-import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
-import com.redhat.thermostat.agent.cli.db.MongoProcessRunner;
+import com.redhat.thermostat.agent.cli.impl.db.MongoProcessRunner;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.cli.CommandContext;

@@ -34,17 +34,11 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.impl;
+package com.redhat.thermostat.agent.cli.impl.db;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.Properties;
 
-import com.redhat.thermostat.agent.cli.db.DBConfig;
-import com.redhat.thermostat.agent.cli.db.DBOptionParser;
-import com.redhat.thermostat.agent.cli.db.DBStartupConfiguration;
-import com.redhat.thermostat.agent.cli.db.MongoProcessRunner;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -65,15 +59,16 @@ public class StorageCommand extends BasicCommand {
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
     
-        this.configuration = new DBStartupConfiguration();
-        // configs, read everything that is in the configs
+        File dbPath = ConfigUtils.getStorageDirectory();
+        File logFile = ConfigUtils.getStorageLogFile();
+        File pidFile = ConfigUtils.getStoragePidFile();
         File propertyFile = ConfigUtils.getStorageConfigurationFile();
         if (!propertyFile.exists()) {
             throw new InvalidConfigurationException("can't access database configuration file " +
                                                     propertyFile);
         }
-        readAndSetProperties(propertyFile);
-        
+        // read everything that is in the configs
+        this.configuration = new DBStartupConfiguration(propertyFile, dbPath, logFile, pidFile);
         parser = new DBOptionParser(configuration, args);
         parser.parse();
     }
@@ -108,34 +103,11 @@ public class StorageCommand extends BasicCommand {
                 break;
             }
             getNotifier().fireAction(ApplicationState.SUCCESS);
+        } catch (InvalidConfigurationException e) {
+            // rethrow
+            throw e;
         } catch (Exception e) {
             getNotifier().fireAction(ApplicationState.FAIL, e);
-        }
-    }
-    
-    private void readAndSetProperties(File propertyFile) throws InvalidConfigurationException {
-    
-        Properties properties = new Properties();
-        try {
-            properties.load(new FileInputStream(propertyFile));
-            
-        } catch (IOException e) {
-            throw new InvalidConfigurationException(e);
-        }
-        
-        if (properties.containsKey(DBConfig.PORT.name())) {
-            String port = (String) properties.get(DBConfig.PORT.name());
-            int localPort = Integer.parseInt(port);
-            configuration.setPort(localPort);
-        } else {
-            throw new InvalidConfigurationException(DBConfig.PORT + " property missing");
-        }
-        
-        if (properties.containsKey(DBConfig.BIND.name())) {
-            String ip = (String) properties.get(DBConfig.BIND.name());
-            configuration.setBindIP(ip);
-        } else {
-            throw new InvalidConfigurationException(DBConfig.BIND + " property missing");
         }
     }
     

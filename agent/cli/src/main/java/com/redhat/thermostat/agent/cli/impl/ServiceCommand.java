@@ -40,7 +40,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
-import com.redhat.thermostat.agent.cli.db.StorageAlreadyRunningException;
+import com.redhat.thermostat.agent.cli.impl.db.StorageAlreadyRunningException;
+import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;

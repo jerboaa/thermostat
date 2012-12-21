@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.test.StubBundleContext;
 

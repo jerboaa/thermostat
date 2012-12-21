@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.db;
+package com.redhat.thermostat.agent.cli.impl.db;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;

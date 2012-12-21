@@ -144,6 +144,7 @@ public class AgentApplicationTest {
 
     // FIXME test the rest of AgentApplication
 
+    @SuppressWarnings("serial")
     private static class ThatsAllThatWeCareAbout extends RuntimeException {
 
     }

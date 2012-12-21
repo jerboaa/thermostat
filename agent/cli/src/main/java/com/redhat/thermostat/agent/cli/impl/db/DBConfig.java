@@ -34,16 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.db;
+package com.redhat.thermostat.agent.cli.impl.db;
 
-import com.redhat.thermostat.agent.cli.impl.StorageCommand;
 
 /**
- * Set of configuration option that the {@link StorageCommand} understands.
+ * Set of configuration options that the {@link StorageCommand} understands.
+ * Keys map to properties in $THERMOSTAT_HOME/storage/db.properties.
  */
 public enum DBConfig {
 
+    /**
+     * The bind IP address.
+     */
     BIND,
+    /**
+     * The port on which mongodb will be listening.
+     */
     PORT,
+    /**
+     * Weather or not to start mongodb with SSL enabled.
+     */
+    SSL_ENABLE,
+    /**
+     * The PEM encoded SSL certificate + SSL key.
+     */
+    SSL_PEM_FILE,
+    /**
+     * The passphrase for the encrypted SSL key. Only used if the private key was encrypted.
+     */
+    SSL_KEY_PASSWORD,
     
 }

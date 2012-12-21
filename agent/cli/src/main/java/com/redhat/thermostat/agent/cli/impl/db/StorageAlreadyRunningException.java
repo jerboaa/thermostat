@@ -33,29 +33,22 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.agent.cli.db;
-
-import java.io.File;
+package com.redhat.thermostat.agent.cli.impl.db;
 
 import com.redhat.thermostat.common.tools.ApplicationException;
 
-public class StorageStartException extends ApplicationException {
+@SuppressWarnings("serial")
+public class StorageAlreadyRunningException extends ApplicationException {
 
-    private final File dbFile;
-    private final int status;
+    private final int storagePid;
 
-    public StorageStartException(File dbPath, int status, String message) {
+    public StorageAlreadyRunningException(int pid, String message) {
         super(message);
-        this.dbFile = dbPath;
-        this.status = status;
+        storagePid = pid;
     }
 
-    public File getDbPath() {
-        return dbFile;
-    }
-
-    public int getStatus() {
-        return status;
+    public int getStoragePid() {
+        return storagePid;
     }
 
 }

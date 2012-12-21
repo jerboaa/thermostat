@@ -106,7 +106,7 @@
             <Private-Package>
               com.redhat.thermostat.agent.cli.impl,
               com.redhat.thermostat.agent.cli.impl.locale,
-              com.redhat.thermostat.agent.cli.db,
+              com.redhat.thermostat.agent.cli.impl.db,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>

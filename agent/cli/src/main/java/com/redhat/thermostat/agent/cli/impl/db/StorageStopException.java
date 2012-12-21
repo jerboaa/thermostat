@@ -33,67 +33,30 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-
-package com.redhat.thermostat.agent.cli.db;
+package com.redhat.thermostat.agent.cli.impl.db;
 
 import java.io.File;
 
-import com.redhat.thermostat.common.config.ConfigUtils;
-import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.common.tools.ApplicationException;
 
-public class DBStartupConfiguration implements StartupConfiguration {
-    
-    private File dbPath;
-    private File logFile;
-    private File pidFile;
-        
-    private long localPort;
-    
-    private String dbConnectionString;
-    
-    private String ip;
-        
-    public DBStartupConfiguration() throws InvalidConfigurationException {
-        dbPath = ConfigUtils.getStorageDirectory();
-        logFile = ConfigUtils.getStorageLogFile();
-        pidFile = ConfigUtils.getStoragePidFile();
-    }
-    
-    public File getDBPath() {
-        return dbPath;
-    }
-    
-    public File getLogFile() {
-        return logFile;
-    }
-    
-    public File getPidFile() {
-        return pidFile;
-    }
-   
-    public void setPort(long localPort) {
-        this.localPort = localPort;
-    }
-    
-    public long getPort() {
-        return localPort;
-    }
-    
-    void setDBConnectionString(String dbConnectionString) {
-        this.dbConnectionString = dbConnectionString;
-    }
-    
-    @Override
-    public String getDBConnectionString() {
-        return dbConnectionString;
+@SuppressWarnings("serial")
+public class StorageStopException extends ApplicationException {
+
+    private final File dbConfig;
+    private final int status;
+
+    public StorageStopException(File dbConfig, int status, String message) {
+        super(message);
+        this.dbConfig = dbConfig;
+        this.status = status;
     }
 
-    public void setBindIP(String ip) {
-        this.ip = ip;
+    public File getDbConfig() {
+        return dbConfig;
     }
-    
-    public String getBindIP() {
-        return ip;
+
+    public int getStatus() {
+        return status;
     }
+
 }

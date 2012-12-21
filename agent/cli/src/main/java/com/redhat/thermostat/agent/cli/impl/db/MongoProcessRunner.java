@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.agent.cli.db;
+package com.redhat.thermostat.agent.cli.impl.db;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -114,7 +114,12 @@ public class MongoProcessRunner {
         if (status == 0) {
             display(translator.localize(LocaleResources.SERVER_SHUTDOWN_COMPLETE, configuration.getDBPath().toString()));
             display(translator.localize(LocaleResources.LOG_FILE_AT, configuration.getLogFile().toString()));
-            
+            // all went well, make sure to remove pid file.
+            try {
+                Files.delete(configuration.getPidFile().toPath());
+            } catch (IOException e) {
+                // ignore
+            }
         } else {
             
             String message = translator.localize(LocaleResources.CANNOT_SHUTDOWN_SERVER,
@@ -135,7 +140,8 @@ public class MongoProcessRunner {
         return processName != null && processName.equalsIgnoreCase(MONGO_PROCESS);
     }
     
-    public void startService() throws IOException, InterruptedException, ApplicationException {
+    public void startService() throws IOException, InterruptedException,
+            ApplicationException, InvalidConfigurationException {
 
         String pid = getPid();
         if (pid != null) {
@@ -157,28 +163,11 @@ public class MongoProcessRunner {
             }
         }
         
-        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
         String dbVersion = getDBVersion();
-        if (dbVersion.compareTo(NO_JOURNAL_FIRST_VERSION) >= 0) {
-            commands.add(1, NO_JOURNAL_ARGUMENT);
-        }
-
-        // check that the db directory exist
+        List<String> commands = null;
+        commands = getStartupCommand(dbVersion);
+        
         display(translator.localize(LocaleResources.STARTING_STORAGE_SERVER));
-
-        commands.add(configuration.getBindIP());
-
-        commands.add("--dbpath");
-        commands.add(configuration.getDBPath().getCanonicalPath());
-
-        commands.add("--logpath");
-        commands.add(configuration.getLogFile().getCanonicalPath());
-
-        commands.add("--pidfilepath");
-        commands.add(configuration.getPidFile().getCanonicalPath());
-
-        commands.add("--port");
-        commands.add(Long.toString(configuration.getPort()));
         
         LoggedExternalProcess process = new LoggedExternalProcess(commands);
         int status = -1;
@@ -210,6 +199,43 @@ public class MongoProcessRunner {
             display(message);
             throw new StorageStartException(configuration.getDBPath(), status, message);
         }
+    }
+    
+    List<String> getStartupCommand(String dbVersion) throws IOException, InvalidConfigurationException {
+        List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
+        
+        if (dbVersion.compareTo(NO_JOURNAL_FIRST_VERSION) >= 0) {
+            commands.add(1, NO_JOURNAL_ARGUMENT);
+        }
+        commands.add(configuration.getBindIP());
+
+        commands.add("--dbpath");
+        commands.add(configuration.getDBPath().getCanonicalPath());
+
+        commands.add("--logpath");
+        commands.add(configuration.getLogFile().getCanonicalPath());
+
+        commands.add("--pidfilepath");
+        commands.add(configuration.getPidFile().getCanonicalPath());
+
+        commands.add("--port");
+        commands.add(Long.toString(configuration.getPort()));
+        
+        if (configuration.isSslEnabled()) {
+            // check for configuration which has a chance of working :)
+            if (configuration.getSslPemFile() == null) {
+                throw new InvalidConfigurationException("No SSL PEM file specified!");
+            } else if (configuration.getSslKeyPassphrase() == null) {
+                throw new InvalidConfigurationException("No SSL key passphrase set!");
+            }
+            commands.add("--sslOnNormalPorts");
+            commands.add("--sslPEMKeyFile");
+            commands.add(configuration.getSslPemFile().getCanonicalPath());
+            commands.add("--sslPEMKeyPassword");
+            commands.add(configuration.getSslKeyPassphrase());
+        }
+        
+        return commands;
     }
  
     private String getDBVersion() throws IOException {

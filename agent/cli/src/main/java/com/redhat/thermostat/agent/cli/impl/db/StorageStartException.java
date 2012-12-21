@@ -33,25 +33,26 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.agent.cli.db;
+package com.redhat.thermostat.agent.cli.impl.db;
 
 import java.io.File;
 
 import com.redhat.thermostat.common.tools.ApplicationException;
 
-public class StorageStopException extends ApplicationException {
+@SuppressWarnings("serial")
+public class StorageStartException extends ApplicationException {
 
-    private final File dbConfig;
+    private final File dbFile;
     private final int status;
 
-    public StorageStopException(File dbConfig, int status, String message) {
+    public StorageStartException(File dbPath, int status, String message) {
         super(message);
-        this.dbConfig = dbConfig;
+        this.dbFile = dbPath;
         this.status = status;
     }
 
-    public File getDbConfig() {
-        return dbConfig;
+    public File getDbPath() {
+        return dbFile;
     }
 
     public int getStatus() {
