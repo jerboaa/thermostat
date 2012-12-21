@@ -65,7 +65,7 @@ public class MongoProcessRunner {
     private static final String MONGO_PROCESS = "mongod";
 
     private static final String [] MONGO_BASIC_ARGS = {
-        "mongod", "--quiet", "--fork", "--auth", "--bind_ip"
+        "mongod", "--quiet", "--fork", "--auth", "--nohttpinterface", "--bind_ip"
     };
 
     private static final String [] MONGO_SHUTDOWN_ARGS = {
