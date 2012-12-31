@@ -46,6 +46,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.test.StubBundleContext;
@@ -72,11 +73,13 @@ public class ActivatorTest {
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
         StubBundleContext context = new StubBundleContext();
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         ApplicationService appSvc = mock(ApplicationService.class);
         GCRequest gcRequest = mock(GCRequest.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
 
+        context.registerService(VmInfoDAO.class, vmInfoDAO, null);
         context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
         context.registerService(ApplicationService.class, appSvc, null);
         context.registerService(GCRequest.class, gcRequest, null);
@@ -91,7 +94,7 @@ public class ActivatorTest {
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(4, context.getAllServices().size());
+        assertEquals(5, context.getAllServices().size());
     }
 
 }

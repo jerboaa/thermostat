@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
@@ -64,6 +65,7 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) throws Exception {
         Class<?>[] deps = new Class<?>[] {
             ApplicationService.class,
+            VmInfoDAO.class,
             VmMemoryStatDAO.class,
             GCRequest.class,
             AgentInfoDAO.class,
@@ -79,12 +81,13 @@ public class Activator implements BundleActivator {
 
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
+                VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 VmMemoryStatDAO memoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
                 AgentInfoDAO agentDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 GCRequest gcRequest = (GCRequest) services.get(GCRequest.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
 
-                MemoryStatsService impl = new MemoryStatsService(appSvc, memoryStatDao, agentDAO, gcRequest);
+                MemoryStatsService impl = new MemoryStatsService(appSvc, vmInfoDao, memoryStatDao, agentDAO, gcRequest);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 memoryStatRegistration = context.registerService(InformationService.class.getName(), impl , properties);

@@ -46,6 +46,7 @@ public abstract class MemoryStatsView extends BasicView implements UIComponent {
     public abstract void addRegion(Payload region);
     public abstract void updateRegion(Payload region);
     
+    public abstract void setEnableGCAction(boolean enable);
     public abstract void addGCActionListener(ActionListener<GCCommand> listener);
     
     public abstract void requestRepaint();

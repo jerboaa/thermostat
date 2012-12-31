@@ -55,6 +55,7 @@ import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -152,7 +153,8 @@ public class MemoryStatsController implements InformationServiceController<VmRef
         }
     }
     
-    public MemoryStatsController(ApplicationService appSvc, final VmMemoryStatDAO vmMemoryStatDao,
+    public MemoryStatsController(ApplicationService appSvc, final VmInfoDAO vmInfoDao,
+                                 final VmMemoryStatDAO vmMemoryStatDao,
                                  final VmRef ref, MemoryStatsViewProvider viewProvider,
                                  final AgentInfoDAO agentDAO, final GCRequest gcRequest) {
         
@@ -206,6 +208,11 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                 gcRequest.sendGCRequestToAgent(ref, agentDAO, listener);
             }
         });
+
+        if (!vmInfoDao.getVmInfo(ref).isAlive()) {
+            view.setEnableGCAction(false);
+        }
+
     }
     
     // for testing

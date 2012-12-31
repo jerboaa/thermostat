@@ -66,10 +66,12 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
@@ -81,6 +83,7 @@ public class MemoryStatsControllerTest {
 
     private Generation[] generations = new Generation[2];
     
+    private VmInfoDAO infoDao;
     private VmMemoryStatDAO memoryStatDao;
     private MemoryStatsView view;
     private Timer timer;
@@ -100,6 +103,12 @@ public class MemoryStatsControllerTest {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     @Before
     public void setUp() {
+        initialize(true);
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public void initialize(boolean vmIsAlive) {
+
         timer = mock(Timer.class);
         ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(actionCaptor.capture());
@@ -109,6 +118,11 @@ public class MemoryStatsControllerTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
         
+        VmInfo vmOverallInformation = mock(VmInfo.class);
+        when(vmOverallInformation.isAlive()).thenReturn(vmIsAlive);
+        infoDao = mock(VmInfoDAO.class);
+        when(infoDao.getVmInfo(any(VmRef.class))).thenReturn(vmOverallInformation);
+
         List<VmMemoryStat> vmInfo = new ArrayList<>();
         
         for (int i = 0; i < 2; i++) {
@@ -163,7 +177,7 @@ public class MemoryStatsControllerTest {
         agentDAO = mock(AgentInfoDAO.class);
         gcRequest = mock(GCRequest.class);
         
-        controller = new MemoryStatsController(appSvc, memoryStatDao, ref, viewProvider, agentDAO, gcRequest);
+        controller = new MemoryStatsController(appSvc, infoDao, memoryStatDao, ref, viewProvider, agentDAO, gcRequest);
         
         viewListener = viewArgumentCaptor.getValue();
         gcActionListener = gcArgumentCaptor.getValue();
@@ -179,6 +193,13 @@ public class MemoryStatsControllerTest {
         viewListener.actionPerformed(new ActionEvent<>(view, MemoryStatsView.Action.HIDDEN));
 
         verify(timer).stop();
+    }
+
+    @Test
+    public void testGCIsDisabledForDeadVms() {
+        initialize(false);
+
+        verify(view).setEnableGCAction(false);
     }
 
     @Test

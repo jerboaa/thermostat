@@ -69,7 +69,8 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     
     private final Map<String, MemoryGraphPanel> regions;
     
-    private RequestGCAction toobarButtonAction;
+    private ToolbarGCButton toolbarButton;
+    private RequestGCAction toolbarButtonAction;
     
     private Dimension preferredSize;
     
@@ -98,8 +99,11 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
         realPanel.setLayout(new BoxLayout(realPanel, BoxLayout.Y_AXIS));
         visiblePanel.setContent(realPanel);
         
-        toobarButtonAction = new RequestGCAction();
-        visiblePanel.addToolBarButton(new ToolbarGCButton(toobarButtonAction));
+        toolbarButtonAction = new RequestGCAction();
+        toolbarButton = new ToolbarGCButton(toolbarButtonAction);
+        toolbarButton.setName("gcButton");
+        visiblePanel.addToolBarButton(toolbarButton);
+
     }
     
     @Transient
@@ -119,8 +123,18 @@ public class MemoryStatsViewImpl extends MemoryStatsView implements SwingCompone
     }
     
     @Override
+    public void setEnableGCAction(final boolean enable) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                toolbarButton.setEnabled(enable);
+            }
+        });
+    }
+
+    @Override
     public void addGCActionListener(ActionListener<GCCommand> listener) {
-        toobarButtonAction.addActionListener(listener);
+        toolbarButtonAction.addActionListener(listener);
     }
     
     @Override

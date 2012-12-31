@@ -42,6 +42,7 @@ import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -54,12 +55,14 @@ public class MemoryStatsService implements InformationService<VmRef> {
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
+    private VmInfoDAO vmInfoDao;
     private VmMemoryStatDAO vmMemoryStatDao;
     private AgentInfoDAO agentDAO;
     private GCRequest gcRequest;
     
-    public MemoryStatsService(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDao, AgentInfoDAO agentDAO, GCRequest gcRequest) {
+    public MemoryStatsService(ApplicationService appSvc, VmInfoDAO vmInfoDao, VmMemoryStatDAO vmMemoryStatDao, AgentInfoDAO agentDAO, GCRequest gcRequest) {
         this.appSvc = appSvc;
+        this.vmInfoDao = vmInfoDao;
         this.vmMemoryStatDao = vmMemoryStatDao;
         this.gcRequest = gcRequest;
         this.agentDAO = agentDAO;
@@ -68,7 +71,7 @@ public class MemoryStatsService implements InformationService<VmRef> {
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
         MemoryStatsViewProvider viewProvider = OSGIUtils.getInstance().getService(MemoryStatsViewProvider.class);
-        return new MemoryStatsController(appSvc, vmMemoryStatDao, ref, viewProvider, agentDAO, gcRequest);
+        return new MemoryStatsController(appSvc, vmInfoDao, vmMemoryStatDao, ref, viewProvider, agentDAO, gcRequest);
     }
 
     @Override
