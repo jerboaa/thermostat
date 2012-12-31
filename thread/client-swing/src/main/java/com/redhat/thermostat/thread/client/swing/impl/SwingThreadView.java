@@ -185,6 +185,16 @@ public class SwingThreadView extends ThreadView implements SwingComponent {
         super.setApplicationService(appService, uniqueId);
         DIVIDER_LOCATION_KEY = "divider." + uniqueId;
     }
+
+    @Override
+    public void setEnableRecordingControl(final boolean enable) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                panel.getToggleButton().setEnabled(enable);
+            }
+        });
+    }
     
     @Override
     public void setRecording(final boolean recording, final boolean notify) {

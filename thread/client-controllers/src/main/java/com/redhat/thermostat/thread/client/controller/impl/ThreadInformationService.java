@@ -41,6 +41,7 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
@@ -51,13 +52,16 @@ public class ThreadInformationService implements InformationService<VmRef> {
     
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
     private ApplicationService service;
+    private VmInfoDAO vmInfoDao;
     private ThreadCollectorFactory collectorFactory;
     private ThreadViewProvider viewFactory;
     
-    public ThreadInformationService(ApplicationService appService, ThreadCollectorFactory collectorFactory,
+    public ThreadInformationService(ApplicationService appService, VmInfoDAO vmInfoDao,
+                                    ThreadCollectorFactory collectorFactory,
                                     ThreadViewProvider viewFactory)
     {
         this.service = appService;
+        this.vmInfoDao = vmInfoDao;
         this.collectorFactory = collectorFactory;
         this.viewFactory = viewFactory;
     }
@@ -69,7 +73,7 @@ public class ThreadInformationService implements InformationService<VmRef> {
 
     @Override
     public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new ThreadInformationController(ref, service, collectorFactory, viewFactory);
+        return new ThreadInformationController(ref, service, vmInfoDao, collectorFactory, viewFactory);
     }
 
     @Override

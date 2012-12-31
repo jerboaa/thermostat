@@ -63,6 +63,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.common.ActionEvent;
@@ -138,6 +139,18 @@ public class SwingThreadViewTest {
         view.setRecording(false, false);
         
         togglefixture.requireToolTip(t.localize(LocaleResources.START_RECORDING));
+    }
+
+    @Category(GUITest.class)
+    @GUITest
+    @Test
+    public void verifyToggleButtonIsDisabled() {
+        frameFixture.show();
+
+        view.setEnableRecordingControl(false);
+
+        JToggleButtonFixture togglefixture = frameFixture.toggleButton("recordButton");
+        togglefixture.requireDisabled();
     }
 
     @GUITest

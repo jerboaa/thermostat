@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.swing.components;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.image.BufferedImage;
@@ -48,6 +49,7 @@ import java.awt.image.Kernel;
 
 import javax.swing.AbstractButton;
 import javax.swing.ButtonModel;
+import javax.swing.GrayFilter;
 import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.plaf.metal.MetalButtonUI;
@@ -59,6 +61,7 @@ class ActionButtonUI extends MetalButtonUI {
 
     private BufferedImage sourceIcon;
     private BufferedImage rollOverIcon;
+    private Image disabledIcon;
     
     ActionButtonUI() {}
     
@@ -99,6 +102,10 @@ class ActionButtonUI extends MetalButtonUI {
             rollOverIcon = getBrighterImage(sourceIcon);
         }
         
+        if (disabledIcon == null) {
+            disabledIcon = GrayFilter.createDisabledImage(sourceIcon);
+        }
+
         int x = 3;
         int y = button.getHeight() / 2 - h / 2;
 
@@ -107,7 +114,9 @@ class ActionButtonUI extends MetalButtonUI {
             x = button.getWidth() / 2 - w / 2;
         }
         
-        if (model.isRollover()) {
+        if (!model.isEnabled()) {
+            g.drawImage(disabledIcon, x, y, null);
+        } else if (model.isRollover()) {
             g.drawImage(rollOverIcon, x, y, null);
         } else {
             g.drawImage(sourceIcon, x, y, null);

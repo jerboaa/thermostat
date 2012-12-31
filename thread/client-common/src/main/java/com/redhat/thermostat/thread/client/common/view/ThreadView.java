@@ -67,6 +67,7 @@ public abstract class ThreadView extends BasicView implements UIComponent {
         notifier.removeActionListener(listener);
     }
     
+    public abstract void setEnableRecordingControl(boolean enable);
     public abstract void setRecording(boolean recording, boolean notify);
     
     public abstract VMThreadCapabilitiesView createVMThreadCapabilitiesView();

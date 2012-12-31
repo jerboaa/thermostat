@@ -39,6 +39,7 @@ package com.redhat.thermostat.thread.client.controller.osgi;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -49,6 +50,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
@@ -63,6 +65,7 @@ public class Activator implements BundleActivator {
         Class[] classes = new Class[] {
                 ThreadCollectorFactory.class,
                 ApplicationService.class,
+                VmInfoDAO.class,
                 ThreadViewProvider.class
         };
         
@@ -74,9 +77,10 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 ThreadCollectorFactory collectorFactory = (ThreadCollectorFactory) services.get(ThreadCollectorFactory.class.getName());
                 ApplicationService applicationService = (ApplicationService) services.get(ApplicationService.class.getName());
+                VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
                 ThreadViewProvider viewFactory = (ThreadViewProvider) services.get(ThreadViewProvider.class.getName());
                 
-                InformationService<VmRef> vmInfoService = new ThreadInformationService(applicationService, collectorFactory, viewFactory);
+                InformationService<VmRef> vmInfoService = new ThreadInformationService(applicationService, vmInfoDao, collectorFactory, viewFactory);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 registration = context.registerService(InformationService.class.getName(), vmInfoService, properties);

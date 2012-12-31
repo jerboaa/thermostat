@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.thread.client.common.ThreadTableBean;
@@ -66,6 +67,7 @@ public class ThreadInformationController implements InformationServiceController
     private ApplicationService appService;
             
     public ThreadInformationController(VmRef ref, ApplicationService appService,
+                                       VmInfoDAO vmInfoDao,
                                        ThreadCollectorFactory collectorFactory, 
                                        ThreadViewProvider viewFactory)
     {
@@ -79,6 +81,10 @@ public class ThreadInformationController implements InformationServiceController
         
         view.setRecording(isRecording(), false);
         view.addThreadActionListener(new ThreadActionListener());
+
+        if (!vmInfoDao.getVmInfo(ref).isAlive()) {
+            view.setEnableRecordingControl(false);
+        }
     }
     
     private boolean isRecording() {
