@@ -182,7 +182,7 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
 
         SectionHeader backendSectionTitle = new SectionHeader(translate.localize(LocaleResources.AGENT_INFO_BACKENDS_SECTION_TITLE));
 
-        backendsTableModel = new DefaultTableModel();
+        backendsTableModel = new BackendsTableModel();
         backendsTableModel.setColumnIdentifiers(BACKEND_TABLE_COLUMN_NAMES);
 
         backendsTable = new JTable(backendsTableModel);
@@ -462,5 +462,16 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         }
 
     }
+    
+    private class BackendsTableModel extends DefaultTableModel {
+
+        private static final long serialVersionUID = 8635399933525019537L;
+
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            // Not editable
+            return false;
+        }
+    };
 
 }
