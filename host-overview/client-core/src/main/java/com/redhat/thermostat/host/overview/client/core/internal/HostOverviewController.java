@@ -48,13 +48,13 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewView;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.locale.LocaleResources;
@@ -94,8 +94,7 @@ public class HostOverviewController implements InformationServiceController<Host
                 view.setCpuModel(hostInfo.getCpuModel());
                 view.setCpuCount(String.valueOf(hostInfo.getCpuCount()));
 
-                String[] parts = DisplayableValues.bytes(hostInfo.getTotalMemory());
-                String readableTotalMemory = translator.localize(LocaleResources.NUMBER_AND_UNIT, parts[0], parts[1]);
+                String readableTotalMemory = new Size(hostInfo.getTotalMemory(), Size.Unit.B).toString();
                 view.setTotalMemory(readableTotalMemory);
 
                 List<NetworkInterfaceInfo> networkInfo =

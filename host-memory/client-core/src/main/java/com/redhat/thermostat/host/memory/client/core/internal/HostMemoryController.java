@@ -47,13 +47,13 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView.GraphVisibilityChangeListener;
@@ -113,8 +113,7 @@ public class HostMemoryController implements InformationServiceController<HostRe
             @Override
             public void run() {
                 long memorySize = HostMemoryController.this.hostInfoDAO.getHostInfo(ref).getTotalMemory();
-                String[] memorySizeParts = DisplayableValues.bytes(memorySize);
-                view.setTotalMemory(translator.localize(LocaleResources.NUMBER_AND_UNIT, memorySizeParts[0], memorySizeParts[1]));
+                view.setTotalMemory(Size.bytes(memorySize).toString());
                 doMemoryChartUpdate();
             }
         });

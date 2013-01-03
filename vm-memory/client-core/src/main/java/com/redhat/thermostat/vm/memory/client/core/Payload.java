@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.memory.client.core;
 
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
+import com.redhat.thermostat.common.Size;
 
 public class Payload implements Cloneable {
 
@@ -48,8 +48,8 @@ public class Payload implements Cloneable {
     private double maxUsed;
     private double used;
     
-    private Scale usedUnit;
-    private Scale capacityUnit;
+    private Size.Unit usedUnit;
+    private Size.Unit capacityUnit;
     
     private StatsModel model;
     
@@ -61,19 +61,19 @@ public class Payload implements Cloneable {
         return model;
     }
     
-    public void setCapacityUnit(Scale capacityUnit) {
+    public void setCapacityUnit(Size.Unit capacityUnit) {
         this.capacityUnit = capacityUnit;
     }
     
-    public Scale getCapacityUnit() {
+    public Size.Unit getCapacityUnit() {
         return capacityUnit;
     }
     
-    public void setUsedUnit(Scale usedUnit) {
+    public void setUsedUnit(Size.Unit usedUnit) {
         this.usedUnit = usedUnit;
     }
     
-    public Scale getUsedUnit() {
+    public Size.Unit getUsedUnit() {
         return usedUnit;
     }
     

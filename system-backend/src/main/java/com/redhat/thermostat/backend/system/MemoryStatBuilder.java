@@ -42,8 +42,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.common.utils.DisplayableValues;
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.MemoryStat;
 import com.redhat.thermostat.utils.ProcDataSource;
@@ -126,8 +125,9 @@ public class MemoryStatBuilder {
         try {
             result = Long.parseLong(value);
             if (units != null) {
+                // /proc/meminfo uses kB instead of KiB, incorrectly
                 if (units.equals("kB") || units.equals("KB")) {
-                    result = Scale.convertToBytes(result, Scale.KiB);
+                    result = (long) new Size(result, Size.Unit.KiB).convertTo(Size.Unit.B).getValue();
                 } else {
                     throw new NotImplementedException("unit conversion from " + units + " not implemented");
                 }

@@ -43,7 +43,8 @@ import java.net.UnknownHostException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
+import com.redhat.thermostat.common.Size;
+import com.redhat.thermostat.common.Size.Unit;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
@@ -76,9 +77,9 @@ public class HostInfoBuilder {
     }
 
     static class HostMemoryInfo {
-        public final long totalMemory;
+        public final Size totalMemory;
 
-        public HostMemoryInfo(long totalMemory) {
+        public HostMemoryInfo(Size totalMemory) {
             this.totalMemory = totalMemory;
         }
     }
@@ -93,9 +94,10 @@ public class HostInfoBuilder {
         String hostname = getHostName();
         HostCpuInfo cpuInfo = getCpuInfo();
         HostMemoryInfo memoryInfo = getMemoryInfo();
+        long totalMemorySize = (long) memoryInfo.totalMemory.convertTo(Unit.B).getValue();
         HostOsInfo osInfo = getOsInfo();
 
-        return new HostInfo(hostname, osInfo.distribution, osInfo.kernel, cpuInfo.model, cpuInfo.count, memoryInfo.totalMemory);
+        return new HostInfo(hostname, osInfo.distribution, osInfo.kernel, cpuInfo.model, cpuInfo.count, totalMemorySize);
     }
 
     HostCpuInfo getCpuInfo() {
@@ -123,19 +125,19 @@ public class HostInfoBuilder {
     }
 
     HostMemoryInfo getMemoryInfo() {
-        long totalMemory = -1;
+        Size totalMemory = null;
         try (BufferedReader bufferedReader = new BufferedReader(dataSource.getMemInfoReader())) {
             String[] memTotalParts = bufferedReader.readLine().split(" +");
             long data = Long.valueOf(memTotalParts[1]);
             String units = memTotalParts[2];
             if (units.equals("kB")) {
-                totalMemory = Scale.convertToBytes(data, Scale.KiB);
+                totalMemory = new Size(data, Size.Unit.KiB);
             }
         } catch (IOException ioe) {
             logger.log(Level.WARNING, "unable to read memory info");
         }
 
-        logger.log(Level.FINEST, "totalMemory: " + totalMemory + " bytes");
+        logger.log(Level.FINEST, "totalMemory: " + totalMemory.toString());
         return new HostMemoryInfo(totalMemory);
     }
 

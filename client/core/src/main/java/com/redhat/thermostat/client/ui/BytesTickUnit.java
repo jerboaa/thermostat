@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.ui;
 import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.axis.TickUnit;
 
-import com.redhat.thermostat.common.utils.DisplayableValues;
+import com.redhat.thermostat.common.Size;
 
 /**
  * A {@link TickUnit} that displays a byte value with an appropriate
@@ -54,7 +54,6 @@ public class BytesTickUnit extends NumberTickUnit {
 
     @Override
     public String valueToString(double value) {
-        String[] displayable = DisplayableValues.bytes((long) value);
-        return displayable[0] + " " + displayable[1];
+        return Size.bytes((long)value).toString();
     }
 }

@@ -48,7 +48,9 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Size.Unit;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
@@ -59,7 +61,6 @@ import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
@@ -104,17 +105,17 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                             payload.setName(space.getName());
                         }
 
-                        Scale usedScale = normalizeScale(space.getUsed(), space.getCapacity());
-                        double used = Scale.convertTo(usedScale, space.getUsed(), 100);
-                        double maxUsed = Scale.convertTo(usedScale, space.getCapacity(), 100);
+                        Size.Unit usedScale = bestUnitForRange(space.getUsed(), space.getCapacity());
+                        double used = Size.bytes(space.getUsed()).convertTo(usedScale).getValue();
+                        double maxUsed = Size.bytes(space.getCapacity()).convertTo(usedScale).getValue();
                         
                         payload.setUsed(used);
                         payload.setMaxUsed(maxUsed);
                         payload.setUsedUnit(usedScale);
                         
-                        Scale maxScale = normalizeScale(space.getCapacity(), space.getMaxCapacity());
-                        double capacity = Scale.convertTo(maxScale, space.getCapacity(), 100);
-                        double maxCapacity = Scale.convertTo(maxScale, space.getMaxCapacity(), 100);
+                        Size.Unit maxScale = bestUnitForRange(space.getCapacity(), space.getMaxCapacity());
+                        double capacity = Size.bytes(space.getCapacity()).convertTo(maxScale).getValue();
+                        double maxCapacity = Size.bytes(space.getMaxCapacity()).convertTo(maxScale).getValue();
                         
                         payload.setCapacity(capacity);
                         payload.setMaxCapacity(maxCapacity);
@@ -134,8 +135,7 @@ public class MemoryStatsController implements InformationServiceController<VmRef
                         }
                         
                         // normalize this always in the same unit
-                        model.addData(memoryStats.getTimeStamp(),
-                                      Scale.convertTo(Scale.MiB, space.getUsed(), 100));
+                        model.addData(memoryStats.getTimeStamp(), Size.bytes(space.getUsed()).convertTo(Unit.MiB).getValue());
                         
                         payload.setModel(model);
                         if (regions.containsKey(space.getName())) {
@@ -224,13 +224,13 @@ public class MemoryStatsController implements InformationServiceController<VmRef
         return regions;
     }
     
-    private Scale normalizeScale(long min, long max) {
+    private Size.Unit bestUnitForRange(long min, long max) {
         // FIXME: this is very dumb and very inefficient
         // needs cleanup
-        Scale minScale = Scale.getScale(min);
-        Scale maxScale = Scale.getScale(max);
+        Size.Unit minScale = Size.Unit.getBestUnit(min);
+        Size.Unit maxScale = Size.Unit.getBestUnit(max);
         
-        Scale[] scales = Scale.values();
+        Size.Unit[] scales = Size.Unit.values();
         int maxID = 0;
         int minID = 0;
         for (int i = 0; i < scales.length; i++) {

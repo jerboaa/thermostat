@@ -70,9 +70,8 @@ import org.jfree.data.time.TimeSeriesCollection;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.client.ui.ChartColors;
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.DisplayableValues;
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
@@ -162,7 +161,7 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 null, // Title
                 translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Scale.MiB.name()), // y-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()), // y-axis Label
                 memoryCollection, // Dataset
                 false, // Show Legend
                 false, // Use tooltips
@@ -258,7 +257,7 @@ public class SWTHostMemoryView extends HostMemoryView implements SWTComponent {
                     RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
                     if (series.getDataItem(period) == null) {
                         Long sizeInBytes = (Long) timeData.getData();
-                        Double sizeInMegaBytes = DisplayableValues.Scale.convertTo(Scale.MiB, sizeInBytes);
+                        Double sizeInMegaBytes = Size.bytes(sizeInBytes).convertTo(Size.Unit.MiB).getValue();
                         series.add(new FixedMillisecond(timeData.getTimeInMillis()), sizeInMegaBytes, false);
                     }
                 }

@@ -72,9 +72,8 @@ import com.redhat.thermostat.client.ui.ChartColors;
 import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.DisplayableValues;
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
@@ -210,7 +209,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
                     RegularTimePeriod period = new FixedMillisecond(timeData.getTimeInMillis());
                     if (series.getDataItem(period) == null) {
                         Long sizeInBytes = (Long) timeData.getData();
-                        Double sizeInMegaBytes = DisplayableValues.Scale.convertTo(Scale.MiB, sizeInBytes);
+                        Double sizeInMegaBytes = Size.bytes(sizeInBytes).convertTo(Size.Unit.MiB).getValue();
                         series.add(new FixedMillisecond(timeData.getTimeInMillis()), sizeInMegaBytes, false);
                     }
                 }
@@ -303,7 +302,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
                 translator.localize(LocaleResources.HOST_MEMORY_CHART_TITLE), // Title
                 translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Scale.MiB.name()), // y-axis Label
+                translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()), // y-axis Label
                 memoryCollection, // Dataset
                 false, // Show Legend
                 false, // Use tooltips

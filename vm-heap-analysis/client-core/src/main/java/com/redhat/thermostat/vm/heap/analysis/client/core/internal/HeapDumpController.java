@@ -50,13 +50,13 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
 import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
@@ -277,14 +277,9 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                     }
                 }
                 model.addData(memoryStats.getTimeStamp(), used, capacity);
-                
-                NumberFormat formatter = DecimalFormat.getInstance();
 
-                double res = Scale.convertTo(Scale.B, used);
-                String _used = formatter.format(res) + " " + Scale.B;
-                
-                res = Scale.convertTo(Scale.B, capacity);
-                String _capacity= formatter.format(capacity) + " " + Scale.B;
+                String _used = Size.bytes(used).toString();
+                String _capacity= Size.bytes(capacity).toString();
                 
                 view.updateUsedAndCapacity(_used, _capacity);
                 desiredUpdateTimeStamp = Math.max(desiredUpdateTimeStamp, memoryStats.getTimeStamp());

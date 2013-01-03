@@ -41,7 +41,7 @@ import static org.junit.Assert.assertNotSame;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.utils.DisplayableValues.Scale;
+import com.redhat.thermostat.common.Size;
 
 public class PayloadTest {
 
@@ -57,11 +57,11 @@ public class PayloadTest {
         Payload source = new Payload();
         source.setCapacity(10.0);
         source.setName("fluff");
-        source.setCapacityUnit(Scale.GiB);
+        source.setCapacityUnit(Size.Unit.GiB);
         source.setMaxCapacity(100.0);
         source.setMaxUsed(5.0);
         source.setUsed(3.0);
-        source.setUsedUnit(Scale.MiB);
+        source.setUsedUnit(Size.Unit.MiB);
         source.setModel(model);
         source.setTooltip("fluffTooltip");
         

@@ -46,12 +46,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.DisplayableValues;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.storage.model.TimeStampedPojoCorrelator;
@@ -160,8 +160,7 @@ class VMStatPrinter {
         int i = 0;
         for (VmMemoryStat.Generation gen : vmMemoryStat.getGenerations()) {
             for (VmMemoryStat.Space space : gen.getSpaces()) {
-                String[] displayableSize = DisplayableValues.bytes(space.getUsed());
-                memoryUsage[i] = translator.localize(LocaleResources.VALUE_AND_UNIT, displayableSize[0], displayableSize[1]);
+                memoryUsage[i] = Size.bytes(space.getUsed()).toString();
                 i++;
             }
         }
