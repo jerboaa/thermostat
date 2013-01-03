@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.storage.core.Storage;
 
@@ -48,11 +49,10 @@ import com.redhat.thermostat.storage.core.Storage;
  * Represents a plugin that runs on the agent and performs monitoring of host
  * and applications.
  */
-public abstract class Backend {
+public abstract class Backend implements Ordered {
 
     private boolean initialConfigurationComplete = false;
     protected DAOFactory df = null;
-    private Storage storage = null;
     private boolean observeNewJvm = attachToNewProcessByDefault();
 
     private String version;
@@ -89,7 +89,6 @@ public abstract class Backend {
 
     public final void setDAOFactory(DAOFactory df) {
         this.df = df;
-        this.storage = df.getStorage();
         setDAOFactoryAction();
     }
 

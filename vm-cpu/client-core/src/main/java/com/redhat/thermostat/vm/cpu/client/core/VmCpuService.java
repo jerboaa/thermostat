@@ -48,7 +48,7 @@ import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
 
 public class VmCpuService implements InformationService<VmRef> {
     
-    private static final int PRIORITY = PRIORITY_CPU_GROUP;
+    private static final int ORDER = ORDER_CPU_GROUP;
     private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -72,8 +72,8 @@ public class VmCpuService implements InformationService<VmRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

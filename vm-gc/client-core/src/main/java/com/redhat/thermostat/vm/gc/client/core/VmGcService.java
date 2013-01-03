@@ -49,7 +49,7 @@ import com.redhat.thermostat.vm.gc.client.core.internal.VmGcController;
 
 public class VmGcService implements InformationService<VmRef> {
     
-    private static final int PRIORITY = PRIORITY_MEMORY_GROUP;
+    private static final int ORDER = ORDER_MEMORY_GROUP;
     private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -75,8 +75,8 @@ public class VmGcService implements InformationService<VmRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

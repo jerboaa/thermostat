@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.ui;
 import java.text.DateFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
@@ -137,7 +137,8 @@ public class AgentInformationDisplayController implements ActionListener<Configu
             view.setSelectedAgentStopTime(translator.localize(LocaleResources.AGENT_INFO_AGENT_RUNNING));
         }
 
-        Map<String, String> map = new HashMap<>();
+        // Linked to enforce order
+        Map<String, String> map = new LinkedHashMap<>();
         for (BackendInformation backendInfo : model.getBackends(agentId)) {
             String status = backendInfo.isActive() ?
                     translator.localize(LocaleResources.AGENT_INFO_BACKEND_STATUS_ACTIVE)

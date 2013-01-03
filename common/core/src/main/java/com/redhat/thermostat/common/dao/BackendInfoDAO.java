@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -49,6 +49,7 @@ public interface BackendInfoDAO {
     static final Key<Boolean> IS_ACTIVE = new Key<>("active", false);
     static final Key<Boolean> SHOULD_MONITOR_NEW_PROCESSES = new Key<>("observeNewJvm", false);
     static final Key<List<Integer>> PIDS_TO_MONITOR = new Key<>("pids", false);
+    static final Key<Integer> ORDER_VALUE = new Key<>("orderValue", false);
 
     static final Category CATEGORY = new Category("backend-info",
             Key.AGENT_ID,
@@ -56,7 +57,8 @@ public interface BackendInfoDAO {
             BACKEND_DESCRIPTION,
             IS_ACTIVE,
             SHOULD_MONITOR_NEW_PROCESSES,
-            PIDS_TO_MONITOR);
+            PIDS_TO_MONITOR,
+            ORDER_VALUE);
 
     List<BackendInformation> getBackendInformation(HostRef host);
 

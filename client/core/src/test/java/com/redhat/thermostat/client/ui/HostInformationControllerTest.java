@@ -75,10 +75,10 @@ public class HostInformationControllerTest {
 
     @Test
     public void testServiceOrder() {
-        int[] priorities = { 45, 20, 0, 90, 53 };
+        int[] orderValues = { 45, 20, 0, 90, 53 };
 
         // Mock services
-        List<InformationService<HostRef>> services = mockServices(priorities);
+        List<InformationService<HostRef>> services = mockServices(orderValues);
 
         new HostInformationController(uiFacadeFactory, ref, provider);
 
@@ -91,15 +91,15 @@ public class HostInformationControllerTest {
         verifyService(services.get(3), order);
     }
 
-    private List<InformationService<HostRef>> mockServices(int[] priorities) {
+    private List<InformationService<HostRef>> mockServices(int[] orderValues) {
         List<InformationService<HostRef>> services = new ArrayList<>();
-        for (int priority : priorities) {
+        for (int order : orderValues) {
             InformationService<HostRef> service = mock(InformationService.class);
             InformationServiceController<HostRef> controller = mock(InformationServiceController.class);
             when(service.getFilter()).thenReturn(FILTER);
             when(service.getInformationServiceController(ref)).thenReturn(
                     controller);
-            when(service.getPriority()).thenReturn(priority);
+            when(service.getOrderValue()).thenReturn(order);
             services.add(service);
         }
         // Return copy

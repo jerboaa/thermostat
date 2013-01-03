@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -52,6 +52,7 @@ public class BackendInformation extends BasePojo {
     private boolean isActive;
     private boolean observeNewJvm;
     private int[] pids;
+    private int orderValue;
     private Map<String, String> configuration = new HashMap<String,String>();
 
     @Persist
@@ -107,6 +108,16 @@ public class BackendInformation extends BasePojo {
     public void setActive(boolean active) {
         this.isActive = active;
     }
+    
+    @Persist
+    public int getOrderValue() {
+        return orderValue;
+    }
+    
+    @Persist
+    public void setOrderValue(int orderValue) {
+        this.orderValue = orderValue;
+    }
 
     @Override
     public boolean equals(Object obj) {
@@ -125,12 +136,13 @@ public class BackendInformation extends BasePojo {
                 Objects.equals(this.configuration, other.configuration) &&
                 Objects.equals(this.isActive, other.isActive) &&
                 Objects.equals(this.observeNewJvm, other.observeNewJvm) &&
-                Arrays.equals(this.pids, other.pids);
+                Arrays.equals(this.pids, other.pids) &&
+                Objects.equals(this.orderValue, other.orderValue);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, configuration, isActive, observeNewJvm, pids);
+        return Objects.hash(name, description, configuration, isActive, observeNewJvm, pids, orderValue);
     }
 
 }

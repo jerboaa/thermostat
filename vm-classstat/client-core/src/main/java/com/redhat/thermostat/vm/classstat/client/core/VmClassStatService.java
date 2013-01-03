@@ -48,7 +48,7 @@ import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatContro
 
 public class VmClassStatService implements InformationService<VmRef> {
 
-    private static final int PRIORITY = PRIORITY_MEMORY_GROUP + 20;
+    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -71,7 +71,7 @@ public class VmClassStatService implements InformationService<VmRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 }

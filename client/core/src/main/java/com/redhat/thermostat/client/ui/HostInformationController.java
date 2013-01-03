@@ -41,10 +41,10 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.internal.InformationServiceComparator;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.dao.HostRef;
 
 public class HostInformationController {
@@ -55,7 +55,7 @@ public class HostInformationController {
         view = provider.createView();
 
         List<InformationService<HostRef>> hostInfoServices = uiFacadeFactory.getHostInformationServices();
-        Collections.sort(hostInfoServices, new InformationServiceComparator<InformationService<HostRef>>());
+        Collections.sort(hostInfoServices, new OrderedComparator<InformationService<HostRef>>());
         for (InformationService<HostRef> hostInfoService : hostInfoServices) {
             if (hostInfoService.getFilter().matches(ref)) {
                 InformationServiceController<HostRef> ctrl = hostInfoService.getInformationServiceController(ref);

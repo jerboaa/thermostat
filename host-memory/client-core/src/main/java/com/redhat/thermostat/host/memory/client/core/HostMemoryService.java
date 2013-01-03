@@ -49,7 +49,7 @@ import com.redhat.thermostat.host.memory.client.core.internal.HostMemoryControll
 
 public class HostMemoryService implements InformationService<HostRef> {
     
-    private static final int PRIORITY = PRIORITY_MEMORY_GROUP;
+    private static final int ORDER = ORDER_MEMORY_GROUP;
     private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -75,8 +75,8 @@ public class HostMemoryService implements InformationService<HostRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

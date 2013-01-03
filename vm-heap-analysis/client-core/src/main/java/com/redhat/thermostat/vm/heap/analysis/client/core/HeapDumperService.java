@@ -49,7 +49,7 @@ import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
 public class HeapDumperService implements InformationService<VmRef> {
     
-    private static final int PRIORITY = PRIORITY_MEMORY_GROUP + 60;
+    private static final int ORDER = ORDER_MEMORY_GROUP + 60;
     private ApplicationService appService;
     private VmMemoryStatDAO vmMemoryStatDao;
     private HeapDAO heapDao;
@@ -78,7 +78,7 @@ public class HeapDumperService implements InformationService<VmRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 }

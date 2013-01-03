@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.internal;
+package com.redhat.thermostat.common;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -46,21 +46,19 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.client.core.InformationService;
-
-public class InformationServiceComparatorTest {
+public class OrderedComparatorTest {
 
     @Test
     public void testServiceOrderTie() {
-        int[] priorities = { 45, 20, 0, 90, 20 };
+        int[] orderValues = { 45, 20, 0, 90, 20 };
 
-        final List<InformationService> services = mockServices(priorities);
+        final List<Ordered> services = mockServices(orderValues);
         
         // Override the getName method to give predetermined class names to
-        // the services with equal priority
-        InformationServiceComparator<InformationService> comparator = new InformationServiceComparator<InformationService>() {
+        // the services with equal order value
+        OrderedComparator<Ordered> comparator = new OrderedComparator<Ordered>() {
             @Override
-            String getName(InformationService object) {
+            String getName(Ordered object) {
                 String result;
                 if (object.equals(services.get(1))) {
                     result = "TheirService";
@@ -75,7 +73,7 @@ public class InformationServiceComparatorTest {
             }
         };
         
-        List<InformationService> sorted = new ArrayList<>(services);
+        List<Ordered> sorted = new ArrayList<>(services);
         Collections.sort(sorted, comparator);
         
         // Ensure MyService comes before TheirService
@@ -86,11 +84,11 @@ public class InformationServiceComparatorTest {
         assertEquals(services.get(3), sorted.get(4));
     }
 
-    private List<InformationService> mockServices(int[] priorities) {
-        List<InformationService> services = new ArrayList<>();
-        for (int priority : priorities) {
-            InformationService service = mock(InformationService.class);
-            when(service.getPriority()).thenReturn(priority);
+    private List<Ordered> mockServices(int[] orderValues) {
+        List<Ordered> services = new ArrayList<>();
+        for (int value : orderValues) {
+            Ordered service = mock(Ordered.class);
+            when(service.getOrderValue()).thenReturn(value);
             services.add(service);
         }
         return services;

@@ -49,7 +49,7 @@ import com.redhat.thermostat.host.overview.client.core.internal.HostOverviewCont
 
 public class HostOverviewService implements InformationService<HostRef> {
     
-    private static final int PRIORITY = PRIORITY_DEFAULT_GROUP;
+    private static final int ORDER = ORDER_DEFAULT_GROUP;
     private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -75,8 +75,8 @@ public class HostOverviewService implements InformationService<HostRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

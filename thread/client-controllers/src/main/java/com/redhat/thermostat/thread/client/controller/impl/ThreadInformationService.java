@@ -48,7 +48,7 @@ import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFacto
 
 public class ThreadInformationService implements InformationService<VmRef> {
 
-    private static final int PRIORITY = PRIORITY_THREAD_GROUP;
+    private static final int ORDER = ORDER_THREAD_GROUP;
     
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
     private ApplicationService service;
@@ -77,8 +77,8 @@ public class ThreadInformationService implements InformationService<VmRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

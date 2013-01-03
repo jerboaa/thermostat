@@ -238,4 +238,9 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         pidsToMonitor.remove(vmId);
         vmCpuBuilder.forgetAbout(vmId);
     }
+
+    @Override
+    public int getOrderValue() {
+        return ORDER_DEFAULT_GROUP;
+    }
 }

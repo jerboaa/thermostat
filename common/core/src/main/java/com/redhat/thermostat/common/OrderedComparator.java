@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,19 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.internal;
+package com.redhat.thermostat.common;
 
 import java.util.Comparator;
 
-import com.redhat.thermostat.client.core.InformationService;
 
-@SuppressWarnings("rawtypes")
-public class InformationServiceComparator<T extends InformationService>
-        implements Comparator<T> {
+public class OrderedComparator<T extends Ordered> implements Comparator<T> {
 
     @Override
     public int compare(T o1, T o2) {
-        int result = o1.getPriority() - o2.getPriority();
+        int result = o1.getOrderValue() - o2.getOrderValue();
         // Break ties using class name
         if (result == 0) {
             result = getName(o1).compareTo(getName(o2));

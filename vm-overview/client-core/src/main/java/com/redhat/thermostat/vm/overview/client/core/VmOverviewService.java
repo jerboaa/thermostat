@@ -48,7 +48,7 @@ import com.redhat.thermostat.vm.overview.client.core.internal.VmOverviewControll
 
 public class VmOverviewService implements InformationService<VmRef> {
     
-    private static final int PRIORITY = PRIORITY_DEFAULT_GROUP;
+    private static final int ORDER = ORDER_DEFAULT_GROUP;
     private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;
@@ -72,8 +72,8 @@ public class VmOverviewService implements InformationService<VmRef> {
     }
 
     @Override
-    public int getPriority() {
-        return PRIORITY;
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

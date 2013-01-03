@@ -41,10 +41,10 @@ import java.util.List;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.internal.InformationServiceComparator;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 
@@ -60,7 +60,7 @@ public class VmInformationController {
         view = provider.createView();
 
         List<InformationService<VmRef>> vmInfoServices = uiFacadeFactory.getVmInformationServices();
-        Collections.sort(vmInfoServices, new InformationServiceComparator<InformationService<VmRef>>());
+        Collections.sort(vmInfoServices, new OrderedComparator<InformationService<VmRef>>());
         for (InformationService<VmRef> vmInfoService : vmInfoServices) {
             if (vmInfoService.getFilter().matches(vmRef)) {
                 InformationServiceController<VmRef> ctrl = vmInfoService.getInformationServiceController(vmRef);

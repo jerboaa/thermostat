@@ -75,10 +75,10 @@ public class VmInformationControllerTest {
 
     @Test
     public void testServiceOrder() {
-        int[] priorities = { 45, 20, 0, 90, 53 };
+        int[] orderValues = { 45, 20, 0, 90, 53 };
 
         // Mock services
-        List<InformationService<VmRef>> services = mockServices(priorities);
+        List<InformationService<VmRef>> services = mockServices(orderValues);
 
         new VmInformationController(uiFacadeFactory, ref, provider);
 
@@ -91,15 +91,15 @@ public class VmInformationControllerTest {
         verifyService(services.get(3), order);
     }
 
-    private List<InformationService<VmRef>> mockServices(int[] priorities) {
+    private List<InformationService<VmRef>> mockServices(int[] orderValues) {
         List<InformationService<VmRef>> services = new ArrayList<>();
-        for (int priority : priorities) {
+        for (int order : orderValues) {
             InformationService<VmRef> service = mock(InformationService.class);
             InformationServiceController<VmRef> controller = mock(InformationServiceController.class);
             when(service.getFilter()).thenReturn(FILTER);
             when(service.getInformationServiceController(ref)).thenReturn(
                     controller);
-            when(service.getPriority()).thenReturn(priority);
+            when(service.getOrderValue()).thenReturn(order);
             services.add(service);
         }
         // Return copy

@@ -75,6 +75,7 @@ public class BackendInfoDAOTest {
         backendInfo1.setActive(true);
         backendInfo1.setObserveNewJvm(true);
         backendInfo1.setPids(new int[] { -1, 0, 1});
+        backendInfo1.setOrderValue(100);
 
         backend1 = new BackendInformation();
         backend1.setName("backend-name");
@@ -82,7 +83,7 @@ public class BackendInfoDAOTest {
         backend1.setActive(true);
         backend1.setObserveNewJvm(true);
         backend1.setPids(new int[] { -1, 0, 1});
-        
+        backend1.setOrderValue(100);
     }
 
     @Test
@@ -102,6 +103,7 @@ public class BackendInfoDAOTest {
         assertTrue(keys.contains(BackendInfoDAO.IS_ACTIVE));
         assertTrue(keys.contains(BackendInfoDAO.PIDS_TO_MONITOR));
         assertTrue(keys.contains(BackendInfoDAO.SHOULD_MONITOR_NEW_PROCESSES));
+        assertTrue(keys.contains(BackendInfoDAO.ORDER_VALUE));
     }
 
     @Test

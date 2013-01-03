@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -37,14 +37,16 @@
 package com.redhat.thermostat.common.dao;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.BackendInformation;
 
 public class BackendInfoDAOImpl implements BackendInfoDAO {
@@ -58,6 +60,7 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public List<BackendInformation> getBackendInformation(HostRef host) {
+        // Sort by order value
         Query query = storage.createQuery()
                 .from(CATEGORY)
                 .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
@@ -68,6 +71,23 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
             BackendInformation backendInfo = cursor.next();
             results.add(backendInfo);
         }
+        
+        // Sort before returning
+        Collections.sort(results, new Comparator<BackendInformation>() {
+
+            // TODO Use OrderedComparator when common-core
+            // doesn't depend on storage-core
+            @Override
+            public int compare(BackendInformation o1, BackendInformation o2) {
+                int result = o1.getOrderValue() - o2.getOrderValue();
+                // Break ties using class name
+                if (result == 0) {
+                    result = o1.getClass().getName().compareTo(o2.getClass().getName());
+                }
+                return result;
+            }
+        });
+        
         return results;
     }
 
