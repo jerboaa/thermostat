@@ -49,9 +49,9 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.ThermostatTable;
-import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.thread.client.common.locale.LocaleResources;
 import com.redhat.thermostat.thread.client.common.view.ThreadTableView;
 import com.redhat.thermostat.common.locale.Translate;

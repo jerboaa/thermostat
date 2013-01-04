@@ -58,8 +58,8 @@ import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.model.LongRange;
 
 import com.redhat.thermostat.thread.client.common.Timeline;

@@ -54,10 +54,10 @@ import javax.swing.text.JTextComponent;
 
 import com.redhat.thermostat.client.core.views.SummaryView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
 import com.redhat.thermostat.client.swing.components.ValueField;
-import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
 

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.swing;
 
 import java.awt.Component;
 import java.awt.event.HierarchyEvent;

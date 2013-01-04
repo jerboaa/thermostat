@@ -52,9 +52,9 @@ import javax.swing.event.ListSelectionListener;
 import org.jfree.chart.ChartPanel;
 
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;

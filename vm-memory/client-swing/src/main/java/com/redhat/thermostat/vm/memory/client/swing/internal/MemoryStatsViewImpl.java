@@ -49,9 +49,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
-import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.gc.remote.client.common.RequestGCAction;
 import com.redhat.thermostat.gc.remote.client.swing.ToolbarGCButton;

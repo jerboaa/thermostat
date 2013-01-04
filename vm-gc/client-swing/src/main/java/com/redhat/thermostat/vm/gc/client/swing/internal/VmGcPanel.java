@@ -62,11 +62,11 @@ import org.jfree.chart.renderer.xy.XYBarRenderer;
 import org.jfree.data.RangeType;
 import org.jfree.data.xy.IntervalXYDataset;
 
+import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
 import com.redhat.thermostat.client.swing.components.RecentTimeSeriesChartPanel;
 import com.redhat.thermostat.client.swing.components.SectionHeader;
-import com.redhat.thermostat.client.ui.ComponentVisibleListener;
 import com.redhat.thermostat.client.ui.RecentTimeSeriesChartController;
 import com.redhat.thermostat.client.ui.SampledDataset;
 import com.redhat.thermostat.common.ActionListener;
