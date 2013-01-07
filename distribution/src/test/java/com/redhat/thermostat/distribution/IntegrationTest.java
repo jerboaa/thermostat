@@ -57,6 +57,8 @@ public class IntegrationTest {
 
     public static final long TIMEOUT_IN_SECONDS = 30;
 
+    public static final String SHELL_PROMPT = "Thermostat >";
+
     public static String getThermostatExecutable() {
         return "target/bin/thermostat";
     }

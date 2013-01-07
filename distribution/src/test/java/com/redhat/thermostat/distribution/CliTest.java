@@ -122,10 +122,10 @@ public class CliTest extends IntegrationTest {
     public void testShell() throws Exception {
         Spawn shell = spawnThermostat("shell");
 
-        shell.expect("Thermostat >");
+        shell.expect(SHELL_PROMPT);
         shell.send("help\n");
 
-        shell.expect("Thermostat >");
+        shell.expect(SHELL_PROMPT);
 
         assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
 
