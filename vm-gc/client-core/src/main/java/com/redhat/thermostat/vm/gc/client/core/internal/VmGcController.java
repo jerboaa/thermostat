@@ -55,7 +55,6 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
@@ -66,6 +65,7 @@ import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 import com.redhat.thermostat.vm.gc.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class VmGcController implements InformationServiceController<VmRef> {

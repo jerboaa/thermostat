@@ -93,7 +93,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     protected void setDAOFactoryAction() {
         hostInfos = df.getHostInfoDAO();
         networkInterfaces = df.getNetworkInterfaceInfoDAO();
-        hostListener = new JvmStatHostListener(df.getVmInfoDAO(), df.getVmGcStatDAO(), df.getVmClassStatsDAO(), getObserveNewJvm());
+        hostListener = new JvmStatHostListener(df.getVmInfoDAO(), df.getVmClassStatsDAO(), getObserveNewJvm());
     }
 
     @Override

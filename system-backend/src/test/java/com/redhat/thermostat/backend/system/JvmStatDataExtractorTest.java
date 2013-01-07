@@ -174,58 +174,6 @@ public class JvmStatDataExtractorTest {
     }
 
     @Test
-    public void testTotalCollectors() throws MonitorException {
-        final String MONITOR_NAME = "sun.gc.policy.collectors";
-        final Long MONITOR_VALUE = 9l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, MONITOR_VALUE);
-
-        JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-        Long returned = extractor.getTotalCollectors();
-
-        verify(vm).findByName(eq(MONITOR_NAME));
-        assertEquals(MONITOR_VALUE, returned);
-    }
-
-    @Test
-    public void testCollectorName() throws MonitorException {
-        final String MONITOR_NAME = "sun.gc.collector.0.name";
-        final String COLLECTOR_NAME = "SomeMemoryCollector";
-        MonitoredVm vm = buildStringMonitoredVm(MONITOR_NAME, COLLECTOR_NAME);
-
-        JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-        String returned = extractor.getCollectorName(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
-        assertEquals(COLLECTOR_NAME, returned);
-    }
-
-    @Test
-    public void testCollectorTime() throws MonitorException {
-        final String MONITOR_NAME = "sun.gc.collector.0.time";
-        final Long COLLECTOR_TIME = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, COLLECTOR_TIME);
-
-        JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-        Long returned = extractor.getCollectorTime(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
-        assertEquals(COLLECTOR_TIME, returned);
-    }
-
-    @Test
-    public void testCollectorInvocations() throws MonitorException {
-        final String MONITOR_NAME = "sun.gc.collector.0.invocations";
-        final Long COLLECTOR_INVOCATIONS = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, COLLECTOR_INVOCATIONS);
-
-        JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-        Long returned = extractor.getCollectorInvocations(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
-        assertEquals(COLLECTOR_INVOCATIONS, returned);
-    }
-
-    @Test
     public void testLoadedClasses() throws MonitorException {
         final String MONITOR_NAME = "java.cls.loadedClasses";
         final Long LOADED_CLASSES = 99l;

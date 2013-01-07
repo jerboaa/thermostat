@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.gc.agent.internal;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,18 +45,18 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.common.dao.VmGcStatDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.VmGcStat;
+import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
-public class JvmStatVmListener implements VmListener {
+public class VmGcVmListener implements VmListener {
 
-    private static final Logger logger = LoggingUtils.getLogger(JvmStatVmListener.class);
+    private static final Logger logger = LoggingUtils.getLogger(VmGcVmListener.class);
 
     private final int vmId;
     private final VmGcStatDAO gcDAO;
 
-    public JvmStatVmListener(VmGcStatDAO vmGcStatDao, int vmId) {
+    public VmGcVmListener(VmGcStatDAO vmGcStatDao, int vmId) {
         gcDAO = vmGcStatDao;
         this.vmId = vmId;
     }
@@ -77,12 +77,13 @@ public class JvmStatVmListener implements VmListener {
         if (vm == null) {
             throw new NullPointerException();
         }
-        recordGcStat(vm);
+        
+        VmGcDataExtractor extractor = new VmGcDataExtractor(vm);
+        recordGcStat(vm, extractor);
     }
 
-    private void recordGcStat(MonitoredVm vm) {
+    void recordGcStat(MonitoredVm vm, VmGcDataExtractor extractor) {
         try {
-            JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
             long collectors = extractor.getTotalCollectors();
             for (int i = 0; i < collectors; i++) {
                 long timestamp = System.currentTimeMillis();

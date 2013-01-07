@@ -98,22 +98,6 @@ public class JvmStatDataExtractor {
         return MonitoredVmUtil.jvmArgs(vm);
     }
 
-    public long getTotalCollectors() throws MonitorException {
-        return (Long) vm.findByName("sun.gc.policy.collectors").getValue();
-    }
-
-    public String getCollectorName(long collector) throws MonitorException {
-        return (String) vm.findByName("sun.gc.collector." + collector + ".name").getValue();
-    }
-
-    public long getCollectorTime(long collector) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.collector." + collector + ".time").getValue();
-    }
-
-    public long getCollectorInvocations(long collector) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.collector." + collector + ".invocations").getValue();
-    }
-
     public long getLoadedClasses() throws MonitorException {
         return (Long) vm.findByName("java.cls.loadedClasses").getValue();
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,26 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.gc.agent.internal;
 
-import java.util.List;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.model.VmGcStat;
+import java.net.URISyntaxException;
 
-public interface VmGcStatDAO {
+import org.junit.Before;
+import org.junit.Test;
 
-    static final Key<String> collectorKey = new Key<>("collectorName", false);
-    static final Key<Long> runCountKey = new Key<>("runCount", false);
-    /** time in microseconds */
-    static final Key<Long> wallTimeKey = new Key<>("wallTime", false);
+import sun.jvmstat.monitor.MonitorException;
+import sun.jvmstat.monitor.MonitoredHost;
+import sun.jvmstat.monitor.event.HostListener;
 
-    static final Category vmGcStatCategory = new Category("vm-gc-stats",
-            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,
-            runCountKey, wallTimeKey);
+import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
-    public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since);
+public class VmGcBackendTest {
+    
+    private VmGcBackend backend;
+    private MonitoredHost host;
 
-    public void putVmGcStat(VmGcStat stat);
+    @Before
+    public void setup() throws MonitorException, URISyntaxException {
+        VmGcStatDAO vmGcStatDao = mock(VmGcStatDAO.class);
+        
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn("0.0.0");
+        
+        backend = new VmGcBackend(vmGcStatDao, version);
+        
+        host = mock(MonitoredHost.class);
+        backend.setHost(host);
+    }
+
+    @Test
+    public void testStart() throws MonitorException {
+        backend.activate();
+        verify(host).addHostListener(any(HostListener.class));
+        assertTrue(backend.isActive());
+    }
+
+    @Test
+    public void testStop() throws MonitorException {
+        backend.activate();
+        backend.deactivate();
+        verify(host).removeHostListener(any(HostListener.class));
+        assertFalse(backend.isActive());
+    }
+    
 }

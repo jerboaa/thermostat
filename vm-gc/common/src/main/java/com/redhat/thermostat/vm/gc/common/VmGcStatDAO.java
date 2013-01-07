@@ -34,32 +34,27 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.gc.common;
 
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.VmGcStat;
 
-class VmGcStatDAOImpl implements VmGcStatDAO {
+public interface VmGcStatDAO {
 
-    private final Storage storage;
-    private final VmLatestPojoListGetter<VmGcStat> getter;
+    static final Key<String> collectorKey = new Key<>("collectorName", false);
+    static final Key<Long> runCountKey = new Key<>("runCount", false);
+    /** time in microseconds */
+    static final Key<Long> wallTimeKey = new Key<>("wallTime", false);
 
-    VmGcStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(vmGcStatCategory);
-        getter = new VmLatestPojoListGetter<>(storage, vmGcStatCategory, VmGcStat.class);
-    }
+    static final Category vmGcStatCategory = new Category("vm-gc-stats",
+            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,
+            runCountKey, wallTimeKey);
 
-    @Override
-    public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since) {
-        return getter.getLatest(ref, since);
-    }
+    public List<VmGcStat> getLatestVmGcStats(VmRef ref, long since);
 
-    @Override
-    public void putVmGcStat(VmGcStat stat) {
-        storage.putPojo(vmGcStatCategory, false, stat);
-    }
-
+    public void putVmGcStat(VmGcStat stat);
 }
