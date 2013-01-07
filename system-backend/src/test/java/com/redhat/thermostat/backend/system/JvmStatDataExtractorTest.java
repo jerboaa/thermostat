@@ -44,7 +44,6 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import sun.jvmstat.monitor.LongMonitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.StringMonitor;
@@ -54,15 +53,6 @@ public class JvmStatDataExtractorTest {
     private MonitoredVm buildStringMonitoredVm(String monitorName, String monitorReturn) throws MonitorException {
         final StringMonitor monitor = mock(StringMonitor.class);
         when(monitor.stringValue()).thenReturn(monitorReturn);
-        when(monitor.getValue()).thenReturn(monitorReturn);
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName(monitorName)).thenReturn(monitor);
-        return vm;
-    }
-
-    private MonitoredVm buildLongMonitoredVm(String monitorName, Long monitorReturn) throws MonitorException {
-        final LongMonitor monitor = mock(LongMonitor.class);
-        when(monitor.longValue()).thenReturn(monitorReturn);
         when(monitor.getValue()).thenReturn(monitorReturn);
         MonitoredVm vm = mock(MonitoredVm.class);
         when(vm.findByName(monitorName)).thenReturn(monitor);
@@ -171,19 +161,6 @@ public class JvmStatDataExtractorTest {
 
         verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(MONITOR_VALUE, returned);
-    }
-
-    @Test
-    public void testLoadedClasses() throws MonitorException {
-        final String MONITOR_NAME = "java.cls.loadedClasses";
-        final Long LOADED_CLASSES = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, LOADED_CLASSES);
-
-        JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-        Long returned = extractor.getLoadedClasses();
-
-        verify(vm).findByName(eq(MONITOR_NAME));
-        assertEquals(LOADED_CLASSES, returned);
     }
 
 }

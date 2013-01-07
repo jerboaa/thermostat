@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,44 +34,39 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
-import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+import sun.jvmstat.monitor.MonitorException;
+import sun.jvmstat.monitor.MonitoredVm;
 
-public class VmClassStatService implements InformationService<VmRef> {
+/**
+ * A helper class to provide type-safe access to commonly used jvmstat monitors
+ * <p>
+ * Implementation details: For local vms, jvmstat uses a ByteBuffer
+ * corresponding to mmap()ed hsperfdata file. The hsperfdata file is updated
+ * asynchronously by the vm that created the file. The polling that jvmstat api
+ * provides is merely an abstraction over this (possibly always up-to-date)
+ * ByteBuffer. So the data this class extracts is as current as possible, and
+ * does not correspond to when the jvmstat update events fired.
+ */
+public class VmClassStatDataExtractor {
 
-    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
-    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
+    /*
+     * Note, there may be a performance issue to consider here. We have a lot of
+     * string constants. When we start adding some of the more heavyweight
+     * features, and running into CPU issues this may need to be reconsidered in
+     * order to avoid the String pool overhead. See also:
+     * http://docs.oracle.com/javase/6/docs/api/java/lang/String.html#intern()
+     */
 
-    private ApplicationService appSvc;
-    private VmClassStatDAO vmClassStatDao;
+    private final MonitoredVm vm;
 
-    public VmClassStatService(ApplicationService appSvc, VmClassStatDAO vmClassStatDao) {
-        this.appSvc = appSvc;
-        this.vmClassStatDao = vmClassStatDao;
-    }
-    
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance().getService(VmClassStatViewProvider.class);
-        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return filter;
+    public VmClassStatDataExtractor(MonitoredVm vm) {
+        this.vm = vm;
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER;
+    public long getLoadedClasses() throws MonitorException {
+        return (Long) vm.findByName("java.cls.loadedClasses").getValue();
     }
+
 }

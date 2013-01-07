@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,15 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URISyntaxException;
@@ -52,70 +50,39 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.StringMonitor;
 import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public class JvmStatHostListenerTest {
+public class VmClassStatHostListenerTest {
     
-    private static String INFO_CMDLINE = "/path/to/executable command line args";
-    private static String INFO_JAVAHOME = "/path/to/java";
-    private static String INFO_JAVAVER = "1.9001";
-    private static String INFO_MAINCLASS = "MyMainClass";
-    private static String INFO_VMARGS = "-Xarg1 -Xarg2";
-    private static String INFO_VMINFO = "Info";
-    private static String INFO_VMNAME = "MyJVM";
-    private static String INFO_VMVER = "90.01";
-
-    private JvmStatHostListener hostListener;
+    private VmClassStatHostListener hostListener;
     private MonitoredHost host;
     private MonitoredVm monitoredVm1;
     private MonitoredVm monitoredVm2;
-    private JvmStatDataExtractor extractor;
-    private VmInfoDAO vmInfoDAO;
 
     @Before
     public void setup() throws MonitorException, URISyntaxException {
-        vmInfoDAO = mock(VmInfoDAO.class);
-        hostListener = new JvmStatHostListener(vmInfoDAO);
+        VmClassStatDAO vmGcStatDAO = mock(VmClassStatDAO.class);
+        hostListener = new VmClassStatHostListener(vmGcStatDAO, true);
         
         host = mock(MonitoredHost.class);
         HostIdentifier hostId = mock(HostIdentifier.class);
         monitoredVm1 = mock(MonitoredVm.class);
         monitoredVm2 = mock(MonitoredVm.class);
-        StringMonitor monitor = mock(StringMonitor.class);
         VmIdentifier vmId1 = new VmIdentifier("1");
         VmIdentifier vmId2 = new VmIdentifier("2");
-        
         when(host.getHostIdentifier()).thenReturn(hostId);
         when(host.getMonitoredVm(eq(vmId1))).thenReturn(monitoredVm1);
         when(host.getMonitoredVm(eq(vmId2))).thenReturn(monitoredVm2);
         when(hostId.resolve(eq(vmId1))).thenReturn(vmId1);
         when(hostId.resolve(eq(vmId2))).thenReturn(vmId2);
-        when(monitoredVm1.findByName(any(String.class))).thenReturn(monitor);
-        when(monitoredVm2.findByName(any(String.class))).thenReturn(monitor);
-        when(monitor.stringValue()).thenReturn("test");
-        when(monitor.getValue()).thenReturn("test");
-        
-        extractor = mock(JvmStatDataExtractor.class);
-        
-        when(extractor.getCommandLine()).thenReturn(INFO_CMDLINE);
-        when(extractor.getJavaHome()).thenReturn(INFO_JAVAHOME);
-        when(extractor.getJavaVersion()).thenReturn(INFO_JAVAVER);
-        when(extractor.getMainClass()).thenReturn(INFO_MAINCLASS);
-        when(extractor.getVmArguments()).thenReturn(INFO_VMARGS);
-        when(extractor.getVmInfo()).thenReturn(INFO_VMINFO);
-        when(extractor.getVmName()).thenReturn(INFO_VMNAME);
-        when(extractor.getVmVersion()).thenReturn(INFO_VMVER);
     }
     
     @Test
@@ -126,6 +93,9 @@ public class JvmStatHostListenerTest {
         assertTrue(hostListener.getMonitoredVms().containsKey(2));
         assertEquals(monitoredVm1, hostListener.getMonitoredVms().get(1));
         assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2));
+        
+        assertTrue(hostListener.getRegisteredListeners().containsKey(monitoredVm1));
+        assertTrue(hostListener.getRegisteredListeners().containsKey(monitoredVm2));
     }
     
     @Test
@@ -146,6 +116,9 @@ public class JvmStatHostListenerTest {
         assertFalse(hostListener.getMonitoredVms().containsKey(1));
         assertTrue(hostListener.getMonitoredVms().containsKey(2));
         assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2));
+        
+        assertFalse(hostListener.getRegisteredListeners().containsKey(monitoredVm1));
+        assertTrue(hostListener.getRegisteredListeners().containsKey(monitoredVm2));
     }
 
     private void startVMs() throws InterruptedException, MonitorException {
@@ -159,28 +132,5 @@ public class JvmStatHostListenerTest {
         when(event.getStarted()).thenReturn(started);
         when(event.getTerminated()).thenReturn(Collections.emptySet());
         hostListener.vmStatusChanged(event);
-    }
-
-    @Test
-    public void testRecordVmInfo() throws MonitorException {
-        final int INFO_ID = 1;
-        final long INFO_STARTTIME = Long.MIN_VALUE;
-        final long INFO_STOPTIME = Long.MAX_VALUE;
-        hostListener.recordVmInfo(INFO_ID, INFO_STARTTIME, INFO_STOPTIME, extractor);
-        ArgumentCaptor<VmInfo> captor = ArgumentCaptor.forClass(VmInfo.class);
-        verify(vmInfoDAO).putVmInfo(captor.capture());
-        VmInfo info = captor.getValue();
-        
-        assertEquals(INFO_ID, info.getVmId());
-        assertEquals(INFO_STARTTIME, info.getStartTimeStamp());
-        assertEquals(INFO_STOPTIME, info.getStopTimeStamp());
-        assertEquals(INFO_CMDLINE, info.getJavaCommandLine());
-        assertEquals(INFO_JAVAHOME, info.getJavaHome());
-        assertEquals(INFO_JAVAVER, info.getJavaVersion());
-        assertEquals(INFO_MAINCLASS, info.getMainClass());
-        assertEquals(INFO_VMARGS, info.getVmArguments());
-        assertEquals(INFO_VMINFO, info.getVmInfo());
-        assertEquals(INFO_VMNAME, info.getVmName());
-        assertEquals(INFO_VMVER, info.getVmVersion());
     }
 }

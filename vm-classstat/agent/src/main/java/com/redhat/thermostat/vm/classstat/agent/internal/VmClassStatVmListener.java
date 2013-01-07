@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -45,18 +45,18 @@ import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.VmClassStat;
+import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-class JvmStatVmClassListener implements VmListener {
+class VmClassStatVmListener implements VmListener {
 
-    private static final Logger logger = LoggingUtils.getLogger(JvmStatVmClassListener.class);
+    private static final Logger logger = LoggingUtils.getLogger(VmClassStatVmListener.class);
 
     private VmClassStatDAO dao;
     private int vmId;
 
-    JvmStatVmClassListener(VmClassStatDAO dao, int vmId) {
+    VmClassStatVmListener(VmClassStatDAO dao, int vmId) {
         this.dao = dao;
         this.vmId = vmId;
     }
@@ -75,7 +75,7 @@ class JvmStatVmClassListener implements VmListener {
     public void monitorsUpdated(VmEvent vmEvent) {
         MonitoredVm vm = vmEvent.getMonitoredVm();
         try {
-            JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
+            VmClassStatDataExtractor extractor = new VmClassStatDataExtractor(vm);
             long loadedClasses = extractor.getLoadedClasses();
             long timestamp = System.currentTimeMillis();
             VmClassStat stat = new VmClassStat(vmId, timestamp, loadedClasses);

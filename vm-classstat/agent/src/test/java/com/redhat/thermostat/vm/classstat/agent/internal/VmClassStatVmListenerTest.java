@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -48,10 +48,11 @@ import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.event.VmEvent;
 
-import com.redhat.thermostat.common.dao.VmClassStatDAO;
 import com.redhat.thermostat.storage.model.VmClassStat;
+import com.redhat.thermostat.vm.classstat.agent.internal.VmClassStatVmListener;
+import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public class JvmStatVmClassListenerTest {
+public class VmClassStatVmListenerTest {
 
     private static final Integer VM_ID = 123;
     private static final Long LOADED_CLASSES = 1234L;
@@ -61,7 +62,7 @@ public class JvmStatVmClassListenerTest {
 
         VmClassStatDAO dao = mock(VmClassStatDAO.class);
 
-        JvmStatVmClassListener l = new JvmStatVmClassListener(dao, VM_ID);
+        VmClassStatVmListener l = new VmClassStatVmListener(dao, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);
@@ -83,7 +84,7 @@ public class JvmStatVmClassListenerTest {
 
         VmClassStatDAO dao = mock(VmClassStatDAO.class);
 
-        JvmStatVmClassListener l = new JvmStatVmClassListener(dao, VM_ID);
+        VmClassStatVmListener l = new VmClassStatVmListener(dao, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);

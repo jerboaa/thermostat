@@ -6,9 +6,9 @@
     <groupId>com.redhat.thermostat</groupId>
     <version>0.5.0-SNAPSHOT</version>
   </parent>
-  <artifactId>thermostat-vm-classstat-client-core</artifactId>
+  <artifactId>thermostat-vm-classstat-agent</artifactId>
   <packaging>bundle</packaging>
-  <name>Thermostat VM ClassStat Core Client plugin</name>
+  <name>Thermostat VM ClassStat Agent plugin</name>
   <build>
     <plugins>
       <plugin>
@@ -18,14 +18,13 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-SymbolicName>com.redhat.thermostat.vm.classstat.client.core</Bundle-SymbolicName>
-            <Bundle-Activator>com.redhat.thermostat.vm.classstat.client.core.internal.Activator</Bundle-Activator>
+            <Bundle-SymbolicName>com.redhat.thermostat.vm.classstat.agent</Bundle-SymbolicName>
+            <Bundle-Activator>com.redhat.thermostat.vm.classstat.agent.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.vm.classstat.client.core,
-              com.redhat.thermostat.vm.classstat.client.locale
+              com.redhat.thermostat.vm.classstat.agent
             </Export-Package>
             <Private-Package>
-              com.redhat.thermostat.vm.classstat.client.core.internal
+              com.redhat.thermostat.vm.classstat.agent.internal
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
@@ -67,14 +66,13 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-client-core</artifactId>
+      <artifactId>thermostat-agent-core</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-test</artifactId>
+      <artifactId>thermostat-storage-core</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
   </dependencies>
 </project>

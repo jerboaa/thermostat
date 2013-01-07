@@ -59,7 +59,6 @@ public class DAOFactoryImpl implements DAOFactory {
     private HostInfoDAO hostInfoDAO;
     private NetworkInterfaceInfoDAO networkInfoDAO;
     private VmInfoDAO vmInfoDAO;
-    private VmClassStatDAO vmClassStatDAO;
 
     public DAOFactoryImpl(StorageProvider prov) {
         this(FrameworkUtil.getBundle(DAOFactoryImpl.class).getBundleContext(), prov);
@@ -106,12 +105,6 @@ public class DAOFactoryImpl implements DAOFactory {
     }
 
     @Override
-    public VmClassStatDAO getVmClassStatsDAO() {
-        ensureStorageConnected();
-        return vmClassStatDAO;
-    }
-
-    @Override
     public Storage getStorage() {
         return storage;
     }
@@ -135,7 +128,6 @@ public class DAOFactoryImpl implements DAOFactory {
         registerAndRecordService(NetworkInterfaceInfoDAO.class, getNetworkInterfaceInfoDAO());
 
         registerAndRecordService(VmInfoDAO.class, getVmInfoDAO());
-        registerAndRecordService(VmClassStatDAO.class, getVmClassStatsDAO());
     }
 
     /*
@@ -147,7 +139,6 @@ public class DAOFactoryImpl implements DAOFactory {
         hostInfoDAO = new HostInfoDAOImpl(storage, agentDAO);
         networkInfoDAO = new NetworkInterfaceInfoDAOImpl(storage);
         vmInfoDAO = new VmInfoDAOImpl(storage);
-        vmClassStatDAO = new VmClassStatDAOImpl(storage);
     }
 
     private <K> void registerAndRecordService(Class<K> serviceType, K serviceImplementation) {

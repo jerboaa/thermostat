@@ -90,12 +90,6 @@ public class MongoDAOFactoryTest {
     }
 
     @Test
-    public void testGetVmClassStatsDAO() {
-        VmClassStatDAO dao = daoFactory.getVmClassStatsDAO();
-        assertNotNull(dao);
-    }
-
-    @Test
     public void testGetVmInfoDAO() {
         VmInfoDAO dao = daoFactory.getVmInfoDAO();
         assertNotNull(dao);
@@ -119,8 +113,8 @@ public class MongoDAOFactoryTest {
 
         daoFactory.registerDAOsAndStorageAsOSGiServices();
 
-        // currently 7 DAOs and Storage are registered
-        assertEquals(7, bundleContext.getAllServices().size());
+        // currently 6 DAOs and Storage are registered
+        assertEquals(6, bundleContext.getAllServices().size());
     }
 
     @Test

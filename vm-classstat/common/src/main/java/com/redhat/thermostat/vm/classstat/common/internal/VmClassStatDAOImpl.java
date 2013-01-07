@@ -34,23 +34,34 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.classstat.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.common.dao.VmLatestPojoListGetter;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmClassStat;
+import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public interface VmClassStatDAO {
+class VmClassStatDAOImpl implements VmClassStatDAO {
 
-    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
+    private final Storage storage;
+    private final VmLatestPojoListGetter<VmClassStat> getter;
 
-    static final Category vmClassStatsCategory = new Category(
-            "vm-class-stats", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);
+    VmClassStatDAOImpl(Storage storage) {
+        this.storage = storage;
+        storage.registerCategory(vmClassStatsCategory);
+        this.getter = new VmLatestPojoListGetter<>(storage, vmClassStatsCategory, VmClassStat.class);
+    }
 
-    public List<VmClassStat> getLatestClassStats(VmRef ref, long since);
+    @Override
+    public List<VmClassStat> getLatestClassStats(VmRef ref, long lastUpdateTime) {
+        return getter.getLatest(ref, lastUpdateTime);
+    }
 
-    public void putVmClassStat(VmClassStat stat);
-
+    @Override
+    public void putVmClassStat(VmClassStat stat) {
+        storage.putPojo(vmClassStatsCategory, false, stat);
+    }
 }

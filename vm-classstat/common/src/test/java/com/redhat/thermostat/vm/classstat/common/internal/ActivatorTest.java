@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -32,46 +32,53 @@
  * this code, you may extend this exception to your version of the
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
- */
+ */ 
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.vm.classstat.common.internal;
 
-import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatController;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public class VmClassStatService implements InformationService<VmRef> {
-
-    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
-    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
-
-    private ApplicationService appSvc;
-    private VmClassStatDAO vmClassStatDao;
-
-    public VmClassStatService(ApplicationService appSvc, VmClassStatDAO vmClassStatDao) {
-        this.appSvc = appSvc;
-        this.vmClassStatDao = vmClassStatDao;
-    }
+public class ActivatorTest {
     
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance().getService(VmClassStatViewProvider.class);
-        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertEquals(0, context.getAllServices().size());
+        assertEquals(1, context.getServiceListeners().size());
+
+        activator.stop(context);
     }
 
-    @Override
-    public Filter<VmRef> getFilter() {
-        return filter;
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        Storage storage = mock(Storage.class);
+
+        context.registerService(Storage.class, storage, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(VmClassStatDAO.class.getName(), VmClassStatDAOImpl.class));
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
 }

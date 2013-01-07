@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -32,25 +32,28 @@
  * this code, you may extend this exception to your version of the
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
- */
+ */ 
 
-package com.redhat.thermostat.vm.classstat.client.core.internal;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.test.StubBundleContext;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
 public class ActivatorTest {
-
+    
     @Test
     public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
         StubBundleContext context = new StubBundleContext();
@@ -60,29 +63,38 @@ public class ActivatorTest {
         activator.start(context);
 
         assertEquals(0, context.getAllServices().size());
-        assertNotSame(1, context.getServiceListeners().size());
+        assertEquals(2, context.getServiceListeners().size());
 
         activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
     }
 
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        ApplicationService appService = mock(ApplicationService.class);
-        VmClassStatDAO daoService = mock(VmClassStatDAO.class);
+        StubBundleContext context = new StubBundleContext() {
+            @Override
+            public Bundle getBundle() {
+                Bundle result = mock(Bundle.class);
+                when(result.getVersion()).thenReturn(Version.emptyVersion);
+                return result;
+            }
+        };
+        BackendService service = mock(BackendService.class);
+        VmClassStatDAO vmClassStatDAO = mock(VmClassStatDAO.class);
 
-        context.registerService(ApplicationService.class, appService, null);
-        context.registerService(VmClassStatDAO.class, daoService, null);
+        context.registerService(BackendService.class, service, null);
+        context.registerService(VmClassStatDAO.class, vmClassStatDAO, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), VmClassStatService.class));
+        assertTrue(context.isServiceRegistered(Backend.class.getName(), VmClassStatBackend.class));
+        VmClassStatBackend backend = activator.getBackend();
+        assertNotNull(backend);
 
         activator.stop(context);
+        
+        assertFalse(backend.isActive());
 
         assertEquals(0, context.getServiceListeners().size());
         assertEquals(2, context.getAllServices().size());

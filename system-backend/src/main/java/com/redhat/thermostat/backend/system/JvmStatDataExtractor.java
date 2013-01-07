@@ -98,8 +98,4 @@ public class JvmStatDataExtractor {
         return MonitoredVmUtil.jvmArgs(vm);
     }
 
-    public long getLoadedClasses() throws MonitorException {
-        return (Long) vm.findByName("java.cls.loadedClasses").getValue();
-    }
-
 }

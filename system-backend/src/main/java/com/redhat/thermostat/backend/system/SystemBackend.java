@@ -93,7 +93,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     protected void setDAOFactoryAction() {
         hostInfos = df.getHostInfoDAO();
         networkInterfaces = df.getNetworkInterfaceInfoDAO();
-        hostListener = new JvmStatHostListener(df.getVmInfoDAO(), df.getVmClassStatsDAO(), getObserveNewJvm());
+        hostListener = new JvmStatHostListener(df.getVmInfoDAO());
     }
 
     @Override
@@ -147,10 +147,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         removeJvmStatusListener(this);
 
         try {
-            
-            // remove all listener from the host listener
-            hostListener.removeAllListeners();
-            
             host.removeHostListener(hostListener);
         } catch (MonitorException me) {
             logger.log(Level.INFO, "something went wrong in jvmstat's listening to this host");

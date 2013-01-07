@@ -56,8 +56,6 @@ public interface DAOFactory {
 
     public VmInfoDAO getVmInfoDAO();
 
-    public VmClassStatDAO getVmClassStatsDAO();
-
     public void registerDAOsAndStorageAsOSGiServices();
     public void unregisterDAOsAndStorageAsOSGiServices();
 

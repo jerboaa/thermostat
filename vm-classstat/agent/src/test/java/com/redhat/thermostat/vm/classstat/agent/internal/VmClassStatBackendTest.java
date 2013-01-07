@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,31 +34,58 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
-import java.util.List;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.VmClassStat;
+import java.net.URISyntaxException;
 
-class VmClassStatDAOImpl implements VmClassStatDAO {
+import org.junit.Before;
+import org.junit.Test;
 
-    private final Storage storage;
-    private final VmLatestPojoListGetter<VmClassStat> getter;
+import sun.jvmstat.monitor.MonitorException;
+import sun.jvmstat.monitor.MonitoredHost;
+import sun.jvmstat.monitor.event.HostListener;
 
-    VmClassStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(vmClassStatsCategory);
-        this.getter = new VmLatestPojoListGetter<>(storage, vmClassStatsCategory, VmClassStat.class);
+import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+
+public class VmClassStatBackendTest {
+    
+    private VmClassStatBackend backend;
+    private MonitoredHost host;
+
+    @Before
+    public void setup() throws MonitorException, URISyntaxException {
+        VmClassStatDAO vmClassStatDao = mock(VmClassStatDAO.class);
+        
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn("0.0.0");
+        
+        backend = new VmClassStatBackend(vmClassStatDao, version);
+        
+        host = mock(MonitoredHost.class);
+        backend.setHost(host);
     }
 
-    @Override
-    public List<VmClassStat> getLatestClassStats(VmRef ref, long lastUpdateTime) {
-        return getter.getLatest(ref, lastUpdateTime);
+    @Test
+    public void testStart() throws MonitorException {
+        backend.activate();
+        verify(host).addHostListener(any(HostListener.class));
+        assertTrue(backend.isActive());
     }
 
-    @Override
-    public void putVmClassStat(VmClassStat stat) {
-        storage.putPojo(vmClassStatsCategory, false, stat);
+    @Test
+    public void testStop() throws MonitorException {
+        backend.activate();
+        backend.deactivate();
+        verify(host).removeHostListener(any(HostListener.class));
+        assertFalse(backend.isActive());
     }
+    
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,44 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.vm.classstat.common.internal;
 
-import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatController;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public class VmClassStatService implements InformationService<VmRef> {
-
-    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
-    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
-
-    private ApplicationService appSvc;
-    private VmClassStatDAO vmClassStatDao;
-
-    public VmClassStatService(ApplicationService appSvc, VmClassStatDAO vmClassStatDao) {
-        this.appSvc = appSvc;
-        this.vmClassStatDao = vmClassStatDao;
-    }
+public class Activator implements BundleActivator {
     
+    private ServiceTracker tracker;
+    private ServiceRegistration reg;
+
     @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance().getService(VmClassStatViewProvider.class);
-        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
+    public void start(BundleContext context) throws Exception {
+        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                VmClassStatDAO vmClassStatDao = new VmClassStatDAOImpl(storage);
+                reg = context.registerService(VmClassStatDAO.class.getName(), vmClassStatDao, null);
+                return super.addingService(reference);
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference,
+                    Object service) {
+                reg.unregister();
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
     }
 
     @Override
-    public Filter<VmRef> getFilter() {
-        return filter;
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
 }

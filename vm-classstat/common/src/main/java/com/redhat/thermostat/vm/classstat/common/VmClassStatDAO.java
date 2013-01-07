@@ -34,44 +34,24 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.vm.classstat.common;
 
-import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
+import java.util.List;
+
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.model.VmClassStat;
 
-public class VmClassStatService implements InformationService<VmRef> {
+public interface VmClassStatDAO {
 
-    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
-    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
+    static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);
 
-    private ApplicationService appSvc;
-    private VmClassStatDAO vmClassStatDao;
+    static final Category vmClassStatsCategory = new Category(
+            "vm-class-stats", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, loadedClassesKey);
 
-    public VmClassStatService(ApplicationService appSvc, VmClassStatDAO vmClassStatDao) {
-        this.appSvc = appSvc;
-        this.vmClassStatDao = vmClassStatDao;
-    }
-    
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance().getService(VmClassStatViewProvider.class);
-        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
-    }
+    public List<VmClassStat> getLatestClassStats(VmRef ref, long since);
 
-    @Override
-    public Filter<VmRef> getFilter() {
-        return filter;
-    }
+    public void putVmClassStat(VmClassStat stat);
 
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
 }

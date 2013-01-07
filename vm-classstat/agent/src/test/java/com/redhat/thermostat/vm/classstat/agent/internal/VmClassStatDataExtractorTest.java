@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,44 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.client.core;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
-import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-public class VmClassStatService implements InformationService<VmRef> {
+import org.junit.Test;
 
-    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
-    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
+import sun.jvmstat.monitor.LongMonitor;
+import sun.jvmstat.monitor.MonitorException;
+import sun.jvmstat.monitor.MonitoredVm;
 
-    private ApplicationService appSvc;
-    private VmClassStatDAO vmClassStatDao;
+public class VmClassStatDataExtractorTest {
 
-    public VmClassStatService(ApplicationService appSvc, VmClassStatDAO vmClassStatDao) {
-        this.appSvc = appSvc;
-        this.vmClassStatDao = vmClassStatDao;
-    }
-    
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance().getService(VmClassStatViewProvider.class);
-        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
+    private MonitoredVm buildLongMonitoredVm(String monitorName, Long monitorReturn) throws MonitorException {
+        final LongMonitor monitor = mock(LongMonitor.class);
+        when(monitor.longValue()).thenReturn(monitorReturn);
+        when(monitor.getValue()).thenReturn(monitorReturn);
+        MonitoredVm vm = mock(MonitoredVm.class);
+        when(vm.findByName(monitorName)).thenReturn(monitor);
+        return vm;
     }
 
-    @Override
-    public Filter<VmRef> getFilter() {
-        return filter;
+    @Test
+    public void testLoadedClasses() throws MonitorException {
+        final String MONITOR_NAME = "java.cls.loadedClasses";
+        final Long LOADED_CLASSES = 99l;
+        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, LOADED_CLASSES);
+
+        VmClassStatDataExtractor extractor = new VmClassStatDataExtractor(vm);
+        Long returned = extractor.getLoadedClasses();
+
+        verify(vm).findByName(eq(MONITOR_NAME));
+        assertEquals(LOADED_CLASSES, returned);
     }
 
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
 }

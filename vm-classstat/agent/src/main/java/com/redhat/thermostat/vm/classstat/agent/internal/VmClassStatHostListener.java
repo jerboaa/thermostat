@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,13 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -50,29 +50,41 @@ import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
+import sun.jvmstat.monitor.event.VmListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
-import com.redhat.thermostat.agent.JvmStatusListener;
-import com.redhat.thermostat.agent.JvmStatusNotifier;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.utils.ProcDataSource;
+import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
+public class VmClassStatHostListener implements HostListener {
 
-    private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
+    private static final Logger logger = LoggingUtils.getLogger(VmClassStatHostListener.class);
 
-    private final VmInfoDAO vmInfoDAO;
+    private boolean attachNew;
+
+    private final VmClassStatDAO vmClassStatDAO;
 
     private Map<Integer, MonitoredVm> monitoredVms  = new HashMap<>();
-    
-    private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
+    private Map<MonitoredVm, VmClassStatVmListener> registeredListeners  = new ConcurrentHashMap<>();
 
-    JvmStatHostListener(VmInfoDAO vmInfoDAO) {
-        this.vmInfoDAO = vmInfoDAO;
+    VmClassStatHostListener(VmClassStatDAO vmClassStatDAO, boolean attachNew) {
+        this.vmClassStatDAO = vmClassStatDAO;
+        this.attachNew = attachNew;        
     }
 
+    void removeAllListeners() {
+        for (MonitoredVm vm : monitoredVms.values()) {
+            VmListener listener = registeredListeners.get(vm);
+            try {
+                if (listener != null) {
+                    vm.removeVmListener(listener);
+                }
+            } catch (MonitorException e) {
+                logger.log(Level.WARNING, "can't remove vm listener", e);
+            }
+        }
+    }
+    
     @Override
     public void disconnected(HostEvent event) {
         logger.warning("Disconnected from host");
@@ -111,62 +123,35 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(
                 new VmIdentifier(vmId.toString())));
         if (vm != null) {
-            JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-            try {
-                long startTime = System.currentTimeMillis();
-                long stopTime = Long.MIN_VALUE;
-                recordVmInfo(vmId, startTime, stopTime, extractor);
-                logger.finer("Sent VM_STARTED messsage");
-            } catch (MonitorException me) {
-                logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
-            }
-
-            for (JvmStatusListener statusListener : statusListeners) {
-                statusListener.jvmStarted(vmId);
+            if (attachNew) {
+                VmClassStatVmListener listener = new VmClassStatVmListener(vmClassStatDAO, vmId);
+                vm.addVmListener(listener);
+                
+                registeredListeners.put(vm, listener);
+                logger.finer("Attached VmListener for VM: " + vmId);
+            } else {
+                logger.log(Level.FINE, "skipping new vm " + vmId);
             }
 
             monitoredVms.put(vmId, vm);
         }
     }
 
-    void recordVmInfo(Integer vmId, long startTime, long stopTime,
-            JvmStatDataExtractor extractor) throws MonitorException {
-        Map<String, String> properties = new HashMap<String, String>();
-        ProcDataSource dataSource = new ProcDataSource();
-        Map<String, String> environment = new ProcessEnvironmentBuilder(dataSource).build(vmId);
-        // TODO actually figure out the loaded libraries.
-        String[] loadedNativeLibraries = new String[0];
-        VmInfo info = new VmInfo(vmId, startTime, stopTime,
-                extractor.getJavaVersion(), extractor.getJavaHome(),
-                extractor.getMainClass(), extractor.getCommandLine(),
-                extractor.getVmName(), extractor.getVmInfo(), extractor.getVmVersion(), extractor.getVmArguments(),
-                properties, environment, loadedNativeLibraries);
-        vmInfoDAO.putVmInfo(info);
-    }
-
     private void sendStoppedVM(Integer vmId, MonitoredHost host) throws URISyntaxException, MonitorException {
         
         VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(new VmIdentifier(vmId.toString()));
         if (resolvedVmID != null) {
-            long stopTime = System.currentTimeMillis();
-            for (JvmStatusListener statusListener : statusListeners) {
-                statusListener.jvmStopped(vmId);
-            }
-            vmInfoDAO.putVmStoppedTime(vmId, stopTime);
-
             MonitoredVm vm = monitoredVms.remove(vmId);
+            VmListener listener = registeredListeners.remove(vm);
+            try {
+                if (listener != null) {
+                    vm.removeVmListener(listener);
+                }
+            } catch (MonitorException e) {
+                logger.log(Level.WARNING, "can't remove vm listener", e);
+            }
             vm.detach();
         }
-    }
-
-    @Override
-    public void addJvmStatusListener(JvmStatusListener listener) {
-        statusListeners.add(listener);
-    }
-
-    @Override
-    public void removeJvmStatusListener(JvmStatusListener listener) {
-        statusListeners.remove(listener);
     }
     
     /*
@@ -176,4 +161,10 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         return monitoredVms;
     }
     
+    /*
+     * For testing purposes only.
+     */
+    Map<MonitoredVm, VmClassStatVmListener> getRegisteredListeners() {
+        return registeredListeners;
+    }
 }
