@@ -56,7 +56,6 @@ import com.redhat.thermostat.backend.BackendsProperties;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -70,7 +69,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
     private HostInfoDAO hostInfos;
-    private MemoryStatDAO memoryStats;
     private VmCpuStatDAO vmCpuStats;
     private NetworkInterfaceInfoDAO networkInterfaces;
 
@@ -86,7 +84,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private final VmCpuStatBuilder vmCpuBuilder;
     private final HostInfoBuilder hostInfoBuilder;
-    private final MemoryStatBuilder memoryStatBuilder;
 
     public SystemBackend() {
         super(new BackendID("System Backend", SystemBackend.class.getName()));
@@ -100,7 +97,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
-        memoryStatBuilder = new MemoryStatBuilder(source);
 
         int cpuCount = hostInfoBuilder.getCpuInfo().count;
         vmCpuBuilder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, builder);
@@ -109,7 +105,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     @Override
     protected void setDAOFactoryAction() {
         hostInfos = df.getHostInfoDAO();
-        memoryStats = df.getMemoryStatDAO();
         vmCpuStats = df.getVmCpuStatDAO();
         networkInterfaces = df.getNetworkInterfaceInfoDAO();
         hostListener = new JvmStatHostListener(df.getVmInfoDAO(), df.getVmMemoryStatDAO(), df.getVmGcStatDAO(), df.getVmClassStatsDAO(), getObserveNewJvm());
@@ -138,7 +133,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
                     networkInterfaces.putNetworkInterfaceInfo(info);
                 }
-                memoryStats.putMemoryStat(memoryStatBuilder.build());
 
                 for (Integer pid : pidsToMonitor) {
                     if (vmCpuBuilder.knowsAbout(pid)) {

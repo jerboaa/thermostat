@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,19 +34,21 @@
  * to do so, delete this exception statement from your version.
  */ 
 
-package com.redhat.thermostat.host.memory.client.core.internal;
+package com.redhat.thermostat.host.memory.agent.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Version;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
 
@@ -61,34 +63,42 @@ public class ActivatorTest {
         activator.start(context);
 
         assertEquals(0, context.getAllServices().size());
-        assertNotSame(1, context.getServiceListeners().size());
+        assertEquals(2, context.getServiceListeners().size());
 
         activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
     }
 
     @Test
     public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
-        MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
-        ApplicationService appSvc = mock(ApplicationService.class);
+        StubBundleContext context = new StubBundleContext() {
+            @Override
+            public Bundle getBundle() {
+                Bundle result = mock(Bundle.class);
+                when(result.getVersion()).thenReturn(Version.emptyVersion);
+                return result;
+            }
+        };
+        
+        BackendService service = mock(BackendService.class);
+        MemoryStatDAO cpuStatDAO = mock(MemoryStatDAO.class);
 
-        context.registerService(HostInfoDAO.class, hostInfoDAO, null);
-        context.registerService(MemoryStatDAO.class, memoryStatDAO, null);
-        context.registerService(ApplicationService.class, appSvc, null);
+        context.registerService(BackendService.class, service, null);
+        context.registerService(MemoryStatDAO.class, cpuStatDAO, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), HostMemoryService.class));
+        assertTrue(context.isServiceRegistered(Backend.class.getName(), HostMemoryBackend.class));
+        HostMemoryBackend backend = activator.getBackend();
+        assertNotNull(backend);
 
         activator.stop(context);
+        
+        assertFalse(backend.isActive());
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(3, context.getAllServices().size());
+        assertEquals(2, context.getAllServices().size());
     }
 
 }

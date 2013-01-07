@@ -32,39 +32,53 @@
  * this code, you may extend this exception to your version of the
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
- */
+ */ 
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.host.memory.common.internal;
 
-import com.redhat.thermostat.storage.core.Connection;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.test.StubBundleContext;
 
-public interface DAOFactory {
+public class ActivatorTest {
+    
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
 
-    // TODO this is temporary until DAO is made for those that are still using Storage directly.
-    public Storage getStorage();
+        Activator activator = new Activator();
 
-    public Connection getConnection();
+        activator.start(context);
 
-    public AgentInfoDAO getAgentInfoDAO();
+        assertEquals(0, context.getAllServices().size());
+        assertEquals(1, context.getServiceListeners().size());
 
-    public BackendInfoDAO getBackendInfoDAO();
+        activator.stop(context);
+    }
 
-    public HostInfoDAO getHostInfoDAO();
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        Storage storage = mock(Storage.class);
 
-    public NetworkInterfaceInfoDAO getNetworkInterfaceInfoDAO();
+        context.registerService(Storage.class, storage, null);
 
-    public VmInfoDAO getVmInfoDAO();
+        Activator activator = new Activator();
 
-    public VmCpuStatDAO getVmCpuStatDAO();
+        activator.start(context);
 
-    public VmMemoryStatDAO getVmMemoryStatDAO();
+        assertTrue(context.isServiceRegistered(MemoryStatDAO.class.getName(), MemoryStatDAOImpl.class));
 
-    public VmClassStatDAO getVmClassStatsDAO();
+        activator.stop(context);
 
-    public VmGcStatDAO getVmGcStatDAO();
-
-    public void registerDAOsAndStorageAsOSGiServices();
-    public void unregisterDAOsAndStorageAsOSGiServices();
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
+    }
 
 }

@@ -34,62 +34,60 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.host.memory.agent.internal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
-import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.model.MemoryStat;
 
-public class SystemBackendTest {
-
-    private SystemBackend b;
+public class HostMemoryBackendTest {
+    
+    private HostMemoryBackend backend;
+    private ScheduledExecutorService executor;
+    private MemoryStatDAO memoryStatDao;
 
     @Before
-    public void setUp() {
-        Storage s = mock(Storage.class);
-        HostInfoDAO hDAO = mock(HostInfoDAO.class);
-        VmCpuStatDAO vDAO = mock(VmCpuStatDAO.class);
-        NetworkInterfaceInfoDAO nDAO = mock(NetworkInterfaceInfoDAO.class);
-        DAOFactory df = mock(DAOFactory.class);
-        when(df.getStorage()).thenReturn(s);
-        when(df.getHostInfoDAO()).thenReturn(hDAO);
-        when(df.getVmCpuStatDAO()).thenReturn(vDAO);
-        when(df.getNetworkInterfaceInfoDAO()).thenReturn(nDAO);
-        b = new SystemBackend();
-        b.setDAOFactory(df);
+    public void setup() {
+        executor = mock(ScheduledExecutorService.class);
+        memoryStatDao = mock(MemoryStatDAO.class);
+        
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn("0.0.0");
+        
+        backend = new HostMemoryBackend(executor, memoryStatDao, version);
     }
 
     @Test
-    public void testBasicBackend() {
-        assertFalse(b.isActive());
-        b.activate();
-        assertTrue(b.isActive());
-        b.deactivate();
-        assertFalse(b.isActive());
+    public void testStart() {
+        backend.activate();
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).scheduleAtFixedRate(captor.capture(), any(Long.class), any(Long.class), any(TimeUnit.class));
+        assertTrue(backend.isActive());
+        
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(memoryStatDao).putMemoryStat(any(MemoryStat.class));
     }
-
+    
     @Test
-    public void testActivateTwice() {
-        b.activate();
-        b.activate();
-        assert(b.isActive());
+    public void testStop() {
+        backend.activate();
+        backend.deactivate();
+        verify(executor).shutdown();
+        assertFalse(backend.isActive());
     }
-
-    @Test
-    public void testDeactiateWhenNotActive() {
-        b.deactivate();
-        b.deactivate();
-        assertFalse(b.isActive());
-    }
-
 }

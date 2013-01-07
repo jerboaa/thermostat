@@ -34,29 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.host.memory.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.common.dao.HostLatestPojoListGetter;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.MemoryStat;
 
-public interface MemoryStatDAO extends Countable {
+public class MemoryStatDAOImpl implements MemoryStatDAO {
 
-    static Key<Long> memoryTotalKey = new Key<>("total", false);
-    static Key<Long> memoryFreeKey = new Key<>("free", false);
-    static Key<Long> memoryBuffersKey = new Key<>("buffers", false);
-    static Key<Long> memoryCachedKey = new Key<>("cached", false);
-    static Key<Long> memorySwapTotalKey = new Key<>("swapTotal", false);
-    static Key<Long> memorySwapFreeKey = new Key<>("swapFree", false);
-    static Key<Long> memoryCommitLimitKey = new Key<>("commitLimit", false);
+    private final Storage storage;
 
-    static final Category memoryStatCategory = new Category("memory-stats",
-            Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
-            memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
+    private final HostLatestPojoListGetter<MemoryStat> getter;
 
-    public List<MemoryStat> getLatestMemoryStats(HostRef ref, long since);
+    MemoryStatDAOImpl(Storage storage) {
+        this.storage = storage;
+        storage.registerCategory(memoryStatCategory);
+        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory, MemoryStat.class);
+    }
 
-    void putMemoryStat(MemoryStat stat);
+    @Override
+    public List<MemoryStat> getLatestMemoryStats(HostRef ref, long lastTimeStamp) {
+        return getter.getLatest(ref, lastTimeStamp);
+    }
+
+    @Override
+    public void putMemoryStat(MemoryStat stat) {
+        storage.putPojo(memoryStatCategory, false, stat);
+    }
+
+    @Override
+    public long getCount() {
+        return storage.getCount(memoryStatCategory);
+    }
 }

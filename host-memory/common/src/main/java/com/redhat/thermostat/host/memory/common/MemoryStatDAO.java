@@ -34,37 +34,31 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.host.memory.common;
 
 import java.util.List;
 
-import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.common.dao.Countable;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.MemoryStat;
 
-class MemoryStatDAOImpl implements MemoryStatDAO {
+public interface MemoryStatDAO extends Countable {
 
-    private final Storage storage;
+    static Key<Long> memoryTotalKey = new Key<>("total", false);
+    static Key<Long> memoryFreeKey = new Key<>("free", false);
+    static Key<Long> memoryBuffersKey = new Key<>("buffers", false);
+    static Key<Long> memoryCachedKey = new Key<>("cached", false);
+    static Key<Long> memorySwapTotalKey = new Key<>("swapTotal", false);
+    static Key<Long> memorySwapFreeKey = new Key<>("swapFree", false);
+    static Key<Long> memoryCommitLimitKey = new Key<>("commitLimit", false);
 
-    private final HostLatestPojoListGetter<MemoryStat> getter;
+    static final Category memoryStatCategory = new Category("memory-stats",
+            Key.AGENT_ID, Key.TIMESTAMP, memoryTotalKey, memoryFreeKey, memoryBuffersKey,
+            memoryCachedKey, memorySwapTotalKey, memorySwapFreeKey, memoryCommitLimitKey);
 
-    MemoryStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(memoryStatCategory);
-        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory, MemoryStat.class);
-    }
+    public List<MemoryStat> getLatestMemoryStats(HostRef ref, long since);
 
-    @Override
-    public List<MemoryStat> getLatestMemoryStats(HostRef ref, long lastTimeStamp) {
-        return getter.getLatest(ref, lastTimeStamp);
-    }
-
-    @Override
-    public void putMemoryStat(MemoryStat stat) {
-        storage.putPojo(memoryStatCategory, false, stat);
-    }
-
-    @Override
-    public long getCount() {
-        return storage.getCount(memoryStatCategory);
-    }
+    void putMemoryStat(MemoryStat stat);
 }
