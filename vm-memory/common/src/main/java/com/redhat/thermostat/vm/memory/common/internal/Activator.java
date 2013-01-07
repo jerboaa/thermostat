@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,51 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.memory.common.internal;
 
-import java.util.List;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.model.VmMemoryStat;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
-class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
+public class Activator implements BundleActivator {
+    
+    private ServiceTracker tracker;
+    private ServiceRegistration reg;
 
-    private final Storage storage;
-    private final VmLatestPojoListGetter<VmMemoryStat> getter;
-
-    VmMemoryStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(vmMemoryStatsCategory);
-        getter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory, VmMemoryStat.class);
+    @Override
+    public void start(BundleContext context) throws Exception {
+        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                VmMemoryStatDAO vmMemoryStatDao = new VmMemoryStatDAOImpl(storage);
+                reg = context.registerService(VmMemoryStatDAO.class.getName(), vmMemoryStatDao, null);
+                return super.addingService(reference);
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference,
+                    Object service) {
+                reg.unregister();
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
     }
 
     @Override
-    public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        Query query = storage.createQuery()
-                .from(vmMemoryStatsCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
-                .where(Key.VM_ID, Criteria.EQUALS, ref.getId())
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING)
-                .limit(1);
-        Cursor<VmMemoryStat> cursor = storage.findAllPojos(query, VmMemoryStat.class);
-        if (cursor.hasNext()) {
-            return cursor.next();
-        }
-        return null;
-    }
-
-    @Override
-    public void putVmMemoryStat(VmMemoryStat stat) {
-        storage.putPojo(vmMemoryStatsCategory, false, stat);
-    }
-
-    @Override
-    public List<VmMemoryStat> getLatestVmMemoryStats(VmRef ref, long since) {
-        return getter.getLatest(ref, since);
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
     }
 
 }

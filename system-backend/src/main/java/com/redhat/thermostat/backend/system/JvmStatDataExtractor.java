@@ -36,9 +36,6 @@
 
 package com.redhat.thermostat.backend.system;
 
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
-
-import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.MonitoredVmUtil;
@@ -115,52 +112,6 @@ public class JvmStatDataExtractor {
 
     public long getCollectorInvocations(long collector) throws MonitorException {
         return (Long) vm.findByName("sun.gc.collector." + collector + ".invocations").getValue();
-    }
-
-    public long getTotalGcGenerations() throws MonitorException {
-        return (Long) vm.findByName("sun.gc.policy.generations").getValue();
-    }
-
-    public String getGenerationName(long generation) throws MonitorException {
-        return (String) vm.findByName("sun.gc.generation." + generation + ".name").getValue();
-    }
-
-    public long getGenerationCapacity(long generation) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".capacity").getValue();
-    }
-
-    public long getGenerationMaxCapacity(long generation) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".maxCapacity").getValue();
-    }
-
-    public String getGenerationCollector(long generation) throws MonitorException {
-        // this is just re-implementing getCollectorName()
-        // TODO check generation number and collector number are always associated
-        Monitor m = vm.findByName("sun.gc.collector." + generation + ".name");
-        if (m == null) {
-            return Generation.COLLECTOR_NONE;
-        }
-        return (String) m.getValue();
-    }
-
-    public long getTotalSpaces(long generation) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".spaces").getValue();
-    }
-
-    public String getSpaceName(long generation, long space) throws MonitorException {
-        return (String) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".name").getValue();
-    }
-
-    public long getSpaceCapacity(long generation, long space) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".capacity").getValue();
-    }
-
-    public long getSpaceMaxCapacity(long generation, long space) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".maxCapacity").getValue();
-    }
-
-    public long getSpaceUsed(long generation, long space) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".used").getValue();
     }
 
     public long getLoadedClasses() throws MonitorException {

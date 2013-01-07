@@ -43,11 +43,11 @@ import com.redhat.thermostat.client.core.controllers.InformationServiceControlle
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.vm.memory.client.core.internal.MemoryStatsController;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class MemoryStatsService implements InformationService<VmRef> {
     

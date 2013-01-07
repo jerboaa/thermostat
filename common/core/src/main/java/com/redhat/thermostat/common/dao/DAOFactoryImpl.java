@@ -60,7 +60,6 @@ public class DAOFactoryImpl implements DAOFactory {
     private NetworkInterfaceInfoDAO networkInfoDAO;
     private VmInfoDAO vmInfoDAO;
     private VmClassStatDAO vmClassStatDAO;
-    private VmMemoryStatDAO vmMemStatDAO;
     private VmGcStatDAO vmGcStatDAO;
 
     public DAOFactoryImpl(StorageProvider prov) {
@@ -108,12 +107,6 @@ public class DAOFactoryImpl implements DAOFactory {
     }
 
     @Override
-    public VmMemoryStatDAO getVmMemoryStatDAO() {
-        ensureStorageConnected();
-        return vmMemStatDAO;
-    }
-
-    @Override
     public VmClassStatDAO getVmClassStatsDAO() {
         ensureStorageConnected();
         return vmClassStatDAO;
@@ -151,7 +144,6 @@ public class DAOFactoryImpl implements DAOFactory {
         registerAndRecordService(VmInfoDAO.class, getVmInfoDAO());
         registerAndRecordService(VmClassStatDAO.class, getVmClassStatsDAO());
         registerAndRecordService(VmGcStatDAO.class, getVmGcStatDAO());
-        registerAndRecordService(VmMemoryStatDAO.class, getVmMemoryStatDAO());
     }
 
     /*
@@ -164,7 +156,6 @@ public class DAOFactoryImpl implements DAOFactory {
         networkInfoDAO = new NetworkInterfaceInfoDAOImpl(storage);
         vmInfoDAO = new VmInfoDAOImpl(storage);
         vmClassStatDAO = new VmClassStatDAOImpl(storage);
-        vmMemStatDAO = new VmMemoryStatDAOImpl(storage);
         vmGcStatDAO = new VmGcStatDAOImpl(storage);
     }
 

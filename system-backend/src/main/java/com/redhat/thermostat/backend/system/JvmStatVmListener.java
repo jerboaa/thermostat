@@ -46,12 +46,8 @@ import sun.jvmstat.monitor.event.VmEvent;
 import sun.jvmstat.monitor.event.VmListener;
 
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.VmGcStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 
 public class JvmStatVmListener implements VmListener {
 
@@ -59,11 +55,9 @@ public class JvmStatVmListener implements VmListener {
 
     private final int vmId;
     private final VmGcStatDAO gcDAO;
-    private final VmMemoryStatDAO memDAO;
 
-    public JvmStatVmListener(VmMemoryStatDAO vmMemoryStatDao, VmGcStatDAO vmGcStatDao, int vmId) {
+    public JvmStatVmListener(VmGcStatDAO vmGcStatDao, int vmId) {
         gcDAO = vmGcStatDao;
-        memDAO = vmMemoryStatDao;
         this.vmId = vmId;
     }
 
@@ -83,7 +77,6 @@ public class JvmStatVmListener implements VmListener {
         if (vm == null) {
             throw new NullPointerException();
         }
-        recordMemoryStat(vm);
         recordGcStat(vm);
     }
 
@@ -104,39 +97,5 @@ public class JvmStatVmListener implements VmListener {
         }
 
     }
-
-    private void recordMemoryStat(MonitoredVm vm) {
-        try {
-            long timestamp = System.currentTimeMillis();
-            JvmStatDataExtractor extractor = new JvmStatDataExtractor(vm);
-            int maxGenerations = (int) extractor.getTotalGcGenerations();
-            Generation[] generations = new Generation[maxGenerations];
-            for (int generation = 0; generation < maxGenerations; generation++) {
-                Generation g = new Generation();
-                g.setName(extractor.getGenerationName(generation));
-                g.setCapacity(extractor.getGenerationCapacity(generation));
-                g.setMaxCapacity(extractor.getGenerationMaxCapacity(generation));
-                g.setCollector(extractor.getGenerationCollector(generation));
-                generations[generation] = g;
-                int maxSpaces = (int) extractor.getTotalSpaces(generation);
-                Space[] spaces = new Space[maxSpaces];
-                for (int space = 0; space < maxSpaces; space++) {
-                    Space s = new Space();
-                    s.setIndex((int) space);
-                    s.setName(extractor.getSpaceName(generation, space));
-                    s.setCapacity(extractor.getSpaceCapacity(generation, space));
-                    s.setMaxCapacity(extractor.getSpaceMaxCapacity(generation, space));
-                    s.setUsed(extractor.getSpaceUsed(generation, space));
-                    spaces[space] = s;
-                }
-                g.setSpaces(spaces);
-            }
-            VmMemoryStat stat = new VmMemoryStat(timestamp, vmId, generations);
-            memDAO.putVmMemoryStat(stat);
-        } catch (MonitorException e) {
-            logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);
-        }
-    }
-
 
 }

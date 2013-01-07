@@ -67,7 +67,6 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.gc.remote.common.command.GCCommand;
@@ -78,6 +77,7 @@ import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.client.core.Payload;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class MemoryStatsControllerTest {
 

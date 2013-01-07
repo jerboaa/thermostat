@@ -47,10 +47,10 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsService;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class ActivatorTest {
     

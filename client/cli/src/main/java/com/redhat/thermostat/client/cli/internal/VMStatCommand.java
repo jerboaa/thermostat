@@ -48,12 +48,12 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleCommand;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class VMStatCommand extends SimpleCommand {
 

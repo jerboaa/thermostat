@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.memory.common.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -52,6 +52,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
@@ -61,6 +63,8 @@ import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 import com.redhat.thermostat.test.MockQuery;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl;
 
 public class VmMemoryStatDAOTest {
 

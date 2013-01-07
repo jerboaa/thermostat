@@ -46,9 +46,9 @@ import org.junit.Test;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class ActivatorTest {
     

@@ -54,7 +54,6 @@ import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.HeapInfo;
@@ -72,6 +71,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.chart.OverviewChart;
 import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class HeapDumpController implements InformationServiceController<VmRef> {
 

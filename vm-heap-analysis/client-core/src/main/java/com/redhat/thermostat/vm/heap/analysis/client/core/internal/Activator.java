@@ -50,10 +50,10 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class Activator implements BundleActivator {
 

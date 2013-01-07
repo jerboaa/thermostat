@@ -125,7 +125,11 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
-
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-heap-analysis-common</artifactId>

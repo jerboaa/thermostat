@@ -51,9 +51,9 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.dao.VmGcStatDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class Activator implements BundleActivator {
     

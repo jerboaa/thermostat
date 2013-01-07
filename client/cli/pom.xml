@@ -106,6 +106,12 @@
       <artifactId>thermostat-vm-cpu-common</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <!-- Only temporary dependency -->
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 
   <build>
@@ -126,7 +132,10 @@
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
             <!-- Remove this later -->
-            <Import-Package>*,com.redhat.thermostat.vm.cpu.common;resolution:=optional</Import-Package>
+            <Import-Package>
+              *,com.redhat.thermostat.vm.cpu.common;resolution:=optional,
+              com.redhat.thermostat.vm.memory.common;resolution:=optional
+            </Import-Package>
           </instructions>
         </configuration>
       </plugin>

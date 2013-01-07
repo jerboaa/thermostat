@@ -49,8 +49,8 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
-import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Size.Unit;
+import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
@@ -58,7 +58,6 @@ import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.common.dao.AgentInfoDAO;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.gc.remote.common.GCRequest;
@@ -71,6 +70,7 @@ import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.client.core.Payload;
 import com.redhat.thermostat.vm.memory.client.core.StatsModel;
 import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class MemoryStatsController implements InformationServiceController<VmRef> {
 

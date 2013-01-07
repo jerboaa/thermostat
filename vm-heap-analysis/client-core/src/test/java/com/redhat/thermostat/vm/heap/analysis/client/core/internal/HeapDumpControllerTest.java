@@ -71,7 +71,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
@@ -90,6 +89,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class HeapDumpControllerTest {
     private static int TIMEOUT_MS = 1000;
