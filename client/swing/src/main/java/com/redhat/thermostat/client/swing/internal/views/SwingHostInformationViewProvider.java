@@ -34,16 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.client.swing.internal.views;
 
-import com.redhat.thermostat.client.core.views.VmInformationView;
-import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+import com.redhat.thermostat.client.core.views.HostInformationView;
+import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 
-public class SwingVmInformationViewProvider implements VmInformationViewProvider {
+public class SwingHostInformationViewProvider implements HostInformationViewProvider {
 
     @Override
-    public VmInformationView createView() {
-        return new VmInformationPanel();
+    public HostInformationView createView() {
+        return new HostInformationPanel();
     }
 
 }

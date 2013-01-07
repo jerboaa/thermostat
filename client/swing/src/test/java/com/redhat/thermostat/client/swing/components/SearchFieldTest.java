@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.client.swing.components;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -62,18 +62,17 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.core.views.SearchFieldView;
-import com.redhat.thermostat.client.swing.views.SearchFieldSwingView;
+import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 
 @RunWith(CacioFESTRunner.class)
-public class SearchFieldSwingViewTest {
+public class SearchFieldTest {
 
     private final String OTHER_COMPONENT_NAME = "other";
 
     private JFrame frame;
-    private SearchFieldSwingView searchField;
+    private SearchField searchField;
     private JButton otherComponent;
     private FrameFixture frameFixture;
 
@@ -91,7 +90,7 @@ public class SearchFieldSwingViewTest {
             protected void executeInEDT() throws Throwable {
                 frame = new JFrame();
                 frame.setLayout(new FlowLayout());
-                searchField = new SearchFieldSwingView();
+                searchField = new SearchField();
                 frame.add(searchField);
                 otherComponent = new JButton();
                 otherComponent.setName(OTHER_COMPONENT_NAME);
@@ -115,25 +114,38 @@ public class SearchFieldSwingViewTest {
     }
 
     @Category(GUITest.class)
+    @GUITest
     @Test
     public void verifyLabelShownByDefault() {
         final String LABEL = "search label to help users";
-        searchField.setLabel(LABEL);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                searchField.setLabel(LABEL);            }
+        });
 
         frameFixture.show();
-        JTextComponentFixture textBox = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
         assertEquals(LABEL, textBox.text());
     }
 
     @Category(GUITest.class)
+    @GUITest
     @Test
     public void verifyLabelHiddenAndShownProperly() {
         final String LABEL = "search label to help users";
         final String USER_TEXT = "java";
-        searchField.setLabel(LABEL);
+
+        GuiActionRunner.execute(new GuiTask() {
+
+            @Override
+            protected void executeInEDT() throws Throwable {
+                searchField.setLabel(LABEL);
+            }
+        });
 
         frameFixture.show();
-        JTextComponentFixture textBox = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
         assertEquals(LABEL, textBox.text());
 
         textBox.enterText(USER_TEXT);
@@ -152,45 +164,52 @@ public class SearchFieldSwingViewTest {
         frameFixture.show();
 
         final String SEARCH_TEXT = "test";
-        JTextComponentFixture textBox = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
         textBox.enterText(SEARCH_TEXT);
         String actual = searchField.getSearchText();
         assertEquals(SEARCH_TEXT, actual);
     }
 
     @Category(GUITest.class)
+    @GUITest
     @Test
     public void verifyTextSetIsShown() {
         frameFixture.show();
 
         final String SEARCH_TEXT = "test";
-        searchField.setSearchText(SEARCH_TEXT);
-        JTextComponentFixture textBox = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                searchField.setSearchText(SEARCH_TEXT);
+            }
+        });
+        JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
         String actual = textBox.text();
         assertEquals(SEARCH_TEXT, actual);
     }
 
     @Category(GUITest.class)
+    @GUITest
     @Test
     public void verifyListenersAreFiredOnTextEntry() {
         frameFixture.show();
 
         final String SEARCH_TEXT = "test";
-        ActionListener<SearchFieldView.SearchAction> listener = mock(ActionListener.class);
+        ActionListener<SearchField.SearchAction> listener = mock(ActionListener.class);
 
-        JTextComponentFixture textBox = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        JTextComponentFixture textBox = frameFixture.textBox(SearchField.VIEW_NAME);
 
         searchField.addActionListener(listener);
 
         textBox.enterText(SEARCH_TEXT);
 
         verify(listener, times(SEARCH_TEXT.length())).actionPerformed(
-                new ActionEvent<SearchFieldView.SearchAction>(searchField, SearchFieldView.SearchAction.TEXT_CHANGED));
+                new ActionEvent<SearchField.SearchAction>(searchField, SearchField.SearchAction.TEXT_CHANGED));
 
         textBox.enterText("\n");
 
         verify(listener).actionPerformed(
-                new ActionEvent<SearchFieldView.SearchAction>(searchField, SearchFieldView.SearchAction.PERFORM_SEARCH));
+                new ActionEvent<SearchField.SearchAction>(searchField, SearchField.SearchAction.PERFORM_SEARCH));
 
     }
 

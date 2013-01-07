@@ -66,7 +66,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.core.views.SearchFieldView;
+import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapObjectUI;
@@ -119,7 +119,7 @@ public class ObjectDetailsPanelTest {
 
         frameFixture.show();
 
-        JTextComponentFixture searchBox = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        JTextComponentFixture searchBox = frameFixture.textBox(SearchField.VIEW_NAME);
         searchBox.enterText(SEARCH_TEXT);
 
         verify(listener, times(SEARCH_TEXT.length())).actionPerformed(new ActionEvent<ObjectAction>(view, ObjectAction.SEARCH));

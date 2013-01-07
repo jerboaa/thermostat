@@ -54,10 +54,10 @@ import javax.swing.SwingUtilities;
 import javax.swing.GroupLayout.Alignment;
 import javax.swing.JLabel;
 
-import com.redhat.thermostat.client.core.views.SearchFieldView.SearchAction;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
-import com.redhat.thermostat.client.swing.views.SearchFieldSwingView;
+import com.redhat.thermostat.client.swing.components.SearchField;
+import com.redhat.thermostat.client.swing.components.SearchField.SearchAction;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionNotifier;
@@ -103,7 +103,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
 
     private final JPanel panel;
 
-    private final SearchFieldSwingView searchField;
+    private final SearchField searchField;
 
     private final LazyMutableTreeNode ROOT = new LazyMutableTreeNode(null);
     /** all the nodes in this model must be {@link LazyMutableTreeNode}s */
@@ -124,7 +124,7 @@ public class ObjectDetailsPanel extends ObjectDetailsView implements SwingCompon
 
         JLabel searchLabel = new JLabel(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_LABEL));
 
-        searchField = new SearchFieldSwingView();
+        searchField = new SearchField();
         searchField.setTooltip(translator.localize(LocaleResources.HEAP_DUMP_OBJECT_BROWSE_SEARCH_PATTERN_HELP));
 
         JSplitPane splitPane = new JSplitPane();

@@ -34,30 +34,17 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.core.views;
+package com.redhat.thermostat.client.swing.internal.views;
 
-import com.redhat.thermostat.client.core.views.View;
-import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
+import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 
-public interface SearchFieldView extends View {
+public class SwingAgentInformationViewProvider implements
+        AgentInformationViewProvider {
 
-    /** For use by tests only */
-    public static final String VIEW_NAME = "searchField";
-
-    public enum SearchAction {
-        TEXT_CHANGED,
-        PERFORM_SEARCH,
+    @Override
+    public AgentInformationDisplayView createView() {
+        return new AgentInformationDisplayFrame();
     }
-
-    public String getSearchText();
-
-    public void setSearchText(String text);
-
-    void setLabel(String label);
-
-    void setTooltip(String tooltip);
-
-    public void addActionListener(ActionListener<SearchAction> listener);
-    public void removeActionListener(ActionListener<SearchAction> listener);
 
 }

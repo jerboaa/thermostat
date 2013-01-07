@@ -34,17 +34,62 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.client.swing.internal.views;
 
-import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
-import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
+import java.awt.BorderLayout;
+import java.awt.Component;
 
-public class SwingAgentInformationViewProvider implements
-        AgentInformationViewProvider {
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 
-    @Override
-    public AgentInformationDisplayView createView() {
-        return new AgentInformationDisplayFrame();
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.client.core.views.VmInformationView;
+import com.redhat.thermostat.client.swing.SwingComponent;
+
+public class VmInformationPanel extends VmInformationView implements SwingComponent {
+
+    private final JTabbedPane tabPane = new JTabbedPane();
+    private JPanel visiblePanel;
+
+    private int tabCount = 0;
+
+    public VmInformationPanel() {
+        super();
+        visiblePanel = new JPanel();
+        visiblePanel.setLayout(new BorderLayout());
+        tabPane.setName("tabPane");
+        visiblePanel.add(tabPane);
     }
 
+    @Override
+    public void addChildView(String title, UIComponent view) {
+        if (view instanceof SwingComponent) {
+            SwingComponent panel = (SwingComponent)view;
+            tabPane.insertTab(title, null, panel.getUiComponent(), null, tabCount);
+            tabCount++;
+        }
+    }
+
+    public Component getUiComponent() {
+        return visiblePanel;
+    }
+
+    @Override
+    public int getSelectedChildID() {
+        return tabPane.getSelectedIndex();
+    }
+
+    @Override
+    public boolean selectChildID(int id) {
+        if (tabPane.getComponentCount() > id) {
+            tabPane.setSelectedIndex(id);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public int getNumChildren() {
+        return tabPane.getComponentCount();
+    }
 }

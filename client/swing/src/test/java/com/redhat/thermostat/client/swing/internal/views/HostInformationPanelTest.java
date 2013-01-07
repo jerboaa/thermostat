@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.client.swing.internal.views;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -54,7 +54,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.swing.TabbedPaneMatcher;
-import com.redhat.thermostat.client.swing.views.HostInformationPanel;
+import com.redhat.thermostat.client.swing.internal.views.HostInformationPanel;
 
 public class HostInformationPanelTest {
 

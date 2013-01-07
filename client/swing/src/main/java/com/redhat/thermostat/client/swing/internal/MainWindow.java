@@ -92,7 +92,6 @@ import sun.misc.Signal;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.SearchFieldView.SearchAction;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
@@ -101,10 +100,11 @@ import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.HtmlTextBuilder;
 import com.redhat.thermostat.client.swing.MenuHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.swing.components.SearchField;
+import com.redhat.thermostat.client.swing.components.SearchField.SearchAction;
 import com.redhat.thermostat.client.swing.components.StatusBar;
 import com.redhat.thermostat.client.swing.components.ThermostatPopupMenu;
 import com.redhat.thermostat.client.swing.internal.components.DecoratedDefaultMutableTreeNode;
-import com.redhat.thermostat.client.swing.views.SearchFieldSwingView;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.common.ActionEvent;
@@ -321,7 +321,7 @@ public class MainWindow extends JFrame implements MainView {
     private final MenuHelper mainMenuHelper = new MenuHelper(mainMenuBar);
     private JPanel contentArea = null;
 
-    private SearchFieldSwingView searchField = new SearchFieldSwingView();
+    private SearchField searchField = new SearchField();
     private JTree agentVmTree = null;
 
     private final ShutdownClient shutdownAction;

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.client.swing.components;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -57,7 +57,6 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
-import com.redhat.thermostat.client.core.views.SearchFieldView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.EdtHelper;
 import com.redhat.thermostat.client.swing.IconResource;
@@ -65,7 +64,21 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.locale.Translate;
 
-public class SearchFieldSwingView extends JPanel implements SearchFieldView {
+/**
+ * A swing component meant for entering search terms.
+ * <p>
+ * Similar to other swing components, this component should only be
+ * modified on the swing EDT.
+ */
+public class SearchField extends JPanel {
+
+    /** For use by tests only */
+    public static final String VIEW_NAME = "searchField";
+
+    public enum SearchAction {
+        TEXT_CHANGED,
+        PERFORM_SEARCH,
+    }
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -76,7 +89,7 @@ public class SearchFieldSwingView extends JPanel implements SearchFieldView {
     private final AtomicReference<String> label = new AtomicReference<>(translator.localize(LocaleResources.SEARCH_HINT));
     private final AtomicBoolean labelDisplayed = new AtomicBoolean(true);
 
-    public SearchFieldSwingView() {
+    public SearchField() {
         super(new BorderLayout());
 
         // TODO move this icon inside the search field
@@ -162,60 +175,30 @@ public class SearchFieldSwingView extends JPanel implements SearchFieldView {
 
     }
 
-    @Override
     public String getSearchText() {
-        try {
-            return new EdtHelper().callAndWait(new Callable<String>() {
-                @Override
-                public String call() throws Exception {
-                    return searchText.get();
-                }
-            });
-        } catch (InvocationTargetException | InterruptedException e) {
-            return null;
-        }
+        return searchText.get();
     }
 
-    @Override
     public void setSearchText(final String text) {
         searchText.set(text);
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                searchField.setText(text);
-            }
-        });
+        searchField.setText(text);
     }
 
-    @Override
     public void setLabel(String label) {
         this.label.set(label);
         if (labelDisplayed.get()) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    searchField.setText(SearchFieldSwingView.this.label.get());
-                }
-            });
+            searchField.setText(this.label.get());
         }
     }
 
-    @Override
     public void setTooltip(final String tooltip) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                searchField.setToolTipText(tooltip);
-            }
-        });
+        searchField.setToolTipText(tooltip);
     }
 
-    @Override
     public void addActionListener(ActionListener<SearchAction> listener) {
         notifier.addActionListener(listener);
     }
 
-    @Override
     public void removeActionListener(ActionListener<SearchAction> listener) {
         notifier.removeActionListener(listener);
     }

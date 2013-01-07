@@ -73,9 +73,9 @@ import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.core.views.SearchFieldView;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.swing.internal.MainView;
 import com.redhat.thermostat.client.swing.internal.MainWindow;
 import com.redhat.thermostat.client.ui.Decorator;
@@ -174,7 +174,7 @@ public class MainWindowTest {
     public void testHostVMTreeFilterPropertySupport() {
         String SEARCH_TEXT = "test";
         frameFixture.show();
-        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchField.VIEW_NAME);
         hostVMTreeFilterField.enterText(SEARCH_TEXT);
 
         verify(l, times(SEARCH_TEXT.length())).actionPerformed(new ActionEvent<MainView.Action>(window, MainView.Action.HOST_VM_TREE_FILTER));
@@ -338,7 +338,7 @@ public class MainWindowTest {
     @Test
     public void testGetHostVMTreeFilter() {
         frameFixture.show();
-        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchFieldView.VIEW_NAME);
+        JTextComponentFixture hostVMTreeFilterField = frameFixture.textBox(SearchField.VIEW_NAME);
         hostVMTreeFilterField.enterText("test");
         String actual = window.getHostVmTreeFilterText();
         assertEquals("test", actual);

@@ -34,62 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.swing.views;
+package com.redhat.thermostat.client.swing.internal.views;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-
-import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.client.core.views.VmInformationView;
-import com.redhat.thermostat.client.swing.SwingComponent;
+import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 
-public class VmInformationPanel extends VmInformationView implements SwingComponent {
-
-    private final JTabbedPane tabPane = new JTabbedPane();
-    private JPanel visiblePanel;
-
-    private int tabCount = 0;
-
-    public VmInformationPanel() {
-        super();
-        visiblePanel = new JPanel();
-        visiblePanel.setLayout(new BorderLayout());
-        tabPane.setName("tabPane");
-        visiblePanel.add(tabPane);
-    }
+public class SwingVmInformationViewProvider implements VmInformationViewProvider {
 
     @Override
-    public void addChildView(String title, UIComponent view) {
-        if (view instanceof SwingComponent) {
-            SwingComponent panel = (SwingComponent)view;
-            tabPane.insertTab(title, null, panel.getUiComponent(), null, tabCount);
-            tabCount++;
-        }
+    public VmInformationView createView() {
+        return new VmInformationPanel();
     }
 
-    public Component getUiComponent() {
-        return visiblePanel;
-    }
-
-    @Override
-    public int getSelectedChildID() {
-        return tabPane.getSelectedIndex();
-    }
-
-    @Override
-    public boolean selectChildID(int id) {
-        if (tabPane.getComponentCount() > id) {
-            tabPane.setSelectedIndex(id);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public int getNumChildren() {
-        return tabPane.getComponentCount();
-    }
 }

@@ -52,7 +52,7 @@ import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.internal.config.ConnectionConfiguration;
-import com.redhat.thermostat.client.swing.views.ClientConfigurationSwing;
+import com.redhat.thermostat.client.swing.internal.views.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigReconnector;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.MainWindowController;

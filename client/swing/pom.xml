@@ -148,13 +148,13 @@
               com.redhat.thermostat.client.swing,
               com.redhat.thermostat.client.swing.components,
               com.redhat.thermostat.client.swing.components.models,
-              com.redhat.thermostat.client.swing.views,
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.client.swing.internal,
               com.redhat.thermostat.client.swing.internal.components,
               com.redhat.thermostat.client.swing.internal.osgi,
-              com.redhat.thermostat.client.swing.internal.config
+              com.redhat.thermostat.client.swing.internal.config,
+              com.redhat.thermostat.client.swing.internal.views,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
