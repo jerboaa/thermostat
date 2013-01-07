@@ -56,8 +56,6 @@ public interface DAOFactory {
 
     public VmInfoDAO getVmInfoDAO();
 
-    public VmCpuStatDAO getVmCpuStatDAO();
-
     public VmMemoryStatDAO getVmMemoryStatDAO();
 
     public VmClassStatDAO getVmClassStatsDAO();

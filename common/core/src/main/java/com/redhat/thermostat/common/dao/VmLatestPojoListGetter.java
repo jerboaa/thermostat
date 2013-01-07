@@ -47,13 +47,13 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-class VmLatestPojoListGetter<T extends TimeStampedPojo> {
+public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
     private final Storage storage;
     private final Category cat;
     private final Class<T> resultClass;
 
-    VmLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
+    public VmLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
         this.storage = storage;
         this.cat = cat;
         this.resultClass = resultClass;

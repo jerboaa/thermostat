@@ -54,12 +54,12 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 
 public class VmCpuControllerTest {

@@ -50,9 +50,9 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 public class Activator implements BundleActivator {
 

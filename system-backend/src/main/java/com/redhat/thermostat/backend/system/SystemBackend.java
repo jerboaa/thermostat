@@ -53,23 +53,17 @@ import com.redhat.thermostat.agent.JvmStatusNotifier;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
-import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
-import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.utils.ProcDataSource;
-import com.redhat.thermostat.utils.SysConf;
 
 public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {
 
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
     private HostInfoDAO hostInfos;
-    private VmCpuStatDAO vmCpuStats;
     private NetworkInterfaceInfoDAO networkInterfaces;
 
     private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
@@ -80,9 +74,8 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private HostIdentifier hostId = null;
     private MonitoredHost host = null;
-    private JvmStatHostListener hostListener;
+    private JvmStatHostListener hostListener = null;
 
-    private final VmCpuStatBuilder vmCpuBuilder;
     private final HostInfoBuilder hostInfoBuilder;
 
     public SystemBackend() {
@@ -92,20 +85,13 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers basic information from the system");
         setConfigurationValue(BackendsProperties.VERSION.name(), "0.5.0");
         
-        Clock clock = new SystemClock();
-        ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
-        long ticksPerSecond = SysConf.getClockTicksPerSecond();
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
-
-        int cpuCount = hostInfoBuilder.getCpuInfo().count;
-        vmCpuBuilder = new VmCpuStatBuilder(clock, cpuCount, ticksPerSecond, builder);
     }
 
     @Override
     protected void setDAOFactoryAction() {
         hostInfos = df.getHostInfoDAO();
-        vmCpuStats = df.getVmCpuStatDAO();
         networkInterfaces = df.getNetworkInterfaceInfoDAO();
         hostListener = new JvmStatHostListener(df.getVmInfoDAO(), df.getVmMemoryStatDAO(), df.getVmGcStatDAO(), df.getVmClassStatsDAO(), getObserveNewJvm());
     }
@@ -132,17 +118,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
             public void run() {
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
                     networkInterfaces.putNetworkInterfaceInfo(info);
-                }
-
-                for (Integer pid : pidsToMonitor) {
-                    if (vmCpuBuilder.knowsAbout(pid)) {
-                        VmCpuStat dataBuilt = vmCpuBuilder.build(pid);
-                        if (dataBuilt != null) {
-                            vmCpuStats.putVmCpuStat(dataBuilt);
-                        }
-                    } else {
-                        vmCpuBuilder.learnAbout(pid);
-                    }
                 }
             }
         }, 0, procCheckInterval);
@@ -221,7 +196,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     @Override
     public void jvmStopped(int vmId) {
         pidsToMonitor.remove(vmId);
-        vmCpuBuilder.forgetAbout(vmId);
     }
 
     @Override

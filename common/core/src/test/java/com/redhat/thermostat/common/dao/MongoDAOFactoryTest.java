@@ -131,8 +131,8 @@ public class MongoDAOFactoryTest {
 
         daoFactory.registerDAOsAndStorageAsOSGiServices();
 
-        // currently 10 DAOs and Storage are registered
-        assertEquals(10, bundleContext.getAllServices().size());
+        // currently 9 DAOs and Storage are registered
+        assertEquals(9, bundleContext.getAllServices().size());
     }
 
     @Test

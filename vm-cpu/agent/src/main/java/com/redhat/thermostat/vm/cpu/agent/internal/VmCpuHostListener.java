@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,31 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.logging.Logger;
 
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.VmCpuStat;
+import sun.jvmstat.monitor.event.HostEvent;
+import sun.jvmstat.monitor.event.HostListener;
+import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
-class VmCpuStatDAOImpl implements VmCpuStatDAO {
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
-    private final Storage storage;
-    private final VmLatestPojoListGetter<VmCpuStat> getter;
-
-    VmCpuStatDAOImpl(Storage storage) {
-        this.storage = storage;
-        storage.registerCategory(vmCpuStatCategory);
-        this.getter = new VmLatestPojoListGetter<>(storage, vmCpuStatCategory, VmCpuStat.class);
+public class VmCpuHostListener implements HostListener {
+    
+    private static final Logger LOGGER = LoggingUtils.getLogger(VmCpuHostListener.class);
+    
+    private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
+    private VmCpuStatBuilder vmCpuStatBuilder;
+    
+    public VmCpuHostListener(VmCpuStatBuilder builder) {
+        this.vmCpuStatBuilder = builder;
     }
 
     @Override
-    public List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since) {
-        return getter.getLatest(ref, since);
+    public void vmStatusChanged(VmStatusChangeEvent event) {
+        for (Object newVm : event.getStarted()) {
+            Integer vmId = (Integer) newVm;
+            LOGGER.fine("New vm: " + vmId);
+            pidsToMonitor.add(vmId);
+        }
+
+        for (Object stoppedVm : event.getTerminated()) {
+            Integer vmId = (Integer) stoppedVm;
+            LOGGER.fine("stopped vm: " + vmId);
+            pidsToMonitor.remove(vmId);
+            vmCpuStatBuilder.forgetAbout(vmId);
+        }
     }
 
     @Override
-    public void putVmCpuStat(VmCpuStat stat) {
-        storage.putPojo(vmCpuStatCategory, false, stat);
+    public void disconnected(HostEvent event) {
+        LOGGER.warning("Disconnected from host");
     }
+    
+    public Set<Integer> getPidsToMonitor() {
+        return pidsToMonitor;
+    }
+    
 }

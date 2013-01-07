@@ -64,7 +64,6 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -74,6 +73,7 @@ import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 public class VmStatCommandTest {
 

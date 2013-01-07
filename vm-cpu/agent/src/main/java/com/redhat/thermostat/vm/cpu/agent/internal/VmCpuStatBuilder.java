@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.cpu.agent.internal;
 
 import java.util.HashMap;
 import java.util.Map;

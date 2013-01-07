@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.cpu.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -49,6 +49,8 @@ import java.io.StringReader;
 import org.junit.Test;
 
 import com.redhat.thermostat.utils.ProcDataSource;
+import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfo;
+import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfoBuilder;
 
 public class ProcessStatusInfoBuilderTest {
 

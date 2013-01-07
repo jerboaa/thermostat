@@ -34,23 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.vm.cpu.agent.internal;
 
-import java.util.List;
+public class ProcessStatusInfo {
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.model.VmCpuStat;
+    /* All times are measured in clock ticks */
 
-public interface VmCpuStatDAO {
+    private final int pid;
+    private final long userTime;
+    private final long kernelTime;
 
-    static final Key<Double> vmCpuLoadKey = new Key<>("cpuLoad", false);
+    public ProcessStatusInfo(int pid, long userTime, long kernelTime) {
+        this.pid = pid;
+        this.userTime = userTime;
+        this.kernelTime = kernelTime;
+    }
 
-    static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
-            Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey);
+    public int getPid() {
+        return pid;
+    }
 
-    public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since);
+    /**
+     * @return the time this process has spent in user-mode as a number of
+     * kernel ticks
+     */
+    public long getUserTime() {
+        return userTime;
+    }
 
-    public abstract void putVmCpuStat(VmCpuStat stat);
+    /**
+     * @return the time this process spent in kernel-mode as a number of kernel
+     * ticks
+     */
+    public long getKernelTime() {
+        return kernelTime;
+    }
 
 }

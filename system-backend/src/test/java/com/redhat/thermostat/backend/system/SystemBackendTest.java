@@ -47,7 +47,6 @@ import org.junit.Test;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.storage.core.Storage;
 
 public class SystemBackendTest {
@@ -58,12 +57,10 @@ public class SystemBackendTest {
     public void setUp() {
         Storage s = mock(Storage.class);
         HostInfoDAO hDAO = mock(HostInfoDAO.class);
-        VmCpuStatDAO vDAO = mock(VmCpuStatDAO.class);
         NetworkInterfaceInfoDAO nDAO = mock(NetworkInterfaceInfoDAO.class);
         DAOFactory df = mock(DAOFactory.class);
         when(df.getStorage()).thenReturn(s);
         when(df.getHostInfoDAO()).thenReturn(hDAO);
-        when(df.getVmCpuStatDAO()).thenReturn(vDAO);
         when(df.getNetworkInterfaceInfoDAO()).thenReturn(nDAO);
         b = new SystemBackend();
         b.setDAOFactory(df);

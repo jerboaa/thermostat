@@ -37,7 +37,6 @@
 package com.redhat.thermostat.backend.system;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

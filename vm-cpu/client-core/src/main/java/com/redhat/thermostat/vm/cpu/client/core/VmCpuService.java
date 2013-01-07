@@ -41,10 +41,10 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 public class VmCpuService implements InformationService<VmRef> {
     

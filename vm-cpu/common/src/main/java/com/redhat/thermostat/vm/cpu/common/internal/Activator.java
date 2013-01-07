@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,40 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.vm.cpu.common.internal;
 
-public class ProcessStatusInfo {
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-    /* All times are measured in clock ticks */
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
-    private final int pid;
-    private final long userTime;
-    private final long kernelTime;
+public class Activator implements BundleActivator {
+    
+    private ServiceTracker tracker;
+    private ServiceRegistration reg;
 
-    public ProcessStatusInfo(int pid, long userTime, long kernelTime) {
-        this.pid = pid;
-        this.userTime = userTime;
-        this.kernelTime = kernelTime;
+    @Override
+    public void start(BundleContext context) throws Exception {
+        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                VmCpuStatDAO vmCpuStatDao = new VmCpuStatDAOImpl(storage);
+                reg = context.registerService(VmCpuStatDAO.class.getName(), vmCpuStatDao, null);
+                return super.addingService(reference);
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference,
+                    Object service) {
+                reg.unregister();
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
     }
 
-    public int getPid() {
-        return pid;
-    }
-
-    /**
-     * @return the time this process has spent in user-mode as a number of
-     * kernel ticks
-     */
-    public long getUserTime() {
-        return userTime;
-    }
-
-    /**
-     * @return the time this process spent in kernel-mode as a number of kernel
-     * ticks
-     */
-    public long getKernelTime() {
-        return kernelTime;
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
     }
 
 }

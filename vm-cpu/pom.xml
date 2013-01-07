@@ -51,8 +51,10 @@
   <name>Thermostat VM CPU plugin</name>
 
   <modules>
+    <module>agent</module>
     <module>client-core</module>
     <module>client-swing</module>
+    <module>common</module>
   </modules>
 
 </project>

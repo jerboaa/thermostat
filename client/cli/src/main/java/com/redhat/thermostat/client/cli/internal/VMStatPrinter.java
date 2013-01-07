@@ -48,7 +48,6 @@ import java.util.NoSuchElementException;
 
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.cli.TableRenderer;
-import com.redhat.thermostat.common.dao.VmCpuStatDAO;
 import com.redhat.thermostat.common.dao.VmMemoryStatDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
@@ -57,6 +56,7 @@ import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.storage.model.TimeStampedPojoCorrelator;
 import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 class VMStatPrinter {
 
