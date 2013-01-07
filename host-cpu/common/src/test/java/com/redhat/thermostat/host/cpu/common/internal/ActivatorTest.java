@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -32,25 +32,53 @@
  * this code, you may extend this exception to your version of the
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
- */
+ */ 
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.host.cpu.common.internal;
 
-import java.util.List;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.model.CpuStat;
+import org.junit.Test;
 
-public interface CpuStatDAO extends Countable {
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.test.StubBundleContext;
 
-    static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage", false);
+public class ActivatorTest {
+    
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
 
-    static final Category cpuStatCategory = new Category("cpu-stats",
-            Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
+        Activator activator = new Activator();
 
-    List<CpuStat> getLatestCpuStats(HostRef ref, long since);
+        activator.start(context);
 
-    void putCpuStat(CpuStat stat);
+        assertEquals(0, context.getAllServices().size());
+        assertEquals(1, context.getServiceListeners().size());
+
+        activator.stop(context);
+    }
+
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        Storage storage = mock(Storage.class);
+
+        context.registerService(Storage.class, storage, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(CpuStatDAO.class.getName(), CpuStatDAOImpl.class));
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
+    }
 
 }

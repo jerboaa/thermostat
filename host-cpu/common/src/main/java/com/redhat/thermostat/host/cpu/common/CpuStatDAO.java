@@ -34,54 +34,25 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.host.cpu.common;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.util.List;
 
-/**
- * A wrapper over POSIX's sysconf.
- * <p>
- * Implementation notes: uses {@code getconf(1)}
- */
-public class SysConf {
+import com.redhat.thermostat.common.dao.Countable;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.model.CpuStat;
 
-    private SysConf() {
-        /* do not initialize */
-    }
+public interface CpuStatDAO extends Countable {
 
-    public static long getClockTicksPerSecond() {
-        String ticks = sysConf("CLK_TCK");
-        try {
-            return Long.valueOf(ticks);
-        } catch (NumberFormatException nfe) {
-            return 0;
-        }
-    }
+    static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage", false);
 
-    private static String sysConf(String arg) {
-        BufferedReader reader = null;
-        try {
-            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
-            int result = process.waitFor();
-            if (result != 0) {
-                return null;
-            }
-            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            return reader.readLine();
-        } catch (IOException e) {
-            return null;
-        } catch (InterruptedException e) {
-            return null;
-        } finally {
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (IOException e) {
-                    // TODO
-                }
-            }
-        }
-    }
+    static final Category cpuStatCategory = new Category("cpu-stats",
+            Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
+
+    List<CpuStat> getLatestCpuStats(HostRef ref, long since);
+
+    void putCpuStat(CpuStat stat);
+
 }

@@ -34,53 +34,54 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+/**
+ * A wrapper over POSIX's sysconf.
+ * <p>
+ * Implementation notes: uses {@code getconf(1)}
+ */
+public class SysConf {
 
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
-
-    private final Storage storage;
-    private final Category cat;
-    private final Class<T> resultClass;
-
-    public HostLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
-        this.storage = storage;
-        this.cat = cat;
-        this.resultClass = resultClass;
+    private SysConf() {
+        /* do not initialize */
     }
 
-    public List<T> getLatest(HostRef hostRef, long since) {
-        Query query = buildQuery(hostRef, since);
-        return getLatest(query);
-    }
-
-    private List<T> getLatest(Query query) {
-        Cursor<T> cursor = storage.findAllPojos(query, resultClass);
-        List<T> result = new ArrayList<>();
-        while (cursor.hasNext()) {
-            T pojo = cursor.next();
-            result.add(pojo);
+    public static long getClockTicksPerSecond() {
+        String ticks = sysConf("CLK_TCK");
+        try {
+            return Long.valueOf(ticks);
+        } catch (NumberFormatException nfe) {
+            return 0;
         }
-        return result;
     }
 
-    protected Query buildQuery(HostRef hostRef, long since) {
-        Query query = storage.createQuery()
-                .from(cat)
-                .where(Key.AGENT_ID, Criteria.EQUALS, hostRef.getAgentId())
-                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        
-        return query;
+    private static String sysConf(String arg) {
+        BufferedReader reader = null;
+        try {
+            Process process = Runtime.getRuntime().exec(new String[] { "getconf", arg });
+            int result = process.waitFor();
+            if (result != 0) {
+                return null;
+            }
+            reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            return reader.readLine();
+        } catch (IOException e) {
+            return null;
+        } catch (InterruptedException e) {
+            return null;
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    // TODO
+                }
+            }
+        }
     }
 }

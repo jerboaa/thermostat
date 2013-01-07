@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -55,7 +55,6 @@ import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
 import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
@@ -64,12 +63,12 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.utils.ProcDataSource;
+import com.redhat.thermostat.utils.SysConf;
 
 public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {
 
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
-    private CpuStatDAO cpuStats;
     private HostInfoDAO hostInfos;
     private MemoryStatDAO memoryStats;
     private VmCpuStatDAO vmCpuStats;
@@ -87,7 +86,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private final VmCpuStatBuilder vmCpuBuilder;
     private final HostInfoBuilder hostInfoBuilder;
-    private final CpuStatBuilder cpuStatBuilder;
     private final MemoryStatBuilder memoryStatBuilder;
 
     public SystemBackend() {
@@ -95,14 +93,13 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
         setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
         setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers basic information from the system");
-        setConfigurationValue(BackendsProperties.VERSION.name(), "0.1.0");
+        setConfigurationValue(BackendsProperties.VERSION.name(), "0.5.0");
         
         Clock clock = new SystemClock();
         ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
-        cpuStatBuilder = new CpuStatBuilder(clock, source, ticksPerSecond);
         memoryStatBuilder = new MemoryStatBuilder(source);
 
         int cpuCount = hostInfoBuilder.getCpuInfo().count;
@@ -111,7 +108,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     @Override
     protected void setDAOFactoryAction() {
-        cpuStats = df.getCpuStatDAO();
         hostInfos = df.getHostInfoDAO();
         memoryStats = df.getMemoryStatDAO();
         vmCpuStats = df.getVmCpuStatDAO();
@@ -139,11 +135,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                if (!cpuStatBuilder.isInitialized()) {
-                    cpuStatBuilder.initialize();
-                } else {
-                    cpuStats.putCpuStat(cpuStatBuilder.build());
-                }
                 for (NetworkInterfaceInfo info: NetworkInfoBuilder.build()) {
                     networkInterfaces.putNetworkInterfaceInfo(info);
                 }

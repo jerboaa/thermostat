@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -44,7 +44,6 @@ import static org.mockito.Mockito.when;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.MemoryStatDAO;
@@ -59,14 +58,12 @@ public class SystemBackendTest {
     @Before
     public void setUp() {
         Storage s = mock(Storage.class);
-        CpuStatDAO cDAO = mock(CpuStatDAO.class);
         HostInfoDAO hDAO = mock(HostInfoDAO.class);
         MemoryStatDAO mDAO = mock(MemoryStatDAO.class);
         VmCpuStatDAO vDAO = mock(VmCpuStatDAO.class);
         NetworkInterfaceInfoDAO nDAO = mock(NetworkInterfaceInfoDAO.class);
         DAOFactory df = mock(DAOFactory.class);
         when(df.getStorage()).thenReturn(s);
-        when(df.getCpuStatDAO()).thenReturn(cDAO);
         when(df.getHostInfoDAO()).thenReturn(hDAO);
         when(df.getMemoryStatDAO()).thenReturn(mDAO);
         when(df.getVmCpuStatDAO()).thenReturn(vDAO);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -120,12 +120,6 @@ public class MongoDAOFactoryTest {
     }
 
     @Test
-    public void testGetCpuStatDAO() {
-        CpuStatDAO dao = daoFactory.getCpuStatDAO();
-        assertNotNull(dao);
-    }
-
-    @Test
     public void testGetMemoryStatDAO() {
         MemoryStatDAO dao = daoFactory.getMemoryStatDAO();
         assertNotNull(dao);
@@ -144,7 +138,7 @@ public class MongoDAOFactoryTest {
         daoFactory.registerDAOsAndStorageAsOSGiServices();
 
         // currently 12 DAOs and Storage are registered
-        assertEquals(12, bundleContext.getAllServices().size());
+        assertEquals(11, bundleContext.getAllServices().size());
     }
 
     @Test

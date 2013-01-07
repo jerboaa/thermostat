@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.host.cpu.agent.internal;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertNotNull;
@@ -51,7 +51,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.common.utils.ArrayUtils;
 import com.redhat.thermostat.storage.model.CpuStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 

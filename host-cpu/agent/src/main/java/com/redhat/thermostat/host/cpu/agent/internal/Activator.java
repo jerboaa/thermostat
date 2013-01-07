@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,61 +34,55 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.host.cpu.client.core.internal;
+package com.redhat.thermostat.host.cpu.agent.internal;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
 import java.util.Map;
-import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 
 public class Activator implements BundleActivator {
     
+    private ScheduledExecutorService executor;
     private MultipleServiceTracker tracker;
+    private HostCpuBackend backend;
     private ServiceRegistration reg;
-
+    
     @Override
     public void start(final BundleContext context) throws Exception {
+        executor = Executors.newSingleThreadScheduledExecutor();
+
         Class<?>[] deps = new Class<?>[] {
-            HostInfoDAO.class,
-            CpuStatDAO.class,
-            ApplicationService.class
+                BackendService.class,
+                CpuStatDAO.class
         };
-
         tracker = new MultipleServiceTracker(context, deps, new Action() {
-
+            
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
-                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                Objects.requireNonNull(hostInfoDAO);
-                CpuStatDAO cpuStatDAO = (CpuStatDAO) services.get(CpuStatDAO.class.getName());
-                Objects.requireNonNull(cpuStatDAO);
-                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
-                Objects.requireNonNull(appSvc);
-                HostCpuService service = new HostCpuService(appSvc, hostInfoDAO, cpuStatDAO);
-                Dictionary<String, String> properties = new Hashtable<>();
-                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
-                reg = context.registerService(InformationService.class.getName(), service, properties);
+                CpuStatDAO cpuStatDao = (CpuStatDAO) services.get(CpuStatDAO.class.getName());
+                Version version = new Version(context.getBundle());
+                backend = new HostCpuBackend(executor, cpuStatDao, version);
+                reg = context.registerService(Backend.class.getName(), backend, null);
             }
 
             @Override
             public void dependenciesUnavailable() {
+                if (backend.isActive()) {
+                    backend.deactivate();
+                }
                 reg.unregister();
             }
-
         });
         tracker.open();
     }
@@ -97,6 +91,11 @@ public class Activator implements BundleActivator {
     public void stop(BundleContext context) throws Exception {
         tracker.close();
     }
-
+    
+    /*
+     * For testing purposes only.
+     */
+    HostCpuBackend getBackend() {
+        return backend;
+    }
 }
-

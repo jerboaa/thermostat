@@ -34,53 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.utils;
 
-import java.util.ArrayList;
-import java.util.List;
+import static org.junit.Assert.assertTrue;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Cursor;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import org.junit.Test;
 
-public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
+import com.redhat.thermostat.utils.SysConf;
 
-    private final Storage storage;
-    private final Category cat;
-    private final Class<T> resultClass;
+public class SysConfTest {
 
-    public HostLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
-        this.storage = storage;
-        this.cat = cat;
-        this.resultClass = resultClass;
-    }
-
-    public List<T> getLatest(HostRef hostRef, long since) {
-        Query query = buildQuery(hostRef, since);
-        return getLatest(query);
-    }
-
-    private List<T> getLatest(Query query) {
-        Cursor<T> cursor = storage.findAllPojos(query, resultClass);
-        List<T> result = new ArrayList<>();
-        while (cursor.hasNext()) {
-            T pojo = cursor.next();
-            result.add(pojo);
-        }
-        return result;
-    }
-
-    protected Query buildQuery(HostRef hostRef, long since) {
-        Query query = storage.createQuery()
-                .from(cat)
-                .where(Key.AGENT_ID, Criteria.EQUALS, hostRef.getAgentId())
-                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        
-        return query;
+    @Test
+    public void test() {
+        long ticksPerSecond = SysConf.getClockTicksPerSecond();
+        assertTrue(ticksPerSecond >= 1);
     }
 }

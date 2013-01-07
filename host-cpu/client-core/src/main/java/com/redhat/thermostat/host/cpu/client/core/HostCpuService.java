@@ -41,11 +41,11 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.CpuStatDAO;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.host.cpu.client.core.internal.HostCpuController;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 
 public class HostCpuService implements InformationService<HostRef> {
     

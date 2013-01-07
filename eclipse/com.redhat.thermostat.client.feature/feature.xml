@@ -182,4 +182,11 @@ to do so, delete this exception statement from your version.
          version="0.0.0"
          unpack="false"/>
 
+   <plugin
+         id="com.redhat.thermostat.host.cpu.common"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
 </feature>

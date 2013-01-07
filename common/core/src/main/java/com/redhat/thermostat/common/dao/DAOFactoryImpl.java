@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -57,7 +57,6 @@ public class DAOFactoryImpl implements DAOFactory {
     private AgentInfoDAO agentDAO;
     private BackendInfoDAO backendInfoDAO;
     private HostInfoDAO hostInfoDAO;
-    private CpuStatDAO cpuStatDAO;
     private MemoryStatDAO memoryStatDAO;
     private NetworkInterfaceInfoDAO networkInfoDAO;
     private VmInfoDAO vmInfoDAO;
@@ -96,12 +95,6 @@ public class DAOFactoryImpl implements DAOFactory {
     public HostInfoDAO getHostInfoDAO() {
         ensureStorageConnected();
         return hostInfoDAO;
-    }
-
-    @Override
-    public CpuStatDAO getCpuStatDAO() {
-        ensureStorageConnected();
-        return cpuStatDAO;
     }
 
     @Override
@@ -168,7 +161,6 @@ public class DAOFactoryImpl implements DAOFactory {
 
         registerAndRecordService(HostInfoDAO.class, getHostInfoDAO());
         registerAndRecordService(NetworkInterfaceInfoDAO.class, getNetworkInterfaceInfoDAO());
-        registerAndRecordService(CpuStatDAO.class, getCpuStatDAO());
         registerAndRecordService(MemoryStatDAO.class, getMemoryStatDAO());
 
         registerAndRecordService(VmInfoDAO.class, getVmInfoDAO());
@@ -185,7 +177,6 @@ public class DAOFactoryImpl implements DAOFactory {
         agentDAO = new AgentInfoDAOImpl(storage);
         backendInfoDAO = new BackendInfoDAOImpl(storage);
         hostInfoDAO = new HostInfoDAOImpl(storage, agentDAO);
-        cpuStatDAO = new CpuStatDAOImpl(storage);
         memoryStatDAO = new MemoryStatDAOImpl(storage);
         networkInfoDAO = new NetworkInterfaceInfoDAOImpl(storage);
         vmInfoDAO = new VmInfoDAOImpl(storage);

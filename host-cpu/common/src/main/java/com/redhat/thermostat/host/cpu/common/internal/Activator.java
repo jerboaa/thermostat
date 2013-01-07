@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,17 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.host.cpu.common.internal;
 
-import static org.junit.Assert.assertTrue;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-import org.junit.Test;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.storage.core.Storage;
 
-public class SysConfTest {
+public class Activator implements BundleActivator {
+    
+    private ServiceTracker tracker;
+    private ServiceRegistration reg;
 
-    @Test
-    public void test() {
-        long ticksPerSecond = SysConf.getClockTicksPerSecond();
-        assertTrue(ticksPerSecond >= 1);
+    @Override
+    public void start(BundleContext context) throws Exception {
+        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Storage storage = (Storage) context.getService(reference);
+                CpuStatDAO cpuStatDao = new CpuStatDAOImpl(storage);
+                reg = context.registerService(CpuStatDAO.class.getName(), cpuStatDao, null);
+                return super.addingService(reference);
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference,
+                    Object service) {
+                reg.unregister();
+                super.removedService(reference, service);
+            }
+        };
+        tracker.open();
     }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
+    }
+
 }

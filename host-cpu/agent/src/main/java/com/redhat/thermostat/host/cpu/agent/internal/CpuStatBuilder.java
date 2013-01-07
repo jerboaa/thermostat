@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.backend.system;
+package com.redhat.thermostat.host.cpu.agent.internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;

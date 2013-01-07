@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.host.cpu.common.internal;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -51,6 +51,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.cpu.common.internal.CpuStatDAOImpl;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;

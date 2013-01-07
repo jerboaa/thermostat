@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -51,8 +51,6 @@ public interface DAOFactory {
     public BackendInfoDAO getBackendInfoDAO();
 
     public HostInfoDAO getHostInfoDAO();
-
-    public CpuStatDAO getCpuStatDAO();
 
     public MemoryStatDAO getMemoryStatDAO();
 

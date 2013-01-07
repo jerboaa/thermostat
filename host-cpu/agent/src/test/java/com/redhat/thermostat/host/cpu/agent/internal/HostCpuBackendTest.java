@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -32,61 +32,65 @@
  * this code, you may extend this exception to your version of the
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
- */ 
+ */
 
-package com.redhat.thermostat.host.cpu.client.core.internal;
+package com.redhat.thermostat.host.cpu.agent.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.storage.model.CpuStat;
 
-public class ActivatorTest {
+public class HostCpuBackendTest {
+    
+    private HostCpuBackend backend;
+    private ScheduledExecutorService executor;
+    private CpuStatDAO cpuStatDao;
+
+    @Before
+    public void setup() {
+        executor = mock(ScheduledExecutorService.class);
+        cpuStatDao = mock(CpuStatDAO.class);
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn("0.0.0");
+        
+        backend = new HostCpuBackend(executor, cpuStatDao, version);
+    }
+
+    @Test
+    public void testActivate() {
+        backend.activate();
+        ArgumentCaptor<Runnable> captor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executor).scheduleAtFixedRate(captor.capture(), any(Long.class), any(Long.class), any(TimeUnit.class));
+        assertTrue(backend.isActive());
+        
+        // Run to ensure working
+        Runnable runnable = captor.getValue();
+        runnable.run();
+        verify(cpuStatDao, never()).putCpuStat(any(CpuStat.class));
+        runnable.run();
+        verify(cpuStatDao).putCpuStat(any(CpuStat.class));
+    }
     
     @Test
-    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertEquals(0, context.getAllServices().size());
-        assertNotSame(1, context.getServiceListeners().size());
-
-        activator.stop(context);
+    public void testDeactivate() {
+        backend.activate();
+        backend.deactivate();
+        verify(executor).shutdown();
+        assertFalse(backend.isActive());
     }
-
-    @Test
-    public void verifyActivatorRegistersServices() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
-        CpuStatDAO cpuStatDAO = mock(CpuStatDAO.class);
-        ApplicationService appSvc = mock(ApplicationService.class);
-
-        context.registerService(HostInfoDAO.class, hostInfoDAO, null);
-        context.registerService(CpuStatDAO.class, cpuStatDAO, null);
-        context.registerService(ApplicationService.class, appSvc, null);
-
-        Activator activator = new Activator();
-
-        activator.start(context);
-
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), HostCpuService.class));
-
-        activator.stop(context);
-
-        assertEquals(0, context.getServiceListeners().size());
-        assertEquals(3, context.getAllServices().size());
-    }
-
 }

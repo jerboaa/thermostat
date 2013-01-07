@@ -34,10 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.dao;
+package com.redhat.thermostat.host.cpu.common.internal;
 
 import java.util.List;
 
+import com.redhat.thermostat.common.dao.HostLatestPojoListGetter;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.CpuStat;
 
