@@ -46,6 +46,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import expectj.Spawn;
+import expectj.TimeoutException;
 
 /**
  * Integration tests to exercise the basics of the thermostat command line.
@@ -157,6 +158,20 @@ public class CliTest extends IntegrationTest {
         Spawn shell = spawnThermostat("shell", "--foo");
         shell.expectErr("Unrecognized option: --foo");
         shell.expectClose();
+    }
+
+    @Test
+    public void testUnrecognizedEventsInShell() throws IOException, TimeoutException {
+        // test '!' events
+        Spawn shell = spawnThermostat("shell");
+
+        shell.expect(SHELL_PROMPT);
+        shell.send("what!?!\n");
+        shell.expect(SHELL_PROMPT);
+        shell.send("exit\n");
+
+        assertTrue(shell.getCurrentStandardErrContents().contains("!?!: event not found"));
+        assertNoExceptions(shell.getCurrentStandardOutContents(), shell.getCurrentStandardErrContents());
     }
 
     @Test

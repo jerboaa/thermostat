@@ -54,6 +54,7 @@ import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ConfigUtils;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
@@ -129,11 +130,23 @@ public class ShellCommand extends SimpleCommand {
         if (history != null) {
             reader.setHistory(history);
         }
-        while (handleConsoleInput(reader)) { /* no-op; the loop conditional performs the action */ }
+        while (handleConsoleInput(reader, ctx.getConsole())) { /* no-op; the loop conditional performs the action */ }
     }
 
-    private boolean handleConsoleInput(ConsoleReader reader) throws IOException, CommandException {
-        String line = reader.readLine(PROMPT);
+    /**
+     * @return true if the shell should continue accepting more input or false if the shell should quit
+     */
+    private boolean handleConsoleInput(ConsoleReader reader, Console console) throws IOException, CommandException {
+        String line;
+        try {
+            line = reader.readLine(PROMPT);
+        } catch (IllegalArgumentException iae) {
+            if (iae.getMessage().endsWith(": event not found")) {
+                console.getError().println(iae.getMessage());
+                return true;
+            }
+            throw iae;
+        }
         if (line == null) {
             return false;
         }
