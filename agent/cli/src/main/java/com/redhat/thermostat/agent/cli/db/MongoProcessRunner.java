@@ -140,17 +140,21 @@ public class MongoProcessRunner {
         String pid = getPid();
         if (pid != null) {
             String message = null;
-            ApplicationException ex = null;
             if (!checkExistingProcess()) {
                 message = translator.localize(LocaleResources.STALE_PID_FILE_NO_MATCHING_PROCESS, configuration.getPidFile().toString(), MONGO_PROCESS);
-                ex = new StalePidFileException(configuration.getPidFile());
+                // Mongo didn't remove its PID file? Work around the issue. Log
+                // the event, remove the stale pid file and continue.
+                logger.log(Level.WARNING, message);
+                try {
+                    Files.delete(configuration.getPidFile().toPath());
+                } catch (IOException benign) {
+                    // ignore this benign error
+                }
             } else {
                 message = translator.localize(LocaleResources.STORAGE_ALREADY_RUNNING_WITH_PID, String.valueOf(pid));
-                ex = new StorageAlreadyRunningException(Integer.valueOf(pid), message);
+                display(message);
+                throw new StorageAlreadyRunningException(Integer.valueOf(pid), message);
             }
-            
-            display(message);
-            throw ex;
         }
         
         List<String> commands = new ArrayList<>(Arrays.asList(MONGO_BASIC_ARGS));
