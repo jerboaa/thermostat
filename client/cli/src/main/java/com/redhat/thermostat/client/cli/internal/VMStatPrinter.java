@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -38,70 +38,102 @@ package com.redhat.thermostat.client.cli.internal;
 
 import java.io.PrintStream;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
-import com.redhat.thermostat.common.Size;
+import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
+import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
 import com.redhat.thermostat.storage.model.TimeStampedPojoCorrelator;
-import com.redhat.thermostat.storage.model.VmCpuStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat;
-import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 class VMStatPrinter {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private static final String CPU_PERCENT = translator.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT);
     private static final String TIME = translator.localize(LocaleResources.COLUMN_HEADER_TIME);
 
     private VmRef vm;
-    private VmCpuStatDAO vmCpuStatDAO;
-    private VmMemoryStatDAO vmMemoryStatDAO;
+    private List<VMStatPrintDelegate> delegates;
     private PrintStream out;
-    private TimeStampedPojoCorrelator correlator = new TimeStampedPojoCorrelator(2);
+    private TimeStampedPojoCorrelator correlator;
     private TableRenderer table;
-    private int numSpaces;
+    private int numCols;
+    private Map<VMStatPrintDelegate, DelegateInfo> delegateInfo;
 
-    private long lastCpuStatTimeStamp = Long.MIN_VALUE;
-    private long lastMemoryStatTimeStamp = Long.MIN_VALUE;
-
-    VMStatPrinter(VmRef vm, VmCpuStatDAO vmCpuStatDAO, VmMemoryStatDAO vmMemoryStatDAO, PrintStream out) {
+    VMStatPrinter(VmRef vm, List<VMStatPrintDelegate> delegates, PrintStream out) {
         this.vm = vm;
-        this.vmCpuStatDAO = vmCpuStatDAO;
-        this.vmMemoryStatDAO = vmMemoryStatDAO;
+        this.delegates = delegates;
         this.out = out;
+        int numDelegates = delegates.size();
+        this.delegateInfo = new HashMap<>();
+        this.correlator = new TimeStampedPojoCorrelator(numDelegates);
+        
+        // Sort the delegates list
+        Collections.sort(delegates, new OrderedComparator<>());
+        
+        for (VMStatPrintDelegate delegate : delegates) {
+            DelegateInfo info = new DelegateInfo();
+            info.lastTimeStamp = Long.MIN_VALUE;
+            delegateInfo.put(delegate, info);
+        }
     }
 
     void printStats() {
-        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm, lastCpuStatTimeStamp);
-        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm, lastMemoryStatTimeStamp);
-
-        lastCpuStatTimeStamp = getLatestTimeStamp(lastCpuStatTimeStamp, cpuStats);
-        lastMemoryStatTimeStamp = getLatestTimeStamp(lastMemoryStatTimeStamp, memStats);
-
-        printStats(cpuStats, memStats);
+        List<List<? extends TimeStampedPojo>> allStats = new ArrayList<>();
+        List<String> allHeaders = new ArrayList<>();
+        allHeaders.add(TIME);
+        
+        // Copy since we can remove elements in loop body
+        List<VMStatPrintDelegate> delegatesCopy = new ArrayList<>(delegates);
+        for (VMStatPrintDelegate delegate : delegatesCopy) {
+            long timeStamp = delegateInfo.get(delegate).lastTimeStamp;
+            List<? extends TimeStampedPojo> latestStats = delegate.getLatestStats(vm, timeStamp);
+            if (latestStats == null || latestStats.isEmpty()) {
+                // Skipping delegate
+                delegates.remove(delegate);
+            }
+            else {
+                List<String> headers = delegate.getHeaders(latestStats.get(0));
+                if (headers == null || headers.isEmpty()) {
+                    // Skipping delegate
+                    delegates.remove(delegate);
+                }
+                else {
+                    DelegateInfo info = delegateInfo.get(delegate);
+                    info.colsPerDelegate = headers.size();
+                    allHeaders.addAll(headers);
+                    allStats.add(latestStats);
+                    info.lastTimeStamp = getLatestTimeStamp(timeStamp, latestStats);
+                }
+            }
+        }
+        
+        printStats(allStats, allHeaders);
     }
 
     void printUpdatedStats() {
         correlator.clear();
-        List<VmCpuStat> cpuStats = vmCpuStatDAO.getLatestVmCpuStats(vm, lastCpuStatTimeStamp);
-        List<VmMemoryStat> memStats = vmMemoryStatDAO.getLatestVmMemoryStats(vm, lastMemoryStatTimeStamp);
+        
+        List<List<? extends TimeStampedPojo>> allStats = new ArrayList<>();
+        for (VMStatPrintDelegate delegate : delegates) {
+            DelegateInfo info = delegateInfo.get(delegate);
+            List<? extends TimeStampedPojo> latestStats = delegate.getLatestStats(vm, info.lastTimeStamp);
+            allStats.add(latestStats);
+            info.lastTimeStamp = getLatestTimeStamp(info.lastTimeStamp, latestStats);
+        }
 
-        lastCpuStatTimeStamp = getLatestTimeStamp(lastCpuStatTimeStamp, cpuStats);
-        lastMemoryStatTimeStamp = getLatestTimeStamp(lastMemoryStatTimeStamp, memStats);
-
-        correlate(cpuStats, memStats);
+        correlate(allStats);
         printUpdatedStatsImpl();
     }
 
@@ -113,103 +145,79 @@ class VMStatPrinter {
         }
     }
 
-    private void printStats(List<VmCpuStat> cpuStats, List<VmMemoryStat> memStats) {
-        correlate(cpuStats, memStats);
-        numSpaces = getNumSpaces(memStats);
-        int numColumns = numSpaces + 2;
-        table = new TableRenderer(numColumns);
-        printHeaders(memStats, numSpaces, numColumns, table);
+    private void printStats(List<List<? extends TimeStampedPojo>> allStats, List<String> headers) {
+        correlate(allStats);
+        numCols = headers.size();
+        table = new TableRenderer(numCols);
+        printHeaders(table, headers);
         printUpdatedStatsImpl();
     }
 
-    private void printStats(int numSpaces, TableRenderer table, Iterator<TimeStampedPojoCorrelator.Correlation> i) {
+    private void printStats(TableRenderer table, Iterator<TimeStampedPojoCorrelator.Correlation> iter) {
+        TimeStampedPojoCorrelator.Correlation correlation = iter.next();
 
-        TimeStampedPojoCorrelator.Correlation correlation = i.next();
-
-        VmCpuStat cpuStat = (VmCpuStat) correlation.get(0);
-        DecimalFormat format = new DecimalFormat("#0.0");
-        String cpuLoad = cpuStat != null ? format.format(cpuStat.getCpuLoad()) : "";
-
+        String[] line = new String[numCols];
         DateFormat dateFormat = DateFormat.getTimeInstance();
         String time = dateFormat.format(new Date(correlation.getTimeStamp()));
-
-        String[] memoryUsage = getMemoryUsage((VmMemoryStat) correlation.get(1), numSpaces);
-
-        String[] line = new String[numSpaces + 2];
-        System.arraycopy(memoryUsage, 0, line, 2, numSpaces);
         line[0] = time;
-        line[1] = cpuLoad;
+        
+        int off = 1; // time is first index
+        for (int i = 0; i < delegates.size(); i++) {
+            TimeStampedPojo stat = correlation.get(i);
+            VMStatPrintDelegate delegate = delegates.get(i);
+            if (stat == null) {
+                // Fill with blanks
+                DelegateInfo info = delegateInfo.get(delegate);
+                Arrays.fill(line, off, off + info.colsPerDelegate, "");
+                off += info.colsPerDelegate;
+            }
+            else {
+                List<String> data = delegate.getStatRow(stat);
+                if (data == null) {
+                    throw new NullPointerException("Returned null stat row");
+                }
+                else if (data.size() != delegateInfo.get(delegate).colsPerDelegate) {
+                    throw new IllegalStateException("Delegate "
+                            + delegate.toString() + " provided "
+                            + delegateInfo.get(delegate).colsPerDelegate
+                            + " column headers, but only " + data.size()
+                            + " stat row values");
+                }
+                else {
+                    System.arraycopy(data.toArray(), 0, line, off, data.size());
+                    off += data.size();
+                }
+            }
+        }
+        
         table.printLine(line);
     }
 
-    private void printHeaders(List<VmMemoryStat> memStats, int numSpaces, int numColumns, TableRenderer table) {
-        String[] spacesNames = getSpacesNames(memStats, numSpaces);
-        String[] headers = new String[numColumns];
-        headers[0] = TIME;
-        headers[1] = CPU_PERCENT;
-        System.arraycopy(spacesNames, 0, headers, 2, numSpaces);
-        table.printLine(headers);
+    private void printHeaders(TableRenderer table, List<String> headers) {
+        table.printLine(headers.toArray(new String[headers.size()]));
     }
 
-    private String[] getMemoryUsage(VmMemoryStat vmMemoryStat, int numSpaces) {
-        String[] memoryUsage = new String[numSpaces];
-        if (vmMemoryStat == null) {
-            Arrays.fill(memoryUsage, "");
-            return memoryUsage;
-        }
-        int i = 0;
-        for (VmMemoryStat.Generation gen : vmMemoryStat.getGenerations()) {
-            for (VmMemoryStat.Space space : gen.getSpaces()) {
-                memoryUsage[i] = Size.bytes(space.getUsed()).toString();
-                i++;
+    private void correlate(List<List<? extends TimeStampedPojo>> allStats) {
+        int count = 0;
+        for (List<? extends TimeStampedPojo> stats : allStats) {
+            for(TimeStampedPojo cpuStat : stats) {
+                correlator.add(count, cpuStat);
             }
-        }
-        return memoryUsage;
-    }
-
-    private String[] getSpacesNames(List<VmMemoryStat> memStats, int numSpaces) {
-        if (numSpaces < 1) {
-            return new String[0];
-        }
-        String[] spacesNames = new String[numSpaces];
-        VmMemoryStat stat = memStats.get(0);
-        int i = 0;
-        for (VmMemoryStat.Generation gen : stat.getGenerations()) {
-            for (VmMemoryStat.Space space : gen.getSpaces()) {
-                spacesNames[i] = translator.localize(LocaleResources.COLUMN_HEADER_MEMORY_PATTERN, space.getName());
-                i++;
-            }
-        }
-        return spacesNames;
-    }
-
-    private int getNumSpaces(List<VmMemoryStat> memStats) {
-        if (memStats.size() < 1) {
-            return 0;
-        }
-        VmMemoryStat stat = memStats.get(0);
-        int numSpaces = 0;
-        for (VmMemoryStat.Generation gen : stat.getGenerations()) {
-            numSpaces += gen.getSpaces().length;
-        }
-        return numSpaces;
-    }
-
-    private void correlate(List<VmCpuStat> cpuStats, List<VmMemoryStat> memStats) {
-        for(VmCpuStat cpuStat : cpuStats) {
-            correlator.add(0, cpuStat);
-        }
-        for (VmMemoryStat memStat : memStats) {
-            correlator.add(1, memStat);
+            count++;
         }
     }
 
     void printUpdatedStatsImpl() {
         Iterator<TimeStampedPojoCorrelator.Correlation> iterator = correlator.iterator();
         while (iterator.hasNext()) {
-            printStats(numSpaces, table, iterator);
+            printStats(table, iterator);
         }
         table.render(out);
+    }
+    
+    private static class DelegateInfo {
+        int colsPerDelegate;
+        long lastTimeStamp;
     }
 
 }

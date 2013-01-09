@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -58,10 +58,12 @@ public class ActivatorTest {
 
     @Test
     public void testCommandsRegistered() throws Exception {
-        // Need to mock FrameworkUtil to avoid NPE in ShellCommand's no-arg constructor
+        // Need to mock FrameworkUtil to avoid NPE in ShellCommand and
+        // VMStatCommand's no-arg constructors
         PowerMockito.mockStatic(FrameworkUtil.class);
         Bundle mockBundle = mock(Bundle.class);
         when(FrameworkUtil.getBundle(ShellCommand.class)).thenReturn(mockBundle);
+        when(FrameworkUtil.getBundle(VMStatCommand.class)).thenReturn(mockBundle);
         StubBundleContext ctx = new StubBundleContext();
         when(mockBundle.getBundleContext()).thenReturn(ctx);
         

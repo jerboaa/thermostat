@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -32,53 +32,53 @@
  * this code, you may extend this exception to your version of the
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
- */
+ */ 
 
-package com.redhat.thermostat.client.cli.internal;
+package com.redhat.thermostat.vm.cpu.client.cli.internal;
 
-import com.redhat.thermostat.common.locale.Translate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-public enum LocaleResources {
+import org.junit.Test;
 
-    MISSING_INFO,
+import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
+import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
-    HOST_SERVICE_UNAVAILABLE,
-    VM_SERVICE_UNAVAILABLE,
-    VM_CPU_SERVICE_NOT_AVAILABLE,
-    VM_MEMORY_SERVICE_NOT_AVAILABLE,
+public class ActivatorTest {
+    
+    @Test
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
 
-    COMMAND_CONNECT_ALREADY_CONNECTED,
-    COMMAND_CONNECT_FAILED_TO_CONNECT,
-    COMMAND_CONNECT_INVALID_STORAGE,
-    COMMAND_CONNECT_ERROR,
+        Activator activator = new Activator();
 
-    COMMAND_DISCONNECT_NOT_CONNECTED,
-    COMMAND_DISCONNECT_ERROR,
+        activator.start(context);
 
-    VM_INFO_PROCESS_ID,
-    VM_INFO_START_TIME,
-    VM_INFO_STOP_TIME,
-    VM_INFO_MAIN_CLASS,
-    VM_INFO_COMMAND_LINE,
-    VM_INFO_JAVA_VERSION,
-    VM_INFO_VIRTUAL_MACHINE,
-    VM_INFO_VM_ARGUMENTS,
+        assertEquals(0, context.getAllServices().size());
+        assertEquals(1, context.getServiceListeners().size());
 
-    COLUMN_HEADER_HOST_ID,
-    COLUMN_HEADER_HOST,
-    COLUMN_HEADER_VM_ID,
-    COLUMN_HEADER_VM_NAME,
-    COLUMN_HEADER_VM_STATUS,
-    COLUMN_HEADER_TIME,
-
-    VM_STOP_TIME_RUNNING,
-    VM_STATUS_ALIVE,
-    VM_STATUS_DEAD,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+        activator.stop(context);
     }
+
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        VmCpuStatDAO dao = mock(VmCpuStatDAO.class);
+
+        context.registerService(VmCpuStatDAO.class, dao, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(VMStatPrintDelegate.class.getName(), VmCpuStatPrintDelegate.class));
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(1, context.getAllServices().size());
+    }
+
 }

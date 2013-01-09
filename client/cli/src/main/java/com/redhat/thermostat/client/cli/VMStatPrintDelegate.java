@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,51 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.cli.internal;
+package com.redhat.thermostat.client.cli;
 
-import com.redhat.thermostat.common.locale.Translate;
+import java.util.List;
 
-public enum LocaleResources {
+import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-    MISSING_INFO,
-
-    HOST_SERVICE_UNAVAILABLE,
-    VM_SERVICE_UNAVAILABLE,
-    VM_CPU_SERVICE_NOT_AVAILABLE,
-    VM_MEMORY_SERVICE_NOT_AVAILABLE,
-
-    COMMAND_CONNECT_ALREADY_CONNECTED,
-    COMMAND_CONNECT_FAILED_TO_CONNECT,
-    COMMAND_CONNECT_INVALID_STORAGE,
-    COMMAND_CONNECT_ERROR,
-
-    COMMAND_DISCONNECT_NOT_CONNECTED,
-    COMMAND_DISCONNECT_ERROR,
-
-    VM_INFO_PROCESS_ID,
-    VM_INFO_START_TIME,
-    VM_INFO_STOP_TIME,
-    VM_INFO_MAIN_CLASS,
-    VM_INFO_COMMAND_LINE,
-    VM_INFO_JAVA_VERSION,
-    VM_INFO_VIRTUAL_MACHINE,
-    VM_INFO_VM_ARGUMENTS,
-
-    COLUMN_HEADER_HOST_ID,
-    COLUMN_HEADER_HOST,
-    COLUMN_HEADER_VM_ID,
-    COLUMN_HEADER_VM_NAME,
-    COLUMN_HEADER_VM_STATUS,
-    COLUMN_HEADER_TIME,
-
-    VM_STOP_TIME_RUNNING,
-    VM_STATUS_ALIVE,
-    VM_STATUS_DEAD,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
-    }
+/**
+ * This interface should be implemented by plug-ins that would like to
+ * contribute data to the output of the vm-stat command.
+ */
+public interface VMStatPrintDelegate extends Ordered {
+    
+    /**
+     * Returns statistics gathered by this plug-in newer than the specified
+     * time stamp.
+     * @param ref - the VM whose statistics to return
+     * @param timeStampSince - the earliest time stamp to return statistics for
+     * @return a list of statistics newer than the time stamp
+     */
+    public List<? extends TimeStampedPojo> getLatestStats(VmRef ref, long timeStampSince);
+    
+    /**
+     * Returns header names for columns this plug-in wishes to add to the 
+     * vm-stat command.
+     * @param stat - the first stat returned by {@link #getLatestStats(VmRef, long)}
+     * @return a list of column headers to append to vm-stat output
+     */
+    public List<String> getHeaders(TimeStampedPojo stat);
+    
+    /**
+     * Returns a row of data for the specified statistic that corresponds to
+     * the columns returned by {@link #getHeaders(TimeStampedPojo)}.
+     * @param stat - the statistic to generate output for
+     * @return a row of text for this statistic separated by column
+     */
+    public List<String> getStatRow(TimeStampedPojo stat);
+    
 }

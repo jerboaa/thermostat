@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,51 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.cli.internal;
+package com.redhat.thermostat.vm.cpu.client.cli.internal;
 
-import com.redhat.thermostat.common.locale.Translate;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
 
-public enum LocaleResources {
+import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
-    MISSING_INFO,
+public class Activator implements BundleActivator {
+    
+    private ServiceTracker tracker;
+    private ServiceRegistration reg;
 
-    HOST_SERVICE_UNAVAILABLE,
-    VM_SERVICE_UNAVAILABLE,
-    VM_CPU_SERVICE_NOT_AVAILABLE,
-    VM_MEMORY_SERVICE_NOT_AVAILABLE,
-
-    COMMAND_CONNECT_ALREADY_CONNECTED,
-    COMMAND_CONNECT_FAILED_TO_CONNECT,
-    COMMAND_CONNECT_INVALID_STORAGE,
-    COMMAND_CONNECT_ERROR,
-
-    COMMAND_DISCONNECT_NOT_CONNECTED,
-    COMMAND_DISCONNECT_ERROR,
-
-    VM_INFO_PROCESS_ID,
-    VM_INFO_START_TIME,
-    VM_INFO_STOP_TIME,
-    VM_INFO_MAIN_CLASS,
-    VM_INFO_COMMAND_LINE,
-    VM_INFO_JAVA_VERSION,
-    VM_INFO_VIRTUAL_MACHINE,
-    VM_INFO_VM_ARGUMENTS,
-
-    COLUMN_HEADER_HOST_ID,
-    COLUMN_HEADER_HOST,
-    COLUMN_HEADER_VM_ID,
-    COLUMN_HEADER_VM_NAME,
-    COLUMN_HEADER_VM_STATUS,
-    COLUMN_HEADER_TIME,
-
-    VM_STOP_TIME_RUNNING,
-    VM_STATUS_ALIVE,
-    VM_STATUS_DEAD,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    @Override
+    public void start(BundleContext context) throws Exception {
+        tracker = new ServiceTracker(context, VmCpuStatDAO.class.getName(), null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                VmCpuStatDAO vmCpuStatDAO = (VmCpuStatDAO) super.addingService(reference);
+                VmCpuStatPrintDelegate delegate = new VmCpuStatPrintDelegate(vmCpuStatDAO);
+                reg = context.registerService(VMStatPrintDelegate.class.getName(), delegate, null);
+                return vmCpuStatDAO;
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference,
+                    Object service) {
+                reg.unregister();
+                super.removedService(reference, service);
+            }
+        };
+        
+        tracker.open();
     }
+
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        tracker.close();
+    }
+
 }

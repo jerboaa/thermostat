@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,51 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.cli.internal;
+package com.redhat.thermostat.vm.cpu.client.cli.internal;
 
+import java.text.DecimalFormat;
+import java.util.Arrays;
+import java.util.List;
+
+import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
+import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
-public enum LocaleResources {
+public class VmCpuStatPrintDelegate implements VMStatPrintDelegate {
+    
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    
+    private static final String CPU_PERCENT = translator.localize(LocaleResources.COLUMN_HEADER_CPU_PERCENT);
+    
+    private VmCpuStatDAO cpuStatDAO;
 
-    MISSING_INFO,
-
-    HOST_SERVICE_UNAVAILABLE,
-    VM_SERVICE_UNAVAILABLE,
-    VM_CPU_SERVICE_NOT_AVAILABLE,
-    VM_MEMORY_SERVICE_NOT_AVAILABLE,
-
-    COMMAND_CONNECT_ALREADY_CONNECTED,
-    COMMAND_CONNECT_FAILED_TO_CONNECT,
-    COMMAND_CONNECT_INVALID_STORAGE,
-    COMMAND_CONNECT_ERROR,
-
-    COMMAND_DISCONNECT_NOT_CONNECTED,
-    COMMAND_DISCONNECT_ERROR,
-
-    VM_INFO_PROCESS_ID,
-    VM_INFO_START_TIME,
-    VM_INFO_STOP_TIME,
-    VM_INFO_MAIN_CLASS,
-    VM_INFO_COMMAND_LINE,
-    VM_INFO_JAVA_VERSION,
-    VM_INFO_VIRTUAL_MACHINE,
-    VM_INFO_VM_ARGUMENTS,
-
-    COLUMN_HEADER_HOST_ID,
-    COLUMN_HEADER_HOST,
-    COLUMN_HEADER_VM_ID,
-    COLUMN_HEADER_VM_NAME,
-    COLUMN_HEADER_VM_STATUS,
-    COLUMN_HEADER_TIME,
-
-    VM_STOP_TIME_RUNNING,
-    VM_STATUS_ALIVE,
-    VM_STATUS_DEAD,
-    ;
-
-    static final String RESOURCE_BUNDLE = "com.redhat.thermostat.client.cli.strings";
-
-    public static Translate<LocaleResources> createLocalizer() {
-        return new Translate<>(RESOURCE_BUNDLE, LocaleResources.class);
+    public VmCpuStatPrintDelegate(VmCpuStatDAO cpuStatDAO) {
+        this.cpuStatDAO = cpuStatDAO;
     }
+
+    @Override
+    public List<? extends TimeStampedPojo> getLatestStats(VmRef ref,
+            long timestamp) {
+        return cpuStatDAO.getLatestVmCpuStats(ref, timestamp);
+    }
+
+    @Override
+    public List<String> getHeaders(TimeStampedPojo stat) {
+        return Arrays.asList(CPU_PERCENT);
+    }
+
+    @Override
+    public List<String> getStatRow(TimeStampedPojo stat) {
+        VmCpuStat cpuStat = (VmCpuStat) stat;
+        DecimalFormat format = new DecimalFormat("#0.0");
+        String cpuLoad = cpuStat != null ? format.format(cpuStat.getCpuLoad()) : "";
+        return Arrays.asList(cpuLoad);
+    }
+
+    @Override
+    public int getOrderValue() {
+        return ORDER_CPU_GROUP;
+    }
+
 }

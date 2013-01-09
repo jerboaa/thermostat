@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -203,7 +203,13 @@ public class StubBundleContext implements BundleContext {
 
     @Override
     public ServiceReference getServiceReference(String clazz) {
-        throw new NotImplementedException();
+        ServiceReference result = null;
+        for (ServiceInformation info : registeredServices) {
+            if (info.serviceInterface.equals(clazz)) {
+                result = new StubServiceReference(info);
+            }
+        }
+        return result;
     }
 
     @Override
