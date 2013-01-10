@@ -41,6 +41,7 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
@@ -104,7 +105,9 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public void addAgentInformation(AgentInformation agentInfo) {
-        storage.putPojo(AgentInfoDAO.CATEGORY, true, agentInfo);
+        Put replace = storage.createReplace(CATEGORY);
+        replace.setPojo(agentInfo);
+        replace.apply();
     }
 
     @Override

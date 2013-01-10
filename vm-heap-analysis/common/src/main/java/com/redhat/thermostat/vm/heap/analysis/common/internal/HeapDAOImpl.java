@@ -53,6 +53,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
@@ -86,7 +87,10 @@ public class HeapDAOImpl implements HeapDAO {
         if (histogramData != null) {
             heapInfo.setHistogramId(histogramId);
         }
-        storage.putPojo(heapInfoCategory, false, heapInfo);
+        Put add = storage.createAdd(heapInfoCategory);
+        add.setPojo(heapInfo);
+        add.apply();
+
         if (heapDumpData != null) {
             storage.saveFile(heapDumpId, new FileInputStream(heapDumpData));
         }

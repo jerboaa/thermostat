@@ -76,6 +76,7 @@ class VMListFormatter {
     }
 
     private void printVM(VmRef vm, VmInfo info) {
+        System.err.println("agentId: " + vm.getAgent().getAgentId());
         printLine(vm.getAgent().getAgentId(),
                   vm.getAgent().getHostName(),
                   vm.getId().toString(),

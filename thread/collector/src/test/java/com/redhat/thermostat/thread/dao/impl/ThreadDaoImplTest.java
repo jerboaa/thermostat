@@ -38,6 +38,7 @@ package com.redhat.thermostat.thread.dao.impl;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,9 +47,11 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Replace;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -98,7 +101,9 @@ public class ThreadDaoImplTest {
     @Test
     public void testSaveVMCapabilities() {
         Storage storage = mock(Storage.class);
-        
+        Replace replace = mock(Replace.class);
+        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+
         VMThreadCapabilities caps = mock(VMThreadCapabilities.class);
         when(caps.supportContentionMonitor()).thenReturn(true);
         when(caps.supportCPUTime()).thenReturn(true);
@@ -107,7 +112,9 @@ public class ThreadDaoImplTest {
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         dao.saveCapabilities(caps);
 
-        verify(storage).putPojo(ThreadDao.THREAD_CAPABILITIES, true, caps);
+        verify(storage).createReplace(ThreadDao.THREAD_CAPABILITIES);
+        verify(replace).setPojo(caps);
+        verify(replace).apply();
 
     }
 }

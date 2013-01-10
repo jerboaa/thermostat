@@ -35,10 +35,34 @@
  */
 
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.storage.core;
 
-public interface AgentIdPojo extends Pojo {
+import com.redhat.thermostat.storage.model.Pojo;
 
-    void setAgentId(String agentId);
-    String getAgentId();
+
+public abstract class BasePut implements Put {
+
+    private Category category;
+    private Pojo pojo;
+
+    public final void setCategory(Category category) {
+        if (this.category != null) {
+            throw new IllegalStateException();
+        }
+        this.category = category;
+    }
+
+    public final Category getCategory() {
+        return category;
+    }
+
+    @Override
+    public final void setPojo(Pojo pojo) {
+        this.pojo = pojo;
+    }
+
+    public final Pojo getPojo() {
+        return pojo;
+    }
+
 }

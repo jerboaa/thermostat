@@ -53,6 +53,7 @@ import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
@@ -188,13 +189,18 @@ public class HostInfoDAOTest {
     @Test
     public void testPutHostInfo() {
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+
         AgentInfoDAO agentInfo = mock(AgentInfoDAO.class);
 
         HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         HostInfoDAO dao = new HostInfoDAOImpl(storage, agentInfo);
         dao.putHostInfo(info);
 
-        verify(storage).putPojo(HostInfoDAO.hostInfoCategory, false, info);
+        verify(storage).createAdd(HostInfoDAO.hostInfoCategory);
+        verify(add).setPojo(info);
+        verify(add).apply();
     }
 
     @Test

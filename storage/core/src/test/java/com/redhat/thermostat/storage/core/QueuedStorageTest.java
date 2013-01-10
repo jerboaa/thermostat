@@ -67,7 +67,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
 
@@ -165,6 +164,7 @@ public class QueuedStorageTest {
             // Not used.
             return null;
         }
+
     }
 
     private static class TestPojo implements Pojo {
@@ -173,6 +173,8 @@ public class QueuedStorageTest {
 
     private QueuedStorage queuedStorage;
     private Storage delegateStorage;
+    private Add delegateAdd;
+    private Replace delegateReplace;
 
     private TestExecutor executor;
     private TestExecutor fileExecutor;
@@ -188,9 +190,15 @@ public class QueuedStorageTest {
         executor = new TestExecutor();
         fileExecutor = new TestExecutor();
         delegateStorage = mock(Storage.class);
+
+        delegateAdd = mock(Add.class);
+        delegateReplace = mock(Replace.class);
+
         Update update = mock(Update.class);
         Remove remove = mock(Remove.class);
         Query query = mock(Query.class);
+        when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
+        when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
         when(delegateStorage.createUpdate()).thenReturn(update);
         when(delegateStorage.createRemove()).thenReturn(remove);
         when(delegateStorage.createQuery()).thenReturn(query);
@@ -218,17 +226,23 @@ public class QueuedStorageTest {
     }
 
     @Test
-    public void testPutPojo() {
+    public void testInsert() {
         Category category = mock(Category.class);
-        AgentIdPojo pojo = mock(AgentIdPojo.class);
+        Pojo pojo = mock(Pojo.class);
 
-        queuedStorage.putPojo(category, true, pojo);
+        Put put = queuedStorage.createReplace(category);
+        put.setPojo(pojo);
+        put.apply();
 
         Runnable r = executor.getTask();
         assertNotNull(r);
         verifyZeroInteractions(delegateStorage);
+        verifyZeroInteractions(delegateReplace);
+
         r.run();
-        verify(delegateStorage, times(1)).putPojo(category, true, pojo);
+        verify(delegateStorage).createReplace(category);
+        verify(delegateReplace).setPojo(pojo);
+        verify(delegateReplace).apply();
         verifyNoMoreInteractions(delegateStorage);
 
         assertNull(fileExecutor.getTask());

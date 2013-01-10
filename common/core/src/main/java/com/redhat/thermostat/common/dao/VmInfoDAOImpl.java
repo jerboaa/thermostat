@@ -42,10 +42,11 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 class VmInfoDAOImpl implements VmInfoDAO {
@@ -111,7 +112,9 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmInfo(VmInfo info) {
-        storage.putPojo(vmInfoCategory, true, info);
+        Put replace = storage.createReplace(vmInfoCategory);
+        replace.setPojo(info);
+        replace.apply();
     }
 
     @Override

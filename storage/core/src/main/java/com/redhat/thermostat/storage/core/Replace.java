@@ -35,42 +35,8 @@
  */
 
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.storage.core;
 
-import java.util.Objects;
+public interface Replace extends Put {
 
-import com.redhat.thermostat.storage.core.Persist;
-
-public class BasePojo implements Pojo {
-
-    private String agentId;
-
-    @Persist
-    public final String getAgentId() {
-        return agentId;
-    }
-
-    @Persist
-    public final void setAgentId(String agentId) {
-        this.agentId = agentId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(agentId);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BasePojo other = (BasePojo) obj;
-        return Objects.equals(agentId, other.agentId);
-    }
-
-    
 }

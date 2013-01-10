@@ -54,15 +54,16 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmClassStat;
 import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
-import com.redhat.thermostat.vm.classstat.common.internal.VmClassStatDAOImpl;
 
 public class VmClassStatDAOTest {
 
@@ -129,10 +130,15 @@ public class VmClassStatDAOTest {
     public void testPutVmClassStat() {
 
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+
         VmClassStat stat = new VmClassStat(VM_ID, TIMESTAMP, LOADED_CLASSES);
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         dao.putVmClassStat(stat);
 
-        verify(storage).putPojo(VmClassStatDAO.vmClassStatsCategory, false, stat);
+        verify(storage).createAdd(VmClassStatDAO.vmClassStatsCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
     }
 }

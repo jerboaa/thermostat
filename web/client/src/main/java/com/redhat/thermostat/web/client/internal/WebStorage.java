@@ -43,6 +43,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.security.SecureRandom;
@@ -57,6 +58,7 @@ import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -84,17 +86,20 @@ import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AuthToken;
+import com.redhat.thermostat.storage.core.BasePut;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.SecureStorage;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.ThermostatGSONConverter;
 import com.redhat.thermostat.web.common.WebInsert;
@@ -269,6 +274,26 @@ public class WebStorage implements Storage, SecureStorage {
             return content.skip(n);
         }
 
+    }
+
+    private class WebAdd extends BasePut implements Add {
+
+        @Override
+        public void apply() {
+            int categoryId = getCategoryId(getCategory());
+            putImpl(new WebInsert(categoryId, false, getPojo().getClass().getName()), getPojo());
+        }
+        
+    }
+
+    private class WebReplace extends BasePut implements Replace {
+
+        @Override
+        public void apply() {
+            int categoryId = getCategoryId(getCategory());
+            putImpl(new WebInsert(categoryId, true, getPojo().getClass().getName()), getPojo());
+        }
+        
     }
 
     private String endpoint;
@@ -483,18 +508,22 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public void putPojo(final Category category, final boolean replace, final AgentIdPojo pojo)
-            throws StorageException {
+    public Add createAdd(Category into) {
+        WebAdd add = new WebAdd();
+        add.setCategory(into);
+        return add;
+    }
 
-        // TODO: This logic should probably be moved elsewhere. I.e. out of the
-        // Storage API.
-        if (pojo.getAgentId() == null) {
-            pojo.setAgentId(getAgentId());
-        }
+    @Override
+    public Replace createReplace(Category into) {
+        WebReplace replace = new WebReplace();
+        replace.setCategory(into);
+        return replace;
+    }
 
-        int categoryId = categoryIds.get(category);
-        WebInsert insert = new WebInsert(categoryId, replace, pojo.getClass()
-                .getName());
+    private void putImpl(WebInsert insert, final Pojo pojo) throws StorageException {
+
+        maybeAddAgentId(pojo);
         NameValuePair insertParam = new BasicNameValuePair("insert",
                 gson.toJson(insert));
         NameValuePair pojoParam = new BasicNameValuePair("pojo",
@@ -502,6 +531,16 @@ public class WebStorage implements Storage, SecureStorage {
         List<NameValuePair> formparams = Arrays.asList(insertParam, pojoParam);
         post(endpoint + "/put-pojo", formparams).close();
 
+    }
+
+    private void maybeAddAgentId(final Pojo pojo) throws AssertionError {
+        try {
+            if (BeanUtils.getProperty(pojo, Key.AGENT_ID.getName()) == null) {
+                BeanUtils.setProperty(pojo, Key.AGENT_ID.getName(), getAgentId());
+            }
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new AssertionError("Pojo needs to have an agentId property");
+        }
     }
 
     @Override
@@ -597,6 +636,10 @@ public class WebStorage implements Storage, SecureStorage {
     @Override
     public void shutdown() {
         // Nothing to do here.
+    }
+
+    int getCategoryId(Category category) {
+        return categoryIds.get(category);
     }
 
 }

@@ -57,9 +57,10 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.MockQuery;
 
@@ -253,13 +254,18 @@ public class VmInfoDAOTest {
     public void testPutVmInfo() {
 
         Storage storage = mock(Storage.class);
+        Replace replace = mock(Replace.class);
+        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+
         VmInfo info = new VmInfo(vmId, startTime, stopTime, jVersion, jHome,
                 mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs,
                 props, env, libs);
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmInfo(info);
 
-        verify(storage).putPojo(VmInfoDAO.vmInfoCategory, true, info);
+        verify(storage).createReplace(VmInfoDAO.vmInfoCategory);
+        verify(replace).setPojo(info);
+        verify(replace).apply();
     }
 
     @Test

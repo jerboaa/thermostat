@@ -41,6 +41,7 @@ import java.util.List;
 import com.redhat.thermostat.common.dao.HostLatestPojoListGetter;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.CpuStat;
 
@@ -63,7 +64,9 @@ class CpuStatDAOImpl implements CpuStatDAO {
 
     @Override
     public void putCpuStat(CpuStat stat) {
-        storage.putPojo(cpuStatCategory, false, stat);
+        Put add = storage.createAdd(cpuStatCategory);
+        add.setPojo(stat);
+        add.apply();
     }
 
     @Override

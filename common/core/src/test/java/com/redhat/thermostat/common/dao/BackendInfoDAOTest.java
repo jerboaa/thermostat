@@ -38,6 +38,7 @@ package com.redhat.thermostat.common.dao;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -51,12 +52,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.BackendInformation;
 import com.redhat.thermostat.test.MockQuery;
 
@@ -109,11 +111,16 @@ public class BackendInfoDAOTest {
     @Test
     public void verifyAddBackendInformation() {
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         dao.addBackendInformation(backendInfo1);
 
-        verify(storage).putPojo(BackendInfoDAO.CATEGORY, false, backendInfo1);
+        verify(storage).createAdd(BackendInfoDAO.CATEGORY);
+        verify(add).setPojo(backendInfo1);
+        verify(add).apply();
     }
 
     @Test

@@ -53,13 +53,13 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
-import com.redhat.thermostat.host.cpu.common.internal.CpuStatDAOImpl;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.CpuStat;
 import com.redhat.thermostat.test.MockQuery;
 
@@ -138,11 +138,16 @@ public class CpuStatDAOTest {
     @Test
     public void testPutCpuStat() {
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        
         CpuStat stat = new CpuStat(1,  new double[] {5.0, 10.0, 15.0});
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
         dao.putCpuStat(stat);
 
-        verify(storage).putPojo(CpuStatDAO.cpuStatCategory, false, stat);
+        verify(storage).createAdd(CpuStatDAO.cpuStatCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
     }
 
     @Test

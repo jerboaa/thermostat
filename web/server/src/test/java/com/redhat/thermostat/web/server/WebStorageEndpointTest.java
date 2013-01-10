@@ -86,6 +86,7 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.BasePojo;
@@ -286,6 +287,9 @@ public class WebStorageEndpointTest {
     @Test
     public void testPutPojo() throws IOException {
 
+        Replace replace = mock(Replace.class);
+        when(mockStorage.createReplace(any(Category.class))).thenReturn(replace);
+
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
         expected1.setKey2(42);
@@ -310,7 +314,9 @@ public class WebStorageEndpointTest {
         out.write("\n");
         out.flush();
         assertEquals(200, conn.getResponseCode());
-        verify(mockStorage).putPojo(category, true, expected1);
+        verify(mockStorage).createReplace(category);
+        verify(replace).setPojo(expected1);
+        verify(replace).apply();
     }
 
     private void sendAuthorization(HttpURLConnection conn, String username, String passwd) {

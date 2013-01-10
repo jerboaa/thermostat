@@ -74,11 +74,13 @@ import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Update;
@@ -413,7 +415,9 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         TestClass pojo = new TestClass();
         pojo.setAgentId("123");
-        storage.putPojo(testCategory, false, pojo);
+        Put add = storage.createAdd(testCategory);
+        add.setPojo(pojo);
+        add.apply();
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
@@ -426,8 +430,9 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         storage.setAgentId(new UUID(1, 2));
         TestClass pojo = new TestClass();
-        pojo.setAgentId("123");
-        storage.putPojo(testCategory, false, pojo);
+        Add add = storage.createAdd(testCategory);
+        add.setPojo(pojo);
+        add.apply();
         ArgumentCaptor<DBObject> dbobj = ArgumentCaptor.forClass(DBObject.class);
         verify(testCollection).insert(dbobj.capture());
         DBObject val = dbobj.getValue();
@@ -500,7 +505,9 @@ public class MongoStorageTest {
         pojo.setKey5("test5");
 
         MongoStorage storage = makeStorage();
-        storage.putPojo(testCategory, true, pojo);
+        Put replace = storage.createReplace(testCategory);
+        replace.setPojo(pojo);
+        replace.apply();
 
         ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
         ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);

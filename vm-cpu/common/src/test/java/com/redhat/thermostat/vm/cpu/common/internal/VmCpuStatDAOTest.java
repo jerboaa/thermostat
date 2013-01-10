@@ -55,11 +55,13 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
@@ -130,11 +132,16 @@ public class VmCpuStatDAOTest {
     @Test
     public void testPutVmCpuStat() {
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        
         VmCpuStat stat = new VmCpuStat(TIMESTAMP, VM_ID, CPU_LOAD);
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         dao.putVmCpuStat(stat);
 
-        verify(storage).putPojo(VmCpuStatDAO.vmCpuStatCategory, false, stat);
+        verify(storage).createAdd(VmCpuStatDAO.vmCpuStatCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
 
     }
 }

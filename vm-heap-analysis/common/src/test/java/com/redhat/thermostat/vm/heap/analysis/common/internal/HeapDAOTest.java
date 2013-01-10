@@ -66,6 +66,7 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
@@ -85,6 +86,7 @@ public class HeapDAOTest {
 
     private HeapDAO dao;
     private Storage storage;
+    private Add add;
     private HeapInfo heapInfo;
     private File heapDumpData;
     private ObjectHistogram histogram;
@@ -93,6 +95,9 @@ public class HeapDAOTest {
     @Before
     public void setUp() throws IOException {
         storage = mock(Storage.class);
+        add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+
         when(storage.getAgentId()).thenReturn("test");
         when(storage.createQuery()).then(new Answer<Query>() {
             @Override
@@ -177,6 +182,7 @@ public class HeapDAOTest {
         heapInfo = null;
         dao = null;
         storage = null;
+        add = null;
     }
 
     @Test
@@ -198,7 +204,9 @@ public class HeapDAOTest {
     public void testPutHeapInfo() throws IOException {
         dao.putHeapInfo(heapInfo, heapDumpData, histogram);
 
-        verify(storage).putPojo(HeapDAO.heapInfoCategory, false, heapInfo);
+        verify(storage).createAdd(HeapDAO.heapInfoCategory);
+        verify(add).setPojo(heapInfo);
+        verify(add).apply();
 
         ArgumentCaptor<InputStream> data = ArgumentCaptor.forClass(InputStream.class);
         verify(storage).saveFile(eq("heapdump-test-123-12345"), data.capture());
@@ -224,7 +232,9 @@ public class HeapDAOTest {
     public void testPutHeapInfoWithoutDump() throws IOException {
         dao.putHeapInfo(heapInfo, null, null);
 
-        verify(storage).putPojo(HeapDAO.heapInfoCategory, false, heapInfo);
+        verify(storage).createAdd(HeapDAO.heapInfoCategory);
+        verify(add).setPojo(heapInfo);
+        verify(add).apply();
 
         verify(storage, never()).saveFile(anyString(), any(InputStream.class));
         assertEquals("test-123-12345", heapInfo.getHeapId());

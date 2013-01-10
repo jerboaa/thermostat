@@ -43,10 +43,10 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -81,12 +81,16 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public void saveCapabilities(VMThreadCapabilities caps) {
-        storage.putPojo(THREAD_CAPABILITIES, true, caps);
+        Put replace = storage.createReplace(THREAD_CAPABILITIES);
+        replace.setPojo(caps);
+        replace.apply();
     }
     
     @Override
     public void saveSummary(ThreadSummary summary) {
-        storage.putPojo(THREAD_SUMMARY, false, summary);
+        Put add = storage.createAdd(THREAD_SUMMARY);
+        add.setPojo(summary);
+        add.apply();
     }
     
     @Override
@@ -121,7 +125,9 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public void saveThreadInfo(ThreadInfoData info) {
-        storage.putPojo(THREAD_INFO, false, info);
+        Put add = storage.createAdd(THREAD_INFO);
+        add.setPojo(info);
+        add.apply();
     }
 
     @Override

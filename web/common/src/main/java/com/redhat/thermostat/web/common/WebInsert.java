@@ -45,7 +45,6 @@ public class WebInsert {
     private String pojoClass;
 
     public WebInsert() {
-        this(-1, false, null);
     }
 
     public WebInsert(int categoryId, boolean replace, String pojoClass) {

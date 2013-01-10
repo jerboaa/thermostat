@@ -53,6 +53,8 @@ import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.BasePut;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -61,9 +63,9 @@ import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
@@ -74,6 +76,24 @@ import com.redhat.thermostat.storage.model.Pojo;
 public class MongoStorage implements Storage {
 
     public static final String SET_MODIFIER = "$set";
+
+    private class MongoAdd extends BasePut implements Add {
+
+        @Override
+        public void apply() {
+            addImpl(getCategory(), getPojo());
+        }
+        
+    }
+
+    private class MongoReplace extends BasePut implements Replace {
+
+        @Override
+        public void apply() {
+            replaceImpl(getCategory(), getPojo());
+        }
+        
+    }
 
     private MongoConnection conn;
     private DB db = null;
@@ -113,45 +133,48 @@ public class MongoStorage implements Storage {
         return agentId.toString();
     }
 
-    private String getAgentQueryKeyFromGlobalAgent() {
-        if (agentId != null) {
-            return agentId.toString();
-        } else {
-            return null;
-        }
-    }
-
-    private String getAgentQueryKeyFromChunkOrGlobalAgent(AgentIdPojo pojo) {
-        String queryKey = getAgentQueryKeyFromGlobalAgent();
-        if (queryKey != null) {
-            return queryKey;
-        } else {
-            return pojo.getAgentId();
-        }
+    @Override
+    public Add createAdd(Category into) {
+        MongoAdd add = new MongoAdd();
+        add.setCategory(into);
+        return add;
     }
 
     @Override
-    public void putPojo(final Category cat, final boolean replace, final AgentIdPojo pojo) {
+    public Replace createReplace(Category into) {
+        MongoReplace replace = new MongoReplace();
+        replace.setCategory(into);
+        return replace;
+    }
+
+    private void addImpl(final Category cat, final Pojo pojo) {
         DBCollection coll = getCachedCollection(cat);
+        DBObject toInsert = preparePut(pojo);
+        coll.insert(toInsert);
+    }
+
+    private void replaceImpl(final Category cat, final Pojo pojo) {
+        DBCollection coll = getCachedCollection(cat);
+        DBObject toInsert = preparePut(pojo);
+
+        DBObject query = new BasicDBObject();
+        Collection<Key<?>> keys = cat.getKeys();
+        for (Key<?> key : keys) {
+            if (key.isPartialCategoryKey()) {
+                String name = key.getName();
+                query.put(name, toInsert.get(name));
+            }
+        }
+        coll.update(query, toInsert, true, false);
+    }
+
+    private DBObject preparePut(final Pojo pojo) {
         MongoPojoConverter converter = new MongoPojoConverter();
         DBObject toInsert = converter.convertPojoToMongo(pojo);
-        String agentId = getAgentQueryKeyFromChunkOrGlobalAgent(pojo);
-        toInsert.put(Key.AGENT_ID.getName(), agentId);
-        if (replace) {
-            // TODO: Split this part out into a separate method. It is a very bad practice to
-            // completely change the behaviour of a method based on a boolean flag.
-            DBObject query = new BasicDBObject();
-            Collection<Key<?>> keys = cat.getKeys();
-            for (Key<?> key : keys) {
-                if (key.isPartialCategoryKey()) {
-                    String name = key.getName();
-                    query.put(name, toInsert.get(name));
-                }
-            }
-            coll.update(query, toInsert, true, false);
-        } else {
-            coll.insert(toInsert);
+        if (toInsert.get(Key.AGENT_ID.getName()) == null) {
+            toInsert.put(Key.AGENT_ID.getName(), getAgentId());
         }
+        return toInsert;
     }
 
     @Override
@@ -172,11 +195,6 @@ public class MongoStorage implements Storage {
         DBObject query = mongoRemove.getQuery();
         Category category = mongoRemove.getCategory();
         DBCollection coll = getCachedCollection(category);
-
-        String agentId = getAgentQueryKeyFromGlobalAgent();
-        if (agentId != null) {
-            query.put(Key.AGENT_ID.getName(), agentId);
-        }
 
         coll.remove(query);
     }
@@ -200,8 +218,7 @@ public class MongoStorage implements Storage {
 
     @Override
     public void purge() {
-        String deleteKey = getAgentQueryKeyFromGlobalAgent();
-        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), deleteKey);
+        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), getAgentId());
         for (DBCollection coll : collectionCache.values()) {
             coll.remove(query);
         }

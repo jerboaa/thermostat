@@ -43,6 +43,7 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
@@ -93,7 +94,9 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public void addBackendInformation(BackendInformation info) {
-        storage.putPojo(BackendInfoDAO.CATEGORY, false, info);
+        Put add = storage.createAdd(BackendInfoDAO.CATEGORY);
+        add.setPojo(info);
+        add.apply();
     }
 
     @Override

@@ -35,42 +35,60 @@
  */
 
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.storage.core;
 
-import java.util.Objects;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
-import com.redhat.thermostat.storage.core.Persist;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-public class BasePojo implements Pojo {
+import com.redhat.thermostat.storage.model.Pojo;
 
-    private String agentId;
+public class BasePutTest {
 
-    @Persist
-    public final String getAgentId() {
-        return agentId;
+    private BasePut insert;
+
+    @Before
+    public void setUp() {
+        insert = new BasePut() {
+            public void apply() {
+                // Do nothing.
+            }
+        };
     }
 
-    @Persist
-    public final void setAgentId(String agentId) {
-        this.agentId = agentId;
+    @After
+    public void tearDown() {
+        insert = null;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(agentId);
+    @Test
+    public void testCategory() {
+        Category category = mock(Category.class);
+
+        assertNull(insert.getCategory());
+        insert.setCategory(category);
+        assertSame(category, insert.getCategory());
+
+        try {
+            insert.setCategory(category);
+            fail();
+        } catch (IllegalStateException ex) {
+            // Ok.
+        }
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BasePojo other = (BasePojo) obj;
-        return Objects.equals(agentId, other.agentId);
-    }
+    @Test
+    public void testPojo() {
+        Pojo pojo = mock(Pojo.class);
 
-    
+        assertNull(insert.getPojo());
+        insert.setPojo(pojo);
+        assertSame(pojo, insert.getPojo());
+        
+    }
 }

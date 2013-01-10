@@ -42,6 +42,7 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
@@ -71,7 +72,9 @@ class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public void putHostInfo(HostInfo info) {
-        storage.putPojo(hostInfoCategory, false, info);
+        Put add = storage.createAdd(hostInfoCategory);
+        add.setPojo(info);
+        add.apply();
     }
 
     @Override

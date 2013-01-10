@@ -42,10 +42,27 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public final class QueuedStorage implements Storage {
+
+    private class QueuedReplace extends BasePut implements Replace {
+
+        @Override
+        public void apply() {
+            replaceImpl(getCategory(), getPojo());
+        }
+        
+    }
+
+    private class QueuedAdd extends BasePut implements Add {
+
+        @Override
+        public void apply() {
+            addImpl(getCategory(), getPojo());
+        }
+        
+    }
 
     private Storage delegate;
     private ExecutorService executor;
@@ -79,13 +96,43 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public void putPojo(final Category category, final boolean replace, final AgentIdPojo pojo) {
+    public Add createAdd(Category into) {
+        QueuedAdd add = new QueuedAdd();
+        add.setCategory(into);
+        return add;
+    }
 
+    @Override
+    public Replace createReplace(Category into) {
+        QueuedReplace replace = new QueuedReplace();
+        replace.setCategory(into);
+        return replace;
+    }
+
+    private void replaceImpl(final Category category, final Pojo pojo) {
+        
         executor.execute(new Runnable() {
             
             @Override
             public void run() {
-                delegate.putPojo(category, replace, pojo);
+                Replace replace = delegate.createReplace(category);
+                replace.setPojo(pojo);
+                replace.apply();
+            }
+
+        });
+
+    }
+
+    private void addImpl(final Category category, final Pojo pojo) {
+        
+        executor.execute(new Runnable() {
+            
+            @Override
+            public void run() {
+                Add add = delegate.createAdd(category);
+                add.setPojo(pojo);
+                add.apply();
             }
 
         });

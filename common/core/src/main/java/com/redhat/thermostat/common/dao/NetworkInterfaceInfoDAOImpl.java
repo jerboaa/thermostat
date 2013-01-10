@@ -41,9 +41,10 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
@@ -72,7 +73,9 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        storage.putPojo(networkInfoCategory, true, info);
+        Put replace = storage.createReplace(networkInfoCategory);
+        replace.setPojo(info);
+        replace.apply();
     }
 
 }

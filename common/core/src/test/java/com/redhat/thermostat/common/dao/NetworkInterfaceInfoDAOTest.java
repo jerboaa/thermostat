@@ -39,6 +39,7 @@ package com.redhat.thermostat.common.dao;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,8 +49,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.test.MockQuery;
@@ -110,12 +113,17 @@ public class NetworkInterfaceInfoDAOTest {
     @Test
     public void testPutNetworkInterfaceInfo() {
         Storage storage = mock(Storage.class);
+        Replace replace = mock(Replace.class);
+        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+
         NetworkInterfaceInfo info = new NetworkInterfaceInfo(INTERFACE_NAME);
         info.setIp4Addr(IPV4_ADDR);
         info.setIp6Addr(IPV6_ADDR);
         NetworkInterfaceInfoDAO dao = new NetworkInterfaceInfoDAOImpl(storage);
         dao.putNetworkInterfaceInfo(info);
 
-        verify(storage).putPojo(NetworkInterfaceInfoDAO.networkInfoCategory, true, info);
+        verify(storage).createReplace(NetworkInterfaceInfoDAO.networkInfoCategory);
+        verify(replace).setPojo(info);
+        verify(replace).apply();
     }
 }

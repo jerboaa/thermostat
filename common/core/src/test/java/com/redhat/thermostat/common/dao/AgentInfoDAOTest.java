@@ -56,10 +56,11 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.test.MockQuery;
 
@@ -196,12 +197,16 @@ public class AgentInfoDAOTest {
     @Test
     public void verifyAddAgentInformation() {
         Storage storage = mock(Storage.class);
+        Replace replace = mock(Replace.class);
+        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.addAgentInformation(agentInfo1);
 
-        verify(storage).putPojo(AgentInfoDAO.CATEGORY, true, agentInfo1);
-
+        verify(storage).createReplace(AgentInfoDAO.CATEGORY);
+        verify(replace).setPojo(agentInfo1);
+        verify(replace).apply();
     }
 
     @Test

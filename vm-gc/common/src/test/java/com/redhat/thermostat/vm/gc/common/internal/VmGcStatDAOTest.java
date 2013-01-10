@@ -52,15 +52,16 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmGcStat;
 import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
-import com.redhat.thermostat.vm.gc.common.internal.VmGcStatDAOImpl;
 
 public class VmGcStatDAOTest {
 
@@ -124,10 +125,15 @@ public class VmGcStatDAOTest {
     @Test
     public void testPutVmGcStat() {
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        
         VmGcStat stat = new VmGcStat(VM_ID, TIMESTAMP, COLLECTOR, RUN_COUNT, WALL_TIME);
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         dao.putVmGcStat(stat);
 
-        verify(storage).putPojo(VmGcStatDAO.vmGcStatCategory, false, stat);
+        verify(storage).createAdd(VmGcStatDAO.vmGcStatCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
     }
 }

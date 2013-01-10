@@ -65,12 +65,12 @@ import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.StorageWrapper;
@@ -250,12 +250,14 @@ public class WebStorageEndPoint extends HttpServlet {
         try {
             String insertParam = req.getParameter("insert");
             WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
-            Class<? extends AgentIdPojo> pojoCls = (Class<? extends AgentIdPojo>) Class.forName(insert.getPojoClass());
+            Class<? extends Pojo> pojoCls = (Class<? extends Pojo>) Class.forName(insert.getPojoClass());
             String pojoParam = req.getParameter("pojo");
-            AgentIdPojo pojo = gson.fromJson(pojoParam, pojoCls);
+            Pojo pojo = gson.fromJson(pojoParam, pojoCls);
             int categoryId = insert.getCategoryId();
             Category category = getCategoryFromId(categoryId);
-            storage.putPojo(category, insert.isReplace(), pojo);
+            Put targetPut = insert.isReplace() ? storage.createReplace(category) : storage.createAdd(category);
+            targetPut.setPojo(pojo);
+            targetPut.apply();
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (ClassNotFoundException ex) {
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

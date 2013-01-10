@@ -54,17 +54,18 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl;
 
 public class VmMemoryStatDAOTest {
 
@@ -194,9 +195,14 @@ public class VmMemoryStatDAOTest {
         VmMemoryStat stat = new VmMemoryStat(1, 2, generations.toArray(new Generation[generations.size()]));
 
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        
         VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(storage);
         dao.putVmMemoryStat(stat);
 
-        verify(storage).putPojo(VmMemoryStatDAO.vmMemoryStatsCategory, false, stat);
+        verify(storage).createAdd(VmMemoryStatDAO.vmMemoryStatsCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
     }
 }

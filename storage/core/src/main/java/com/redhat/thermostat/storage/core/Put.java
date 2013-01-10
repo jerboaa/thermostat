@@ -35,42 +35,25 @@
  */
 
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.storage.core;
 
-import java.util.Objects;
+import com.redhat.thermostat.storage.model.Pojo;
 
-import com.redhat.thermostat.storage.core.Persist;
 
-public class BasePojo implements Pojo {
+public interface Put {
 
-    private String agentId;
+    /**
+     * Sets the POJO that is to be put into the database.
+     * Notice that this is usually not necessary to call, because Storage.add() 
+     * and Storage.replace() already take this argument. It is useful
+     * for pre-building and caching queries though.
+     *
+     * @param the pojo to be put into the database
+     */
+    void setPojo(Pojo pojo);
 
-    @Persist
-    public final String getAgentId() {
-        return agentId;
-    }
-
-    @Persist
-    public final void setAgentId(String agentId) {
-        this.agentId = agentId;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(agentId);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
-            return true;
-        if (obj == null)
-            return false;
-        if (getClass() != obj.getClass())
-            return false;
-        BasePojo other = (BasePojo) obj;
-        return Objects.equals(agentId, other.agentId);
-    }
-
-    
+    /**
+     * Applies this put operation to the database.
+     */
+    void apply();
 }

@@ -54,6 +54,7 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
@@ -135,11 +136,16 @@ public class MemoryStatDAOTest {
     @Test
     public void testPutMemoryStat() {
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+
         MemoryStat stat = new MemoryStat(TIMESTAMP, TOTAL, FREE, BUFFERS, CACHED, SWAP_TOTAL, SWAP_FREE, COMMIT_LIMIT);
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         dao.putMemoryStat(stat);
 
-        verify(storage).putPojo(MemoryStatDAO.memoryStatCategory, false, stat);
+        verify(storage).createAdd(MemoryStatDAO.memoryStatCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
     }
 
     @Test

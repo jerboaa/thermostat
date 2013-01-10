@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.core;
 import java.io.InputStream;
 import java.util.UUID;
 
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
@@ -59,7 +58,8 @@ public interface Storage {
 
     // TODO why does putPojo have an agent id param but not updatePojo and removePojo?
 
-    void putPojo(Category category, boolean replace, AgentIdPojo pojo);
+    Add createAdd(Category category);
+    Replace createReplace(Category category);
 
     void updatePojo(Update update);
 
@@ -83,6 +83,7 @@ public interface Storage {
     Query createQuery();
     Update createUpdate();
     Remove createRemove();
+
 
     void shutdown();
 

@@ -86,6 +86,7 @@ import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
@@ -289,7 +290,13 @@ public class WebStorageTest {
         TestObj obj = new TestObj();
         obj.setProperty1("fluff");
 
-        storage.putPojo(category, true, obj);
+        // We need an agentId, so that we can check automatic insert of agentId.
+        UUID agentId = new UUID(1, 2);
+        storage.setAgentId(agentId);
+
+        Put replace = storage.createReplace(category);
+        replace.setPojo(obj);
+        replace.apply();
 
         Gson gson = new Gson();
         StringReader reader = new StringReader(requestBody);
@@ -308,6 +315,9 @@ public class WebStorageTest {
         assertEquals(2, parts.length);
         assertEquals("pojo", parts[0]);
         Object resultObj = gson.fromJson(parts[1], Class.forName(insert.getPojoClass()));
+
+        // Set agentId on expected object, because we expect WebStorage to insert it for us.
+        obj.setAgentId(agentId.toString());
         assertEquals(obj, resultObj);
     }
 
