@@ -54,7 +54,7 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
     MemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(memoryStatCategory);
-        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory, MemoryStat.class);
+        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory);
     }
 
     @Override

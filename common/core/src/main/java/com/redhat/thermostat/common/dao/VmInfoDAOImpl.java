@@ -60,7 +60,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public VmInfo getVmInfo(VmRef ref) {
-        Query<VmInfo> findMatchingVm = storage.createQuery(vmInfoCategory, VmInfo.class);
+        Query<VmInfo> findMatchingVm = storage.createQuery(vmInfoCategory);
         findMatchingVm.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId());
         findMatchingVm.where(Key.VM_ID, Criteria.EQUALS, ref.getId());
         findMatchingVm.limit(1);
@@ -80,7 +80,7 @@ class VmInfoDAOImpl implements VmInfoDAO {
     }
 
     private Query<VmInfo> buildQuery(HostRef host) {
-        Query<VmInfo> query = storage.createQuery(vmInfoCategory, VmInfo.class);
+        Query<VmInfo> query = storage.createQuery(vmInfoCategory);
         query.where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
         return query;
     }

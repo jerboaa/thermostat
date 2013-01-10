@@ -113,7 +113,7 @@ public class WebStorageTest {
     private String requestURI;
     private int responseStatus;
 
-    private static Category category;
+    private static Category<TestObj> category;
     private static Key<String> key1;
     private static Key<Integer> key2;
 
@@ -123,7 +123,7 @@ public class WebStorageTest {
     public static void setupCategory() {
         key1 = new Key<>("property1", true);
         key2 = new Key<>("property2", true);
-        category = new Category("test", key1);
+        category = new Category<>("test", TestObj.class, key1);
     }
 
     @AfterClass
@@ -231,7 +231,7 @@ public class WebStorageTest {
         responseBody = gson.toJson(Arrays.asList(obj1, obj2));
 
         Key<String> key1 = new Key<>("property1", true);
-        Query<TestObj> query = storage.createQuery(category, TestObj.class);
+        Query<TestObj> query = storage.createQuery(category);
         query.where(key1, Criteria.EQUALS, "fluff");
 
         Cursor<TestObj> results = query.execute();
@@ -240,7 +240,7 @@ public class WebStorageTest {
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
         String[] parts = line.split("=");
         assertEquals("query", parts[0]);
-        WebQuery restQuery = gson.fromJson(parts[1], WebQuery.class);
+        WebQuery<?> restQuery = gson.fromJson(parts[1], WebQuery.class);
 
         assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
@@ -282,12 +282,11 @@ public class WebStorageTest {
         WebInsert insert = gson.fromJson(parts[1], WebInsert.class);
         assertEquals(42, insert.getCategoryId());
         assertEquals(true, insert.isReplace());
-        assertEquals(TestObj.class.getName(), insert.getPojoClass());
 
         parts = params[1].split("=");
         assertEquals(2, parts.length);
         assertEquals("pojo", parts[0]);
-        Object resultObj = gson.fromJson(parts[1], Class.forName(insert.getPojoClass()));
+        Object resultObj = gson.fromJson(parts[1], TestObj.class);
 
         // Set agentId on expected object, because we expect WebStorage to insert it for us.
         obj.setAgentId(agentId.toString());

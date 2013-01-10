@@ -103,7 +103,7 @@ public class MemoryStatDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
@@ -112,7 +112,7 @@ public class MemoryStatDAOTest {
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef, Long.MIN_VALUE);
 
-        verify(storage).createQuery(MemoryStatDAO.memoryStatCategory, MemoryStat.class);
+        verify(storage).createQuery(MemoryStatDAO.memoryStatCategory);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);

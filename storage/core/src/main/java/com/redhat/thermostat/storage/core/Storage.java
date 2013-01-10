@@ -52,12 +52,12 @@ public interface Storage {
 
     String getAgentId();
 
-    void registerCategory(Category category);
+    void registerCategory(Category<?> category);
 
     Connection getConnection();
 
-    Add createAdd(Category category);
-    Replace createReplace(Category category);
+    Add createAdd(Category<?> category);
+    Replace createReplace(Category<?> category);
 
     void removePojo(Remove remove);
 
@@ -66,15 +66,15 @@ public interface Storage {
      */
     void purge();
 
-    long getCount(Category category);
+    long getCount(Category<?> category);
 
     void saveFile(String filename, InputStream data);
 
     InputStream loadFile(String filename);
 
-    <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass);
+    <T extends Pojo> Query<T> createQuery(Category<T> category);
 
-    Update createUpdate(Category category);
+    Update createUpdate(Category<?> category);
     Remove createRemove();
 
 

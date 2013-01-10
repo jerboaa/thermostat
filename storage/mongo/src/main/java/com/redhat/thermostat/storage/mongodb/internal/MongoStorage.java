@@ -132,26 +132,26 @@ public class MongoStorage implements Storage {
     }
 
     @Override
-    public Add createAdd(Category into) {
+    public Add createAdd(Category<?> into) {
         MongoAdd add = new MongoAdd();
         add.setCategory(into);
         return add;
     }
 
     @Override
-    public Replace createReplace(Category into) {
+    public Replace createReplace(Category<?> into) {
         MongoReplace replace = new MongoReplace();
         replace.setCategory(into);
         return replace;
     }
 
-    private void addImpl(final Category cat, final Pojo pojo) {
+    private void addImpl(final Category<?> cat, final Pojo pojo) {
         DBCollection coll = getCachedCollection(cat);
         DBObject toInsert = preparePut(pojo);
         coll.insert(toInsert);
     }
 
-    private void replaceImpl(final Category cat, final Pojo pojo) {
+    private void replaceImpl(final Category<?> cat, final Pojo pojo) {
         DBCollection coll = getCachedCollection(cat);
         DBObject toInsert = preparePut(pojo);
 
@@ -176,7 +176,7 @@ public class MongoStorage implements Storage {
     }
 
     void updatePojo(MongoUpdate mongoUpdate) {
-        Category cat = mongoUpdate.getCategory();
+        Category<?> cat = mongoUpdate.getCategory();
         DBCollection coll = getCachedCollection(cat);
         DBObject query = mongoUpdate.getQuery();
         DBObject values = mongoUpdate.getValues();
@@ -188,13 +188,13 @@ public class MongoStorage implements Storage {
         assert (remove instanceof MongoRemove);
         MongoRemove mongoRemove = (MongoRemove) remove;
         DBObject query = mongoRemove.getQuery();
-        Category category = mongoRemove.getCategory();
+        Category<?> category = mongoRemove.getCategory();
         DBCollection coll = getCachedCollection(category);
 
         coll.remove(query);
     }
 
-    private DBCollection getCachedCollection(Category category) {
+    private DBCollection getCachedCollection(Category<?> category) {
         String collName = category.getName();
         DBCollection coll = collectionCache.get(collName);
         if (coll == null && db.collectionExists(collName)) {
@@ -206,7 +206,7 @@ public class MongoStorage implements Storage {
     // TODO: This method is only temporary to enable tests, until we come up with a better design,
     // in particular, the collection should be stored in the category itself. It must not be called
     // from production code.
-    void mapCategoryToDBCollection(Category category, DBCollection coll) {
+    void mapCategoryToDBCollection(Category<?> category, DBCollection coll) {
         collectionCache.put(category.getName(), coll);
     }
 
@@ -220,7 +220,7 @@ public class MongoStorage implements Storage {
     }
     
     @Override
-    public void registerCategory(Category category) {
+    public void registerCategory(Category<?> category) {
         String name = category.getName();
         if (collectionCache.containsKey(name)) {
             throw new IllegalStateException("Category may only be associated with one backend.");
@@ -236,12 +236,12 @@ public class MongoStorage implements Storage {
     }
 
     @Override
-    public <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass) {
-        return new MongoQuery(this, category, resultClass);
+    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
+        return new MongoQuery<T>(this, category);
     }
 
     @Override
-    public Update createUpdate(Category category) {
+    public Update createUpdate(Category<?> category) {
         return new MongoUpdate(this, category);
     }
 
@@ -250,8 +250,7 @@ public class MongoStorage implements Storage {
         return new MongoRemove();
     }
 
-    <T extends Pojo> Cursor<T> findAllPojos(Query<T> query, Class<T> resultClass) {
-        MongoQuery mongoQuery =  checkAndCastQuery(query);
+    <T extends Pojo> Cursor<T> findAllPojos(MongoQuery<T> mongoQuery, Class<T> resultClass) {
         DBCollection coll = getCachedCollection(mongoQuery.getCategory());
         DBCursor dbCursor;
         if (mongoQuery.hasClauses()) {
@@ -263,7 +262,7 @@ public class MongoStorage implements Storage {
         return new MongoCursor<T>(dbCursor, resultClass);
     }
 
-    private DBCursor applySortAndLimit(MongoQuery query, DBCursor dbCursor) {
+    private DBCursor applySortAndLimit(MongoQuery<?> query, DBCursor dbCursor) {
         BasicDBObject orderBy = new BasicDBObject();
         List<Sort> sorts = query.getSorts();
         for (Sort sort : sorts) {
@@ -278,17 +277,8 @@ public class MongoStorage implements Storage {
     }
 
 
-    private MongoQuery checkAndCastQuery(Query query) {
-        if (!(query instanceof MongoQuery)) {
-            throw new IllegalArgumentException("MongoStorage can only handle MongoQuery");
-        }
-
-        return (MongoQuery) query;
-
-    }
-
     @Override
-    public long getCount(Category category) {
+    public long getCount(Category<?> category) {
         DBCollection coll = getCachedCollection(category);
         if (coll != null) {
             return coll.getCount();

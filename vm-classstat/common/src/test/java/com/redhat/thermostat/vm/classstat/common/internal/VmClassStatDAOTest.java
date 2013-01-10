@@ -90,7 +90,7 @@ public class VmClassStatDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);

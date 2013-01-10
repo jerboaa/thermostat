@@ -66,7 +66,7 @@ public class HostLatestPojoListGetterTest {
     private static final String CATEGORY_NAME = "hostcategory";
     // Make this one static so we don't get IllegalStateException from trying
     // to make category of same name while running tests in same classloader.
-    private static final Category cat =  new Category(CATEGORY_NAME);
+    private static final Category<CpuStat> cat =  new Category<>(CATEGORY_NAME, CpuStat.class);
 
     private static long t1 = 1;
     private static long t2 = 5;
@@ -99,13 +99,13 @@ public class HostLatestPojoListGetterTest {
     public void testBuildQuery() {
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when (storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when (storage.createQuery(any(Category.class))).thenReturn(query);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat);
         query = getter.buildQuery(ref, 123);
 
         assertNotNull(query);
-        verify(storage).createQuery(cat, CpuStat.class);
+        verify(storage).createQuery(cat);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
@@ -117,15 +117,15 @@ public class HostLatestPojoListGetterTest {
         Storage storage = mock(Storage.class);
         Query ignored = mock(Query.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(ignored).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(ignored).thenReturn(query);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat);
         ignored = getter.buildQuery(ref,Long.MIN_VALUE); // Ignore first return value.
 
         query = getter.buildQuery(ref, Long.MIN_VALUE);
 
         assertNotNull(query);
-        verify(storage, times(2)).createQuery(cat, CpuStat.class);
+        verify(storage, times(2)).createQuery(cat);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
         verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
@@ -141,10 +141,10 @@ public class HostLatestPojoListGetterTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
-        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
+        HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat);
 
         List<CpuStat> stats = getter.getLatest(ref, Long.MIN_VALUE);
 

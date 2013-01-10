@@ -57,12 +57,12 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     VmMemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmMemoryStatsCategory);
-        getter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory, VmMemoryStat.class);
+        getter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory);
     }
 
     @Override
     public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        Query<VmMemoryStat> query = storage.createQuery(vmMemoryStatsCategory, VmMemoryStat.class);
+        Query<VmMemoryStat> query = storage.createQuery(vmMemoryStatsCategory);
         query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId());
         query.where(Key.VM_ID, Criteria.EQUALS, ref.getId());
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);

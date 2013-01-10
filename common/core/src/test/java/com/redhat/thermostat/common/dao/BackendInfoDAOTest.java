@@ -137,14 +137,14 @@ public class BackendInfoDAOTest {
 
         Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(backendCursor);
 
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         List<BackendInformation> result = dao.getBackendInformation(agentref);
 
-        verify(storage).createQuery(BackendInfoDAO.CATEGORY, BackendInformation.class);
+        verify(storage).createQuery(BackendInfoDAO.CATEGORY);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
         verify(query).execute();
         verifyNoMoreInteractions(query);

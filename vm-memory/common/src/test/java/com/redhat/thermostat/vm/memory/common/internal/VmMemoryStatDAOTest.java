@@ -91,7 +91,7 @@ public class VmMemoryStatDAOTest {
 
         storage = mock(Storage.class);
         query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
 
         cursor = mock(Cursor.class);
         when(query.execute()).thenReturn(cursor);
@@ -155,7 +155,7 @@ public class VmMemoryStatDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);

@@ -144,8 +144,8 @@ public class MongoStorageTest {
     private static final Key<String> key3 = new Key<>("key3", false);
     private static final Key<String> key4 = new Key<>("key4", false);
     private static final Key<String> key5 = new Key<>("key5", false);
-    private static final Category testCategory = new Category("MongoStorageTest", key1, key2, key3, key4, key5);
-    private static final Category emptyTestCategory = new Category("MongoEmptyCategory");
+    private static final Category<TestClass> testCategory = new Category<>("MongoStorageTest", TestClass.class, key1, key2, key3, key4, key5);
+    private static final Category<TestClass> emptyTestCategory = new Category("MongoEmptyCategory", TestClass.class);
 
     private StartupConfiguration conf;
     private Mongo m;
@@ -207,7 +207,7 @@ public class MongoStorageTest {
     public void verifyFindAllReturnsCursor() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory, TestClass.class);
+        Query query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
         assertNotNull(cursor);
     }
@@ -216,7 +216,7 @@ public class MongoStorageTest {
     public void verifyFindAllCallsDBCollectionFind() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory, TestClass.class);
+        Query query = storage.createQuery(testCategory);
         query.where(key1, Criteria.EQUALS, "fluff");
         query.execute();
         verify(testCollection).find(any(DBObject.class));
@@ -244,7 +244,7 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing MongoCursor
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
-        Query query = storage.createQuery(testCategory, TestClass.class);
+        Query query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
 
         verifyDefaultCursor(cursor);
@@ -256,7 +256,7 @@ public class MongoStorageTest {
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing MongoCursor
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
-        Query query = storage.createQuery(testCategory, TestClass.class);
+        Query query = storage.createQuery(testCategory);
         query.sort(key1, Query.SortDirection.ASCENDING);
         query.limit(3);
 
@@ -274,7 +274,7 @@ public class MongoStorageTest {
     public void verifyFindAllFromCategoryCallsDBCollectionFindAll() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory, TestClass.class);
+        Query query = storage.createQuery(testCategory);
         query.execute();
         verify(testCollection).find();
     }
@@ -283,7 +283,7 @@ public class MongoStorageTest {
     public void verifyFindAllFromCategoryReturnsCorrectCursor() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        Query query = storage.createQuery(testCategory, TestClass.class);
+        Query query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
 
         verifyDefaultCursor(cursor);
@@ -310,7 +310,7 @@ public class MongoStorageTest {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         storage.getConnection().connect();
-        long count = storage.getCount(new Category("NonExistent"));
+        long count = storage.getCount(new Category("NonExistent", TestClass.class));
         assertEquals(0, count);
     }
 

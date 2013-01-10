@@ -128,20 +128,20 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public Add createAdd(Category into) {
+    public Add createAdd(Category<?> into) {
         QueuedAdd add = new QueuedAdd();
         add.setCategory(into);
         return add;
     }
 
     @Override
-    public Replace createReplace(Category into) {
+    public Replace createReplace(Category<?> into) {
         QueuedReplace replace = new QueuedReplace();
         replace.setCategory(into);
         return replace;
     }
 
-    private void replaceImpl(final Category category, final Pojo pojo) {
+    private void replaceImpl(final Category<?> category, final Pojo pojo) {
         
         executor.execute(new Runnable() {
             
@@ -156,7 +156,7 @@ public final class QueuedStorage implements Storage {
 
     }
 
-    private void addImpl(final Category category, final Pojo pojo) {
+    private void addImpl(final Category<?> category, final Pojo pojo) {
         
         executor.execute(new Runnable() {
             
@@ -228,12 +228,12 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass) {
-        return delegate.createQuery(category, resultClass);
+    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
+        return delegate.createQuery(category);
     }
 
     @Override
-    public Update createUpdate(Category category) {
+    public Update createUpdate(Category<?> category) {
         QueuedUpdate update = new QueuedUpdate(delegate.createUpdate(category));
         return update;
     }
@@ -263,7 +263,7 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public void registerCategory(final Category category) {
+    public void registerCategory(final Category<?> category) {
         delegate.registerCategory(category);
     }
 

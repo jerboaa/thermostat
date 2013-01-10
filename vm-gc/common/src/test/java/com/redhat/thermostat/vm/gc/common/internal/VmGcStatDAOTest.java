@@ -94,7 +94,7 @@ public class VmGcStatDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
@@ -108,7 +108,7 @@ public class VmGcStatDAOTest {
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef, Long.MIN_VALUE);
 
-        verify(storage).createQuery(VmGcStatDAO.vmGcStatCategory, VmGcStat.class);
+        verify(storage).createQuery(VmGcStatDAO.vmGcStatCategory);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
         verify(query).where(Key.VM_ID, Criteria.EQUALS, 321);

@@ -93,7 +93,7 @@ public class CpuStatDAOTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
 
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
@@ -128,7 +128,7 @@ public class CpuStatDAOTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
 
-        when(storage.createQuery(CpuStatDAO.cpuStatCategory, CpuStat.class)).thenReturn(query);
+        when(storage.createQuery(CpuStatDAO.cpuStatCategory)).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 

@@ -48,7 +48,7 @@ public interface CpuStatDAO extends Countable {
 
     static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage", false);
 
-    static final Category cpuStatCategory = new Category("cpu-stats",
+    static final Category<CpuStat> cpuStatCategory = new Category<>("cpu-stats", CpuStat.class,
             Key.AGENT_ID, Key.TIMESTAMP, cpuLoadKey);
 
     List<CpuStat> getLatestCpuStats(HostRef ref, long since);

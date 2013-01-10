@@ -42,15 +42,13 @@ public class WebInsert {
 
     private int categoryId;
     private boolean replace;
-    private String pojoClass;
 
     public WebInsert() {
     }
 
-    public WebInsert(int categoryId, boolean replace, String pojoClass) {
+    public WebInsert(int categoryId, boolean replace) {
         this.categoryId = categoryId;
         this.replace = replace;
-        this.pojoClass = pojoClass;
     }
 
     public int getCategoryId() {
@@ -59,14 +57,6 @@ public class WebInsert {
 
     public void setCategoryId(int categoryId) {
         this.categoryId = categoryId;
-    }
-
-    public String getPojoClass() {
-        return pojoClass;
-    }
-
-    public void setPojoClass(String pojoClass) {
-        this.pojoClass = pojoClass;
     }
 
     public boolean isReplace() {

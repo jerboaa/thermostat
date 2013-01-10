@@ -281,7 +281,7 @@ public class WebStorage implements Storage, SecureStorage {
         @Override
         public void apply() {
             int categoryId = getCategoryId(getCategory());
-            putImpl(new WebInsert(categoryId, false, getPojo().getClass().getName()), getPojo());
+            putImpl(new WebInsert(categoryId, false), getPojo());
         }
         
     }
@@ -291,7 +291,7 @@ public class WebStorage implements Storage, SecureStorage {
         @Override
         public void apply() {
             int categoryId = getCategoryId(getCategory());
-            putImpl(new WebInsert(categoryId, true, getPojo().getClass().getName()), getPojo());
+            putImpl(new WebInsert(categoryId, true), getPojo());
         }
         
     }
@@ -306,20 +306,23 @@ public class WebStorage implements Storage, SecureStorage {
 
     private class WebQueryImpl<T extends Pojo> extends WebQuery<T> {
 
-        WebQueryImpl(int categoryId, Class<T> resultClass) {
-            super(categoryId, resultClass);
+        private transient Class<T> dataClass;
+
+        WebQueryImpl(int categoryId, Class<T> dataClass) {
+            super(categoryId);
+            this.dataClass = dataClass;
         }
 
         @Override
         public Cursor<T> execute() {
-            return findAllPojos(this, getResultClass());
+            return findAllPojos(this, dataClass);
         }
     }
 
     private String endpoint;
     private UUID agentId;
 
-    private Map<Category, Integer> categoryIds;
+    private Map<Category<?>, Integer> categoryIds;
     private Gson gson;
     // package private for testing
     DefaultHttpClient httpClient;
@@ -429,7 +432,7 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public void registerCategory(Category category) throws StorageException {
+    public void registerCategory(Category<?> category) throws StorageException {
         NameValuePair nameParam = new BasicNameValuePair("name",
                 category.getName());
         NameValuePair categoryParam = new BasicNameValuePair("category",
@@ -445,8 +448,8 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass) {
-        return new WebQueryImpl(categoryIds.get(category), resultClass);
+    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
+        return new WebQueryImpl<>(categoryIds.get(category), category.getDataClass());
     }
 
     @Override
@@ -455,24 +458,19 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public Update createUpdate(Category category) {
+    public Update createUpdate(Category<?> category) {
         WebUpdateImpl updateImpl = new WebUpdateImpl();
         updateImpl.setCategoryId(categoryIds.get(category));
         return updateImpl;
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends Pojo> Cursor<T> findAllPojos(Query query,
-            Class<T> resultClass) throws StorageException {
-        ((WebQuery) query).setResultClassName(resultClass.getName());
-        NameValuePair queryParam = new BasicNameValuePair("query",
-                gson.toJson(query));
+    private <T extends Pojo> Cursor<T> findAllPojos(WebQuery<T> query, Class<T> resultClass) throws StorageException {
+        NameValuePair queryParam = new BasicNameValuePair("query", gson.toJson(query));
         List<NameValuePair> formparams = Arrays.asList(queryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/find-all",
-                formparams)) {
+        try (CloseableHttpEntity entity = post(endpoint + "/find-all", formparams)) {
             Reader reader = getContentAsReader(entity);
-            T[] result = (T[]) gson.fromJson(reader,
-                    Array.newInstance(resultClass, 0).getClass());
+            T[] result = (T[]) gson.fromJson(reader, Array.newInstance(resultClass, 0).getClass());
             return new WebCursor<T>(result);
         }
     }
@@ -488,12 +486,10 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public long getCount(Category category) throws StorageException {
-        NameValuePair categoryParam = new BasicNameValuePair("category",
-                gson.toJson(categoryIds.get(category)));
+    public long getCount(Category<?> category) throws StorageException {
+        NameValuePair categoryParam = new BasicNameValuePair("category", gson.toJson(categoryIds.get(category)));
         List<NameValuePair> formparams = Arrays.asList(categoryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/get-count",
-                formparams)) {
+        try (CloseableHttpEntity entity = post(endpoint + "/get-count", formparams)) {
             Reader reader = getContentAsReader(entity);
             long result = gson.fromJson(reader, Long.class);
             return result;
@@ -514,14 +510,14 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public Add createAdd(Category into) {
+    public Add createAdd(Category<?> into) {
         WebAdd add = new WebAdd();
         add.setCategory(into);
         return add;
     }
 
     @Override
-    public Replace createReplace(Category into) {
+    public Replace createReplace(Category<?> into) {
         WebReplace replace = new WebReplace();
         replace.setCategory(into);
         return replace;
@@ -643,7 +639,7 @@ public class WebStorage implements Storage, SecureStorage {
         // Nothing to do here.
     }
 
-    int getCategoryId(Category category) {
+    int getCategoryId(Category<?> category) {
         return categoryIds.get(category);
     }
 

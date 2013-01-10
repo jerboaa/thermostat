@@ -50,7 +50,7 @@ public interface VmGcStatDAO {
     /** time in microseconds */
     static final Key<Long> wallTimeKey = new Key<>("wallTime", false);
 
-    static final Category vmGcStatCategory = new Category("vm-gc-stats",
+    static final Category<VmGcStat> vmGcStatCategory = new Category<>("vm-gc-stats", VmGcStat.class,
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, collectorKey,
             runCountKey, wallTimeKey);
 

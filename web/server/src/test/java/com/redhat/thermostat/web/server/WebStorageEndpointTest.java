@@ -133,13 +133,13 @@ public class WebStorageEndpointTest {
 
     private static Key<String> key1;
     private static Key<Integer> key2;
-    private static Category category;
+    private static Category<TestClass> category;
 
     @BeforeClass
     public static void setupCategory() {
         key1 = new Key<>("key1", true);
         key2 = new Key<>("key2", false);
-        category = new Category("test", key1, key2);
+        category = new Category<>("test", TestClass.class, key1, key2);
     }
 
     @AfterClass
@@ -211,7 +211,7 @@ public class WebStorageEndpointTest {
         when(cursor.next()).thenReturn(expected1).thenReturn(expected2);
 
         Query mockQuery = mock(Query.class);
-        when(mockStorage.createQuery(any(Category.class), any(Class.class))).thenReturn(mockQuery);
+        when(mockStorage.createQuery(any(Category.class))).thenReturn(mockQuery);
         when(mockQuery.execute()).thenReturn(cursor);
 
         String endpoint = getEndpoint();
@@ -223,11 +223,10 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         Map<Category,Integer> categoryIdMap = new HashMap<>();
         categoryIdMap.put(category, categoryId);
-        WebQuery query = new WebQuery(categoryId, TestClass.class);
+        WebQuery query = new WebQuery(categoryId);
         query.where(key1, Criteria.EQUALS, "fluff");
         query.sort(key1, SortDirection.DESCENDING);
         query.limit(42);
-        query.setResultClassName(TestClass.class.getName());
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         String body = "query=" + URLEncoder.encode(gson.toJson(query), "UTF-8");
@@ -268,7 +267,7 @@ public class WebStorageEndpointTest {
 
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        WebInsert insert = new WebInsert(categoryId, true, TestClass.class.getName());
+        WebInsert insert = new WebInsert(categoryId, true);
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("insert=");
@@ -305,7 +304,7 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        Map<Category,Integer> categoryIds = new HashMap<>();
+        Map<Category<?>,Integer> categoryIds = new HashMap<>();
         categoryIds.put(category, categoryId);
         WebRemove remove = new WebRemove(categoryIds).from(category).where(key1, "test");
         Gson gson = new Gson();

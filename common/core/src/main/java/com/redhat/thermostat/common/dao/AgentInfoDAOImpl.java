@@ -65,7 +65,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Query<AgentInformation> query = storage.createQuery(CATEGORY, AgentInformation.class);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY);
         Cursor<AgentInformation> agentCursor = query.execute();
 
         List<AgentInformation> results = new ArrayList<>();
@@ -79,7 +79,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAliveAgents() {
-        Query<AgentInformation> query = storage.createQuery(CATEGORY, AgentInformation.class);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY);
         query.where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
 
         Cursor<AgentInformation> agentCursor = query.execute();
@@ -95,7 +95,7 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public AgentInformation getAgentInformation(HostRef agentRef) {
-        Query<AgentInformation> query = storage.createQuery(CATEGORY, AgentInformation.class);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY);
         query.where(Key.AGENT_ID, Criteria.EQUALS, agentRef.getAgentId());
         query.limit(1);
         return query.execute().next();

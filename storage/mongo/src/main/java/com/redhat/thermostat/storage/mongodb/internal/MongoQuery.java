@@ -51,20 +51,20 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
     private MongoStorage storage;
     private BasicDBObject query = new BasicDBObject();
     private boolean hasClauses = false;
-    private Category category;
+    private Category<T> category;
     private Class<T> resultClass;
 
-    MongoQuery(MongoStorage storage, Category category, Class<T> resultClass) {
+    MongoQuery(MongoStorage storage, Category<T> category) {
         this.storage = storage;
         this.category = category;
-        this.resultClass = resultClass;
+        this.resultClass = category.getDataClass();
     }
 
-    public Category getCategory() {
+    public Category<T> getCategory() {
         return category;
     }
 
-    public void setCategory(Category category) {
+    public void setCategory(Category<T> category) {
         this.category = category;
     }
 

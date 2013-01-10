@@ -76,7 +76,7 @@ public class ThreadDaoImplTest {
     public void testLoadVMCapabilities() {
         Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         VmRef ref = mock(VmRef.class);
         when(ref.getId()).thenReturn(42);
         

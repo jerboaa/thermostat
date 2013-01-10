@@ -65,7 +65,7 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public VMThreadCapabilities loadCapabilities(VmRef vm) {
-        Query<VMThreadCapabilities> query = storage.createQuery(THREAD_CAPABILITIES, VMThreadCapabilities.class);
+        Query<VMThreadCapabilities> query = storage.createQuery(THREAD_CAPABILITIES);
         query.where(Key.VM_ID, Query.Criteria.EQUALS, vm.getId());
         query.where(Key.AGENT_ID, Query.Criteria.EQUALS, vm.getAgent().getAgentId());
         query.limit(1);
@@ -91,7 +91,7 @@ public class ThreadDaoImpl implements ThreadDao {
     public ThreadSummary loadLastestSummary(VmRef ref) {
         ThreadSummary summary = null;
 
-        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ThreadSummary.class, ref);
+        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         query.limit(1);
         Cursor<ThreadSummary> cursor = query.execute();
@@ -107,7 +107,7 @@ public class ThreadDaoImpl implements ThreadDao {
         
         List<ThreadSummary> result = new ArrayList<>();
         
-        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ThreadSummary.class, ref);
+        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
 
@@ -131,7 +131,7 @@ public class ThreadDaoImpl implements ThreadDao {
     public List<ThreadInfoData> loadThreadInfo(VmRef ref, long since) {
         List<ThreadInfoData> result = new ArrayList<>();
         
-        Query<ThreadInfoData> query = prepareQuery(THREAD_INFO, ThreadInfoData.class, ref);
+        Query<ThreadInfoData> query = prepareQuery(THREAD_INFO, ref);
         query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
         query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         
@@ -144,12 +144,12 @@ public class ThreadDaoImpl implements ThreadDao {
         return result;
     }
     
-    private <T extends Pojo> Query<T> prepareQuery(Category category, Class<T> resultClass, VmRef vm) {
-        return prepareQuery(category, resultClass, vm.getIdString(), vm.getAgent().getAgentId());
+    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, VmRef vm) {
+        return prepareQuery(category, vm.getIdString(), vm.getAgent().getAgentId());
     }
 
-    private <T extends Pojo> Query<T> prepareQuery(Category category, Class<T> resultClass, String vmId, String agentId) {
-        Query<T> query = storage.createQuery(category, resultClass);
+    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, String vmId, String agentId) {
+        Query<T> query = storage.createQuery(category);
         query.where(Key.AGENT_ID, Query.Criteria.EQUALS, agentId);
         query.where(Key.VM_ID, Query.Criteria.EQUALS, Integer.valueOf(vmId));
         return query;

@@ -52,7 +52,7 @@ public interface HeapDAO {
     static final Key<String> heapDumpIdKey = new Key<String>("heapDumpId", false);
     static final Key<String> histogramIdKey = new Key<String>("histogramId", false);
 
-    public static final Category heapInfoCategory = new Category("vm-heap-info", Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapIdKey, heapDumpIdKey, histogramIdKey);
+    public static final Category<HeapInfo> heapInfoCategory = new Category<>("vm-heap-info", HeapInfo.class, Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, heapIdKey, heapDumpIdKey, histogramIdKey);
 
     void putHeapInfo(HeapInfo heapInfo, File heapDumpFile, ObjectHistogram histogramData) throws IOException;
 

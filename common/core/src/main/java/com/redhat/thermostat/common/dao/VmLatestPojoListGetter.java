@@ -50,13 +50,11 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
     private final Storage storage;
-    private final Category cat;
-    private final Class<T> resultClass;
+    private final Category<T> cat;
 
-    public VmLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
+    public VmLatestPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.resultClass = resultClass;
     }
 
     public List<T> getLatest(VmRef vmRef, long since) {
@@ -75,7 +73,7 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
     }
 
     protected Query<T> buildQuery(VmRef vmRef, long since) {
-        Query<T> query = storage.createQuery(cat, resultClass);
+        Query<T> query = storage.createQuery(cat);
         query.where(Key.AGENT_ID, Criteria.EQUALS, vmRef.getAgent().getAgentId());
         query.where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());
         query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);

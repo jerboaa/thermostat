@@ -47,7 +47,7 @@ import com.redhat.thermostat.storage.core.Query.Criteria;
 
 public class WebRemove implements Remove {
 
-    private transient Map<Category, Integer> categoryIds;
+    private transient Map<Category<?>, Integer> categoryIds;
     private int categoryId;
     private List<Qualifier<?>> qualifiers;
 
@@ -56,7 +56,7 @@ public class WebRemove implements Remove {
         this(null);
     }
 
-    public WebRemove(Map<Category, Integer> categoryIds) {
+    public WebRemove(Map<Category<?>, Integer> categoryIds) {
         qualifiers = new ArrayList<>();
         this.categoryIds = categoryIds;
     }

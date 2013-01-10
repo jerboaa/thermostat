@@ -125,7 +125,7 @@ public class VmInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         VmInfo expected = new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs);
         Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
@@ -149,7 +149,7 @@ public class VmInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         Cursor cursor = mock(Cursor.class);
         when(query.execute()).thenReturn(cursor);
         
@@ -194,7 +194,7 @@ public class VmInfoDAOTest {
 
       Storage storage = mock(Storage.class);
       Query query = mock(Query.class);
-      when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+      when(storage.createQuery(any(Category.class))).thenReturn(query);
       when(query.execute()).thenReturn(singleVMCursor);
       return storage;
   }
@@ -228,7 +228,7 @@ public class VmInfoDAOTest {
 
       Storage storage = mock(Storage.class);
       Query query = mock(Query.class);
-      when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+      when(storage.createQuery(any(Category.class))).thenReturn(query);
       when(query.execute()).thenReturn(multiVMsCursor);
       return storage;
   }

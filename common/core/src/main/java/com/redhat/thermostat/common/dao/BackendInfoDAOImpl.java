@@ -62,7 +62,7 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
     @Override
     public List<BackendInformation> getBackendInformation(HostRef host) {
         // Sort by order value
-        Query<BackendInformation> query = storage.createQuery(CATEGORY, BackendInformation.class);
+        Query<BackendInformation> query = storage.createQuery(CATEGORY);
         query.where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
 
         List<BackendInformation> results = new ArrayList<>();

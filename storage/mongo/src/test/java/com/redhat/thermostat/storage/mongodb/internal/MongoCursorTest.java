@@ -52,13 +52,10 @@ import org.junit.Test;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.mongodb.internal.MongoCursor;
 
 public class MongoCursorTest {
 
@@ -101,13 +98,6 @@ public class MongoCursorTest {
             this.key4 = key4;
         }
     }
-
-    private static final Key<String> key1 = new Key<>("key1", false);
-    private static final Key<String> key2 = new Key<>("key2", false);
-    private static final Key<String> key3 = new Key<>("key3", false);
-    private static final Key<String> key4 = new Key<>("key4", false);
-
-    private static final Category testCategory = new Category("MongoCursorTest", key1, key2, key3, key4);
 
     private DBCursor dbCursor;
     private Cursor<TestClass> cursor;

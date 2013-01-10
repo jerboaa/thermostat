@@ -48,16 +48,21 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class MongoQueryTest {
 
+    private static class TestClass implements Pojo {
+        
+    }
+
     private static MongoStorage storage;
-    private static Category category;
+    private static Category<TestClass> category;
 
     @BeforeClass
     public static void setUp() {
         storage = mock(MongoStorage.class);
-        category = new Category("some-collection");
+        category = new Category<>("some-collection", TestClass.class);
     }
 
     @AfterClass
@@ -69,14 +74,14 @@ public class MongoQueryTest {
     @Test
     public void testEmptyQuery() {
         
-        MongoQuery query = new MongoQuery(storage, category, String.class);
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
         DBObject mongoQuery = query.getGeneratedQuery();
         assertTrue(mongoQuery.keySet().isEmpty());
     }
 
     @Test
     public void testCollectionName() {
-        MongoQuery query = new MongoQuery(storage, category, String.class);
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
         assertEquals("some-collection", query.getCategory().getName());
     }
 
@@ -117,7 +122,7 @@ public class MongoQueryTest {
     }
 
     private DBObject generateSimpleWhereQuery(String key, Criteria criteria, Object value) {
-        MongoQuery query = new MongoQuery(storage, category, String.class);
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
         query.where(key, criteria, value);
         return query.getGeneratedQuery();
     }

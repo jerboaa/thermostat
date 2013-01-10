@@ -54,7 +54,7 @@ class CpuStatDAOImpl implements CpuStatDAO {
     CpuStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(cpuStatCategory);
-        this.getter = new HostLatestPojoListGetter<>(storage, cpuStatCategory, CpuStat.class);
+        this.getter = new HostLatestPojoListGetter<>(storage, cpuStatCategory);
     }
 
     @Override

@@ -98,7 +98,7 @@ public class HostInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
         Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
@@ -135,7 +135,7 @@ public class HostInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
         
         return storage;
@@ -173,7 +173,7 @@ public class HostInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
         
         return storage;
@@ -218,7 +218,7 @@ public class HostInfoDAOTest {
 
         assertEquals(1, hosts.size());
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
-        verify(storage).createQuery(HostInfoDAO.hostInfoCategory, HostInfo.class);
+        verify(storage).createQuery(HostInfoDAO.hostInfoCategory);
     }
     
     private Pair<Storage, AgentInfoDAO> setupForSingleAliveHost() {
@@ -255,7 +255,7 @@ public class HostInfoDAOTest {
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
         
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor1);
 
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
@@ -278,7 +278,7 @@ public class HostInfoDAOTest {
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
         assertTrue(hosts.contains(new HostRef("456", "fluffhost2")));
         assertTrue(hosts.contains(new HostRef("678", "fluffhost3")));
-        verify(storage, atLeast(3)).createQuery(HostInfoDAO.hostInfoCategory, HostInfo.class);
+        verify(storage, atLeast(3)).createQuery(HostInfoDAO.hostInfoCategory);
     }
     
     private Pair<Storage, AgentInfoDAO> setupForAliveHost3() {
@@ -329,7 +329,7 @@ public class HostInfoDAOTest {
         
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor1).thenReturn(cursor2).thenReturn(cursor3);
         
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);

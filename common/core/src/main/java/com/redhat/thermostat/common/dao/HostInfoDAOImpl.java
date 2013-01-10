@@ -63,7 +63,7 @@ class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public HostInfo getHostInfo(HostRef ref) {
-        Query<HostInfo> query = storage.createQuery(hostInfoCategory, HostInfo.class);
+        Query<HostInfo> query = storage.createQuery(hostInfoCategory);
         query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
         query.limit(1);
         HostInfo result = query.execute().next();
@@ -79,7 +79,7 @@ class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public Collection<HostRef> getHosts() {
-        Query<HostInfo> allHosts = storage.createQuery(hostInfoCategory, HostInfo.class);
+        Query<HostInfo> allHosts = storage.createQuery(hostInfoCategory);
         return getHosts(allHosts);
     }
 
@@ -88,7 +88,7 @@ class HostInfoDAOImpl implements HostInfoDAO {
         List<HostRef> hosts = new ArrayList<>();
         List<AgentInformation> agentInfos = agentInfoDao.getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
-            Query<HostInfo> filter = storage.createQuery(hostInfoCategory, HostInfo.class);
+            Query<HostInfo> filter = storage.createQuery(hostInfoCategory);
             filter.where(Key.AGENT_ID, Criteria.EQUALS, agentInfo.getAgentId());
             hosts.addAll(getHosts(filter));
         }

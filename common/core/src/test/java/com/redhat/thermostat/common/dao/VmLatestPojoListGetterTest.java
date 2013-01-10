@@ -66,7 +66,7 @@ public class VmLatestPojoListGetterTest {
     private static final String CATEGORY_NAME = "vmcategory";
     // Make this one static so we don't get IllegalStateException from trying
     // to make category of same name while running tests in same classloader.
-    private static final Category cat =  new Category(CATEGORY_NAME);
+    private static final Category<VmClassStat> cat =  new Category<>(CATEGORY_NAME, VmClassStat.class);
 
     private static long t1 = 1;
     private static long t2 = 5;
@@ -93,13 +93,13 @@ public class VmLatestPojoListGetterTest {
     public void testBuildQuery() {
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, VmClassStat.class);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat);
         query = getter.buildQuery(vmRef, 123l);
 
         assertNotNull(query);
-        verify(storage).createQuery(cat, VmClassStat.class);
+        verify(storage).createQuery(cat);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
         verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_PID);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l);
@@ -112,14 +112,14 @@ public class VmLatestPojoListGetterTest {
         Storage storage = mock(Storage.class);
         Query ignored = mock(Query.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(ignored).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(ignored).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, VmClassStat.class);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat);
         getter.buildQuery(vmRef, Long.MIN_VALUE); // Ignore first return value.
         query = getter.buildQuery(vmRef, Long.MIN_VALUE);
 
         assertNotNull(query);
-        verify(storage, times(2)).createQuery(cat, VmClassStat.class);
+        verify(storage, times(2)).createQuery(cat);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
         verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_PID);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
@@ -136,14 +136,14 @@ public class VmLatestPojoListGetterTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat, VmClassStat.class);
+        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat);
 
         List<VmClassStat> stats = getter.getLatest(vmRef, t2);
 
-        verify(storage).createQuery(cat, VmClassStat.class);
+        verify(storage).createQuery(cat);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
         verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_PID);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, t2);

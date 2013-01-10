@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -121,7 +120,7 @@ public class AgentInfoDAOTest {
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
         when(query.execute()).thenReturn(agentCursor);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
         List<AgentInformation> allAgentInfo = dao.getAllAgentInformation();
@@ -142,13 +141,13 @@ public class AgentInfoDAOTest {
 
         Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(agentCursor);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
         List<AgentInformation> aliveAgents = dao.getAliveAgents();
 
-        verify(storage).createQuery(AgentInfoDAO.CATEGORY, AgentInformation.class);
+        verify(storage).createQuery(AgentInfoDAO.CATEGORY);
         verify(query).where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
         verify(query).execute();
         verifyNoMoreInteractions(query);
@@ -171,7 +170,7 @@ public class AgentInfoDAOTest {
         when(query.execute()).thenReturn(cursor);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
@@ -187,7 +186,7 @@ public class AgentInfoDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         Cursor cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(agentInfo1).thenReturn(null);
@@ -196,7 +195,7 @@ public class AgentInfoDAOTest {
 
         AgentInformation computed = dao.getAgentInformation(agentRef);
 
-        verify(storage).createQuery(AgentInfoDAO.CATEGORY, AgentInformation.class);
+        verify(storage).createQuery(AgentInfoDAO.CATEGORY);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, agentInfo1.getAgentId());
         verify(query).limit(1);
         verify(query).execute();

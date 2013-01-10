@@ -110,7 +110,7 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
-        Query<HeapInfo> query = storage.createQuery(heapInfoCategory, HeapInfo.class);
+        Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
         query.where(Key.AGENT_ID, Criteria.EQUALS, vm.getAgent().getAgentId());
         query.where(Key.VM_ID, Criteria.EQUALS, vm.getId());
         Cursor<HeapInfo> cursor = query.execute();
@@ -140,7 +140,7 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public HeapInfo getHeapInfo(String heapId) {
-        Query<HeapInfo> query = storage.createQuery(heapInfoCategory, HeapInfo.class);
+        Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
         query.where(heapIdKey, Criteria.EQUALS, heapId);
         query.limit(1);
         HeapInfo found = null;

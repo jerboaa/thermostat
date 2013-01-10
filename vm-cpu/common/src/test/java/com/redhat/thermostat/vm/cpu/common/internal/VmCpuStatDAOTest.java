@@ -96,7 +96,7 @@ public class VmCpuStatDAOTest {
 
         Storage storage = mock(Storage.class);
         Query query = mock(Query.class);
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
@@ -110,7 +110,7 @@ public class VmCpuStatDAOTest {
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats(vmRef, Long.MIN_VALUE);
 
-        verify(storage).createQuery(VmCpuStatDAO.vmCpuStatCategory, VmCpuStat.class);
+        verify(storage).createQuery(VmCpuStatDAO.vmCpuStatCategory);
         verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, vmRef.getAgent().getAgentId());
         verify(query).where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());

@@ -58,7 +58,7 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
-        Query<NetworkInterfaceInfo> allHostNetworkInterfaces = storage.createQuery(networkInfoCategory, NetworkInterfaceInfo.class);
+        Query<NetworkInterfaceInfo> allHostNetworkInterfaces = storage.createQuery(networkInfoCategory);
         allHostNetworkInterfaces.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
 
         Cursor<NetworkInterfaceInfo> cursor = allHostNetworkInterfaces.execute();

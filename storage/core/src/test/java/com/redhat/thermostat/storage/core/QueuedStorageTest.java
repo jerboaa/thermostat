@@ -175,14 +175,13 @@ public class QueuedStorageTest {
     private Storage delegateStorage;
     private Add delegateAdd;
     private Replace delegateReplace;
-    private Query delegateQuery;
+    private Query<?> delegateQuery;
 
     private TestExecutor executor;
     private TestExecutor fileExecutor;
 
     @SuppressWarnings("rawtypes")
     private Cursor expectedResults;
-    private TestPojo expectedResult;
     private InputStream expectedFile;
 
     @SuppressWarnings("unchecked")
@@ -200,10 +199,9 @@ public class QueuedStorageTest {
         when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
         when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
         when(delegateStorage.createRemove()).thenReturn(remove);
-        when(delegateStorage.createQuery(any(Category.class), any(Class.class))).thenReturn(delegateQuery);
+        when(delegateStorage.createQuery(any(Category.class))).thenReturn(delegateQuery);
         expectedResults = mock(Cursor.class);
         when(delegateQuery.execute()).thenReturn(expectedResults);
-        expectedResult = new TestPojo();
         when(delegateStorage.getCount(any(Category.class))).thenReturn(42l);
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
@@ -215,7 +213,6 @@ public class QueuedStorageTest {
     @After
     public void tearDown() {
         expectedFile = null;
-        expectedResult = null;
         expectedResults = null;
         queuedStorage = null;
         delegateStorage = null;
@@ -226,7 +223,7 @@ public class QueuedStorageTest {
 
     @Test
     public void testInsert() {
-        Category category = mock(Category.class);
+        Category<?> category = mock(Category.class);
         Pojo pojo = mock(Pojo.class);
 
         Put put = queuedStorage.createReplace(category);
@@ -252,7 +249,7 @@ public class QueuedStorageTest {
         Update delegateUpdate = mock(Update.class);
         when(delegateStorage.createUpdate(any(Category.class))).thenReturn(delegateUpdate);
 
-        Category category = mock(Category.class);
+        Category<?> category = mock(Category.class);
 
         Update update = queuedStorage.createUpdate(category);
         verify(delegateStorage).createUpdate(category);
@@ -306,9 +303,10 @@ public class QueuedStorageTest {
 
     @Test
     public void testFindAllPojos() {
-        Category category = mock(Category.class);
-        Query query = queuedStorage.createQuery(category, TestPojo.class);
-        verify(delegateStorage).createQuery(category, TestPojo.class);
+        @SuppressWarnings("unchecked")
+        Category<TestPojo> category = mock(Category.class);
+        Query<TestPojo> query = queuedStorage.createQuery(category);
+        verify(delegateStorage).createQuery(category);
         verifyNoMoreInteractions(delegateStorage);
 
         Cursor<TestPojo> result = query.execute();
@@ -321,7 +319,7 @@ public class QueuedStorageTest {
 
     @Test
     public void testGetCount() {
-        Category category = mock(Category.class);
+        Category<?> category = mock(Category.class);
 
         long result = queuedStorage.getCount(category);
         assertEquals(42, result);
@@ -384,7 +382,7 @@ public class QueuedStorageTest {
     @Test
     public void testRegisterCategory() {
 
-        Category category = mock(Category.class);
+        Category<?> category = mock(Category.class);
 
         queuedStorage.registerCategory(category);
 

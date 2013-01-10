@@ -97,7 +97,7 @@ public class HeapDAOTest {
 
         when(storage.getAgentId()).thenReturn("test");
         query = mock(Query.class); 
-        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
 
         dao = new HeapDAOImpl(storage);
         
