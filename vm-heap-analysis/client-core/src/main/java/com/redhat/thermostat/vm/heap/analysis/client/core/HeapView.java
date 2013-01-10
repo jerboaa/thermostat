@@ -50,9 +50,14 @@ public abstract class HeapView extends BasicView implements UIComponent {
     public enum HeapDumperAction {
         DUMP_REQUESTED,
         ANALYSE,
-        REQUEST_ABORTED
+        REQUEST_ABORTED,
     }
-   
+
+    public enum DumpDisabledReason {
+        DUMP_IN_PROGRESS,
+        PROCESS_DEAD,
+    }
+
     protected final ActionNotifier<HeapDumperAction> heapDumperNotifier;
     protected HeapView() {
         heapDumperNotifier = new ActionNotifier<HeapDumperAction>(this);
@@ -66,17 +71,20 @@ public abstract class HeapView extends BasicView implements UIComponent {
         heapDumperNotifier.removeActionListener(listener);
     }
 
-    abstract public void updateUsedAndCapacity(String used, String capacity);
+    public abstract void updateUsedAndCapacity(String used, String capacity);
     /** View updates automatically based on the model */
-    abstract public void setModel(OverviewChart model);
-    abstract public void addHeapDump(HeapDump dump);
-    abstract public void clearHeapDumpList();
-    
-    abstract public void openDumpView();
-    abstract public void setChildView(BasicView childView);
-    public abstract void notifyHeapDumpComplete();
+    public abstract void setModel(OverviewChart model);
 
+    public abstract void enableHeapDumping();
+    public abstract void disableHeapDumping(DumpDisabledReason reason);
+
+    public abstract void addHeapDump(HeapDump dump);
     public abstract void updateHeapDumpList(List<HeapDump> heapDumps);
+    public abstract void clearHeapDumpList();
+
+    public abstract void openDumpView();
+    public abstract void setChildView(BasicView childView);
+    public abstract void notifyHeapDumpComplete();
 
     public abstract void displayWarning(String string);
 

@@ -71,8 +71,10 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.HeapInfo;
+import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
@@ -81,6 +83,7 @@ import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewPro
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramView;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.DumpDisabledReason;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.HeapDumperAction;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsView;
@@ -100,6 +103,7 @@ public class HeapDumpControllerTest {
     private Timer timer;
 
     private HeapDAO heapDao;
+    private VmInfoDAO vmInfoDao;
     private VmMemoryStatDAO vmDao;
     private HeapView view;
     private HeapDumpDetailsView detailsView;
@@ -120,6 +124,10 @@ public class HeapDumpControllerTest {
     public void setUp() {
         heapDao = mock(HeapDAO.class);
         vmDao = mock(VmMemoryStatDAO.class);
+        vmInfoDao = mock(VmInfoDAO.class);
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(vmInfo.isAlive()).thenReturn(true);
+        when(vmInfoDao.getVmInfo(isA(VmRef.class))).thenReturn(vmInfo);
         appService = mock(ApplicationService.class);
         heapDumper = mock(HeapDumper.class);
 
@@ -184,7 +192,7 @@ public class HeapDumpControllerTest {
         when(ref.getIdString()).thenReturn("vm-id");
         when(ref.getAgent()).thenReturn(hostRef);
 
-        controller = new HeapDumpController(vmDao, heapDao, ref, appService,
+        controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumper);
     }
@@ -268,7 +276,7 @@ public class HeapDumpControllerTest {
         when(cache.getAttribute(any(VmRef.class))).thenReturn(dump);
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
-        controller = new HeapDumpController(vmDao, heapDao, ref, appService,
+        controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumper);
         
@@ -293,11 +301,31 @@ public class HeapDumpControllerTest {
 
         when(appService.getApplicationCache()).thenReturn(cache);
         VmRef ref = mock(VmRef.class);
-        controller = new HeapDumpController(vmDao, heapDao, ref, appService,
+        controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
                 viewProvider, detailsViewProvider, histogramProvider,
                 objectDetailsProvider, objectRootsProvider, heapDumper);
         
         verify(view, times(0)).openDumpView();
+    }
+
+    @Test
+    public void testHeapDumpingDisabledForDeadVms() {
+        ApplicationCache cache = mock(ApplicationCache.class);
+        when(appService.getApplicationCache()).thenReturn(cache);
+        setUpTimers();
+
+        VmRef ref = mock(VmRef.class);
+
+        VmInfo vmInfo = mock(VmInfo.class);
+        when(vmInfo.isAlive()).thenReturn(false);
+
+        when(vmInfoDao.getVmInfo(ref)).thenReturn(vmInfo);
+
+        controller = new HeapDumpController(vmDao, vmInfoDao, heapDao, ref, appService,
+                viewProvider, detailsViewProvider, histogramProvider,
+                objectDetailsProvider, objectRootsProvider, heapDumper);
+
+        verify(view).disableHeapDumping(DumpDisabledReason.PROCESS_DEAD);
     }
 
     @Test
