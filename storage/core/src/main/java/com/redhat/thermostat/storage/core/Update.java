@@ -37,11 +37,35 @@
 package com.redhat.thermostat.storage.core;
 
 /**
- * Describes which data should be updated with what values
+ * Updates fields of a database entry. 
  */
 public interface Update {
 
-    Update from(Category category);
-    <T> Update where(Key<T> key, T value);
-    <T> Update set(Key<T> key, T value);
+    /**
+     * Adds a where clause that denotes the entry to be updated. If more than one
+     * where-clause is declared, they are concatenated as an and-query.
+     * If a clause with the same key is declared more than once, the latter
+     * overrides the former. This is so that an Update object can be reused
+     * for multiple requests. If an update is issued for which no entry can
+     * be found (i.e. the where-clause yields no results), a
+     * <code>StorageException</code> may get thrown.
+     *
+     * @param key the key of the field of the where clause
+     * @param value the value of the field of the where clause
+     */
+    <T> void where(Key<T> key, T value);
+
+    /**
+     * Sets a field in a found document to the specified value. If the same key is
+     * set more than once, the latest values overrides the former values.
+     *
+     * @param key the key of the field
+     * @param value the value to set
+     */
+    <T> void set(Key<T> key, T value);
+
+    /**
+     * Applies the update operation.
+     */
+    void apply();
 }

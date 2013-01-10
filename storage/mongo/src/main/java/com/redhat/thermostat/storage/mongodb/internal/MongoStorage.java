@@ -75,8 +75,6 @@ import com.redhat.thermostat.storage.model.Pojo;
  */
 public class MongoStorage implements Storage {
 
-    public static final String SET_MODIFIER = "$set";
-
     private class MongoAdd extends BasePut implements Add {
 
         @Override
@@ -177,10 +175,7 @@ public class MongoStorage implements Storage {
         return toInsert;
     }
 
-    @Override
-    public void updatePojo(Update update) {
-        assert update instanceof MongoUpdate;
-        MongoUpdate mongoUpdate = (MongoUpdate) update;
+    void updatePojo(MongoUpdate mongoUpdate) {
         Category cat = mongoUpdate.getCategory();
         DBCollection coll = getCachedCollection(cat);
         DBObject query = mongoUpdate.getQuery();
@@ -246,8 +241,8 @@ public class MongoStorage implements Storage {
     }
 
     @Override
-    public Update createUpdate() {
-        return new MongoUpdate();
+    public Update createUpdate(Category category) {
+        return new MongoUpdate(this, category);
     }
 
     @Override

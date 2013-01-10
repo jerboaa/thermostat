@@ -44,20 +44,10 @@ import static org.mockito.Mockito.when;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Remove;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Remove;
 
 public class QueryTestHelper {
-
-    @SuppressWarnings("unchecked")
-    public static Update createMockUpdate() {
-        Update mockUpdate = mock(Update.class);
-        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
-        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
-        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
-        return mockUpdate;
-    }
 
     @SuppressWarnings("unchecked")
     public static Remove createMockRemove() {

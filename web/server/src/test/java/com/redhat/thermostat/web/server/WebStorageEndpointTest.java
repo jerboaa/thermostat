@@ -44,6 +44,7 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -72,8 +73,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-
-import sun.misc.BASE64Encoder;
 
 import com.google.gson.Gson;
 import com.redhat.thermostat.storage.core.Categories;
@@ -320,9 +319,8 @@ public class WebStorageEndpointTest {
     }
 
     private void sendAuthorization(HttpURLConnection conn, String username, String passwd) {
-        BASE64Encoder enc = new BASE64Encoder();
         String userpassword = username + ":" + passwd;
-        String encodedAuthorization = enc.encode( userpassword.getBytes() );
+        String encodedAuthorization = Base64.encodeBase64String(userpassword.getBytes());
         conn.setRequestProperty("Authorization", "Basic "+ encodedAuthorization);
     }
 
@@ -362,10 +360,7 @@ public class WebStorageEndpointTest {
     public void testUpdatePojo() throws IOException {
 
         Update mockUpdate = mock(Update.class);
-        when(mockUpdate.from(any(Category.class))).thenReturn(mockUpdate);
-        when(mockUpdate.where(any(Key.class), any())).thenReturn(mockUpdate);
-        when(mockUpdate.set(any(Key.class), any())).thenReturn(mockUpdate);
-        when(mockStorage.createUpdate()).thenReturn(mockUpdate);
+        when(mockStorage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
 
         String endpoint = getEndpoint();
 
@@ -373,9 +368,13 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
-        Map<Category,Integer> categoryIds = new HashMap<>();
-        categoryIds.put(category, categoryId);
-        WebUpdate update = new WebUpdate(categoryIds).from(category).where(key1, "test").set(key1, "fluff").set(key2, 42);
+
+        WebUpdate update = new WebUpdate();
+        update.setCategoryId(categoryId);
+        update.where(key1, "test");
+        update.set(key1, "fluff");
+        update.set(key2, 42);
+
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
         out.write("update=");
@@ -386,12 +385,12 @@ public class WebStorageEndpointTest {
         out.flush();
 
         assertEquals(200, conn.getResponseCode());
-        verify(mockStorage).createUpdate();
-        verify(mockUpdate).from(category);
+        verify(mockStorage).createUpdate(category);
         verify(mockUpdate).where(key1, "test");
         verify(mockUpdate).set(key1, "fluff");
         verify(mockUpdate).set(key2, 42);
-        verify(mockStorage).updatePojo(mockUpdate);
+        verify(mockUpdate).apply();
+        verifyNoMoreInteractions(mockUpdate);
     }
 
 

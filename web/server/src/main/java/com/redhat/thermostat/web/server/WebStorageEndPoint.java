@@ -284,12 +284,11 @@ public class WebStorageEndPoint extends HttpServlet {
         try {
             String updateParam = req.getParameter("update");
             WebUpdate update = gson.fromJson(updateParam, WebUpdate.class);
-            Update targetUpdate = storage.createUpdate();
-            targetUpdate = targetUpdate.from(getCategoryFromId(update.getCategoryId()));
+            Update targetUpdate = storage.createUpdate(getCategoryFromId(update.getCategoryId()));
             List<Qualifier<?>> qualifiers = update.getQualifiers();
             for (Qualifier qualifier : qualifiers) {
                 assert (qualifier.getCriteria() == Criteria.EQUALS);
-                targetUpdate = targetUpdate.where(qualifier.getKey(), qualifier.getValue());
+                targetUpdate.where(qualifier.getKey(), qualifier.getValue());
             }
             List<WebUpdate.UpdateValue> updates = update.getUpdates();
             if (updates != null) {
@@ -308,7 +307,7 @@ public class WebStorageEndPoint extends HttpServlet {
                     targetUpdate.set(key, value);
                 }
             }
-            storage.updatePojo(targetUpdate);
+            targetUpdate.apply();
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace();

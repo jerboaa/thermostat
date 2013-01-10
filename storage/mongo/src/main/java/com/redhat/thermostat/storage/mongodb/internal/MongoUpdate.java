@@ -43,22 +43,18 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Update;
 
-// TODO: For now we utilize the Chunk based conversion, and rely on MongoStorage to
-// actually resolve the $set fields. Eventually, we want to convert to DBObject
-// directly, and take advantage of improved semantics of this class.
 class MongoUpdate implements Update {
 
+    private static final String SET_MODIFIER = "$set";
+
+    private MongoStorage storage;
     private DBObject query;
     private DBObject values;
     private Category category;
 
-    @Override
-    public Update from(Category category) {
-        if (query != null || values != null) {
-            throw new IllegalStateException();
-        }
+    public MongoUpdate(MongoStorage storage, Category category) {
+        this.storage = storage;
         this.category = category;
-        return this;
     }
 
     Category getCategory() {
@@ -66,12 +62,11 @@ class MongoUpdate implements Update {
     }
 
     @Override
-    public <T> Update where(Key<T> key, T value) {
+    public <T> void where(Key<T> key, T value) {
         if (query == null) {
             query = new BasicDBObject();
         }
         query.put(key.getName(), value);
-        return this;
     }
 
     DBObject getQuery() {
@@ -79,15 +74,19 @@ class MongoUpdate implements Update {
     }
 
     @Override
-    public <T> Update set(Key<T> key, T value) {
+    public <T> void set(Key<T> key, T value) {
         if (values == null) {
             values = new BasicDBObject();
         }
         values.put(key.getName(), value);
-        return this;
     }
 
     DBObject getValues() {
-        return new BasicDBObject("$set", values);
+        return new BasicDBObject(SET_MODIFIER, values);
+    }
+
+    @Override
+    public void apply() {
+        storage.updatePojo(this);
     }
 }

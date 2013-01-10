@@ -61,8 +61,6 @@ public interface Storage {
     Add createAdd(Category category);
     Replace createReplace(Category category);
 
-    void updatePojo(Update update);
-
     void removePojo(Remove remove);
 
     /**
@@ -81,7 +79,7 @@ public interface Storage {
     InputStream loadFile(String filename);
 
     Query createQuery();
-    Update createUpdate();
+    Update createUpdate(Category category);
     Remove createRemove();
 
 

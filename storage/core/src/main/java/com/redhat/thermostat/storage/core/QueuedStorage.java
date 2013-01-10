@@ -64,6 +64,38 @@ public final class QueuedStorage implements Storage {
         
     }
 
+    private class QueuedUpdate implements Update {
+        private Update delegateUpdate;
+
+        QueuedUpdate(Update delegateUpdate) {
+            this.delegateUpdate = delegateUpdate;
+        }
+
+        @Override
+        public <T> void where(Key<T> key, T value) {
+            delegateUpdate.where(key,  value);
+            
+        }
+
+        @Override
+        public <T> void set(Key<T> key, T value) {
+            delegateUpdate.set(key, value);
+        }
+
+        @Override
+        public void apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    delegateUpdate.apply();
+                }
+
+            });
+        }
+
+    }
+
     private Storage delegate;
     private ExecutorService executor;
     private ExecutorService fileExecutor;
@@ -140,20 +172,6 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public void updatePojo(final Update update) {
-
-        executor.execute(new Runnable() {
-            
-            @Override
-            public void run() {
-                delegate.updatePojo(update);
-            }
-
-        });
-
-    }
-
-    @Override
     public void removePojo(final Remove remove) {
 
         executor.execute(new Runnable() {
@@ -221,8 +239,9 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public Update createUpdate() {
-        return delegate.createUpdate();
+    public Update createUpdate(Category category) {
+        QueuedUpdate update = new QueuedUpdate(delegate.createUpdate(category));
+        return update;
     }
 
     @Override

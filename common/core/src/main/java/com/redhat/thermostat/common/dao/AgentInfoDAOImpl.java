@@ -118,12 +118,13 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
-        Update update = storage.createUpdate().from(CATEGORY).where(Key.AGENT_ID, agentInfo.getAgentId())
-                                .set(START_TIME_KEY, agentInfo.getStartTime())
-                                .set(STOP_TIME_KEY, agentInfo.getStopTime())
-                                .set(ALIVE_KEY, agentInfo.isAlive())
-                                .set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(CATEGORY);
+        update.where(Key.AGENT_ID, agentInfo.getAgentId());
+        update.set(START_TIME_KEY, agentInfo.getStartTime());
+        update.set(STOP_TIME_KEY, agentInfo.getStopTime());
+        update.set(ALIVE_KEY, agentInfo.isAlive());
+        update.set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
+        update.apply();
     }
 
 }

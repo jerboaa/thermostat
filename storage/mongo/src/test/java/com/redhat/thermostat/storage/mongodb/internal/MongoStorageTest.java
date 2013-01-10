@@ -460,8 +460,10 @@ public class MongoStorageTest {
     @Test
     public void verifySimpleUpdate() {
         MongoStorage storage = makeStorage();
-        Update update = storage.createUpdate().from(testCategory).where(Key.AGENT_ID, "test1").set(key2, "test2");
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(testCategory);
+        update.where(Key.AGENT_ID, "test1");
+        update.set(key2, "test2");
+        update.apply();
 
         ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
         ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
@@ -470,13 +472,24 @@ public class MongoStorageTest {
         DBObject query = queryCaptor.getValue();
         assertTrue(query.containsField(Key.AGENT_ID.getName()));
         assertEquals("test1", query.get(Key.AGENT_ID.getName()));
+
+        DBObject set = valueCaptor.getValue();
+        assertEquals(1, set.keySet().size());
+        assertTrue(set.containsField("$set"));
+        DBObject values = (DBObject) set.get("$set");
+        assertEquals(1, values.keySet().size());
+        assertTrue(values.containsField(key2.getName()));
+        assertEquals("test2", values.get(key2.getName()));
     }
 
     @Test
     public void verifyMultiFieldUpdate() {
         MongoStorage storage = makeStorage();
-        Update update = storage.createUpdate().from(testCategory).where(Key.AGENT_ID, "test1").set(key2, "test2").set(key3, "test3");
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(testCategory);
+        update.where(Key.AGENT_ID, "test1");
+        update.set(key2, "test2");
+        update.set(key3, "test3");
+        update.apply();
 
         ArgumentCaptor<DBObject> queryCaptor = ArgumentCaptor.forClass(DBObject.class);
         ArgumentCaptor<DBObject> valueCaptor = ArgumentCaptor.forClass(DBObject.class);
@@ -485,9 +498,10 @@ public class MongoStorageTest {
         DBObject query = queryCaptor.getValue();
         assertTrue(query.containsField(Key.AGENT_ID.getName()));
         assertEquals("test1", query.get(Key.AGENT_ID.getName()));
-        DBObject value = valueCaptor.getValue();
-        assertTrue(value.containsField("$set"));
-        DBObject values = (DBObject) value.get("$set");
+
+        DBObject set = valueCaptor.getValue();
+        assertTrue(set.containsField("$set"));
+        DBObject values = (DBObject) set.get("$set");
         assertTrue(values.containsField("key2"));
         assertEquals("test2", values.get("key2"));
         assertTrue(values.containsField("key3"));

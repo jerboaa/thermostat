@@ -194,12 +194,10 @@ public class QueuedStorageTest {
         delegateAdd = mock(Add.class);
         delegateReplace = mock(Replace.class);
 
-        Update update = mock(Update.class);
         Remove remove = mock(Remove.class);
         Query query = mock(Query.class);
         when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
         when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
-        when(delegateStorage.createUpdate()).thenReturn(update);
         when(delegateStorage.createRemove()).thenReturn(remove);
         when(delegateStorage.createQuery()).thenReturn(query);
         expectedResults = mock(Cursor.class);
@@ -250,19 +248,23 @@ public class QueuedStorageTest {
 
     @Test
     public void testUpdatePojo() {
+        Update delegateUpdate = mock(Update.class);
+        when(delegateStorage.createUpdate(any(Category.class))).thenReturn(delegateUpdate);
 
-        Update update = queuedStorage.createUpdate();
-        verify(delegateStorage).createUpdate();
+        Category category = mock(Category.class);
+
+        Update update = queuedStorage.createUpdate(category);
+        verify(delegateStorage).createUpdate(category);
         verifyNoMoreInteractions(delegateStorage);
 
-        queuedStorage.updatePojo(update);
+        update.apply();
 
         Runnable r = executor.getTask();
         assertNotNull(r);
-        verifyZeroInteractions(delegateStorage);
+        verifyZeroInteractions(delegateUpdate);
         r.run();
-        verify(delegateStorage, times(1)).updatePojo(update);
-        verifyNoMoreInteractions(delegateStorage);
+        verify(delegateUpdate).apply();
+        verifyNoMoreInteractions(delegateUpdate);
 
         assertNull(fileExecutor.getTask());
     }

@@ -38,14 +38,11 @@ package com.redhat.thermostat.web.common;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 
-public class WebUpdate implements Update {
+public class WebUpdate {
 
     public static class UpdateValue {
         private Key<?> key;
@@ -90,42 +87,29 @@ public class WebUpdate implements Update {
 
     }
 
-    private transient Map<Category, Integer> categoryIds;
-    private Integer categoryId;
+    private int categoryId;
     private List<Qualifier<?>> qualifiers;
     private List<UpdateValue> updateValues;
 
-    // NOTE: This is needed for de-serialization!
     public WebUpdate() {
-        this(null);
-    }
-
-    public WebUpdate(Map<Category, Integer> categoryIds) {
         qualifiers = new ArrayList<>();
         updateValues = new ArrayList<>();
-        this.categoryIds = categoryIds;
     }
 
-    @Override
-    public WebUpdate from(Category category) {
-        categoryId = categoryIds.get(category);
-        return this;
-    }
-
-    @Override
-    public <T> WebUpdate where(Key<T> key, T value) {
+    public <T> void where(Key<T> key, T value) {
         qualifiers.add(new Qualifier<T>(key, Criteria.EQUALS, value));
-        return this;
     }
 
-    @Override
-    public <T> WebUpdate set(Key<T> key, T value) {
+    public <T> void set(Key<T> key, T value) {
         updateValues.add(new UpdateValue(key, value));
-        return this;
     }
 
     public int getCategoryId() {
         return categoryId;
+    }
+
+    public void setCategoryId(int categoryId) {
+        this.categoryId = categoryId;
     }
 
     public List<Qualifier<?>> getQualifiers() {

@@ -90,6 +90,7 @@ import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.Qualifier;
@@ -362,21 +363,19 @@ public class WebStorageTest {
 
     @Test
     public void testCreateUpdate() {
-        WebUpdate update = (WebUpdate) storage.createUpdate();
+        WebUpdate update = (WebUpdate) storage.createUpdate(category);
         assertNotNull(update);
-        update = update.from(category);
         assertEquals(42, update.getCategoryId());
-        assertNotNull(update);
-        update = update.where(key1, "test");
-        assertNotNull(update);
+
+        update.where(key1, "test");
         List<Qualifier<?>> qualifiers = update.getQualifiers();
         assertEquals(1, qualifiers.size());
         Qualifier<?> qualifier = qualifiers.get(0);
         assertEquals(key1, qualifier.getKey());
         assertEquals(Criteria.EQUALS, qualifier.getCriteria());
         assertEquals("test", qualifier.getValue());
-        update = update.set(key1, "fluff");
-        assertNotNull(update);
+
+        update.set(key1, "fluff");
         List<WebUpdate.UpdateValue> updates = update.getUpdates();
         assertEquals(1, updates.size());
         assertEquals("fluff", updates.get(0).getValue());
@@ -387,8 +386,11 @@ public class WebStorageTest {
     @Test
     public void testUpdate() throws UnsupportedEncodingException, IOException, JsonSyntaxException, ClassNotFoundException {
 
-        WebUpdate update = storage.createUpdate().from(category).where(key1, "test").set(key1, "fluff").set(key2, 42);
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(category);
+        update.where(key1, "test");
+        update.set(key1, "fluff");
+        update.set(key2, 42);
+        update.apply();
 
         Gson gson = new Gson();
         StringReader reader = new StringReader(requestBody);

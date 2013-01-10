@@ -270,16 +270,17 @@ public class VmInfoDAOTest {
 
     @Test
     public void testPutVmStoppedTime() {
-        Update mockUpdate = QueryTestHelper.createMockUpdate();
+        Update mockUpdate = mock(Update.class);
         Storage storage = mock(Storage.class);
-        when(storage.createUpdate()).thenReturn(mockUpdate);
+        when(storage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
+
         VmInfoDAO dao = new VmInfoDAOImpl(storage);
         dao.putVmStoppedTime(vmId, stopTime);
 
-        verify(mockUpdate).from(VmInfoDAO.vmInfoCategory);
+        verify(storage).createUpdate(VmInfoDAO.vmInfoCategory);
         verify(mockUpdate).where(Key.VM_ID, 1);
         verify(mockUpdate).set(VmInfoDAO.stopTimeKey, 3L);
+        verify(mockUpdate).apply();
         verifyNoMoreInteractions(mockUpdate);
-        verify(storage).updatePojo(mockUpdate);
     }
 }

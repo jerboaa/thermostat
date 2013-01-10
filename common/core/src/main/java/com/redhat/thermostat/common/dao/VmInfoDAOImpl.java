@@ -119,10 +119,10 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmStoppedTime(int vmId, long timestamp) {
-        Update update = storage.createUpdate().from(vmInfoCategory)
-                                              .where(Key.VM_ID, vmId)
-                                              .set(VmInfoDAO.stopTimeKey, timestamp);
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(vmInfoCategory);
+        update.where(Key.VM_ID, vmId);
+        update.set(VmInfoDAO.stopTimeKey, timestamp);
+        update.apply();
     }
 
 }

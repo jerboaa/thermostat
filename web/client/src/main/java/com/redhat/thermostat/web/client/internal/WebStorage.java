@@ -296,6 +296,14 @@ public class WebStorage implements Storage, SecureStorage {
         
     }
 
+    private class WebUpdateImpl extends WebUpdate implements Update {
+    
+        @Override
+        public void apply() {
+            updatePojo(this);
+        }
+    }
+
     private String endpoint;
     private UUID agentId;
 
@@ -435,8 +443,10 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public WebUpdate createUpdate() {
-        return new WebUpdate(categoryIds);
+    public Update createUpdate(Category category) {
+        WebUpdateImpl updateImpl = new WebUpdateImpl();
+        updateImpl.setCategoryId(categoryIds.get(category));
+        return updateImpl;
     }
 
     @SuppressWarnings("unchecked")
@@ -564,8 +574,7 @@ public class WebStorage implements Storage, SecureStorage {
         this.agentId = agentId;
     }
 
-    @Override
-    public void updatePojo(Update update) throws StorageException {
+    private void updatePojo(Update update) throws StorageException {
         WebUpdate webUp = (WebUpdate) update;
         List<WebUpdate.UpdateValue> updateValues = webUp.getUpdates();
         List<Object> values = new ArrayList<>(updateValues.size());

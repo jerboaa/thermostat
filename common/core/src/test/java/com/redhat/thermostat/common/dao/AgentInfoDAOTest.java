@@ -212,21 +212,21 @@ public class AgentInfoDAOTest {
     @Test
     public void verifyUpdateAgentInformation() {
 
-        Update mockUpdate = QueryTestHelper.createMockUpdate();
+        Update mockUpdate = mock(Update.class);
         Storage storage = mock(Storage.class);
-        when(storage.createUpdate()).thenReturn(mockUpdate);
+        when(storage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.updateAgentInformation(agentInfo1);
 
-        verify(mockUpdate).from(AgentInfoDAO.CATEGORY);
+        verify(storage).createUpdate(AgentInfoDAO.CATEGORY);
         verify(mockUpdate).where(Key.AGENT_ID, "1234");
         verify(mockUpdate).set(AgentInfoDAO.START_TIME_KEY, 100L);
         verify(mockUpdate).set(AgentInfoDAO.STOP_TIME_KEY, 10L);
         verify(mockUpdate).set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, "foobar:666");
         verify(mockUpdate).set(AgentInfoDAO.ALIVE_KEY, true);
+        verify(mockUpdate).apply();
         verifyNoMoreInteractions(mockUpdate);
-        verify(storage).updatePojo(mockUpdate);
 
     }
 
