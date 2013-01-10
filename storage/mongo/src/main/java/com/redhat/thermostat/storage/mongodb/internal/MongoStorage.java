@@ -236,8 +236,8 @@ public class MongoStorage implements Storage {
     }
 
     @Override
-    public Query createQuery() {
-        return new MongoQuery();
+    public <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass) {
+        return new MongoQuery(this, category, resultClass);
     }
 
     @Override
@@ -250,8 +250,7 @@ public class MongoStorage implements Storage {
         return new MongoRemove();
     }
 
-    @Override
-    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
+    <T extends Pojo> Cursor<T> findAllPojos(Query<T> query, Class<T> resultClass) {
         MongoQuery mongoQuery =  checkAndCastQuery(query);
         DBCollection coll = getCachedCollection(mongoQuery.getCategory());
         DBCursor dbCursor;
@@ -278,15 +277,6 @@ public class MongoStorage implements Storage {
         return dbCursor;
     }
 
-
-    @Override
-    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) {
-        MongoQuery mongoQuery = checkAndCastQuery(query);
-        DBCollection coll = getCachedCollection(mongoQuery.getCategory());
-        DBObject dbResult = coll.findOne(mongoQuery.getGeneratedQuery());
-        MongoPojoConverter conv = new MongoPojoConverter();
-        return conv.convertMongoToPojo(dbResult, resultClass);
-    }
 
     private MongoQuery checkAndCastQuery(Query query) {
         if (!(query instanceof MongoQuery)) {

@@ -39,8 +39,11 @@ package com.redhat.thermostat.common.dao;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -52,10 +55,10 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.CpuStat;
-import com.redhat.thermostat.test.MockQuery;
 
 public class HostLatestPojoListGetterTest {
     private static final String AGENT_ID = "agentid";
@@ -95,36 +98,38 @@ public class HostLatestPojoListGetterTest {
     @Test
     public void testBuildQuery() {
         Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
-        when (storage.createQuery()).thenReturn(query);
+        Query query = mock(Query.class);
+        when (storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
 
         HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
-        query = (MockQuery) getter.buildQuery(ref, 123);
+        query = getter.buildQuery(ref, 123);
 
         assertNotNull(query);
-        assertEquals(cat, query.getCategory());
-        assertEquals(2, query.getWhereClausesCount());
-        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l));
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        verify(storage).createQuery(cat, CpuStat.class);
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verifyNoMoreInteractions(query);
     }
 
     @Test
     public void testBuildQueryPopulatesUpdateTimes() {
         Storage storage = mock(Storage.class);
-        MockQuery ignored = new MockQuery();
-        MockQuery query = new MockQuery();
-        when(storage.createQuery()).thenReturn(ignored).thenReturn(query);
+        Query ignored = mock(Query.class);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(ignored).thenReturn(query);
 
         HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
-        ignored = (MockQuery) getter.buildQuery(ref,Long.MIN_VALUE); // Ignore first return value.
+        ignored = getter.buildQuery(ref,Long.MIN_VALUE); // Ignore first return value.
 
-        query = (MockQuery) getter.buildQuery(ref, Long.MIN_VALUE);
+        query = getter.buildQuery(ref, Long.MIN_VALUE);
 
         assertNotNull(query);
-        assertEquals(cat, query.getCategory());
-        assertEquals(2, query.getWhereClausesCount());
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
-        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
+        verify(storage, times(2)).createQuery(cat, CpuStat.class);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verifyNoMoreInteractions(query);
     }
 
     @Test
@@ -135,16 +140,16 @@ public class HostLatestPojoListGetterTest {
         when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findAllPojos(query, CpuStat.class)).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
 
         HostLatestPojoListGetter<CpuStat> getter = new HostLatestPojoListGetter<>(storage, cat, CpuStat.class);
 
         List<CpuStat> stats = getter.getLatest(ref, Long.MIN_VALUE);
 
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
-        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
 
         assertNotNull(stats);
         assertEquals(2, stats.size());

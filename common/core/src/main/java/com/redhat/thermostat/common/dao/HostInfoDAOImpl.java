@@ -63,10 +63,10 @@ class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public HostInfo getHostInfo(HostRef ref) {
-        Query query = storage.createQuery()
-                .from(hostInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
-        HostInfo result = storage.findPojo(query, HostInfo.class);
+        Query<HostInfo> query = storage.createQuery(hostInfoCategory, HostInfo.class);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
+        query.limit(1);
+        HostInfo result = query.execute().next();
         return result;
     }
 
@@ -79,7 +79,7 @@ class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public Collection<HostRef> getHosts() {
-        Query allHosts = storage.createQuery().from(hostInfoCategory);
+        Query<HostInfo> allHosts = storage.createQuery(hostInfoCategory, HostInfo.class);
         return getHosts(allHosts);
     }
 
@@ -88,10 +88,8 @@ class HostInfoDAOImpl implements HostInfoDAO {
         List<HostRef> hosts = new ArrayList<>();
         List<AgentInformation> agentInfos = agentInfoDao.getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
-            Query filter = storage.createQuery()
-                    .from(hostInfoCategory)
-                    .where(Key.AGENT_ID, Criteria.EQUALS, agentInfo.getAgentId());
-
+            Query<HostInfo> filter = storage.createQuery(hostInfoCategory, HostInfo.class);
+            filter.where(Key.AGENT_ID, Criteria.EQUALS, agentInfo.getAgentId());
             hosts.addAll(getHosts(filter));
         }
 
@@ -99,10 +97,10 @@ class HostInfoDAOImpl implements HostInfoDAO {
     }
 
 
-    private Collection<HostRef> getHosts(Query filter) {
+    private Collection<HostRef> getHosts(Query<HostInfo> filter) {
         Collection<HostRef> hosts = new ArrayList<HostRef>();
         
-        Cursor<HostInfo> hostsCursor = storage.findAllPojos(filter, HostInfo.class);
+        Cursor<HostInfo> hostsCursor = filter.execute();
         while(hostsCursor.hasNext()) {
             HostInfo host = hostsCursor.next();
             String agentId = host.getAgentId();

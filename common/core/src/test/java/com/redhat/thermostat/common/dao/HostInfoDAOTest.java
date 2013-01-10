@@ -40,9 +40,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,8 +49,6 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
@@ -61,7 +58,7 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.test.MockQuery;
+
 
 public class HostInfoDAOTest {
 
@@ -100,9 +97,13 @@ public class HostInfoDAOTest {
     public void testGetHostInfo() {
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(new MockQuery());
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
         HostInfo info = new HostInfo(HOST_NAME, OS_NAME, OS_KERNEL, CPU_MODEL, CPU_NUM, MEMORY_TOTAL);
-        when(storage.findPojo(any(Query.class), same(HostInfo.class))).thenReturn(info);
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(info).thenReturn(null);
+        when(query.execute()).thenReturn(cursor);
         AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
 
         HostInfo result = new HostInfoDAOImpl(storage, agentInfoDao).getHostInfo(new HostRef("some uid", HOST_NAME));
@@ -133,13 +134,9 @@ public class HostInfoDAOTest {
         when(cursor.next()).thenReturn(hostConfig);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(HostInfo.class))).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
         
         return storage;
     }
@@ -175,13 +172,9 @@ public class HostInfoDAOTest {
         when(cursor.next()).thenReturn(hostConfig1).thenReturn(hostConfig2).thenReturn(hostConfig3);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(HostInfo.class))).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
         
         return storage;
     }
@@ -225,7 +218,7 @@ public class HostInfoDAOTest {
 
         assertEquals(1, hosts.size());
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
-        verify(storage, times(1)).findAllPojos(any(Query.class), same(HostInfo.class));
+        verify(storage).createQuery(HostInfoDAO.hostInfoCategory, HostInfo.class);
     }
     
     private Pair<Storage, AgentInfoDAO> setupForSingleAliveHost() {
@@ -260,13 +253,10 @@ public class HostInfoDAOTest {
         // storage
         
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(HostInfo.class))).thenReturn(cursor1);
+        Query query = mock(Query.class);
+        
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor1);
 
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         when(agentDao.getAliveAgents()).thenReturn(Arrays.asList(agentInfo1));
@@ -288,7 +278,7 @@ public class HostInfoDAOTest {
         assertTrue(hosts.contains(new HostRef("123", "fluffhost1")));
         assertTrue(hosts.contains(new HostRef("456", "fluffhost2")));
         assertTrue(hosts.contains(new HostRef("678", "fluffhost3")));
-        verify(storage, times(3)).findAllPojos(any(Query.class), same(HostInfo.class));
+        verify(storage, atLeast(3)).createQuery(HostInfoDAO.hostInfoCategory, HostInfo.class);
     }
     
     private Pair<Storage, AgentInfoDAO> setupForAliveHost3() {
@@ -338,15 +328,9 @@ public class HostInfoDAOTest {
         // storage
         
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(HostInfo.class))).thenReturn(cursor1).
-                                                                           thenReturn(cursor2).
-                                                                           thenReturn(cursor3);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor1).thenReturn(cursor2).thenReturn(cursor3);
         
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         when(agentDao.getAliveAgents()).thenReturn(Arrays.asList(agentInfo1, agentInfo2, agentInfo3));

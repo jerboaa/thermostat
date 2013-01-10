@@ -65,8 +65,8 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Query query = storage.createQuery().from(CATEGORY);
-        Cursor<AgentInformation> agentCursor = storage.findAllPojos(query, AgentInformation.class);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY, AgentInformation.class);
+        Cursor<AgentInformation> agentCursor = query.execute();
 
         List<AgentInformation> results = new ArrayList<>();
 
@@ -79,11 +79,10 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAliveAgents() {
-        Query query = storage.createQuery()
-                .from(CATEGORY)
-                .where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY, AgentInformation.class);
+        query.where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
 
-        Cursor<AgentInformation> agentCursor = storage.findAllPojos(query, AgentInformation.class);
+        Cursor<AgentInformation> agentCursor = query.execute();
 
         List<AgentInformation> results = new ArrayList<>();
 
@@ -96,11 +95,10 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public AgentInformation getAgentInformation(HostRef agentRef) {
-        Query query = storage.createQuery()
-                .from(CATEGORY)
-                .where(Key.AGENT_ID, Criteria.EQUALS, agentRef.getAgentId());
-
-        return storage.findPojo(query, AgentInformation.class);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY, AgentInformation.class);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, agentRef.getAgentId());
+        query.limit(1);
+        return query.execute().next();
     }
 
     @Override

@@ -60,11 +60,11 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public VmInfo getVmInfo(VmRef ref) {
-        Query findMatchingVm = storage.createQuery()
-                .from(vmInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
-                .where(Key.VM_ID, Criteria.EQUALS, ref.getId());
-        VmInfo result = storage.findPojo(findMatchingVm, VmInfo.class);
+        Query<VmInfo> findMatchingVm = storage.createQuery(vmInfoCategory, VmInfo.class);
+        findMatchingVm.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId());
+        findMatchingVm.where(Key.VM_ID, Criteria.EQUALS, ref.getId());
+        findMatchingVm.limit(1);
+        VmInfo result = findMatchingVm.execute().next();
         if (result == null) {
             throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
         }
@@ -74,15 +74,14 @@ class VmInfoDAOImpl implements VmInfoDAO {
     @Override
     public Collection<VmRef> getVMs(HostRef host) {
 
-        Query query = buildQuery(host);
-        Cursor<VmInfo> cursor = storage.findAllPojos(query, VmInfo.class);
+        Query<VmInfo> query = buildQuery(host);
+        Cursor<VmInfo> cursor = query.execute();
         return buildVMsFromQuery(cursor, host);
     }
 
-    private Query buildQuery(HostRef host) {
-        Query query = storage.createQuery()
-                .from(vmInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
+    private Query<VmInfo> buildQuery(HostRef host) {
+        Query<VmInfo> query = storage.createQuery(vmInfoCategory, VmInfo.class);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
         return query;
     }
 

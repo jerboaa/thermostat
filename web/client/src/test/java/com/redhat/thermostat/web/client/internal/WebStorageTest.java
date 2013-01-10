@@ -221,35 +221,6 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testFindPojo() throws UnsupportedEncodingException, IOException {
-
-        TestObj obj = new TestObj();
-        obj.setProperty1("fluffor");
-        Gson gson = new Gson();
-        responseBody = gson.toJson(obj);
-
-        Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
-
-        TestObj result = storage.findPojo(query, TestObj.class);
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String[] parts = line.split("=");
-        assertEquals("query", parts[0]);
-        WebQuery restQuery = gson.fromJson(parts[1], WebQuery.class);
-
-        assertEquals(42, restQuery.getCategoryId());
-        List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
-        assertEquals(1, qualifiers.size());
-        Qualifier<?> qual = qualifiers.get(0);
-        assertEquals(new Key<String>("property1", true), qual.getKey());
-        assertEquals(Criteria.EQUALS, qual.getCriteria());
-        assertEquals("fluff", qual.getValue());
-
-        assertEquals("fluffor", result.getProperty1());
-    }
-
-    @Test
     public void testFindAllPojos() throws UnsupportedEncodingException, IOException {
 
         TestObj obj1 = new TestObj();
@@ -260,9 +231,10 @@ public class WebStorageTest {
         responseBody = gson.toJson(Arrays.asList(obj1, obj2));
 
         Key<String> key1 = new Key<>("property1", true);
-        Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
+        Query<TestObj> query = storage.createQuery(category, TestObj.class);
+        query.where(key1, Criteria.EQUALS, "fluff");
 
-        Cursor<TestObj> results = storage.findAllPojos(query, TestObj.class);
+        Cursor<TestObj> results = query.execute();
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");

@@ -60,12 +60,12 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
     }
 
     public List<T> getLatest(HostRef hostRef, long since) {
-        Query query = buildQuery(hostRef, since);
+        Query<T> query = buildQuery(hostRef, since);
         return getLatest(query);
     }
 
-    private List<T> getLatest(Query query) {
-        Cursor<T> cursor = storage.findAllPojos(query, resultClass);
+    private List<T> getLatest(Query<T> query) {
+        Cursor<T> cursor = query.execute();
         List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
             T pojo = cursor.next();
@@ -74,13 +74,11 @@ public class HostLatestPojoListGetter<T extends TimeStampedPojo> {
         return result;
     }
 
-    protected Query buildQuery(HostRef hostRef, long since) {
-        Query query = storage.createQuery()
-                .from(cat)
-                .where(Key.AGENT_ID, Criteria.EQUALS, hostRef.getAgentId())
-                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
-        
+    protected Query<T> buildQuery(HostRef hostRef, long since) {
+        Query<T> query = storage.createQuery(cat, resultClass);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, hostRef.getAgentId());
+        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         return query;
     }
 }

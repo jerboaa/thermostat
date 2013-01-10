@@ -56,8 +56,6 @@ public interface Storage {
 
     Connection getConnection();
 
-    // TODO why does putPojo have an agent id param but not updatePojo and removePojo?
-
     Add createAdd(Category category);
     Replace createReplace(Category category);
 
@@ -68,17 +66,14 @@ public interface Storage {
      */
     void purge();
 
-    <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass);
-
-    <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
-
     long getCount(Category category);
 
     void saveFile(String filename, InputStream data);
 
     InputStream loadFile(String filename);
 
-    Query createQuery();
+    <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass);
+
     Update createUpdate(Category category);
     Remove createRemove();
 

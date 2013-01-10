@@ -37,11 +37,9 @@
 package com.redhat.thermostat.web.server;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -91,7 +89,6 @@ import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.BasePojo;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
-import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.web.common.StorageWrapper;
 import com.redhat.thermostat.web.common.WebInsert;
 import com.redhat.thermostat.web.common.WebQuery;
@@ -201,42 +198,6 @@ public class WebStorageEndpointTest {
     }
 
     @Test
-    public void testFind() throws IOException {
-        // Configure mock storage.
-        TestClass expected = new TestClass();
-        expected.setKey1("fluff");
-        expected.setKey2(42);
-        when(mockStorage.findPojo(any(Query.class), same(TestClass.class))).thenReturn(expected);
-
-        Query mockQuery = new MockQuery();
-        when(mockStorage.createQuery()).thenReturn(mockQuery);
-
-        String endpoint = getEndpoint();
-        URL url = new URL(endpoint + "/find-pojo");
-        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        conn.setDoInput(true);
-        conn.setDoOutput(true);
-        Map<Category,Integer> categoryIdMap = new HashMap<>();
-        categoryIdMap.put(category, categoryId);
-        WebQuery query = (WebQuery) new WebQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff");
-        query.setResultClassName(TestClass.class.getName());
-        Gson gson = new Gson();
-        OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
-        out.write("query=");
-        out.write(URLEncoder.encode(gson.toJson(query), "UTF-8"));
-        out.write("\n");
-        out.flush();
-
-        Reader in = new InputStreamReader(conn.getInputStream());
-        TestClass result = gson.fromJson(in, TestClass.class);
-
-        assertEquals("fluff", result.getKey1());
-        assertEquals(42, result.getKey2());
-        verify(mockStorage).createQuery();
-        verify(mockStorage).findPojo(any(Query.class), same(TestClass.class));
-    }
-
-    @Test
     public void testFindAllPojos() throws IOException {
         TestClass expected1 = new TestClass();
         expected1.setKey1("fluff1");
@@ -249,9 +210,9 @@ public class WebStorageEndpointTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(expected1).thenReturn(expected2);
 
-        when(mockStorage.findAllPojos(any(Query.class), same(TestClass.class))).thenReturn(cursor);
-        MockQuery mockQuery = new MockQuery();
-        when(mockStorage.createQuery()).thenReturn(mockQuery);
+        Query mockQuery = mock(Query.class);
+        when(mockStorage.createQuery(any(Category.class), any(Class.class))).thenReturn(mockQuery);
+        when(mockQuery.execute()).thenReturn(cursor);
 
         String endpoint = getEndpoint();
         URL url = new URL(endpoint + "/find-all");
@@ -262,8 +223,10 @@ public class WebStorageEndpointTest {
         conn.setDoOutput(true);
         Map<Category,Integer> categoryIdMap = new HashMap<>();
         categoryIdMap.put(category, categoryId);
-        WebQuery query = (WebQuery) new WebQuery(categoryIdMap).from(category).where(key1, Criteria.EQUALS, "fluff")
-                                                               .sort(key1, SortDirection.DESCENDING).limit(42);
+        WebQuery query = new WebQuery(categoryId, TestClass.class);
+        query.where(key1, Criteria.EQUALS, "fluff");
+        query.sort(key1, SortDirection.DESCENDING);
+        query.limit(42);
         query.setResultClassName(TestClass.class.getName());
         Gson gson = new Gson();
         OutputStreamWriter out = new OutputStreamWriter(conn.getOutputStream());
@@ -279,8 +242,11 @@ public class WebStorageEndpointTest {
         assertEquals("fluff2", results[1].getKey1());
         assertEquals(43, results[1].getKey2());
 
-        assertTrue(mockQuery.hasSort(key1, SortDirection.DESCENDING));
-        assertEquals(42, mockQuery.getLimit());
+        verify(mockQuery).where(key1, Criteria.EQUALS, "fluff");
+        verify(mockQuery).sort(key1, SortDirection.DESCENDING);
+        verify(mockQuery).limit(42);
+        verify(mockQuery).execute();
+        verifyNoMoreInteractions(mockQuery);
     }
 
     @Test

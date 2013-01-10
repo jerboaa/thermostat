@@ -57,12 +57,10 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.VmInfo;
-import com.redhat.thermostat.test.MockQuery;
 
 public class VmInfoDAOTest {
 
@@ -126,10 +124,13 @@ public class VmInfoDAOTest {
     public void testGetVmInfo() {
 
         Storage storage = mock(Storage.class);
-        Query query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
         VmInfo expected = new VmInfo(vmId, startTime, stopTime, jVersion, jHome, mainClass, commandLine, vmName, vmInfo, vmVersion, vmArgs, props, env, libs);
-        when(storage.findPojo(query, VmInfo.class)).thenReturn(expected);
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(expected).thenReturn(null);
+        when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -147,9 +148,11 @@ public class VmInfoDAOTest {
     public void testGetVmInfoUnknownVM() {
 
         Storage storage = mock(Storage.class);
-        Query query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
-
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        Cursor cursor = mock(Cursor.class);
+        when(query.execute()).thenReturn(cursor);
+        
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
 
@@ -179,9 +182,6 @@ public class VmInfoDAOTest {
     }
 
     private Storage setupStorageForSingleVM() {
-      Query expectedQuery = new MockQuery()
-          .from(VmInfoDAO.vmInfoCategory)
-          .where(Key.AGENT_ID, Criteria.EQUALS, "123");
 
       VmInfo vm1 = new VmInfo();
       vm1.setVmPid(123);
@@ -193,8 +193,9 @@ public class VmInfoDAOTest {
       when(singleVMCursor.next()).thenReturn(vm1);
 
       Storage storage = mock(Storage.class);
-      when(storage.createQuery()).thenReturn(new MockQuery());
-      when(storage.findAllPojos(expectedQuery, VmInfo.class)).thenReturn(singleVMCursor);
+      Query query = mock(Query.class);
+      when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+      when(query.execute()).thenReturn(singleVMCursor);
       return storage;
   }
 
@@ -211,9 +212,6 @@ public class VmInfoDAOTest {
     }
 
     private Storage setupStorageForMultiVM() {
-      Query expectedQuery = new MockQuery()
-          .from(VmInfoDAO.vmInfoCategory)
-          .where(Key.AGENT_ID, Criteria.EQUALS, "456");
 
       VmInfo vm1 = new VmInfo();
       vm1.setVmPid(123);
@@ -229,8 +227,9 @@ public class VmInfoDAOTest {
       when(multiVMsCursor.next()).thenReturn(vm1).thenReturn(vm2);
 
       Storage storage = mock(Storage.class);
-      when(storage.createQuery()).thenReturn(new MockQuery());
-      when(storage.findAllPojos(expectedQuery, VmInfo.class)).thenReturn(multiVMsCursor);
+      Query query = mock(Query.class);
+      when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+      when(query.execute()).thenReturn(multiVMsCursor);
       return storage;
   }
 

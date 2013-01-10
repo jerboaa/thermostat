@@ -39,18 +39,15 @@ package com.redhat.thermostat.vm.classstat.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -62,7 +59,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmClassStat;
-import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
 public class VmClassStatDAOTest {
@@ -93,13 +89,9 @@ public class VmClassStatDAOTest {
         when(cursor.next()).thenReturn(vmClassStat);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(VmClassStat.class))).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -111,9 +103,12 @@ public class VmClassStatDAOTest {
         VmClassStatDAO dao = new VmClassStatDAOImpl(storage);
         List<VmClassStat> vmClassStats = dao.getLatestClassStats(vmRef, Long.MIN_VALUE);
 
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage).findAllPojos(arg.capture(), same(VmClassStat.class));
-        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, 321);
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(1, vmClassStats.size());
         VmClassStat stat = vmClassStats.get(0);

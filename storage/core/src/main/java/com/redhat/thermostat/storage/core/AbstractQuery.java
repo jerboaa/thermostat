@@ -41,7 +41,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public abstract class AbstractQuery implements Query {
+import com.redhat.thermostat.storage.model.Pojo;
+
+public abstract class AbstractQuery<T extends Pojo> implements Query<T> {
 
     public static class Sort {
         private Key<?> key;
@@ -93,9 +95,8 @@ public abstract class AbstractQuery implements Query {
     }
 
     @Override
-    public <T> Query sort(Key<T> key, SortDirection direction) {
+    public void sort(Key<?> key, SortDirection direction) {
         sorts.add(new Sort(key, direction));
-        return this;
     }
 
     public List<Sort> getSorts() {
@@ -107,9 +108,8 @@ public abstract class AbstractQuery implements Query {
     }
 
     @Override
-    public Query limit(int limit) {
+    public void limit(int limit) {
         this.limit  = limit;
-        return this;
     }
 
     public int getLimit() {

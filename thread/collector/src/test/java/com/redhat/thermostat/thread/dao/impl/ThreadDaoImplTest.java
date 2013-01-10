@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
@@ -48,11 +49,12 @@ import org.junit.Test;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
@@ -72,9 +74,9 @@ public class ThreadDaoImplTest {
     
     @Test
     public void testLoadVMCapabilities() {
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(query);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
         VmRef ref = mock(VmRef.class);
         when(ref.getId()).thenReturn(42);
         
@@ -85,14 +87,20 @@ public class ThreadDaoImplTest {
 
         VMThreadCapabilities expected = new VMThreadCapabilities();
         expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
-        when(storage.findPojo(query, VMThreadCapabilities.class)).thenReturn(expected);
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(expected).thenReturn(null);
+        when(query.execute()).thenReturn(cursor);
         
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         VMThreadCapabilities caps = dao.loadCapabilities(ref);
 
-        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, 42));
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, "0xcafe"));
-        
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, 42);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "0xcafe");
+        verify(query).limit(1);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
+
         assertFalse(caps.supportContentionMonitor());
         assertTrue(caps.supportCPUTime());
         assertTrue(caps.supportThreadAllocatedMemory());

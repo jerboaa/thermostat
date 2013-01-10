@@ -304,6 +304,18 @@ public class WebStorage implements Storage, SecureStorage {
         }
     }
 
+    private class WebQueryImpl<T extends Pojo> extends WebQuery<T> {
+
+        WebQueryImpl(int categoryId, Class<T> resultClass) {
+            super(categoryId, resultClass);
+        }
+
+        @Override
+        public Cursor<T> execute() {
+            return findAllPojos(this, getResultClass());
+        }
+    }
+
     private String endpoint;
     private UUID agentId;
 
@@ -433,8 +445,8 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public Query createQuery() {
-        return new WebQuery(categoryIds);
+    public <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass) {
+        return new WebQueryImpl(categoryIds.get(category), resultClass);
     }
 
     @Override
@@ -450,8 +462,7 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @SuppressWarnings("unchecked")
-    @Override
-    public <T extends Pojo> Cursor<T> findAllPojos(Query query,
+    private <T extends Pojo> Cursor<T> findAllPojos(Query query,
             Class<T> resultClass) throws StorageException {
         ((WebQuery) query).setResultClassName(resultClass.getName());
         NameValuePair queryParam = new BasicNameValuePair("query",
@@ -463,21 +474,6 @@ public class WebStorage implements Storage, SecureStorage {
             T[] result = (T[]) gson.fromJson(reader,
                     Array.newInstance(resultClass, 0).getClass());
             return new WebCursor<T>(result);
-        }
-    }
-
-    @Override
-    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass)
-            throws StorageException {
-        ((WebQuery) query).setResultClassName(resultClass.getName());
-        NameValuePair queryParam = new BasicNameValuePair("query",
-                gson.toJson(query));
-        List<NameValuePair> formparams = Arrays.asList(queryParam);
-        try (CloseableHttpEntity entity = post(endpoint + "/find-pojo",
-                formparams)) {
-            Reader reader = getContentAsReader(entity);
-            T result = gson.fromJson(reader, resultClass);
-            return result;
         }
     }
 

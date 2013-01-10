@@ -39,16 +39,15 @@ package com.redhat.thermostat.vm.gc.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -60,7 +59,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmGcStat;
-import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class VmGcStatDAOTest {
@@ -95,8 +93,9 @@ public class VmGcStatDAOTest {
         when(cursor.next()).thenReturn(vmGcStat);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.findAllPojos(any(Query.class), same(VmGcStat.class))).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -109,9 +108,14 @@ public class VmGcStatDAOTest {
         VmGcStatDAO dao = new VmGcStatDAOImpl(storage);
         List<VmGcStat> vmGcStats = dao.getLatestVmGcStats(vmRef, Long.MIN_VALUE);
 
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage).findAllPojos(arg.capture(), same(VmGcStat.class));
-        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
+        verify(storage).createQuery(VmGcStatDAO.vmGcStatCategory, VmGcStat.class);
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, 321);
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(1, vmGcStats.size());
         VmGcStat stat = vmGcStats.get(0);

@@ -43,31 +43,26 @@ import java.util.Map;
 
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.model.Pojo;
 
-public class WebQuery extends AbstractQuery {
+public class WebQuery<T extends Pojo> extends AbstractQuery<T> {
 
     private List<Qualifier<?>> qualifiers;
     private String resultClassName;
-
-    private transient Map<Category, Integer> categoryIdMap;
+    private transient Class<T> resultClass;
 
     private int categoryId;
 
     public WebQuery() {
-        this(null);
+        this(-1, null);
     }
 
-    public WebQuery(Map<Category, Integer> categoryIdMap) {
+    public WebQuery(int categoryId, Class<T> resultClass) {
         qualifiers = new ArrayList<>();
-        this.categoryIdMap = categoryIdMap;
-    }
-
-    @Override
-    public WebQuery from(Category category) {
-        categoryId = categoryIdMap.get(category);
-        return this;
+        this.categoryId = categoryId;
+        this.resultClass = resultClass;
     }
 
     public int getCategoryId() {
@@ -79,9 +74,8 @@ public class WebQuery extends AbstractQuery {
     }
 
     @Override
-    public <T> WebQuery where(Key<T> key, Criteria criteria, T value) {
+    public <T> void where(Key<T> key, Criteria criteria, T value) {
         qualifiers.add(new Qualifier<>(key, criteria, value));
-        return this;
     }
 
     public List<Qualifier<?>> getQualifiers() {
@@ -98,6 +92,16 @@ public class WebQuery extends AbstractQuery {
 
     public void setResultClassName(String resultClassName) {
         this.resultClassName = resultClassName;
+    }
+
+    public Class<T> getResultClass() {
+        return resultClass;
+    }
+
+    @Override
+    public Cursor<T> execute() {
+        // This should only ever be called when created from WebStorage, which provides its own subclass.
+        throw new IllegalStateException();
     }
 
 }

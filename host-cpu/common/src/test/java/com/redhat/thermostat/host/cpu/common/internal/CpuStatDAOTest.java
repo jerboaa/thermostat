@@ -41,9 +41,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -61,7 +63,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.CpuStat;
-import com.redhat.thermostat.test.MockQuery;
 
 public class CpuStatDAOTest {
 
@@ -82,7 +83,7 @@ public class CpuStatDAOTest {
         @SuppressWarnings("unchecked")
         Cursor<CpuStat> cursor = mock(Cursor.class);
         Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
         HostRef hostRef = mock(HostRef.class);
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
 
@@ -92,13 +93,17 @@ public class CpuStatDAOTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
 
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findAllPojos(query, CpuStat.class)).thenReturn(cursor);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
         List<CpuStat> cpuStats = dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
-        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(1, cpuStats.size());
         CpuStat stat = cpuStats.get(0);
@@ -113,7 +118,7 @@ public class CpuStatDAOTest {
         @SuppressWarnings("unchecked")
         Cursor<CpuStat> cursor = mock(Cursor.class);
         Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
         HostRef hostRef = mock(HostRef.class);
 
         CpuStatDAO dao = new CpuStatDAOImpl(storage);
@@ -123,16 +128,16 @@ public class CpuStatDAOTest {
         when(cursor.hasNext()).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(cpuStat);
 
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findAllPojos(any(Query.class), same(CpuStat.class))).thenReturn(cursor);
+        when(storage.createQuery(CpuStatDAO.cpuStatCategory, CpuStat.class)).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
         when(hostRef.getAgentId()).thenReturn("system");
 
         dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
         dao.getLatestCpuStats(hostRef, Long.MIN_VALUE);
 
-        verify(storage, times(2)).findAllPojos(query, CpuStat.class);
-
-        query.hasWhereClauseFor(Key.TIMESTAMP);
+        verify(query, times(2)).execute();
+        verify(query, atLeastOnce()).where(same(Key.AGENT_ID), same(Criteria.EQUALS), any());
+        verify(query, atLeastOnce()).where(same(Key.TIMESTAMP), any(Criteria.class), any());
     }
 
     @Test

@@ -199,14 +199,8 @@ public final class QueuedStorage implements Storage {
 
     }
 
-    @Override
-    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
-        return delegate.findAllPojos(query, resultClass);
-    }
-
-    @Override
-    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) {
-        return delegate.findPojo(query, resultClass);
+    <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
+        return query.execute();
     }
 
     @Override
@@ -234,8 +228,8 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public Query createQuery() {
-        return delegate.createQuery();
+    public <T extends Pojo> Query<T> createQuery(Category category, Class<T> resultClass) {
+        return delegate.createQuery(category, resultClass);
     }
 
     @Override

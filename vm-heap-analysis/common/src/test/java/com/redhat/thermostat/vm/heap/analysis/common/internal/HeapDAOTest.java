@@ -42,7 +42,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -61,8 +60,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
@@ -71,10 +68,8 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.HeapInfo;
-import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HistogramRecord;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
@@ -92,6 +87,8 @@ public class HeapDAOTest {
     private ObjectHistogram histogram;
     private InputStream histogramData;
 
+    private Query query;
+
     @Before
     public void setUp() throws IOException {
         storage = mock(Storage.class);
@@ -99,12 +96,8 @@ public class HeapDAOTest {
         when(storage.createAdd(any(Category.class))).thenReturn(add);
 
         when(storage.getAgentId()).thenReturn("test");
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
+        query = mock(Query.class); 
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
 
         dao = new HeapDAOImpl(storage);
         
@@ -115,12 +108,6 @@ public class HeapDAOTest {
         out.write(data);
         out.close();
         histogramData = createHistogramData();
-
-        // Setup for reading data from DB.
-        MockQuery findAllQuery = new MockQuery()
-            .from(HeapDAO.heapInfoCategory)
-            .where(Key.AGENT_ID, Criteria.EQUALS, "123")
-            .where(Key.VM_ID, Criteria.EQUALS, 234);
 
         @SuppressWarnings("unchecked")
         Cursor<HeapInfo> cursor = mock(Cursor.class);
@@ -136,7 +123,7 @@ public class HeapDAOTest {
 
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(info1).thenReturn(info2).thenReturn(null);
-        when(storage.findAllPojos(findAllQuery, HeapInfo.class)).thenReturn(cursor);
+        when(query.execute()).thenReturn(cursor);
 
         // Setup for reading heapdump data.
         when(storage.loadFile("test-heap")).thenReturn(new ByteArrayInputStream(data));
@@ -175,6 +162,7 @@ public class HeapDAOTest {
 
     @After
     public void tearDown() {
+        query = null;
         histogramData = null;
         histogram = null;
         heapDumpData.delete();
@@ -286,9 +274,7 @@ public class HeapDAOTest {
 
     @Test
     public void testInvalidHeapId() throws IOException {
-        storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.findPojo(any(Query.class), same(HeapInfo.class))).thenThrow(new IllegalArgumentException("invalid ObjectId"));
+        when(query.execute()).thenThrow(new IllegalArgumentException("invalid ObjectId"));
         dao = new HeapDAOImpl(storage);
         heapInfo = dao.getHeapInfo("some-random-heap-id");
         assertTrue(heapInfo == null);

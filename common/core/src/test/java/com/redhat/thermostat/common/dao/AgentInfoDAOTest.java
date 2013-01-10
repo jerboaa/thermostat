@@ -62,7 +62,6 @@ import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.test.MockQuery;
 
 public class AgentInfoDAOTest {
 
@@ -120,9 +119,9 @@ public class AgentInfoDAOTest {
         when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAllPojos(any(Query.class), same(AgentInformation.class))).thenReturn(agentCursor);
-        MockQuery query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
+        Query query = mock(Query.class);
+        when(query.execute()).thenReturn(agentCursor);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
         List<AgentInformation> allAgentInfo = dao.getAllAgentInformation();
@@ -141,16 +140,18 @@ public class AgentInfoDAOTest {
         when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
         when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findAllPojos(query, AgentInformation.class)).thenReturn(agentCursor);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(agentCursor);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
         List<AgentInformation> aliveAgents = dao.getAliveAgents();
 
-        assertEquals(AgentInfoDAO.CATEGORY, query.getCategory());
-        assertTrue(query.hasWhereClause(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true));
+        verify(storage).createQuery(AgentInfoDAO.CATEGORY, AgentInformation.class);
+        verify(query).where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(1, aliveAgents.size());
 
@@ -163,9 +164,14 @@ public class AgentInfoDAOTest {
     public void verifyGetAgentInformationWhenStorageCantFindIt() {
         HostRef agentRef = mock(HostRef.class);
 
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(false);
+        when(cursor.next()).thenReturn(null);
+        when(query.execute()).thenReturn(cursor);
+
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(query);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
@@ -180,16 +186,21 @@ public class AgentInfoDAOTest {
         when(agentRef.getAgentId()).thenReturn(agentInfo1.getAgentId());
 
         Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findPojo(query, AgentInformation.class)).thenReturn(agentInfo1);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(agentInfo1).thenReturn(null);
+        when(query.execute()).thenReturn(cursor);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         AgentInformation computed = dao.getAgentInformation(agentRef);
 
-        assertEquals(AgentInfoDAO.CATEGORY, query.getCategory());
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, agentInfo1.getAgentId()));
-
+        verify(storage).createQuery(AgentInfoDAO.CATEGORY, AgentInformation.class);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, agentInfo1.getAgentId());
+        verify(query).limit(1);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
         AgentInformation expected = agentInfo1;
         assertSame(expected, computed);
     }

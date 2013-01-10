@@ -42,6 +42,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
@@ -56,11 +57,11 @@ import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.BackendInformation;
-import com.redhat.thermostat.test.MockQuery;
 
 public class BackendInfoDAOTest {
 
@@ -134,17 +135,19 @@ public class BackendInfoDAOTest {
         when(backendCursor.hasNext()).thenReturn(true).thenReturn(false);
         when(backendCursor.next()).thenReturn(backend1).thenReturn(null);
 
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findAllPojos(query, BackendInformation.class)).thenReturn(backendCursor);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(backendCursor);
 
         BackendInfoDAO dao = new BackendInfoDAOImpl(storage);
 
         List<BackendInformation> result = dao.getBackendInformation(agentref);
 
-        assertEquals(BackendInfoDAO.CATEGORY, query.getCategory());
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
+        verify(storage).createQuery(BackendInfoDAO.CATEGORY, BackendInformation.class);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(Arrays.asList(backendInfo1), result);
     }

@@ -43,8 +43,6 @@ import static org.mockito.Mockito.when;
 
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 
 public class QueryTestHelper {
@@ -57,11 +55,4 @@ public class QueryTestHelper {
         return mockRemove;
     }
 
-    @SuppressWarnings("unchecked")
-    public static Query createMockQuery() {
-        Query mockQuery = mock(Query.class);
-        when(mockQuery.from(any(Category.class))).thenReturn(mockQuery);
-        when(mockQuery.where(any(Key.class), any(Criteria.class), any())).thenReturn(mockQuery);
-        return mockQuery;
-    }
 }

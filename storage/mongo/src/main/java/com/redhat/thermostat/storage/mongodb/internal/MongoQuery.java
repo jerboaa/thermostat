@@ -42,18 +42,22 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.model.Pojo;
 
-public class MongoQuery extends AbstractQuery {
+public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
 
+    private MongoStorage storage;
     private BasicDBObject query = new BasicDBObject();
     private boolean hasClauses = false;
     private Category category;
+    private Class<T> resultClass;
 
-    @Override
-    public MongoQuery from(Category category) {
-        setCategory(category);
-        return this;
+    MongoQuery(MongoStorage storage, Category category, Class<T> resultClass) {
+        this.storage = storage;
+        this.category = category;
+        this.resultClass = resultClass;
     }
 
     public Category getCategory() {
@@ -65,11 +69,11 @@ public class MongoQuery extends AbstractQuery {
     }
 
     @Override
-    public <T> MongoQuery where(Key<T> key, Criteria operator, T value) {
-        return where(key.getName(), operator, value);
+    public <S> void where(Key<S> key, Criteria operator, S value) {
+        where(key.getName(), operator, value);
     }
 
-    public MongoQuery where(String key, Criteria operator, Object value) {
+    public void where(String key, Criteria operator, Object value) {
         switch (operator) {
         case EQUALS:
             query.put(key, value);
@@ -97,7 +101,6 @@ public class MongoQuery extends AbstractQuery {
             throw new IllegalArgumentException("MongoQuery can not handle " + operator);
         }
         hasClauses = true;
-        return this;
     }
 
     DBObject getGeneratedQuery() {
@@ -115,7 +118,7 @@ public class MongoQuery extends AbstractQuery {
         if (!(obj instanceof MongoQuery)) {
             return false;
         }
-        MongoQuery other = (MongoQuery) obj;
+        MongoQuery<?> other = (MongoQuery<?>) obj;
         return Objects.equals(getCategory(), other.getCategory()) && Objects.equals(this.query, other.query);
     }
 
@@ -128,4 +131,8 @@ public class MongoQuery extends AbstractQuery {
         return hasClauses ;
     }
 
+    @Override
+    public Cursor<T> execute() {
+        return storage.findAllPojos(this, resultClass);
+    }
 }

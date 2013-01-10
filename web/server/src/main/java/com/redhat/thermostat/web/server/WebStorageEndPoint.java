@@ -70,6 +70,7 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.Qualifier;
@@ -126,9 +127,7 @@ public class WebStorageEndPoint extends HttpServlet {
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");
         String cmd = uri.substring(lastPartIdx + 1);
-        if (cmd.equals("find-pojo")) {
-            findPojo(req, resp);
-        } else if (cmd.equals("find-all")) {
+        if (cmd.equals("find-all")) {
             findAll(req, resp);
         } else if (cmd.equals("put-pojo")) {
             putPojo(req, resp);
@@ -316,21 +315,6 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void findPojo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        try {
-            String queryParam = req.getParameter("query");
-            WebQuery query = gson.fromJson(queryParam, WebQuery.class);
-            Class resultClass = Class.forName(query.getResultClassName());
-            Query targetQuery = constructTargetQuery(query);
-            Object result = storage.findPojo(targetQuery, resultClass);
-            writeResponse(resp, result);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "result class not found");
-        }
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findAll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         try {
             String queryParam = req.getParameter("query");
@@ -338,7 +322,7 @@ public class WebStorageEndPoint extends HttpServlet {
             Class resultClass = Class.forName(query.getResultClassName());
             Query targetQuery = constructTargetQuery(query);
             ArrayList resultList = new ArrayList();
-            Cursor result = storage.findAllPojos(targetQuery, resultClass);
+            Cursor result = targetQuery.execute();
             while (result.hasNext()) {
                 resultList.add(result.next());
             }
@@ -349,20 +333,24 @@ public class WebStorageEndPoint extends HttpServlet {
         }
     }
 
-    private Query constructTargetQuery(WebQuery query) {
-        Query targetQuery = storage.createQuery();
+    private Query constructTargetQuery(WebQuery<? extends Pojo> query) {
         int categoryId = query.getCategoryId();
         Category category = getCategoryFromId(categoryId);
-        targetQuery = targetQuery.from(category);
-        List<Qualifier<?>> qualifiers = query.getQualifiers();
-        for (Qualifier q : qualifiers) {
-            targetQuery = targetQuery.where(q.getKey(), q.getCriteria(), q.getValue());
+        try {
+            Class<? extends Pojo> resultClass = (Class<? extends Pojo>) Class.forName(query.getResultClassName());
+            Query targetQuery = storage.createQuery(category, resultClass);
+            List<Qualifier<?>> qualifiers = query.getQualifiers();
+            for (Qualifier q : qualifiers) {
+                targetQuery.where(q.getKey(), q.getCriteria(), q.getValue());
+            }
+            for (Sort s : query.getSorts()) {
+                targetQuery.sort(s.getKey(), s.getDirection());
+            }
+            targetQuery.limit(query.getLimit());
+            return targetQuery;
+        } catch (ClassNotFoundException ex) {
+            throw new StorageException(ex);
         }
-        for (Sort s : query.getSorts()) {
-            targetQuery = targetQuery.sort(s.getKey(), s.getDirection());
-        }
-        targetQuery = targetQuery.limit(query.getLimit());
-        return targetQuery;
     }
 
     private Category getCategoryFromId(int categoryId) {

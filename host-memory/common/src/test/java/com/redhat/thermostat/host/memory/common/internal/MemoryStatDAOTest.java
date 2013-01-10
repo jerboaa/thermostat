@@ -42,6 +42,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -62,7 +63,6 @@ import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.MemoryStat;
-import com.redhat.thermostat.test.MockQuery;
 
 public class MemoryStatDAOTest {
 
@@ -102,13 +102,9 @@ public class MemoryStatDAOTest {
         when(cursor.next()).thenReturn(memStat1);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(MemoryStat.class))).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class), any(Class.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -116,9 +112,12 @@ public class MemoryStatDAOTest {
         MemoryStatDAO dao = new MemoryStatDAOImpl(storage);
         List<MemoryStat> memoryStats = dao.getLatestMemoryStats(hostRef, Long.MIN_VALUE);
 
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage).findAllPojos(arg.capture(), same(MemoryStat.class));
-        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
+        verify(storage).createQuery(MemoryStatDAO.memoryStatCategory, MemoryStat.class);
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "system");
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(1, memoryStats.size());
         MemoryStat stat = memoryStats.get(0);
