@@ -53,11 +53,16 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.event.ListSelectionListener;
 
+import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.DumpDisabledReason;
+import com.redhat.thermostat.vm.heap.analysis.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 
 @SuppressWarnings("serial")
 public class StatsPanel extends JPanel {
     
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+
     private JPanel leftPanel;
     
     private JButton heapDumpButton;
@@ -99,7 +104,7 @@ public class StatsPanel extends JPanel {
         max = new JLabel("-");
         max.setHorizontalAlignment(SwingConstants.RIGHT);
         
-        heapDumpButton = new JButton("Heap Dump");
+        heapDumpButton = new JButton(translator.localize(LocaleResources.TRIGGER_HEAP_DUMP));
         heapDumpButton.setName("heapDumpButton");
 
         JScrollPane dumpListScrollPane = new JScrollPane();
@@ -173,13 +178,22 @@ public class StatsPanel extends JPanel {
         dumpList.addListSelectionListener(listener);
     }
     
-    public void disableHeapDumperControl() {
-        heapDumpButton.setText("dumping...");
+    public void disableHeapDumperControl(DumpDisabledReason reason) {
+        String text = null;
+        switch (reason) {
+        case DUMP_IN_PROGRESS:
+            text = translator.localize(LocaleResources.HEAP_DUMP_IN_PROGRESS);
+            break;
+        case PROCESS_DEAD:
+            text = translator.localize(LocaleResources.PROCESS_EXITED);
+            break;
+        }
+        heapDumpButton.setText(text);
         heapDumpButton.setEnabled(false);
     }
 
     public void enableHeapDumperControl() {
-        heapDumpButton.setText("Heap Dump");
+        heapDumpButton.setText(translator.localize(LocaleResources.TRIGGER_HEAP_DUMP));
         heapDumpButton.setEnabled(true);
     }
 

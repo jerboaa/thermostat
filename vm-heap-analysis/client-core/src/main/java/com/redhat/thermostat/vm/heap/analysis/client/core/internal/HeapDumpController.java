@@ -54,6 +54,7 @@ import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.model.HeapInfo;
@@ -63,6 +64,7 @@ import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.DumpDisabledReason;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapView.HeapDumperAction;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
@@ -77,6 +79,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
+    private final VmInfoDAO vmInfoDao;
     private final VmMemoryStatDAO vmDao;
     private final VmRef ref;
     
@@ -92,19 +95,22 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
     private ObjectDetailsViewProvider objectDetailsViewProvider;
     private ObjectRootsViewProvider objectRootsViewProvider;
 
+
     public HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
+            final VmInfoDAO vmInfoDao,
             final HeapDAO heapDao, final VmRef ref,
             final ApplicationService appService, HeapViewProvider viewProvider,
             HeapDumpDetailsViewProvider detailsViewProvider,
             HeapHistogramViewProvider histogramProvider,
             ObjectDetailsViewProvider objectDetailsProvider,
             ObjectRootsViewProvider objectRootsProvider) {
-        this(vmMemoryStatDao, heapDao, ref, appService, viewProvider,
+        this(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService, viewProvider,
                 detailsViewProvider, histogramProvider, objectDetailsProvider,
                 objectRootsProvider, new HeapDumper(ref));
     }
 
     HeapDumpController(final VmMemoryStatDAO vmMemoryStatDao,
+            final VmInfoDAO vmInfoDao,
             final HeapDAO heapDao, final VmRef ref,
             final ApplicationService appService, HeapViewProvider viewProvider,
             HeapDumpDetailsViewProvider detailsViewProvider,
@@ -118,6 +124,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         this.detailsViewProvider = detailsViewProvider;
         this.appService = appService;
         this.ref = ref;
+        this.vmInfoDao = vmInfoDao;
         this.vmDao = vmMemoryStatDao;
         this.heapDAO = heapDao;
         
@@ -178,6 +185,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                 HeapDump dump = null;
                 switch (actionEvent.getActionId()) {
                 case DUMP_REQUESTED:
+                    view.disableHeapDumping(DumpDisabledReason.DUMP_IN_PROGRESS);
                     requestDump(heapDumper);
                     break;
                 case ANALYSE:
@@ -189,6 +197,11 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
                 }
             }
         });
+
+        boolean vmIsAlive = vmInfoDao.getVmInfo(ref).isAlive();
+        if (!vmIsAlive) {
+            view.disableHeapDumping(DumpDisabledReason.PROCESS_DEAD);
+        }
     }
 
     private void requestDump(final HeapDumper heapDumper) {
@@ -198,6 +211,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
             public void run() {
                 try {
                     heapDumper.dump();
+                    view.enableHeapDumping();
                     view.notifyHeapDumpComplete();
                 } catch (CommandException e) {
                     view.displayWarning(e.getMessage());

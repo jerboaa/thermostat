@@ -41,6 +41,7 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.heap.analysis.client.core.internal.HeapDumpController;
@@ -51,12 +52,14 @@ public class HeapDumperService implements InformationService<VmRef> {
     
     private static final int ORDER = ORDER_MEMORY_GROUP + 60;
     private ApplicationService appService;
+    private VmInfoDAO vmInfoDao;
     private VmMemoryStatDAO vmMemoryStatDao;
     private HeapDAO heapDao;
 
     private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
-    public HeapDumperService(ApplicationService appService, VmMemoryStatDAO vmMemoryStatDao, HeapDAO heapDao) {
+    public HeapDumperService(ApplicationService appService, VmInfoDAO vmInfoDao, VmMemoryStatDAO vmMemoryStatDao, HeapDAO heapDao) {
+        this.vmInfoDao = vmInfoDao;
         this.vmMemoryStatDao = vmMemoryStatDao;
         this.heapDao = heapDao;
         this.appService = appService;
@@ -69,7 +72,8 @@ public class HeapDumperService implements InformationService<VmRef> {
         HeapHistogramViewProvider histogramViewProvider = OSGIUtils.getInstance().getService(HeapHistogramViewProvider.class);
         ObjectDetailsViewProvider objectDetailsViewProvider = OSGIUtils.getInstance().getService(ObjectDetailsViewProvider.class);
         ObjectRootsViewProvider objectRootsViewProvider = OSGIUtils.getInstance().getService(ObjectRootsViewProvider.class);
-        return new HeapDumpController(vmMemoryStatDao, heapDao, ref, appService, viewProvider, detailsViewProvider, histogramViewProvider, objectDetailsViewProvider, objectRootsViewProvider);
+        return new HeapDumpController(vmMemoryStatDao, vmInfoDao, heapDao, ref, appService,
+                viewProvider, detailsViewProvider, histogramViewProvider, objectDetailsViewProvider, objectRootsViewProvider);
     }
 
     @Override

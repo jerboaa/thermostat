@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
@@ -64,6 +65,7 @@ public class Activator implements BundleActivator {
     public void start(final BundleContext context) throws Exception {
         Class<?>[] deps = new Class<?>[] {
             ApplicationService.class,
+            VmInfoDAO.class,
             VmMemoryStatDAO.class,
             HeapDAO.class,
         };
@@ -74,12 +76,13 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
+                VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
                 VmMemoryStatDAO vmMemoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
                 Objects.requireNonNull(vmMemoryStatDao);
                 HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
                 Objects.requireNonNull(heapDao);
 
-                HeapDumperService service = new HeapDumperService(appSvc, vmMemoryStatDao, heapDao);
+                HeapDumperService service = new HeapDumperService(appSvc, vmInfoDao, vmMemoryStatDao, heapDao);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
                 reg = context.registerService(InformationService.class.getName(), service , properties);
