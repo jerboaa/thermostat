@@ -36,27 +36,36 @@
 
 package com.redhat.thermostat.main;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Hashtable;
 
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.launch.Framework;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.bundles.impl.OSGiRegistryImpl;
-import com.redhat.thermostat.common.Configuration;
+import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.main.impl.FrameworkProvider;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(value = Thermostat.class)
+@PrepareForTest({FrameworkProvider.class})
 public class ThermostatTest {
 
     private Path tempDir;
@@ -65,12 +74,9 @@ public class ThermostatTest {
 
     private BundleContext mockContext;
 
+    @SuppressWarnings("rawtypes")
     @Before
     public void setUp() throws Exception {
-
-        final OSGiRegistryImpl osgiRegistry = mock(OSGiRegistryImpl.class);
-        PowerMockito.whenNew(OSGiRegistryImpl.class).withArguments(any(Configuration.class)).thenReturn(osgiRegistry);
-
         tempDir = Files.createTempDirectory("test");
         tempDir.toFile().deleteOnExit();
         System.setProperty("THERMOSTAT_HOME", tempDir.toString());
@@ -93,19 +99,40 @@ public class ThermostatTest {
         
         mockContext = mock(BundleContext.class);
 
-        mockFramework = mock(Framework.class);
-        when(mockFramework.getBundleContext()).thenReturn(mockContext);
-
-        TestFrameworkFactory.setFramework(mockFramework);
+        Framework framework = mock(Framework.class);
+        TestFrameworkFactory.setFramework(framework);
+        when(framework.getBundleContext()).thenReturn(mockContext);
+        Bundle mockBundle = mock(Bundle.class);
+        when(mockContext.installBundle(any(String.class))).thenReturn(mockBundle);
+        when(mockBundle.getHeaders()).thenReturn(new Hashtable<String, String>());
+        ServiceTracker registryTracker = mock(ServiceTracker.class);
+        PowerMockito
+                .whenNew(ServiceTracker.class)
+                .withParameterTypes(BundleContext.class, String.class,
+                        ServiceTrackerCustomizer.class)
+                .withArguments(any(BundleContext.class),
+                        eq(BundleManager.class.getName()), any(ServiceTrackerCustomizer.class))
+                .thenReturn(registryTracker);
+        when(registryTracker.waitForService(0)).thenReturn(mock(BundleManager.class));
+        ServiceTracker launcherTracker = mock(ServiceTracker.class);
+        Launcher launcher = mock(Launcher.class);
+        PowerMockito
+                .whenNew(ServiceTracker.class)
+                .withParameterTypes(BundleContext.class, String.class,
+                        ServiceTrackerCustomizer.class)
+                .withArguments(any(BundleContext.class),
+                        eq(Launcher.class.getName()),
+                        any(ServiceTrackerCustomizer.class))
+                .thenReturn(launcherTracker);
+        when(launcherTracker.waitForService(0))
+                .thenReturn(launcher);
     }
 
-    // TODO These now seem to belong in OSGiRegistryTest
-
-    /*
     @Test
     public void testOSGIDirExists() throws Exception {
-        Path osgiDir = tempDir.resolve("osgi");
+        Path osgiDir = tempDir.resolve("osgi-cache");
         osgiDir.toFile().mkdirs();
+        osgiDir.toFile().deleteOnExit();
         assertTrue(osgiDir.toFile().exists());
         try {
             Thermostat.main(new String[0]);
@@ -113,20 +140,18 @@ public class ThermostatTest {
             e.printStackTrace();
         }
         assertTrue(osgiDir.toFile().exists());
-    }*/
-
-    /*@Test
-    public void testFrameworkConfig() throws Exception {
-        Thermostat.main(new String[0]);
-        Map<String,String> config = TestFrameworkFactory.getConfig();
-        Path osgiDir = tempDir.resolve("osgi");
-        assertEquals(osgiDir.toString(), config.get(Constants.FRAMEWORK_STORAGE));
     }
 
     @Test
     public void testFrameworkInitAndStart() throws Exception {
+        Path osgiDir = tempDir.resolve("osgi-cache");
+        osgiDir.toFile().mkdirs();
+        osgiDir.toFile().deleteOnExit();
+        mockFramework = mock(Framework.class);
+        when(mockFramework.getBundleContext()).thenReturn(mockContext);
+        TestFrameworkFactory.setFramework(mockFramework);
         Thermostat.main(new String[0]);
         verify(mockFramework).init();
         verify(mockFramework).start();
-    }*/
+    }
 }

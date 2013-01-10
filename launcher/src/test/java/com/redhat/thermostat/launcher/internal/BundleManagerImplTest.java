@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.bundles.impl;
+package com.redhat.thermostat.launcher.internal;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.eq;
@@ -61,10 +61,12 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.launcher.internal.BundleLoader;
+import com.redhat.thermostat.launcher.internal.BundleManagerImpl;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({OSGiRegistryImpl.class, FrameworkUtil.class})
-public class OSGiRegistryImplTest {
+@PrepareForTest({BundleManagerImpl.class, FrameworkUtil.class})
+public class BundleManagerImplTest {
 
     private static final String cmdName = "one";
 
@@ -122,7 +124,7 @@ public class OSGiRegistryImplTest {
         mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        OSGiRegistryImpl registry = new OSGiRegistryImpl(conf);
+        BundleManagerImpl registry = new BundleManagerImpl(conf);
         CommandInfoSource infos = mock(CommandInfoSource.class);
         CommandInfo info = mock(CommandInfo.class);
         when (info.getDependencyResourceNames()).thenReturn(bundleLocs);
@@ -146,7 +148,7 @@ public class OSGiRegistryImplTest {
         mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(theBundle);
 
-        Object registry = new OSGiRegistryImpl(conf);
+        Object registry = new BundleManagerImpl(conf);
         Class clazz = registry.getClass();
         Method m = clazz.getMethod("setPrintOSGiInfo", Boolean.TYPE);
         m.invoke(registry, true); // If this fails, then API has changed in ways that break FrameworkProvider.

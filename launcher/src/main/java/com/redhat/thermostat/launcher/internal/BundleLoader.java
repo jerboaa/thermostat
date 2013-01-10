@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.bundles.impl;
+package com.redhat.thermostat.launcher.internal;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.bundles.impl;
+package com.redhat.thermostat.launcher.internal;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -53,6 +53,7 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.launch.Framework;
 
+import com.redhat.thermostat.launcher.internal.BundleLoader;
 import com.redhat.thermostat.test.Bug;
 
 public class BundleLoaderTest {
@@ -62,7 +63,7 @@ public class BundleLoaderTest {
         final String BUNDLE_LOCATION = "bundle-location-1";
 
         Bundle bundle = mock(Bundle.class);
-        when(bundle.getHeaders()).thenReturn(new Hashtable<>());
+        when(bundle.getHeaders()).thenReturn(new Hashtable<String, String>());
         BundleContext bundleContext = mock(BundleContext.class);
         when(bundleContext.installBundle(BUNDLE_LOCATION)).thenReturn(bundle);
         Framework framework = mock(Framework.class);

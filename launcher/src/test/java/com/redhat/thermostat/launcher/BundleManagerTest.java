@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.bundles;
+package com.redhat.thermostat.launcher;
 
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.mock;
@@ -49,11 +49,12 @@ import org.osgi.framework.launch.Framework;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.bundles.impl.BundleLoader;
+import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.internal.BundleLoader;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(OSGiRegistry.class)
-public class OSGiRegistryTest {
+@PrepareForTest(BundleManager.class)
+public class BundleManagerTest {
 
     @Test
     public void testPreLoadBundles() throws Exception {
@@ -63,7 +64,7 @@ public class OSGiRegistryTest {
         whenNew(BundleLoader.class).withParameterTypes(Boolean.TYPE).
                 withArguments(any()).thenReturn(loader);
 
-        OSGiRegistry.preLoadBundles(framework, bundleLocations, true);
+        BundleManager.preLoadBundles(framework, bundleLocations, true);
         verify(loader).installAndStartBundles(framework, bundleLocations);
     }
 }

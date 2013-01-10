@@ -34,31 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.bundles.impl;
+package com.redhat.thermostat.launcher;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
+import java.io.IOException;
+import java.util.List;
 
-import com.redhat.thermostat.bundles.OSGiRegistry;
+import org.osgi.framework.BundleException;
+import org.osgi.framework.launch.Framework;
+
 import com.redhat.thermostat.common.Configuration;
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.launcher.internal.BundleLoader;
 
-public class Activator implements BundleActivator {
+/**
+ * A Service that provides features to load bundles for given command names.
+ */
+public abstract class BundleManager {
 
-    ServiceRegistration reg;
+    public abstract void setPrintOSGiInfo(boolean printOSGiInfo);
 
-    @Override
-    public void start(BundleContext context) throws Exception {
-        OSGiRegistryImpl bundleRegistry = new OSGiRegistryImpl(new Configuration());
-        reg = context.registerService(OSGiRegistry.class.getName(), bundleRegistry, null);
+    public abstract void setCommandInfoSource(CommandInfoSource source);
+
+    public abstract void addBundlesFor(String commandName) throws BundleException, CommandInfoNotFoundException, IOException;
+
+    public static void preLoadBundles(Framework framework, List<String> bundleLocations,
+            boolean printOSGiInfo) throws BundleException {
+        BundleLoader loader = new BundleLoader(printOSGiInfo);
+        loader.installAndStartBundles(framework, bundleLocations);
     }
 
-    @Override
-    public void stop(BundleContext context) throws Exception {
-        if (reg != null) {
-            reg.unregister();
-            reg = null;
-        }
-    }
+    public abstract Configuration getConfiguration();
 
 }

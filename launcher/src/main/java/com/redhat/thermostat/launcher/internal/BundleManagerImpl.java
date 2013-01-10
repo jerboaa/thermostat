@@ -34,13 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.bundles.impl;
+package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.ConfigurationException;
 import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.launcher.BundleManager;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,14 +54,14 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.launch.Framework;
 
-public class OSGiRegistryImpl extends OSGiRegistry {
+public class BundleManagerImpl extends BundleManager {
 
     private CommandInfoSource commandInfos;
     private Map<String, Bundle> loaded;
     private Configuration configuration;
     private BundleLoader loader;
 
-    OSGiRegistryImpl(Configuration configuration) throws ConfigurationException, FileNotFoundException, IOException {
+    BundleManagerImpl(Configuration configuration) throws ConfigurationException, FileNotFoundException, IOException {
         initLoadedBundles();
         this.configuration = configuration;
         loader = new BundleLoader(configuration.getPrintOSGiInfo());

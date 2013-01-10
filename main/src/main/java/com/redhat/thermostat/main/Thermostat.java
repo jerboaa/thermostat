@@ -62,6 +62,7 @@ public class Thermostat implements Runnable {
         this.context = context;
     }
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void launch()
             throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
             FileNotFoundException, IOException, BundleException, InterruptedException {

@@ -36,70 +36,85 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import java.util.Map;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.CommandLoadingBundleActivator;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Activator extends CommandLoadingBundleActivator {
+    
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    class RegisterLauncherCustomizer implements ServiceTrackerCustomizer {
 
-    class RegisterLauncherAction implements Action {
-
+        private ServiceRegistration launcherReg;
+        private ServiceRegistration bundleManReg;
+        private ServiceRegistration cmdInfoReg;
         private BundleContext context;
-        private ServiceReference registryReference;
+        private BundleManager bundleService;
 
-        RegisterLauncherAction(BundleContext context) {
+        RegisterLauncherCustomizer(BundleContext context, BundleManager bundleService) {
             this.context = context;
+            this.bundleService = bundleService;
         }
 
         @Override
-        public void dependenciesAvailable(Map<String, Object> services) {
-            
-            registryReference = context.getServiceReference(OSGiRegistry.class);
-            OSGiRegistry bundleService = (OSGiRegistry) context.getService(registryReference);
+        public Object addingService(ServiceReference reference) {
+            // keyring is now ready
+            Keyring keyring = (Keyring)context.getService(reference);
+            // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             CommandInfoSourceImpl commands = new CommandInfoSourceImpl(bundleService.getConfiguration().getThermostatHome());
-            context.registerService(CommandInfoSource.class, commands, null);
+            cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);
             bundleService.setCommandInfoSource(commands);
             LauncherImpl launcher = new LauncherImpl(context,
                     new CommandContextFactory(context), bundleService);
-            launcherServiceRegistration = context.registerService(Launcher.class.getName(), launcher, null);
+            launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
+            bundleManReg = context.registerService(BundleManager.class, bundleService, null);
+            return keyring;
         }
 
         @Override
-        public void dependenciesUnavailable() {
-            launcherServiceRegistration.unregister();
-            context.ungetService(registryReference);
+        public void modifiedService(ServiceReference reference, Object service) {
+            // nothing
+        }
+
+        @Override
+        public void removedService(ServiceReference reference, Object service) {
+            // Keyring is gone, remove launcher, et. al. as well
+            launcherReg.unregister();
+            bundleManReg.unregister();
+            cmdInfoReg.unregister();
         }
 
     }
 
     @SuppressWarnings("rawtypes")
-    private ServiceRegistration launcherServiceRegistration;
-    private MultipleServiceTracker tracker;
+    private ServiceTracker serviceTracker;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
         super.start(context);
-
-        tracker = new MultipleServiceTracker(context, new Class[] {OSGiRegistry.class, Keyring.class}, new RegisterLauncherAction(context));
-        tracker.open();
+        BundleManager bundleService = new BundleManagerImpl(new Configuration());
+        ServiceTrackerCustomizer customizer = new RegisterLauncherCustomizer(context, bundleService);
+        serviceTracker = new ServiceTracker(context, Keyring.class, customizer);
+        // Track for Keyring service.
+        serviceTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         super.stop(context);
-        if (tracker != null) {
-            tracker.close();
+        if (serviceTracker != null) {
+            serviceTracker.close();
         }
     }
 }
