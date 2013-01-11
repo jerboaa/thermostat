@@ -60,7 +60,7 @@ public class WebServiceCommand extends SimpleCommand {
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        String storageURL = ctx.getArguments().getArgument("storageURL");
+        String storageURL = ctx.getArguments().getArgument("dbUrl");
         String username = ctx.getArguments().getArgument("username");
         String password = ctx.getArguments().getArgument("password");
         serviceLauncher.setIpAddresses(parseIPsPorts(ctx.getArguments().getArgument("bindAddrs")));

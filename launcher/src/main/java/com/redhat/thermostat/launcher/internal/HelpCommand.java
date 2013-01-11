@@ -57,7 +57,6 @@ import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.launcher.CommonCommandOptions;
 
 public class HelpCommand extends SimpleCommand {
 
@@ -65,6 +64,7 @@ public class HelpCommand extends SimpleCommand {
 
     private static final int COMMANDS_COLUMNS_WIDTH = 14;
     private static final String NAME = "help";
+    private static final String APP_NAME = "thermostat";
 
     private static final CommandInfoComparator comparator = new CommandInfoComparator();
 
@@ -119,10 +119,12 @@ public class HelpCommand extends SimpleCommand {
 
     private void printHelp(CommandContext ctx, CommandInfo info) {
         HelpFormatter helpFormatter = new HelpFormatter();
+        
         PrintWriter pw = new PrintWriter(ctx.getConsole().getOutput());
-        CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Options options = commonOpts.getOptionsFor(info);
-        helpFormatter.printHelp(pw, 80, info.getName(), info.getUsage(), options, 2, 4, null, true);
+        Options options = info.getOptions();
+        String name = APP_NAME + " " + info.getName();
+        String usage = APP_NAME + " " + info.getUsage() + "\n" + info.getDescription();
+        helpFormatter.printHelp(pw, 80, usage, name, options, 2, 4, null);
         pw.flush();
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,47 +34,50 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.launcher;
+package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
-import com.redhat.thermostat.test.cli.TestCommand;
 
-public class CommonCommandOptionsTest {
+public class CommonOptionsTest {
 
     @Test
-    public void verifyStorageCommandAddsDbUrlOption() {
-        TestCommand cmd = new TestCommand("test1");
-        cmd.setStorageRequired(true);
-
-        CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Options cmdOpts = commonOpts.getOptionsFor(cmd);
-
-        assertTrue(cmdOpts.hasOption("dbUrl"));
-        Option db = cmdOpts.getOption("dbUrl");
-        assertEquals("d", db.getOpt());
-        assertEquals("the URL of the storage to connect to", db.getDescription());
-        assertFalse(db.isRequired());
-        assertTrue(db.hasArg());
+    public void canGetLogLevel() {
+        Option logOption = CommonOptions.getLogOption();
+        Options options = new Options();
+        options.addOption(logOption);
+        assertTrue(options.hasOption("logLevel"));
+        assertTrue(options.hasOption("l"));
+        assertFalse(logOption.isRequired());
+        assertTrue(logOption.hasArg());
     }
-
+    
     @Test
-    public void verifyLogLevelOption() {
-        TestCommand cmd = new TestCommand("test1");
-
-        CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Options cmdOpts = commonOpts.getOptionsFor(cmd);
-
-        assertTrue(cmdOpts.hasOption("logLevel"));
-        Option log = cmdOpts.getOption("logLevel");
-        assertEquals("log level", log.getDescription());
-        assertFalse(log.isRequired());
-        assertTrue(log.hasArg());
+    public void canGetDbOptions() {
+        List<Option> opts = CommonOptions.getDbOptions();
+        Options options = new Options();
+        for (Option opt: opts) {
+            options.addOption(opt);
+        }
+        assertTrue(options.hasOption("dbUrl"));
+        assertTrue(options.hasOption("username"));
+        assertTrue(options.hasOption("password"));
+        assertFalse(options.getOption("dbUrl").isRequired());
+        assertFalse(options.getOption("username").isRequired());
+        assertFalse(options.getOption("password").isRequired());
+        assertTrue(options.getOption("dbUrl").hasArg());
+        assertTrue(options.getOption("username").hasArg());
+        assertTrue(options.getOption("password").hasArg());
+        Option dbUrlOption = options.getOption("dbUrl");
+        assertEquals(CommonOptions.DB_URL_ARG, dbUrlOption.getArgName());
+        assertEquals(CommonOptions.USERNAME_ARG, options.getOption(CommonOptions.USERNAME_ARG).getArgName());
     }
 }

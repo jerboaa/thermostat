@@ -83,7 +83,7 @@ public class WebServiceCommandTest {
     public void verifyLauncherStart() throws Exception {
         SimpleArguments args = new SimpleArguments();
         String storageUrl = "mongodb://127.0.0.1:27518";
-        args.addArgument("storageURL", storageUrl);
+        args.addArgument("dbUrl", storageUrl);
         args.addArgument("bindAddrs", "127.0.0.1:8888,127.0.0.2:9999");
         try {
             cmd.run(cmdCtxFactory.createContext(args));
@@ -102,7 +102,7 @@ public class WebServiceCommandTest {
     public void verifyLauncherStartWithAuth() throws Exception {
         SimpleArguments args = new SimpleArguments();
         String storageUrl = "mongodb://127.0.0.1:27518";
-        args.addArgument("storageURL", storageUrl);
+        args.addArgument("dbUrl", storageUrl);
         args.addArgument("bindAddrs", "127.0.0.1:8888,127.0.0.2:9999");
         args.addArgument("username", "testuser");
         args.addArgument("password", "testpasswd");

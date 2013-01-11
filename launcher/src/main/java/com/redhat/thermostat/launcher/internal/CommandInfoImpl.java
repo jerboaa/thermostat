@@ -65,7 +65,7 @@ public class CommandInfoImpl implements CommandInfo {
     private static final String PROP_OPTHASARG = ".hasarg";
     private static final String PROP_OPTREQUIRED = ".required";
     private static final String PROP_OPTDESC = ".description";
-
+    
     private String name, description, usage;
     private Options options;
     private List<String> dependencies;
@@ -122,8 +122,20 @@ public class CommandInfoImpl implements CommandInfo {
     }
 
     private void learnOption(String name, Properties props) {
-        Option option = optionFromProperties(name, props);
-        options.addOption(option);
+        if (name.equals(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
+            addDbOptions();
+        } else if (name.equals(CommonOptions.OPTIONS_COMMON_LOG_OPTION)) {
+            options.addOption(CommonOptions.getLogOption());
+        } else {
+            Option option = optionFromProperties(name, props);
+            options.addOption(option);
+        }
+    }
+
+    private void addDbOptions() {
+        for (Option opt: CommonOptions.getDbOptions()) {
+            options.addOption(opt);
+        }
     }
 
     /* TODO currently this assumes that any set of mutually exclusive options will be
@@ -153,6 +165,17 @@ public class CommandInfoImpl implements CommandInfo {
         String argKey = name + PROP_OPTHASARG;
         String requiredKey = name + PROP_OPTREQUIRED;
         String descKey = name + PROP_OPTDESC;
+        
+        // required property of common options are allowed to be overridden by
+        // command.properties files
+        if (CommonOptions.ALL_COMMON_OPTIONS.contains(name) && options.hasOption(name)) {
+            if (props.containsKey(requiredKey)) {
+                Option optionToChange = options.getOption(name);
+                required = Boolean.parseBoolean((String) props.getProperty(requiredKey));
+                optionToChange.setRequired(required);
+                return optionToChange;
+            }
+        }
 
         if (props.containsKey(optKey)) {
             opt = (String) props.getProperty(optKey);

@@ -44,7 +44,6 @@ import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -59,6 +58,10 @@ import com.redhat.thermostat.utils.keyring.Keyring;
  */
 public class ConnectCommand extends SimpleCommand {
 
+    private static final String DB_URL_ARG = "dbUrl";
+    private static final String USERNAME_ARG = "username";
+    private static final String PASSWORD_ARG = "password";
+    
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private static final String NAME = "connect";
@@ -84,12 +87,12 @@ public class ConnectCommand extends SimpleCommand {
         if (prefs == null) {
             prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
         }
-        String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);
+        String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
         if (dbUrl == null) {
             dbUrl = prefs.getConnectionUrl();
         }
-        String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
-        String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
+        String username = ctx.getArguments().getArgument(USERNAME_ARG);
+        String password = ctx.getArguments().getArgument(PASSWORD_ARG);
         try {
             // may throw StorageException if storage url is not supported
             service = dbServiceFactory.createDbService(username, password, dbUrl);
