@@ -43,6 +43,7 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
@@ -61,12 +62,11 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
     @Override
     public List<BackendInformation> getBackendInformation(HostRef host) {
         // Sort by order value
-        Query query = storage.createQuery()
-                .from(CATEGORY)
-                .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
+        Query<BackendInformation> query = storage.createQuery(CATEGORY);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
 
         List<BackendInformation> results = new ArrayList<>();
-        Cursor<BackendInformation> cursor = storage.findAllPojos(query, BackendInformation.class);
+        Cursor<BackendInformation> cursor = query.execute();
         while (cursor.hasNext()) {
             BackendInformation backendInfo = cursor.next();
             results.add(backendInfo);
@@ -93,7 +93,9 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
 
     @Override
     public void addBackendInformation(BackendInformation info) {
-        storage.putPojo(BackendInfoDAO.CATEGORY, false, info);
+        Put add = storage.createAdd(BackendInfoDAO.CATEGORY);
+        add.setPojo(info);
+        add.apply();
     }
 
     @Override

@@ -42,15 +42,20 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.redhat.thermostat.storage.model.Pojo;
+
 /**
  * A bag of data
  */
-public class Category {
+public class Category<T extends Pojo> {
+
     private String name;
     private final Map<String, Key<?>> keys;
+    private transient Class<T> dataClass;
+    private String dataClassName;
 
     public Category() {
-        this(null);
+        this(null, null);
     }
 
     /**
@@ -60,20 +65,21 @@ public class Category {
      *
      * @throws IllegalArgumentException if a Category is created with a name that has been used before
      */
-    public Category(String name, Key<?>... keys) {
+    public Category(String name, Class<T> dataClass, Key<?>... keys) {
         Map<String, Key<?>> keysMap = new HashMap<String, Key<?>>();
         for (Key<?> key : keys) {
             keysMap.put(key.getName(), key);
         }
         this.keys = Collections.unmodifiableMap(keysMap);
         setName(name);
+        setDataClass(dataClass);
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    private void setName(String name) {
         if (Categories.contains(name)) {
             throw new IllegalStateException();
         }
@@ -82,6 +88,29 @@ public class Category {
 
         if (name != null) {
             Categories.add(this);
+        }
+    }
+
+    private void setDataClass(Class<T> dataClass) {
+        this.dataClass = dataClass;
+        if (dataClass != null) {
+            dataClassName = dataClass.getName();
+        }
+    }
+
+    public Class<T> getDataClass() {
+        if (dataClass == null && dataClassName != null) {
+            initializeDataClassFromName();
+        }
+        return dataClass;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void initializeDataClassFromName() {
+        try {
+            dataClass = (Class<T>) Class.forName(dataClassName);
+        } catch (ClassNotFoundException e) {
+            throw new StorageException(e);
         }
     }
 
@@ -105,7 +134,7 @@ public class Category {
         if (! (o instanceof Category)) {
             return false;
         }
-        Category other = (Category) o;
+        Category<?> other = (Category<?>) o;
         return Objects.equals(name, other.name) && Objects.equals(keys, other.keys);
     }
 }

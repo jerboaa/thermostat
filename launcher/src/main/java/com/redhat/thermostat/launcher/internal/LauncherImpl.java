@@ -50,7 +50,6 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
@@ -72,6 +71,7 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
@@ -89,14 +89,14 @@ public class LauncherImpl implements Launcher {
     private final Semaphore argsBarrier = new Semaphore(0);
 
     private BundleContext context;
-    private OSGiRegistry registry;
+    private BundleManager registry;
     private final DbServiceFactory dbServiceFactory;
     
-    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, OSGiRegistry registry) {
+    public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry) {
         this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory());
     }
 
-    LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, OSGiRegistry registry,
+    LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
             LoggingInitializer loggingInitializer, DbServiceFactory dbServiceFactory) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;

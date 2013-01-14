@@ -67,7 +67,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
 
@@ -165,6 +164,7 @@ public class QueuedStorageTest {
             // Not used.
             return null;
         }
+
     }
 
     private static class TestPojo implements Pojo {
@@ -173,13 +173,15 @@ public class QueuedStorageTest {
 
     private QueuedStorage queuedStorage;
     private Storage delegateStorage;
+    private Add delegateAdd;
+    private Replace delegateReplace;
+    private Query<?> delegateQuery;
 
     private TestExecutor executor;
     private TestExecutor fileExecutor;
 
     @SuppressWarnings("rawtypes")
     private Cursor expectedResults;
-    private TestPojo expectedResult;
     private InputStream expectedFile;
 
     @SuppressWarnings("unchecked")
@@ -188,16 +190,18 @@ public class QueuedStorageTest {
         executor = new TestExecutor();
         fileExecutor = new TestExecutor();
         delegateStorage = mock(Storage.class);
-        Update update = mock(Update.class);
+
+        delegateAdd = mock(Add.class);
+        delegateReplace = mock(Replace.class);
+
         Remove remove = mock(Remove.class);
-        Query query = mock(Query.class);
-        when(delegateStorage.createUpdate()).thenReturn(update);
+        delegateQuery = mock(Query.class);
+        when(delegateStorage.createAdd(any(Category.class))).thenReturn(delegateAdd);
+        when(delegateStorage.createReplace(any(Category.class))).thenReturn(delegateReplace);
         when(delegateStorage.createRemove()).thenReturn(remove);
-        when(delegateStorage.createQuery()).thenReturn(query);
+        when(delegateStorage.createQuery(any(Category.class))).thenReturn(delegateQuery);
         expectedResults = mock(Cursor.class);
-        when(delegateStorage.findAllPojos(query, TestPojo.class)).thenReturn(expectedResults);
-        expectedResult = new TestPojo();
-        when(delegateStorage.findPojo(query, TestPojo.class)).thenReturn(expectedResult);
+        when(delegateQuery.execute()).thenReturn(expectedResults);
         when(delegateStorage.getCount(any(Category.class))).thenReturn(42l);
         expectedFile = mock(InputStream.class);
         when(delegateStorage.loadFile(anyString())).thenReturn(expectedFile);
@@ -209,26 +213,32 @@ public class QueuedStorageTest {
     @After
     public void tearDown() {
         expectedFile = null;
-        expectedResult = null;
         expectedResults = null;
         queuedStorage = null;
         delegateStorage = null;
         fileExecutor = null;
         executor = null;
+        delegateQuery = null;
     }
 
     @Test
-    public void testPutPojo() {
-        Category category = mock(Category.class);
-        AgentIdPojo pojo = mock(AgentIdPojo.class);
+    public void testInsert() {
+        Category<?> category = mock(Category.class);
+        Pojo pojo = mock(Pojo.class);
 
-        queuedStorage.putPojo(category, true, pojo);
+        Put put = queuedStorage.createReplace(category);
+        put.setPojo(pojo);
+        put.apply();
 
         Runnable r = executor.getTask();
         assertNotNull(r);
         verifyZeroInteractions(delegateStorage);
+        verifyZeroInteractions(delegateReplace);
+
         r.run();
-        verify(delegateStorage, times(1)).putPojo(category, true, pojo);
+        verify(delegateStorage).createReplace(category);
+        verify(delegateReplace).setPojo(pojo);
+        verify(delegateReplace).apply();
         verifyNoMoreInteractions(delegateStorage);
 
         assertNull(fileExecutor.getTask());
@@ -236,19 +246,23 @@ public class QueuedStorageTest {
 
     @Test
     public void testUpdatePojo() {
+        Update delegateUpdate = mock(Update.class);
+        when(delegateStorage.createUpdate(any(Category.class))).thenReturn(delegateUpdate);
 
-        Update update = queuedStorage.createUpdate();
-        verify(delegateStorage).createUpdate();
+        Category<?> category = mock(Category.class);
+
+        Update update = queuedStorage.createUpdate(category);
+        verify(delegateStorage).createUpdate(category);
         verifyNoMoreInteractions(delegateStorage);
 
-        queuedStorage.updatePojo(update);
+        update.apply();
 
         Runnable r = executor.getTask();
         assertNotNull(r);
-        verifyZeroInteractions(delegateStorage);
+        verifyZeroInteractions(delegateUpdate);
         r.run();
-        verify(delegateStorage, times(1)).updatePojo(update);
-        verifyNoMoreInteractions(delegateStorage);
+        verify(delegateUpdate).apply();
+        verifyNoMoreInteractions(delegateUpdate);
 
         assertNull(fileExecutor.getTask());
     }
@@ -289,12 +303,14 @@ public class QueuedStorageTest {
 
     @Test
     public void testFindAllPojos() {
-        Query query = queuedStorage.createQuery();
-        verify(delegateStorage).createQuery();
+        @SuppressWarnings("unchecked")
+        Category<TestPojo> category = mock(Category.class);
+        Query<TestPojo> query = queuedStorage.createQuery(category);
+        verify(delegateStorage).createQuery(category);
         verifyNoMoreInteractions(delegateStorage);
 
-        Cursor<TestPojo> result = queuedStorage.findAllPojos(query, TestPojo.class);
-        verify(delegateStorage).findAllPojos(query, TestPojo.class);
+        Cursor<TestPojo> result = query.execute();
+        verify(delegateQuery).execute();
         assertSame(expectedResults, result);
 
         assertNull(executor.getTask());
@@ -302,22 +318,8 @@ public class QueuedStorageTest {
     }
 
     @Test
-    public void testFindPojo() {
-        Query query = queuedStorage.createQuery();
-        verify(delegateStorage).createQuery();
-        verifyNoMoreInteractions(delegateStorage);
-
-        TestPojo result = queuedStorage.findPojo(query, TestPojo.class);
-        verify(delegateStorage).findPojo(query, TestPojo.class);
-        assertSame(expectedResult, result);
-
-        assertNull(executor.getTask());
-        assertNull(fileExecutor.getTask());
-    }
-
-    @Test
     public void testGetCount() {
-        Category category = mock(Category.class);
+        Category<?> category = mock(Category.class);
 
         long result = queuedStorage.getCount(category);
         assertEquals(42, result);
@@ -380,7 +382,7 @@ public class QueuedStorageTest {
     @Test
     public void testRegisterCategory() {
 
-        Category category = mock(Category.class);
+        Category<?> category = mock(Category.class);
 
         queuedStorage.registerCategory(category);
 

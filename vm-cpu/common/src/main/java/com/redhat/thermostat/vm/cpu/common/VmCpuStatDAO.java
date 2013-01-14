@@ -47,7 +47,7 @@ public interface VmCpuStatDAO {
 
     static final Key<Double> vmCpuLoadKey = new Key<>("cpuLoad", false);
 
-    static final Category vmCpuStatCategory = new Category("vm-cpu-stats",
+    static final Category<VmCpuStat> vmCpuStatCategory = new Category<>("vm-cpu-stats", VmCpuStat.class,
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, vmCpuLoadKey);
 
     public abstract List<VmCpuStat> getLatestVmCpuStats(VmRef ref, long since);

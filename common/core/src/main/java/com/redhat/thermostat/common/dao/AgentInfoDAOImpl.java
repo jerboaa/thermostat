@@ -41,6 +41,7 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
@@ -64,8 +65,8 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAllAgentInformation() {
-        Query query = storage.createQuery().from(CATEGORY);
-        Cursor<AgentInformation> agentCursor = storage.findAllPojos(query, AgentInformation.class);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY);
+        Cursor<AgentInformation> agentCursor = query.execute();
 
         List<AgentInformation> results = new ArrayList<>();
 
@@ -78,11 +79,10 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public List<AgentInformation> getAliveAgents() {
-        Query query = storage.createQuery()
-                .from(CATEGORY)
-                .where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY);
+        query.where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
 
-        Cursor<AgentInformation> agentCursor = storage.findAllPojos(query, AgentInformation.class);
+        Cursor<AgentInformation> agentCursor = query.execute();
 
         List<AgentInformation> results = new ArrayList<>();
 
@@ -95,16 +95,17 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public AgentInformation getAgentInformation(HostRef agentRef) {
-        Query query = storage.createQuery()
-                .from(CATEGORY)
-                .where(Key.AGENT_ID, Criteria.EQUALS, agentRef.getAgentId());
-
-        return storage.findPojo(query, AgentInformation.class);
+        Query<AgentInformation> query = storage.createQuery(CATEGORY);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, agentRef.getAgentId());
+        query.limit(1);
+        return query.execute().next();
     }
 
     @Override
     public void addAgentInformation(AgentInformation agentInfo) {
-        storage.putPojo(AgentInfoDAO.CATEGORY, true, agentInfo);
+        Put replace = storage.createReplace(CATEGORY);
+        replace.setPojo(agentInfo);
+        replace.apply();
     }
 
     @Override
@@ -115,12 +116,13 @@ public class AgentInfoDAOImpl implements AgentInfoDAO {
 
     @Override
     public void updateAgentInformation(AgentInformation agentInfo) {
-        Update update = storage.createUpdate().from(CATEGORY).where(Key.AGENT_ID, agentInfo.getAgentId())
-                                .set(START_TIME_KEY, agentInfo.getStartTime())
-                                .set(STOP_TIME_KEY, agentInfo.getStopTime())
-                                .set(ALIVE_KEY, agentInfo.isAlive())
-                                .set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(CATEGORY);
+        update.where(Key.AGENT_ID, agentInfo.getAgentId());
+        update.set(START_TIME_KEY, agentInfo.getStartTime());
+        update.set(STOP_TIME_KEY, agentInfo.getStopTime());
+        update.set(ALIVE_KEY, agentInfo.isAlive());
+        update.set(CONFIG_LISTEN_ADDRESS, agentInfo.getConfigListenAddress());
+        update.apply();
     }
 
 }

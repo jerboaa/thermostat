@@ -77,9 +77,6 @@ public class HeapSwingView extends HeapView implements SwingComponent {
         stats.addHeapDumperListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
-                stats.disableHeapDumperControl();
-                
                 heapDumperNotifier.fireAction(HeapDumperAction.DUMP_REQUESTED);
             }
         });
@@ -156,6 +153,26 @@ public class HeapSwingView extends HeapView implements SwingComponent {
     }
 
     @Override
+    public void enableHeapDumping() {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stats.enableHeapDumperControl();
+            }
+        });
+    }
+
+    @Override
+    public void disableHeapDumping(final DumpDisabledReason reason) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stats.disableHeapDumperControl(reason);
+            }
+        });
+    }
+
+    @Override
     public void addHeapDump(final HeapDump dump) {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
@@ -211,12 +228,7 @@ public class HeapSwingView extends HeapView implements SwingComponent {
 
     @Override
     public void notifyHeapDumpComplete() {
-        EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                stats.enableHeapDumperControl();
-            }
-        });
+        enableHeapDumping();
     }
 
     @Override

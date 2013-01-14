@@ -65,12 +65,12 @@ import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.web.common.Qualifier;
 import com.redhat.thermostat.web.common.StorageWrapper;
@@ -100,7 +100,7 @@ public class WebStorageEndPoint extends HttpServlet {
     private int currentCategoryId;
 
     private Map<String, Integer> categoryIds;
-    private Map<Integer, Category> categories;
+    private Map<Integer, Category<?>> categories;
 
     public void init() {
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
@@ -126,9 +126,7 @@ public class WebStorageEndPoint extends HttpServlet {
         String uri = req.getRequestURI();
         int lastPartIdx = uri.lastIndexOf("/");
         String cmd = uri.substring(lastPartIdx + 1);
-        if (cmd.equals("find-pojo")) {
-            findPojo(req, resp);
-        } else if (cmd.equals("find-all")) {
+        if (cmd.equals("find-all")) {
             findAll(req, resp);
         } else if (cmd.equals("put-pojo")) {
             putPojo(req, resp);
@@ -207,7 +205,7 @@ public class WebStorageEndPoint extends HttpServlet {
         try {
             String categoryParam = req.getParameter("category");
             int categoryId = gson.fromJson(categoryParam, Integer.class);
-            Category category = categories.get(categoryId);
+            Category<?> category = getCategoryFromId(categoryId);
             long result = storage.getCount(category);
             resp.setStatus(HttpServletResponse.SC_OK);
             resp.setContentType("application/json");
@@ -226,8 +224,8 @@ public class WebStorageEndPoint extends HttpServlet {
         if (categoryIds.containsKey(categoryName)) {
             id = categoryIds.get(categoryName);
         } else {
-            // The following has the side effect of registering the newly deserialized Category in the Categories clas.
-            Category category = gson.fromJson(categoryParam, Category.class);
+            // The following has the side effect of registering the newly deserialized Category in the Categories class.
+            Category<?> category = gson.fromJson(categoryParam, Category.class);
             storage.registerCategory(category);
 
             id = currentCategoryId;
@@ -247,19 +245,18 @@ public class WebStorageEndPoint extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        try {
-            String insertParam = req.getParameter("insert");
-            WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
-            Class<? extends AgentIdPojo> pojoCls = (Class<? extends AgentIdPojo>) Class.forName(insert.getPojoClass());
-            String pojoParam = req.getParameter("pojo");
-            AgentIdPojo pojo = gson.fromJson(pojoParam, pojoCls);
-            int categoryId = insert.getCategoryId();
-            Category category = getCategoryFromId(categoryId);
-            storage.putPojo(category, insert.isReplace(), pojo);
-            resp.setStatus(HttpServletResponse.SC_OK);
-        } catch (ClassNotFoundException ex) {
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-        }
+
+        String insertParam = req.getParameter("insert");
+        WebInsert insert = gson.fromJson(insertParam, WebInsert.class);
+        int categoryId = insert.getCategoryId();
+        Category<?> category = getCategoryFromId(categoryId);
+        Class<? extends Pojo> pojoCls = category.getDataClass();
+        String pojoParam = req.getParameter("pojo");
+        Pojo pojo = gson.fromJson(pojoParam, pojoCls);
+        Put targetPut = insert.isReplace() ? storage.createReplace(category) : storage.createAdd(category);
+        targetPut.setPojo(pojo);
+        targetPut.apply();
+        resp.setStatus(HttpServletResponse.SC_OK);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -282,12 +279,11 @@ public class WebStorageEndPoint extends HttpServlet {
         try {
             String updateParam = req.getParameter("update");
             WebUpdate update = gson.fromJson(updateParam, WebUpdate.class);
-            Update targetUpdate = storage.createUpdate();
-            targetUpdate = targetUpdate.from(getCategoryFromId(update.getCategoryId()));
+            Update targetUpdate = storage.createUpdate(getCategoryFromId(update.getCategoryId()));
             List<Qualifier<?>> qualifiers = update.getQualifiers();
             for (Qualifier qualifier : qualifiers) {
                 assert (qualifier.getCriteria() == Criteria.EQUALS);
-                targetUpdate = targetUpdate.where(qualifier.getKey(), qualifier.getValue());
+                targetUpdate.where(qualifier.getKey(), qualifier.getValue());
             }
             List<WebUpdate.UpdateValue> updates = update.getUpdates();
             if (updates != null) {
@@ -306,7 +302,7 @@ public class WebStorageEndPoint extends HttpServlet {
                     targetUpdate.set(key, value);
                 }
             }
-            storage.updatePojo(targetUpdate);
+            targetUpdate.apply();
             resp.setStatus(HttpServletResponse.SC_OK);
         } catch (ClassNotFoundException ex) {
             ex.printStackTrace();
@@ -315,57 +311,36 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void findPojo(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        try {
-            String queryParam = req.getParameter("query");
-            WebQuery query = gson.fromJson(queryParam, WebQuery.class);
-            Class resultClass = Class.forName(query.getResultClassName());
-            Query targetQuery = constructTargetQuery(query);
-            Object result = storage.findPojo(targetQuery, resultClass);
-            writeResponse(resp, result);
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "result class not found");
-        }
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void findAll(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        try {
-            String queryParam = req.getParameter("query");
-            WebQuery query = gson.fromJson(queryParam, WebQuery.class);
-            Class resultClass = Class.forName(query.getResultClassName());
-            Query targetQuery = constructTargetQuery(query);
-            ArrayList resultList = new ArrayList();
-            Cursor result = storage.findAllPojos(targetQuery, resultClass);
-            while (result.hasNext()) {
-                resultList.add(result.next());
-            }
-            writeResponse(resp, resultList.toArray());
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "result class not found");
+        String queryParam = req.getParameter("query");
+        WebQuery query = gson.fromJson(queryParam, WebQuery.class);
+        Query targetQuery = constructTargetQuery(query);
+        ArrayList resultList = new ArrayList();
+        Cursor result = targetQuery.execute();
+        while (result.hasNext()) {
+            resultList.add(result.next());
         }
+        writeResponse(resp, resultList.toArray());
     }
 
-    private Query constructTargetQuery(WebQuery query) {
-        Query targetQuery = storage.createQuery();
+    private Query<?> constructTargetQuery(WebQuery<? extends Pojo> query) {
         int categoryId = query.getCategoryId();
-        Category category = getCategoryFromId(categoryId);
-        targetQuery = targetQuery.from(category);
+        Category<?> category = getCategoryFromId(categoryId);
+
+        Query<?> targetQuery = storage.createQuery(category);
         List<Qualifier<?>> qualifiers = query.getQualifiers();
         for (Qualifier q : qualifiers) {
-            targetQuery = targetQuery.where(q.getKey(), q.getCriteria(), q.getValue());
+            targetQuery.where(q.getKey(), q.getCriteria(), q.getValue());
         }
         for (Sort s : query.getSorts()) {
-            targetQuery = targetQuery.sort(s.getKey(), s.getDirection());
+            targetQuery.sort(s.getKey(), s.getDirection());
         }
-        targetQuery = targetQuery.limit(query.getLimit());
+        targetQuery.limit(query.getLimit());
         return targetQuery;
     }
 
-    private Category getCategoryFromId(int categoryId) {
-        Category category = categories.get(categoryId);
+    private Category<?> getCategoryFromId(int categoryId) {
+        Category<?> category = categories.get(categoryId);
         return category;
     }
 

@@ -44,22 +44,25 @@ import java.util.Collection;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class CategoryTest {
+
+    private static class TestObj implements Pojo {
+        // Dummy class for testing.
+    }
 
     @Test
     public void testGetKey() {
         Key<String> key1 = new Key<String>("key1", false);
-        Category category = new Category("testGetKey", key1);
+        Category<TestObj> category = new Category<>("testGetKey", TestObj.class, key1);
         assertEquals(key1, category.getKey("key1"));
     }
 
     @Test
     public void testGetNonExistingKey() {
         Key<String> key1 = new Key<String>("key1", false);
-        Category category = new Category("testGetNonExistingKey", key1);
+        Category<TestObj> category = new Category<>("testGetNonExistingKey", TestObj.class, key1);
         assertNull(category.getKey("key2"));
     }
 
@@ -69,7 +72,7 @@ public class CategoryTest {
         Key<String> key2 = new Key<String>("key2", false);
         Key<String> key3 = new Key<String>("key3", false);
         Key<String> key4 = new Key<String>("key4", false);
-        Category category = new Category("testGetKeys", key1, key2, key3, key4);
+        Category<TestObj> category = new Category<>("testGetKeys", TestObj.class, key1, key2, key3, key4);
         assertEquals(4, category.getKeys().size());
         assertTrue(category.getKeys().contains(key1));
         assertTrue(category.getKeys().contains(key2));
@@ -82,7 +85,7 @@ public class CategoryTest {
         Key<String> key1 = new Key<String>("key1", false);
         Key<String> key2 = new Key<String>("key2", false);
         Key<String> key3 = new Key<String>("key3", false);
-        Category category = new Category("verifyThatKeysAreUnmodifiable", key1, key2, key3);
+        Category<TestObj> category = new Category<>("verifyThatKeysAreUnmodifiable", TestObj.class, key1, key2, key3);
 
         Collection<Key<?>> keys = category.getKeys();
 

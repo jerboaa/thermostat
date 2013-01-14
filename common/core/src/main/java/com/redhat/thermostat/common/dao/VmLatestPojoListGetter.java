@@ -50,22 +50,20 @@ import com.redhat.thermostat.storage.model.TimeStampedPojo;
 public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
 
     private final Storage storage;
-    private final Category cat;
-    private final Class<T> resultClass;
+    private final Category<T> cat;
 
-    public VmLatestPojoListGetter(Storage storage, Category cat, Class<T> resultClass) {
+    public VmLatestPojoListGetter(Storage storage, Category<T> cat) {
         this.storage = storage;
         this.cat = cat;
-        this.resultClass = resultClass;
     }
 
     public List<T> getLatest(VmRef vmRef, long since) {
-        Query query = buildQuery(vmRef, since);
+        Query<T> query = buildQuery(vmRef, since);
         return getLatest(query);
     }
 
-    private List<T> getLatest(Query query) {
-        Cursor<T> cursor = storage.findAllPojos(query, resultClass);
+    private List<T> getLatest(Query<T> query) {
+        Cursor<T> cursor = query.execute();
         List<T> result = new ArrayList<>();
         while (cursor.hasNext()) {
             T pojo = cursor.next();
@@ -74,13 +72,12 @@ public class VmLatestPojoListGetter<T extends TimeStampedPojo> {
         return result;
     }
 
-    protected Query buildQuery(VmRef vmRef, long since) {
-        Query query = storage.createQuery()
-                .from(cat)
-                .where(Key.AGENT_ID, Criteria.EQUALS, vmRef.getAgent().getAgentId())
-                .where(Key.VM_ID, Criteria.EQUALS, vmRef.getId())
-                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+    protected Query<T> buildQuery(VmRef vmRef, long since) {
+        Query<T> query = storage.createQuery(cat);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, vmRef.getAgent().getAgentId());
+        query.where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());
+        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         return query;
     }
 

@@ -58,8 +58,8 @@ public interface ThreadDao {
     static final Key<Boolean> THREAD_ALLOCATED_MEMORY_KEY = new Key<Boolean>(THREAD_ALLOCATED_MEMORY, false);
     static final Key<List<String>> SUPPORTED_FEATURES_LIST_KEY = new Key<List<String>>(SUPPORTED_FEATURES_LIST, false);
 
-    static final Category THREAD_CAPABILITIES =
-            new Category("vm-thread-capabilities", Key.AGENT_ID, Key.VM_ID,
+    static final Category<VMThreadCapabilities> THREAD_CAPABILITIES =
+            new Category<>("vm-thread-capabilities", VMThreadCapabilities.class, Key.AGENT_ID, Key.VM_ID,
                          SUPPORTED_FEATURES_LIST_KEY);
 
 
@@ -71,8 +71,8 @@ public interface ThreadDao {
     static final String DAEMON_THREADS = "currentDaemonThreads";
     static final Key<Long> DAEMON_THREADS_KEY = new Key<Long>(DAEMON_THREADS, false);
     
-    static final Category THREAD_SUMMARY =
-            new Category("vm-thread-summary", Key.AGENT_ID, Key.VM_ID,
+    static final Category<ThreadSummary> THREAD_SUMMARY =
+            new Category<>("vm-thread-summary", ThreadSummary.class, Key.AGENT_ID, Key.VM_ID,
                          Key.TIMESTAMP,
                          LIVE_THREADS_KEY, DAEMON_THREADS_KEY);
     
@@ -95,8 +95,8 @@ public interface ThreadDao {
     static final String THREAD_WAIT_COUNT = "threadWaitCount";
     static final Key<Long> THREAD_WAIT_COUNT_KEY = new Key<Long>(THREAD_WAIT_COUNT, false);
     
-    static final Category THREAD_INFO =
-            new Category("vm-thread-info", Key.AGENT_ID, Key.VM_ID,
+    static final Category<ThreadInfoData> THREAD_INFO =
+            new Category<>("vm-thread-info", ThreadInfoData.class, Key.AGENT_ID, Key.VM_ID,
                          Key.TIMESTAMP, THREAD_NAME_KEY, THREAD_ID_KEY,
                          THREAD_STATE_KEY,
                          THREAD_CPU_TIME_KEY,

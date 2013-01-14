@@ -42,6 +42,7 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
@@ -62,21 +63,23 @@ class HostInfoDAOImpl implements HostInfoDAO {
 
     @Override
     public HostInfo getHostInfo(HostRef ref) {
-        Query query = storage.createQuery()
-                .from(hostInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
-        HostInfo result = storage.findPojo(query, HostInfo.class);
+        Query<HostInfo> query = storage.createQuery(hostInfoCategory);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
+        query.limit(1);
+        HostInfo result = query.execute().next();
         return result;
     }
 
     @Override
     public void putHostInfo(HostInfo info) {
-        storage.putPojo(hostInfoCategory, false, info);
+        Put add = storage.createAdd(hostInfoCategory);
+        add.setPojo(info);
+        add.apply();
     }
 
     @Override
     public Collection<HostRef> getHosts() {
-        Query allHosts = storage.createQuery().from(hostInfoCategory);
+        Query<HostInfo> allHosts = storage.createQuery(hostInfoCategory);
         return getHosts(allHosts);
     }
 
@@ -85,10 +88,8 @@ class HostInfoDAOImpl implements HostInfoDAO {
         List<HostRef> hosts = new ArrayList<>();
         List<AgentInformation> agentInfos = agentInfoDao.getAliveAgents();
         for (AgentInformation agentInfo : agentInfos) {
-            Query filter = storage.createQuery()
-                    .from(hostInfoCategory)
-                    .where(Key.AGENT_ID, Criteria.EQUALS, agentInfo.getAgentId());
-
+            Query<HostInfo> filter = storage.createQuery(hostInfoCategory);
+            filter.where(Key.AGENT_ID, Criteria.EQUALS, agentInfo.getAgentId());
             hosts.addAll(getHosts(filter));
         }
 
@@ -96,10 +97,10 @@ class HostInfoDAOImpl implements HostInfoDAO {
     }
 
 
-    private Collection<HostRef> getHosts(Query filter) {
+    private Collection<HostRef> getHosts(Query<HostInfo> filter) {
         Collection<HostRef> hosts = new ArrayList<HostRef>();
         
-        Cursor<HostInfo> hostsCursor = storage.findAllPojos(filter, HostInfo.class);
+        Cursor<HostInfo> hostsCursor = filter.execute();
         while(hostsCursor.hasNext()) {
             HostInfo host = hostsCursor.next();
             String agentId = host.getAgentId();

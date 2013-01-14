@@ -68,6 +68,10 @@ public enum LocaleResources {
     HEAP_DUMP_OBJECT_FIND_ROOT,
     
     OBJECT_ROOTS_VIEW_TITLE,
+
+    TRIGGER_HEAP_DUMP,
+    HEAP_DUMP_IN_PROGRESS,
+    PROCESS_EXITED,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.vm.heap.analysis.client.locale.strings";

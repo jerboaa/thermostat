@@ -39,7 +39,6 @@ package com.redhat.thermostat.storage.core;
 import java.io.InputStream;
 import java.util.UUID;
 
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
@@ -53,15 +52,12 @@ public interface Storage {
 
     String getAgentId();
 
-    void registerCategory(Category category);
+    void registerCategory(Category<?> category);
 
     Connection getConnection();
 
-    // TODO why does putPojo have an agent id param but not updatePojo and removePojo?
-
-    void putPojo(Category category, boolean replace, AgentIdPojo pojo);
-
-    void updatePojo(Update update);
+    Add createAdd(Category<?> category);
+    Replace createReplace(Category<?> category);
 
     void removePojo(Remove remove);
 
@@ -70,19 +66,17 @@ public interface Storage {
      */
     void purge();
 
-    <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass);
-
-    <T extends Pojo> T findPojo(Query query, Class<T> resultClass);
-
-    long getCount(Category category);
+    long getCount(Category<?> category);
 
     void saveFile(String filename, InputStream data);
 
     InputStream loadFile(String filename);
 
-    Query createQuery();
-    Update createUpdate();
+    <T extends Pojo> Query<T> createQuery(Category<T> category);
+
+    Update createUpdate(Category<?> category);
     Remove createRemove();
+
 
     void shutdown();
 

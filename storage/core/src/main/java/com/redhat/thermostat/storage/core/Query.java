@@ -36,10 +36,12 @@
 
 package com.redhat.thermostat.storage.core;
 
+import com.redhat.thermostat.storage.model.Pojo;
+
 /**
  * Describes what data should be fetched.
  */
-public interface Query {
+public interface Query<T extends Pojo> {
 
     enum Criteria {
         EQUALS,
@@ -65,11 +67,12 @@ public interface Query {
         }
     }
 
-    Query from(Category category);
+    <S> void where(Key<S> key, Criteria criteria, S value);
 
-    <T> Query where(Key<T> key, Criteria criteria, T value);
+    void sort(Key<?> key, SortDirection direction);
 
-    <T> Query sort(Key<T> key, SortDirection direction);
+    void limit(int n);
 
-    Query limit(int n);
+    Cursor<T> execute();
+
 }

@@ -51,7 +51,7 @@ public interface BackendInfoDAO {
     static final Key<List<Integer>> PIDS_TO_MONITOR = new Key<>("pids", false);
     static final Key<Integer> ORDER_VALUE = new Key<>("orderValue", false);
 
-    static final Category CATEGORY = new Category("backend-info",
+    static final Category<BackendInformation> CATEGORY = new Category<>("backend-info", BackendInformation.class,
             Key.AGENT_ID,
             BACKEND_NAME,
             BACKEND_DESCRIPTION,

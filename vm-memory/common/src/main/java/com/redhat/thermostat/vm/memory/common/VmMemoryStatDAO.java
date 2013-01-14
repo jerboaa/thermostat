@@ -48,7 +48,7 @@ public interface VmMemoryStatDAO {
 
     static final Key<Generation[]> generationsKey = new Key<>("generations", false);
 
-    static final Category vmMemoryStatsCategory = new Category("vm-memory-stats",
+    static final Category<VmMemoryStat> vmMemoryStatsCategory = new Category<>("vm-memory-stats", VmMemoryStat.class,
             Key.AGENT_ID, Key.VM_ID, Key.TIMESTAMP, generationsKey);
 
     public VmMemoryStat getLatestMemoryStat(VmRef ref);

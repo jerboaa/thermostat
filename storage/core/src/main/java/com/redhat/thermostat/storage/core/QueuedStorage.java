@@ -42,10 +42,59 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.redhat.thermostat.storage.model.AgentIdPojo;
 import com.redhat.thermostat.storage.model.Pojo;
 
 public final class QueuedStorage implements Storage {
+
+    private class QueuedReplace extends BasePut implements Replace {
+
+        @Override
+        public void apply() {
+            replaceImpl(getCategory(), getPojo());
+        }
+        
+    }
+
+    private class QueuedAdd extends BasePut implements Add {
+
+        @Override
+        public void apply() {
+            addImpl(getCategory(), getPojo());
+        }
+        
+    }
+
+    private class QueuedUpdate implements Update {
+        private Update delegateUpdate;
+
+        QueuedUpdate(Update delegateUpdate) {
+            this.delegateUpdate = delegateUpdate;
+        }
+
+        @Override
+        public <T> void where(Key<T> key, T value) {
+            delegateUpdate.where(key,  value);
+            
+        }
+
+        @Override
+        public <T> void set(Key<T> key, T value) {
+            delegateUpdate.set(key, value);
+        }
+
+        @Override
+        public void apply() {
+            executor.execute(new Runnable() {
+                
+                @Override
+                public void run() {
+                    delegateUpdate.apply();
+                }
+
+            });
+        }
+
+    }
 
     private Storage delegate;
     private ExecutorService executor;
@@ -79,27 +128,43 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public void putPojo(final Category category, final boolean replace, final AgentIdPojo pojo) {
+    public Add createAdd(Category<?> into) {
+        QueuedAdd add = new QueuedAdd();
+        add.setCategory(into);
+        return add;
+    }
 
+    @Override
+    public Replace createReplace(Category<?> into) {
+        QueuedReplace replace = new QueuedReplace();
+        replace.setCategory(into);
+        return replace;
+    }
+
+    private void replaceImpl(final Category<?> category, final Pojo pojo) {
+        
         executor.execute(new Runnable() {
             
             @Override
             public void run() {
-                delegate.putPojo(category, replace, pojo);
+                Replace replace = delegate.createReplace(category);
+                replace.setPojo(pojo);
+                replace.apply();
             }
 
         });
 
     }
 
-    @Override
-    public void updatePojo(final Update update) {
-
+    private void addImpl(final Category<?> category, final Pojo pojo) {
+        
         executor.execute(new Runnable() {
             
             @Override
             public void run() {
-                delegate.updatePojo(update);
+                Add add = delegate.createAdd(category);
+                add.setPojo(pojo);
+                add.apply();
             }
 
         });
@@ -134,14 +199,8 @@ public final class QueuedStorage implements Storage {
 
     }
 
-    @Override
-    public <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
-        return delegate.findAllPojos(query, resultClass);
-    }
-
-    @Override
-    public <T extends Pojo> T findPojo(Query query, Class<T> resultClass) {
-        return delegate.findPojo(query, resultClass);
+    <T extends Pojo> Cursor<T> findAllPojos(Query query, Class<T> resultClass) {
+        return query.execute();
     }
 
     @Override
@@ -169,13 +228,14 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public Query createQuery() {
-        return delegate.createQuery();
+    public <T extends Pojo> Query<T> createQuery(Category<T> category) {
+        return delegate.createQuery(category);
     }
 
     @Override
-    public Update createUpdate() {
-        return delegate.createUpdate();
+    public Update createUpdate(Category<?> category) {
+        QueuedUpdate update = new QueuedUpdate(delegate.createUpdate(category));
+        return update;
     }
 
     @Override
@@ -203,7 +263,7 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public void registerCategory(final Category category) {
+    public void registerCategory(final Category<?> category) {
         delegate.registerCategory(category);
     }
 

@@ -39,35 +39,25 @@ package com.redhat.thermostat.web.common;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import com.redhat.thermostat.storage.core.AbstractQuery;
-import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.model.Pojo;
 
-public class WebQuery extends AbstractQuery {
+public class WebQuery<T extends Pojo> extends AbstractQuery<T> {
 
     private List<Qualifier<?>> qualifiers;
-    private String resultClassName;
-
-    private transient Map<Category, Integer> categoryIdMap;
 
     private int categoryId;
 
     public WebQuery() {
-        this(null);
+        this(-1);
     }
 
-    public WebQuery(Map<Category, Integer> categoryIdMap) {
+    public WebQuery(int categoryId) {
         qualifiers = new ArrayList<>();
-        this.categoryIdMap = categoryIdMap;
-    }
-
-    @Override
-    public WebQuery from(Category category) {
-        categoryId = categoryIdMap.get(category);
-        return this;
+        this.categoryId = categoryId;
     }
 
     public int getCategoryId() {
@@ -79,9 +69,8 @@ public class WebQuery extends AbstractQuery {
     }
 
     @Override
-    public <T> WebQuery where(Key<T> key, Criteria criteria, T value) {
+    public <S> void where(Key<S> key, Criteria criteria, S value) {
         qualifiers.add(new Qualifier<>(key, criteria, value));
-        return this;
     }
 
     public List<Qualifier<?>> getQualifiers() {
@@ -92,12 +81,10 @@ public class WebQuery extends AbstractQuery {
         this.qualifiers = qualifiers;
     }
 
-    public String getResultClassName() {
-        return resultClassName;
-    }
-
-    public void setResultClassName(String resultClassName) {
-        this.resultClassName = resultClassName;
+    @Override
+    public Cursor<T> execute() {
+        // This should only ever be called when created from WebStorage, which provides its own subclass.
+        throw new IllegalStateException();
     }
 
 }

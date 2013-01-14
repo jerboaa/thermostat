@@ -39,9 +39,9 @@ package com.redhat.thermostat.vm.memory.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -54,17 +54,17 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
-import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
-import com.redhat.thermostat.vm.memory.common.internal.VmMemoryStatDAOImpl;
 
 public class VmMemoryStatDAOTest {
 
@@ -74,7 +74,7 @@ public class VmMemoryStatDAOTest {
     private Storage storage;
     private VmRef vmRef;
 
-    private MockQuery query;
+    private Query query;
     private Cursor<VmMemoryStat> cursor;
 
     @SuppressWarnings("unchecked")
@@ -90,11 +90,11 @@ public class VmMemoryStatDAOTest {
         when(vmRef.getId()).thenReturn(VM_ID);
 
         storage = mock(Storage.class);
-        query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
+        query = mock(Query.class);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
 
         cursor = mock(Cursor.class);
-        when(storage.findAllPojos(any(Query.class), same(VmMemoryStat.class))).thenReturn(cursor);
+        when(query.execute()).thenReturn(cursor);
 
         when(cursor.hasNext()).thenReturn(false);
 
@@ -136,14 +136,16 @@ public class VmMemoryStatDAOTest {
 
         verifyQuery();
 
-        assertTrue(query.hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l));
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, 123l);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
     }
 
     private void verifyQuery() {
 
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID));
-        assertTrue(query.hasWhereClause(Key.VM_ID, Criteria.EQUALS, VM_ID));
-        assertTrue(query.hasSort(Key.TIMESTAMP, Query.SortDirection.DESCENDING));
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, VM_ID);
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
     }
 
     @Test
@@ -152,8 +154,9 @@ public class VmMemoryStatDAOTest {
         when(cursor.next()).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(new MockQuery());
-        when(storage.findAllPojos(any(Query.class), same(VmMemoryStat.class))).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
 
         VmMemoryStatDAO impl = new VmMemoryStatDAOImpl(storage);
         VmMemoryStat latest = impl.getLatestMemoryStat(vmRef);
@@ -194,9 +197,14 @@ public class VmMemoryStatDAOTest {
         VmMemoryStat stat = new VmMemoryStat(1, 2, generations.toArray(new Generation[generations.size()]));
 
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        
         VmMemoryStatDAO dao = new VmMemoryStatDAOImpl(storage);
         dao.putVmMemoryStat(stat);
 
-        verify(storage).putPojo(VmMemoryStatDAO.vmMemoryStatsCategory, false, stat);
+        verify(storage).createAdd(VmMemoryStatDAO.vmMemoryStatsCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
     }
 }

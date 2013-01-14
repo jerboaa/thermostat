@@ -42,9 +42,10 @@ import com.redhat.thermostat.common.dao.VmLatestPojoListGetter;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
@@ -56,18 +57,17 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
     VmMemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmMemoryStatsCategory);
-        getter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory, VmMemoryStat.class);
+        getter = new VmLatestPojoListGetter<>(storage, vmMemoryStatsCategory);
     }
 
     @Override
     public VmMemoryStat getLatestMemoryStat(VmRef ref) {
-        Query query = storage.createQuery()
-                .from(vmMemoryStatsCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
-                .where(Key.VM_ID, Criteria.EQUALS, ref.getId())
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING)
-                .limit(1);
-        Cursor<VmMemoryStat> cursor = storage.findAllPojos(query, VmMemoryStat.class);
+        Query<VmMemoryStat> query = storage.createQuery(vmMemoryStatsCategory);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId());
+        query.where(Key.VM_ID, Criteria.EQUALS, ref.getId());
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        query.limit(1);
+        Cursor<VmMemoryStat> cursor = query.execute();
         if (cursor.hasNext()) {
             return cursor.next();
         }
@@ -76,7 +76,9 @@ class VmMemoryStatDAOImpl implements VmMemoryStatDAO {
 
     @Override
     public void putVmMemoryStat(VmMemoryStat stat) {
-        storage.putPojo(vmMemoryStatsCategory, false, stat);
+        Put add = storage.createAdd(vmMemoryStatsCategory);
+        add.setPojo(stat);
+        add.apply();
     }
 
     @Override

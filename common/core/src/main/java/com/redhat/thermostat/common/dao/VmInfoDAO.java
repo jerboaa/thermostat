@@ -61,7 +61,7 @@ public interface VmInfoDAO extends Countable {
     static final Key<Long> startTimeKey = new Key<>("startTimeStamp", false);
     static final Key<Long> stopTimeKey = new Key<>("stopTimeStamp", false);
 
-    static final Category vmInfoCategory = new Category("vm-info",
+    static final Category<VmInfo> vmInfoCategory = new Category<>("vm-info", VmInfo.class,
             Key.AGENT_ID, Key.VM_ID, vmPidKey, runtimeVersionKey, javaHomeKey,
             mainClassKey, commandLineKey,
             vmArgumentsKey, vmNameKey, vmInfoKey, vmVersionKey,

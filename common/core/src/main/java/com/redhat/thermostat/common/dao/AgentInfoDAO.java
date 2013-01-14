@@ -49,7 +49,7 @@ public interface AgentInfoDAO extends Countable {
     static final Key<Boolean> ALIVE_KEY = new Key<>("alive", false);
     static final Key<String> CONFIG_LISTEN_ADDRESS = new Key<>("configListenAddress", false);
 
-    static final Category CATEGORY = new Category("agent-config",
+    static final Category<AgentInformation> CATEGORY = new Category<>("agent-config", AgentInformation.class,
             Key.AGENT_ID,
             START_TIME_KEY,
             STOP_TIME_KEY,

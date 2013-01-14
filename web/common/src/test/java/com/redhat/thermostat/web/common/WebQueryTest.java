@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.web.common;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 
 import java.util.HashMap;
 import java.util.List;
@@ -47,19 +46,22 @@ import org.junit.Test;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.web.common.Qualifier;
-import com.redhat.thermostat.web.common.WebQuery;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class WebQueryTest {
+
+    private static class TestObj implements Pojo {
+        
+    }
 
     @Test
     public void test() {
         Key<String> key1 = new Key<>("testkey", true);
-        Category category = new Category("test", key1);
+        Category<TestObj> category = new Category<>("test", TestObj.class, key1);
         Map<Category,Integer> categoryIdMap = new HashMap<>();
         categoryIdMap.put(category, 42);
-        WebQuery query = new WebQuery(categoryIdMap);
-        query.from(category).where(key1, Criteria.EQUALS, "fluff");
+        WebQuery query = new WebQuery(42);
+        query.where(key1, Criteria.EQUALS, "fluff");
 
         List<Qualifier<?>> qualifiers = query.getQualifiers();
         assertEquals(1, qualifiers.size());

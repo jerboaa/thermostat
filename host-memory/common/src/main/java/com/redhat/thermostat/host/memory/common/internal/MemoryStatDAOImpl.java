@@ -41,6 +41,7 @@ import java.util.List;
 import com.redhat.thermostat.common.dao.HostLatestPojoListGetter;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.MemoryStat;
 
@@ -53,7 +54,7 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
     MemoryStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(memoryStatCategory);
-        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory, MemoryStat.class);
+        this.getter = new HostLatestPojoListGetter<>(storage, memoryStatCategory);
     }
 
     @Override
@@ -63,7 +64,9 @@ public class MemoryStatDAOImpl implements MemoryStatDAO {
 
     @Override
     public void putMemoryStat(MemoryStat stat) {
-        storage.putPojo(memoryStatCategory, false, stat);
+        Put add = storage.createAdd(memoryStatCategory);
+        add.setPojo(stat);
+        add.apply();
     }
 
     @Override

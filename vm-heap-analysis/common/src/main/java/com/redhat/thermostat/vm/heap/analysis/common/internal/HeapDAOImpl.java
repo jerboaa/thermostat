@@ -53,6 +53,7 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
@@ -86,7 +87,10 @@ public class HeapDAOImpl implements HeapDAO {
         if (histogramData != null) {
             heapInfo.setHistogramId(histogramId);
         }
-        storage.putPojo(heapInfoCategory, false, heapInfo);
+        Put add = storage.createAdd(heapInfoCategory);
+        add.setPojo(heapInfo);
+        add.apply();
+
         if (heapDumpData != null) {
             storage.saveFile(heapDumpId, new FileInputStream(heapDumpData));
         }
@@ -106,11 +110,10 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public Collection<HeapInfo> getAllHeapInfo(VmRef vm) {
-        Query query = storage.createQuery()
-                .from(heapInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, vm.getAgent().getAgentId())
-                .where(Key.VM_ID, Criteria.EQUALS, vm.getId());
-        Cursor<HeapInfo> cursor = storage.findAllPojos(query, HeapInfo.class);
+        Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, vm.getAgent().getAgentId());
+        query.where(Key.VM_ID, Criteria.EQUALS, vm.getId());
+        Cursor<HeapInfo> cursor = query.execute();
         Collection<HeapInfo> heapInfos = new ArrayList<>();
         while (cursor.hasNext()) {
             heapInfos.add(cursor.next());
@@ -137,12 +140,12 @@ public class HeapDAOImpl implements HeapDAO {
 
     @Override
     public HeapInfo getHeapInfo(String heapId) {
-        Query query = storage.createQuery()
-                .from(heapInfoCategory)
-                .where(heapIdKey, Criteria.EQUALS, heapId);
+        Query<HeapInfo> query = storage.createQuery(heapInfoCategory);
+        query.where(heapIdKey, Criteria.EQUALS, heapId);
+        query.limit(1);
         HeapInfo found = null;
         try {
-            found = storage.findPojo(query, HeapInfo.class);
+            found = query.execute().next();
         } catch (IllegalArgumentException iae) {
             /*
              * if the heap id is not found, we get a nice

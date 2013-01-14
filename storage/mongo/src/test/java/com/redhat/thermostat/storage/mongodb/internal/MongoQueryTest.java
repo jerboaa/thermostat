@@ -38,28 +38,50 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.mongodb.internal.MongoQuery;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class MongoQueryTest {
 
+    private static class TestClass implements Pojo {
+        
+    }
+
+    private static MongoStorage storage;
+    private static Category<TestClass> category;
+
+    @BeforeClass
+    public static void setUp() {
+        storage = mock(MongoStorage.class);
+        category = new Category<>("some-collection", TestClass.class);
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        storage = null;
+        category = null;
+    }
+
     @Test
     public void testEmptyQuery() {
-        MongoQuery query = new MongoQuery();
+        
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
         DBObject mongoQuery = query.getGeneratedQuery();
         assertTrue(mongoQuery.keySet().isEmpty());
     }
 
     @Test
     public void testCollectionName() {
-        MongoQuery query = new MongoQuery().from(new Category("some-collection"));
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
         assertEquals("some-collection", query.getCategory().getName());
     }
 
@@ -100,7 +122,8 @@ public class MongoQueryTest {
     }
 
     private DBObject generateSimpleWhereQuery(String key, Criteria criteria, Object value) {
-        MongoQuery query = new MongoQuery().where(key, criteria, value);
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
+        query.where(key, criteria, value);
         return query.getGeneratedQuery();
     }
 

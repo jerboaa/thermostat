@@ -86,9 +86,11 @@ import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.test.FreePortFinder;
 import com.redhat.thermostat.test.FreePortFinder.TryPort;
 import com.redhat.thermostat.web.common.Qualifier;
@@ -111,7 +113,7 @@ public class WebStorageTest {
     private String requestURI;
     private int responseStatus;
 
-    private static Category category;
+    private static Category<TestObj> category;
     private static Key<String> key1;
     private static Key<Integer> key2;
 
@@ -121,7 +123,7 @@ public class WebStorageTest {
     public static void setupCategory() {
         key1 = new Key<>("property1", true);
         key2 = new Key<>("property2", true);
-        category = new Category("test", key1);
+        category = new Category<>("test", TestObj.class, key1);
     }
 
     @AfterClass
@@ -219,35 +221,6 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testFindPojo() throws UnsupportedEncodingException, IOException {
-
-        TestObj obj = new TestObj();
-        obj.setProperty1("fluffor");
-        Gson gson = new Gson();
-        responseBody = gson.toJson(obj);
-
-        Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
-
-        TestObj result = storage.findPojo(query, TestObj.class);
-        StringReader reader = new StringReader(requestBody);
-        BufferedReader bufRead = new BufferedReader(reader);
-        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
-        String[] parts = line.split("=");
-        assertEquals("query", parts[0]);
-        WebQuery restQuery = gson.fromJson(parts[1], WebQuery.class);
-
-        assertEquals(42, restQuery.getCategoryId());
-        List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
-        assertEquals(1, qualifiers.size());
-        Qualifier<?> qual = qualifiers.get(0);
-        assertEquals(new Key<String>("property1", true), qual.getKey());
-        assertEquals(Criteria.EQUALS, qual.getCriteria());
-        assertEquals("fluff", qual.getValue());
-
-        assertEquals("fluffor", result.getProperty1());
-    }
-
-    @Test
     public void testFindAllPojos() throws UnsupportedEncodingException, IOException {
 
         TestObj obj1 = new TestObj();
@@ -258,15 +231,16 @@ public class WebStorageTest {
         responseBody = gson.toJson(Arrays.asList(obj1, obj2));
 
         Key<String> key1 = new Key<>("property1", true);
-        Query query = storage.createQuery().from(category).where(key1, Criteria.EQUALS, "fluff");
+        Query<TestObj> query = storage.createQuery(category);
+        query.where(key1, Criteria.EQUALS, "fluff");
 
-        Cursor<TestObj> results = storage.findAllPojos(query, TestObj.class);
+        Cursor<TestObj> results = query.execute();
         StringReader reader = new StringReader(requestBody);
         BufferedReader bufRead = new BufferedReader(reader);
         String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
         String[] parts = line.split("=");
         assertEquals("query", parts[0]);
-        WebQuery restQuery = gson.fromJson(parts[1], WebQuery.class);
+        WebQuery<?> restQuery = gson.fromJson(parts[1], WebQuery.class);
 
         assertEquals(42, restQuery.getCategoryId());
         List<Qualifier<?>> qualifiers = restQuery.getQualifiers();
@@ -289,7 +263,13 @@ public class WebStorageTest {
         TestObj obj = new TestObj();
         obj.setProperty1("fluff");
 
-        storage.putPojo(category, true, obj);
+        // We need an agentId, so that we can check automatic insert of agentId.
+        UUID agentId = new UUID(1, 2);
+        storage.setAgentId(agentId);
+
+        Put replace = storage.createReplace(category);
+        replace.setPojo(obj);
+        replace.apply();
 
         Gson gson = new Gson();
         StringReader reader = new StringReader(requestBody);
@@ -302,12 +282,14 @@ public class WebStorageTest {
         WebInsert insert = gson.fromJson(parts[1], WebInsert.class);
         assertEquals(42, insert.getCategoryId());
         assertEquals(true, insert.isReplace());
-        assertEquals(TestObj.class.getName(), insert.getPojoClass());
 
         parts = params[1].split("=");
         assertEquals(2, parts.length);
         assertEquals("pojo", parts[0]);
-        Object resultObj = gson.fromJson(parts[1], Class.forName(insert.getPojoClass()));
+        Object resultObj = gson.fromJson(parts[1], TestObj.class);
+
+        // Set agentId on expected object, because we expect WebStorage to insert it for us.
+        obj.setAgentId(agentId.toString());
         assertEquals(obj, resultObj);
     }
 
@@ -352,21 +334,19 @@ public class WebStorageTest {
 
     @Test
     public void testCreateUpdate() {
-        WebUpdate update = (WebUpdate) storage.createUpdate();
+        WebUpdate update = (WebUpdate) storage.createUpdate(category);
         assertNotNull(update);
-        update = update.from(category);
         assertEquals(42, update.getCategoryId());
-        assertNotNull(update);
-        update = update.where(key1, "test");
-        assertNotNull(update);
+
+        update.where(key1, "test");
         List<Qualifier<?>> qualifiers = update.getQualifiers();
         assertEquals(1, qualifiers.size());
         Qualifier<?> qualifier = qualifiers.get(0);
         assertEquals(key1, qualifier.getKey());
         assertEquals(Criteria.EQUALS, qualifier.getCriteria());
         assertEquals("test", qualifier.getValue());
-        update = update.set(key1, "fluff");
-        assertNotNull(update);
+
+        update.set(key1, "fluff");
         List<WebUpdate.UpdateValue> updates = update.getUpdates();
         assertEquals(1, updates.size());
         assertEquals("fluff", updates.get(0).getValue());
@@ -377,8 +357,11 @@ public class WebStorageTest {
     @Test
     public void testUpdate() throws UnsupportedEncodingException, IOException, JsonSyntaxException, ClassNotFoundException {
 
-        WebUpdate update = storage.createUpdate().from(category).where(key1, "test").set(key1, "fluff").set(key2, 42);
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(category);
+        update.where(key1, "test");
+        update.set(key1, "fluff");
+        update.set(key2, 42);
+        update.apply();
 
         Gson gson = new Gson();
         StringReader reader = new StringReader(requestBody);

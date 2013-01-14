@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
@@ -46,6 +49,9 @@ import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.verifyNew;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Dictionary;
 import java.util.Hashtable;
@@ -55,41 +61,55 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
+import org.osgi.framework.launch.Framework;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
+import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandInfo;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.utils.ServiceRegistry;
 import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.launcher.BundleManager;
+import com.redhat.thermostat.launcher.internal.Activator.RegisterLauncherCustomizer;
+import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({Activator.class})
+@PrepareForTest({Activator.class, Activator.RegisterLauncherCustomizer.class, FrameworkUtil.class})
 public class ActivatorTest {
 
     private BundleContext context;
     private MultipleServiceTracker tracker;
     private ServiceReference registryServiceReference, helpCommandReference;
     private ServiceRegistration launcherServiceRegistration, helpCommandRegistration;
-    private OSGiRegistry registryService;
+    private BundleManager registryService;
     private Command helpCommand;
 
     @Before
     public void setUp() throws Exception {
+        Path tempDir = createStubThermostatHome();
+        System.setProperty("THERMOSTAT_HOME", tempDir.toString());
+        
         context = mock(BundleContext.class);
+        setupOsgiRegistryImplMock();
 
         registryServiceReference = mock(ServiceReference.class);
         launcherServiceRegistration = mock(ServiceRegistration.class);
-        registryService = mock(OSGiRegistry.class);
-        when(context.getServiceReference(eq(OSGiRegistry.class))).thenReturn(registryServiceReference);
+        registryService = mock(BundleManager.class);
+        when(context.getServiceReference(eq(BundleManager.class))).thenReturn(registryServiceReference);
         when(context.getService(eq(registryServiceReference))).thenReturn(registryService);
         when(context.registerService(eq(Launcher.class.getName()), any(), (Dictionary) isNull())).
                 thenReturn(launcherServiceRegistration);
@@ -116,32 +136,95 @@ public class ActivatorTest {
         tracker = mock(MultipleServiceTracker.class);
         whenNew(MultipleServiceTracker.class).
                 withParameterTypes(BundleContext.class, Class[].class, Action.class).
-                withArguments(eq(context), eq(new Class[] {OSGiRegistry.class, Keyring.class}),
+                withArguments(eq(context), eq(new Class[] {BundleManager.class, Keyring.class}),
                         isA(Action.class)).thenReturn(tracker);
     }
 
     @Test
     public void testActivatorLifecycle() throws Exception {
+        ArgumentCaptor<RegisterLauncherCustomizer> customizerCaptor = ArgumentCaptor.forClass(RegisterLauncherCustomizer.class);
+        ServiceTracker mockTracker = mock(ServiceTracker.class);
+        whenNew(ServiceTracker.class).withParameterTypes(BundleContext.class, Class.class, ServiceTrackerCustomizer.class).withArguments(eq(context),
+                any(Keyring.class), customizerCaptor.capture()).thenReturn(mockTracker);
+        
         Activator activator = new Activator();
-
         activator.start(context);
 
         Hashtable<String, Object> props = new Hashtable<>();
         props.put(ServiceRegistry.SERVICE_NAME, "help");
         verify(context).registerService(eq(Command.class.getName()), isA(HelpCommand.class), eq(props));
 
-        ArgumentCaptor<Action> actionCaptor = ArgumentCaptor.forClass(Action.class);
-        verifyNew(MultipleServiceTracker.class).withArguments(eq(context),
-                eq(new Class[] {OSGiRegistry.class, Keyring.class}),
-                actionCaptor.capture());
-        Action action = actionCaptor.getValue();
-
-        action.dependenciesAvailable(isA(Map.class));
-        verify(context).registerService(eq(Launcher.class.getName()), isA(Launcher.class), (Dictionary) isNull());
-
+        verify(mockTracker).open();
+        
+        RegisterLauncherCustomizer customizer = customizerCaptor.getValue();
+        assertNotNull(customizer);
         activator.stop(context);
-        // osgi will take care of unregistration on bundle stop
-        // verify(launcherServiceRegistration).unregister();
-        verify(tracker).close();
+        verify(mockTracker).close();
+    }
+    
+    @Test
+    public void testServiceTrackerCustomizer() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        ArgumentCaptor<RegisterLauncherCustomizer> customizerCaptor = ArgumentCaptor.forClass(RegisterLauncherCustomizer.class);
+        ServiceTracker mockTracker = mock(ServiceTracker.class);
+        whenNew(ServiceTracker.class).withParameterTypes(BundleContext.class, Class.class, ServiceTrackerCustomizer.class).withArguments(eq(context),
+                any(Keyring.class), customizerCaptor.capture()).thenReturn(mockTracker);
+        
+        Activator activator = new Activator();
+        context.registerService(Keyring.class, mock(Keyring.class), null);
+        activator.start(context);
+        
+        assertTrue(context.isServiceRegistered(Command.class.getName(), HelpCommand.class));
+        
+        RegisterLauncherCustomizer customizer = customizerCaptor.getValue();
+        assertNotNull(customizer);
+        Keyring keyringService = mock(Keyring.class);
+        context.registerService(Keyring.class, keyringService, null);
+        ServiceReference ref = context.getServiceReference(Keyring.class);
+        customizer.addingService(ref);
+        
+        assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CommandInfoSourceImpl.class).getClass()));
+        assertTrue(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
+        assertTrue(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
+
+        customizer.removedService(null, null);
+        
+        assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CommandInfoSourceImpl.class));
+        assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
+        assertFalse(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
+    }
+    
+    private Path createStubThermostatHome() throws Exception {
+        Path tempDir = Files.createTempDirectory("test");
+        tempDir.toFile().deleteOnExit();
+        System.setProperty("THERMOSTAT_HOME", tempDir.toString());
+        
+        File tempEtc = new File(tempDir.toFile(), "etc");
+        tempEtc.mkdirs();
+        tempEtc.deleteOnExit();
+        
+        File tempProps = new File(tempEtc, "osgi-export.properties");
+        tempProps.createNewFile();
+        tempProps.deleteOnExit();
+
+        File tempBundleProps = new File(tempEtc, "bundles.properties");
+        tempBundleProps.createNewFile();
+        tempBundleProps.deleteOnExit();
+        
+        File tempLibs = new File(tempDir.toFile(), "libs");
+        tempLibs.mkdirs();
+        tempLibs.deleteOnExit();
+        return tempDir;
+    }
+
+    private void setupOsgiRegistryImplMock() {
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle mockBundle = mock(Bundle.class);
+        when(FrameworkUtil.getBundle(BundleManagerImpl.class)).thenReturn(mockBundle);
+        when(mockBundle.getBundleContext()).thenReturn(context);
+        Bundle mockFramework = mock(Framework.class);
+        when(context.getBundle(0)).thenReturn(mockFramework);
+        when(mockFramework.getBundleContext()).thenReturn(context);
+        when(context.getBundles()).thenReturn(new Bundle[0]);
     }
 }

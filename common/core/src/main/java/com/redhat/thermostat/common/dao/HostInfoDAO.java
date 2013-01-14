@@ -51,7 +51,7 @@ public interface HostInfoDAO extends Countable {
     static Key<String> cpuModelKey = new Key<>("cpuModel", false);
     static Key<Long> hostMemoryTotalKey = new Key<>("totalMemory", false);
 
-    static final Category hostInfoCategory = new Category("host-info",
+    static final Category<HostInfo> hostInfoCategory = new Category<>("host-info", HostInfo.class,
             Key.AGENT_ID, hostNameKey, osNameKey, osKernelKey,
             cpuCountKey, cpuModelKey, hostMemoryTotalKey);
 

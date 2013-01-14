@@ -140,7 +140,9 @@ public final class AgentApplication extends BasicCommand {
         connection.connect();
         logger.fine("Connecting to storage...");
 
+        @SuppressWarnings("rawtypes")
         ServiceReference configServiceRef = bundleContext.getServiceReference(ConfigurationServer.class.getName());
+        @SuppressWarnings("unchecked")
         final ConfigurationServer configServer = (ConfigurationServer) bundleContext.getService(configServiceRef);
         configServer.startListening(configuration.getConfigListenAddress());
         

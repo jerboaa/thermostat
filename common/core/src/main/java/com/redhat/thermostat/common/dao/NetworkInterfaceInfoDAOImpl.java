@@ -41,9 +41,10 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 
 class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
@@ -57,11 +58,10 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public List<NetworkInterfaceInfo> getNetworkInterfaces(HostRef ref) {
-        Query allHostNetworkInterfaces = storage.createQuery()
-                .from(networkInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
+        Query<NetworkInterfaceInfo> allHostNetworkInterfaces = storage.createQuery(networkInfoCategory);
+        allHostNetworkInterfaces.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
 
-        Cursor<NetworkInterfaceInfo> cursor = storage.findAllPojos(allHostNetworkInterfaces, NetworkInterfaceInfo.class);
+        Cursor<NetworkInterfaceInfo> cursor = allHostNetworkInterfaces.execute();
         List<NetworkInterfaceInfo> result = new ArrayList<>();
         while (cursor.hasNext()) {
             NetworkInterfaceInfo stat = cursor.next();
@@ -72,7 +72,9 @@ class NetworkInterfaceInfoDAOImpl implements NetworkInterfaceInfoDAO {
 
     @Override
     public void putNetworkInterfaceInfo(NetworkInterfaceInfo info) {
-        storage.putPojo(networkInfoCategory, true, info);
+        Put replace = storage.createReplace(networkInfoCategory);
+        replace.setPojo(info);
+        replace.apply();
     }
 
 }

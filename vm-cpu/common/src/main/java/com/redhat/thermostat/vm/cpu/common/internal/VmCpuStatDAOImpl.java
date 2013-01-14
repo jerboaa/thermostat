@@ -40,6 +40,7 @@ import java.util.List;
 
 import com.redhat.thermostat.common.dao.VmLatestPojoListGetter;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
@@ -52,7 +53,7 @@ public class VmCpuStatDAOImpl implements VmCpuStatDAO {
     VmCpuStatDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(vmCpuStatCategory);
-        this.getter = new VmLatestPojoListGetter<>(storage, vmCpuStatCategory, VmCpuStat.class);
+        this.getter = new VmLatestPojoListGetter<>(storage, vmCpuStatCategory);
     }
 
     @Override
@@ -62,6 +63,8 @@ public class VmCpuStatDAOImpl implements VmCpuStatDAO {
 
     @Override
     public void putVmCpuStat(VmCpuStat stat) {
-        storage.putPojo(vmCpuStatCategory, false, stat);
+        Put add = storage.createAdd(vmCpuStatCategory);
+        add.setPojo(stat);
+        add.apply();
     }
 }

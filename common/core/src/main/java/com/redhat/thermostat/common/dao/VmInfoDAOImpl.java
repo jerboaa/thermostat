@@ -42,10 +42,11 @@ import java.util.List;
 
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 class VmInfoDAOImpl implements VmInfoDAO {
@@ -59,11 +60,11 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public VmInfo getVmInfo(VmRef ref) {
-        Query findMatchingVm = storage.createQuery()
-                .from(vmInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId())
-                .where(Key.VM_ID, Criteria.EQUALS, ref.getId());
-        VmInfo result = storage.findPojo(findMatchingVm, VmInfo.class);
+        Query<VmInfo> findMatchingVm = storage.createQuery(vmInfoCategory);
+        findMatchingVm.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgent().getAgentId());
+        findMatchingVm.where(Key.VM_ID, Criteria.EQUALS, ref.getId());
+        findMatchingVm.limit(1);
+        VmInfo result = findMatchingVm.execute().next();
         if (result == null) {
             throw new DAOException("Unknown VM: host:" + ref.getAgent().getAgentId() + ";vm:" + ref.getId());
         }
@@ -73,15 +74,14 @@ class VmInfoDAOImpl implements VmInfoDAO {
     @Override
     public Collection<VmRef> getVMs(HostRef host) {
 
-        Query query = buildQuery(host);
-        Cursor<VmInfo> cursor = storage.findAllPojos(query, VmInfo.class);
+        Query<VmInfo> query = buildQuery(host);
+        Cursor<VmInfo> cursor = query.execute();
         return buildVMsFromQuery(cursor, host);
     }
 
-    private Query buildQuery(HostRef host) {
-        Query query = storage.createQuery()
-                .from(vmInfoCategory)
-                .where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
+    private Query<VmInfo> buildQuery(HostRef host) {
+        Query<VmInfo> query = storage.createQuery(vmInfoCategory);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, host.getAgentId());
         return query;
     }
 
@@ -111,15 +111,17 @@ class VmInfoDAOImpl implements VmInfoDAO {
 
     @Override
     public void putVmInfo(VmInfo info) {
-        storage.putPojo(vmInfoCategory, true, info);
+        Put replace = storage.createReplace(vmInfoCategory);
+        replace.setPojo(info);
+        replace.apply();
     }
 
     @Override
     public void putVmStoppedTime(int vmId, long timestamp) {
-        Update update = storage.createUpdate().from(vmInfoCategory)
-                                              .where(Key.VM_ID, vmId)
-                                              .set(VmInfoDAO.stopTimeKey, timestamp);
-        storage.updatePojo(update);
+        Update update = storage.createUpdate(vmInfoCategory);
+        update.where(Key.VM_ID, vmId);
+        update.set(VmInfoDAO.stopTimeKey, timestamp);
+        update.apply();
     }
 
 }

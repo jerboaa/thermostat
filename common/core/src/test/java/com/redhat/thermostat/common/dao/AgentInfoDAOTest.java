@@ -40,7 +40,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -56,12 +55,12 @@ import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Remove;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Update;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.test.MockQuery;
 
 public class AgentInfoDAOTest {
 
@@ -119,9 +118,9 @@ public class AgentInfoDAOTest {
         when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
         Storage storage = mock(Storage.class);
-        when(storage.findAllPojos(any(Query.class), same(AgentInformation.class))).thenReturn(agentCursor);
-        MockQuery query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
+        Query query = mock(Query.class);
+        when(query.execute()).thenReturn(agentCursor);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
         AgentInfoDAOImpl dao = new AgentInfoDAOImpl(storage);
 
         List<AgentInformation> allAgentInfo = dao.getAllAgentInformation();
@@ -140,16 +139,18 @@ public class AgentInfoDAOTest {
         when(agentCursor.hasNext()).thenReturn(true).thenReturn(false);
         when(agentCursor.next()).thenReturn(agent1).thenReturn(null);
 
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findAllPojos(query, AgentInformation.class)).thenReturn(agentCursor);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        when(query.execute()).thenReturn(agentCursor);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
         List<AgentInformation> aliveAgents = dao.getAliveAgents();
 
-        assertEquals(AgentInfoDAO.CATEGORY, query.getCategory());
-        assertTrue(query.hasWhereClause(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true));
+        verify(storage).createQuery(AgentInfoDAO.CATEGORY);
+        verify(query).where(AgentInfoDAO.ALIVE_KEY, Criteria.EQUALS, true);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(1, aliveAgents.size());
 
@@ -162,9 +163,14 @@ public class AgentInfoDAOTest {
     public void verifyGetAgentInformationWhenStorageCantFindIt() {
         HostRef agentRef = mock(HostRef.class);
 
-        MockQuery query = new MockQuery();
+        Query query = mock(Query.class);
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(false);
+        when(cursor.next()).thenReturn(null);
+        when(query.execute()).thenReturn(cursor);
+
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).thenReturn(query);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
 
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
@@ -179,16 +185,21 @@ public class AgentInfoDAOTest {
         when(agentRef.getAgentId()).thenReturn(agentInfo1.getAgentId());
 
         Storage storage = mock(Storage.class);
-        MockQuery query = new MockQuery();
-        when(storage.createQuery()).thenReturn(query);
-        when(storage.findPojo(query, AgentInformation.class)).thenReturn(agentInfo1);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(true).thenReturn(false);
+        when(cursor.next()).thenReturn(agentInfo1).thenReturn(null);
+        when(query.execute()).thenReturn(cursor);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         AgentInformation computed = dao.getAgentInformation(agentRef);
 
-        assertEquals(AgentInfoDAO.CATEGORY, query.getCategory());
-        assertTrue(query.hasWhereClause(Key.AGENT_ID, Criteria.EQUALS, agentInfo1.getAgentId()));
-
+        verify(storage).createQuery(AgentInfoDAO.CATEGORY);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, agentInfo1.getAgentId());
+        verify(query).limit(1);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
         AgentInformation expected = agentInfo1;
         assertSame(expected, computed);
     }
@@ -196,32 +207,36 @@ public class AgentInfoDAOTest {
     @Test
     public void verifyAddAgentInformation() {
         Storage storage = mock(Storage.class);
+        Replace replace = mock(Replace.class);
+        when(storage.createReplace(any(Category.class))).thenReturn(replace);
+
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.addAgentInformation(agentInfo1);
 
-        verify(storage).putPojo(AgentInfoDAO.CATEGORY, true, agentInfo1);
-
+        verify(storage).createReplace(AgentInfoDAO.CATEGORY);
+        verify(replace).setPojo(agentInfo1);
+        verify(replace).apply();
     }
 
     @Test
     public void verifyUpdateAgentInformation() {
 
-        Update mockUpdate = QueryTestHelper.createMockUpdate();
+        Update mockUpdate = mock(Update.class);
         Storage storage = mock(Storage.class);
-        when(storage.createUpdate()).thenReturn(mockUpdate);
+        when(storage.createUpdate(any(Category.class))).thenReturn(mockUpdate);
         AgentInfoDAO dao = new AgentInfoDAOImpl(storage);
 
         dao.updateAgentInformation(agentInfo1);
 
-        verify(mockUpdate).from(AgentInfoDAO.CATEGORY);
+        verify(storage).createUpdate(AgentInfoDAO.CATEGORY);
         verify(mockUpdate).where(Key.AGENT_ID, "1234");
         verify(mockUpdate).set(AgentInfoDAO.START_TIME_KEY, 100L);
         verify(mockUpdate).set(AgentInfoDAO.STOP_TIME_KEY, 10L);
         verify(mockUpdate).set(AgentInfoDAO.CONFIG_LISTEN_ADDRESS, "foobar:666");
         verify(mockUpdate).set(AgentInfoDAO.ALIVE_KEY, true);
+        verify(mockUpdate).apply();
         verifyNoMoreInteractions(mockUpdate);
-        verify(storage).updatePojo(mockUpdate);
 
     }
 

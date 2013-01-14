@@ -43,10 +43,11 @@ import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
@@ -64,37 +65,36 @@ public class ThreadDaoImpl implements ThreadDao {
 
     @Override
     public VMThreadCapabilities loadCapabilities(VmRef vm) {
-        try {
-        Query query = storage.createQuery()
-                .from(THREAD_CAPABILITIES)
-                .where(Key.VM_ID, Query.Criteria.EQUALS, vm.getId())
-                .where(Key.AGENT_ID, Query.Criteria.EQUALS, vm.getAgent().getAgentId());
-        
-        VMThreadCapabilities caps = storage.findPojo(query, VMThreadCapabilities.class);
+        Query<VMThreadCapabilities> query = storage.createQuery(THREAD_CAPABILITIES);
+        query.where(Key.VM_ID, Query.Criteria.EQUALS, vm.getId());
+        query.where(Key.AGENT_ID, Query.Criteria.EQUALS, vm.getAgent().getAgentId());
+        query.limit(1);
+        VMThreadCapabilities caps = query.execute().next();
         return caps;
-        } catch (Throwable t) {
-            t.printStackTrace();
-            System.exit(0);
-            return null;
-        }
     }
     
     @Override
     public void saveCapabilities(VMThreadCapabilities caps) {
-        storage.putPojo(THREAD_CAPABILITIES, true, caps);
+        Put replace = storage.createReplace(THREAD_CAPABILITIES);
+        replace.setPojo(caps);
+        replace.apply();
     }
     
     @Override
     public void saveSummary(ThreadSummary summary) {
-        storage.putPojo(THREAD_SUMMARY, false, summary);
+        Put add = storage.createAdd(THREAD_SUMMARY);
+        add.setPojo(summary);
+        add.apply();
     }
     
     @Override
     public ThreadSummary loadLastestSummary(VmRef ref) {
         ThreadSummary summary = null;
 
-        Query query = prepareQuery(THREAD_SUMMARY, ref).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING).limit(1);
-        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class);
+        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref);
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        query.limit(1);
+        Cursor<ThreadSummary> cursor = query.execute();
         if (cursor.hasNext()) {
             summary = cursor.next();
         }
@@ -107,10 +107,11 @@ public class ThreadDaoImpl implements ThreadDao {
         
         List<ThreadSummary> result = new ArrayList<>();
         
-        Query query = prepareQuery(THREAD_SUMMARY, ref).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        Query<ThreadSummary> query = prepareQuery(THREAD_SUMMARY, ref);
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
 
-        Cursor<ThreadSummary> cursor = storage.findAllPojos(query, ThreadSummary.class);
+        Cursor<ThreadSummary> cursor = query.execute();
         while (cursor.hasNext()) {
             ThreadSummary summary = cursor.next();
             result.add(summary);
@@ -121,18 +122,20 @@ public class ThreadDaoImpl implements ThreadDao {
     
     @Override
     public void saveThreadInfo(ThreadInfoData info) {
-        storage.putPojo(THREAD_INFO, false, info);
+        Put add = storage.createAdd(THREAD_INFO);
+        add.setPojo(info);
+        add.apply();
     }
 
     @Override
     public List<ThreadInfoData> loadThreadInfo(VmRef ref, long since) {
         List<ThreadInfoData> result = new ArrayList<>();
         
-        Query query = prepareQuery(THREAD_INFO, ref)
-                .where(Key.TIMESTAMP, Criteria.GREATER_THAN, since)
-                .sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        Query<ThreadInfoData> query = prepareQuery(THREAD_INFO, ref);
+        query.where(Key.TIMESTAMP, Criteria.GREATER_THAN, since);
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
         
-        Cursor<ThreadInfoData> cursor = storage.findAllPojos(query, ThreadInfoData.class);
+        Cursor<ThreadInfoData> cursor = query.execute();
         while (cursor.hasNext()) {
             ThreadInfoData info = cursor.next();
             result.add(info);
@@ -141,15 +144,14 @@ public class ThreadDaoImpl implements ThreadDao {
         return result;
     }
     
-    private Query prepareQuery(Category category, VmRef vm) {
+    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, VmRef vm) {
         return prepareQuery(category, vm.getIdString(), vm.getAgent().getAgentId());
     }
 
-    private Query prepareQuery(Category category, String vmId, String agentId) {
-        Query query = storage.createQuery()
-                .from(category)
-                .where(Key.AGENT_ID, Query.Criteria.EQUALS, agentId)
-                .where(Key.VM_ID, Query.Criteria.EQUALS, Integer.valueOf(vmId));
+    private <T extends Pojo> Query<T> prepareQuery(Category<T> category, String vmId, String agentId) {
+        Query<T> query = storage.createQuery(category);
+        query.where(Key.AGENT_ID, Query.Criteria.EQUALS, agentId);
+        query.where(Key.VM_ID, Query.Criteria.EQUALS, Integer.valueOf(vmId));
         return query;
     }
     

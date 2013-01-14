@@ -39,9 +39,9 @@ package com.redhat.thermostat.vm.cpu.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Collection;
@@ -49,19 +49,17 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.Add;
+import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.VmCpuStat;
-import com.redhat.thermostat.test.MockQuery;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 public class VmCpuStatDAOTest {
@@ -97,13 +95,9 @@ public class VmCpuStatDAOTest {
         when(cursor.next()).thenReturn(cpuStat);
 
         Storage storage = mock(Storage.class);
-        when(storage.createQuery()).then(new Answer<Query>() {
-            @Override
-            public Query answer(InvocationOnMock invocation) throws Throwable {
-                return new MockQuery();
-            }
-        });
-        when(storage.findAllPojos(any(Query.class), same(VmCpuStat.class))).thenReturn(cursor);
+        Query query = mock(Query.class);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        when(query.execute()).thenReturn(cursor);
 
         HostRef hostRef = mock(HostRef.class);
         when(hostRef.getAgentId()).thenReturn("system");
@@ -116,9 +110,13 @@ public class VmCpuStatDAOTest {
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         List<VmCpuStat> vmCpuStats = dao.getLatestVmCpuStats(vmRef, Long.MIN_VALUE);
 
-        ArgumentCaptor<MockQuery> arg = ArgumentCaptor.forClass(MockQuery.class);
-        verify(storage).findAllPojos(arg.capture(), same(VmCpuStat.class));
-        assertTrue(arg.getValue().hasWhereClause(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE));
+        verify(storage).createQuery(VmCpuStatDAO.vmCpuStatCategory);
+        verify(query).where(Key.TIMESTAMP, Criteria.GREATER_THAN, Long.MIN_VALUE);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, vmRef.getAgent().getAgentId());
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, vmRef.getId());
+        verify(query).sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
 
         assertEquals(1, vmCpuStats.size());
         VmCpuStat stat = vmCpuStats.get(0);
@@ -130,11 +128,16 @@ public class VmCpuStatDAOTest {
     @Test
     public void testPutVmCpuStat() {
         Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(any(Category.class))).thenReturn(add);
+        
         VmCpuStat stat = new VmCpuStat(TIMESTAMP, VM_ID, CPU_LOAD);
         VmCpuStatDAO dao = new VmCpuStatDAOImpl(storage);
         dao.putVmCpuStat(stat);
 
-        verify(storage).putPojo(VmCpuStatDAO.vmCpuStatCategory, false, stat);
+        verify(storage).createAdd(VmCpuStatDAO.vmCpuStatCategory);
+        verify(add).setPojo(stat);
+        verify(add).apply();
 
     }
 }
