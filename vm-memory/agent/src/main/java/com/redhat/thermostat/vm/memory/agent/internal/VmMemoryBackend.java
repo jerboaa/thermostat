@@ -110,11 +110,6 @@ public class VmMemoryBackend extends Backend {
     public boolean isActive() {
         return started;
     }
-    
-    @Override
-    protected void setDAOFactoryAction() {
-        // No need for DAOFactory
-    }
 
     @Override
     public String getConfigurationValue(String key) {

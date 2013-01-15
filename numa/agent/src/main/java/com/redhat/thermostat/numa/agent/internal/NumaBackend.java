@@ -34,76 +34,82 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.gc.agent.internal;
+package com.redhat.thermostat.numa.agent.internal;
 
-import java.net.URISyntaxException;
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import sun.jvmstat.monitor.HostIdentifier;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaStat;
 
-public class VmGcBackend extends Backend {
+public class NumaBackend extends Backend {
 
-    private static final Logger LOGGER = LoggingUtils.getLogger(VmGcBackend.class);
+    private static final Logger log = Logger.getLogger(NumaBackend.class.getName());
 
-    private VmGcStatDAO vmGcStats;
-    private HostIdentifier hostId;
-    private MonitoredHost host;
-    private VmGcHostListener hostListener;
+    private static final long NUMA_CHECK_INTERVAL_SECONDS = 1;
+    
+    private NumaDAO numaDAO;
+    private ApplicationService appService;
     private boolean started;
+    private NumaCollector numaCollector;
+    private Timer timer;
 
-    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version) {
-        super(new BackendID("VM GC Backend", VmGcBackend.class.getName()));
-        this.vmGcStats = vmGcStatDAO;
+    public NumaBackend(ApplicationService appService, NumaDAO numaDAO, NumaCollector numaCollector, Version version) {
+        super(new BackendID("NUMA Backend", NumaBackend.class.getName()));
+        this.appService = appService;
+        this.numaDAO = numaDAO;
+        this.numaCollector = numaCollector;
         
         setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers garbage collection statistics about a JVM");
+        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers NUMA statistics about a host");
         setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
         
-        try {
-            hostId = new HostIdentifier((String) null);
-            host = MonitoredHost.getMonitoredHost(hostId);
-            hostListener = new VmGcHostListener(vmGcStats, attachToNewProcessByDefault());
-        } catch (MonitorException me) {
-            LOGGER.log(Level.WARNING, "Problems with connecting jvmstat to local machine", me);
-        } catch (URISyntaxException use) {
-            LOGGER.log(Level.WARNING, "Failed to create host identifier", use);
-        }
     }
 
     @Override
     public boolean activate() {
-        if (!started && host != null) {
-            try {
-                host.addHostListener(hostListener);
-                started = true;
-            } catch (MonitorException me) {
-                LOGGER.log(Level.WARNING, "problems with connecting jvmstat to local machine", me);
+        TimerFactory timerFactory = appService.getTimerFactory();
+        timer = timerFactory.createTimer();
+        timer.setDelay(NUMA_CHECK_INTERVAL_SECONDS);
+        timer.setInitialDelay(0);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setAction(new Runnable() {
+
+            @Override
+            public void run() {
+                NumaStat[] stats;
+                try {
+                    stats = numaCollector.collectData();
+                    for (NumaStat stat : stats) {
+                        numaDAO.putNumaStat(stat);
+                    }
+                } catch (IOException e) {
+                    log.log(Level.WARNING, e.getMessage(), e);
+                }
             }
-        }
-        return started;
+        });
+        timer.start();
+        started = true;
+
+        return true;
     }
 
     @Override
     public boolean deactivate() {
-        if (started && host != null) {
-            try {
-                host.removeHostListener(hostListener);
-                started = false;
-            } catch (MonitorException me) {
-                LOGGER.log(Level.INFO, "something went wrong in jvmstat's listening to this host");
-            }
-        }
-        return !started;
+        started = false;
+        timer.stop();
+        return true;
     }
     
     @Override
@@ -112,25 +118,13 @@ public class VmGcBackend extends Backend {
     }
 
     @Override
-    public String getConfigurationValue(String key) {
-        return null;
-    }
-
-    @Override
     public boolean attachToNewProcessByDefault() {
-        return true;
+        return false;
     }
 
     @Override
     public int getOrderValue() {
-        return ORDER_MEMORY_GROUP + 20;
+        return ORDER_CPU_GROUP;
     }
 
-    /*
-     * For testing purposes only.
-     */
-    void setHost(MonitoredHost host) {
-        this.host = host;
-    }
-    
 }

@@ -55,9 +55,7 @@ public abstract class Backend implements Ordered {
     protected DAOFactory df = null;
     private boolean observeNewJvm = attachToNewProcessByDefault();
 
-    private String version;
-    private String vendor;
-    private String description;
+    private Map<String,String> config = new HashMap<>();
     
     private BackendID id;
 
@@ -92,7 +90,9 @@ public abstract class Backend implements Ordered {
         setDAOFactoryAction();
     }
 
-    protected abstract void setDAOFactoryAction();
+    protected void setDAOFactoryAction() {
+        // Default implementation does nothing.
+    }
 
     /**
      * Set the named configuration to the given value.
@@ -112,23 +112,8 @@ public abstract class Backend implements Ordered {
      *                                  for this backend or the value is not valid for the key
      */
     protected void setConfigurationValue(String name, String value) {
-        
-        if (name.equals(BackendsProperties.DESCRIPTION.name())) {
-            this.description = value;
-        } else if (name.equals(BackendsProperties.VERSION.name())) {
-            this.version = value;
-        } else if (name.equals(BackendsProperties.VENDOR.name())) {
-            this.vendor = value;
-        } else {
-            setConfigurationValueImpl(name, value);
-        }
+        config.put(name, value);
     }
-    
-    /**
-     * Set the named configuration to the given value.
-     * By default, does nothing.
-     */
-    protected void setConfigurationValueImpl(String name, String value) {}
     
     /**
      * @return the name of the {@link Backend}
@@ -141,21 +126,21 @@ public abstract class Backend implements Ordered {
      * @returns the description of the {@link Backend}
      */
     public String getDescription() {
-        return description;
+        return config.get(BackendsProperties.DESCRIPTION.name());
     }
 
     /**
      * @return the vendor of the {@link Backend}
      */
     public String getVendor() {
-        return vendor;
+        return config.get(BackendsProperties.VENDOR.name());
     }
 
     /** 
      * @return the version of the {@link Backend}
      */
     public String getVersion() {
-        return version;
+        return config.get(BackendsProperties.VERSION.name());
     }
 
     /** Get a map containing the current settings of this backend.
@@ -176,7 +161,9 @@ public abstract class Backend implements Ordered {
      * @throws IllegalArgumentException if the key does not refer to a valid configuration option for
      *                                  this backend
      */
-    public abstract String getConfigurationValue(String key);
+    public String getConfigurationValue(String key) {
+        return config.get(key);
+    }
 
     /**
      * Activate the {@link Backend}.  Based on the current configuration,
@@ -246,6 +233,8 @@ public abstract class Backend implements Ordered {
     
     @Override
     public int hashCode() {
+        String vendor = getVendor();
+        String version = getVersion();
         final int prime = 31;
         int result = 1;
         result = prime * result + ((id == null) ? 0 : id.hashCode());
@@ -256,6 +245,8 @@ public abstract class Backend implements Ordered {
 
     @Override
     public boolean equals(Object obj) {
+        String vendor = getVendor();
+        String version = getVersion();
         if (this == obj)
             return true;
         if (obj == null)
@@ -269,21 +260,21 @@ public abstract class Backend implements Ordered {
         } else if (!id.equals(other.id))
             return false;
         if (vendor == null) {
-            if (other.vendor != null)
+            if (other.getVendor() != null)
                 return false;
-        } else if (!vendor.equals(other.vendor))
+        } else if (!vendor.equals(other.getVendor()))
             return false;
         if (version == null) {
-            if (other.version != null)
+            if (other.getVersion() != null)
                 return false;
-        } else if (!version.equals(other.version))
+        } else if (!version.equals(other.getVersion()))
             return false;
         return true;
     }
 
     @Override
     public String toString() {
-        return "Backend [version=" + version + ", vendor=" + vendor
-                + ", description=" + description + ", id=" + id + "]";
+        return "Backend [version=" + getVersion() + ", vendor=" + getVendor()
+                + ", description=" + getDescription() + ", id=" + id + "]";
     }
 }

@@ -113,11 +113,6 @@ public class VmClassStatBackend extends Backend {
     }
     
     @Override
-    protected void setDAOFactoryAction() {
-        // No need for DAOFactory
-    }
-
-    @Override
     public String getConfigurationValue(String key) {
         return null;
     }

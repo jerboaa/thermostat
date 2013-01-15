@@ -95,11 +95,6 @@ public class HostMemoryBackend extends Backend {
     }
 
     @Override
-    protected void setDAOFactoryAction() {
-        // No use for DAOFactory
-    }
-
-    @Override
     public String getConfigurationValue(String key) {
         return null;
     }

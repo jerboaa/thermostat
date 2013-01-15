@@ -140,6 +140,7 @@
     <module>vm-classstat</module>
     <module>vm-memory</module>
     <module>vm-heap-analysis</module>
+    <module>numa</module>
     <!-- development related modules -->
     <module>dev</module>
   </modules>
