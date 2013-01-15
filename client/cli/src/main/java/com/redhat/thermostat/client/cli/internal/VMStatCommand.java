@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -37,71 +37,81 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
+
+import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class VMStatCommand extends SimpleCommand {
 
-    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-
     private static final Logger log = LoggingUtils.getLogger(VMStatCommand.class);
-
     private static final String CMD_NAME = "vm-stat";
-
-    private OSGIUtils serviceProvider;
-
+    
+    private List<VMStatPrintDelegate> delegates;
+    private BundleContext context;
+    
     public VMStatCommand() {
-        this(OSGIUtils.getInstance());
+        this(FrameworkUtil.getBundle(VMStatCommand.class).getBundleContext());
     }
 
-    VMStatCommand(OSGIUtils serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    VMStatCommand(BundleContext context) {
+        this.context = context;
+        delegates = new CopyOnWriteArrayList<>();
+        ServiceTracker tracker = new ServiceTracker(context, VMStatPrintDelegate.class.getName(), null) {
+
+            public Object addingService(ServiceReference reference) {
+                VMStatPrintDelegate delegate = (VMStatPrintDelegate) super.addingService(reference);
+                delegates.add(delegate);
+                return delegate;
+            };
+
+            public void removedService(ServiceReference reference, Object service) {
+                delegates.remove(service);
+                super.removedService(reference, service);
+            };
+
+        };
+        tracker.open();
     }
 
     @Override
     public void run(final CommandContext ctx) throws CommandException {
-        VmCpuStatDAO vmCpuStatDAO = serviceProvider.getServiceAllowNull(VmCpuStatDAO.class);
-        if (vmCpuStatDAO == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_CPU_SERVICE_NOT_AVAILABLE));
-        }
-
-        VmMemoryStatDAO vmMemoryStatDAO = serviceProvider.getServiceAllowNull(VmMemoryStatDAO.class);
-        if (vmMemoryStatDAO == null) {
-            throw new CommandException(translator.localize(LocaleResources.VM_MEMORY_SERVICE_NOT_AVAILABLE));
-        }
-
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments());
         VmRef vm = hostVMArgs.getVM();
-        final VMStatPrinter statPrinter = new VMStatPrinter(vm, vmCpuStatDAO, vmMemoryStatDAO, ctx.getConsole().getOutput());
+        // Pass a copy of the delegates list to the printer
+        final VMStatPrinter statPrinter = new VMStatPrinter(vm, new ArrayList<>(delegates), ctx.getConsole().getOutput());
         statPrinter.printStats();
         boolean continuous = ctx.getArguments().hasArgument("continuous");
         if (continuous) {
             startContinuousStats(ctx, statPrinter);
         }
-
-        serviceProvider.ungetService(VmMemoryStatDAO.class, vmMemoryStatDAO);
-        serviceProvider.ungetService(VmCpuStatDAO.class, vmCpuStatDAO);
     }
 
     private void startContinuousStats(final CommandContext ctx, final VMStatPrinter statPrinter) {
 
         final CountDownLatch latch = new CountDownLatch(1);
-        ApplicationService appSvc = serviceProvider.getService(ApplicationService.class);
+        ServiceReference ref = context.getServiceReference(ApplicationService.class.getName());
+        ApplicationService appSvc = (ApplicationService) context.getService(ref);
         Timer timer = appSvc.getTimerFactory().createTimer();
         timer.setDelay(1);
         timer.setInitialDelay(1);
@@ -133,6 +143,8 @@ public class VMStatCommand extends SimpleCommand {
         } catch (InterruptedException e) {
             // Return immediately.
         }
+        
+        context.ungetService(ref);
     }
 
     @Override

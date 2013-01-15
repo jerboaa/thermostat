@@ -52,14 +52,14 @@ import sun.jvmstat.monitor.event.HostEvent;
 import sun.jvmstat.monitor.event.HostListener;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
-import com.redhat.thermostat.agent.JvmStatusListener;
-import com.redhat.thermostat.agent.JvmStatusNotifier;
+import com.redhat.thermostat.agent.VmStatusListener;
+import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 
-public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
+public class JvmStatHostListener implements HostListener {
 
     private static final Logger logger = LoggingUtils.getLogger(JvmStatHostListener.class);
 
@@ -67,10 +67,11 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
 
     private Map<Integer, MonitoredVm> monitoredVms  = new HashMap<>();
     
-    private Set<JvmStatusListener> statusListeners = new CopyOnWriteArraySet<JvmStatusListener>();
+    private VmStatusChangeNotifier notifier;
 
-    JvmStatHostListener(VmInfoDAO vmInfoDAO) {
+    JvmStatHostListener(VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier) {
         this.vmInfoDAO = vmInfoDAO;
+        this.notifier = notifier;
     }
 
     @Override
@@ -121,9 +122,7 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
                 logger.log(Level.WARNING, "error getting vm info for " + vmId, me);
             }
 
-            for (JvmStatusListener statusListener : statusListeners) {
-                statusListener.jvmStarted(vmId);
-            }
+            notifier.notifyVmStatusChange(Status.VM_STARTED, vmId);
 
             monitoredVms.put(vmId, vm);
         }
@@ -149,9 +148,9 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         VmIdentifier resolvedVmID = host.getHostIdentifier().resolve(new VmIdentifier(vmId.toString()));
         if (resolvedVmID != null) {
             long stopTime = System.currentTimeMillis();
-            for (JvmStatusListener statusListener : statusListeners) {
-                statusListener.jvmStopped(vmId);
-            }
+
+            notifier.notifyVmStatusChange(Status.VM_STOPPED, vmId);
+
             vmInfoDAO.putVmStoppedTime(vmId, stopTime);
 
             MonitoredVm vm = monitoredVms.remove(vmId);
@@ -159,16 +158,6 @@ public class JvmStatHostListener implements HostListener, JvmStatusNotifier {
         }
     }
 
-    @Override
-    public void addJvmStatusListener(JvmStatusListener listener) {
-        statusListeners.add(listener);
-    }
-
-    @Override
-    public void removeJvmStatusListener(JvmStatusListener listener) {
-        statusListeners.remove(listener);
-    }
-    
     /*
      * For testing purposes only.
      */

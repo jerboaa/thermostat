@@ -45,7 +45,7 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
-/*
+/**
  * Superclass for activators that need to register commands.  The bundle for this
  * activator should contain a META-INF/services/com.redhat.thermostat.common.cli.Command
  * file containing the class names that should be loaded as commands.  If this activator

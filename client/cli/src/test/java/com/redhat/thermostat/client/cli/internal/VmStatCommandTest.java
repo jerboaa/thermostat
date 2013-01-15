@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -40,11 +40,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -59,26 +63,21 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.dao.VmRef;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.storage.model.VmCpuStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.test.StubBundleContext;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
-import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class VmStatCommandTest {
-
     private static Locale defaultLocale;
     private static TimeZone defaultTimeZone;
+    private static int NUM_ROWS = 3;
 
     @BeforeClass
     public static void setUpClass() {
@@ -94,34 +93,62 @@ public class VmStatCommandTest {
         Locale.setDefault(defaultLocale);
     }
 
-    private VMStatCommand cmd;
-    private VmCpuStatDAO vmCpuStatDAO;
+    private VMStatPrintDelegate[] delegates;
     private TestCommandContextFactory cmdCtxFactory;
-    private VmMemoryStatDAO vmMemoryStatDAO;
     private TestTimerFactory timerFactory;
+    private ApplicationService appSvc;
 
     @Before
     public void setUp() {
+        delegates = new VMStatPrintDelegate[2];
+        final String[][] headers = {
+                { "FIRST", "SECOND", "THIRD" }, 
+                { "FOURTH", "FIFTH" } };
+        
+        final String[][][] rows = {
+                {
+                    { "1", "2", "3" },
+                    { "6", "7", "8" },
+                    { "11", "12", "13" },
+                },
+                {
+                    { "4", "5" },
+                    { "9", "10" },
+                    { "14", "15" }
+                }
+        };
         timerFactory = new TestTimerFactory();
-        ApplicationService appSvc = mock(ApplicationService.class);
+        appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
         setupCommandContextFactory();
-
-        setupDAOs();
-
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(VmCpuStatDAO.class)).thenReturn(vmCpuStatDAO);
-        when(serviceProvider.getServiceAllowNull(VmMemoryStatDAO.class)).thenReturn(vmMemoryStatDAO);
-        when(serviceProvider.getService(ApplicationService.class)).thenReturn(appSvc);
-
-        cmd = new VMStatCommand(serviceProvider);
+        
+        delegates[0] = mockDelegate(headers[0], rows[0]);
+        delegates[1] = mockDelegate(headers[1], rows[1]);
+    }
+    
+    private VMStatPrintDelegate mockDelegate(String[] headers, String[][] data) {
+        VMStatPrintDelegate delegate = mock(VMStatPrintDelegate.class);
+        List<TimeStampedPojo> stats = new ArrayList<>();
+        for (int i = 0; i < NUM_ROWS; i++) {
+            TimeStampedPojo stat = mock(TimeStampedPojo.class);
+            when(stat.getTimeStamp()).thenReturn(i * 1000L); // Increment by one second
+            stats.add(stat);
+        }
+        
+        // Need this syntax due to generics
+        doReturn(stats).when(delegate).getLatestStats(any(VmRef.class), eq(Long.MIN_VALUE));
+        when(delegate.getHeaders(stats.get(0))).thenReturn(Arrays.asList(headers));
+        for (int i = 0; i < data.length; i++) {
+            List<String> row = Arrays.asList(data[i]);
+            doReturn(row).when(delegate).getStatRow(eq(stats.get(i)));
+        }
+        
+        return delegate;
     }
 
     @After
     public void tearDown() {
-        vmCpuStatDAO = null;
         cmdCtxFactory = null;
-        cmd = null;
         timerFactory = null;
     }
 
@@ -129,116 +156,62 @@ public class VmStatCommandTest {
         cmdCtxFactory = new TestCommandContextFactory();
     }
 
-    private void setupDAOs() {
-        vmCpuStatDAO = mock(VmCpuStatDAO.class);
-        int vmId = 234;
-        HostRef host = new HostRef("123", "dummy");
-        VmRef vm = new VmRef(host, 234, "dummy");
-        VmCpuStat cpustat1 = new VmCpuStat(2, vmId, 65);
-        VmCpuStat cpustat2 = new VmCpuStat(3, vmId, 70);
-        List<VmCpuStat> cpuStats = Arrays.asList(cpustat1, cpustat2);
-        List<VmCpuStat> cpuStats2 = Collections.emptyList();
-        when(vmCpuStatDAO.getLatestVmCpuStats(vm, Long.MIN_VALUE)).thenReturn(cpuStats).thenReturn(cpuStats2);
-
-        VmMemoryStat.Space space1_1_1 = newSpace("space1", 123456, 12345, 1, 0);
-        VmMemoryStat.Space space1_1_2 = newSpace("space2", 123456, 12345, 1, 0);
-        VmMemoryStat.Space[] spaces1_1 = new VmMemoryStat.Space[] { space1_1_1, space1_1_2 };
-        VmMemoryStat.Generation gen1_1 = newGeneration("gen1", "col1", 123456, 12345, spaces1_1);
-
-        VmMemoryStat.Space space1_2_1 = newSpace("space3", 123456, 12345, 1, 0);
-        VmMemoryStat.Space space1_2_2 = newSpace("space4", 123456, 12345, 1, 0);
-        VmMemoryStat.Space[] spaces1_2 = new VmMemoryStat.Space[] { space1_2_1, space1_2_2 };
-        VmMemoryStat.Generation gen1_2 = newGeneration("gen2", "col1", 123456, 12345, spaces1_2);
-
-        VmMemoryStat.Generation[] gens1 = new VmMemoryStat.Generation[] { gen1_1, gen1_2 };
-
-        VmMemoryStat memStat1 = new VmMemoryStat(1, vmId, gens1);
-
-        VmMemoryStat.Space space2_1_1 = newSpace("space1", 123456, 12345, 2, 0);
-        VmMemoryStat.Space space2_1_2 = newSpace("space2", 123456, 12345, 2, 0);
-        VmMemoryStat.Space[] spaces2_1 = new VmMemoryStat.Space[] { space2_1_1, space2_1_2 };
-        VmMemoryStat.Generation gen2_1 = newGeneration("gen1", "col1", 123456, 12345, spaces2_1);
-
-        VmMemoryStat.Space space2_2_1 = newSpace("space3", 123456, 12345, 3, 0);
-        VmMemoryStat.Space space2_2_2 = newSpace("space4", 123456, 12345, 4, 0);
-        VmMemoryStat.Space[] spaces2_2 = new VmMemoryStat.Space[] { space2_2_1, space2_2_2 };
-        VmMemoryStat.Generation gen2_2 = newGeneration("gen2", "col1", 123456, 12345, spaces2_2);
-
-        VmMemoryStat.Generation[] gens2 = new VmMemoryStat.Generation[] { gen2_1, gen2_2 };
-
-        VmMemoryStat memStat2 = new VmMemoryStat(2, vmId, gens2);
-
-        VmMemoryStat.Space space3_1_1 = newSpace("space1", 123456, 12345, 4, 0);
-        VmMemoryStat.Space space3_1_2 = newSpace("space2", 123456, 12345, 5, 0);
-        VmMemoryStat.Space[] spaces3_1 = new VmMemoryStat.Space[] { space3_1_1, space3_1_2 };
-        VmMemoryStat.Generation gen3_1 = newGeneration("gen1", "col1", 123456, 12345, spaces3_1);
-
-        VmMemoryStat.Space space3_2_1 = newSpace("space3", 123456, 12345, 6, 0);
-        VmMemoryStat.Space space3_2_2 = newSpace("space4", 123456, 12345, 7, 0);
-        VmMemoryStat.Space[] spaces3_2 = new VmMemoryStat.Space[] { space3_2_1, space3_2_2 };
-        VmMemoryStat.Generation gen3_2 = newGeneration("gen2", "col1", 123456, 12345, spaces3_2);
-
-        VmMemoryStat.Generation[] gens3 = new VmMemoryStat.Generation[] { gen3_1, gen3_2 };
-
-        VmMemoryStat memStat3 = new VmMemoryStat(3, vmId, gens3);
-
-        VmMemoryStat.Space space4_1_1 = newSpace("space1", 123456, 12345, 8, 0);
-        VmMemoryStat.Space space4_1_2 = newSpace("space2", 123456, 12345, 9, 0);
-        VmMemoryStat.Space[] spaces4_1 = new VmMemoryStat.Space[] { space4_1_1, space4_1_2 };
-        VmMemoryStat.Generation gen4_1 = newGeneration("gen4", "col1", 123456, 12345, spaces4_1);
-
-        VmMemoryStat.Space space4_2_1 = newSpace("space3", 123456, 12345, 10, 0);
-        VmMemoryStat.Space space4_2_2 = newSpace("space4", 123456, 12345, 11, 0);
-        VmMemoryStat.Space[] spaces4_2 = new VmMemoryStat.Space[] { space4_2_1, space4_2_2 };
-        VmMemoryStat.Generation gen4_2 = newGeneration("gen4", "col1", 123456, 12345, spaces4_2);
-
-        VmMemoryStat.Generation[] gens4 = new VmMemoryStat.Generation[] { gen4_1, gen4_2 };
-
-        VmMemoryStat memStat4 = new VmMemoryStat(4, vmId, gens4);
-
-        vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
-        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm, Long.MIN_VALUE))
-            .thenReturn(Arrays.asList(memStat1, memStat2, memStat3));
-
-        when(vmMemoryStatDAO.getLatestVmMemoryStats(vm, memStat3.getTimeStamp())).thenReturn(Arrays.asList(memStat4));
-
-    }
-
-    private Space newSpace(String name, long maxCapacity, long capacity, long used, int index) {
-        VmMemoryStat.Space space = new VmMemoryStat.Space();
-        space.setName(name);
-        space.setMaxCapacity(maxCapacity);
-        space.setCapacity(capacity);
-        space.setUsed(used);
-        space.setIndex(index);
-        return space;
-    }
-
-    private Generation newGeneration(String name, String collector, long maxCapacity, long capacity, Space[] spaces) {
-        VmMemoryStat.Generation gen = new VmMemoryStat.Generation();
-        gen.setName(name);
-        gen.setCollector(collector);
-        gen.setMaxCapacity(capacity);
-        gen.setSpaces(spaces);
-        return gen;
-    }
-
     @Test
-    public void testBasicCPUMemory() throws CommandException {
+    public void testOutput() throws CommandException {
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(VMStatPrintDelegate.class.getName(), delegates[0], null);
+        context.registerService(VMStatPrintDelegate.class.getName(), delegates[1], null);
+        
+        VMStatCommand cmd = new VMStatCommand(context);
+        
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", "234");
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
-        String expected = "TIME        %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
-                          "12:00:00 AM      1 B        1 B        1 B        1 B\n" +
-                          "12:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
-                          "12:00:00 AM 70.0 4 B        5 B        6 B        7 B\n";
+        String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
+                + "12:00:00 AM 1     2      3     4      5\n"
+                + "12:00:01 AM 6     7      8     9      10\n"
+                + "12:00:02 AM 11    12     13    14     15\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
-
+    }
+    
+    @Test
+    public void testNoDelegates() throws CommandException {
+        StubBundleContext context = new StubBundleContext();
+        VMStatCommand cmd = new VMStatCommand(context);
+        
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "TIME\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
     }
 
     @Test
     public void testContinuousMode() throws CommandException {
+        final String[][] data = {
+                { "16", "17", "18" },
+                { "19", "20" }
+        };
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(ApplicationService.class.getName(), appSvc, null);
+        context.registerService(VMStatPrintDelegate.class.getName(), delegates[0], null);
+        context.registerService(VMStatPrintDelegate.class.getName(), delegates[1], null);
+        
+        // Add one more stat
+        TimeStampedPojo stat = mock(TimeStampedPojo.class);
+        // One second after previous timestamps
+        when(stat.getTimeStamp()).thenReturn(3000L);
+        List<TimeStampedPojo> stats = new ArrayList<>();
+        stats.add(stat);
+        
+        doReturn(stats).when(delegates[0]).getLatestStats(any(VmRef.class), eq(2000L));
+        doReturn(stats).when(delegates[1]).getLatestStats(any(VmRef.class), eq(2000L));
+        doReturn(Arrays.asList(data[0])).when(delegates[0]).getStatRow(eq(stat));
+        doReturn(Arrays.asList(data[1])).when(delegates[1]).getStatRow(eq(stat));
+        
+        final VMStatCommand cmd = new VMStatCommand(context);
         
         Thread t = new Thread() {
             public void run() {
@@ -261,10 +234,10 @@ public class VmStatCommandTest {
             return;
         }
         assertTrue(timerFactory.isActive());
-        String expected = "TIME        %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
-                          "12:00:00 AM      1 B        1 B        1 B        1 B\n" +
-                          "12:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
-                          "12:00:00 AM 70.0 4 B        5 B        6 B        7 B\n";
+        String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n" +
+                "12:00:00 AM 1     2      3     4      5\n" +
+                "12:00:01 AM 6     7      8     9      10\n" +
+                "12:00:02 AM 11    12     13    14     15\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
         assertEquals(1, timerFactory.getDelay());
         assertEquals(1, timerFactory.getInitialDelay());
@@ -273,11 +246,11 @@ public class VmStatCommandTest {
 
         timerFactory.getAction().run();
 
-        expected = "TIME        %CPU MEM.space1 MEM.space2 MEM.space3 MEM.space4\n" +
-                   "12:00:00 AM      1 B        1 B        1 B        1 B\n" +
-                   "12:00:00 AM 65.0 2 B        2 B        3 B        4 B\n" +
-                   "12:00:00 AM 70.0 4 B        5 B        6 B        7 B\n" +
-                   "12:00:00 AM 70.0 8 B        9 B        10 B       11 B\n";
+        expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n" +
+                "12:00:00 AM 1     2      3     4      5\n" +
+                "12:00:01 AM 6     7      8     9      10\n" +
+                "12:00:02 AM 11    12     13    14     15\n" +
+                "12:00:03 AM 16    17     18    19     20\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
         cmdCtxFactory.setInput(" ");
         try {
@@ -290,18 +263,24 @@ public class VmStatCommandTest {
 
     @Test
     public void testName() {
+        StubBundleContext context = new StubBundleContext();
+        VMStatCommand cmd = new VMStatCommand(context);
         assertEquals("vm-stat", cmd.getName());
     }
 
     @Test
     public void testDescAndUsage() {
-        assertNotNull(cmd.getUsage());
+        StubBundleContext context = new StubBundleContext();
+        VMStatCommand cmd = new VMStatCommand(context);
+        assertNotNull(cmd.getDescription());
         assertNotNull(cmd.getUsage());
     }
 
     @Ignore
     @Test
     public void testOptions() {
+        StubBundleContext context = new StubBundleContext();
+        VMStatCommand cmd = new VMStatCommand(context);
         Options options = cmd.getOptions();
         assertNotNull(options);
         assertEquals(3, options.getOptions().size());
@@ -325,9 +304,91 @@ public class VmStatCommandTest {
         assertFalse(cont.isRequired());
         assertFalse(cont.hasArg());
     }
+    
+    @Test
+    public void testNoStats() throws CommandException {
+        // Fail stats != null check
+        VMStatPrintDelegate badDelegate = mock(VMStatPrintDelegate.class);
+        when(badDelegate.getLatestStats(any(VmRef.class), anyLong())).thenReturn(null);
+        
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(VMStatPrintDelegate.class, delegates[0], null);
+        context.registerService(VMStatPrintDelegate.class, badDelegate, null);
+        context.registerService(VMStatPrintDelegate.class, delegates[1], null);
+        
+        VMStatCommand cmd = new VMStatCommand(context);
+        
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
+                + "12:00:00 AM 1     2      3     4      5\n"
+                + "12:00:01 AM 6     7      8     9      10\n"
+                + "12:00:02 AM 11    12     13    14     15\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+    }
+    
+    @Test
+    public void testNoHeaders() throws CommandException {
+        // Pass stats check, but fail headers check
+        VMStatPrintDelegate badDelegate = mock(VMStatPrintDelegate.class);
+        TimeStampedPojo stat = mock(TimeStampedPojo.class);
+        doReturn(Arrays.asList(stat)).when(badDelegate).getLatestStats(any(VmRef.class), anyLong());
+        when(badDelegate.getHeaders(any(TimeStampedPojo.class))).thenReturn(null);
+        
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(VMStatPrintDelegate.class, delegates[0], null);
+        context.registerService(VMStatPrintDelegate.class, badDelegate, null);
+        context.registerService(VMStatPrintDelegate.class, delegates[1], null);
+        
+        VMStatCommand cmd = new VMStatCommand(context);
+        
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "TIME        FIRST SECOND THIRD FOURTH FIFTH\n"
+                + "12:00:00 AM 1     2      3     4      5\n"
+                + "12:00:01 AM 6     7      8     9      10\n"
+                + "12:00:02 AM 11    12     13    14     15\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+    }
+    
+    @Test
+    public void testUnevenStat() throws CommandException {
+        // Fewer stats than other delegates
+        VMStatPrintDelegate badDelegate = mock(VMStatPrintDelegate.class);
+        TimeStampedPojo stat1 = mock(TimeStampedPojo.class);
+        when(stat1.getTimeStamp()).thenReturn(1000L);
+        TimeStampedPojo stat2 = mock(TimeStampedPojo.class);
+        when(stat2.getTimeStamp()).thenReturn(2000L);
+        doReturn(Arrays.asList(stat1, stat2)).when(badDelegate).getLatestStats(any(VmRef.class), anyLong());
+        when(badDelegate.getHeaders(any(TimeStampedPojo.class))).thenReturn(Arrays.asList("BAD"));
+        when(badDelegate.getStatRow(any(TimeStampedPojo.class))).thenReturn(Arrays.asList("0"));
+        
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(VMStatPrintDelegate.class, delegates[0], null);
+        context.registerService(VMStatPrintDelegate.class, badDelegate, null);
+        context.registerService(VMStatPrintDelegate.class, delegates[1], null);
+        
+        VMStatCommand cmd = new VMStatCommand(context);
+        
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        cmd.run(cmdCtxFactory.createContext(args));
+        String expected = "TIME        FIRST SECOND THIRD BAD FOURTH FIFTH\n"
+                + "12:00:00 AM 1     2      3         4      5\n"
+                + "12:00:01 AM 6     7      8     0   9      10\n"
+                + "12:00:02 AM 11    12     13    0   14     15\n";
+        assertEquals(expected, cmdCtxFactory.getOutput());
+    }
 
     @Test
     public void testStorageRequired() {
+        StubBundleContext context = new StubBundleContext();
+        VMStatCommand cmd = new VMStatCommand(context);
         assertTrue(cmd.isStorageRequired());
     }
 }

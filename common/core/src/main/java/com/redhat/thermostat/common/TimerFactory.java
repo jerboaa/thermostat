@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.common;
 
+/**
+ * An instance of this can be obtained from {@link ApplicationService}.
+ */
 public interface TimerFactory {
 
     Timer createTimer();

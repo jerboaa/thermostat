@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.client.core.views;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
- * Provides an AgentInformationViewProvider
+ * Provides an {@link AgentInformationDisplayView}
  */
+@ExtensionPoint
 public interface AgentInformationViewProvider extends ViewProvider {
 
     @Override

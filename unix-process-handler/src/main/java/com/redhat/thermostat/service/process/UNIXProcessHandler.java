@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.service.process;
 
+import com.redhat.thermostat.annotations.Service;
+
+@Service
 public interface UNIXProcessHandler {
     
     public static String ID = "com.redhat.thermostat.service.process.UNIXProcessHandler";

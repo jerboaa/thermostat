@@ -38,10 +38,12 @@ package com.redhat.thermostat.common.dao;
 
 import java.util.List;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
+@Service
 public interface AgentInfoDAO extends Countable {
 
     static final Key<Long> START_TIME_KEY = new Key<>("startTime", false);

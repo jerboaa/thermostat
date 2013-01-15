@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.dao.DAOFactory;
@@ -48,7 +49,11 @@ import com.redhat.thermostat.storage.core.Storage;
 /**
  * Represents a plugin that runs on the agent and performs monitoring of host
  * and applications.
+ * <p>
+ * To register a new backend, register an instance of the class with the OSGi
+ * service registry.
  */
+@ExtensionPoint
 public abstract class Backend implements Ordered {
 
     private boolean initialConfigurationComplete = false;

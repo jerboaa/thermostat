@@ -44,18 +44,24 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.backend.system.SystemBackend;
+import com.redhat.thermostat.backend.system.VmStatusChangeNotifier;
 
 @SuppressWarnings("rawtypes")
 public class SystemBackendActivator implements BundleActivator {
 
     private ServiceTracker tracker;
     private SystemBackend backend;
+
+    private VmStatusChangeNotifier notifier;
     
     @SuppressWarnings("unchecked")
     @Override
     public void start(BundleContext context) throws Exception {
         
-        backend = new SystemBackend();
+        notifier = new VmStatusChangeNotifier(context);
+        notifier.start();
+
+        backend = new SystemBackend(notifier);
         
         tracker = new ServiceTracker(context, BackendService.class, null) {
             @Override
@@ -84,5 +90,6 @@ public class SystemBackendActivator implements BundleActivator {
             backend.deactivate();
         }
         tracker.close();
+        notifier.stop();
     }
 }

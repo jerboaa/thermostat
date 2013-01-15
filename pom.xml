@@ -117,10 +117,10 @@
   </repositories>
 
   <modules>
+    <module>annotations</module>
     <module>distribution</module>
     <module>main</module>
     <module>launcher</module>
-    <module>bundles</module>
     <module>common</module>
     <module>agent</module>
     <module>client</module>

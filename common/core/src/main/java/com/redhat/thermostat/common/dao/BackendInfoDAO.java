@@ -38,10 +38,12 @@ package com.redhat.thermostat.common.dao;
 
 import java.util.List;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.BackendInformation;
 
+@Service
 public interface BackendInfoDAO {
 
     static final Key<String> BACKEND_NAME = new Key<>("name", true);

@@ -34,4 +34,4 @@
 # to do so, delete this exception statement from your version.
 #
 
-com.redhat.thermostat.launcher.TestFrameworkFactory
+com.redhat.thermostat.main.TestFrameworkFactory

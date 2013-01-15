@@ -48,8 +48,7 @@ import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
-import com.redhat.thermostat.agent.JvmStatusListener;
-import com.redhat.thermostat.agent.JvmStatusNotifier;
+import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
@@ -59,14 +58,16 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 
-public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStatusListener {
+public class SystemBackend extends Backend {
 
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
     private HostInfoDAO hostInfos;
     private NetworkInterfaceInfoDAO networkInterfaces;
 
-    private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
+    private final VmStatusChangeNotifier notifier;
+
+    private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<>();
 
     private long procCheckInterval = 1000; // TODO make this configurable.
 
@@ -78,8 +79,10 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
 
     private final HostInfoBuilder hostInfoBuilder;
 
-    public SystemBackend() {
+
+    public SystemBackend(VmStatusChangeNotifier notifier) {
         super(new BackendID("System Backend", SystemBackend.class.getName()));
+        this.notifier = notifier;
 
         setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
         setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers basic information from the system");
@@ -93,7 +96,7 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     protected void setDAOFactoryAction() {
         hostInfos = df.getHostInfoDAO();
         networkInterfaces = df.getNetworkInterfaceInfoDAO();
-        hostListener = new JvmStatHostListener(df.getVmInfoDAO());
+        hostListener = new JvmStatHostListener(df.getVmInfoDAO(), notifier);
     }
 
     @Override
@@ -104,8 +107,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         if (df == null) {
             throw new IllegalStateException("Cannot activate backend without DAOFactory.");
         }
-
-        addJvmStatusListener(this);
 
         if (!getObserveNewJvm()) {
             logger.fine("not monitoring new vms");
@@ -144,8 +145,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
         timer.cancel();
         timer = null;
 
-        removeJvmStatusListener(this);
-
         try {
             host.removeHostListener(hostListener);
         } catch (MonitorException me) {
@@ -170,28 +169,6 @@ public class SystemBackend extends Backend implements JvmStatusNotifier, JvmStat
     @Override
     public boolean attachToNewProcessByDefault() {
         return true;
-    }
-
-    @Override
-    public void addJvmStatusListener(JvmStatusListener listener) {
-        hostListener.addJvmStatusListener(listener);
-    }
-
-    @Override
-    public void removeJvmStatusListener(JvmStatusListener listener) {
-        hostListener.removeJvmStatusListener(listener);
-    }
-
-    @Override
-    public void jvmStarted(int vmId) {
-        if (getObserveNewJvm()) {
-            pidsToMonitor.add(vmId);
-        }
-    }
-
-    @Override
-    public void jvmStopped(int vmId) {
-        pidsToMonitor.remove(vmId);
     }
 
     @Override

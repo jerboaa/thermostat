@@ -99,18 +99,12 @@
     <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
     </dependency>
-    <!-- Only temporary dependency -->
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-cpu-common</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <!-- Only temporary dependency -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-common</artifactId>
-      <version>${project.version}</version>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
     </dependency>
   </dependencies>
 
@@ -125,17 +119,15 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.client.cli.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.client.cli</Bundle-SymbolicName>
+            <Export-Package>
+              com.redhat.thermostat.client.cli,
+            </Export-Package>
             <Private-Package>
               META_INF.services,
               com.redhat.thermostat.client.cli.internal,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
-            <!-- Remove this later -->
-            <Import-Package>
-              *,com.redhat.thermostat.vm.cpu.common;resolution:=optional,
-              com.redhat.thermostat.vm.memory.common;resolution:=optional
-            </Import-Package>
           </instructions>
         </configuration>
       </plugin>

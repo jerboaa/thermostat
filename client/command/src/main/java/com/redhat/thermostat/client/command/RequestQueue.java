@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.command;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.command.Request;
 
 /**
@@ -45,6 +46,7 @@ import com.redhat.thermostat.common.command.Request;
  * and response (if any) are processed asynchronously. An instance of this can
  * be obtained from OSGi.
  */
+@Service
 public interface RequestQueue {
 
     public void putRequest(Request request);

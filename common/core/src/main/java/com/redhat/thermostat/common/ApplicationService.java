@@ -38,6 +38,9 @@ package com.redhat.thermostat.common;
 
 import java.util.concurrent.ExecutorService;
 
+import com.redhat.thermostat.annotations.Service;
+
+@Service
 public interface ApplicationService {
 
     ApplicationCache getApplicationCache();

@@ -40,10 +40,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.VmInfo;
 
+@Service
 public interface VmInfoDAO extends Countable {
 
     static final Key<Integer> vmPidKey = new Key<>("vmPid", false);

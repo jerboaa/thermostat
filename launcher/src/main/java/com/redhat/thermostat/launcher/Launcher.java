@@ -38,12 +38,14 @@ package com.redhat.thermostat.launcher;
 
 import java.util.Collection;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.tools.ApplicationState;
 
 /**
  * Launcher is the main entry point for all Thermostat commands.
  */
+@Service
 public interface Launcher {
 
     /**

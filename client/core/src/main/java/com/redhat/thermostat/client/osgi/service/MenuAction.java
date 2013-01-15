@@ -35,6 +35,8 @@
  */
 package com.redhat.thermostat.client.osgi.service;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * Allows plugins to register menu items.
  * <p>
@@ -42,6 +44,7 @@ package com.redhat.thermostat.client.osgi.service;
  * register a service that implements this class with the property
  * "parentMenu" set to "File".
  */
+@ExtensionPoint
 public interface MenuAction extends ContextAction {
 
     public static enum Type {

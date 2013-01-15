@@ -62,7 +62,10 @@ public class SystemBackendTest {
         when(df.getStorage()).thenReturn(s);
         when(df.getHostInfoDAO()).thenReturn(hDAO);
         when(df.getNetworkInterfaceInfoDAO()).thenReturn(nDAO);
-        b = new SystemBackend();
+
+        VmStatusChangeNotifier notifier = mock(VmStatusChangeNotifier.class);
+
+        b = new SystemBackend(notifier);
         b.setDAOFactory(df);
     }
 

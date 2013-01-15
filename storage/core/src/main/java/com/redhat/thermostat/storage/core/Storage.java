@@ -39,6 +39,7 @@ package com.redhat.thermostat.storage.core;
 import java.io.InputStream;
 import java.util.UUID;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.model.Pojo;
 
 /**
@@ -46,6 +47,7 @@ import com.redhat.thermostat.storage.model.Pojo;
  * Implementations may use memory, a file, some database or even a network
  * server as the backing store.
  */
+@Service
 public interface Storage {
 
     void setAgentId(UUID id);

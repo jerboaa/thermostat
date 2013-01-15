@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -50,14 +50,21 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceEvent;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.common.NotImplementedException;
-import com.redhat.thermostat.test.StubBundleContext.ServiceInformation;
 
+/**
+ * An implementation of BundleContext that's useful for writing unit tests.
+ * <p>
+ * WARNING: if you static mock {@link FrameworkUtil#createFilter(String)}, you
+ * are going to have a bad time.
+ */
 public class StubBundleContext implements BundleContext {
 
     static class ServiceInformation {
@@ -180,17 +187,28 @@ public class StubBundleContext implements BundleContext {
     public ServiceRegistration registerService(String className, Object service, Dictionary properties) {
         ServiceInformation info = new ServiceInformation(className, service, properties);
         registeredServices.add(info);
+
+        notifyServiceChange(new StubServiceReference(info), true);
+
         return new StubServiceRegistration(this, info);
     }
 
     @Override
     public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
-        Filter toMatch = createFilter(filter);
         List<ServiceReference> toReturn = new ArrayList<>();
-        for (ServiceInformation info : registeredServices) {
-            // how does filter matching in OSGI work again?
-            if (info.serviceInterface.equals(clazz) && toMatch.match(info.properties)) {
-                toReturn.add(new StubServiceReference(info));
+
+        if (filter == null) {
+            for (ServiceInformation info : registeredServices) {
+                if (info.serviceInterface.equals(clazz)) {
+                    toReturn.add(new StubServiceReference(info));
+                }
+            }
+        } else {
+            Filter toMatch = createFilter(filter);
+            for (ServiceInformation info : registeredServices) {
+                if (info.serviceInterface.equals(clazz) && toMatch.match(info.properties)) {
+                    toReturn.add(new StubServiceReference(info));
+                }
             }
         }
         return toReturn.toArray(new ServiceReference[0]);
@@ -203,7 +221,13 @@ public class StubBundleContext implements BundleContext {
 
     @Override
     public ServiceReference getServiceReference(String clazz) {
-        throw new NotImplementedException();
+        ServiceReference result = null;
+        for (ServiceInformation info : registeredServices) {
+            if (info.serviceInterface.equals(clazz)) {
+                result = new StubServiceReference(info);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -247,7 +271,11 @@ public class StubBundleContext implements BundleContext {
 
     @Override
     public Filter createFilter(String filter) throws InvalidSyntaxException {
-        return new StubFilter(filter);
+        // FIXME this will break service trackers if FrameworkUtil is mocked
+        // the following call will return null if FrameworkUtil is mocked.
+        // that's a problem because this is meant to be used (mostly) in test
+        // environments and that's where FrameworkUtil is likely to be mocked.
+        return FrameworkUtil.createFilter(filter);
     }
 
     @Override
@@ -285,7 +313,17 @@ public class StubBundleContext implements BundleContext {
             throw new IllegalStateException("service not registered");
         }
         registeredServices.remove(info);
+        notifyServiceChange(new StubServiceReference(info), false);
+    }
 
+    private void notifyServiceChange(ServiceReference serviceReference, boolean registered) {
+        int eventType = registered ? ServiceEvent.REGISTERED : ServiceEvent.UNREGISTERING;
+        ServiceEvent event = new ServiceEvent(eventType, serviceReference);
+        for (ListenerSpec l : registeredListeners) {
+            if (l.filter.match(serviceReference)) {
+                l.listener.serviceChanged(event);
+            }
+        }
     }
 
     public int getExportedServiceCount(ServiceRegistration registration) {

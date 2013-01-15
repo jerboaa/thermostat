@@ -38,6 +38,8 @@ package com.redhat.thermostat.common.cli;
 
 import org.apache.commons.cli.Options;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * Represents a command on the command line.
  * <p>
@@ -51,6 +53,7 @@ import org.apache.commons.cli.Options;
  * <p>
  * @see CommandRegistry
  */
+@ExtensionPoint
 public interface Command {
 
     public static final String NAME = "COMMAND_NAME";

@@ -1,17 +1,3 @@
-package com.redhat.thermostat.web.common;
-import static org.junit.Assert.assertEquals;
-
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.junit.Test;
-
-import com.redhat.thermostat.storage.core.Category;
-import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.core.Query.Criteria;
-import com.redhat.thermostat.storage.model.Pojo;
-
 /*
  * Copyright 2012 Red Hat, Inc.
  *
@@ -47,6 +33,20 @@ import com.redhat.thermostat.storage.model.Pojo;
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+
+package com.redhat.thermostat.web.common;
+import static org.junit.Assert.assertEquals;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.Test;
+
+import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.model.Pojo;
 
 public class WebQueryTest {
 

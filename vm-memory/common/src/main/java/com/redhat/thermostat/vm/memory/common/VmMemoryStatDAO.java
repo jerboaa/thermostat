@@ -38,12 +38,14 @@ package com.redhat.thermostat.vm.memory.common;
 
 import java.util.List;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 
+@Service
 public interface VmMemoryStatDAO {
 
     static final Key<Generation[]> generationsKey = new Key<>("generations", false);

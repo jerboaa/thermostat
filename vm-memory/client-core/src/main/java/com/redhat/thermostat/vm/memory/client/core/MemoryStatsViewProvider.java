@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.vm.memory.client.core;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.views.ViewProvider;
 
+@ExtensionPoint
 public interface MemoryStatsViewProvider extends ViewProvider {
 
     @Override

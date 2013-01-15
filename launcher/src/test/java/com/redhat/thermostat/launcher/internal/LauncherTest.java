@@ -72,7 +72,6 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.bundles.OSGiRegistry;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationInfo;
@@ -93,6 +92,7 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.test.StubBundleContext;
@@ -144,7 +144,7 @@ public class LauncherTest {
     private StubBundleContext bundleContext;
     private Bundle sysBundle;
     private TestTimerFactory timerFactory;
-    private OSGiRegistry registry;
+    private BundleManager registry;
     private LoggingInitializer loggingInitializer;
     private DbServiceFactory dbServiceFactory;
     private CommandInfoSource infos;
@@ -211,7 +211,7 @@ public class LauncherTest {
 
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(new HelpCommand(), cmd1, cmd2, cmd3, basicCmd));
 
-        registry = mock(OSGiRegistry.class);
+        registry = mock(BundleManager.class);
 
         infos = mock(CommandInfoSource.class);
         when(infos.getCommandInfo(name1)).thenReturn(info1);
