@@ -38,10 +38,12 @@ package com.redhat.thermostat.common.dao;
 
 import java.util.Collection;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.HostInfo;
 
+@Service
 public interface HostInfoDAO extends Countable {
 
     static Key<String> hostNameKey = new Key<>("hostname", true);

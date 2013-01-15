@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.core;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.dao.Ref;
@@ -46,7 +47,13 @@ import com.redhat.thermostat.common.dao.Ref;
  * <p>
  * An {@code InformationService} provides some sort of information about
  * something. Plug-ins should normally implement this as a entry point.
+ * <p>
+ * To provide an implementation of {@link InformationService}, register an
+ * instance of this interface as an OSGi service with the property
+ * {@link Constants#GENERIC_SERVICE_CLASSNAME} set to the name of the Class
+ * that this {@link InformationService} provides information for.
  */
+@ExtensionPoint
 public interface InformationService<T extends Ref> extends Ordered {
     
     /**

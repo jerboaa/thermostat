@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.client.core.views;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * This services provides an appropriate {@link HostInformationView}.
  */
+@ExtensionPoint
 public interface HostInformationViewProvider extends ViewProvider {
 
     @Override

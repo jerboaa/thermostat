@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * Marker service for context menu actions.
  * <br /><br />
@@ -56,6 +58,7 @@ package com.redhat.thermostat.client.osgi.service;
  * 
  * <strong>Exported entry point</strong>: com.redhat.thermostat.client.osgi.service.ContextAction
  */
+@ExtensionPoint
 public interface ContextAction {
     
     String getName();

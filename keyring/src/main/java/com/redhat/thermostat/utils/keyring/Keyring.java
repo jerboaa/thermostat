@@ -36,9 +36,14 @@
 
 package com.redhat.thermostat.utils.keyring;
 
+import com.redhat.thermostat.annotations.Service;
+
 /**
  * Manages sensitive data, like {@link Credentials}, securely.
+ * <p>
+ * An instance of this class can be obtained from OSGi as a service.
  */
+@Service
 public interface Keyring {
 
     /**

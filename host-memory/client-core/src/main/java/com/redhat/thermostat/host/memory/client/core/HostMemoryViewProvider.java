@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.host.memory.client.core;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.client.core.views.ViewProvider;
 
+@Service
 public interface HostMemoryViewProvider extends ViewProvider {
 
     @Override

@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.client.core.views;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * A service that provides a {@link VmInformationView}
  */
+@ExtensionPoint
 public interface VmInformationViewProvider extends ViewProvider {
 
     @Override

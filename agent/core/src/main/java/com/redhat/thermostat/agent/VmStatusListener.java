@@ -36,13 +36,15 @@
 
 package com.redhat.thermostat.agent;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * A listener that is notified when a JVM starts or is stopped.
  * <p>
  * Register an instance of this class as an OSGi service, and it will be
  * notified of all VM {@link Status} events.
  */
-//@ExtensionPoint
+@ExtensionPoint
 public interface VmStatusListener {
 
     enum Status {

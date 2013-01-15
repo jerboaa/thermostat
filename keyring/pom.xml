@@ -115,6 +115,12 @@
       <artifactId>org.osgi.compendium</artifactId>
       <scope>provided</scope>
     </dependency>
-    
+
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-annotations</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 </project>

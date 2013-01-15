@@ -1,0 +1,2 @@
+# This jar provides the following annotation processors:
+com.redhat.thermostat.annotations.internal.AnnotationProcessor

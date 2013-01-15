@@ -38,11 +38,13 @@ package com.redhat.thermostat.vm.classstat.common;
 
 import java.util.List;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.VmClassStat;
 
+@Service
 public interface VmClassStatDAO {
 
     static final Key<Long> loadedClassesKey = new Key<>("loadedClasses", false);

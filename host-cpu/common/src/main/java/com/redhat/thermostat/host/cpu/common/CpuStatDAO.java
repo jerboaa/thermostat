@@ -38,12 +38,14 @@ package com.redhat.thermostat.host.cpu.common;
 
 import java.util.List;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.dao.Countable;
 import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.CpuStat;
 
+@Service
 public interface CpuStatDAO extends Countable {
 
     static Key<List<Double>> cpuLoadKey = new Key<>("perProcessorUsage", false);

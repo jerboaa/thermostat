@@ -36,9 +36,10 @@
 
 package com.redhat.thermostat.vm.classstat.client.core;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.views.ViewProvider;
 
-
+@ExtensionPoint
 public interface VmClassStatViewProvider extends ViewProvider {
 
     @Override

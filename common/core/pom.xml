@@ -160,6 +160,12 @@
       <systemPath>${java.home}/../lib/tools.jar</systemPath>
     </dependency>
     <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-annotations</artifactId>
+      <version>${project.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
     	<groupId>com.redhat.thermostat</groupId>
     	<artifactId>thermostat-keyring</artifactId>
     	<version>${project.version}</version>

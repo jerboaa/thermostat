@@ -38,11 +38,13 @@ package com.redhat.thermostat.vm.gc.common;
 
 import java.util.List;
 
+import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.model.VmGcStat;
 
+@Service
 public interface VmGcStatDAO {
 
     static final Key<String> collectorKey = new Key<>("collectorName", false);

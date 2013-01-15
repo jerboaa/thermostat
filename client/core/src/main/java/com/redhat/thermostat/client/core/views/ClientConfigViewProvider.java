@@ -36,9 +36,12 @@
 
 package com.redhat.thermostat.client.core.views;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
+
 /**
  * A services that provides {@link ClientConfigurationView}s.
  */
+@ExtensionPoint
 public interface ClientConfigViewProvider extends ViewProvider {
 
     @Override

@@ -36,12 +36,14 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
+import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.common.dao.VmRef;
 
 /**
  * A context action for VMs
  */
+@ExtensionPoint
 public interface VMContextAction extends ContextAction {
 
     void execute(VmRef referece);
