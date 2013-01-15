@@ -37,13 +37,20 @@
 package com.redhat.thermostat.vm.gc.agent.internal;
 
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
+import sun.jvmstat.monitor.MonitoredVm;
+import sun.jvmstat.monitor.VmIdentifier;
+import sun.jvmstat.monitor.event.VmListener;
 
+import com.redhat.thermostat.agent.VmStatusListener;
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
@@ -51,28 +58,29 @@ import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
-public class VmGcBackend extends Backend {
+public class VmGcBackend extends Backend implements VmStatusListener {
 
     private static final Logger LOGGER = LoggingUtils.getLogger(VmGcBackend.class);
 
-    private VmGcStatDAO vmGcStats;
-    private HostIdentifier hostId;
+    private final VmGcStatDAO vmGcStats;
+    private final VmStatusListenerRegistrar registerer;
+
+    private final Map<Integer, VmAndListener> registeredListeners = new HashMap<>();
     private MonitoredHost host;
-    private VmGcHostListener hostListener;
     private boolean started;
 
-    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version) {
+    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version, VmStatusListenerRegistrar registerer) {
         super(new BackendID("VM GC Backend", VmGcBackend.class.getName()));
         this.vmGcStats = vmGcStatDAO;
+        this.registerer = registerer;
         
         setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
         setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers garbage collection statistics about a JVM");
         setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
         
         try {
-            hostId = new HostIdentifier((String) null);
+            HostIdentifier hostId = new HostIdentifier((String) null);
             host = MonitoredHost.getMonitoredHost(hostId);
-            hostListener = new VmGcHostListener(vmGcStats, attachToNewProcessByDefault());
         } catch (MonitorException me) {
             LOGGER.log(Level.WARNING, "Problems with connecting jvmstat to local machine", me);
         } catch (URISyntaxException use) {
@@ -80,28 +88,22 @@ public class VmGcBackend extends Backend {
         }
     }
 
+    // Methods from Backend
+
     @Override
     public boolean activate() {
-        if (!started && host != null) {
-            try {
-                host.addHostListener(hostListener);
-                started = true;
-            } catch (MonitorException me) {
-                LOGGER.log(Level.WARNING, "problems with connecting jvmstat to local machine", me);
-            }
+        if (!started) {
+            registerer.register(this);
+            started = true;
         }
         return started;
     }
 
     @Override
     public boolean deactivate() {
-        if (started && host != null) {
-            try {
-                host.removeHostListener(hostListener);
-                started = false;
-            } catch (MonitorException me) {
-                LOGGER.log(Level.INFO, "something went wrong in jvmstat's listening to this host");
-            }
+        if (started) {
+            registerer.unregister(this);
+            started = false;
         }
         return !started;
     }
@@ -131,11 +133,76 @@ public class VmGcBackend extends Backend {
         return ORDER_MEMORY_GROUP + 20;
     }
 
+    // Methods from VmStatusListener
+
+    @Override
+    public void vmStatusChanged(Status newStatus, int pid) {
+        switch (newStatus) {
+        case VM_STARTED:
+            /* fall-through */
+        case VM_ACTIVE:
+            vmStarted(pid);
+            break;
+        case VM_STOPPED:
+            vmStopped(pid);
+            break;
+        }
+    }
+
+    private void vmStarted(int pid) {
+        if (attachToNewProcessByDefault()) {
+            try {
+                MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(new VmIdentifier(String.valueOf(pid))));
+                if (vm != null) {
+                    VmGcVmListener listener = new VmGcVmListener(vmGcStats, pid);
+                    vm.addVmListener(listener);
+                    registeredListeners.put(pid, new VmAndListener(vm, listener));
+                    LOGGER.finer("Attached VmListener for VM: " + pid);
+                } else {
+                    LOGGER.warning("could not connect to vm " + pid);
+                }
+            } catch (MonitorException me) {
+                LOGGER.log(Level.WARNING, "could not connect to vm " + pid, me);
+            } catch (URISyntaxException e) {
+                throw new AssertionError("The URI for the monitored vm must be valid, but it is not.");
+            }
+        }
+    }
+
+    private void vmStopped(int pid) {
+        VmAndListener tuple = registeredListeners.remove(pid);
+        if (tuple == null) {
+            LOGGER.warning("received vm stopped for an unknown VM");
+            return;
+        }
+
+        MonitoredVm vm = tuple.vm;
+        VmListener listener = tuple.listener;
+        try {
+            if (listener != null) {
+                vm.removeVmListener(listener);
+            }
+        } catch (MonitorException e) {
+            LOGGER.log(Level.WARNING, "can't remove vm listener", e);
+        }
+        vm.detach();
+    }
+
     /*
      * For testing purposes only.
      */
     void setHost(MonitoredHost host) {
         this.host = host;
     }
-    
+
+    private static class VmAndListener {
+        private MonitoredVm vm;
+        private VmListener listener;
+
+        public VmAndListener(MonitoredVm vm, VmListener listener) {
+            this.vm = vm;
+            this.listener = listener;
+        }
+
+    }
 }

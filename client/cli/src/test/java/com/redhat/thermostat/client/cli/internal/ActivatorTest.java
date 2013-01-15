@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -64,6 +65,9 @@ public class ActivatorTest {
         Bundle mockBundle = mock(Bundle.class);
         when(FrameworkUtil.getBundle(ShellCommand.class)).thenReturn(mockBundle);
         when(FrameworkUtil.getBundle(VMStatCommand.class)).thenReturn(mockBundle);
+        // When we call createFilter, we need a real return value
+        when(FrameworkUtil.createFilter(anyString())).thenCallRealMethod();
+
         StubBundleContext ctx = new StubBundleContext();
         when(mockBundle.getBundleContext()).thenReturn(ctx);
         

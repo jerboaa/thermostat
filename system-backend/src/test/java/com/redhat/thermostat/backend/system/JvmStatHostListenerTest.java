@@ -41,7 +41,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,6 +64,7 @@ import sun.jvmstat.monitor.StringMonitor;
 import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
+import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
@@ -82,11 +85,14 @@ public class JvmStatHostListenerTest {
     private MonitoredVm monitoredVm2;
     private JvmStatDataExtractor extractor;
     private VmInfoDAO vmInfoDAO;
+    private VmStatusChangeNotifier notifier;
 
     @Before
     public void setup() throws MonitorException, URISyntaxException {
         vmInfoDAO = mock(VmInfoDAO.class);
-        hostListener = new JvmStatHostListener(vmInfoDAO);
+        notifier = mock(VmStatusChangeNotifier.class);
+
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier);
         
         host = mock(MonitoredHost.class);
         HostIdentifier hostId = mock(HostIdentifier.class);
@@ -126,6 +132,8 @@ public class JvmStatHostListenerTest {
         assertTrue(hostListener.getMonitoredVms().containsKey(2));
         assertEquals(monitoredVm1, hostListener.getMonitoredVms().get(1));
         assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2));
+
+        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), (isA(Integer.class)));
     }
     
     @Test
@@ -146,6 +154,9 @@ public class JvmStatHostListenerTest {
         assertFalse(hostListener.getMonitoredVms().containsKey(1));
         assertTrue(hostListener.getMonitoredVms().containsKey(2));
         assertEquals(monitoredVm2, hostListener.getMonitoredVms().get(2));
+
+        verify(notifier).notifyVmStatusChange(eq(Status.VM_STOPPED), (isA(Integer.class)));
+
     }
 
     private void startVMs() throws InterruptedException, MonitorException {
@@ -159,6 +170,8 @@ public class JvmStatHostListenerTest {
         when(event.getStarted()).thenReturn(started);
         when(event.getTerminated()).thenReturn(Collections.emptySet());
         hostListener.vmStatusChanged(event);
+
+        verify(notifier, times(2)).notifyVmStatusChange(eq(Status.VM_STARTED), isA(Integer.class));
     }
 
     @Test

@@ -38,7 +38,7 @@ package com.redhat.thermostat.vm.gc.agent.internal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,36 +47,59 @@ import java.net.URISyntaxException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
-import sun.jvmstat.monitor.event.HostListener;
+import sun.jvmstat.monitor.MonitoredVm;
+import sun.jvmstat.monitor.VmIdentifier;
 
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
 public class VmGcBackendTest {
-    
+
     private VmGcBackend backend;
+    private VmStatusListenerRegistrar registerer;
+
     private MonitoredHost host;
+    private HostIdentifier hostIdentifier;
+    private MonitoredVm monitoredVm1;
 
     @Before
     public void setup() throws MonitorException, URISyntaxException {
         VmGcStatDAO vmGcStatDao = mock(VmGcStatDAO.class);
-        
+
         Version version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn("0.0.0");
-        
-        backend = new VmGcBackend(vmGcStatDao, version);
-        
+
+        registerer = mock(VmStatusListenerRegistrar.class);
+
+        hostIdentifier = mock(HostIdentifier.class);
+        when(hostIdentifier.resolve(isA(VmIdentifier.class))).then(new Answer<VmIdentifier>() {
+            @Override
+            public VmIdentifier answer(InvocationOnMock invocation) throws Throwable {
+                return (VmIdentifier) invocation.getArguments()[0];
+            }
+        });
         host = mock(MonitoredHost.class);
+        when(host.getHostIdentifier()).thenReturn(hostIdentifier);
+
+        monitoredVm1 = mock(MonitoredVm.class);
+
+        backend = new VmGcBackend(vmGcStatDao, version, registerer);
+
         backend.setHost(host);
     }
 
     @Test
     public void testStart() throws MonitorException {
         backend.activate();
-        verify(host).addHostListener(any(HostListener.class));
+        verify(registerer).register(backend);
         assertTrue(backend.isActive());
     }
 
@@ -84,8 +107,31 @@ public class VmGcBackendTest {
     public void testStop() throws MonitorException {
         backend.activate();
         backend.deactivate();
-        verify(host).removeHostListener(any(HostListener.class));
+        verify(registerer).unregister(backend);
         assertFalse(backend.isActive());
     }
-    
+
+    @Test
+    public void testNewVM() throws InterruptedException, MonitorException, URISyntaxException {
+        int VM_PID = 1;
+        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
+        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm1);
+
+        backend.vmStatusChanged(Status.VM_STARTED, 1);
+
+        verify(monitoredVm1).addVmListener(isA(VmGcVmListener.class));
+    }
+
+    @Test
+    public void testStoppedVM() throws InterruptedException, MonitorException, URISyntaxException {
+        int VM_PID = 1;
+        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
+        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm1);
+
+        backend.vmStatusChanged(Status.VM_STARTED, 1);
+        backend.vmStatusChanged(Status.VM_STOPPED, 1);
+
+        verify(monitoredVm1).removeVmListener(isA(VmGcVmListener.class));
+    }
+
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -36,20 +36,40 @@
 
 package com.redhat.thermostat.agent;
 
-public interface JvmStatusNotifier {
+import java.util.HashMap;
+import java.util.Map;
 
-    /**
-     * Request to be informed when JVM processes are started or stopped.
-     * 
-     * @param listener the receiver of future {@link JvmStatusListener.jvmStarted()}
-     * and {@link JvmStatusListener.jvmStopped()} calls
-     */
-    public void addJvmStatusListener(JvmStatusListener listener);
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-    /**
-     * Request to no longer be informed when JVM processes are started or stopped.
-     * @param listener the {@link JvmStatusListener} to be unregistered.
-     */
-    public void removeJvmStatusListener(JvmStatusListener listener);
+/**
+ * Registers a {@link VmStatusListener} as an OSGi Service.
+ * <p>
+ * This is just a convenience wrapper over
+ * {@link BundleContext#registerService(String, Object, java.util.Dictionary)}.
+ * It does absolutely nothing special.
+ *
+ * @see VmStatusListener
+ */
+public class VmStatusListenerRegistrar {
 
+    private final BundleContext context;
+    private final Map<VmStatusListener, ServiceRegistration> registrations = new HashMap<>();
+
+    public VmStatusListenerRegistrar(BundleContext context) {
+        this.context = context;
+    }
+
+    public void register(VmStatusListener listener) {
+        registrations.put(listener, context.registerService(VmStatusListener.class.getName(), listener, null));
+    }
+
+    public void unregister(VmStatusListener listener) {
+        ServiceRegistration registration = registrations.remove(listener);
+        if (registration == null) {
+            throw new IllegalArgumentException("no listener found");
+        }
+
+        registration.unregister();
+    }
 }

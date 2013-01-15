@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,54 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.test;
+package com.redhat.thermostat.agent;
 
-import java.util.Dictionary;
-import java.util.Map;
+/**
+ * A listener that is notified when a JVM starts or is stopped.
+ * <p>
+ * Register an instance of this class as an OSGi service, and it will be
+ * notified of all VM {@link Status} events.
+ */
+//@ExtensionPoint
+public interface VmStatusListener {
 
-import org.osgi.framework.Filter;
-import org.osgi.framework.ServiceReference;
+    enum Status {
 
-import com.redhat.thermostat.common.NotImplementedException;
+        /** A VM has just started now */
+        VM_STARTED,
 
-public class StubFilter implements Filter {
+        /**
+         * A delayed version of {@link #VM_STARTED}. A VM was started at some
+         * point in the past. The listener was not informed about it then
+         * (probably because the listener was not registered at the time), but
+         * is being informed about it now.
+         */
+        VM_ACTIVE,
 
-    private final String filter;
-
-    public StubFilter(String filter) {
-        this.filter = filter;
+        /** A VM was stopped just now */
+        VM_STOPPED,
     }
 
-    @Override
-    public boolean match(ServiceReference reference) {
-        if (filter == null) {
-            return true;
-        }
-        throw new NotImplementedException();
-    }
+    // TODO what other information other than pid may be useful for plugins?
 
-    @Override
-    public boolean match(Dictionary dictionary) {
-        if (filter == null) {
-            return true;
-        }
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public boolean matchCase(Dictionary dictionary) {
-        if (filter == null) {
-            return true;
-        }
-        throw new NotImplementedException();
-    }
-
-    @Override
-    public boolean matches(Map map) {
-        if (filter == null) {
-            return true;
-        }
-        throw new NotImplementedException();
-    }
+    public void vmStatusChanged(Status newStatus, int pid);
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -36,6 +36,11 @@
 
 package com.redhat.thermostat.test;
 
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.Enumeration;
+import java.util.List;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
@@ -57,12 +62,22 @@ public class StubServiceReference implements ServiceReference {
             return new String[] { information.serviceInterface };
         }
 
-        throw new NotImplementedException();
+        return information.properties.get(key);
     }
 
     @Override
     public String[] getPropertyKeys() {
-        throw new NotImplementedException();
+        if (information.properties == null) {
+            return new String[] { Constants.OBJECTCLASS };
+        } else {
+            Dictionary props = information.properties;
+            List<String> toReturn = new ArrayList<>(props.size());
+            Enumeration keyEnumeration = props.keys();
+            while (keyEnumeration.hasMoreElements()) {
+                toReturn.add((String) keyEnumeration.nextElement());
+            }
+            return toReturn.toArray(new String[0]);
+        }
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -36,12 +36,41 @@
 
 package com.redhat.thermostat.agent;
 
-/**
- * A listener that is notified when a JVM starts or is stopped.
- */
-public interface JvmStatusListener {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-    public void jvmStarted(int pid);
+import org.junit.Test;
 
-    public void jvmStopped(int pid);
+import com.redhat.thermostat.agent.VmStatusListener;
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.test.StubBundleContext;
+
+public class VmStatusListenerRegistrarTest {
+
+    @Test
+    public void testRegister() {
+        StubBundleContext context = new StubBundleContext();
+        VmStatusListener listener = mock(VmStatusListener.class);
+
+        VmStatusListenerRegistrar registerer = new VmStatusListenerRegistrar(context);
+        registerer.register(listener);
+
+        assertTrue(context.isServiceRegistered(VmStatusListener.class.getName(), listener.getClass()));
+        assertEquals(1, context.getAllServices().size());
+    }
+
+    @Test
+    public void testUnregister() {
+        StubBundleContext context = new StubBundleContext();
+        VmStatusListener listener = mock(VmStatusListener.class);
+
+        VmStatusListenerRegistrar registerer = new VmStatusListenerRegistrar(context);
+        registerer.register(listener);
+        registerer.unregister(listener);
+
+        assertFalse(context.isServiceRegistered(VmStatusListener.class.getName(), listener.getClass()));
+        assertEquals(0, context.getAllServices().size());
+    }
 }
