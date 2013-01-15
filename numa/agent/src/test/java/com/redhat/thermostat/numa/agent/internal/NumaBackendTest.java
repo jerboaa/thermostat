@@ -108,7 +108,7 @@ public class NumaBackendTest {
         assertTrue(activated);
         assertTrue(backend.isActive());
         verify(timer).setDelay(1);
-        verify(timer).setInitialDelay(1);
+        verify(timer).setInitialDelay(0);
         verify(timer).setTimeUnit(TimeUnit.SECONDS);
         verify(timer).setSchedulingType(Timer.SchedulingType.FIXED_RATE);
         verify(timer).start();
