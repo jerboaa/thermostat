@@ -51,7 +51,7 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest(FrameworkUtil.class)

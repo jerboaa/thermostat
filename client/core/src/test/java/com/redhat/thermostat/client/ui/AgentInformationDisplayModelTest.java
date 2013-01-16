@@ -45,8 +45,8 @@ import java.util.Arrays;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.BackendInfoDAO;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 
 public class AgentInformationDisplayModelTest {

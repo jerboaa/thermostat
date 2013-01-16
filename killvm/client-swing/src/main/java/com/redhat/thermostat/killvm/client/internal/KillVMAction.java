@@ -45,12 +45,12 @@ import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 /**

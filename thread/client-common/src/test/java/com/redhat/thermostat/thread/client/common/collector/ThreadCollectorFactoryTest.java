@@ -41,8 +41,8 @@ import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.impl.ThreadCollectorFactoryImpl;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 

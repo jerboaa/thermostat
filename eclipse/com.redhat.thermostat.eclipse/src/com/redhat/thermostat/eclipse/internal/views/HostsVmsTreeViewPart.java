@@ -51,10 +51,6 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.ViewPart;
 
-import com.redhat.thermostat.common.DefaultHostsVMsLoader;
-import com.redhat.thermostat.common.HostsVMsLoader;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
@@ -64,6 +60,10 @@ import com.redhat.thermostat.eclipse.internal.jobs.ConnectDbJob;
 import com.redhat.thermostat.eclipse.internal.model.HostsVmsLabelProvider;
 import com.redhat.thermostat.eclipse.internal.model.HostsVmsTreeContentProvider;
 import com.redhat.thermostat.eclipse.internal.model.HostsVmsTreeRoot;
+import com.redhat.thermostat.storage.core.DefaultHostsVMsLoader;
+import com.redhat.thermostat.storage.core.HostsVMsLoader;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 /**
  * 

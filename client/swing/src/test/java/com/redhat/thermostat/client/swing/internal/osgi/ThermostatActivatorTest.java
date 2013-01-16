@@ -53,7 +53,7 @@ import com.redhat.thermostat.client.swing.internal.views.SwingClientConfiguratio
 import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ThermostatActivatorTest {
 

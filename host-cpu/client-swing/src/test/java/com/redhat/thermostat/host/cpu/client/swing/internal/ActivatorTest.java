@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
     

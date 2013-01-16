@@ -47,13 +47,13 @@ import org.junit.Test;
 import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcView;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmGcViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 

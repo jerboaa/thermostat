@@ -45,8 +45,8 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class Activator implements BundleActivator {
 

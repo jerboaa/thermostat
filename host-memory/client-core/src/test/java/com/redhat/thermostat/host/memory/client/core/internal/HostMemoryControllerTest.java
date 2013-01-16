@@ -56,12 +56,12 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.host.memory.client.core.internal.HostMemoryController;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.HostInfo;
 import com.redhat.thermostat.storage.model.MemoryStat;
 

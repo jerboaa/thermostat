@@ -43,7 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class ActivatorTest {

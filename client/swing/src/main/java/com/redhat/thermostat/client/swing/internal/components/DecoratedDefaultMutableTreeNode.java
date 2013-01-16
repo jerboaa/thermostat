@@ -42,7 +42,7 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.storage.core.Ref;
 
 public class DecoratedDefaultMutableTreeNode  extends DefaultMutableTreeNode {
     

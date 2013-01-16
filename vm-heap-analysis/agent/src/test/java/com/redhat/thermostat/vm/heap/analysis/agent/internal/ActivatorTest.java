@@ -46,7 +46,7 @@ import org.junit.Test;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.agent.internal.Activator;
 import com.redhat.thermostat.vm.heap.analysis.agent.internal.HeapDumpReceiver;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;

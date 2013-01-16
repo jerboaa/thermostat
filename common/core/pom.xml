@@ -84,7 +84,6 @@
               com.redhat.thermostat.common,
               com.redhat.thermostat.common.appctx,
               com.redhat.thermostat.common.config,
-              com.redhat.thermostat.common.dao,
               com.redhat.thermostat.common.utils,
               com.redhat.thermostat.common.heap,
               com.redhat.thermostat.common.locale,
@@ -170,12 +169,6 @@
     	<artifactId>thermostat-keyring</artifactId>
     	<version>${project.version}</version>
     </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-storage-core</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-
   </dependencies>
 
 </project>

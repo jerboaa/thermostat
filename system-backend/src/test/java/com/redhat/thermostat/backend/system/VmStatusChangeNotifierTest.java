@@ -43,7 +43,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListener.Status;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class VmStatusChangeNotifierTest {
 

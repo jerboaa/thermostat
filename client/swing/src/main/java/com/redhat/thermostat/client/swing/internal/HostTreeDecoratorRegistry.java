@@ -42,7 +42,7 @@ import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostRef;
 
 @SuppressWarnings("rawtypes")
 class HostTreeDecoratorRegistry extends ThermostatExtensionRegistry<DecoratorProvider> {

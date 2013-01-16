@@ -48,7 +48,6 @@ import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.HostMemoryViewPart;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryView;
@@ -56,6 +55,7 @@ import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryViewProvider;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
+import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
 

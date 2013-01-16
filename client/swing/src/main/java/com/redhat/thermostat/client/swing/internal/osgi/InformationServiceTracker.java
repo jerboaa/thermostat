@@ -45,9 +45,9 @@ import org.osgi.util.tracker.ServiceTracker;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.Constants;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 @SuppressWarnings("rawtypes")
 public class InformationServiceTracker extends ServiceTracker {

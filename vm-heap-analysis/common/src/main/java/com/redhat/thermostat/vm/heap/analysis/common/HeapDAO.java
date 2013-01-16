@@ -42,9 +42,9 @@ import java.io.InputStream;
 import java.util.Collection;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.HeapInfo;
 
 @Service

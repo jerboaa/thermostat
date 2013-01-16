@@ -50,10 +50,10 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 
 public class Activator implements BundleActivator {
     

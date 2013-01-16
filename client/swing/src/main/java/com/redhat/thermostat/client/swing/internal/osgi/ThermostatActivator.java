@@ -64,7 +64,7 @@ import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {

@@ -60,7 +60,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.launcher.Launcher;
+import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 

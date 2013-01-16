@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.core;
 import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.storage.core.Ref;
 
 
 /**

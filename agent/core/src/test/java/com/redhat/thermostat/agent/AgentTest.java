@@ -63,10 +63,10 @@ import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.BackendInfoDAO;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
+import com.redhat.thermostat.storage.dao.DAOFactory;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
 

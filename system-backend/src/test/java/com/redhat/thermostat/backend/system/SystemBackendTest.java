@@ -44,10 +44,10 @@ import static org.mockito.Mockito.when;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.DAOFactory;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 
 public class SystemBackendTest {
 

@@ -45,8 +45,8 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.common.OrderedComparator;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmInformationController {
 

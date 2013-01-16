@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;

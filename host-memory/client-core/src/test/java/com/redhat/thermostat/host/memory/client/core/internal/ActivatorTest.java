@@ -45,10 +45,10 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
     

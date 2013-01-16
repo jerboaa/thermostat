@@ -58,8 +58,8 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class SummaryControllerTest {
 

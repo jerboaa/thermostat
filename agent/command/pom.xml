@@ -92,6 +92,12 @@
       <version>${project.version}</version>
     </dependency>
     
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
   </dependencies>
 
   <build>

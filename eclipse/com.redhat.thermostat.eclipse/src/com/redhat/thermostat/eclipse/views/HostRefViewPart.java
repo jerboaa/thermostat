@@ -36,9 +36,9 @@
 
 package com.redhat.thermostat.eclipse.views;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public abstract class HostRefViewPart extends RefViewPart<HostRef> {
 

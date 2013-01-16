@@ -44,7 +44,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
     

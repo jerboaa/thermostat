@@ -53,7 +53,7 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmInformationControllerTest {
 

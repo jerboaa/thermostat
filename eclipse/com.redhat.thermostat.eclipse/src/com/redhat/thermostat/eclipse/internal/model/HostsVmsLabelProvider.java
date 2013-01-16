@@ -39,8 +39,8 @@ package com.redhat.thermostat.eclipse.internal.model;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.swt.graphics.Image;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostsVmsLabelProvider extends LabelProvider {
 

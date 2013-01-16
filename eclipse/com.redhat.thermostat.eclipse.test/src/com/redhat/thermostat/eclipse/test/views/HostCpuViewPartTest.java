@@ -50,8 +50,6 @@ import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.HostCpuViewPart;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostCpuView;
@@ -59,6 +57,8 @@ import com.redhat.thermostat.eclipse.chart.common.SWTHostCpuViewProvider;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostCpuViewPartTest extends AbstractRefViewPartTest<HostRef> {
     

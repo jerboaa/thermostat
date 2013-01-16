@@ -71,6 +71,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.Command;
@@ -79,9 +80,8 @@ import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.utils.ServiceRegistry;
 import com.redhat.thermostat.launcher.BundleManager;
-import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.internal.Activator.RegisterLauncherCustomizer;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 @RunWith(PowerMockRunner.class)

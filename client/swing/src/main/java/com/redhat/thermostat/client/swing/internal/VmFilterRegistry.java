@@ -42,7 +42,7 @@ import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 class VmFilterRegistry extends ThermostatExtensionRegistry<Filter> {
 

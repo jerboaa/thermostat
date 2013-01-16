@@ -38,12 +38,12 @@ package com.redhat.thermostat.numa.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.dao.HostLatestPojoListGetter;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;

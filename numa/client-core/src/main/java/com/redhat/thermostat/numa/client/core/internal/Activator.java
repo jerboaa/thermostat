@@ -50,10 +50,10 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.numa.client.core.NumaInformationService;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 
 public class Activator implements BundleActivator {
     

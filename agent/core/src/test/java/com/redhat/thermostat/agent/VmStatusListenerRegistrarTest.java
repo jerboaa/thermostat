@@ -45,7 +45,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class VmStatusListenerRegistrarTest {
 

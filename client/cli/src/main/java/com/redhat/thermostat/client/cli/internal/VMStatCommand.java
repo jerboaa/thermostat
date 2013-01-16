@@ -38,7 +38,6 @@ package com.redhat.thermostat.client.cli.internal;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
@@ -51,16 +50,15 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.SimpleCommand;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class VMStatCommand extends SimpleCommand {
 

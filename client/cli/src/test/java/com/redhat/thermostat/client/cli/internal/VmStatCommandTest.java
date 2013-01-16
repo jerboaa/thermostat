@@ -68,9 +68,15 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
 

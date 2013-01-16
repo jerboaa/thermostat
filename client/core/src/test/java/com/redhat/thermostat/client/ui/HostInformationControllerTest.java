@@ -53,7 +53,7 @@ import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostInformationControllerTest {
 

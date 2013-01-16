@@ -57,12 +57,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 @RunWith(PowerMockRunner.class)

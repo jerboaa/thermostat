@@ -46,8 +46,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilterMenuAction;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class LivingVMFilterTest {

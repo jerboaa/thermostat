@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
-import com.redhat.thermostat.common.DbService;
-import com.redhat.thermostat.common.DbServiceFactory;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
@@ -45,6 +43,8 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
 

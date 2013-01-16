@@ -41,9 +41,9 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.numa.client.core.internal.NumaController;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 
 public class NumaInformationService implements InformationService<HostRef> {
     

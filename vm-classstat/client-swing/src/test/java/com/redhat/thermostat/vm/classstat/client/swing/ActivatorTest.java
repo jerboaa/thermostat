@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 public class ActivatorTest {

@@ -43,7 +43,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
 

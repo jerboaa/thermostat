@@ -41,7 +41,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.common.collector.impl.ThreadCollectorFactoryImpl;
 import com.redhat.thermostat.thread.dao.ThreadDao;

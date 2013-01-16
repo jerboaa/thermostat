@@ -38,17 +38,33 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.Filter;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({FrameworkUtil.class})
 public class ActivatorTest {
 
     @Test
     public void testCommandsRegistered() throws Exception {
         StubBundleContext ctx = new StubBundleContext();
+        
+        makeServiceLoaderHappy(ctx);
+        
         Activator activator = new Activator();
         
         activator.start(ctx);
@@ -64,6 +80,26 @@ public class ActivatorTest {
         activator.stop(ctx);
         
         assertEquals(0, ctx.getAllServices().size());
+    }
+
+    private void makeServiceLoaderHappy(StubBundleContext ctx) {
+        // ShellCommands no-arg constructor uses FrameworkUtil to get
+        // the bundle context. This results in NPEs when ServiceLoader
+        // attempts to load Command classes. Note that client-cli is
+        // a dep of this bundle and hence ServiceLoader wants to instantiate
+        // Command classes from there too.
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle mockBundle = mock(Bundle.class);
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(mockBundle);
+        when(mockBundle.getBundleContext()).thenReturn(ctx);
+        Filter mockFilter = mock(Filter.class);
+        // StubBundleContext.createFilter() returns null if FrameworkUtil is
+        // mocked, so mock the offending static call too.
+        try {
+            when(FrameworkUtil.createFilter(any(String.class))).thenReturn(mockFilter);
+        } catch (InvalidSyntaxException e) {
+            // ignored
+        }
     }
 }
 

@@ -39,10 +39,10 @@ package com.redhat.thermostat.eclipse.chart.vmclassstat;
 import org.eclipse.swt.widgets.Composite;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.VmRefViewPart;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 

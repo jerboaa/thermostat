@@ -36,7 +36,6 @@
 
 package com.redhat.thermostat.storage.config;
 
-
 public class ConnectionConfiguration implements StartupConfiguration, AuthenticationConfiguration {
 
     private String dbUrl;

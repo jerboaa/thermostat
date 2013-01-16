@@ -53,7 +53,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;

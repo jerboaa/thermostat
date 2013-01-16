@@ -39,7 +39,6 @@ package com.redhat.thermostat.host.memory.common.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -49,11 +48,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;

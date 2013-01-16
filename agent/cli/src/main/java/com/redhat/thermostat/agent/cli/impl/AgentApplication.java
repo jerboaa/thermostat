@@ -53,21 +53,21 @@ import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
+import com.redhat.thermostat.common.cli.BasicCommand;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.DAOFactoryImpl;
-import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.storage.core.StorageProviderUtil;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
+import com.redhat.thermostat.storage.dao.DAOFactory;
+import com.redhat.thermostat.storage.dao.DAOFactoryImpl;
 
 @SuppressWarnings("restriction")
 public final class AgentApplication extends BasicCommand {
@@ -94,11 +94,6 @@ public final class AgentApplication extends BasicCommand {
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
         parser = new AgentOptionParser(configuration, args);
         parser.parse();
-    }
-
-    @Override
-    public AgentStartupConfiguration getConfiguration() {
-        return configuration;
     }
     
     private void runAgent(CommandContext ctx) {

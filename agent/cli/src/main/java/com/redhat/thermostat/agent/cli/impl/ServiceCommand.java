@@ -45,13 +45,13 @@ import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.launcher.Launcher;
 
 /**
  * Simple service that allows starting Agent and DB Backend

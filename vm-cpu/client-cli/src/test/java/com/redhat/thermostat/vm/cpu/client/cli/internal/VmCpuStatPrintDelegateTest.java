@@ -51,8 +51,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;

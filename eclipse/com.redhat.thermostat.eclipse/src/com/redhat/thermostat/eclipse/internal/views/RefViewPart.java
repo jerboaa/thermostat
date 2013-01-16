@@ -50,9 +50,9 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
-import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
+import com.redhat.thermostat.storage.core.Ref;
 
 public abstract class RefViewPart<T extends Ref> extends ViewPart implements
         ISelectionListener {

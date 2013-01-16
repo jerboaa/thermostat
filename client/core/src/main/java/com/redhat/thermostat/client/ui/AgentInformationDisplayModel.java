@@ -42,10 +42,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
-import com.redhat.thermostat.common.dao.BackendInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
 

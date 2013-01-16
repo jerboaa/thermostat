@@ -48,10 +48,10 @@ import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.HostsVMsLoader;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.Ref;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostsVMsLoader;
+import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public interface MainView {
 

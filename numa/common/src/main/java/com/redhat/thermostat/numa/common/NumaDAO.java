@@ -38,8 +38,8 @@ package com.redhat.thermostat.numa.common;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 
 public interface NumaDAO {

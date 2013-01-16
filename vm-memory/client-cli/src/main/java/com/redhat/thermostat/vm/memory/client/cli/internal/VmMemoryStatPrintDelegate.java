@@ -41,8 +41,8 @@ import java.util.List;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.Size;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;

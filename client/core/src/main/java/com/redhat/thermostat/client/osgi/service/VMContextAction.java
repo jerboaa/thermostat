@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.osgi.service;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 /**
  * {@code VMContextAction}s provide actions that are associated with Java

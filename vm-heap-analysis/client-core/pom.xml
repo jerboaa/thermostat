@@ -157,6 +157,12 @@
       <scope>system</scope>
       <systemPath>${java.home}/../lib/tools.jar</systemPath>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
     
   </dependencies>
 </project>

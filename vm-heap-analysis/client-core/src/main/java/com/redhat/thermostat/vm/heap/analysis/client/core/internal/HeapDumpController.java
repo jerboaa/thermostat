@@ -36,8 +36,6 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -54,9 +52,9 @@ import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
@@ -79,7 +77,6 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
-    private final VmInfoDAO vmInfoDao;
     private final VmMemoryStatDAO vmDao;
     private final VmRef ref;
     
@@ -124,7 +121,6 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         this.detailsViewProvider = detailsViewProvider;
         this.appService = appService;
         this.ref = ref;
-        this.vmInfoDao = vmInfoDao;
         this.vmDao = vmMemoryStatDao;
         this.heapDAO = heapDao;
         

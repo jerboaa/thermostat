@@ -49,12 +49,12 @@ import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.model.HeapInfo;

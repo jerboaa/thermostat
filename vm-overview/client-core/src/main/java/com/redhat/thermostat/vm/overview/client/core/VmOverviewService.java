@@ -41,9 +41,9 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.overview.client.core.internal.VmOverviewController;
 
 public class VmOverviewService implements InformationService<VmRef> {

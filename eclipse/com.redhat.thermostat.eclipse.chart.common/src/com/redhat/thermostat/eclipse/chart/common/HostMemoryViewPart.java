@@ -39,12 +39,12 @@ package com.redhat.thermostat.eclipse.chart.common;
 import org.eclipse.swt.widgets.Composite;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
+import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostMemoryViewPart extends HostRefViewPart {
 

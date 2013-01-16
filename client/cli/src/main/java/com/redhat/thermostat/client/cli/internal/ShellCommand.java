@@ -52,6 +52,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
@@ -59,7 +60,6 @@ import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.launcher.Launcher;
 
 public class ShellCommand extends SimpleCommand {
 

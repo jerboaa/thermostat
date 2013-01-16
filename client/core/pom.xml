@@ -85,6 +85,12 @@
     </dependency>
     
     <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-storage-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    
+    <dependency>
       <groupId>org.jfree</groupId>
       <artifactId>jfreechart</artifactId>
     </dependency>

@@ -53,8 +53,8 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class HeapDumperTest {
     private static final String TEST_HOST_ID = "1111111";

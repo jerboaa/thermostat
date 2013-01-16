@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.vm.overview.client.locale;
 
-import com.redhat.thermostat.test.locale.AbstractLocaleResourcesTest;
+import com.redhat.thermostat.testutils.AbstractLocaleResourcesTest;
 
 public class LocaleResourcesTest extends AbstractLocaleResourcesTest<LocaleResources> {
 

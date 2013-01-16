@@ -38,7 +38,7 @@ package com.redhat.thermostat.thread.client.common.collector;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;

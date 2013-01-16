@@ -42,10 +42,10 @@ import java.util.List;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public interface UiFacadeFactory {
 

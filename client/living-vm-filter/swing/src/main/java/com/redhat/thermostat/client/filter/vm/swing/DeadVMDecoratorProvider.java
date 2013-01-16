@@ -42,8 +42,8 @@ import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 
 public class DeadVMDecoratorProvider implements DecoratorProvider<VmRef> {

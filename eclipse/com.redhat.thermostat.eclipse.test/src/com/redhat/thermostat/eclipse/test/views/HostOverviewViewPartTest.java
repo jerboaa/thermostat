@@ -48,7 +48,6 @@ import org.mockito.InOrder;
 
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.views.UIComponent;
-import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.internal.views.HostOverviewViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
@@ -56,6 +55,7 @@ import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewView;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
+import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
 

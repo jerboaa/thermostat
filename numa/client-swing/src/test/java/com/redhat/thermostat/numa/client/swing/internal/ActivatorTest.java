@@ -44,7 +44,7 @@ import org.junit.Test;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 import com.redhat.thermostat.numa.client.swing.internal.Activator;
 import com.redhat.thermostat.numa.client.swing.internal.SwingNumaViewProvider;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
     

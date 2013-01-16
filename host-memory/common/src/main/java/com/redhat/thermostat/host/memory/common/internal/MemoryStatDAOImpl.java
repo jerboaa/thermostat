@@ -38,8 +38,8 @@ package com.redhat.thermostat.host.memory.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.dao.HostLatestPojoListGetter;
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;

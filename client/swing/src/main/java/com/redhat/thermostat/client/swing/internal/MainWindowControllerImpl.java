@@ -72,19 +72,19 @@ import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.DefaultHostsVMsLoader;
-import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.Ref;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.storage.core.DefaultHostsVMsLoader;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostsVMsLoader;
+import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class MainWindowControllerImpl implements MainWindowController {

@@ -60,8 +60,6 @@ import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.dao.DAOFactory;
-import com.redhat.thermostat.common.dao.DAOFactoryImpl;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -72,6 +70,8 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Connection.ConnectionType;
 import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.storage.core.StorageProviderUtil;
+import com.redhat.thermostat.storage.dao.DAOFactory;
+import com.redhat.thermostat.storage.dao.DAOFactoryImpl;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Main {

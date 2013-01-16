@@ -46,7 +46,7 @@ import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.internal.Activator;
 import com.redhat.thermostat.numa.common.internal.NumaDAOImpl;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
     

@@ -41,13 +41,13 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-import com.redhat.thermostat.common.DbService;
-import com.redhat.thermostat.common.DbServiceFactory;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.core.DbServiceFactory;
 
 public class ConnectDbJob extends Job {
 

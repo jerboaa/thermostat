@@ -46,7 +46,7 @@ import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.sun.tools.attach.VirtualMachine;
 
 public class MXBeanConnector implements Closeable {

@@ -50,7 +50,7 @@ import org.osgi.framework.Version;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
     

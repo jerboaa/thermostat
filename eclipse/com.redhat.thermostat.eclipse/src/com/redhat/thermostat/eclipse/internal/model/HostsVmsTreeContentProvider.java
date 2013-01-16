@@ -42,9 +42,9 @@ import java.util.Map;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 
-import com.redhat.thermostat.common.HostsVMsLoader;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostsVMsLoader;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostsVmsTreeContentProvider implements ITreeContentProvider {
 

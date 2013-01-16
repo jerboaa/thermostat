@@ -44,7 +44,7 @@ import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class HostContextActionServiceTrackerTest {
 

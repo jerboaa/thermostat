@@ -51,12 +51,12 @@ import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.junit.Before;
 
-import com.redhat.thermostat.common.dao.Ref;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.internal.views.HostsVmsTreeViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
+import com.redhat.thermostat.storage.core.Ref;
 
 public abstract class AbstractRefViewPartTest<T extends Ref> {
 

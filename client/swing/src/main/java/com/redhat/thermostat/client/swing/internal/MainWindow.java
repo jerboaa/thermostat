@@ -112,12 +112,12 @@ import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.HostsVMsLoader;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.Ref;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.StringUtils;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostsVMsLoader;
+import com.redhat.thermostat.storage.core.Ref;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class MainWindow extends JFrame implements MainView {
     

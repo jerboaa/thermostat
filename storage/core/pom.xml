@@ -65,6 +65,7 @@
               com.redhat.thermostat.storage.core,
               com.redhat.thermostat.storage.config,
               com.redhat.thermostat.storage.model,
+              com.redhat.thermostat.storage.dao,
             </Export-Package>
             <!-- TODO: For the thread tab (i.e. thread plug-in) the web server
                  bundle requires model classes provided by said bundle. Since
@@ -75,6 +76,11 @@
                  for user-provided bundles which contribute DAOs/models in the
                  same way. -->
             <DynamicImport-Package>com.redhat.thermostat.*</DynamicImport-Package>
+            <Private-Package>
+              com.redhat.thermostat.storage.internal.dao,
+              com.redhat.thermostat.storage.internal,
+              com.redhat.thermostat.storage.internal.test,
+            </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>
@@ -98,6 +104,12 @@
       <artifactId>thermostat-annotations</artifactId>
       <version>${project.version}</version>
       <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
     </dependency>
   </dependencies>
 

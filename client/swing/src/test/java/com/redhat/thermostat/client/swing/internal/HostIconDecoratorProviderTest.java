@@ -51,7 +51,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostIconDecoratorProviderTest {
 

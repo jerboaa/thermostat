@@ -49,8 +49,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;

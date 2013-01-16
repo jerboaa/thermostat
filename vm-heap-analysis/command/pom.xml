@@ -83,6 +83,16 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-api-mockito</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-module-junit4</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <scope>provided</scope>
@@ -103,11 +113,11 @@
       <artifactId>thermostat-client-command</artifactId>
       <version>${project.version}</version>
     </dependency>
+    
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-common-test</artifactId>
+      <artifactId>thermostat-client-cli</artifactId>
       <version>${project.version}</version>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -118,6 +128,12 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-vm-heap-analysis-agent</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-common-test</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

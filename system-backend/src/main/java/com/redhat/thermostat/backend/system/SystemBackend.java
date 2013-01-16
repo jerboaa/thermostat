@@ -48,13 +48,12 @@ import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
-import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 

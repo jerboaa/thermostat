@@ -45,10 +45,10 @@ import static org.junit.Assert.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.eclipse.internal.model.HostsVmsLabelProvider;
 import com.redhat.thermostat.eclipse.internal.model.HostsVmsTreeRoot;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 public class HostsVmsLabelProviderTest {
 

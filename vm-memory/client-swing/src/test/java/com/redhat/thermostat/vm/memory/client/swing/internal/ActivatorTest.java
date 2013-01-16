@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.client.swing.internal.Activator;
 import com.redhat.thermostat.vm.memory.client.swing.internal.SwingMemoryStatsViewProvider;

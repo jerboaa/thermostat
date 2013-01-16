@@ -84,8 +84,8 @@ import com.redhat.thermostat.client.swing.components.SearchField;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.HostsVMsLoader;
-import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.HostsVMsLoader;
 
 @RunWith(CacioFESTRunner.class)
 public class MainWindowTest {

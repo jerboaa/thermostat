@@ -58,11 +58,11 @@ import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.common.dao.DAOFactory;
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.test.StubBundleContext;
+import com.redhat.thermostat.storage.dao.DAOFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class AgentApplicationTest {
 

@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.osgi.service;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.ui.Decorator;
-import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.storage.core.Ref;
 
 /**
  * This interface allows plugins to install a custom {@link Decorator} into

@@ -39,6 +39,7 @@ package com.redhat.thermostat.agent.cli.impl.db;
 import java.io.File;
 import java.io.IOException;
 
+import com.redhat.thermostat.common.cli.BasicCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -46,7 +47,6 @@ import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.common.tools.BasicCommand;
 
 public class StorageCommand extends BasicCommand {
 
@@ -137,7 +137,6 @@ public class StorageCommand extends BasicCommand {
         }
     }
 
-    @Override
     public DBStartupConfiguration getConfiguration() {
         return configuration;
     }

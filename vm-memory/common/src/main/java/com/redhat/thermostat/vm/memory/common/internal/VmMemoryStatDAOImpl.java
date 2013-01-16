@@ -38,14 +38,14 @@ package com.redhat.thermostat.vm.memory.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.dao.VmLatestPojoListGetter;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 

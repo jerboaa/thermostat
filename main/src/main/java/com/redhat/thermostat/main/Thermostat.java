@@ -48,8 +48,8 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.config.Configuration;
-import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 
 public class Thermostat implements Runnable {

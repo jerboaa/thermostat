@@ -64,9 +64,9 @@ import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.cli.SimpleArguments;
+import com.redhat.thermostat.launcher.TestCommand;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.test.TestCommandContextFactory;
-import com.redhat.thermostat.test.cli.TestCommand;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({HelpCommand.class, FrameworkUtil.class})

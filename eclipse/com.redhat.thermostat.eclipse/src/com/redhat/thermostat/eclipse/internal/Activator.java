@@ -44,12 +44,12 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.DbService;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.DbService;
 
 /**
  * The activator class controls the plug-in life cycle

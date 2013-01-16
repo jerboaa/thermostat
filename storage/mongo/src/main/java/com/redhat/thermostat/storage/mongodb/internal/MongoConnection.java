@@ -70,6 +70,7 @@ class MongoConnection extends Connection {
             connected = true;
 
         } catch (IOException | MongoException | IllegalArgumentException e) {
+            e.printStackTrace();
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             throw new ConnectionException(e.getMessage(), e);
         }

@@ -39,7 +39,7 @@ package com.redhat.thermostat.client.cli;
 import java.util.List;
 
 import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 /**

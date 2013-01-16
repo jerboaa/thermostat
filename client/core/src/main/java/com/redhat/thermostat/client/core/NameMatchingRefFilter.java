@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.core;
 
 import java.util.Objects;
 
-import com.redhat.thermostat.common.dao.Ref;
+import com.redhat.thermostat.storage.core.Ref;
 
 /**
  * A {@link Filter} that checks if the name of a {@link Ref} contains

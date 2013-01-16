@@ -65,8 +65,8 @@ import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.VmStatusChangeEvent;
 
 import com.redhat.thermostat.agent.VmStatusListener.Status;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class JvmStatHostListenerTest {
     
@@ -197,4 +197,3 @@ public class JvmStatHostListenerTest {
         assertEquals(INFO_VMVER, info.getVmVersion());
     }
 }
-

@@ -38,10 +38,10 @@ package com.redhat.thermostat.vm.classstat.common.internal;
 
 import java.util.List;
 
-import com.redhat.thermostat.common.dao.VmLatestPojoListGetter;
-import com.redhat.thermostat.common.dao.VmRef;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.VmLatestPojoListGetter;
+import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.VmClassStat;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
