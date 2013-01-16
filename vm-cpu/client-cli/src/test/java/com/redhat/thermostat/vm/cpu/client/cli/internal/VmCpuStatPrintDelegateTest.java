@@ -42,9 +42,12 @@ import static org.mockito.Mockito.when;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
@@ -56,10 +59,23 @@ import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
 public class VmCpuStatPrintDelegateTest {
 
+    private static Locale defaultLocale;
+
     private VmCpuStatDAO vmCpuStatDAO;
     private VmCpuStatPrintDelegate delegate;
     private VmRef vm;
     private List<VmCpuStat> cpuStats;
+
+    @BeforeClass
+    public static void setUpBeforeClass() {
+        defaultLocale = Locale.getDefault();
+        Locale.setDefault(Locale.US);
+    }
+
+    @AfterClass
+    public static void tearDownAfterClass() {
+        Locale.setDefault(defaultLocale);
+    }
 
     @Before
     public void setUp() {
