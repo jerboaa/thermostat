@@ -69,7 +69,6 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.tools.BasicCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.storage.core.ConnectionException;
@@ -237,8 +236,7 @@ public class LauncherImpl implements Launcher {
                 notifier.addActionListener(listener);
             }
         }
-        CommonCommandOptions commonOpts = new CommonCommandOptions();
-        Options options = commonOpts.getOptionsFor(cmd);
+        Options options = cmd.getOptions();
         Arguments args = parseCommandArguments(cmdArgs, options);
         setupLogLevel(args);
         CommandContext ctx = setupCommandContext(cmd, args);
@@ -246,8 +244,8 @@ public class LauncherImpl implements Launcher {
     }
 
     private void setupLogLevel(Arguments args) {
-        if (args.hasArgument(CommonCommandOptions.LOG_LEVEL_ARG)) {
-            String levelOption = args.getArgument(CommonCommandOptions.LOG_LEVEL_ARG);
+        if (args.hasArgument(CommonOptions.LOG_LEVEL_ARG)) {
+            String levelOption = args.getArgument(CommonOptions.LOG_LEVEL_ARG);
             setLogLevel(levelOption);
         }
     }
@@ -292,12 +290,12 @@ public class LauncherImpl implements Launcher {
         if (cmd.isStorageRequired()) {
             ServiceReference dbServiceReference = context.getServiceReference(DbService.class);
             if (dbServiceReference == null) {
-                String dbUrl = ctx.getArguments().getArgument(CommonCommandOptions.DB_URL_ARG);
+                String dbUrl = ctx.getArguments().getArgument(CommonOptions.DB_URL_ARG);
                 if (dbUrl == null) {
                     dbUrl = prefs.getConnectionUrl();
                 }
-                String username = ctx.getArguments().getArgument(CommonCommandOptions.USERNAME_ARG);
-                String password = ctx.getArguments().getArgument(CommonCommandOptions.PASSWORD_ARG);
+                String username = ctx.getArguments().getArgument(CommonOptions.USERNAME_ARG);
+                String password = ctx.getArguments().getArgument(CommonOptions.PASSWORD_ARG);
                 try {
                     // this may throw storage exception
                     DbService service = dbServiceFactory.createDbService(username, password, dbUrl);

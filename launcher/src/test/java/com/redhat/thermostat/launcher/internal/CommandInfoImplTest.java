@@ -55,6 +55,8 @@ import org.apache.commons.cli.Options;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.locale.Translate;
+
 public class CommandInfoImplTest {
 
     private Path tempThermostatHome, someJarName1, someJarName2, missingJarName;
@@ -190,6 +192,53 @@ public class CommandInfoImplTest {
         assertFalse(bar.hasArg());
         assertFalse(bar.isRequired());
         assertEquals("the bar option", bar.getDescription());
+    }
+    
+    @Test
+    public void canAddCommonDBOptions() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "AUTO_DB_OPTIONS");
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+
+        Options options = info.getOptions();
+        assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
+        assertTrue(options.hasOption(CommonOptions.USERNAME_ARG));
+        assertTrue(options.hasOption(CommonOptions.PASSWORD_ARG));
+        assertFalse(options.getOption(CommonOptions.DB_URL_ARG).isRequired());
+        Option dbUrlOption = options.getOption(CommonOptions.DB_URL_ARG);
+        Translate<LocaleResources> t = LocaleResources.createLocalizer();
+        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC), dbUrlOption.getDescription());
+        assertEquals("d", dbUrlOption.getOpt());
+        assertEquals("dbUrl", dbUrlOption.getLongOpt());
+    }
+    
+    @Test
+    public void requiredCommandPropertyOverridesCommonDbOptions() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
+        props.put("dbUrl.long", "ignored");
+        props.put("dbUrl.required", "true");
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+
+        Options options = info.getOptions();
+        assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
+        Option dbUrlOption = options.getOption(CommonOptions.DB_URL_ARG);
+        assertTrue(dbUrlOption.isRequired());
+        assertEquals("dbUrl", dbUrlOption.getLongOpt());
+    }
+    
+    @Test
+    public void canAddLogOption() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "AUTO_LOG_OPTION");
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+
+        Options options = info.getOptions();
+        assertTrue(options.hasOption(CommonOptions.LOG_LEVEL_ARG));
+        assertFalse(options.getOption(CommonOptions.LOG_LEVEL_ARG).isRequired());
     }
 
     @Test

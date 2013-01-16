@@ -144,13 +144,10 @@ public class CliTest extends IntegrationTest {
 
         String[] lines = stdOut.split("\n");
         String usage = lines[0];
-        assertTrue(usage.matches("^usage: shell \\[.*\\]$"));
+        assertTrue(usage.matches("^usage: thermostat shell$"));
         String description = lines[1];
-
-        for (int i = 2; i < lines.length; i++) {
-            String argLine = lines[i];
-            assertTrue(argLine.matches("^\\s+--\\w+\\s.*$"));
-        }
+        assertTrue(description.matches("^\\s+launches the Thermostat interactive shell$"));
+        assertTrue(lines[2].matches("thermostat shell"));
     }
 
     @Test

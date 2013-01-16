@@ -45,11 +45,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
@@ -65,7 +62,6 @@ import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.launcher.CommonCommandOptions;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 
 @RunWith(PowerMockRunner.class)
@@ -168,29 +164,4 @@ public class ConnectCommandTest {
         assertNotNull(cmd.getUsage());
     }
 
-    @Ignore
-    @Test
-    public void testAcceptedArguments() {
-        Options options = cmd.getOptions();
-        assertNotNull(options);
-        assertTrue(options.getOptions().size() == 3);
-
-        assertTrue(options.hasOption(CommonCommandOptions.DB_URL_ARG));
-        Option db = options.getOption(CommonCommandOptions.DB_URL_ARG);
-        assertEquals(CommonCommandOptions.DB_URL_DESC, db.getDescription());
-        assertTrue(db.isRequired());
-        assertTrue(db.hasArg());
-
-        assertTrue(options.hasOption(CommonCommandOptions.USERNAME_ARG));
-        Option user = options.getOption(CommonCommandOptions.USERNAME_ARG);
-        assertEquals(CommonCommandOptions.USERNAME_DESC, user.getDescription());
-        assertFalse(user.isRequired());
-        assertTrue(user.hasArg());
-
-        assertTrue(options.hasOption(CommonCommandOptions.PASSWORD_ARG));
-        Option pass = options.getOption(CommonCommandOptions.PASSWORD_ARG);
-        assertEquals(CommonCommandOptions.PASSWORD_DESC, pass.getDescription());
-        assertFalse(pass.isRequired());
-        assertTrue(pass.hasArg());
-    }
 }

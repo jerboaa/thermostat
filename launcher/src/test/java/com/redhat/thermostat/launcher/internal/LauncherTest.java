@@ -165,7 +165,11 @@ public class LauncherTest {
         options1.addOption(opt1);
         Option opt2 = new Option(null, "arg2", true, null);
         options1.addOption(opt2);
-        cmd1.addOptions(opt1, opt2);
+        // cmd1 needs logLevel option since it is used in tests if logLevel
+        // option is properly set up
+        Option logLevel = new Option("l", "logLevel", true, null);
+        options1.addOption(logLevel);
+        cmd1.addOptions(opt1, opt2, logLevel);
         cmd1.setDescription("description 1");
         when(info1.getDescription()).thenReturn("description 1");
         when(info1.getOptions()).thenReturn(options1);
