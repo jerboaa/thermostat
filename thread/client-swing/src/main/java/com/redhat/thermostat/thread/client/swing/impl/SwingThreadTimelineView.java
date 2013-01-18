@@ -38,42 +38,29 @@ package com.redhat.thermostat.thread.client.swing.impl;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.awt.Point;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
-import javax.swing.ListCellRenderer;
 import javax.swing.SwingUtilities;
-import javax.swing.SwingWorker;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.common.model.LongRange;
-
 import com.redhat.thermostat.thread.client.common.Timeline;
-import com.redhat.thermostat.thread.client.common.TimelineInfo;
 import com.redhat.thermostat.thread.client.common.view.ThreadTimelineView;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineCellRenderer;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineComponent;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineRulerHeader;
 import com.redhat.thermostat.thread.client.swing.impl.timeline.TimelineUtils;
-import com.redhat.thermostat.thread.model.ThreadInfoData;
 
 public class SwingThreadTimelineView extends ThreadTimelineView implements SwingComponent  {
-
-    private final String lock = new String("SwingThreadTimelineViewLock");
         
     private JPanel timeLinePanel;
     private JList<TimelineComponent> chartList;
@@ -110,6 +97,14 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
         timeLinePanel.add(timelineLegend, BorderLayout.SOUTH);
     }
     
+    private class ScrollChangeListener implements ChangeListener {
+        @Override
+        public void stateChanged(ChangeEvent e) {
+            scrollPane.repaint();
+            header.repaint();
+        }
+    }
+    
     private JScrollPane createScrollPane() {
         scrollPane = new JScrollPane(chartList);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -118,51 +113,51 @@ public class SwingThreadTimelineView extends ThreadTimelineView implements Swing
         long now = System.currentTimeMillis();
         header = new TimelineRulerHeader(new LongRange(now, now + TimelineUtils.STEP), scrollPane);
         scrollPane.setColumnHeaderView(header);
-        scrollPane.getHorizontalScrollBar().getModel().addChangeListener(new ChangeListener() {
+
+        ScrollChangeListener listener = new ScrollChangeListener();
+        
+        scrollPane.getHorizontalScrollBar().getModel().addChangeListener(listener);
+        scrollPane.getVerticalScrollBar().getModel().addChangeListener(listener);
+        
+        return scrollPane;
+    }
+    
+    private void handleScrollBar() {
+        SwingUtilities.invokeLater(new Runnable() {
             @Override
-            public void stateChanged(ChangeEvent e) {
-                scrollPane.repaint();
+            public void run() {        
+                JScrollBar scrollBar = scrollPane.getHorizontalScrollBar();                
+                if (!chartModel.isEmpty()) {
+                    TimelineComponent component = chartModel.getElementAt(0);
+
+                    int extent = scrollBar.getVisibleAmount();
+                    int min = scrollBar.getMinimum();
+                    int max = component.getWidth() + (2 * TimelineUtils.INC);
+
+                    scrollBar.setValues(max - extent, extent, min, max);
+                }
             }
         });
-        scrollPane.getVerticalScrollBar().getModel().addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(ChangeEvent e) {
-                scrollPane.repaint();
-            }
-        });        
-        return scrollPane;
     }
     
     @Override
     public void displayStats(final List<Timeline> timelines, final LongRange range) {
+                
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                range.setMax(range.getMax() + (2 * TimelineUtils.STEP));
                 chartModel.removeAllElements();
                 for (Timeline timeline : timelines) {
                     chartModel.addElement(new TimelineComponent(range, timeline, scrollPane));
                 }
                 header.getRange().setMin(range.getMin());
                 header.getRange().setMax(range.getMax());
+                
+                handleScrollBar();
             }
         });
     }
-    
-//    private class SelectedThreadListener implements PropertyChangeListener {
-//        @Override
-//        public void propertyChange(final PropertyChangeEvent evt) {
-//            SwingWorker<Void, Void> notifier = new SwingWorker<Void, Void>() {
-//                @Override
-//                protected Void doInBackground() throws Exception {
-//                    SwingThreadTimelineView.this.
-//                    threadTimelineNotifier.fireAction(ThreadTimelineView.ThreadTimelineViewAction.THREAD_TIMELINE_SELECTED,
-//                                                      evt.getNewValue());
-//                    return null;
-//                }
-//            };
-//            notifier.execute();
-//        }
-//    }
     
     @Override
     public Component getUiComponent() {
