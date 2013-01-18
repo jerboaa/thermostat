@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,77 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
+
 package com.redhat.thermostat.numa.common;
 
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
 
+@Entity
 public class NumaStat extends BasePojo {
 
-    private long numaHit = -1;
-    private long numaMiss = -1;
-    private long numaForeign = -1;
-    private long interleaveHit = -1;
-    private long localNode = -1;
-    private long otherNode = -1;
-    private int node = -1;
+    private long timeStamp = -1;
+    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
 
-    public long getNumaHit() {
-        return numaHit;
+    @Persist
+    public long getTimeStamp() {
+        return timeStamp;
     }
 
-    public void setNumaHit(long numaHit) {
-        this.numaHit = numaHit;
+    @Persist
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 
-    public long getNumaMiss() {
-        return numaMiss;
+    @Persist
+    public NumaNodeStat[] getNodeStats() {
+        return nodeStats;
     }
 
-    public void setNumaMiss(long numaMiss) {
-        this.numaMiss = numaMiss;
+    @Persist
+    public void setNodeStats(NumaNodeStat[] nodeStats) {
+        this.nodeStats = nodeStats;
     }
 
-    public long getNumaForeign() {
-        return numaForeign;
-    }
-
-    public void setNumaForeign(long numaForeign) {
-        this.numaForeign = numaForeign;
-    }
-
-    public long getInterleaveHit() {
-        return interleaveHit;
-    }
-
-    public void setInterleaveHit(long interleaveHit) {
-        this.interleaveHit = interleaveHit;
-    }
-
-    public long getLocalNode() {
-        return localNode;
-    }
-
-    public void setLocalNode(long localNode) {
-        this.localNode = localNode;
-    }
-
-    public long getOtherNode() {
-        return otherNode;
-    }
-
-    public void setOtherNode(long otherNode) {
-        this.otherNode = otherNode;
-    }
-
-    public int getNode() {
-        return node;
-    }
-
-    public void setNode(int node) {
-        this.node = node;
-    }
-
-    public String toString() {
-        return "NumaStat: node: " + node + ", numaHit: " + numaHit + ", numaMiss: " + numaMiss + ", numaForeign: " + numaForeign + ", interleaveHit: " + interleaveHit + ", localNode: " + localNode + ", otherNode: " + otherNode;
-    }
 }

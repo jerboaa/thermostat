@@ -137,18 +137,6 @@
             <Export-Package>
               com.redhat.thermostat.web.server
             </Export-Package>
-            <!-- TODO: For the thread tab (i.e. thread plug-in) the web server
-                 bundle requires model classes provided by said bundle. Since
-                 no explicit imports (in the Java import sense) are in our code,
-                 the maven bundle plugin seems to fail on us. Therefore we need
-                 these explicit Import-Package instructions. If not there, this
-                 results in class not found exceptions. This may be a problem
-                 for user-provided bundles which contribute DAOs/models in the
-                 same way. -->
-            <Import-Package>
-              com.redhat.thermostat.thread.model,
-              *
-            </Import-Package>
             <Private-Package>
               com.redhat.thermostat.web.server.internal
             </Private-Package>

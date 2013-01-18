@@ -38,29 +38,70 @@
 package com.redhat.thermostat.numa.common;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Category;
+public class NumaNodeStatTest {
 
-public class NumaDAOTest {
+    private NumaNodeStat stat;
+
+    @Before
+    public void setUp() {
+        stat = new NumaNodeStat();
+        stat.setNodeId(1);
+        stat.setNumaHit(2);
+        stat.setNumaMiss(3);
+        stat.setNumaForeign(4);
+        stat.setInterleaveHit(5);
+        stat.setLocalNode(6);
+        stat.setOtherNode(7);
+    }
+
+    @After
+    public void tearDown() {
+        stat = null;
+    }
 
     @Test
-    public void testCategory() {
-        Category<?> cat = NumaDAO.numaStatCategory;
-        assertEquals("numa-stat", cat.getName());
-        assertEquals(NumaStat.class, cat.getDataClass());
-        assertEquals(3, cat.getKeys().size());
+    public void testDefaults() {
+        NumaNodeStat stat = new NumaNodeStat();
+        assertEquals(-1, stat.getNodeId());
+        assertEquals(-1, stat.getNumaHit());
+        assertEquals(-1, stat.getNumaMiss());
+        assertEquals(-1, stat.getNumaForeign());
+        assertEquals(-1, stat.getInterleaveHit());
+        assertEquals(-1, stat.getLocalNode());
+        assertEquals(-1, stat.getOtherNode());
+    }
 
-        assertEquals("agentId", cat.getKey("agentId").getName());
-        assertTrue(cat.getKey("agentId").isPartialCategoryKey());
-        assertEquals("timeStamp", cat.getKey("timeStamp").getName());
-        assertFalse(cat.getKey("timeStamp").isPartialCategoryKey());
+    @Test
+    public void testProperties() {
 
-        assertEquals("nodeStats", cat.getKey("nodeStats").getName());
-        assertFalse(cat.getKey("nodeStats").isPartialCategoryKey());
+        assertEquals(1, stat.getNodeId());
+        assertEquals(2, stat.getNumaHit());
+        assertEquals(3, stat.getNumaMiss());
+        assertEquals(4, stat.getNumaForeign());
+        assertEquals(5, stat.getInterleaveHit());
+        assertEquals(6, stat.getLocalNode());
+        assertEquals(7, stat.getOtherNode());
+        
+    }
 
+    @Test
+    public void testToString() {
+        NumaNodeStat stat = new NumaNodeStat();
+        stat.setNodeId(1);
+        stat.setNumaHit(2);
+        stat.setNumaMiss(3);
+        stat.setNumaForeign(4);
+        stat.setInterleaveHit(5);
+        stat.setLocalNode(6);
+        stat.setOtherNode(7);
+
+        String str = stat.toString();
+        String expected = "NumaStat: nodeId: 1, numaHit: 2, numaMiss: 3, numaForeign: 4, interleaveHit: 5, localNode: 6, otherNode: 7";
+        assertEquals(expected, str);
     }
 }

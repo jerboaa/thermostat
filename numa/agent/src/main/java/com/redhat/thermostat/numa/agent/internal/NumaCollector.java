@@ -44,7 +44,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import com.redhat.thermostat.numa.common.NumaStat;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 
 class NumaCollector {
 
@@ -75,8 +75,8 @@ class NumaCollector {
         numberOfNodes = nodeFiles.length;
     }
 
-    NumaStat[] collectData() throws IOException {
-        NumaStat[] stat = new NumaStat[numberOfNodes];
+    NumaNodeStat[] collectData() throws IOException {
+        NumaNodeStat[] stat = new NumaNodeStat[numberOfNodes];
         for (int i = 0; i < numberOfNodes; i++) {
             File nodeDir = new File(baseDir, NODE_DIR_PREFIX + i);
             File numaStatFile = new File(nodeDir, NUMA_STAT_FILE);
@@ -84,7 +84,7 @@ class NumaCollector {
                 Reader reader = new InputStreamReader(in);
                 NumaStatBuilder builder = new NumaStatBuilder(reader);
                 stat[i] = builder.build();
-                stat[i].setNode(i);
+                stat[i].setNodeId(i);
             }
         }
         return stat;

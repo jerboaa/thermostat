@@ -40,7 +40,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import com.redhat.thermostat.numa.common.NumaStat;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 
 class NumaStatBuilder {
 
@@ -50,13 +50,13 @@ class NumaStatBuilder {
         this.in = in;
     }
 
-    NumaStat build() throws IOException {
-        NumaStat numaStat = new NumaStat();
+    NumaNodeStat build() throws IOException {
+        NumaNodeStat numaStat = new NumaNodeStat();
         readNumaData(numaStat);
         return numaStat;
     }
 
-    private void readNumaData(NumaStat numaStat) throws IOException {
+    private void readNumaData(NumaNodeStat numaStat) throws IOException {
         BufferedReader bufIn = new BufferedReader(in);
         String line = bufIn.readLine();
         while (line != null) {

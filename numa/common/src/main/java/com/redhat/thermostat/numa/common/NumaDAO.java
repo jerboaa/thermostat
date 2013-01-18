@@ -41,16 +41,9 @@ import com.redhat.thermostat.storage.core.Key;
 
 public interface NumaDAO {
 
-    static final Key<Integer> nodeKey = new Key<>("node", true);
-    static final Key<Long> numaHitKey = new Key<>("numaHit", false);
-    static final Key<Long> numaMissKey = new Key<>("numaMiss", false);
-    static final Key<Long> numaForeignKey = new Key<>("numaForeign", false);
-    static final Key<Long> interleaveHitKey = new Key<>("interleaveHit", false);
-    static final Key<Long> localNodeKey = new Key<>("localNode", false);
-    static final Key<Long> otherNodeKey = new Key<>("otherNode", false);
+    static final Key<NumaNodeStat[]> nodeStats = new Key<>("nodeStats", false);
     
-    static final Category<NumaStat> numaStatCategory = new Category<>("numa-stat", NumaStat.class, Key.AGENT_ID, Key.TIMESTAMP,
-            nodeKey, numaHitKey, numaMissKey, numaForeignKey, interleaveHitKey, localNodeKey, otherNodeKey);
+    static final Category<NumaStat> numaStatCategory = new Category<>("numa-stat", NumaStat.class, Key.AGENT_ID, Key.TIMESTAMP, nodeStats);
 
     void putNumaStat(NumaStat stat);
 }

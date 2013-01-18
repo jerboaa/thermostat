@@ -50,6 +50,7 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 
 public class NumaBackend extends Backend {
@@ -88,12 +89,13 @@ public class NumaBackend extends Backend {
 
             @Override
             public void run() {
-                NumaStat[] stats;
+                NumaNodeStat[] stats;
                 try {
                     stats = numaCollector.collectData();
-                    for (NumaStat stat : stats) {
-                        numaDAO.putNumaStat(stat);
-                    }
+                    NumaStat numaStat = new NumaStat();
+                    numaStat.setTimeStamp(System.currentTimeMillis());
+                    numaStat.setNodeStats(stats);
+                    numaDAO.putNumaStat(numaStat);
                 } catch (IOException e) {
                     log.log(Level.WARNING, e.getMessage(), e);
                 }

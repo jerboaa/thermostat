@@ -44,7 +44,7 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.numa.common.NumaStat;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 
 public class NumaStatBuilderTest {
 
@@ -59,7 +59,7 @@ public class NumaStatBuilderTest {
     public void test() throws IOException {
         Reader in = new StringReader(TEST_STAT);
         NumaStatBuilder builder = new NumaStatBuilder(in);
-        NumaStat stat = builder.build();
+        NumaNodeStat stat = builder.build();
         assertEquals(32931L, stat.getNumaHit());
         assertEquals(819L, stat.getNumaMiss());
         assertEquals(918L, stat.getNumaForeign());

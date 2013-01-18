@@ -47,6 +47,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Storage;
@@ -79,8 +80,8 @@ public class NumaDAOImplTest {
         Add add = mock(Add.class);
         when(storage.createAdd(NumaDAO.numaStatCategory)).thenReturn(add);
 
-        NumaStat stat = new NumaStat();
-        stat.setNode(1);
+        NumaNodeStat stat = new NumaNodeStat();
+        stat.setNodeId(1);
         stat.setNumaHit(2);
         stat.setNumaMiss(3);
         stat.setNumaForeign(4);
@@ -88,12 +89,15 @@ public class NumaDAOImplTest {
         stat.setLocalNode(6);
         stat.setOtherNode(7);
 
-        numaDAO.putNumaStat(stat);
+        NumaStat numaStat = new NumaStat();
+        numaStat.setTimeStamp(12345);
+        numaStat.setNodeStats(new NumaNodeStat[] { stat });
+        numaDAO.putNumaStat(numaStat);
 
         verify(storage).registerCategory(NumaDAO.numaStatCategory);
         verify(storage).createAdd(NumaDAO.numaStatCategory);
         verifyNoMoreInteractions(storage);
-        verify(add).setPojo(stat);
+        verify(add).setPojo(numaStat);
         verify(add).apply();
         verifyNoMoreInteractions(add);
     }

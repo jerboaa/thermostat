@@ -52,7 +52,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.numa.common.NumaStat;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 
 public class NumaCollectorTest {
 
@@ -128,11 +128,11 @@ public class NumaCollectorTest {
     @Test
     public void testStats() throws IOException {
         NumaCollector coll = new NumaCollector(tmpDir.getAbsolutePath());
-        NumaStat[] stats = coll.collectData();
+        NumaNodeStat[] stats = coll.collectData();
 
         assertEquals(3, stats.length);
 
-        assertEquals(0, stats[0].getNode());
+        assertEquals(0, stats[0].getNodeId());
         assertEquals(11, stats[0].getNumaHit());
         assertEquals(12, stats[0].getNumaMiss());
         assertEquals(13, stats[0].getNumaForeign());
@@ -140,7 +140,7 @@ public class NumaCollectorTest {
         assertEquals(15, stats[0].getLocalNode());
         assertEquals(16, stats[0].getOtherNode());
 
-        assertEquals(1, stats[1].getNode());
+        assertEquals(1, stats[1].getNodeId());
         assertEquals(21, stats[1].getNumaHit());
         assertEquals(22, stats[1].getNumaMiss());
         assertEquals(23, stats[1].getNumaForeign());
@@ -148,7 +148,7 @@ public class NumaCollectorTest {
         assertEquals(25, stats[1].getLocalNode());
         assertEquals(26, stats[1].getOtherNode());
 
-        assertEquals(2, stats[2].getNode());
+        assertEquals(2, stats[2].getNodeId());
         assertEquals(31, stats[2].getNumaHit());
         assertEquals(32, stats[2].getNumaMiss());
         assertEquals(33, stats[2].getNumaForeign());

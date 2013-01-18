@@ -38,6 +38,7 @@ package com.redhat.thermostat.numa.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -62,6 +63,7 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 
 public class NumaBackendTest {
@@ -96,14 +98,17 @@ public class NumaBackendTest {
     }
 
     @Test
-    public void testActivate() throws IOException {
+    public void testActivate() throws IOException, InterruptedException {
+
         ArgumentCaptor<Runnable> actionCaptor = ArgumentCaptor.forClass(Runnable.class);
         doNothing().when(timer).setAction(actionCaptor.capture());
-        NumaStat stat1 = mock(NumaStat.class);
-        NumaStat stat2 = mock(NumaStat.class);
-        NumaStat[] stats = new NumaStat[] { stat1, stat2 };
+        NumaNodeStat stat1 = mock(NumaNodeStat.class);
+        NumaNodeStat stat2 = mock(NumaNodeStat.class);
+        NumaNodeStat[] stats = new NumaNodeStat[] { stat1, stat2 };
         when(collector.collectData()).thenReturn(stats);
-
+        ArgumentCaptor<NumaStat> statCaptor = ArgumentCaptor.forClass(NumaStat.class);
+        doNothing().when(numaDAO).putNumaStat(statCaptor.capture());
+        
         boolean activated = backend.activate();
         assertTrue(activated);
         assertTrue(backend.isActive());
@@ -121,14 +126,30 @@ public class NumaBackendTest {
 
         action.run();
         verify(collector).collectData();
-        verify(numaDAO).putNumaStat(stat1);
-        verify(numaDAO).putNumaStat(stat2);
+        verify(numaDAO).putNumaStat(any(NumaStat.class));
+        NumaStat stat = statCaptor.getValue();
+        assertSame(stat1, stat.getNodeStats()[0]);
+        assertSame(stat2, stat.getNodeStats()[1]);
+        long time1 = stat.getTimeStamp();
+        verifyNoMoreInteractions(numaDAO);
+        verifyNoMoreInteractions(collector);
+
+        Thread.sleep(10);
+
+        action.run();
+        verify(collector, times(2)).collectData();
+        verify(numaDAO, times(2)).putNumaStat(any(NumaStat.class));
+        stat = statCaptor.getValue();
+        assertSame(stat1, stat.getNodeStats()[0]);
+        assertSame(stat2, stat.getNodeStats()[1]);
+        long time2 = stat.getTimeStamp();
+        assertTrue(time2 > time1);
         verifyNoMoreInteractions(numaDAO);
         verifyNoMoreInteractions(collector);
 
         when(collector.collectData()).thenThrow(new IOException());
         action.run();
-        verify(collector, times(2)).collectData();
+        verify(collector, times(3)).collectData();
         verifyNoMoreInteractions(collector);
         verifyNoMoreInteractions(numaDAO);
 
