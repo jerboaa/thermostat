@@ -39,20 +39,27 @@ package com.redhat.thermostat.test;
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Dictionary;
-import java.util.Iterator;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.BundleListener;
+import org.osgi.framework.Constants;
 import org.osgi.framework.Filter;
 import org.osgi.framework.FrameworkListener;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceEvent;
+import org.osgi.framework.ServiceFactory;
 import org.osgi.framework.ServiceListener;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -68,31 +75,23 @@ import com.redhat.thermostat.common.NotImplementedException;
 public class StubBundleContext implements BundleContext {
 
     static class ServiceInformation {
-        public String serviceInterface;
         public Object implementation;
         public Dictionary properties;
         public int exportedReferences;
 
-        public ServiceInformation(String className, Object impl, Dictionary props) {
-            this.serviceInterface = className;
+        public ServiceInformation(Object impl, Dictionary props) {
             this.implementation = impl;
             this.properties = props;
         }
     }
 
-    static class ListenerSpec {
-        public ServiceListener listener;
-        public Filter filter;
+    private int nextServiceId = 0;
 
-        public ListenerSpec(ServiceListener listener, Filter filter) {
-            this.listener = listener;
-            this.filter = filter;
-        }
-    }
-
+    private Map<String, String> frameworkProperties = new HashMap<>();
     private List<Bundle> bundles = new ArrayList<>();
     private List<ServiceInformation> registeredServices = new ArrayList<>();
-    private List<ListenerSpec> registeredListeners = new ArrayList<>();
+    private Map<ServiceListener, Filter> registeredListeners = new HashMap<>();
+    private Bundle contextBundle = null;
 
     /*
      * Interface methods
@@ -100,12 +99,17 @@ public class StubBundleContext implements BundleContext {
 
     @Override
     public String getProperty(String key) {
-        throw new NotImplementedException();
+        String result = null;
+        result = frameworkProperties.get(key);
+        if (result == null) {
+            result = System.getProperty(key);
+        }
+        return result;
     }
 
     @Override
     public Bundle getBundle() {
-        throw new NotImplementedException();
+        return contextBundle;
     }
 
     @Override
@@ -123,34 +127,40 @@ public class StubBundleContext implements BundleContext {
         if (id > Integer.MAX_VALUE) {
             throw new NotImplementedException();
         }
+        if (id >= bundles.size()) {
+            return null;
+        }
+
         return bundles.get((int) id);
     }
 
     @Override
-    public Bundle[] getBundles() {
+    public Bundle getBundle(String location) {
         throw new NotImplementedException();
+    }
+
+    @Override
+    public Bundle[] getBundles() {
+        return bundles.toArray(new Bundle[bundles.size()]);
     }
 
     @Override
     public void addServiceListener(ServiceListener listener, String filter) throws InvalidSyntaxException {
-        ListenerSpec spec = new ListenerSpec(listener, createFilter(filter));
-        registeredListeners.add(spec);
+        registeredListeners.put(listener, filter == null ? null : createFilter(filter));
     }
 
     @Override
     public void addServiceListener(ServiceListener listener) {
-        throw new NotImplementedException();
+        try {
+            addServiceListener(listener, null);
+        } catch (InvalidSyntaxException e) {
+            throw new AssertionError("a null filter can not have invalid systax");
+        }
     }
 
     @Override
     public void removeServiceListener(ServiceListener listener) {
-        Iterator<ListenerSpec> iter = registeredListeners.iterator();
-        while (iter.hasNext()) {
-            ListenerSpec item = iter.next();
-            if (item.listener == listener) {
-                iter.remove();
-            }
-        }
+        registeredListeners.remove(listener);
     }
 
     @Override
@@ -179,70 +189,125 @@ public class StubBundleContext implements BundleContext {
     }
 
     @Override
-    public ServiceRegistration registerService(String[] clazzes, Object service, Dictionary properties) {
-        throw new NotImplementedException();
+    public ServiceRegistration registerService(String className, Object service, Dictionary properties) {
+        return registerService(new String[] { className }, service, properties);
     }
 
     @Override
-    public ServiceRegistration registerService(String className, Object service, Dictionary properties) {
-        ServiceInformation info = new ServiceInformation(className, service, properties);
+    public ServiceRegistration registerService(String[] clazzes, Object service, Dictionary properties) {
+        if (service instanceof ServiceFactory) {
+            throw new NotImplementedException("support for service factories is not implemented");
+        }
+
+        for (String className : clazzes) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                if (!clazz.isAssignableFrom(service.getClass())) {
+                    throw new IllegalArgumentException("service is not a subclass of " + className);
+                }
+            } catch (ClassNotFoundException classNotFound) {
+                throw new IllegalArgumentException("not a valid class: " + className);
+            }
+        }
+
+        Object specifiedRanking = null;
+        Hashtable<String, Object> newProperties = new Hashtable<>();
+        if (properties != null) {
+            Enumeration<?> enumeration = properties.keys();
+            while (enumeration.hasMoreElements()) {
+                Object key = enumeration.nextElement();
+                newProperties.put((String)key, properties.get(key));
+            }
+            specifiedRanking = properties.get(Constants.SERVICE_RANKING);
+        }
+
+        newProperties.put(Constants.OBJECTCLASS, clazzes);
+        newProperties.put(Constants.SERVICE_ID, nextServiceId);
+        nextServiceId++;
+        if (specifiedRanking == null || !(specifiedRanking instanceof Integer)) {
+            specifiedRanking = 0;
+        }
+        newProperties.put(Constants.SERVICE_RANKING, (Integer) specifiedRanking);
+
+        ServiceInformation info = new ServiceInformation(service, newProperties);
         registeredServices.add(info);
 
-        notifyServiceChange(new StubServiceReference(info), true);
+        notifyServiceChange(new StubServiceReference(info, contextBundle), true);
 
         return new StubServiceRegistration(this, info);
     }
 
     @Override
-    public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
-        List<ServiceReference> toReturn = new ArrayList<>();
-
-        if (filter == null) {
-            for (ServiceInformation info : registeredServices) {
-                if (info.serviceInterface.equals(clazz)) {
-                    toReturn.add(new StubServiceReference(info));
-                }
-            }
-        } else {
-            Filter toMatch = createFilter(filter);
-            for (ServiceInformation info : registeredServices) {
-                if (info.serviceInterface.equals(clazz) && toMatch.match(info.properties)) {
-                    toReturn.add(new StubServiceReference(info));
-                }
-            }
-        }
-        return toReturn.toArray(new ServiceReference[0]);
-    }
-
-    @Override
-    public ServiceReference[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
-        throw new NotImplementedException();
+    public ServiceReference getServiceReference(Class clazz) {
+        return getServiceReference(clazz.getName());
     }
 
     @Override
     public ServiceReference getServiceReference(String clazz) {
-        ServiceReference result = null;
-        for (ServiceInformation info : registeredServices) {
-            if (info.serviceInterface.equals(clazz)) {
-                result = new StubServiceReference(info);
+        try {
+            ServiceReference[] initial = getServiceReferences(clazz, null);
+            if (initial == null) {
+                return null;
             }
-        }
-        return result;
-    }
 
-    @Override
-    public ServiceReference getServiceReference(Class clazz) {
-        for (ServiceInformation info : registeredServices) {
-            if (info.serviceInterface.equals(clazz.getName())) {
-                return new StubServiceReference(info);
-            }
+            Arrays.sort(initial);
+            return initial[initial.length-1];
+        } catch (InvalidSyntaxException invalidFilterSyntax) {
+            throw new AssertionError("a null filter can not have an invalid syntax");
         }
-        return null;
     }
 
     @Override
     public Collection getServiceReferences(Class clazz, String filter) throws InvalidSyntaxException {
-        throw new NotImplementedException();
+        return Arrays.asList(getServiceReferences(clazz.getName(), filter));
+    }
+
+    @Override
+    public ServiceReference[] getServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
+        ServiceReference[] allRefs = getAllServiceReferences(clazz, filter);
+        if (allRefs == null) {
+            return null;
+        }
+
+        List<ServiceReference> result = new ArrayList<>();
+        for (ServiceReference ref : allRefs) {
+            if (ref.isAssignableTo(contextBundle, clazz)) {
+                result.add(ref);
+            }
+        }
+        return result.toArray(new ServiceReference[0]);
+    }
+
+    @Override
+    public ServiceReference[] getAllServiceReferences(String clazz, String filter) throws InvalidSyntaxException {
+        List<ServiceReference> toReturn = new ArrayList<>();
+
+        Filter toMatch = (filter == null) ? null : createFilter(filter);
+
+        for (ServiceInformation info : registeredServices) {
+            for (String serviceInterface : (String[]) info.properties.get(Constants.OBJECTCLASS)) {
+                if (clazz == null || serviceInterface.equals(clazz)) {
+                    if (toMatch == null || toMatch.match(info.properties)) {
+                        toReturn.add(new StubServiceReference(info, contextBundle));
+                    }
+                }
+            }
+        }
+
+        if (toReturn.size() == 0) {
+            return null;
+        }
+        return toReturn.toArray(new ServiceReference[0]);
+    }
+
+
+    @Override
+    public Filter createFilter(String filter) throws InvalidSyntaxException {
+        // FIXME this will break service trackers if FrameworkUtil is mocked.
+        // The following call will return null if FrameworkUtil is mocked.
+        // that's a problem because this is meant to be used (mostly) in test
+        // environments and that's where FrameworkUtil is likely to be mocked.
+        return FrameworkUtil.createFilter(filter);
     }
 
     @Override
@@ -260,6 +325,9 @@ public class StubBundleContext implements BundleContext {
         if (info.exportedReferences == 0) {
             return false;
         }
+        if (!registeredServices.contains(info)) {
+            return false;
+        }
         info.exportedReferences--;
         return true;
     }
@@ -269,32 +337,30 @@ public class StubBundleContext implements BundleContext {
         throw new NotImplementedException();
     }
 
-    @Override
-    public Filter createFilter(String filter) throws InvalidSyntaxException {
-        // FIXME this will break service trackers if FrameworkUtil is mocked
-        // the following call will return null if FrameworkUtil is mocked.
-        // that's a problem because this is meant to be used (mostly) in test
-        // environments and that's where FrameworkUtil is likely to be mocked.
-        return FrameworkUtil.createFilter(filter);
-    }
-
-    @Override
-    public Bundle getBundle(String location) {
-        throw new NotImplementedException();
-    }
-
     /*
      * Our custom methods
      */
+    public void setProperty(String key, String value) {
+        frameworkProperties.put(key, value);
+    }
 
+    /** Set the context bundle */
+    public void setBundle(Bundle bundle) {
+        this.contextBundle = bundle;
+    }
+
+    /** Set the bundle associated with an id */
     public void setBundle(int i, Bundle bundle) {
         bundles.add(i, bundle);
     }
 
     public boolean isServiceRegistered(String serviceName, Class<?> implementationClass) {
         for (ServiceInformation info : registeredServices) {
-            if (info.serviceInterface.equals(serviceName) && info.implementation.getClass().equals(implementationClass)) {
-                return true;
+            for (String serviceInterface : (String[]) info.properties.get(Constants.OBJECTCLASS)) {
+                if (serviceInterface.equals(serviceName)
+                        && info.implementation.getClass().equals(implementationClass)) {
+                    return true;
+                }
             }
         }
         return false;
@@ -304,24 +370,26 @@ public class StubBundleContext implements BundleContext {
         return registeredServices;
     }
 
-    public Collection<ListenerSpec> getServiceListeners() {
-        return registeredListeners;
+    public Collection<ServiceListener> getServiceListeners() {
+        return registeredListeners.keySet();
     }
 
     public void removeService(ServiceInformation info) {
         if (!registeredServices.contains(info)) {
-            throw new IllegalStateException("service not registered");
+            throw new IllegalArgumentException("service not registered");
         }
         registeredServices.remove(info);
-        notifyServiceChange(new StubServiceReference(info), false);
+        notifyServiceChange(new StubServiceReference(info, contextBundle), false);
     }
 
     private void notifyServiceChange(ServiceReference serviceReference, boolean registered) {
         int eventType = registered ? ServiceEvent.REGISTERED : ServiceEvent.UNREGISTERING;
         ServiceEvent event = new ServiceEvent(eventType, serviceReference);
-        for (ListenerSpec l : registeredListeners) {
-            if (l.filter.match(serviceReference)) {
-                l.listener.serviceChanged(event);
+        for (Entry<ServiceListener, Filter> entry : registeredListeners.entrySet()) {
+            ServiceListener listener = entry.getKey();
+            Filter filter = entry.getValue();
+            if (filter == null || filter.match(serviceReference)) {
+                listener.serviceChanged(event);
             }
         }
     }

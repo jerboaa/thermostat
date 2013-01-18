@@ -40,13 +40,13 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.common.dao.VmInfoDAO;
 import com.redhat.thermostat.test.StubBundleContext;
-import com.redhat.thermostat.test.StubServiceReference;
-import com.redhat.thermostat.test.StubServiceRegistration;
 
 public class VMFilterActivatorTest {
     
@@ -57,8 +57,8 @@ public class VMFilterActivatorTest {
         activator.start(ctx);
         
         VmInfoDAO dao = mock(VmInfoDAO.class);
-        StubServiceRegistration reg = (StubServiceRegistration) ctx.registerService(VmInfoDAO.class, dao, null);
-        StubServiceReference ref = new StubServiceReference(reg.getInfo());
+        ServiceRegistration reg = ctx.registerService(VmInfoDAO.class, dao, null);
+        ServiceReference ref = reg.getReference();
         activator.vmInfoDaoTracker.addingService(ref);
         
         assertTrue(ctx.isServiceRegistered(MenuAction.class.getName(), LivingVMFilterMenuAction.class));
