@@ -51,7 +51,7 @@ public interface Query<T extends Pojo> {
         LESS_THAN,
         LESS_THAN_OR_EQUAL_TO,
     }
-
+    
     enum SortDirection {
         ASCENDING(1),
         DESCENDING(-1);
@@ -68,7 +68,7 @@ public interface Query<T extends Pojo> {
     }
 
     <S> void where(Key<S> key, Criteria criteria, S value);
-
+    
     void sort(Key<?> key, SortDirection direction);
 
     void limit(int n);

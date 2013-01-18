@@ -36,9 +36,13 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.AbstractQuery;
 import com.redhat.thermostat.storage.core.Category;
@@ -50,6 +54,8 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
 
     private MongoStorage storage;
     private BasicDBObject query = new BasicDBObject();
+    private Map<String, BasicDBObjectBuilder> builerMap;
+    
     private boolean hasClauses = false;
     private Category<T> category;
     private Class<T> resultClass;
@@ -58,6 +64,7 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
         this.storage = storage;
         this.category = category;
         this.resultClass = category.getDataClass();
+        this.builerMap = new HashMap<String, BasicDBObjectBuilder>();
     }
 
     public Category<T> getCategory() {
@@ -74,31 +81,45 @@ public class MongoQuery<T extends Pojo> extends AbstractQuery<T> {
     }
 
     public void where(String key, Criteria operator, Object value) {
-        switch (operator) {
-        case EQUALS:
+
+        // strict equality is mutually exclusive on the key
+        if (operator.equals(Criteria.EQUALS)) {
             query.put(key, value);
-            break;
-
-        case NOT_EQUAL_TO:
-            query.put(key, new BasicDBObject("$ne", value));
-            break;
-
-        case LESS_THAN:
-            query.put(key, new BasicDBObject("$lt", value));
-            break;
-
-        case LESS_THAN_OR_EQUAL_TO:
-            query.put(key, new BasicDBObject("$lte", value));
-            break;
-        case GREATER_THAN:
-            query.put(key, new BasicDBObject("$gt", value));
-            break;
-
-        case GREATER_THAN_OR_EQUAL_TO:
-            query.put(key, new BasicDBObject("$gte", value));
-            break;
-        default:
-            throw new IllegalArgumentException("MongoQuery can not handle " + operator);
+        
+        } else {
+            BasicDBObjectBuilder queryParameters = null;
+            if (builerMap.containsKey(key)) {
+                queryParameters = (BasicDBObjectBuilder) builerMap.get(key);
+            } else {
+                queryParameters = BasicDBObjectBuilder.start();
+                builerMap.put(key, queryParameters);
+            }
+            
+            switch (operator) {
+    
+            case NOT_EQUAL_TO:
+                queryParameters.add("$ne", value);
+                break;
+    
+            case LESS_THAN:
+                queryParameters.add("$lt", value);
+                break;
+    
+            case LESS_THAN_OR_EQUAL_TO:
+                queryParameters.add("$lte", value);
+                break;
+            case GREATER_THAN:
+                queryParameters.add("$gt", value);
+                break;
+    
+            case GREATER_THAN_OR_EQUAL_TO:
+                queryParameters.add("$gte", value);
+                break;
+    
+            default:
+                throw new IllegalArgumentException("MongoQuery can not handle " + operator);
+            }
+            query.put(key, queryParameters.get());
         }
         hasClauses = true;
     }
