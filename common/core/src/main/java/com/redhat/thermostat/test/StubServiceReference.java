@@ -50,39 +50,33 @@ import com.redhat.thermostat.test.StubBundleContext.ServiceInformation;
 
 public class StubServiceReference implements ServiceReference {
 
-    private ServiceInformation information;
+    private final Bundle sourceBundle;
+    private final ServiceInformation information;
 
-    public StubServiceReference(ServiceInformation info) {
+    public StubServiceReference(ServiceInformation info, Bundle sourceBundle) {
         this.information = info;
+        this.sourceBundle = sourceBundle;
     }
 
     @Override
     public Object getProperty(String key) {
-        if (Constants.OBJECTCLASS.equals(key)) {
-            return new String[] { information.serviceInterface };
-        }
-
         return information.properties.get(key);
     }
 
     @Override
     public String[] getPropertyKeys() {
-        if (information.properties == null) {
-            return new String[] { Constants.OBJECTCLASS };
-        } else {
-            Dictionary props = information.properties;
-            List<String> toReturn = new ArrayList<>(props.size());
-            Enumeration keyEnumeration = props.keys();
-            while (keyEnumeration.hasMoreElements()) {
-                toReturn.add((String) keyEnumeration.nextElement());
-            }
-            return toReturn.toArray(new String[0]);
+        Dictionary props = information.properties;
+        List<String> toReturn = new ArrayList<>(props.size());
+        Enumeration keyEnumeration = props.keys();
+        while (keyEnumeration.hasMoreElements()) {
+            toReturn.add((String) keyEnumeration.nextElement());
         }
+        return toReturn.toArray(new String[0]);
     }
 
     @Override
     public Bundle getBundle() {
-        throw new NotImplementedException();
+        return sourceBundle;
     }
 
     @Override
@@ -92,12 +86,39 @@ public class StubServiceReference implements ServiceReference {
 
     @Override
     public boolean isAssignableTo(Bundle bundle, String className) {
+        if (sourceBundle == bundle) {
+            return true;
+        }
         throw new NotImplementedException();
     }
 
     @Override
     public int compareTo(Object reference) {
-        throw new NotImplementedException();
+        if (!(reference instanceof ServiceReference)) {
+            throw new NotImplementedException();
+        }
+
+        ServiceReference ref = (ServiceReference) reference;
+
+        Integer myRanking = (Integer) getProperty(Constants.SERVICE_RANKING);
+        Integer otherRanking = (Integer) ref.getProperty(Constants.SERVICE_RANKING);
+
+        if (myRanking > otherRanking) {
+            return 1;
+        } else if (myRanking < otherRanking) {
+            return -1;
+        } else {
+            Integer myServiceId = (Integer) getProperty(Constants.SERVICE_ID);
+            Integer otherServiceId = (Integer) ref.getProperty(Constants.SERVICE_ID);
+
+            if (myServiceId < otherServiceId) {
+                return 1;
+            } else if (myServiceId > otherServiceId) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
     }
 
     public ServiceInformation getInformation() {

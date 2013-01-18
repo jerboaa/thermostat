@@ -56,7 +56,7 @@ public class StubServiceRegistration implements ServiceRegistration {
 
     @Override
     public ServiceReference getReference() {
-        throw new NotImplementedException();
+        return new StubServiceReference(info, bundleContext.getBundle());
     }
 
     @Override
