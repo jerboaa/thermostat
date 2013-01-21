@@ -54,6 +54,7 @@ import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
@@ -65,7 +66,7 @@ public class VmGcBackend extends Backend implements VmStatusListener {
     private final VmGcStatDAO vmGcStats;
     private final VmStatusListenerRegistrar registerer;
 
-    private final Map<Integer, VmAndListener> registeredListeners = new HashMap<>();
+    private final Map<Integer, Pair<MonitoredVm, ? extends VmListener>> pidToData = new HashMap<>();
     private MonitoredHost host;
     private boolean started;
 
@@ -92,7 +93,7 @@ public class VmGcBackend extends Backend implements VmStatusListener {
 
     @Override
     public boolean activate() {
-        if (!started) {
+        if (!started && host != null) {
             registerer.register(this);
             started = true;
         }
@@ -151,7 +152,7 @@ public class VmGcBackend extends Backend implements VmStatusListener {
                 if (vm != null) {
                     VmGcVmListener listener = new VmGcVmListener(vmGcStats, pid);
                     vm.addVmListener(listener);
-                    registeredListeners.put(pid, new VmAndListener(vm, listener));
+                    pidToData.put(pid, new Pair<>(vm, listener));
                     LOGGER.finer("Attached VmListener for VM: " + pid);
                 } else {
                     LOGGER.warning("could not connect to vm " + pid);
@@ -165,14 +166,14 @@ public class VmGcBackend extends Backend implements VmStatusListener {
     }
 
     private void vmStopped(int pid) {
-        VmAndListener tuple = registeredListeners.remove(pid);
-        if (tuple == null) {
-            LOGGER.warning("received vm stopped for an unknown VM");
+        Pair<MonitoredVm, ? extends VmListener> data = pidToData.remove(pid);
+        // if there is no data, we must never have attached to it. Nothing to do.
+        if (data == null) {
             return;
         }
 
-        MonitoredVm vm = tuple.vm;
-        VmListener listener = tuple.listener;
+        MonitoredVm vm = data.getFirst();
+        VmListener listener = data.getSecond();
         try {
             if (listener != null) {
                 vm.removeVmListener(listener);
@@ -190,14 +191,4 @@ public class VmGcBackend extends Backend implements VmStatusListener {
         this.host = host;
     }
 
-    private static class VmAndListener {
-        private MonitoredVm vm;
-        private VmListener listener;
-
-        public VmAndListener(MonitoredVm vm, VmListener listener) {
-            this.vm = vm;
-            this.listener = listener;
-        }
-
-    }
 }

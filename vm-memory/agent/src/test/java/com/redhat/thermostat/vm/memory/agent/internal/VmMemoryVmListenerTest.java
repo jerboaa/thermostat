@@ -37,16 +37,21 @@
 package com.redhat.thermostat.vm.memory.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
+import sun.jvmstat.monitor.event.VmEvent;
 
 import com.redhat.thermostat.storage.model.VmMemoryStat;
 import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
@@ -77,19 +82,20 @@ public class VmMemoryVmListenerTest {
     };
     
     private VmMemoryVmListener vmListener;
-    private MonitoredVm monitoredVm;
     private VmMemoryDataExtractor extractor;
     private VmMemoryStatDAO vmMemoryStatDAO;
+    private MonitoredVm monitoredVm;
     
     @Before
     public void setup() throws MonitorException {
         final int numGens = 2;
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         vmListener = new VmMemoryVmListener(vmMemoryStatDAO, 0);
-        
         monitoredVm = mock(MonitoredVm.class);
         extractor = mock(VmMemoryDataExtractor.class);
-        
+
+        mockTotalGenerations(numGens);
+
         for (int i = 0; i < numGens; i++) {
             mockGenerationName(i);
             mockGenerationCapacity(i);
@@ -104,6 +110,10 @@ public class VmMemoryVmListenerTest {
                 mockSpaceUsed(i, j);
             }
         }
+    }
+
+    private void mockTotalGenerations(long gens) throws MonitorException {
+        when(extractor.getTotalGcGenerations()).thenReturn(gens);
     }
 
     private void mockGenerationName(int gen) throws MonitorException {
@@ -141,15 +151,43 @@ public class VmMemoryVmListenerTest {
     private void mockSpaceUsed(int gen, int space) throws MonitorException {
         when(extractor.getSpaceUsed(gen, space)).thenReturn(SPACE_USED[gen][space]);
     }
-    
+
+    @Test
+    public void testDisconnectedIsNoOp() {
+        vmListener.disconnected(null);
+
+        verifyNoMoreInteractions(vmMemoryStatDAO, extractor);
+    }
+
+    @Test
+    public void testMonitorStatusChangeIsNoOp() {
+        vmListener.monitorStatusChanged(null);
+
+        verifyNoMoreInteractions(vmMemoryStatDAO, extractor);
+    }
+
+    @Test
+    public void testMonitorsUpdated() throws MonitorException {
+        Monitor monitor = mock(Monitor.class);
+        when(monitor.getValue()).thenReturn(Long.valueOf(0));
+        when(monitoredVm.findByName(anyString())).thenReturn(monitor);
+        VmEvent monitorUpdateEvent = mock(VmEvent.class);
+        when(monitorUpdateEvent.getMonitoredVm()).thenReturn(monitoredVm);
+
+        vmListener.monitorsUpdated(monitorUpdateEvent);
+
+        verify(vmMemoryStatDAO).putVmMemoryStat(isA(VmMemoryStat.class));
+    }
+
     @Test
     public void testRecordMemoryStat() {
-        vmListener.recordMemoryStat(monitoredVm, extractor);
+        vmListener.recordMemoryStat(extractor);
         ArgumentCaptor<VmMemoryStat> captor = ArgumentCaptor.forClass(VmMemoryStat.class);
         verify(vmMemoryStatDAO).putVmMemoryStat(captor.capture());
         VmMemoryStat memoryStat = captor.getValue();
         
         Generation[] gens = memoryStat.getGenerations();
+        assertEquals(2, gens.length);
         for (int i = 0; i < gens.length; i++) {
             Generation gen = gens[i];
             assertEquals(GEN_NAMES[i], gen.getName());
@@ -166,5 +204,13 @@ public class VmMemoryVmListenerTest {
                 assertEquals(SPACE_USED[i][j], (Long) space.getUsed());
             }
         }
+    }
+
+    @Test
+    public void testRecordingMemoryInPresenseOfExtrationErrors() throws MonitorException {
+        when(extractor.getTotalGcGenerations()).thenThrow(new MonitorException());
+        vmListener.recordMemoryStat(extractor);
+
+        verifyNoMoreInteractions(vmMemoryStatDAO);
     }
 }

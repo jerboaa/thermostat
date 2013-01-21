@@ -37,15 +37,20 @@
 package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import sun.jvmstat.monitor.Monitor;
+import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
+import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 
 import com.redhat.thermostat.storage.model.VmClassStat;
@@ -57,12 +62,35 @@ public class VmClassStatVmListenerTest {
     private static final Integer VM_ID = 123;
     private static final Long LOADED_CLASSES = 1234L;
 
+    private VmClassStatDAO dao;
+    private VmClassStatVmListener listener;
+
+    @Before
+    public void setUp() {
+        dao = mock(VmClassStatDAO.class);
+        listener = new VmClassStatVmListener(dao, VM_ID);
+    }
+
+    @Test
+    public void testDisconnected() {
+        VmEvent vmEvent = mock(VmEvent.class);
+
+        listener.disconnected(vmEvent);
+
+        verifyNoMoreInteractions(vmEvent, dao);
+    }
+
+    @Test
+    public void testMonitorStatusChanged() {
+        MonitorStatusChangeEvent statusChangeEvent = mock(MonitorStatusChangeEvent.class);
+
+        listener.monitorStatusChanged(statusChangeEvent);
+
+        verifyNoMoreInteractions(statusChangeEvent, dao);
+    }
+
     @Test
     public void testMonitorUpdatedClassStat() throws Exception {
-
-        VmClassStatDAO dao = mock(VmClassStatDAO.class);
-
-        VmClassStatVmListener l = new VmClassStatVmListener(dao, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);
@@ -70,7 +98,7 @@ public class VmClassStatVmListenerTest {
         when(monitoredVm.findByName("java.cls.loadedClasses")).thenReturn(m);
         when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
 
-        l.monitorsUpdated(vmEvent);
+        listener.monitorsUpdated(vmEvent);
 
         ArgumentCaptor<VmClassStat> arg = ArgumentCaptor.forClass(VmClassStat.class);
         verify(dao).putVmClassStat(arg.capture());
@@ -81,10 +109,6 @@ public class VmClassStatVmListenerTest {
 
     @Test
     public void testMonitorUpdatedClassStatTwice() throws Exception {
-
-        VmClassStatDAO dao = mock(VmClassStatDAO.class);
-
-        VmClassStatVmListener l = new VmClassStatVmListener(dao, VM_ID);
         VmEvent vmEvent = mock(VmEvent.class);
         MonitoredVm monitoredVm = mock(MonitoredVm.class);
         Monitor m = mock(Monitor.class);
@@ -92,10 +116,24 @@ public class VmClassStatVmListenerTest {
         when(monitoredVm.findByName("java.cls.loadedClasses")).thenReturn(m);
         when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
 
-        l.monitorsUpdated(vmEvent);
-        l.monitorsUpdated(vmEvent);
+        listener.monitorsUpdated(vmEvent);
+        listener.monitorsUpdated(vmEvent);
 
         // This checks a bug where the Category threw an IllegalStateException because the DAO
         // created a new one on each call, thus violating the unique guarantee of Category.
+    }
+
+    @Test
+    public void testMonitorUpdateFails() throws MonitorException {
+        VmEvent vmEvent = mock(VmEvent.class);
+        MonitoredVm monitoredVm = mock(MonitoredVm.class);
+        MonitorException monitorException = new MonitorException();
+
+        when(monitoredVm.findByName(anyString())).thenThrow(monitorException);
+        when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
+
+        listener.monitorsUpdated(vmEvent);
+
+        verifyNoMoreInteractions(dao);
     }
 }

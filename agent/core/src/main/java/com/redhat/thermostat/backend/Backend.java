@@ -181,7 +181,8 @@ public abstract class Backend implements Ordered {
      * This method is called by the framework when the {@link Backend} is
      * registered.
      *
-     * @return true on success, false if there was an error
+     * @return {@code true} if the backend was activated successfully or
+     * already active. {@code false} if there was an error
      */
     public abstract boolean activate();
 
@@ -196,7 +197,8 @@ public abstract class Backend implements Ordered {
      * This method is called by the framework when the {@link Backend} is
      * deregistered.
      *
-     * @return true on success
+     * @return {@code true} if the backend was successfully deactivated or
+     * already inactive. {@code false} if the backend is still active.
      */
     public abstract boolean deactivate();
 

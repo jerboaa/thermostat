@@ -92,6 +92,9 @@ public class ActivatorTest {
         VmClassStatBackend backend = activator.getBackend();
         assertNotNull(backend);
 
+        // something in core thermostat activates the backend; do it manually here
+        backend.activate();
+
         activator.stop(context);
         
         assertFalse(backend.isActive());
