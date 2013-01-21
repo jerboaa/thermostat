@@ -43,9 +43,10 @@ import javax.swing.JFrame;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.HostsVMsLoader;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -64,8 +65,8 @@ public interface MainView {
         SWITCH_HISTORY_MODE,
         SHOW_ABOUT_DIALOG,
         SHUTDOWN,
-        SHOW_VM_CONTEXT_MENU,
-        VM_CONTEXT_ACTION,
+        SHOW_HOST_VM_CONTEXT_MENU,
+        HOST_VM_CONTEXT_ACTION,
     }
 
     void addActionListener(ActionListener<Action> capture);
@@ -96,11 +97,23 @@ public interface MainView {
 
     /**
      * Removes a menu item to the window. Assumes the menu path is valid (has a
-     * non-zero length) and doesn't collide with existing menus.
+     * non-zero length) and the menu already exists.
      */
     void removeMenu(MenuAction action);
 
-    void showVMContextActions(List<VMContextAction> actions, MouseEvent e);
+    /**
+     * Shows a popup context menu created from the list of supplied context
+     * actions. When an item in the popup menu is selected, an
+     * {@link ActionEvent} is fired with the id
+     * {@link Action#HOST_VM_CONTEXT_ACTION} and the user-selected
+     * {@link ContextAction} as the payload.
+     *
+     * @param actions the {@link ContextAction}s available to the user.
+     * Normally classes implementing sub-interfaces of {@link ContextAction} are used here.
+     * @param e the mouse event that triggered the context action. Used to
+     * position the context menu.
+     */
+    void showContextActions(List<ContextAction> actions, MouseEvent e);
     
     JFrame getTopFrame();
 }

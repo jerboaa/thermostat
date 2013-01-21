@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.swing.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.atLeastOnce;
@@ -47,6 +48,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -71,13 +73,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
+import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.swing.components.SearchField;
-import com.redhat.thermostat.client.swing.internal.MainView;
-import com.redhat.thermostat.client.swing.internal.MainWindow;
 import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -352,6 +355,40 @@ public class MainWindowTest {
         hostVMTree.selectRow(0);
 
         assertEquals(null, window.getSelectedHostOrVm());
+    }
+
+    @GUITest
+    @Test
+    public void verifyContextMenu() {
+        List<ContextAction> actions = new ArrayList<>();
+
+        HostContextAction action = mock(HostContextAction.class);
+        when(action.getName()).thenReturn("action");
+        Filter allMatchingFilter = mock(Filter.class);
+        when(allMatchingFilter.matches(any(HostRef.class))).thenReturn(true);
+
+        actions.add(action);
+
+        frameFixture.show();
+
+        // add a second action listener to discard the 'show' event invoked on the first
+        l = mock(ActionListener.class);
+        window.addActionListener(l);
+
+        MouseEvent e = new MouseEvent(window, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), MouseEvent.BUTTON2_MASK, 0, 0, 0, 0, 1, true, MouseEvent.BUTTON2);
+
+        window.showContextActions(actions, e);
+
+        JMenuItemFixture hostActionMenuItem = frameFixture.menuItem("action");
+        hostActionMenuItem.click();
+
+        ArgumentCaptor<ActionEvent> actionEventCaptor = ArgumentCaptor.forClass(ActionEvent.class);
+        verify(l).actionPerformed(actionEventCaptor.capture());
+
+        ActionEvent actionEvent = actionEventCaptor.getValue();
+        assertEquals(window, actionEvent.getSource());
+        assertEquals(MainView.Action.HOST_VM_CONTEXT_ACTION, actionEvent.getActionId());
+        assertEquals(action, actionEvent.getPayload());
     }
 
 }

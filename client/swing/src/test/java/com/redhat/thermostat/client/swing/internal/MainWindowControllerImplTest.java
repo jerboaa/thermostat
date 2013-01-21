@@ -66,7 +66,9 @@ import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
+import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.SummaryController;
@@ -103,8 +105,9 @@ public class MainWindowControllerImplTest {
     private HostInfoDAO mockHostsDAO;
     private VmInfoDAO mockVmsDAO;
 
-    private VMContextAction action1;
-    private VMContextAction action2;
+    private HostContextAction hostContextAction1;
+    private VMContextAction vmContextAction1;
+    private VMContextAction vmContextAction2;
 
     private HostFilterRegistry hostFilterRegistry;
     private VmFilterRegistry vmFilterRegistry;
@@ -177,6 +180,7 @@ public class MainWindowControllerImplTest {
         ArgumentCaptor<ActionListener> grabInfoRegistry = ArgumentCaptor.forClass(ActionListener.class);
         doNothing().when(vmInfoRegistry).addActionListener(grabInfoRegistry.capture());
 
+        setUpHostContextActions();
         setUpVMContextActions();
 
         controller = new MainWindowControllerImpl(appSvc, uiFacadeFactory, view, registryFactory, mockHostsDAO, mockVmsDAO);
@@ -187,26 +191,38 @@ public class MainWindowControllerImplTest {
         decoratorsListener = grabDecoratorsListener.getValue();
     }
 
+    private void setUpHostContextActions() {
+        hostContextAction1 = mock(HostContextAction.class);
+        Filter<HostRef> hostFilter1 = mock(Filter.class);
+        when(hostFilter1.matches(isA(HostRef.class))).thenReturn(true);
+
+        when(hostContextAction1.getName()).thenReturn("action1");
+        when(hostContextAction1.getDescription()).thenReturn("action1desc");
+        when(hostContextAction1.getFilter()).thenReturn(hostFilter1);
+
+        when(uiFacadeFactory.getHostContextActions()).thenReturn(Arrays.asList(hostContextAction1));
+    }
+
     private void setUpVMContextActions() {
-        action1 = mock(VMContextAction.class);
+        vmContextAction1 = mock(VMContextAction.class);
         Filter action1Filter = mock(Filter.class);
         when(action1Filter.matches(isA(VmRef.class))).thenReturn(true);
 
-        when(action1.getName()).thenReturn("action1");
-        when(action1.getDescription()).thenReturn("action1desc");
-        when(action1.getFilter()).thenReturn(action1Filter);
+        when(vmContextAction1.getName()).thenReturn("action1");
+        when(vmContextAction1.getDescription()).thenReturn("action1desc");
+        when(vmContextAction1.getFilter()).thenReturn(action1Filter);
         
-        action2 = mock(VMContextAction.class);
+        vmContextAction2 = mock(VMContextAction.class);
         Filter action2Filter = mock(Filter.class);
         when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
 
-        when(action2.getName()).thenReturn("action2");
-        when(action2.getDescription()).thenReturn("action2desc");
-        when(action2.getFilter()).thenReturn(action2Filter);
+        when(vmContextAction2.getName()).thenReturn("action2");
+        when(vmContextAction2.getDescription()).thenReturn("action2desc");
+        when(vmContextAction2.getFilter()).thenReturn(action2Filter);
         
         Collection<VMContextAction> actions = new ArrayList<>();
-        actions.add(action1);
-        actions.add(action2);
+        actions.add(vmContextAction1);
+        actions.add(vmContextAction2);
         
         when(uiFacadeFactory.getVMContextActions()).thenReturn(actions);
     }
@@ -495,7 +511,24 @@ public class MainWindowControllerImplTest {
 
         assertEquals(2, id);
     }
-    
+
+    @Test
+    public void verifyHostActionsAreShown() {
+        HostRef host = mock(HostRef.class);
+        when(view.getSelectedHostOrVm()).thenReturn(host);
+
+        MouseEvent uiEvent = mock(MouseEvent.class);
+        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
+        viewEvent.setPayload(uiEvent);
+
+        l.actionPerformed(viewEvent);
+
+        List<ContextAction> actions = new ArrayList<>();
+        actions.add(hostContextAction1);
+
+        verify(view).showContextActions(actions, uiEvent);
+    }
+
     @Test
     public void verityVMActionsAreShown() {
         VmInfo vmInfo = new VmInfo(0, 1, 2, null, null, null, null, null, null, null, null, null, null, null);
@@ -505,26 +538,41 @@ public class MainWindowControllerImplTest {
         when(view.getSelectedHostOrVm()).thenReturn(ref);
 
         MouseEvent uiEvent = mock(MouseEvent.class);
-        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_VM_CONTEXT_MENU);
+        ActionEvent<MainView.Action> viewEvent = new ActionEvent<>(view, MainView.Action.SHOW_HOST_VM_CONTEXT_MENU);
         viewEvent.setPayload(uiEvent);
 
         l.actionPerformed(viewEvent);
 
-        verify(view).showVMContextActions(Arrays.asList(action1), uiEvent);
+        List<ContextAction> actions = new ArrayList<>();
+        actions.add(vmContextAction1);
+
+        verify(view).showContextActions(actions, uiEvent);
     }
-    
+
+    @Test
+    public void verifyHostActionsAreExecuted() {
+        HostRef hostRef = mock(HostRef.class);
+        when(view.getSelectedHostOrVm()).thenReturn(hostRef);
+
+        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
+        event.setPayload(hostContextAction1);
+        l.actionPerformed(event);
+
+        verify(hostContextAction1, times(1)).execute(hostRef);
+    }
+
     @Test
     public void verityVMActionsAreExecuted() {
 
         VmRef vmRef = mock(VmRef.class);
         when(view.getSelectedHostOrVm()).thenReturn(vmRef);
 
-        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.VM_CONTEXT_ACTION);
-        event.setPayload(action1);
+        ActionEvent<MainView.Action> event = new ActionEvent<>(view, MainView.Action.HOST_VM_CONTEXT_ACTION);
+        event.setPayload(vmContextAction1);
         l.actionPerformed(event);
         
-        verify(action1, times(1)).execute(any(VmRef.class));
-        verify(action2, times(0)).execute(any(VmRef.class));
+        verify(vmContextAction1, times(1)).execute(any(VmRef.class));
+        verify(vmContextAction2, times(0)).execute(any(VmRef.class));
     }
 
     @Test

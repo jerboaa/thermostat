@@ -34,56 +34,40 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.swing.internal.osgi;
 
-import java.util.Collection;
-import java.util.List;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.osgi.service.HostContextAction;
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.common.dao.HostInfoDAO;
-import com.redhat.thermostat.common.dao.HostRef;
-import com.redhat.thermostat.common.dao.VmInfoDAO;
-import com.redhat.thermostat.common.dao.VmRef;
+import com.redhat.thermostat.client.ui.UiFacadeFactory;
 
-public interface UiFacadeFactory {
+@SuppressWarnings("rawtypes")
+class HostContextActionServiceTracker extends ServiceTracker {
 
-    void setHostInfoDao(HostInfoDAO hostInfoDao);
+    private UiFacadeFactory uiFacadeFactory;
 
-    void setVmInfoDao(VmInfoDAO vmInfoDAO);
+    private BundleContext context;
 
-    public MainWindowController getMainWindow();
+    @SuppressWarnings("unchecked")
+    HostContextActionServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+        super(context, HostContextAction.class.getName(), null);
+        this.context = context;
+        this.uiFacadeFactory = uiFacadeFactory;
+    }
 
-    public SummaryController getSummary();
+    @Override
+    public Object addingService(ServiceReference reference) {
+        @SuppressWarnings("unchecked")
+        HostContextAction service = (HostContextAction) super.addingService(reference);
+        uiFacadeFactory.addHostContextAction(service);
+        return service;
+    }
 
-    public HostInformationController getHostController(HostRef ref);
-    
-    List<InformationService<HostRef>> getHostInformationServices();
-
-    void addHostInformationService(InformationService<HostRef> hostInfoService);
-
-    void removeHostInformationService(InformationService<HostRef> hostInfoService);
-
-    public VmInformationController getVmController(VmRef ref);
-
-    List<InformationService<VmRef>> getVmInformationServices();
-
-    void addVmInformationService(InformationService<VmRef> vmInfoService);
-
-    void removeVmInformationService(InformationService<VmRef> vmInfoService);
-
-    Collection<HostContextAction> getHostContextActions();
-    void addHostContextAction(HostContextAction action);
-    void removeHostContextAction(HostContextAction action);
-
-    Collection<VMContextAction> getVMContextActions();
-    void addVMContextAction(VMContextAction service);
-
-    public void shutdown();
-
-    public void shutdown(int exitCode);
-
-    public void awaitShutdown() throws InterruptedException;
-
+    @Override
+    public void removedService(ServiceReference reference, Object service) {
+        uiFacadeFactory.removeHostContextAction((HostContextAction)service);
+        super.removedService(reference, service);
+    }
 }

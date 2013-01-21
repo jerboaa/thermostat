@@ -47,6 +47,7 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
+import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
@@ -66,7 +67,8 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
 
     private List<InformationService<HostRef>> hostInformationServices = new ArrayList<>();
     private List<InformationService<VmRef>> vmInformationServices = new ArrayList<>();
-    private Collection<VMContextAction> contextAction = new ArrayList<>();
+    private Collection<HostContextAction> hostContextActions = new ArrayList<>();
+    private Collection<VMContextAction> vmContextActions = new ArrayList<>();
 
     private BundleContext context;
     private ApplicationService appSvc;
@@ -136,13 +138,28 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
     }
 
     @Override
+    public Collection<HostContextAction> getHostContextActions() {
+        return hostContextActions;
+    }
+
+    @Override
+    public void addHostContextAction(HostContextAction action) {
+        hostContextActions.add(action);
+    }
+
+    @Override
+    public void removeHostContextAction(HostContextAction action) {
+        hostContextActions.remove(action);
+    }
+
+    @Override
     public Collection<VMContextAction> getVMContextActions() {
-        return contextAction;
+        return vmContextActions;
     }
 
     @Override
     public void addVMContextAction(VMContextAction service) {
-        contextAction.add(service);
+        vmContextActions.add(service);
     }
 
     @Override
