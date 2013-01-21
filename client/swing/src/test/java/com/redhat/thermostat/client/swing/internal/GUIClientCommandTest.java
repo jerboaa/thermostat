@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -39,23 +39,15 @@ package com.redhat.thermostat.client.swing.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isNotNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.Dictionary;
 
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -68,8 +60,7 @@ public class GUIClientCommandTest {
     @Before
     public void setUp() {
         clientMain = mock(Main.class);
-        BundleContext ctxt = mock(BundleContext.class);
-        cmd = new GUIClientCommand(clientMain, ctxt);
+        cmd = new GUIClientCommand(clientMain);
     }
 
     @After
@@ -80,17 +71,15 @@ public class GUIClientCommandTest {
 
     @Test
     public void testRun() throws CommandException {
-        BundleContext bCtx = mock(BundleContext.class);
         CommandContextFactory cmdCtxFactory = mock(CommandContextFactory.class);
 
         CommandContext cmdCtx = mock(CommandContext.class);
         when(cmdCtx.getCommandContextFactory()).thenReturn(cmdCtxFactory);
 
-        cmd = new GUIClientCommand(clientMain, bCtx);
+        cmd = new GUIClientCommand(clientMain);
         cmd.run(cmdCtx);
 
         verify(clientMain).run();
-        verify(bCtx).registerService(eq(ContextAction.class.getName()), isNotNull(), any(Dictionary.class));
     }
 
     @Test

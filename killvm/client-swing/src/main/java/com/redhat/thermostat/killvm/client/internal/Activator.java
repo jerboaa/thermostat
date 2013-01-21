@@ -42,7 +42,6 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -59,7 +58,6 @@ public class Activator implements BundleActivator {
         Class<?>[] serviceDeps = new Class<?>[] {
             AgentInfoDAO.class,
             VmInfoDAO.class,
-            ContextAction.class,
         };
 
         killVmActionTracker = new MultipleServiceTracker(context, serviceDeps, new Action() {

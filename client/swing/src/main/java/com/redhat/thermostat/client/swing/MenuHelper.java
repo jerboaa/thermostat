@@ -215,8 +215,6 @@ public class MenuHelper {
     private static final class Menu {
         private Object swingDelegate;
 
-        public Menu() { /* no op */}
-
         public Menu(JMenuItem actual) {
             this.swingDelegate = actual;
         }
