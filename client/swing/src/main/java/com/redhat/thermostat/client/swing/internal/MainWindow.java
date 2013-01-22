@@ -93,7 +93,9 @@ import sun.misc.Signal;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.locale.LocaleResources;
+import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
+import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.swing.EdtHelper;
@@ -328,7 +330,7 @@ public class MainWindow extends JFrame implements MainView {
 
     private ActionNotifier<Action> actionNotifier = new ActionNotifier<>(this);
 
-    private ThermostatPopupMenu vmContextMenu;
+    private ThermostatPopupMenu contextMenu;
     private StatusBar statusBar;
     
     private final DefaultMutableTreeNode publishedRoot =
@@ -505,29 +507,27 @@ public class MainWindow extends JFrame implements MainView {
     }
 
     private void registerContextActionListener(JTree agentVmTree2) {
-        vmContextMenu = new ThermostatPopupMenu();
+        contextMenu = new ThermostatPopupMenu();
         agentVmTree2.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
                 if (e.isPopupTrigger()) {
                     Ref ref = getSelectedHostOrVm();
-                    if (ref instanceof VmRef) {
-                        fireViewAction(Action.SHOW_VM_CONTEXT_MENU, e);
-                    }
+                    fireViewAction(Action.SHOW_HOST_VM_CONTEXT_MENU, e);
                 }
             }
         });
     }
 
     @Override
-    public void showVMContextActions(final List<VMContextAction> actions, final MouseEvent e) {
+    public void showContextActions(final List<ContextAction> actions, final MouseEvent e) {
         SwingUtilities.invokeLater(new Runnable() {
 
             @Override
             public void run() {
-                vmContextMenu.removeAll();
+                contextMenu.removeAll();
 
-                for (final VMContextAction action: actions) {
+                for (final ContextAction action: actions) {
                     JMenuItem contextAction = new JMenuItem();
                     contextAction.setText(action.getName());
                     contextAction.setToolTipText(action.getDescription());
@@ -535,15 +535,18 @@ public class MainWindow extends JFrame implements MainView {
                     contextAction.addActionListener(new java.awt.event.ActionListener() {
                         @Override
                         public void actionPerformed(java.awt.event.ActionEvent e) {
-                            fireViewAction(Action.VM_CONTEXT_ACTION, action);
+                            fireViewAction(Action.HOST_VM_CONTEXT_ACTION, action);
                         }
                     });
-                    vmContextMenu.add(contextAction);
+
+                    // the component name is for unit tests only
+                    contextAction.setName(action.getName());
+
+                    contextMenu.add(contextAction);
                 }
 
-                vmContextMenu.show((Component)e.getSource(), e.getX(), e.getY());
+                contextMenu.show((Component)e.getSource(), e.getX(), e.getY());
             }
-
         });
     }
     

@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -33,51 +33,62 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+
 package com.redhat.thermostat.client.osgi.service;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.common.dao.HostRef;
 
 /**
- * {@code MenuAction}s are used to create top-level menu items in the main
- * window.
+ * {@code HostContextAction}s provide actions that are associated with hosts and
+ * can be invoked by users. The exact position and appearance of these
+ * {@code HostContextAction}s varies based on the implementation.
  * <p>
- * Plugins can register menu items by creating classes that implement this
- * interface and registering them as OSGi services. To register a menu item for
- * for the menu "File" in thermostat client window, register a service that
- * returns <code> {"File", getName()}</code> from {@link #getPath()}.
- *
- * <h2>Implementation Notes</h2>
+ * Plugins can register implementations of this interface as OSGi services to
+ * provide additional {@code HostContextAction}s.
+ * <p>
+ * <h2>Implementation Note</h2>
  * <p>
  * The following information is specific to the current release and may change
  * in a future release.
  * <p>
- * The swing client uses {@code MenuActions}s to implement top-level menus in
- * the main window only.
+ * The swing client uses instances of this interface to provide menu items for
+ * the Host/VM tree. The menu is shown when a user right clicks a host in the
+ * Host/VM tree. A menu item for every {@code HostContextAction} is added, if
+ * the {@link Filter} matches, to this menu. Selecting a menu item invokes the
+ * appropriate {@code HostContextAction}.
+ *
+ * @see VMContextAction
  */
 @ExtensionPoint
-public interface MenuAction extends ContextAction {
+public interface HostContextAction extends ContextAction {
 
-    public static enum Type {
-        CHECK,
-        RADIO,
-        STANDARD
-    }
-
-    /** The user-visible text displayed as the menu item. */
+    /**
+     * A user-visible name for this {@code HostContextAction}. This should be
+     * localized.
+     */
     @Override
-    public String getName();
+    String getName();
 
-    /** A user-visible description of what this {@code MenuAction} does. */
+    /**
+     * A user-visible description for this {@code HostContextAction}. This
+     * should be localized.
+     */
     @Override
-    public String getDescription();
+    String getDescription();
 
-    /** Invoked when the user selects this menu item */
-    void execute();
+    /**
+     * Invoked when the user selects this {@code HostContextAction}.
+     *
+     * @param reference the host on which this {@code HostContextAction} was
+     * invoked on.
+     */
+    void execute(HostRef reference);
 
-    /** The type of the menu (radio, check, standard) */
-    Type getType();
-
-    /** The path to the menu action. The last element must equal getName() */
-    String[] getPath();
-
+    /**
+     * The {@link Filter} returned by this method is used to select what VMs
+     * this {@code HostContextAction} is applicable to.
+     */
+    Filter<HostRef> getFilter();
 }

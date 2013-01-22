@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -41,12 +41,55 @@ import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.common.dao.VmRef;
 
 /**
- * A context action for VMs
+ * {@code VMContextAction}s provide actions that are associated with Java
+ * Virtual Machines and can be invoked by users. The exact position and
+ * appearance of these {@code VMContextAction}s varies based on the client
+ * implementation.
+ * <p>
+ * Plugins can register implementation of this interface as OSGi services to
+ * provide additional {@code VMContextAction}s.
+ * <p>
+ * <h2>Implementation Note</h2>
+ * <p>
+ * The following information is specific to the current release and may change
+ * in a future release.
+ * <p>
+ * The swing client uses instances of this class to provide menu items in the
+ * Host/VM tree. The menu is shown when a user right-clicks a VM in the Host/VM
+ * tree. A menu item for every {@link VMContextAction} is added, if the
+ * {@code Filter} matches, to this menu. Selecting a menu item invokes the
+ * corresponding {@code VMContextAction}.
+ *
+ * @see HostContextAction
  */
 @ExtensionPoint
 public interface VMContextAction extends ContextAction {
 
-    void execute(VmRef referece);
+    /**
+     * A user-visible name for this {@code VMContextAction}. Should be
+     * localized.
+     */
+    @Override
+    public String getName();
 
+    /**
+     * A user-visible description for {@code VMContextAction}. Should be
+     * localized.
+     */
+    @Override
+    public String getDescription();
+
+    /**
+     * Invoked when the user selects this {@code VMContextAction}.
+     *
+     * @param reference specifies the vm that this {@code VMContextAction} was
+     * invoked on.
+     */
+    void execute(VmRef reference);
+
+    /**
+     * The {@link Filter} returned by this method is used to select what VMs
+     * this {@code VMContextAction} is applicable to.
+     */
     Filter<VmRef> getFilter();
 }

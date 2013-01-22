@@ -40,6 +40,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.common.dao.HostInfoDAO;
 import com.redhat.thermostat.common.dao.HostRef;
@@ -71,6 +72,10 @@ public interface UiFacadeFactory {
     void addVmInformationService(InformationService<VmRef> vmInfoService);
 
     void removeVmInformationService(InformationService<VmRef> vmInfoService);
+
+    Collection<HostContextAction> getHostContextActions();
+    void addHostContextAction(HostContextAction action);
+    void removeHostContextAction(HostContextAction action);
 
     Collection<VMContextAction> getVMContextActions();
     void addVMContextAction(VMContextAction service);

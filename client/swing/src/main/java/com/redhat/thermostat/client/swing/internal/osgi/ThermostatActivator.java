@@ -70,7 +70,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class ThermostatActivator implements BundleActivator {
 
     private InformationServiceTracker infoServiceTracker;
-    private VMContextActionServiceTracker contextActionTracker;
+    private HostContextActionServiceTracker hostContextActionTracker;
+    private VMContextActionServiceTracker vmContextActionTracker;
 
     private CommandRegistry cmdReg;
 
@@ -111,8 +112,12 @@ public class ThermostatActivator implements BundleActivator {
 
                 infoServiceTracker = new InformationServiceTracker(context, uiFacadeFactory);
                 infoServiceTracker.open();
-                contextActionTracker = new VMContextActionServiceTracker(context, uiFacadeFactory);
-                contextActionTracker.open();
+
+                hostContextActionTracker = new HostContextActionServiceTracker(context, uiFacadeFactory);
+                hostContextActionTracker.open();
+
+                vmContextActionTracker = new VMContextActionServiceTracker(context, uiFacadeFactory);
+                vmContextActionTracker.open();
 
                 cmdReg = new CommandRegistryImpl(context);
                 Main main = new Main(keyring, uiFacadeFactory, new String[0]);
@@ -129,7 +134,8 @@ public class ThermostatActivator implements BundleActivator {
     @Override
     public void stop(BundleContext context) throws Exception {
         infoServiceTracker.close();
-        contextActionTracker.close();
+        hostContextActionTracker.close();
+        vmContextActionTracker.close();
         cmdReg.unregisterCommands();
     }
 }

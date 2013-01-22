@@ -73,5 +73,7 @@ public class ThermostatActivatorTest {
         assertTrue(ctx.isServiceRegistered(ClientConfigViewProvider.class.getName(), SwingClientConfigurationViewProvider.class));
         
         assertEquals(6, ctx.getAllServices().size());
+
+        // FIXME add more tests for the service tracker used by ThermostatActivator
     }
 }

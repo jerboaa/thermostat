@@ -44,6 +44,8 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
+
 import sun.jvmstat.monitor.LongMonitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
@@ -133,6 +135,18 @@ public class VmMemoryDataExtractorTest {
 
         verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(GENERATION_COLLECTOR, returned);
+    }
+
+    @Test
+    public void testGenerationCollectorNone() throws MonitorException {
+        final String MONITOR_NAME = "sun.gc.collector.0.name";
+        MonitoredVm vm = mock(MonitoredVm.class);
+        when(vm.findByName(MONITOR_NAME)).thenReturn(null);
+
+        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        String returned = extractor.getGenerationCollector(0);
+
+        assertEquals(Generation.COLLECTOR_NONE, returned);
     }
 
     @Test

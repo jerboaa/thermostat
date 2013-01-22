@@ -38,20 +38,31 @@ package com.redhat.thermostat.vm.memory.agent.internal;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URISyntaxException;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 
+import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
-import sun.jvmstat.monitor.event.HostListener;
+import sun.jvmstat.monitor.MonitoredVm;
+import sun.jvmstat.monitor.VmIdentifier;
+import sun.jvmstat.monitor.event.VmListener;
 
+import com.redhat.thermostat.agent.VmStatusListener.Status;
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
@@ -59,32 +70,158 @@ public class VmMemoryBackendTest {
     
     private VmMemoryBackend backend;
     private MonitoredHost host;
+    private VmStatusListenerRegistrar registrar;
+    private VmMemoryStatDAO vmMemoryStatDao;
 
     @Before
     public void setup() throws MonitorException, URISyntaxException {
-        VmMemoryStatDAO vmMemoryStatDao = mock(VmMemoryStatDAO.class);
+        vmMemoryStatDao = mock(VmMemoryStatDAO.class);
         
         Version version = mock(Version.class);
         when(version.getVersionNumber()).thenReturn("0.0.0");
-        backend = new VmMemoryBackend(vmMemoryStatDao, version);
+
+        registrar = mock(VmStatusListenerRegistrar.class);
+
+        backend = new VmMemoryBackend(vmMemoryStatDao, version, registrar);
         
+        HostIdentifier hostIdentifier = mock(HostIdentifier.class);
+        when(hostIdentifier.resolve(isA(VmIdentifier.class))).then(new Answer<VmIdentifier>() {
+            @Override
+            public VmIdentifier answer(InvocationOnMock invocation) throws Throwable {
+                return (VmIdentifier) invocation.getArguments()[0];
+            }
+        });
         host = mock(MonitoredHost.class);
+        when(host.getHostIdentifier()).thenReturn(hostIdentifier);
+
         backend.setHost(host);
     }
 
     @Test
-    public void testStart() throws MonitorException {
-        backend.activate();
-        verify(host).addHostListener(any(HostListener.class));
+    public void testActivate() {
+        assertTrue(backend.activate());
+
+        verify(registrar).register(backend);
         assertTrue(backend.isActive());
     }
 
     @Test
-    public void testStop() throws MonitorException {
+    public void testActivateTwice() {
+        assertTrue(backend.activate());
+        assertTrue(backend.isActive());
+
+        assertTrue(backend.activate());
+        assertTrue(backend.isActive());
+
+        verify(registrar).register(backend);
+    }
+
+    @Test
+    public void testActivateFailsIfHostIsNull() {
+        backend.setHost(null);
+
+        assertFalse(backend.activate());
+    }
+
+    @Test
+    public void testDeactivate() {
         backend.activate();
         backend.deactivate();
-        verify(host).removeHostListener(any(HostListener.class));
+
+        verify(registrar).unregister(backend);
         assertFalse(backend.isActive());
     }
-    
+
+    @Test
+    public void testDeactiveTwice() {
+        assertTrue(backend.activate());
+
+        assertTrue(backend.deactivate());
+        assertFalse(backend.isActive());
+
+        assertTrue(backend.deactivate());
+        assertFalse(backend.isActive());
+
+        verify(registrar).unregister(backend);
+    }
+
+    @Test
+    public void testNewVmStarted() throws URISyntaxException, MonitorException {
+        int VM_PID = 10;
+        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
+        MonitoredVm monitoredVm = mock(MonitoredVm.class);
+
+        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
+
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+
+        verify(monitoredVm).addVmListener(isA(VmMemoryVmListener.class));
+    }
+
+    @Test
+    public void testErrorInAttachingToNewVm() throws MonitorException, URISyntaxException {
+        int VM_PID = 10;
+        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
+
+        when(host.getMonitoredVm(VM_ID)).thenThrow(new MonitorException());
+
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+    }
+
+    @Test
+    public void testVmStopped() throws URISyntaxException, MonitorException {
+        int VM_PID = 10;
+        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
+        MonitoredVm monitoredVm = mock(MonitoredVm.class);
+
+        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
+
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+
+        ArgumentCaptor<VmListener> listenerCaptor = ArgumentCaptor.forClass(VmListener.class);
+        verify(monitoredVm).addVmListener(listenerCaptor.capture());
+
+        backend.vmStatusChanged(Status.VM_STOPPED, VM_PID);
+
+        verify(monitoredVm).removeVmListener(listenerCaptor.getValue());
+        verify(monitoredVm).detach();
+    }
+
+    @Test
+    public void testUnknownVmStoppedIsIgnored() {
+        int VM_PID = 10;
+
+        backend.vmStatusChanged(Status.VM_STOPPED, VM_PID);
+
+        verifyNoMoreInteractions(host, vmMemoryStatDao);
+    }
+
+    @Test
+    public void testStoppedVmIsDetachedEvenInPresenceOfErrors() throws URISyntaxException, MonitorException {
+        int VM_PID = 10;
+        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
+        MonitoredVm monitoredVm = mock(MonitoredVm.class);
+
+        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
+
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+
+        ArgumentCaptor<VmListener> listenerCaptor = ArgumentCaptor.forClass(VmListener.class);
+        verify(monitoredVm).addVmListener(listenerCaptor.capture());
+
+        VmListener vmListener = listenerCaptor.getValue();
+        doThrow(new MonitorException("test")).when(monitoredVm).removeVmListener(vmListener);
+
+        backend.vmStatusChanged(Status.VM_STOPPED, VM_PID);
+
+        verify(monitoredVm).detach();
+    }
+
+    @Test
+    public void testOrderValue() {
+        int orderValue = backend.getOrderValue();
+
+        assertTrue(orderValue > Ordered.ORDER_MEMORY_GROUP);
+        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
+    }
 }

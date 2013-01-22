@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -36,36 +36,22 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-
-import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.swing.internal.osgi.ContextActionServiceProvider;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleCommand;
 
 public class GUIClientCommand extends SimpleCommand {
 
-    private BundleContext context;
     private Main clientMain;
 
     public GUIClientCommand(Main clientMain) {
-        this(clientMain, FrameworkUtil.getBundle(GUIClientCommand.class).getBundleContext());
-    }
-    
-    GUIClientCommand(Main clientMain, BundleContext context) {
-        this.context = context;
         this.clientMain = clientMain;
     }
-    
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        context.registerService(ContextAction.class.getName(), new ContextActionServiceProvider(), null);
-        
         // this blocks, everything else needs to be done before
         clientMain.run();
-
     }
 
     @Override

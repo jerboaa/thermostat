@@ -34,52 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.cpu.agent.internal;
+package com.redhat.thermostat.common;
 
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.logging.Logger;
+import java.util.Objects;
 
-import sun.jvmstat.monitor.event.HostEvent;
-import sun.jvmstat.monitor.event.HostListener;
-import sun.jvmstat.monitor.event.VmStatusChangeEvent;
+/**
+ * A container that hold two values.
+ * <p>
+ * The values may be related or unrelated.
+ * <p>
+ * For most predictable results, the params should be immutable. If the value of
+ * {@link #hashCode()} is relevant, the two values must provide sane
+ * implementations of hashCode too.
+ *
+ * @param <F> the type of the first value
+ * @param <S> the type of the second value
+ */
+public class Pair<F, S> {
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
+    private final F first;
+    private final S second;
 
-public class VmCpuHostListener implements HostListener {
-    
-    private static final Logger LOGGER = LoggingUtils.getLogger(VmCpuHostListener.class);
-    
-    private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<Integer>();
-    private VmCpuStatBuilder vmCpuStatBuilder;
-    
-    public VmCpuHostListener(VmCpuStatBuilder builder) {
-        this.vmCpuStatBuilder = builder;
+    public Pair(F first, S second) {
+        this.first = first;
+        this.second = second;
+    }
+
+    public F getFirst() {
+        return first;
+    }
+
+    public S getSecond() {
+        return second;
     }
 
     @Override
-    public void vmStatusChanged(VmStatusChangeEvent event) {
-        for (Object newVm : event.getStarted()) {
-            Integer vmId = (Integer) newVm;
-            LOGGER.fine("New vm: " + vmId);
-            pidsToMonitor.add(vmId);
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Pair)) {
+            return false;
         }
-
-        for (Object stoppedVm : event.getTerminated()) {
-            Integer vmId = (Integer) stoppedVm;
-            LOGGER.fine("stopped vm: " + vmId);
-            pidsToMonitor.remove(vmId);
-            vmCpuStatBuilder.forgetAbout(vmId);
-        }
+        Pair<?,?> other = (Pair<?,?>) obj;
+        return Objects.equals(first, other.first) && Objects.equals(second, other.second);
     }
 
     @Override
-    public void disconnected(HostEvent event) {
-        LOGGER.warning("Disconnected from host");
+    public int hashCode() {
+        return Objects.hash(first, second);
     }
-    
-    public Set<Integer> getPidsToMonitor() {
-        return pidsToMonitor;
-    }
-    
 }

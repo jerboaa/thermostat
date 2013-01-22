@@ -76,15 +76,12 @@ public class VmMemoryVmListener implements VmListener {
     @Override
     public void monitorsUpdated(VmEvent event) {
         MonitoredVm vm = event.getMonitoredVm();
-        if (vm == null) {
-            throw new NullPointerException();
-        }
-        
+
         VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
-        recordMemoryStat(vm, extractor);
+        recordMemoryStat(extractor);
     }
 
-    void recordMemoryStat(MonitoredVm vm, VmMemoryDataExtractor extractor) {
+    void recordMemoryStat(VmMemoryDataExtractor extractor) {
         try {
             long timestamp = System.currentTimeMillis();
             int maxGenerations = (int) extractor.getTotalGcGenerations();

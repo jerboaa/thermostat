@@ -45,6 +45,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.mongodb.BasicDBObject;
+import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DBObject;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Query.Criteria;
@@ -121,6 +122,48 @@ public class MongoQueryTest {
         assertEquals(new BasicDBObject("$lte", "value"), generatedQuery.get("key"));
     }
 
+    @Test
+    public void testMultiWhere() {
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
+        query.where("test", Criteria.LESS_THAN_OR_EQUAL_TO, 1);
+        query.where("test", Criteria.GREATER_THAN, 2);
+
+        DBObject generatedQuery = query.getGeneratedQuery();
+        DBObject dbObject = BasicDBObjectBuilder.start("$lte", 1).add("$gt", 2).get();
+        assertEquals(dbObject, generatedQuery.get("test"));
+    }
+    
+    @Test
+    public void testMultiWhere2() {
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
+        query.where("test", Criteria.LESS_THAN_OR_EQUAL_TO, 1);
+        query.where("test2", Criteria.GREATER_THAN, 2);
+
+        DBObject generatedQuery = query.getGeneratedQuery();
+        assertEquals(new BasicDBObject("$lte", 1), generatedQuery.get("test"));
+    }
+    
+    @Test
+    public void testMultiWhere3() {
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
+        query.where("test", Criteria.EQUALS, 1);
+        query.where("test", Criteria.GREATER_THAN, 2);
+
+        DBObject generatedQuery = query.getGeneratedQuery();
+        assertEquals(new BasicDBObject("$gt", 2), generatedQuery.get("test"));
+    }
+    
+    @Test
+    public void testMultiWhere4() {
+        MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
+        query.where("test", Criteria.EQUALS, 1);
+        query.where("test2", Criteria.GREATER_THAN, 2);
+
+        DBObject generatedQuery = query.getGeneratedQuery();
+        assertEquals(1, generatedQuery.get("test"));
+        assertEquals(new BasicDBObject("$gt", 2), generatedQuery.get("test2"));
+    }
+    
     private DBObject generateSimpleWhereQuery(String key, Criteria criteria, Object value) {
         MongoQuery<TestClass> query = new MongoQuery<>(storage, category);
         query.where(key, criteria, value);

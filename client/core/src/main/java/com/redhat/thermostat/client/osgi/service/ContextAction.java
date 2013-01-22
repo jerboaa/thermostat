@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -36,31 +36,32 @@
 
 package com.redhat.thermostat.client.osgi.service;
 
-import com.redhat.thermostat.annotations.ExtensionPoint;
-
 /**
- * Marker service for context menu actions.
- * <br /><br />
+ * Parent interface for all context-sensitive actions.
+ * <p>
+ * {@code ContextAction}s are executed once the user selects the appropriate UI
+ * elements in the view and triggers the registered action.
+ * <p>
+ * The name of the action (as returned by {@link #getName()}) is likely to be
+ * user-visible and should be localized.
+ *
+ * <h2>Implementation Notes</h2>
+ * <p>
+ * The following information is specific to the current release and may change
+ * in a future release.
+ * <p>
+ * The swing client uses {@code ContextAction}s to mostly implement menus. Some
+ * of these menus are shown when a user right-clicks on a widget, but some are
+ * associated with a window.
  * 
- * Each specific subclass defines the selected entry points for the context
- * menus.
- * <br /><br />
- * 
- * Context actions are executed once the user select the appropriate UI elements
- * in the main framework view and trigger the registered action.
- * <br /><br />
- * 
- * An empty {@link ContextAction} is instantiated within the framework at
- * startup, so services implementing specific actions interfaces should track
- * for a {@link ContextAction} service to be active in the framework before
- * adding themselves.
- * <br /><br />
- * 
- * <strong>Exported entry point</strong>: com.redhat.thermostat.client.osgi.service.ContextAction
+ * @see MenuAction
+ * @see VMContextAction
  */
-@ExtensionPoint
 public interface ContextAction {
     
+    /** A user-visible name for this action */
     String getName();
+
+    /** A user-visible description for this action */
     String getDescription();
 }

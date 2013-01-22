@@ -38,16 +38,15 @@ package com.redhat.thermostat.vm.cpu.agent.internal;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import sun.jvmstat.monitor.HostIdentifier;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredHost;
-
+import com.redhat.thermostat.agent.VmStatusListener;
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
@@ -60,7 +59,7 @@ import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.SysConf;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
-public class VmCpuBackend extends Backend {
+public class VmCpuBackend extends Backend implements VmStatusListener {
 
     private static final Logger LOGGER = LoggingUtils.getLogger(VmCpuBackend.class);
     static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
@@ -68,15 +67,17 @@ public class VmCpuBackend extends Backend {
     private VmCpuStatBuilder vmCpuStatBuilder;
     private VmCpuStatDAO vmCpuStats;
     private ScheduledExecutorService executor;
-    private HostIdentifier hostId;
-    private MonitoredHost host;
-    private VmCpuHostListener hostListener;
+    private VmStatusListenerRegistrar registrar;
     private boolean started;
 
-    public VmCpuBackend(ScheduledExecutorService executor, VmCpuStatDAO vmCpuStatDao, Version version) {
+    private final List<Integer> pidsToMonitor = new CopyOnWriteArrayList<>();
+
+    public VmCpuBackend(ScheduledExecutorService executor, VmCpuStatDAO vmCpuStatDao, Version version,
+            VmStatusListenerRegistrar registrar) {
         super(new BackendID("VM CPU Backend", VmCpuBackend.class.getName()));
         this.executor = executor;
         this.vmCpuStats = vmCpuStatDao;
+        this.registrar = registrar;
         
         setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
         setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers CPU statistics about a JVM");
@@ -88,25 +89,17 @@ public class VmCpuBackend extends Backend {
         ProcessStatusInfoBuilder builder = new ProcessStatusInfoBuilder(new ProcDataSource());
         int numCpus = getCpuCount(source);
         vmCpuStatBuilder = new VmCpuStatBuilder(clock, numCpus, ticksPerSecond, builder);
-        
-        try {
-            hostId = new HostIdentifier((String) null);
-            host = MonitoredHost.getMonitoredHost(hostId);
-            hostListener = new VmCpuHostListener(vmCpuStatBuilder);
-        } catch (MonitorException me) {
-            LOGGER.log(Level.WARNING, "Problems with connecting jvmstat to local machine", me);
-        } catch (URISyntaxException use) {
-            LOGGER.log(Level.WARNING, "Failed to create host identifier", use);
-        }
     }
 
     @Override
     public boolean activate() {
-        if (!started && host != null) {
+        if (!started) {
+            registrar.register(this);
+
             executor.scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    for (Integer pid : hostListener.getPidsToMonitor()) {
+                    for (Integer pid : pidsToMonitor) {
                         if (vmCpuStatBuilder.knowsAbout(pid)) {
                             VmCpuStat dataBuilt = vmCpuStatBuilder.build(pid);
                             if (dataBuilt != null) {
@@ -119,28 +112,18 @@ public class VmCpuBackend extends Backend {
                 }
             }, 0, PROC_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
 
-            try {
-                host.addHostListener(hostListener);
-                started = true;
-            } catch (MonitorException me) {
-                LOGGER.log(Level.WARNING, "Failed to add host listener", me);
-            }
-
+            started = true;
         }
         return started;
     }
 
     @Override
     public boolean deactivate() {
-        if (started && host != null) {
+        if (started) {
             executor.shutdown();
+            registrar.unregister(this);
 
-            try {
-                host.removeHostListener(hostListener);
-                started = false;
-            } catch (MonitorException me) {
-                LOGGER.log(Level.INFO, "Failed to remove host listener");
-            }
+            started = false;
         }
         return !started;
     }
@@ -183,10 +166,23 @@ public class VmCpuBackend extends Backend {
     }
 
     /*
-     * For testing purposes only.
+     * Methods implementing VmStatusListener
      */
-    void setHost(MonitoredHost host) {
-        this.host = host;
+    @Override
+    public void vmStatusChanged(Status newStatus, int pid) {
+        switch (newStatus) {
+        case VM_STARTED:
+            /* fall-through */
+        case VM_ACTIVE:
+            pidsToMonitor.add(pid);
+            break;
+        case VM_STOPPED:
+            // the cast is important because it changes the call from remove(index) to remove(Object)
+            pidsToMonitor.remove((Integer) pid);
+            vmCpuStatBuilder.forgetAbout(pid);
+            break;
+        }
+
     }
     
     /*
@@ -195,12 +191,5 @@ public class VmCpuBackend extends Backend {
     void setVmCpuStatBuilder(VmCpuStatBuilder vmCpuStatBuilder) {
         this.vmCpuStatBuilder = vmCpuStatBuilder;
     }
-    
-    /*
-     * For testing purposes only.
-     */
-    void setHostListener(VmCpuHostListener hostListener) {
-        this.hostListener = hostListener;
-    }
-    
+
 }

@@ -93,6 +93,10 @@ public class ActivatorTest {
         VmMemoryBackend backend = activator.getBackend();
         assertNotNull(backend);
 
+        // core thermostat activates the backend when the backend is detected
+        // do it manually for the test
+        backend.activate();
+
         activator.stop(context);
         
         assertFalse(backend.isActive());

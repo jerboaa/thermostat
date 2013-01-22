@@ -54,7 +54,9 @@ import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
+import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
+import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.swing.internal.MainView.Action;
@@ -295,10 +297,10 @@ public class MainWindowControllerImpl implements MainWindowController {
                 case SHOW_ABOUT_DIALOG:
                     showAboutDialog();
                     break;
-                case SHOW_VM_CONTEXT_MENU:
+                case SHOW_HOST_VM_CONTEXT_MENU:
                     showContextMenu(evt);
                     break;
-                case VM_CONTEXT_ACTION:
+                case HOST_VM_CONTEXT_ACTION:
                     handleVMHooks(evt);
                     break;
                 case SHUTDOWN:
@@ -371,32 +373,49 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void showContextMenu(ActionEvent<Action> evt) {
-        List<VMContextAction> toShow = new ArrayList<>();
-        VmRef vm = (VmRef) view.getSelectedHostOrVm();
+        List<ContextAction> toShow = new ArrayList<>();
 
-        logger.log(Level.INFO, "registering applicable VMContextActions actions to show");
+        Ref ref = view.getSelectedHostOrVm();
+        if (ref instanceof HostRef) {
+            HostRef vm = (HostRef) ref;
 
-        for (VMContextAction action : facadeFactory.getVMContextActions()) {
-            if (action.getFilter().matches(vm)) {
-                toShow.add(action);
+            logger.log(Level.INFO, "registering applicable HostContextActions actions to show");
+
+            for (HostContextAction action : facadeFactory.getHostContextActions()) {
+                if (action.getFilter().matches(vm)) {
+                    toShow.add(action);
+                }
+            }
+        } else if (ref instanceof VmRef) {
+            VmRef vm = (VmRef) ref;
+
+            logger.log(Level.INFO, "registering applicable VMContextActions actions to show");
+
+            for (VMContextAction action : facadeFactory.getVMContextActions()) {
+                if (action.getFilter().matches(vm)) {
+                    toShow.add(action);
+                }
             }
         }
 
-        view.showVMContextActions(toShow, (MouseEvent)evt.getPayload());
+        view.showContextActions(toShow, (MouseEvent) evt.getPayload());
     }
 
     private void handleVMHooks(ActionEvent<MainView.Action> event) {
         Object payload = event.getPayload();
-        if (payload instanceof VMContextAction) { 
-            try {
+        try {
+            if (payload instanceof HostContextAction) {
+                HostContextAction action = (HostContextAction) payload;
+                action.execute((HostRef) view.getSelectedHostOrVm());
+            } else if (payload instanceof VMContextAction) {
                 VMContextAction action = (VMContextAction) payload;
                 action.execute((VmRef) view.getSelectedHostOrVm());
-            } catch (Throwable error) {
-                logger.log(Level.SEVERE, "");
             }
+        } catch (Throwable error) {
+            logger.log(Level.SEVERE, "error invocating context action", error);
         }
     }
-    
+
     @Override
     public void showMainMainWindow() {
         view.showMainWindow();
