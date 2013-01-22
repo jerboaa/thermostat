@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,39 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.numa.client.swing.internal;
 
-package com.redhat.thermostat.numa.common;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import java.awt.Container;
 
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
+import net.java.openjdk.cacio.ctc.junit.CacioFESTRunner;
 
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
+import org.fest.swing.fixture.Containers;
+import org.fest.swing.fixture.FrameFixture;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
-    @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.common.ActionEvent;
+import com.redhat.thermostat.common.ActionListener;
+
+@RunWith(CacioFESTRunner.class)
+public class NumaPanelTest {
+
+    @Test
+    public void testActionListener() {
+        NumaPanel numaPanel = new NumaPanel();
+        ActionListener listener = mock(ActionListener.class);
+        numaPanel.addActionListener(listener);
+        FrameFixture frameFixture = Containers.frameFixtureFor((Container) numaPanel.getUiComponent());
+        frameFixture.show();
+        verify(listener).actionPerformed(new ActionEvent(numaPanel, BasicView.Action.VISIBLE));
+        frameFixture.close();
+        verify(listener).actionPerformed(new ActionEvent(numaPanel, BasicView.Action.VISIBLE));
     }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
-
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
-    }
-
 }

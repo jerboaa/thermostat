@@ -596,5 +596,10 @@
       <artifactId>thermostat-numa-agent</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>

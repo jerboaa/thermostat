@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,39 +34,18 @@
  * to do so, delete this exception statement from your version.
  */
 
-
 package com.redhat.thermostat.numa.common;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import static org.junit.Assert.assertEquals;
 
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
+import org.junit.Test;
 
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
+public class NumaHostInfoTest {
 
-    @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
+    @Test
+    public void testGetterSetter() {
+        NumaHostInfo numaHostInfo = new NumaHostInfo();
+        numaHostInfo.setNumNumaNodes(42);
+        assertEquals(42, numaHostInfo.getNumNumaNodes());
     }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
-
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
-    }
-
 }

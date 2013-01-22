@@ -79,6 +79,9 @@ public class NumaBackend extends Backend {
 
     @Override
     public boolean activate() {
+        int numNodes = numaCollector.getNumberOfNumaNodes();
+        numaDAO.putNumberOfNumaNodes(numNodes);
+
         TimerFactory timerFactory = appService.getTimerFactory();
         timer = timerFactory.createTimer();
         timer.setDelay(NUMA_CHECK_INTERVAL_SECONDS);

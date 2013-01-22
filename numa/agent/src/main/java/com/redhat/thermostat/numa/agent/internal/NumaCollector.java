@@ -94,4 +94,8 @@ class NumaCollector {
     String getBaseDir() {
         return baseDir.getAbsolutePath();
     }
+
+    public int getNumberOfNumaNodes() {
+        return numberOfNodes;
+    }
 }

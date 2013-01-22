@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,39 +34,16 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.numa.client.swing.internal;
 
-package com.redhat.thermostat.numa.common;
+import com.redhat.thermostat.numa.client.core.NumaView;
+import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
-
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
-
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
+public class SwingNumaViewProvider implements NumaViewProvider {
 
     @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
-
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
+    public NumaView createView() {
+        return new NumaPanel();
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,39 +34,36 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.numa.client.core;
 
-package com.redhat.thermostat.numa.common;
+import java.util.List;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.UIComponent;
+import com.redhat.thermostat.storage.model.DiscreteTimeData;
 
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
+public abstract class NumaView extends BasicView implements UIComponent {
 
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
+    public interface GraphVisibilityChangeListener {
+        public void show(String tag);
 
-    @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
+        public void hide(String tag);
     }
 
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
+    public abstract void addNumaChart(String tag, String humanReadableName);
 
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
+    public abstract void removeNumaChart(String tag);
 
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
-    }
+    public abstract void showNumaChart(String tag);
+
+    public abstract void hideNumaChart(String tag);
+
+    public abstract void addNumaData(String tag, List<DiscreteTimeData<? extends Number>> data);
+
+    public abstract void clearNumaData(String tag);
+
+    public abstract void addGraphVisibilityListener(GraphVisibilityChangeListener listener);
+
+    public abstract void removeGraphVisibilityListener(GraphVisibilityChangeListener listener);
 
 }

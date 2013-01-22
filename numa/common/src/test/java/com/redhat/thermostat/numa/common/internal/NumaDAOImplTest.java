@@ -95,6 +95,7 @@ public class NumaDAOImplTest {
         numaDAO.putNumaStat(numaStat);
 
         verify(storage).registerCategory(NumaDAO.numaStatCategory);
+        verify(storage).registerCategory(NumaDAO.numaHostCategory);
         verify(storage).createAdd(NumaDAO.numaStatCategory);
         verifyNoMoreInteractions(storage);
         verify(add).setPojo(numaStat);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,39 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.numa.client.core;
 
-package com.redhat.thermostat.numa.common;
+import static org.junit.Assert.*;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import org.junit.Test;
 
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Ordered;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.TimerFactory;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.numa.client.core.internal.NumaController;
+import com.redhat.thermostat.numa.common.NumaDAO;
 
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
+import static org.mockito.Mockito.*;
 
-    @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
-    }
+public class NumaInformationServiceTest {
 
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
+    @Test
+    public void test() {
+        ApplicationService appSvc = mock(ApplicationService.class);
+        TimerFactory timerFactory = mock(TimerFactory.class);
+        Timer timer = mock(Timer.class);
+        when(timerFactory.createTimer()).thenReturn(timer);
+        when(appSvc.getTimerFactory()).thenReturn(timerFactory);
+        NumaDAO numaDAO = mock(NumaDAO.class);
+        NumaViewProvider numaViewProvider = mock(NumaViewProvider.class);
+        NumaView view = mock(NumaView.class);
+        when(numaViewProvider.createView()).thenReturn(view);
 
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
+        NumaInformationService numaInfoService = new NumaInformationService(appSvc, numaDAO, numaViewProvider);
 
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
+        int order = numaInfoService.getOrderValue();
+        assertEquals(Ordered.ORDER_MEMORY_GROUP, order);
+        HostRef ref = mock(HostRef.class);
+        assertTrue(numaInfoService.getInformationServiceController(ref) instanceof NumaController);
+        assertNotNull(numaInfoService.getFilter());
     }
 
 }

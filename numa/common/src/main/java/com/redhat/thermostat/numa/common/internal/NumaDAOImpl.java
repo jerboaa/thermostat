@@ -36,18 +36,32 @@
 
 package com.redhat.thermostat.numa.common.internal;
 
+import java.util.List;
+
+import com.redhat.thermostat.common.dao.HostLatestPojoListGetter;
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.numa.common.NumaHostInfo;
 import com.redhat.thermostat.numa.common.NumaStat;
+import com.redhat.thermostat.storage.core.Cursor;
+import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
+import com.redhat.thermostat.storage.core.Query;
+import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 
 public class NumaDAOImpl implements NumaDAO {
 
     private final Storage storage;
+    private final HostLatestPojoListGetter<NumaStat> getter;
+
 
     NumaDAOImpl(Storage storage) {
         this.storage = storage;
         storage.registerCategory(numaStatCategory);
+        storage.registerCategory(numaHostCategory);
+        this.getter = new HostLatestPojoListGetter<>(storage, numaStatCategory);
     }
 
     @Override
@@ -55,5 +69,32 @@ public class NumaDAOImpl implements NumaDAO {
         Put add = storage.createAdd(numaStatCategory);
         add.setPojo(stat);
         add.apply();
+    }
+
+    @Override
+    public List<NumaStat> getLatestNumaStats(HostRef ref, long lastTimeStamp) {
+        return getter.getLatest(ref, lastTimeStamp);
+    }
+
+    @Override
+    public void putNumberOfNumaNodes(int numNodes) {
+        Replace replace = storage.createReplace(numaHostCategory);
+        NumaHostInfo numaHostInfo = new NumaHostInfo();
+        numaHostInfo.setNumNumaNodes(numNodes);
+        replace.setPojo(numaHostInfo);
+        replace.apply();
+    }
+
+    @Override
+    public int getNumberOfNumaNodes(HostRef ref) {
+        Query<NumaHostInfo> query = storage.createQuery(numaHostCategory);
+        query.where(Key.AGENT_ID, Criteria.EQUALS, ref.getAgentId());
+        query.limit(1);
+        Cursor<NumaHostInfo> numaHostInfo = query.execute();
+        if (numaHostInfo.hasNext()) {
+            return numaHostInfo.next().getNumNumaNodes();
+        } else {
+            return 0;
+        }
     }
 }

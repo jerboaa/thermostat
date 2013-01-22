@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,39 +34,45 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.numa.client.core;
 
-package com.redhat.thermostat.numa.common;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.numa.client.core.internal.NumaController;
+import com.redhat.thermostat.numa.common.NumaDAO;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+public class NumaInformationService implements InformationService<HostRef> {
+    
+    private static final int ORDER = ORDER_MEMORY_GROUP;
+    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
+    private ApplicationService appSvc;
+    private NumaDAO numaDAO;
+    private NumaViewProvider numaViewProvider;
 
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
+    public NumaInformationService(ApplicationService appSvc, NumaDAO numaDAO, NumaViewProvider numaViewProvider) {
+        this.appSvc = appSvc;
+        this.numaDAO = numaDAO;
+        this.numaViewProvider = numaViewProvider;
+    }
 
     @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
+    public Filter<HostRef> getFilter() {
+        return FILTER;
     }
 
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
+    @Override
+    public InformationServiceController<HostRef> getInformationServiceController(HostRef ref) {
+        return new NumaController(appSvc, numaDAO, ref, numaViewProvider);
     }
 
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
-
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
+    @Override
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

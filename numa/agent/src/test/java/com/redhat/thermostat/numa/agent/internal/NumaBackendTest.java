@@ -106,6 +106,7 @@ public class NumaBackendTest {
         NumaNodeStat stat2 = mock(NumaNodeStat.class);
         NumaNodeStat[] stats = new NumaNodeStat[] { stat1, stat2 };
         when(collector.collectData()).thenReturn(stats);
+        when(collector.getNumberOfNumaNodes()).thenReturn(42);
         ArgumentCaptor<NumaStat> statCaptor = ArgumentCaptor.forClass(NumaStat.class);
         doNothing().when(numaDAO).putNumaStat(statCaptor.capture());
         
@@ -121,8 +122,10 @@ public class NumaBackendTest {
         verifyNoMoreInteractions(timer);
 
         Runnable action = actionCaptor.getValue();
-        verifyZeroInteractions(numaDAO);
-        verifyZeroInteractions(collector);
+        verify(numaDAO).putNumberOfNumaNodes(42);
+        verifyNoMoreInteractions(numaDAO);
+        verify(collector).getNumberOfNumaNodes();
+        verifyNoMoreInteractions(collector);
 
         action.run();
         verify(collector).collectData();

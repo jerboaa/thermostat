@@ -34,39 +34,62 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.numa.common.internal;
+package com.redhat.thermostat.numa.client.core.internal;
+
+import java.util.Dictionary;
+import java.util.Hashtable;
+import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
-import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.common.dao.HostRef;
+import com.redhat.thermostat.numa.client.core.NumaInformationService;
+import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 import com.redhat.thermostat.numa.common.NumaDAO;
-import com.redhat.thermostat.storage.core.Storage;
 
 public class Activator implements BundleActivator {
     
-    private ServiceTracker tracker;
+    private MultipleServiceTracker tracker;
     private ServiceRegistration reg;
 
     @Override
-    public void start(BundleContext context) throws Exception {
-        tracker = new ServiceTracker(context, Storage.class.getName(), null) {
-            @Override
-            public Object addingService(ServiceReference reference) {
-                Storage storage = (Storage) context.getService(reference);
-                NumaDAO numaDao = new NumaDAOImpl(storage);
-                reg = context.registerService(NumaDAO.class.getName(), numaDao, null);
-                return super.addingService(reference);
-            }
-            
-            @Override
-            public void removedService(ServiceReference reference, Object service) {
-                reg.unregister();
-                super.removedService(reference, service);
-            }
+    public void start(final BundleContext context) throws Exception {
+        Class<?>[] deps = new Class<?>[] {
+            NumaDAO.class,
+            ApplicationService.class,
+            NumaViewProvider.class
         };
+
+        tracker = new MultipleServiceTracker(context, deps, new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                NumaDAO numaDAO = (NumaDAO) services.get(NumaDAO.class.getName());
+                Objects.requireNonNull(numaDAO);
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
+                NumaViewProvider numaViewProvider = (NumaViewProvider) services.get(NumaViewProvider.class.getName());
+                Objects.requireNonNull(numaViewProvider);
+                NumaInformationService service = new NumaInformationService(appSvc, numaDAO, numaViewProvider);
+                Dictionary<String, String> properties = new Hashtable<>();
+                properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+                reg = context.registerService(InformationService.class.getName(), service, properties);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                reg.unregister();
+            }
+
+        });
         tracker.open();
     }
 
@@ -76,3 +99,4 @@ public class Activator implements BundleActivator {
     }
 
 }
+

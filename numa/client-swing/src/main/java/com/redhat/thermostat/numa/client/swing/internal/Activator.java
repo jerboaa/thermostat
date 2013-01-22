@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,39 +34,29 @@
  * to do so, delete this exception statement from your version.
  */
 
+package com.redhat.thermostat.numa.client.swing.internal;
 
-package com.redhat.thermostat.numa.common;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
-
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
+public class Activator implements BundleActivator {
+    
+    private ServiceRegistration serviceReg;
 
     @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
+    public void start(final BundleContext context) throws Exception {
+        NumaViewProvider viewProvider = new SwingNumaViewProvider();
+        // Unregistered on Activator.stop
+        serviceReg = context.registerService(NumaViewProvider.class.getName(), viewProvider, null);
     }
 
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
-
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
+    @Override
+    public void stop(BundleContext context) throws Exception {
+        serviceReg.unregister();
     }
 
 }
+

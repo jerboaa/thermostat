@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -32,41 +32,31 @@
  * this code, you may extend this exception to your version of the
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
- */
+ */ 
 
+package com.redhat.thermostat.numa.client.swing.internal;
 
-package com.redhat.thermostat.numa.common;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-import com.redhat.thermostat.storage.model.BasePojo;
-import com.redhat.thermostat.storage.model.TimeStampedPojo;
+import org.junit.Test;
 
-@Entity
-public class NumaStat extends BasePojo implements TimeStampedPojo{
+import com.redhat.thermostat.numa.client.core.NumaViewProvider;
+import com.redhat.thermostat.numa.client.swing.internal.Activator;
+import com.redhat.thermostat.numa.client.swing.internal.SwingNumaViewProvider;
+import com.redhat.thermostat.test.StubBundleContext;
 
-    private long timeStamp = -1;
-    private NumaNodeStat[] nodeStats = new NumaNodeStat[0];
-
-    @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
-    @Persist
-    public NumaNodeStat[] getNodeStats() {
-        return nodeStats;
-    }
-
-    @Persist
-    public void setNodeStats(NumaNodeStat[] nodeStats) {
-        this.nodeStats = nodeStats;
+public class ActivatorTest {
+    
+    @Test
+    public void verifyStartRegistersViewProvider() throws Exception {
+        StubBundleContext ctx = new StubBundleContext();
+        Activator activator = new Activator();
+        activator.start(ctx);
+        assertTrue(ctx.isServiceRegistered(NumaViewProvider.class.getName(), SwingNumaViewProvider.class));
+        assertEquals(1, ctx.getAllServices().size());
+        activator.stop(ctx);
+        assertEquals(0, ctx.getAllServices().size());
     }
 
 }

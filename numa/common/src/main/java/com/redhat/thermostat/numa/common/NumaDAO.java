@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.numa.common;
 
+import java.util.List;
+
+import com.redhat.thermostat.common.dao.HostRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 
@@ -45,5 +48,14 @@ public interface NumaDAO {
     
     static final Category<NumaStat> numaStatCategory = new Category<>("numa-stat", NumaStat.class, Key.AGENT_ID, Key.TIMESTAMP, nodeStats);
 
+    static final Key<Integer> hostNumNumaNodes = new Key<>("hostNumNumaNodes", false);
+
+    static final Category<NumaHostInfo> numaHostCategory = new Category<>("numa-host-info", NumaHostInfo.class, Key.AGENT_ID, hostNumNumaNodes);
+
+    void putNumberOfNumaNodes(int numNodes);
+    int getNumberOfNumaNodes(HostRef ref);
+
     void putNumaStat(NumaStat stat);
+
+    List<NumaStat> getLatestNumaStats(HostRef ref, long lastSeenTimeStamp);
 }
