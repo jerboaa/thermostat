@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -123,3 +123,4 @@ public class NodeStat implements Pojo {
         return "NumaStat: node: " + node + ", numaHit: " + numaHit + ", numaMiss: " + numaMiss + ", numaForeign: " + numaForeign + ", interleaveHit: " + interleaveHit + ", localNode: " + localNode + ", otherNode: " + otherNode;
     }
 }
+

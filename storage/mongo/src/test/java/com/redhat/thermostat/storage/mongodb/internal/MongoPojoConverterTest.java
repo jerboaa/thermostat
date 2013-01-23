@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -325,3 +325,4 @@ public class MongoPojoConverterTest {
         assertEquals(3, indexedObj[2]);
     }
 }
+

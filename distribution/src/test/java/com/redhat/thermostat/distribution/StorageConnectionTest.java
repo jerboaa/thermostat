@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -111,3 +111,4 @@ public class StorageConnectionTest extends IntegrationTest {
 
     // TODO add a test to make sure connect/disconnect is not visible outside the shell
 }
+

@@ -1,4 +1,4 @@
-Copyright 2012 Red Hat, Inc.
+Copyright 2012, 2013 Red Hat, Inc.
 
 Thermostat is distributed under the GNU General Public License,
 version 2 or any later version (with a special exception described
@@ -22,3 +22,4 @@ or based on Thermostat code.  If you modify Thermostat, you may
 extend this exception to your version of the software, but you are
 not obligated to do so.  If you do not wish to do so, delete this
 exception statement from your version.
+

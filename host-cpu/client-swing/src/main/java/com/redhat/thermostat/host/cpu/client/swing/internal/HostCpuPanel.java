@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -295,3 +295,4 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
         return new JLabel("<html> <font color='" + hexColor + "'>\u2588</font> " + text + "</html>");
     }
 }
+

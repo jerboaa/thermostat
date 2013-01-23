@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -134,3 +134,4 @@ public class VmCpuController implements InformationServiceController<VmRef> {
         return translator.localize(LocaleResources.VM_INFO_TAB_CPU);
     }
 }
+

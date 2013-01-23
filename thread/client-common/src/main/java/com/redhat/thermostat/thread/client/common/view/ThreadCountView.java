@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -44,3 +44,4 @@ public abstract class ThreadCountView extends BasicView {
     public abstract void setLiveThreads(String liveThreads);
     public abstract void updateLivingDaemonTimeline(LivingDaemonThreadDifferenceChart model);
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -43,3 +43,4 @@ public enum GCCommand {
     public static final String VM_ID = "VM_ID";
     public static final String RECEIVER = "com.redhat.thermostat.gc.remote.command.GCCommandReceiver";
 }
+

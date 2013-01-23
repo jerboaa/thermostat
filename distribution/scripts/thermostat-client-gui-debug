@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2013 Red Hat, Inc.
+# Copyright 2012, 2013 Red Hat, Inc.
 #
 # This file is part of Thermostat.
 #
@@ -49,3 +49,4 @@ export THERMOSTAT_CLIENT_DEBUG_ADDRESS
 
 $THERMOSTAT_HOME/bin/thermostat gui -J-Dsun.awt.disablegrab=true -J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,address=$THERMOSTAT_CLIENT_DEBUG_ADDRESS
 exit $?
+

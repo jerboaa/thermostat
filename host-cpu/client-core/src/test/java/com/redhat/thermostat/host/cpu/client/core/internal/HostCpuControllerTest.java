@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -162,3 +162,4 @@ public class HostCpuControllerTest {
         assertEquals(15.0, cpuLoadData.get(1).getData().doubleValue(), 0.0001);
     }
 }
+

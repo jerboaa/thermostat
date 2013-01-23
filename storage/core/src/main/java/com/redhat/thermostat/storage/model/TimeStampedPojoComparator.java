@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -43,3 +43,4 @@ public final class TimeStampedPojoComparator<T extends TimeStampedPojo> implemen
         return Long.compare(o1.getTimeStamp(), o2.getTimeStamp());
     }
 }
+

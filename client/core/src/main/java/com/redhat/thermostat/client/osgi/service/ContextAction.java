@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -65,3 +65,4 @@ public interface ContextAction {
     /** A user-visible description for this action */
     String getDescription();
 }
+

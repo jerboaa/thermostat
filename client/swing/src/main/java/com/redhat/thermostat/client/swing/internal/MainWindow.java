@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -806,3 +806,4 @@ public class MainWindow extends JFrame implements MainView {
         return searchField.getSearchText();
     }
 }
+

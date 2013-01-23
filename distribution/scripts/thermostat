@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2012 Red Hat, Inc.
+# Copyright 2012, 2013 Red Hat, Inc.
 #
 # This file is part of Thermostat.
 #
@@ -89,3 +89,4 @@ done
 # finally run thermostat
 ${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
 exit $?
+

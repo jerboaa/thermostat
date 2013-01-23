@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -55,3 +55,4 @@ public abstract class HostCpuView extends BasicView implements UIComponent {
     public abstract void addCpuUsageData(int cpuIndex, List<DiscreteTimeData<Double>> data);
 
 }
+

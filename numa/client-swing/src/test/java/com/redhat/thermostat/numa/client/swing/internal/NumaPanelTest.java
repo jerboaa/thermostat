@@ -1,5 +1,5 @@
 /*
- * Copyright 2013 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -67,3 +67,4 @@ public class NumaPanelTest {
         verify(listener).actionPerformed(new ActionEvent(numaPanel, BasicView.Action.VISIBLE));
     }
 }
+

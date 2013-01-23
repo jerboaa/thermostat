@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -51,3 +51,4 @@ final class Defaults {
     public static final boolean LOCAL_MODE = false; // Default behaviour is to connect to cluster.
 
 }
+

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Red Hat, Inc.
+ * Copyright 2012, 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -45,3 +45,4 @@ public abstract class HeapDumpDetailsView extends BasicView implements UICompone
     public abstract void addSubView(String title, ObjectDetailsView child);
     public abstract void removeSubView(String title);
 }
+
