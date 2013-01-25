@@ -43,9 +43,9 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.launch.Framework;
 
 import com.redhat.thermostat.annotations.Service;
-import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.internal.BundleLoader;
 
 /**

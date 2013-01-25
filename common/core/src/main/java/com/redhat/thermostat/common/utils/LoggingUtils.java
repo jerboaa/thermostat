@@ -47,7 +47,7 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.LogFormatter;
-import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 /**
@@ -119,14 +119,14 @@ public final class LoggingUtils {
     }
 
     public static void loadGlobalLoggingConfig() throws InvalidConfigurationException {
-        File thermostatEtcDir = new File(ConfigUtils.getThermostatHome(), "etc");
+        File thermostatEtcDir = new File(new Configuration().getThermostatHome(), "etc");
         File loggingPropertiesFile = new File(thermostatEtcDir, "logging.properties");
         loadConfig(loggingPropertiesFile);
     }
     
 
     public static void loadUserLoggingConfig() throws InvalidConfigurationException {
-        File thermostatUserDir = new File(ConfigUtils.getThermostatUserHome());
+        File thermostatUserDir = new File(new Configuration().getThermostatUserHome());
         File loggingPropertiesFile = new File(thermostatUserDir, "logging.properties");
         loadConfig(loggingPropertiesFile);
     }

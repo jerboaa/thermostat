@@ -42,7 +42,7 @@ import java.io.IOException;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
@@ -59,10 +59,11 @@ public class StorageCommand extends BasicCommand {
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
     
-        File dbPath = ConfigUtils.getStorageDirectory();
-        File logFile = ConfigUtils.getStorageLogFile();
-        File pidFile = ConfigUtils.getStoragePidFile();
-        File propertyFile = ConfigUtils.getStorageConfigurationFile();
+        Configuration thermostatConfiguration = new Configuration();
+        File dbPath = thermostatConfiguration.getStorageDirectory();
+        File logFile = thermostatConfiguration.getStorageLogFile();
+        File pidFile = thermostatConfiguration.getStoragePidFile();
+        File propertyFile = thermostatConfiguration.getStorageConfigurationFile();
         if (!propertyFile.exists()) {
             throw new InvalidConfigurationException("can't access database configuration file " +
                                                     propertyFile);

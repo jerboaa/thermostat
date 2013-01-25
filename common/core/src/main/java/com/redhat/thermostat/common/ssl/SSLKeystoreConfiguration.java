@@ -41,7 +41,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 public class SSLKeystoreConfiguration {
@@ -128,7 +128,7 @@ public class SSLKeystoreConfiguration {
     private static void loadClientProperties()
             throws InvalidConfigurationException {
         if (clientProps == null) {
-            File thermostatEtcDir = new File(ConfigUtils.getThermostatHome(),
+            File thermostatEtcDir = new File(new Configuration().getThermostatHome(),
                     "etc");
             File clientPropertiesFile = new File(thermostatEtcDir,
                     "ssl.properties");

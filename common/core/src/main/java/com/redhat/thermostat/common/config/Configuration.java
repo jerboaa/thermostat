@@ -34,39 +34,32 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.common.config;
 
 import java.io.File;
 
-/*
- * This is a duplicate of com.redhat.thermostat.common.config.ConfigUtils
- * TODO: expose this as an OSGI service and remove the copy in config
- *  _or_
- * remove this; somehow tell the launcher to figure out where it can find files
- * and bundles and expose the real ConfigUtils as an OSGI service.
- */
 public class Configuration {
 
     private static final String THERMOSTAT_USER_DIR = ".thermostat";
 
-    private final String home;
-    private boolean printOSGiInfo;
+    private String home;
+    private boolean printOsgiInfo = false;
 
-    public Configuration() throws ConfigurationException {
+    public Configuration() throws InvalidConfigurationException {
         // allow this to be specified also as a property, especially for
         // tests, this overrides the env setting
         String home = System.getProperty("THERMOSTAT_HOME");
         if (home == null) {
             home = System.getenv("THERMOSTAT_HOME");
         }
+        
         if (home == null) {
-            throw new ConfigurationException("THERMOSTAT_HOME is not defined as either Java property or environment variable.  Cannot proceed.");
+            throw new InvalidConfigurationException("THERMOSTAT_HOME not defined...");
         }
         this.home = home;
-        printOSGiInfo = false;
     }
 
-    public String getThermostatHome() {
+    public String getThermostatHome() throws InvalidConfigurationException {
         return home;
     }
 
@@ -75,45 +68,62 @@ public class Configuration {
         return home + File.separator + THERMOSTAT_USER_DIR;
     }
 
-    public File getStorageBaseDirectory() throws ConfigurationException {
+    public File getBackendsBaseDirectory() throws InvalidConfigurationException {
+        String loc = getThermostatHome() + File.separatorChar + "backends";
+        File file = new File(loc);
+        return file;
+    }
+    
+    public File getStorageBaseDirectory() throws InvalidConfigurationException {
         String loc = getThermostatHome() + File.separatorChar + "storage";
         File file = new File(loc);
         return file;
     }
-
-    public File getStorageDirectory() throws ConfigurationException {
+    
+    public File getStorageDirectory() throws InvalidConfigurationException {
         return new File(getStorageBaseDirectory(), "db");
     }
-
-    public File getStorageConfigurationFile() throws ConfigurationException {
+    
+    public File getStorageConfigurationFile() throws InvalidConfigurationException {
         return new File(getStorageBaseDirectory(), "db.properties");
     }
 
-    public File getStorageLogFile() throws ConfigurationException {
+    public File getStorageLogFile() throws InvalidConfigurationException {
         File logDir = new File(getStorageBaseDirectory(), "logs");
         File logFile = new File(logDir, "db.log");
-
+        
         return logFile;
     }
 
-    public File getStoragePidFile() throws ConfigurationException {
+    public File getStoragePidFile() throws InvalidConfigurationException {
         File logDir = new File(getStorageBaseDirectory(), "run");
         File logFile = new File(logDir, "db.pid");
-
+        
         return logFile;
     }
 
-    public File getAgentConfigurationFile() throws ConfigurationException {
+    public File getAgentConfigurationFile() throws InvalidConfigurationException {
+
         File agent = new File(getThermostatHome(), "agent");
         return new File(agent, "agent.properties");
     }
 
+    public File getClientConfigurationDirectory() throws InvalidConfigurationException {
+        File client = new File(getThermostatHome(), "client");
+        return client;
+    }
+
+    public File getHistoryFile() throws InvalidConfigurationException {
+        File history = new File(getClientConfigurationDirectory(), "cli-history");
+        return history;
+    }
+
     public boolean getPrintOSGiInfo() {
-        return printOSGiInfo;
+        return printOsgiInfo;
     }
 
     public void setPrintOSGiInfo(boolean newValue) {
-        printOSGiInfo = newValue;
+        printOsgiInfo = newValue;
     }
 }
 

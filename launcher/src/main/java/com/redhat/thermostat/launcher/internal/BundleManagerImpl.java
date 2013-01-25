@@ -36,12 +36,6 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import com.redhat.thermostat.common.Configuration;
-import com.redhat.thermostat.common.ConfigurationException;
-import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
-import com.redhat.thermostat.common.cli.CommandInfoSource;
-import com.redhat.thermostat.launcher.BundleManager;
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -49,10 +43,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.naming.ConfigurationException;
+
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.launch.Framework;
+
+import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
+import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.common.config.Configuration;
+import com.redhat.thermostat.launcher.BundleManager;
 
 public class BundleManagerImpl extends BundleManager {
 

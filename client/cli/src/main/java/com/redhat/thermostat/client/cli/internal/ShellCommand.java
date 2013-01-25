@@ -56,7 +56,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.cli.SimpleCommand;
-import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.Launcher;
@@ -79,7 +79,7 @@ public class ShellCommand extends SimpleCommand {
         public PersistentHistory get() {
             PersistentHistory history = null;
             try {
-                history = new FileHistory(ConfigUtils.getHistoryFile());
+                history = new FileHistory(new Configuration().getHistoryFile());
             } catch (InvalidConfigurationException | IOException e) {
                 /* no history available */
             }
