@@ -36,16 +36,21 @@
 
 package com.redhat.thermostat.numa.common;
 
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
 import com.redhat.thermostat.storage.model.BasePojo;
 
+@Entity
 public class NumaHostInfo extends BasePojo {
 
     private int numNumaNodes;
 
+    @Persist
     public void setNumNumaNodes(int numNumaNodes) {
         this.numNumaNodes = numNumaNodes;
     }
 
+    @Persist
     public int getNumNumaNodes() {
         return numNumaNodes;
     }
