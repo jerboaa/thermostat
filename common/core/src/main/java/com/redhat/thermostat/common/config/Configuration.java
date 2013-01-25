@@ -73,7 +73,11 @@ public class Configuration {
         File file = new File(loc);
         return file;
     }
-    
+
+    public String getLibRoot() {
+        return home + File.separator + "libs";
+    }
+
     public File getStorageBaseDirectory() throws InvalidConfigurationException {
         String loc = getThermostatHome() + File.separatorChar + "storage";
         File file = new File(loc);

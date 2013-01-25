@@ -70,13 +70,13 @@ public class CommandInfoImpl implements CommandInfo {
     private Options options;
     private List<String> dependencies;
 
-    CommandInfoImpl(String name, Properties properties, String thermostatHome) {
+    CommandInfoImpl(String name, Properties properties, String libRoot) {
         options = new Options();
         this.name = name;
         for (Entry<Object,Object> entry: properties.entrySet()) {
             String key = (String) entry.getKey();
             if (key.equals(PROPERTY_BUNDLES)) {
-                learnDependencies((String) entry.getValue(), thermostatHome);
+                learnDependencies((String) entry.getValue(), libRoot);
             } else if (key.equals(PROPERTY_DESC)) {
                 description = properties.getProperty(key);
             } else if (key.equals(PROPERTY_USAGE)) {
@@ -87,8 +87,7 @@ public class CommandInfoImpl implements CommandInfo {
         }
     }
 
-    private void learnDependencies(String bundlesValue, String thermostatHome) {
-        String libRoot = thermostatHome + File.separator + "libs";
+    private void learnDependencies(String bundlesValue, String libRoot) {
         List<String> resourceNames = Arrays.asList(bundlesValue.split(","));
         dependencies = new ArrayList<>(resourceNames.size());
         for (String value : resourceNames) {

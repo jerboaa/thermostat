@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.launcher.internal;
 
+import java.io.File;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
@@ -70,10 +72,14 @@ public class Activator extends CommandLoadingBundleActivator {
         public Object addingService(ServiceReference reference) {
             // keyring is now ready
             Keyring keyring = (Keyring)context.getService(reference);
-            // Register Launcher service since FrameworkProvider is waiting for it blockingly.
-            CommandInfoSourceImpl commands = new CommandInfoSourceImpl(bundleService.getConfiguration().getThermostatHome());
+            Configuration config = bundleService.getConfiguration();
+            String commandsDir = config.getThermostatHome() + File.separator + "etc" +
+                    File.separator + "commands";
+            CommandInfoSourceImpl commands =
+                    new CommandInfoSourceImpl(commandsDir, config.getLibRoot());
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);
             bundleService.setCommandInfoSource(commands);
+            // Register Launcher service since FrameworkProvider is waiting for it blockingly.
             LauncherImpl launcher = new LauncherImpl(context,
                     new CommandContextFactory(context), bundleService);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);

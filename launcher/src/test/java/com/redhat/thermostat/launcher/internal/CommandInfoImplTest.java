@@ -60,6 +60,7 @@ import com.redhat.thermostat.common.locale.Translate;
 public class CommandInfoImplTest {
 
     private Path tempThermostatHome, someJarName1, someJarName2, missingJarName;
+    private File tempLibs;
 
     @Before
     public void setUp() throws IOException {
@@ -67,7 +68,7 @@ public class CommandInfoImplTest {
         tempThermostatHome.toFile().deleteOnExit();
         System.setProperty("THERMOSTAT_HOME", tempThermostatHome.toString());
 
-        File tempLibs = new File(tempThermostatHome.toFile(), "libs");
+        tempLibs = new File(tempThermostatHome.toFile(), "libs");
         tempLibs.mkdirs();
         tempLibs.deleteOnExit();
 
@@ -104,7 +105,7 @@ public class CommandInfoImplTest {
         Properties props = new Properties();
         props.setProperty("bundles", someJarName1.getFileName().toString());
         String name = "name";
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         List<String> resources = info.getDependencyResourceNames();
         assertEquals(1, resources.size());
@@ -116,7 +117,7 @@ public class CommandInfoImplTest {
         Properties props = new Properties();
         props.setProperty("bundles", someJarName1.getFileName() + "," + someJarName2.getFileName());
         String name = "name";
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         List<String> resources = info.getDependencyResourceNames();
         assertEquals(2, resources.size());
@@ -129,7 +130,7 @@ public class CommandInfoImplTest {
         Properties props = new Properties();
         props.setProperty("bundles", missingJarName.getFileName().toString());
         String name = "name";
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         List<String> resources = info.getDependencyResourceNames();
         assertEquals(0, resources.size());
@@ -142,7 +143,7 @@ public class CommandInfoImplTest {
         String name = "name";
         String desc = "desc";
         props.put("description", desc);
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         String commandDesc = info.getDescription();
         assertEquals(desc, commandDesc);
@@ -154,7 +155,7 @@ public class CommandInfoImplTest {
         String name = "name";
         String usage = "some sort of usage message";
         props.put("usage", usage);
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         String commandUsage = info.getUsage();
         assertEquals(usage, commandUsage);
@@ -175,7 +176,7 @@ public class CommandInfoImplTest {
         props.put("bar.hasarg", "FALSE");
         props.put("bar.required", "this will evaluate as false");
         props.put("bar.description", "the bar option");
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         Options options = info.getOptions();
         Option foo = options.getOption("foo");
@@ -199,7 +200,7 @@ public class CommandInfoImplTest {
         Properties props = new Properties();
         String name = "name";
         props.put("options", "AUTO_DB_OPTIONS");
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         Options options = info.getOptions();
         assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
@@ -220,7 +221,7 @@ public class CommandInfoImplTest {
         props.put("options", "AUTO_DB_OPTIONS, dbUrl");
         props.put("dbUrl.long", "ignored");
         props.put("dbUrl.required", "true");
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         Options options = info.getOptions();
         assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
@@ -234,7 +235,7 @@ public class CommandInfoImplTest {
         Properties props = new Properties();
         String name = "name";
         props.put("options", "AUTO_LOG_OPTION");
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         Options options = info.getOptions();
         assertTrue(options.hasOption(CommonOptions.LOG_LEVEL_ARG));
@@ -248,7 +249,7 @@ public class CommandInfoImplTest {
         props.put("options", "foo|bar");
         props.put("foo.short", "f");
         props.put("bar.short", "b");
-        CommandInfoImpl info = new CommandInfoImpl(name, props, tempThermostatHome.toString());
+        CommandInfoImpl info = new CommandInfoImpl(name, props, tempLibs.toString());
 
         Options options = info.getOptions();
         Option foo = options.getOption("f");

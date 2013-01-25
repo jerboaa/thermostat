@@ -57,6 +57,7 @@ public class CommandInfoSourceTest {
 
     private Path tempThermostatHome;
 
+    private File tempLibs;
     private File tempEtc;
     private File tempCommands;
     private File tempPropsFile;
@@ -68,6 +69,8 @@ public class CommandInfoSourceTest {
         tempThermostatHome.toFile().deleteOnExit();
         System.setProperty("THERMOSTAT_HOME", tempThermostatHome.toString());
         
+        tempLibs = new File(tempThermostatHome.toFile(), "libs");
+
         tempEtc = new File(tempThermostatHome.toFile(), "etc");
         tempEtc.mkdirs();
         tempEtc.deleteOnExit();
@@ -93,7 +96,8 @@ public class CommandInfoSourceTest {
 
     @Test
     public void testGetCommandInfo() {
-        CommandInfoSourceImpl bundles = new CommandInfoSourceImpl(tempThermostatHome.toString());
+        CommandInfoSourceImpl bundles =
+                new CommandInfoSourceImpl(tempCommands.toString(), tempLibs.toString());
         CommandInfo info = bundles.getCommandInfo("foo");
         assertNotNull(info);
         assertEquals("foo", info.getName());
@@ -101,7 +105,8 @@ public class CommandInfoSourceTest {
 
     @Test
     public void testGetCommandInfos() {
-        CommandInfoSourceImpl bundles = new CommandInfoSourceImpl(tempThermostatHome.toString());
+        CommandInfoSourceImpl bundles =
+                new CommandInfoSourceImpl(tempCommands.toString(), tempLibs.toString());
         Collection<CommandInfo> infos = bundles.getCommandInfos();
         assertNotNull(infos);
         assertEquals(1, infos.size());

@@ -127,8 +127,8 @@ public class ActivatorTest {
         CommandInfoSourceImpl commands = mock(CommandInfoSourceImpl.class);
         when(commands.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
         whenNew(CommandInfoSourceImpl.class).
-                withParameterTypes(String.class).
-                withArguments(isA(String.class)).thenReturn(commands);
+                withParameterTypes(String.class, String.class).
+                withArguments(isA(String.class), isA(String.class)).thenReturn(commands);
 
         tracker = mock(MultipleServiceTracker.class);
         whenNew(MultipleServiceTracker.class).
