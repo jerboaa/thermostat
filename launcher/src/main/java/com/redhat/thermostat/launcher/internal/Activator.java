@@ -43,9 +43,9 @@ import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 import com.redhat.thermostat.common.CommandLoadingBundleActivator;
-import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.Launcher;
 import com.redhat.thermostat.utils.keyring.Keyring;

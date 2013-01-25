@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.common.config;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class ConfigurationTest {
     }
 
     @Test
-    public void testLocations() throws ConfigurationException, IOException {
+    public void testLocations() throws InvalidConfigurationException, IOException {
         String path = System.getProperty("THERMOSTAT_HOME");
         char s = File.separatorChar;
 

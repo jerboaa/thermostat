@@ -36,11 +36,11 @@
 
 package com.redhat.thermostat.launcher.internal;
 
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.eq;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.whenNew;
 
@@ -58,11 +58,9 @@ import org.osgi.framework.launch.Framework;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.Configuration;
 import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
-import com.redhat.thermostat.launcher.internal.BundleLoader;
-import com.redhat.thermostat.launcher.internal.BundleManagerImpl;
+import com.redhat.thermostat.common.config.Configuration;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({BundleManagerImpl.class, FrameworkUtil.class})

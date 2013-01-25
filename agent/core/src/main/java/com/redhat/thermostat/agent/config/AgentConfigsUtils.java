@@ -41,7 +41,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-import com.redhat.thermostat.common.config.ConfigUtils;
+import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 
 public class AgentConfigsUtils {
@@ -50,7 +50,7 @@ public class AgentConfigsUtils {
         
         AgentStartupConfiguration config = new AgentStartupConfiguration();
         
-        File propertyFile = ConfigUtils.getAgentConfigurationFile();
+        File propertyFile = new Configuration().getAgentConfigurationFile();
         readAndSetProperties(propertyFile, config);
         
         return config;
