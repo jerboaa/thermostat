@@ -40,6 +40,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Matchers.isNull;
@@ -56,6 +57,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -124,11 +126,24 @@ public class ActivatorTest {
         when(config.getThermostatHome()).thenReturn("");
         when(registryService.getConfiguration()).thenReturn(config);
 
-        CommandInfoSourceImpl commands = mock(CommandInfoSourceImpl.class);
-        when(commands.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
-        whenNew(CommandInfoSourceImpl.class).
+        BuiltInCommandInfoSource source1 = mock(BuiltInCommandInfoSource.class);
+        when(source1.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
+        whenNew(BuiltInCommandInfoSource.class).
                 withParameterTypes(String.class, String.class).
-                withArguments(isA(String.class), isA(String.class)).thenReturn(commands);
+                withArguments(isA(String.class), isA(String.class)).thenReturn(source1);
+
+        PluginCommandInfoSource source2 = mock(PluginCommandInfoSource.class);
+        when(source2.getCommandInfos()).thenReturn(new ArrayList<CommandInfo>());
+        whenNew(PluginCommandInfoSource.class)
+                .withParameterTypes(String.class, String.class)
+                .withArguments(anyString(), anyString())
+                .thenReturn(source2);
+
+        CompoundCommandInfoSource commands = mock(CompoundCommandInfoSource.class);
+        whenNew(CompoundCommandInfoSource.class)
+                .withParameterTypes(CommandInfoSource.class, CommandInfoSource.class)
+                .withArguments(source1, source2)
+                .thenReturn(commands);
 
         tracker = mock(MultipleServiceTracker.class);
         whenNew(MultipleServiceTracker.class).
@@ -180,13 +195,13 @@ public class ActivatorTest {
         ServiceReference ref = context.getServiceReference(Keyring.class);
         customizer.addingService(ref);
         
-        assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CommandInfoSourceImpl.class).getClass()));
+        assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CompoundCommandInfoSource.class).getClass()));
         assertTrue(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
         assertTrue(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
 
         customizer.removedService(null, null);
         
-        assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CommandInfoSourceImpl.class));
+        assertFalse(context.isServiceRegistered(CommandInfoSource.class.getName(), CompoundCommandInfoSource.class));
         assertFalse(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
         assertFalse(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
     }

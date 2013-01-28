@@ -196,6 +196,7 @@
                 <mkdir dir="${project.build.directory}/client" />
                 <mkdir dir="${project.build.directory}/osgi-cache" />
                 <mkdir dir="${project.build.directory}/libs/native" />
+                <mkdir dir="${project.build.directory}/plugins/" />
                 
                 <!--  also copy the native libraries -->
                 <copy file="${main.basedir}/keyring/target/libGnomeKeyringWrapper.so"

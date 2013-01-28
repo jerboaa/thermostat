@@ -68,6 +68,10 @@ public class Configuration {
         return home + File.separator + THERMOSTAT_USER_DIR;
     }
 
+    public String getPluginRoot() throws InvalidConfigurationException {
+        return home + File.separator + "plugins";
+    }
+
     public File getBackendsBaseDirectory() throws InvalidConfigurationException {
         String loc = getThermostatHome() + File.separatorChar + "backends";
         File file = new File(loc);

@@ -50,6 +50,7 @@ public interface CommandInfo {
 
     public Options getOptions();
 
+    /** Returns a list of jar that this command depends on */
     public List<String> getDependencyResourceNames();
 
 }

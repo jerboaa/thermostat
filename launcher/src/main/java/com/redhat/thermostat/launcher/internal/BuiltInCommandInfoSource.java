@@ -51,12 +51,12 @@ import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class CommandInfoSourceImpl implements CommandInfoSource {
+public class BuiltInCommandInfoSource implements CommandInfoSource {
 
-    private static final Logger logger = LoggingUtils.getLogger(CommandInfoSourceImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(BuiltInCommandInfoSource.class);
     private Map<String, CommandInfo> commands;
 
-    CommandInfoSourceImpl(String commandsDir, String libRoot) {
+    BuiltInCommandInfoSource(String commandsDir, String libRoot) {
         commands = new HashMap<>();
         final File dir = new File(commandsDir);
         if (dir.isDirectory()) {
@@ -82,7 +82,7 @@ public class CommandInfoSourceImpl implements CommandInfoSource {
                     logger.warning("Issue loading properties file: " + file.getPath());
                 }
                 String commandName = deduceCommandName(file.getName());
-                commands.put(commandName, new CommandInfoImpl(commandName, commandProps, libRoot));
+                commands.put(commandName, new BuiltInCommandInfo(commandName, commandProps, libRoot));
             }
         } else {
             logger.warning("Command configuration directory not found or not a directory: " + dir.getPath());
@@ -109,4 +109,3 @@ public class CommandInfoSourceImpl implements CommandInfoSource {
     }
 
 }
-

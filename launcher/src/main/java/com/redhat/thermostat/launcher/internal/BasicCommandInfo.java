@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,15 +34,53 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
-import java.util.Collection;
+import java.util.List;
 
-public interface CommandInfoSource {
+import org.apache.commons.cli.Options;
 
-    public CommandInfo getCommandInfo(String name) throws CommandInfoNotFoundException;
+import com.redhat.thermostat.common.cli.CommandInfo;
 
-    public Collection<CommandInfo> getCommandInfos();
+public class BasicCommandInfo implements CommandInfo {
+
+    private final String name;
+    private final String description;
+    private final String usage;
+    private final Options options;
+    private final List<String> resources;
+
+    public BasicCommandInfo(String name, String description, String usage, Options options, List<String> resources) {
+        this.name = name;
+        this.description = description;
+        this.usage = usage;
+        this.options = options;
+        this.resources = resources;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public String getUsage() {
+        return usage;
+    }
+
+    @Override
+    public Options getOptions() {
+        return options;
+    }
+
+    @Override
+    public List<String> getDependencyResourceNames() {
+        return resources;
+    }
 
 }
-

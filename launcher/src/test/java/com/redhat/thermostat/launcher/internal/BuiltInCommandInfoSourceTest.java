@@ -51,9 +51,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandInfo;
-import com.redhat.thermostat.launcher.internal.CommandInfoSourceImpl;
+import com.redhat.thermostat.launcher.internal.BuiltInCommandInfoSource;
 
-public class CommandInfoSourceTest {
+public class BuiltInCommandInfoSourceTest {
 
     private Path tempThermostatHome;
 
@@ -96,8 +96,8 @@ public class CommandInfoSourceTest {
 
     @Test
     public void testGetCommandInfo() {
-        CommandInfoSourceImpl bundles =
-                new CommandInfoSourceImpl(tempCommands.toString(), tempLibs.toString());
+        BuiltInCommandInfoSource bundles =
+                new BuiltInCommandInfoSource(tempCommands.toString(), tempLibs.toString());
         CommandInfo info = bundles.getCommandInfo("foo");
         assertNotNull(info);
         assertEquals("foo", info.getName());
@@ -105,8 +105,8 @@ public class CommandInfoSourceTest {
 
     @Test
     public void testGetCommandInfos() {
-        CommandInfoSourceImpl bundles =
-                new CommandInfoSourceImpl(tempCommands.toString(), tempLibs.toString());
+        BuiltInCommandInfoSource bundles =
+                new BuiltInCommandInfoSource(tempCommands.toString(), tempLibs.toString());
         Collection<CommandInfo> infos = bundles.getCommandInfos();
         assertNotNull(infos);
         assertEquals(1, infos.size());

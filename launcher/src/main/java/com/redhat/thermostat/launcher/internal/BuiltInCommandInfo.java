@@ -51,10 +51,9 @@ import org.apache.commons.cli.Options;
 import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
+public class BuiltInCommandInfo implements CommandInfo {
 
-public class CommandInfoImpl implements CommandInfo {
-
-    private static final Logger logger = LoggingUtils.getLogger(CommandInfoSourceImpl.class);
+    private static final Logger logger = LoggingUtils.getLogger(BuiltInCommandInfo.class);
     private static final String PROPERTY_BUNDLES = "bundles";
     private static final String PROPERTY_DESC = "description";
     private static final String PROPERTY_USAGE = "usage";
@@ -70,7 +69,7 @@ public class CommandInfoImpl implements CommandInfo {
     private Options options;
     private List<String> dependencies;
 
-    CommandInfoImpl(String name, Properties properties, String libRoot) {
+    BuiltInCommandInfo(String name, Properties properties, String libRoot) {
         options = new Options();
         this.name = name;
         for (Entry<Object,Object> entry: properties.entrySet()) {

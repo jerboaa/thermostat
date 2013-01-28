@@ -1,5 +1,5 @@
 /*
- * Copyright 2012, 2013 Red Hat, Inc.
+ * Copyright 2013 Red Hat, Inc.
  *
  * This file is part of Thermostat.
  *
@@ -34,15 +34,33 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common.cli;
+package com.redhat.thermostat.launcher.internal;
 
-import java.util.Collection;
+import static org.junit.Assert.assertEquals;
 
-public interface CommandInfoSource {
+import java.util.Collections;
+import java.util.List;
 
-    public CommandInfo getCommandInfo(String name) throws CommandInfoNotFoundException;
+import org.apache.commons.cli.Options;
+import org.junit.Test;
 
-    public Collection<CommandInfo> getCommandInfos();
+public class BasicCommandInfoTest {
 
+    @Test
+    public void testBasics() {
+        final String NAME = "name";
+        final String DESCRIPTION = "description";
+        final String USAGE = "usage";
+        final Options OPTIONS = new Options();
+        final List<String> RESOURCES = Collections.emptyList();
+
+        BasicCommandInfo info = new BasicCommandInfo(NAME, DESCRIPTION, USAGE, OPTIONS, RESOURCES);
+
+        assertEquals(NAME, info.getName());
+        assertEquals(DESCRIPTION, info.getDescription());
+        assertEquals(USAGE, info.getUsage());
+        assertEquals(OPTIONS, info.getOptions());
+        assertEquals(RESOURCES, info.getDependencyResourceNames());
+
+    }
 }
-

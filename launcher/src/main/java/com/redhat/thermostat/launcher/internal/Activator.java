@@ -73,10 +73,16 @@ public class Activator extends CommandLoadingBundleActivator {
             // keyring is now ready
             Keyring keyring = (Keyring)context.getService(reference);
             Configuration config = bundleService.getConfiguration();
+
             String commandsDir = config.getThermostatHome() + File.separator + "etc" +
                     File.separator + "commands";
-            CommandInfoSourceImpl commands =
-                    new CommandInfoSourceImpl(commandsDir, config.getLibRoot());
+            CommandInfoSource builtInCommandSource =
+                    new BuiltInCommandInfoSource(commandsDir, config.getLibRoot());
+            CommandInfoSource pluginCommandSource = new PluginCommandInfoSource(
+                            config.getLibRoot(), config.getPluginRoot());
+            CommandInfoSource commands = new CompoundCommandInfoSource(builtInCommandSource, pluginCommandSource);
+
+
             cmdInfoReg = context.registerService(CommandInfoSource.class, commands, null);
             bundleService.setCommandInfoSource(commands);
             // Register Launcher service since FrameworkProvider is waiting for it blockingly.
