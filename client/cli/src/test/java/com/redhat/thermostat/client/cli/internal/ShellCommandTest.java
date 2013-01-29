@@ -98,7 +98,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
         verify(launcher).setArgs(new String[]{"help"});
-        verify(launcher).run();
+        verify(launcher).run(true);
     }
 
     @Test
@@ -172,7 +172,7 @@ public class ShellCommandTest {
         assertEquals("", ctxFactory.getError());
 
         verify(launcher).setArgs(new String[] {"old-history-value"});
-        verify(launcher).run();
+        verify(launcher).run(true);
     }
 
     @Test
@@ -195,7 +195,7 @@ public class ShellCommandTest {
         cmd.run(ctx);
 
         verify(launcher).setArgs(new String[] {"add-to-history"});
-        verify(launcher).run();
+        verify(launcher).run(true);
         verify(mockHistory).add("add-to-history");
         verify(mockHistory).flush();
 

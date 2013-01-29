@@ -167,7 +167,7 @@ public class ShellCommand extends AbstractCommand {
         if (launcherRef != null) {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
             launcher.setArgs(parsed);
-            launcher.run();
+            launcher.run(true);
         } else {
             throw new CommandException("Severe: Could not locate launcher");
         }

@@ -46,6 +46,9 @@ public enum LocaleResources {
     OPTION_USERNAME_DESC,
     OPTION_PASSWORD_DESC,
     OPTION_LOG_LEVEL_DESC,
+    WITHIN,
+    OUTSIDE,
+    COMMAND_USED_IN_WRONG_CONTEXT,
     ;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.launcher.internal.strings";

@@ -70,7 +70,7 @@ public class Thermostat implements Runnable {
         ServiceTracker tracker = new ServiceTracker(context, Launcher.class.getName(), null);
         tracker.open();
         launcher = (Launcher) tracker.waitForService(0);
-        launcher.run();
+        launcher.run(false);
         tracker.close();
     }
 

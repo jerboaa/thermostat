@@ -65,6 +65,7 @@ import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -90,6 +91,8 @@ public class LauncherImpl implements Launcher {
     private BundleContext context;
     private BundleManager registry;
     private final DbServiceFactory dbServiceFactory;
+
+    private Translate<LocaleResources> t = LocaleResources.createLocalizer();
     
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry) {
         this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory());
@@ -106,12 +109,12 @@ public class LauncherImpl implements Launcher {
     }
 
     @Override
-    public synchronized void run() {
-        run(null);
+    public synchronized void run(boolean inShell) {
+        run(null, inShell);
     }
 
     @Override
-    public synchronized void run(Collection<ActionListener<ApplicationState>> listeners) {
+    public synchronized void run(Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
 
         usageCount++;
         waitForArgs();
@@ -125,7 +128,7 @@ public class LauncherImpl implements Launcher {
                 Version coreVersion = new Version();
                 cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
             } else {
-                runCommandFromArguments(listeners);
+                runCommandFromArguments(listeners, inShell);
             }
         } finally {
             args = null;
@@ -189,26 +192,27 @@ public class LauncherImpl implements Launcher {
     }
 
     private void runHelpCommand() {
-        runCommand("help", new String[0], null);
+        runCommand("help", new String[0], null, false);
     }
 
     private void runHelpCommandFor(String cmdName) {
-        runCommand("help", new String[] { "--", cmdName }, null);
+        runCommand("help", new String[] { "--", cmdName }, null, false);
     }
 
-    private void runCommandFromArguments(Collection<ActionListener<ApplicationState>> listeners) {
-        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners);
+    private void runCommandFromArguments(Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+        runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners, inShell);
     }
 
-    private void runCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners) {
+    private void runCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
         try {
-            parseArgsAndRunCommand(cmdName, cmdArgs, listeners);
+            parseArgsAndRunCommand(cmdName, cmdArgs, listeners, inShell);
         } catch (CommandException e) {
             cmdCtxFactory.getConsole().getError().println(e.getMessage());
         }
     }
 
-    private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs, Collection<ActionListener<ApplicationState>> listeners) throws CommandException {
+    private void parseArgsAndRunCommand(String cmdName, String[] cmdArgs,
+    		Collection<ActionListener<ApplicationState>> listeners, boolean inShell) throws CommandException {
 
         PrintStream out = cmdCtxFactory.getConsole().getOutput();
         try {
@@ -229,6 +233,10 @@ public class LauncherImpl implements Launcher {
             runHelpCommandFor(cmdName);
             return;
         }
+        if ((inShell && !cmd.isAvailableInShell()) || (!inShell && !cmd.isAvailableOutsideShell())) {
+        	outputBadShellContext(inShell, out, cmdName);
+        	return;
+        }
         if (listeners != null && cmd instanceof AbstractStateNotifyingCommand) {
             AbstractStateNotifyingCommand basicCmd = (AbstractStateNotifyingCommand) cmd;
             ActionNotifier<ApplicationState> notifier = basicCmd.getNotifier();
@@ -241,6 +249,16 @@ public class LauncherImpl implements Launcher {
         setupLogLevel(args);
         CommandContext ctx = setupCommandContext(cmd, args);
         cmd.run(ctx);
+    }
+
+    private void outputBadShellContext(boolean inShell, PrintStream out, String cmd) {
+    	String inOrOut = null;
+    	if (inShell) {
+    		inOrOut = t.localize(LocaleResources.WITHIN);
+    	} else {
+    		inOrOut = t.localize(LocaleResources.OUTSIDE);
+    	}
+    	out.println(t.localize(LocaleResources.COMMAND_USED_IN_WRONG_CONTEXT, cmd, inOrOut));
     }
 
     private void setupLogLevel(Arguments args) {

@@ -106,7 +106,7 @@ import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({FrameworkUtil.class, HelpCommand.class, OSGIUtils.class})
-public class LauncherTest {
+public class LauncherImplTest {
     
     private static String defaultKeyringProvider;
     private static final String name1 = "test1";
@@ -203,6 +203,8 @@ public class LauncherTest {
         when(basicCmd.getDescription()).thenReturn("nothing that means anything");
         when(basicInfo.getDescription()).thenReturn("nothing that means anything");
         when(basicCmd.isStorageRequired()).thenReturn(false);
+        when(basicCmd.isAvailableInShell()).thenReturn(true);
+        when(basicCmd.isAvailableOutsideShell()).thenReturn(true);
         Options options = new Options();
         when(basicCmd.getOptions()).thenReturn(options);
         when(basicInfo.getOptions()).thenReturn(options);
@@ -287,11 +289,11 @@ public class LauncherTest {
 
     @Test
     public void testMain() {
-        runAndVerifyCommand(new String[] {name1, "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
+        runAndVerifyCommand(new String[] {name1, "--arg1", "Hello", "--arg2", "World"}, "Hello, World", false);
 
         ctxFactory.reset();
 
-        runAndVerifyCommand(new String[] {"test2", "--arg3", "Hello", "--arg4", "World"}, "World: Hello");
+        runAndVerifyCommand(new String[] {"test2", "--arg3", "Hello", "--arg4", "World"}, "World: Hello", false);
     }
 
     @Test
@@ -302,12 +304,12 @@ public class LauncherTest {
                         + " test1         description 1\n"
                         + " test2         description 2\n"
                         + " test3         description 3\n";
-        runAndVerifyCommand(new String[0], expected);
+        runAndVerifyCommand(new String[0], expected, false);
     }
 
     @Test
     public void verifySetLogLevel() {
-        runAndVerifyCommand(new String[] {name1, "--logLevel", "WARNING", "--arg1", "Hello", "--arg2", "World"}, "Hello, World");
+        runAndVerifyCommand(new String[] {name1, "--logLevel", "WARNING", "--arg1", "Hello", "--arg2", "World"}, "Hello, World", false);
         Logger globalLogger = Logger.getLogger("com.redhat.thermostat");
         assertEquals(Level.WARNING, globalLogger.getLevel());
     }
@@ -323,7 +325,7 @@ public class LauncherTest {
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
-        runAndVerifyCommand(new String[] {"--help"}, expected);
+        runAndVerifyCommand(new String[] {"--help"}, expected, false);
     }
 
     @Test
@@ -337,7 +339,7 @@ public class LauncherTest {
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
-        runAndVerifyCommand(new String[] {"-help"}, expected);
+        runAndVerifyCommand(new String[] {"-help"}, expected, false);
     }
 
     @Test
@@ -351,7 +353,7 @@ public class LauncherTest {
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
-        runAndVerifyCommand(new String[] {"foobarbaz"}, expected);
+        runAndVerifyCommand(new String[] {"foobarbaz"}, expected, false);
     }
 
     @Test
@@ -365,7 +367,7 @@ public class LauncherTest {
             + " test1         description 1\n"
             + " test2         description 2\n"
             + " test3         description 3\n";
-        runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected);
+        runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected, false);
     }
 
     @Test
@@ -380,7 +382,7 @@ public class LauncherTest {
                 + " test1         description 1\n"
                 + " test2         description 2\n"
                 + " test3         description 3\n";
-            runAndVerifyCommand(new String[] {"foo"}, expected);
+            runAndVerifyCommand(new String[] {"foo"}, expected, false);
     }
 
     @Test
@@ -396,14 +398,14 @@ public class LauncherTest {
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
         launcher.setArgs(new String[] { "error" });
-        launcher.run();
+        launcher.run(false);
         assertEquals("test error\n", ctxFactory.getError());
 
     }
 
-    private void runAndVerifyCommand(String[] args, String expected) {
+    private void runAndVerifyCommand(String[] args, String expected, boolean inShell) {
         launcher.setArgs(args);
-        launcher.run();
+        launcher.run(inShell);
         assertEquals(expected, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
     }
@@ -419,7 +421,7 @@ public class LauncherTest {
         when(dbServiceFactory.createDbService(anyString(), anyString(), dbUrlCaptor.capture())).thenReturn(dbService);
         launcher.setPreferences(prefs);
         launcher.setArgs(new String[] { "test3" });
-        launcher.run();
+        launcher.run(false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();
         assertEquals(dbUrl, dbUrlCaptor.getValue());
@@ -432,6 +434,8 @@ public class LauncherTest {
         when(mockCmd.isStorageRequired()).thenReturn(true);
         Options options = mock(Options.class);
         when(mockCmd.getOptions()).thenReturn(options);
+        when(mockCmd.isAvailableInShell()).thenReturn(true);
+        when(mockCmd.isAvailableOutsideShell()).thenReturn(true);
         
         ctxFactory.getCommandRegistry().registerCommand(mockCmd);
         
@@ -439,7 +443,7 @@ public class LauncherTest {
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
 
         launcher.setArgs(new String[] { "dummy" });
-        launcher.run();
+        launcher.run(false);
         verify(dbService).connect();
     }
 
@@ -469,7 +473,7 @@ public class LauncherTest {
         PowerMockito.mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(Version.class)).thenReturn(sysBundle);
         launcher.setArgs(new String[] {Version.VERSION_OPTION});
-        launcher.run();
+        launcher.run(false);
 
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
@@ -483,14 +487,14 @@ public class LauncherTest {
         String[] args = new String[] {"basic"};
 
         launcher.setArgs(args);
-        launcher.run(listeners);
+        launcher.run(listeners, false);
         verify(notifier).addActionListener(listener);
     }
 
     @Test
     public void verifyLoggingIsInitialized() {
         launcher.setArgs(new String[] { "test1" });
-        launcher.run();
+        launcher.run(false);
 
         verify(loggingInitializer).initialize();
     }
@@ -498,10 +502,43 @@ public class LauncherTest {
     @Test
     public void verifyShutdown() throws BundleException {
         launcher.setArgs(new String[] { "test1" });
-        launcher.run();
+        launcher.run(false);
 
         verify(sysBundle).stop();
     }
 
+    @Test
+    public void verifyCommandSupportedInShellBehavesNormally() {
+    	runWithShellStatus(true, "fluff", true, true, "");
+    }
+
+    @Test
+    public void verifyCommandSupportedOutsideShellBehavesNormally() {
+    	runWithShellStatus(false, "fluff", true, true, "");
+    }
+
+    @Test
+    public void verifyCommandNotSupportedInShellDisplaysMessage() {
+    	runWithShellStatus(true, "fluff", false, true, "The fluff command is not supported from within the thermostat shell.\n");
+    }
+
+    @Test
+    public void verifyCommandNotSupportedOutsideShellDisplaysMessage() {
+    	runWithShellStatus(false, "fluff", true, false, "The fluff command is not supported from outside the thermostat shell.\n");
+    }
+
+    private void runWithShellStatus(boolean isInShell, String cmdName, boolean isAvailableInShell,
+    		boolean isAvailableOutsideShell, String expected) {
+    	Command mockCmd = mock(Command.class);
+        when(mockCmd.getName()).thenReturn(cmdName);
+        when(mockCmd.isStorageRequired()).thenReturn(false);
+        Options options = mock(Options.class);
+        when(mockCmd.getOptions()).thenReturn(options);
+        when(mockCmd.isAvailableInShell()).thenReturn(isAvailableInShell);
+        when(mockCmd.isAvailableOutsideShell()).thenReturn(isAvailableOutsideShell);
+
+        ctxFactory.getCommandRegistry().registerCommand(mockCmd);
+        runAndVerifyCommand(new String[] { cmdName }, expected, isInShell);
+    }
 }
 

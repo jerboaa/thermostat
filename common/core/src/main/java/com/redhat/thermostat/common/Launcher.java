@@ -50,17 +50,20 @@ public interface Launcher {
 
     /**
      * Invoked in order to start a command, either when Thermostat starts, or within
-     * the thermostat shell.  Equivalent to calling run(null).
+     * the thermostat shell.  Equivalent to calling run(null, inShell).
+     * @param inShell whether invoked from within the thermostat shell
      */
-    void run();
+    void run(boolean inShell);
 
     /**
      * Invoked in order to start a command, either when Thermostat starts, or within
      * the thermostat shell.  If the command being run happens to be a AbstractStateNotifyingCommand,
      * and the argument is non-null, the listeners will be added to the command for
      * life cycle notifications.  Otherwise, the argument is ignored.
+     * @param listeners the collection of listeners to be added to the command
+     * @param inShell whether invoked from within the thermostat shell
      */
-    void run(Collection<ActionListener<ApplicationState>> listeners);
+    void run(Collection<ActionListener<ApplicationState>> listeners, boolean inShell);
 
     /**
      * Should be set before calling run()

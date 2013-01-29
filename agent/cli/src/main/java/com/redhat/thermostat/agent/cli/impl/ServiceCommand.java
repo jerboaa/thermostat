@@ -77,11 +77,11 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
         Launcher launcher = getLauncher();
         String[] storageStartArgs = new String[] { "storage", "--start" };
         launcher.setArgs(storageStartArgs);
-        launcher.run(listeners);
+        launcher.run(listeners, false);
         agentBarrier.acquireUninterruptibly();
         String[] storageStopArgs = new String[] { "storage", "--stop" };
         launcher.setArgs(storageStopArgs);
-        launcher.run();
+        launcher.run(false);
     }
 
     @Override
@@ -99,7 +99,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                 String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
                 System.err.println(translator.localize(LocaleResources.STARTING_AGENT));
                 launcher.setArgs(agentArgs);
-                launcher.run();
+                launcher.run(false);
                 agentBarrier.release();
                 break;
             case FAIL:

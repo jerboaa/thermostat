@@ -126,8 +126,8 @@ public class TestCommand implements Command {
         return availableInShell;
     }
 
-    void setAvailableInShell(boolean avaiable) {
-        this.availableInShell = avaiable;
+    void setAvailableInShell(boolean available) {
+        this.availableInShell = available;
     }
 
     @Override
