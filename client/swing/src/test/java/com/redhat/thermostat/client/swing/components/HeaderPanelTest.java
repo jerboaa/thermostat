@@ -52,6 +52,7 @@ import org.fest.swing.edt.GuiActionRunner;
 import org.fest.swing.edt.GuiTask;
 import org.fest.swing.fixture.FrameFixture;
 import org.fest.swing.fixture.JPanelFixture;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -60,6 +61,7 @@ import org.junit.runner.RunWith;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertEquals;
 
 @RunWith(CacioFESTRunner.class)
 public class HeaderPanelTest {
@@ -140,17 +142,51 @@ public class HeaderPanelTest {
     @Test
     public void testContentAdded() {
         frameFixture.show();
+        final String[] results = new String[2];
         
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                results[0] = header.getHeader();
+                header.setHeader("fluff");
+                results[1] = header.getHeader();
+            }
+        });
+        
+        assertEquals("Test Panel", results[0]);
+        assertEquals("fluff", results[1]);
+        
+        // do it again, with a new header
+        GuiActionRunner.execute(new GuiTask() {
+            @Override
+            protected void executeInEDT() throws Throwable {
+                
+                HeaderPanel header = new HeaderPanel("Test");
+                
+                results[0] = header.getHeader();
+                header.setHeader("fluff");
+                results[1] = header.getHeader();
+            }
+        });
+        
+        assertEquals("Test", results[0]);
+        assertEquals("fluff", results[1]);
+    }
+    
+    @Test
+    public void testHeaderHasText() throws InterruptedException {
+        frameFixture.show();
+
         JPanelFixture contentPanel = frameFixture.panel("contentPanel");
         contentPanel.requireVisible();
-        
+
         frameFixture.button("button1").requireVisible();
         frameFixture.button("button2").requireVisible();
         frameFixture.toggleButton("toggle1").requireVisible();
     }
     
     @Test
-    public void testshowtoolbarText() throws InterruptedException {
+    public void testShowToolbarText() throws InterruptedException {
         frameFixture.show();
         
         JPanelFixture headerPanel = frameFixture.panel("clickableArea");

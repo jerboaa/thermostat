@@ -87,7 +87,7 @@ public class HeaderPanel extends JPanel {
     }
     
     public HeaderPanel(String header) {
-        this(Preferences.userRoot().node(HeaderPanel.class.getName()), "");
+        this(Preferences.userRoot().node(HeaderPanel.class.getName()), header);
     }
     
     public HeaderPanel(Preferences prefs, String header) {
