@@ -38,21 +38,23 @@ package com.redhat.thermostat.launcher.internal;
 
 import java.io.File;
 
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
-import com.redhat.thermostat.common.CommandLoadingBundleActivator;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
+import com.redhat.thermostat.common.cli.CommandRegistry;
+import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
-public class Activator extends CommandLoadingBundleActivator {
+public class Activator implements BundleActivator {
     
     @SuppressWarnings({"rawtypes", "unchecked"})
     class RegisterLauncherCustomizer implements ServiceTrackerCustomizer {
@@ -111,23 +113,48 @@ public class Activator extends CommandLoadingBundleActivator {
     @SuppressWarnings("rawtypes")
     private ServiceTracker serviceTracker;
 
+    private CommandRegistry registry;
+
+    private ServiceTracker commandInfoSourceTracker;
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
-        super.start(context);
         BundleManager bundleService = new BundleManagerImpl(new Configuration());
         ServiceTrackerCustomizer customizer = new RegisterLauncherCustomizer(context, bundleService);
         serviceTracker = new ServiceTracker(context, Keyring.class, customizer);
         // Track for Keyring service.
         serviceTracker.open();
+
+        final HelpCommand helpCommand = new HelpCommand();
+
+        commandInfoSourceTracker = new ServiceTracker(context, CommandInfoSource.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                CommandInfoSource infoSource = (CommandInfoSource) super.addingService(reference);
+                helpCommand.setCommandInfoSource(infoSource);
+                return infoSource;
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                helpCommand.setCommandInfoSource(null);
+                super.removedService(reference, service);
+            }
+        };
+        commandInfoSourceTracker.open();
+
+        registry = new CommandRegistryImpl(context);
+        registry.registerCommand(helpCommand);
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        super.stop(context);
         if (serviceTracker != null) {
             serviceTracker.close();
         }
+        commandInfoSourceTracker.close();
+        registry.unregisterCommands();
     }
 }
 

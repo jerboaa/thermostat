@@ -45,9 +45,6 @@ import java.util.List;
 
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -68,10 +65,22 @@ public class HelpCommand extends AbstractCommand {
 
     private static final CommandInfoComparator comparator = new CommandInfoComparator();
 
+    private CommandInfoSource commandInfoSource;
+
+    public void setCommandInfoSource(CommandInfoSource source) {
+        this.commandInfoSource = source;
+    }
+
     @Override
     public void run(CommandContext ctx) {
         Arguments args = ctx.getArguments();
         List<String> nonParsed = args.getNonOptionArguments();
+
+        if (commandInfoSource == null) {
+            ctx.getConsole().getError().print(translator.localize(LocaleResources.CANNOT_GET_COMMAND_INFO));
+            return;
+        }
+
         if (nonParsed.isEmpty()) {
             printCommandSummaries(ctx);
         } else {
@@ -80,15 +89,11 @@ public class HelpCommand extends AbstractCommand {
     }
 
     private void printCommandSummaries(CommandContext ctx) {
-        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
-        CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
         ctx.getConsole().getOutput().print(translator.localize(LocaleResources.COMMAND_HELP_COMMAND_LIST_HEADER));
 
         TableRenderer renderer = new TableRenderer(2, COMMANDS_COLUMNS_WIDTH);
 
-        Collection<CommandInfo> commandInfos = infos.getCommandInfos();
-        context.ungetService(infosRef);
+        Collection<CommandInfo> commandInfos = commandInfoSource.getCommandInfos();
         List<CommandInfo> sortedCommandInfos = new ArrayList<>(commandInfos);
 
         Collections.sort(sortedCommandInfos, comparator);
@@ -103,17 +108,12 @@ public class HelpCommand extends AbstractCommand {
     }
 
     private void printCommandUsage(CommandContext ctx, String cmdName) {
-        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);
-        CommandInfoSource infos = (CommandInfoSource) context.getService(infosRef);
         try {
-            CommandInfo info = infos.getCommandInfo(cmdName);
+            CommandInfo info = commandInfoSource.getCommandInfo(cmdName);
             printHelp(ctx, info);
         } catch (CommandInfoNotFoundException notFound) {
             ctx.getConsole().getOutput().print(translator.localize(LocaleResources.UNKNOWN_COMMAND, cmdName));
             printCommandSummaries(ctx);
-        } finally {
-            context.ungetService(infosRef);
         }
     }
 

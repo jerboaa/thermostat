@@ -91,7 +91,6 @@ public class CliTest extends IntegrationTest {
         assertEquals(stdErr, "");
     }
 
-    @Ignore("this is currently broken; help's usage includes stuff about usernames and passwords")
     @Test
     public void testHelpOnHelp() throws Exception {
         Spawn shell = spawnThermostat("help", "help");
@@ -102,7 +101,7 @@ public class CliTest extends IntegrationTest {
 
         String[] lines = stdOut.split("\n");
         String usage = lines[0];
-        assertEquals("usage: help [command-name]", usage);
+        assertEquals("usage: thermostat help [command-name]", usage);
 
         assertEquals(stdErr, "");
     }

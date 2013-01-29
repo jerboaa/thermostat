@@ -64,6 +64,7 @@ import org.mockito.ArgumentCaptor;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.framework.launch.Framework;
@@ -229,8 +230,9 @@ public class ActivatorTest {
         return tempDir;
     }
 
-    private void setupOsgiRegistryImplMock() {
+    private void setupOsgiRegistryImplMock() throws InvalidSyntaxException {
         PowerMockito.mockStatic(FrameworkUtil.class);
+        when(FrameworkUtil.createFilter(anyString())).thenCallRealMethod();
         Bundle mockBundle = mock(Bundle.class);
         when(FrameworkUtil.getBundle(BundleManagerImpl.class)).thenReturn(mockBundle);
         when(mockBundle.getBundleContext()).thenReturn(context);

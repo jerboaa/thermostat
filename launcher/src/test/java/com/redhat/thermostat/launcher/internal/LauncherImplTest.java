@@ -217,7 +217,9 @@ public class LauncherImplTest {
         when(helpCommandInfo.getOptions()).thenReturn(new Options());
         when(helpCommandInfo.getUsage()).thenReturn("thermostat help");
 
-        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(new HelpCommand(), cmd1, cmd2, cmd3, basicCmd));
+        HelpCommand helpCommand = new HelpCommand();
+
+        ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(helpCommand, cmd1, cmd2, cmd3, basicCmd));
 
         registry = mock(BundleManager.class);
 
@@ -236,14 +238,9 @@ public class LauncherImplTest {
         infoList.add(info3);
         when(infos.getCommandInfos()).thenReturn(infoList);
 
+        helpCommand.setCommandInfoSource(infos);
+
         PowerMockito.mockStatic(FrameworkUtil.class);
-        Bundle bundle = mock(Bundle.class);
-        BundleContext bCtx = mock(BundleContext.class);
-        when(bundle.getBundleContext()).thenReturn(bCtx);
-        ServiceReference infosRef = mock(ServiceReference.class);
-        when(bCtx.getServiceReference(CommandInfoSource.class)).thenReturn(infosRef);
-        when(bCtx.getService(infosRef)).thenReturn(infos);
-        when(FrameworkUtil.getBundle(isA(HelpCommand.class.getClass()))).thenReturn(bundle);
 
         storage = mock(Storage.class);
         ServiceReference storageRef = mock(ServiceReference.class);

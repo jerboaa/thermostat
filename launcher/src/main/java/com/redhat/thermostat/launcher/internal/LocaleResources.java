@@ -40,7 +40,9 @@ import com.redhat.thermostat.common.locale.Translate;
 
 public enum LocaleResources {
 
+    CANNOT_GET_COMMAND_INFO,
     UNKNOWN_COMMAND,
+
     COMMAND_HELP_COMMAND_LIST_HEADER,
     OPTION_DB_URL_DESC,
     OPTION_USERNAME_DESC,
