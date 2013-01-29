@@ -38,28 +38,42 @@ package com.redhat.thermostat.killvm.agent.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
 
 public class Activator implements BundleActivator {
 
     private ReceiverRegistry registry;
-    private UNIXProcessHandler unixService;
+    private ServiceTracker killActionTracker;
 
     @Override
-    public void start(final BundleContext context) throws Exception {
-        unixService = OSGIUtils.getInstance().getService(UNIXProcessHandler.class);
+    public void start(final BundleContext context) {
         registry = new ReceiverRegistry(context);
-        registry.registerReceiver(new KillVmReceiver(unixService));
+
+        killActionTracker = new ServiceTracker(context, UNIXProcessHandler.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                UNIXProcessHandler processHandler = (UNIXProcessHandler) super.addingService(reference);
+                registry.registerReceiver(new KillVmReceiver(processHandler));
+                return processHandler;
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                registry.unregisterReceivers();
+                super.removedService(reference, service);
+            }
+        };
+
+        killActionTracker.open();
     }
 
     @Override
-    public void stop(BundleContext context) throws Exception {
-        // This only unregisters receivers which we've registered
-        // in start()
-        registry.unregisterReceivers();
+    public void stop(BundleContext context) {
+        killActionTracker.close();
     }
 }
 

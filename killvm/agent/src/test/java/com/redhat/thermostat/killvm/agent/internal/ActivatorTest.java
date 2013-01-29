@@ -36,55 +36,46 @@
 
 package com.redhat.thermostat.killvm.agent.internal;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Dictionary;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.killvm.agent.internal.Activator;
-import com.redhat.thermostat.killvm.agent.internal.KillVmReceiver;
 import com.redhat.thermostat.service.process.UNIXProcessHandler;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(OSGIUtils.class)
 public class ActivatorTest {
 
     /**
      * Makes sure receiver is registered and unix service gets set.
-     * 
-     * @throws Exception
      */
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Test
-    public void startStopTest() throws Exception {
-        OSGIUtils utils = mock(OSGIUtils.class);
-        PowerMockito.mockStatic(OSGIUtils.class);
-        when(OSGIUtils.getInstance()).thenReturn(utils);
-        BundleContext ctx = mock(BundleContext.class);
-        ServiceRegistration serviceReg = mock(ServiceRegistration.class);
-        when(ctx.registerService(anyString(), any(), any(Dictionary.class))).thenReturn(serviceReg);
+    public void verifyKillReciverIsNotRegisteredWithoutDependencies() {
+        StubBundleContext ctx = new StubBundleContext();
         Activator activator = new Activator();
         activator.start(ctx);
-        verify(utils).getService(UNIXProcessHandler.class);
-        verify(ctx).registerService(eq(RequestReceiver.class.getName()), isA(KillVmReceiver.class), any(Dictionary.class));
+
+        assertEquals(0, ctx.getAllServices().size());
+
         activator.stop(ctx);
-        verify(serviceReg).unregister();
     }
 
-}
+    @Test
+    public void verifyKillReciverIsRegistered() {
+        StubBundleContext ctx = new StubBundleContext();
 
+        ctx.registerService(UNIXProcessHandler.class, mock(UNIXProcessHandler.class), null);
+
+        Activator activator = new Activator();
+        activator.start(ctx);
+
+        assertEquals(2, ctx.getAllServices().size());
+        assertTrue(ctx.isServiceRegistered(RequestReceiver.class.getName(), KillVmReceiver.class));
+
+        activator.stop(ctx);
+
+        assertEquals(1, ctx.getAllServices().size());
+    }
+}
