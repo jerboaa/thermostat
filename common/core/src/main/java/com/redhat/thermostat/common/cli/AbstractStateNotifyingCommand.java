@@ -36,78 +36,39 @@
 
 package com.redhat.thermostat.common.cli;
 
-import java.util.logging.Logger;
+import com.redhat.thermostat.common.ActionNotifier;
+import com.redhat.thermostat.common.tools.ApplicationState;
 
-import org.apache.commons.cli.Options;
+/**
+ * Abstract {@link Command} implementation including all the default functionality of
+ * {@link AbstractCommand}, but also contains an {@link ActionNotifier<ApplicationState>}
+ * so that concrete implementations of this class can use this to provide updates with regards
+ * to their runtime status to other components.
+ * <p>
+ * Concrete implementations must be registered as OSGi services with {@link Command} as the
+ * class.  This may be done through the use of a BundleActivator which descends from
+ * {@link CommandLoadingBundleActivator}
+ */
+public abstract class AbstractStateNotifyingCommand extends AbstractCommand {
 
-import com.redhat.thermostat.common.utils.LoggingUtils;
-
-public abstract class CommandWithInfo implements Command {
-
-    private static final Logger logger = LoggingUtils.getLogger(CommandWithInfo.class);
-    private CommandInfo info;
-    private static final String noDesc = "Description not available.";
-    private static final String noUsage = "Usage not available.";
-
-    void setCommandInfo(CommandInfo info) {
-        this.info = info; 
+    private ActionNotifier<ApplicationState> notifier;
+    private boolean storageRequired;
+    
+    public AbstractStateNotifyingCommand() {
+        this.notifier = new ActionNotifier<>(this);
     }
 
-    boolean hasCommandInfo() {
-        return info != null;
-    }
-
-    @Override
-    public String getDescription() {
-        String desc = null;
-        if (hasCommandInfo()) {
-            desc = info.getDescription();
-        }
-        if (desc == null) {
-            desc = noDesc;
-        }
-        return desc;
-    }
-
-    @Override
-    public String getUsage() {
-        String usage = null;
-        if (hasCommandInfo()) { 
-            usage = info.getUsage();
-        }
-        if (usage == null) {
-            usage = noUsage;
-        }
-        return usage;
-    }
-
-    @Override
-    public Options getOptions() {
-        try {
-            return info.getOptions();
-        } catch (NullPointerException e) {
-            logger.warning("CommandInfo not yet set, returning empty Options.");
-            return new Options();
-        }
+    public ActionNotifier<ApplicationState> getNotifier() {
+        return notifier;
     }
 
     @Override
     public boolean isStorageRequired() {
-        // TODO Auto-generated method stub
-        return false;
+        return storageRequired;
     }
 
-    @Override
-    public boolean isAvailableInShell() {
-        // TODO Auto-generated method stub
-        return false;
+    protected void setStorageRequired(boolean storageRequired) {
+        this.storageRequired = storageRequired;
     }
-
-    @Override
-    public boolean isAvailableOutsideShell() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
 }
 

@@ -39,16 +39,16 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 import java.util.concurrent.Semaphore;
 
 import com.redhat.thermostat.client.cli.HostVMArguments;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
 
-public class DumpHeapCommand extends SimpleCommand {
+public class DumpHeapCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String NAME = "dump-heap";

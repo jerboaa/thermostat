@@ -72,12 +72,12 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.common.cli.BasicCommand;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -92,7 +92,6 @@ import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.TestCommand;
-import com.redhat.thermostat.launcher.TestCommand.Handle;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
@@ -197,7 +196,7 @@ public class LauncherTest {
         when(info3.getDescription()).thenReturn("description 3");
         when(info3.getOptions()).thenReturn(new Options());
 
-        BasicCommand basicCmd = mock(BasicCommand.class);
+        AbstractStateNotifyingCommand basicCmd = mock(AbstractStateNotifyingCommand.class);
         CommandInfo basicInfo = mock(CommandInfo.class);
         when(basicCmd.getName()).thenReturn("basic");
         when(basicInfo.getName()).thenReturn("basic");

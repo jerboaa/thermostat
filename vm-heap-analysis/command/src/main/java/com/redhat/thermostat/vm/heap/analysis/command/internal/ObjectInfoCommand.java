@@ -41,7 +41,7 @@ import java.util.Enumeration;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -54,7 +54,7 @@ import com.sun.tools.hat.internal.model.JavaHeapObject;
 import com.sun.tools.hat.internal.model.JavaHeapObjectVisitor;
 import com.sun.tools.hat.internal.model.Snapshot;
 
-public class ObjectInfoCommand extends SimpleCommand {
+public class ObjectInfoCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 

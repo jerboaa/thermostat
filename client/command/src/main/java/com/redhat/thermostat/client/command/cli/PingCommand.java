@@ -46,7 +46,7 @@ import com.redhat.thermostat.client.command.internal.LocaleResources;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
@@ -57,7 +57,7 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-public class PingCommand extends SimpleCommand {
+public class PingCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 

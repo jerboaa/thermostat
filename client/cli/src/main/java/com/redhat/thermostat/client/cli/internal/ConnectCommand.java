@@ -38,7 +38,7 @@ package com.redhat.thermostat.client.cli.internal;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -56,7 +56,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
  * it can be used to retrieve a DB connection.
  * 
  */
-public class ConnectCommand extends SimpleCommand {
+public class ConnectCommand extends AbstractCommand {
 
     private static final String DB_URL_ARG = "dbUrl";
     private static final String USERNAME_ARG = "username";

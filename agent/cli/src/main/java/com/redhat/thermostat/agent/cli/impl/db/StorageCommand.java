@@ -39,7 +39,7 @@ package com.redhat.thermostat.agent.cli.impl.db;
 import java.io.File;
 import java.io.IOException;
 
-import com.redhat.thermostat.common.cli.BasicCommand;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -48,7 +48,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
 
-public class StorageCommand extends BasicCommand {
+public class StorageCommand extends AbstractStateNotifyingCommand {
 
     private static final String NAME = "storage";
 
@@ -146,5 +146,14 @@ public class StorageCommand extends BasicCommand {
         return NAME;
     }
 
+    @Override
+    public boolean isStorageRequired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAvailableInShell() {
+        return false;
+    }
 }
 

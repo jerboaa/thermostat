@@ -38,9 +38,9 @@ package com.redhat.thermostat.client.swing.internal;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 
-public class GUIClientCommand extends SimpleCommand {
+public class GUIClientCommand extends AbstractCommand {
 
     private Main clientMain;
 

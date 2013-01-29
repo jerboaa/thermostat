@@ -82,13 +82,13 @@ public class CommandRegistryImpl implements CommandRegistry {
     @Override
     public Command getCommand(String name) {
         Command command = proxy.getService(name);
-        if (command instanceof CommandWithInfo) {
-            initializeCommandInfo((CommandWithInfo) command);
+        if (command != null && command instanceof AbstractCommand) {
+        	initializeCommandInfo((AbstractCommand) command);
         }
         return command;
     }
 
-    void initializeCommandInfo(CommandWithInfo command) {
+    void initializeCommandInfo(AbstractCommand command) {
         if (!command.hasCommandInfo()) {
             @SuppressWarnings("rawtypes")
             ServiceReference infosRef = context.getServiceReference(CommandInfoSource.class);

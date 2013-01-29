@@ -36,42 +36,65 @@
 
 package com.redhat.thermostat.common.cli;
 
-import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.tools.ApplicationState;
+import static org.junit.Assert.assertNotNull;
 
-/**
- * Common base class for all daemon and application
- */
-public abstract class BasicCommand extends CommandWithInfo {
+import org.apache.commons.cli.Options;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
-    private ActionNotifier<ApplicationState> notifier;
-    private boolean storageRequired;
-    
-    public BasicCommand() {
-        this.notifier = new ActionNotifier<>(this);
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
+import com.redhat.thermostat.common.cli.CommandContext;
+import com.redhat.thermostat.common.cli.CommandException;
+
+public class AbstractStateNotifyingCommandTest {
+
+    private AbstractStateNotifyingCommand application;
+
+    @Before
+    public void setUp() {
+        application = new AbstractStateNotifyingCommand() {
+
+            @Override
+            public void run(CommandContext ctx) throws CommandException {
+                // Nothing to do here.
+            }
+
+            @Override
+            public String getName() {
+                return null;
+            }
+
+            @Override
+            public String getDescription() {
+                return null;
+            }
+
+            @Override
+            public String getUsage() {
+                return null;
+            }
+
+            @Override
+            public Options getOptions() {
+                return new Options();
+            }
+
+            @Override
+            public boolean isStorageRequired() {
+                return false;
+            }
+        };
     }
 
-    public ActionNotifier<ApplicationState> getNotifier() {
-        return notifier;
+    @After
+    public void tearDown() {
+        application = null;
     }
 
-    @Override
-    public boolean isStorageRequired() {
-        return storageRequired;
-    }
-
-    protected void setStorageRequired(boolean storageRequired) {
-        this.storageRequired = storageRequired;
-    }
-
-    @Override
-    public boolean isAvailableInShell() {
-        return true;
-    }
-
-    @Override
-    public boolean isAvailableOutsideShell() {
-        return true;
+    @Test
+    public void testNotfier() {
+        assertNotNull(application.getNotifier());
     }
 }
 

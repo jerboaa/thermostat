@@ -54,11 +54,11 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
-import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
 
-public class HelpCommand extends SimpleCommand {
+public class HelpCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 

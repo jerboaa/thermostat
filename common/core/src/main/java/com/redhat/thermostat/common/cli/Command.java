@@ -43,15 +43,27 @@ import com.redhat.thermostat.annotations.ExtensionPoint;
 /**
  * Represents a command on the command line.
  * <p>
- * To register a custom command, use the CommandRegistry, registering the
+ * In order to be runnable, a command must be registered as an OSGi service
+ * with the {@link #NAME} set to the value of {@link #getName()}. If this is
+ * done directly, the developer is then responsible for enabling and disabling
+ * it at the appropriate times.
+ * <p>
+ * Bundles which provide {@link Command}s may choose to have their BundleActivator
+ * extend from {@link CommandLoadingBundleActivator} and in so doing avoid needing to
+ * explicitly register their {@link Command} implementations as services.
+ * <p>
+ * It is also possible to use an instance of {@link CommandRegistry}, registering the
  * {@link Command}s when the bundle starts and and unregistering them when the
  * bundle stops.
  * <p>
- * You can also register a custom command by registering it as an OSGi service
- * with the {@link #NAME} set to the value of {@link #getName()}. You are
- * responsible for enabling and disabling it at appropriate times then.
+ * Most {@link Command} implementations will want to choose one of the {@link AbstractCommand}
+ * or {@link AbstractStateNotifyingCommand} classes to descend from, as they provide
+ * sensible default implementations of most methods and/or provide some other functionality.
  * <p>
+ * @see CommandLoadingBundleActivator
  * @see CommandRegistry
+ * @see AbstractCommand
+ * @see AbstractStateNotifyingCommand
  */
 @ExtensionPoint
 public interface Command {
@@ -86,6 +98,10 @@ public interface Command {
      */
     public Options getOptions();
 
+    /**
+     * Whether the command depends on {@link Storage}
+     * @return true if {@link Storage} is required.
+     */
     public boolean isStorageRequired();
 
     /**
@@ -96,7 +112,7 @@ public interface Command {
 
     /**
      * Indicates if the command is available to be invoked from outside the
-     * shell (from the main command line).
+     * shell (as an argument to the main thermostat program).
      * @return true if can command can be invoked from the command line
      */
     public boolean isAvailableOutsideShell();

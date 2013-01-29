@@ -53,9 +53,9 @@ import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
-import com.redhat.thermostat.common.cli.BasicCommand;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -70,7 +70,7 @@ import com.redhat.thermostat.storage.dao.DAOFactory;
 import com.redhat.thermostat.storage.dao.DAOFactoryImpl;
 
 @SuppressWarnings("restriction")
-public final class AgentApplication extends BasicCommand {
+public final class AgentApplication extends AbstractStateNotifyingCommand {
 
     private static final String NAME = "agent";
 

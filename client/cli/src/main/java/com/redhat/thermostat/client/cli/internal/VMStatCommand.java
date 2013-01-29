@@ -54,13 +54,13 @@ import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.client.cli.VMStatPrintDelegate;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.VmRef;
 
-public class VMStatCommand extends SimpleCommand {
+public class VMStatCommand extends AbstractCommand {
 
     private static final Logger log = LoggingUtils.getLogger(VMStatCommand.class);
     private static final String CMD_NAME = "vm-stat";

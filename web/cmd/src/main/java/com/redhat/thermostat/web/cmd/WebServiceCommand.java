@@ -41,11 +41,11 @@ import java.util.List;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.web.server.IpPortPair;
 import com.redhat.thermostat.web.server.IpPortsParser;
 
-public class WebServiceCommand extends SimpleCommand {
+public class WebServiceCommand extends AbstractCommand {
 
     private WebServiceLauncher serviceLauncher;
     
@@ -92,6 +92,11 @@ public class WebServiceCommand extends SimpleCommand {
     @Override
     public boolean isStorageRequired() {
         return false;
+    }
+
+    @Override
+    public boolean isAvailableInShell() {
+    	return false;
     }
 
     private List<IpPortPair> parseIPsPorts(String rawIpsPorts) throws CommandException {

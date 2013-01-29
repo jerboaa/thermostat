@@ -56,7 +56,7 @@ public interface Launcher {
 
     /**
      * Invoked in order to start a command, either when Thermostat starts, or within
-     * the thermostat shell.  If the command being run happens to be a BasicCommand,
+     * the thermostat shell.  If the command being run happens to be a AbstractStateNotifyingCommand,
      * and the argument is non-null, the listeners will be added to the command for
      * life cycle notifications.  Otherwise, the argument is ignored.
      */

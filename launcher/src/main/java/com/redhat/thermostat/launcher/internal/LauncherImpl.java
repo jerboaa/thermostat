@@ -50,12 +50,12 @@ import org.osgi.framework.BundleException;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.common.cli.BasicCommand;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -229,8 +229,8 @@ public class LauncherImpl implements Launcher {
             runHelpCommandFor(cmdName);
             return;
         }
-        if (listeners != null && cmd instanceof BasicCommand) {
-            BasicCommand basicCmd = (BasicCommand) cmd;
+        if (listeners != null && cmd instanceof AbstractStateNotifyingCommand) {
+            AbstractStateNotifyingCommand basicCmd = (AbstractStateNotifyingCommand) cmd;
             ActionNotifier<ApplicationState> notifier = basicCmd.getNotifier();
             for (ActionListener<ApplicationState> listener : listeners) {
                 notifier.addActionListener(listener);

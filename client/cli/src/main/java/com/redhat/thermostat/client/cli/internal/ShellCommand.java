@@ -53,15 +53,15 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.Launcher;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.Console;
-import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
-public class ShellCommand extends SimpleCommand {
+public class ShellCommand extends AbstractCommand {
 
     private static final Logger logger = LoggingUtils.getLogger(ShellCommand.class);
 
@@ -180,6 +180,11 @@ public class ShellCommand extends SimpleCommand {
 
     @Override
     public boolean isStorageRequired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAvailableInShell() {
         return false;
     }
 

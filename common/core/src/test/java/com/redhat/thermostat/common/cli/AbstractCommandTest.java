@@ -36,17 +36,63 @@
 
 package com.redhat.thermostat.common.cli;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-public class CommandWithInfoTest {
+public class AbstractCommandTest {
 
     @Test
     public void testHasCommandInfo() {
-        CommandWithInfo command = new CommandWithInfo() {
+        AbstractCommand command = createCommandForTest();
+        CommandInfo info = mock(CommandInfo.class);
+        assertFalse(command.hasCommandInfo());
+        command.setCommandInfo(info);
+        assertTrue(command.hasCommandInfo());
+    }
+
+    @Test
+    public void testGettersReturnCorrectly() {
+        AbstractCommand command = createCommandForTest();
+
+        CommandInfo info = mock(CommandInfo.class);
+        when(info.getDescription()).thenReturn("The description");
+        when(info.getUsage()).thenReturn("The usage.");
+        Options options = new Options();
+        Option option = new Option("option", "description");
+        options.addOption(option);
+        when(info.getOptions()).thenReturn(options);
+        command.setCommandInfo(info);
+
+        // The values that should be returned based on the CommandInfo supplied.
+        assertTrue(command.hasCommandInfo());
+        assertEquals(options, command.getOptions());
+        assertEquals("The description", command.getDescription());
+        assertEquals("The usage.", command.getUsage());
+    }
+
+    @Test
+    public void testDefaultReturnValues() {
+        AbstractCommand command = createCommandForTest();
+
+        // The default values used before CommandInfo injected.
+        assertEquals("Description not available.", command.getDescription());
+        assertEquals("Usage not available.", command.getUsage());
+        Options options = command.getOptions();
+        assertTrue(options.getOptions().isEmpty());
+        assertTrue(command.isStorageRequired());
+        assertTrue(command.isAvailableInShell());
+        assertTrue(command.isAvailableOutsideShell());
+    }
+
+    private AbstractCommand createCommandForTest() {
+        return new AbstractCommand() {
 
             @Override
             public void run(CommandContext ctx) throws CommandException {
@@ -59,10 +105,6 @@ public class CommandWithInfoTest {
             }
             
         };
-        CommandInfo info = mock(CommandInfo.class);
-        assertFalse(command.hasCommandInfo());
-        command.setCommandInfo(info);
-        assertTrue(command.hasCommandInfo());
     }
 }
 

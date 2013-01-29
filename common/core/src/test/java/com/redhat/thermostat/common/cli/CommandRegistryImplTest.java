@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -52,7 +53,6 @@ import java.util.Hashtable;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
@@ -71,6 +71,12 @@ public class CommandRegistryImplTest {
     public void setUp() {
         bundleContext = mock(BundleContext.class);
         commandRegistry = new CommandRegistryImpl(bundleContext);
+        ServiceReference infoSourceReference = mock(ServiceReference.class);
+        CommandInfoSource infoSource = mock(CommandInfoSource.class);
+        CommandInfo info = mock(CommandInfo.class);
+        when(infoSource.getCommandInfo(any(String.class))).thenReturn(info);
+        when(bundleContext.getServiceReference(eq(CommandInfoSource.class))).thenReturn(infoSourceReference);
+        when(bundleContext.getService(infoSourceReference)).thenReturn(infoSource);
     }
 
     @After
@@ -215,7 +221,7 @@ public class CommandRegistryImplTest {
         ServiceReference infosRef = mock(ServiceReference.class);
         CommandInfo info = mock(CommandInfo.class);
         when(infos.getCommandInfo("name")).thenReturn(info);
-        CommandWithInfo command = mock(CommandWithInfo.class);
+        AbstractCommand command = mock(AbstractCommand.class);
         when(command.getName()).thenReturn("name");
         when(command.hasCommandInfo()).thenReturn(false);
 

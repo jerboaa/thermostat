@@ -41,9 +41,9 @@ import java.util.Collection;
 import java.util.Date;
 
 import com.redhat.thermostat.client.cli.HostVMArguments;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.OSGIUtils;
@@ -55,7 +55,7 @@ import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 
-public class ListHeapDumpsCommand extends SimpleCommand {
+public class ListHeapDumpsCommand extends AbstractCommand {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 

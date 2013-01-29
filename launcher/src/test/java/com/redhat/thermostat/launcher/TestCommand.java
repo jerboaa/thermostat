@@ -42,6 +42,7 @@ import org.apache.commons.cli.Options;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.CommandInfo;
 
 
 public class TestCommand implements Command {
@@ -53,6 +54,7 @@ public class TestCommand implements Command {
     private boolean storageRequired;
     private boolean availableInShell = true;
     private boolean availableOutsideShell = true;
+    private CommandInfo info;
 
     private Options options = new Options();
 
