@@ -44,7 +44,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -61,6 +64,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+import com.redhat.thermostat.common.config.Configuration;
+import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
@@ -88,6 +94,7 @@ public class WebStorageEndPoint extends HttpServlet {
     private static final String ROLE_THERMOSTAT_AGENT = "thermostat-agent";
     private static final String ROLE_THERMOSTAT_CLIENT = "thermostat-client";
     private static final String ROLE_CMD_CHANNEL = "thermostat-cmd-channel";
+    private static final Logger logger = LoggingUtils.getLogger(WebStorageEndPoint.class);
 
     private Storage storage;
     private Gson gson;
@@ -102,7 +109,22 @@ public class WebStorageEndPoint extends HttpServlet {
     private Map<String, Integer> categoryIds;
     private Map<Integer, Category<?>> categories;
 
-    public void init() {
+    @Override
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        if (!isThermostatHomeSet()) {
+            // This is the webapp and our entry point into thermostat's web
+            // service. The launcher did not run and hence THERMOSTAT_HOME is
+            // not set and we need to do this ourselves.
+            // In this case THERMOSTAT_HOME is in the WEB-INF/thermostat folder
+            // in order to make it inaccessible via HTTP. This is not a "real"
+            // THERMOSTAT_HOME. For now it only contains an ssl.properties file.
+            String thermostatHome = config.getServletContext().getRealPath(
+                    "/WEB-INF/thermostat");
+            logger.log(Level.INFO, "Setting THERMOSTAT_HOME for webapp to "
+                    + thermostatHome);
+            System.setProperty("THERMOSTAT_HOME", thermostatHome);
+        }
         gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class, new ThermostatGSONConverter()).create();
         categoryIds = new HashMap<>();
         categories = new HashMap<>();
@@ -150,6 +172,17 @@ public class WebStorageEndPoint extends HttpServlet {
             generateToken(req, resp);
         } else if (cmd.equals("verify-token")) {
             verifyToken(req, resp);
+        }
+    }
+    
+    private boolean isThermostatHomeSet() {
+        try {
+            // this throws config exception if neither the property
+            // nor the env var is set
+            new Configuration();
+            return true;
+        } catch (InvalidConfigurationException e) {
+            return false;
         }
     }
 

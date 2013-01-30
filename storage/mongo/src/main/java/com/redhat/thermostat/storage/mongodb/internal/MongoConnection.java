@@ -120,8 +120,10 @@ class MongoConnection extends Connection {
 
     private void createConnection() throws MongoException, UnknownHostException {
         if (SSLKeystoreConfiguration.useSslForMongodb()) {
+            logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
             this.m = getSSLMongo();
         } else {
+            logger.log(Level.FINE, "Using plain socket for mongodb://");
             this.m = new Mongo(getServerAddress());
         }
         this.db = m.getDB(THERMOSTAT_DB_NAME);

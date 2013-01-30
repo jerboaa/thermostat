@@ -36,42 +36,66 @@
 
 package com.redhat.thermostat.common.config;
 
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.IOException;
+import java.util.Properties;
 
 import junit.framework.Assert;
 
-import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
 
 public class ConfigurationTest {
-
-    @Before
-    public void setUp() throws IOException {
-        System.setProperty("THERMOSTAT_HOME", "/tmp/");
+    
+    @After
+    public void tearDown() {
+        // remove THERMOSTAT_HOME system property for a clean slate
+        Properties props = System.getProperties();
+        Properties newProps = new Properties();
+        for (Object key: props.keySet()) {
+            if (!key.equals("THERMOSTAT_HOME")) {
+                newProps.put(key, props.get(key));
+            }
+        }
+        System.setProperties(newProps);
     }
 
     @Test
     public void testLocations() throws InvalidConfigurationException, IOException {
-        String path = System.getProperty("THERMOSTAT_HOME");
+        String thermostatHome = "/tmp/";
+        System.setProperty("THERMOSTAT_HOME", thermostatHome);
+        
         char s = File.separatorChar;
 
         Configuration config = new Configuration();
 
-        Assert.assertEquals(path, config.getThermostatHome());
+        Assert.assertEquals(thermostatHome, config.getThermostatHome());
 
-        Assert.assertEquals(path + "agent" + s + "agent.properties",
+        Assert.assertEquals(thermostatHome + "agent" + s + "agent.properties",
                             config.getAgentConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(path + "storage", config.getStorageBaseDirectory().getCanonicalPath());
-        Assert.assertEquals(path + "storage" + s + "db.properties",
+        Assert.assertEquals(thermostatHome + "storage", config.getStorageBaseDirectory().getCanonicalPath());
+        Assert.assertEquals(thermostatHome + "storage" + s + "db.properties",
                             config.getStorageConfigurationFile().getCanonicalPath());
-        Assert.assertEquals(path + "storage" + s + "db",
+        Assert.assertEquals(thermostatHome + "storage" + s + "db",
                 config.getStorageDirectory().getCanonicalPath());
-        Assert.assertEquals(path + "storage" + s + "logs" + s + "db.log",
+        Assert.assertEquals(thermostatHome + "storage" + s + "logs" + s + "db.log",
                 config.getStorageLogFile().getCanonicalPath());
-        Assert.assertEquals(path + "storage" + s + "run" + s + "db.pid",
+        Assert.assertEquals(thermostatHome + "storage" + s + "run" + s + "db.pid",
                 config.getStoragePidFile().getCanonicalPath());
 
+    }
+    
+    @Test
+    public void instantiationThrowsException() {
+        try {
+            new Configuration();
+            // The web archive uses this. See WebStorageEndPoint#init();
+            fail("Should have thrown InvalidConfigurationException");
+        } catch (InvalidConfigurationException e) {
+            // pass
+        }
     }
 }
 

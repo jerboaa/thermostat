@@ -133,5 +133,6 @@ public class Configuration {
     public void setPrintOSGiInfo(boolean newValue) {
         printOsgiInfo = newValue;
     }
+
 }
 

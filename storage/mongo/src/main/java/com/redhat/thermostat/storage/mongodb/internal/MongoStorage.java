@@ -42,6 +42,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
@@ -96,11 +97,12 @@ public class MongoStorage implements Storage {
     private MongoConnection conn;
     private DB db = null;
     private Map<String, DBCollection> collectionCache = new HashMap<String, DBCollection>();
-
+    private CountDownLatch connectedLatch;
     private UUID agentId;
 
     public MongoStorage(StartupConfiguration conf) {
         conn = new MongoConnection(conf);
+        connectedLatch = new CountDownLatch(1);
         conn.addListener(new ConnectionListener() {
             @Override
             public void changed(ConnectionStatus newStatus) {
@@ -109,6 +111,8 @@ public class MongoStorage implements Storage {
                     db = null;
                 case CONNECTED:
                     db = conn.getDB();
+                    // This is important. See comment in registerCategory().
+                    connectedLatch.countDown();
                 default:
                     // ignore other status events
                 }
@@ -224,6 +228,17 @@ public class MongoStorage implements Storage {
         String name = category.getName();
         if (collectionCache.containsKey(name)) {
             throw new IllegalStateException("Category may only be associated with one backend.");
+        }
+
+        // The db field is only set once we've got a connection
+        // established. Wait until we actually get notification
+        // this has happened. Without this sychronization we might
+        // get NPEs since the connection handshake might still be
+        // ongoing.
+        try {
+            connectedLatch.await();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
         DBCollection coll;

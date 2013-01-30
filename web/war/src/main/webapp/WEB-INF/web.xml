@@ -52,5 +52,8 @@
   <security-role>
     <role-name>thermostat-client</role-name>
   </security-role>
+  <security-role>
+    <role-name>thermostat-cmd-channel</role-name>
+  </security-role>
 
 </web-app>

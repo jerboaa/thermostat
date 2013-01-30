@@ -40,9 +40,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class SSLKeystoreConfiguration {
 
@@ -51,6 +54,7 @@ public class SSLKeystoreConfiguration {
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
     private static final String CMD_CHANNEL_SSL_KEY = "COMMAND_CHANNEL_USE_SSL";
     private static final String MONGO_CONNECTION_USE_SSL_KEY = "MONGODB_CONNECTION_USE_SSL";
+    private static final Logger logger = LoggingUtils.getLogger(SSLKeystoreConfiguration.class);
 
     /**
      * 
@@ -105,7 +109,9 @@ public class SSLKeystoreConfiguration {
         try {
             loadClientProperties();
         } catch (InvalidConfigurationException e) {
-            // Thermostat home not set? Do something reasonable
+            logger.log(Level.WARNING,
+                    "THERMOSTAT_HOME not set and config file attempted to be " +
+                    		"read from there! Returning false.");
             return result;
         }
         String token = clientProps.getProperty(CMD_CHANNEL_SSL_KEY);
@@ -126,7 +132,9 @@ public class SSLKeystoreConfiguration {
         try {
             loadClientProperties();
         } catch (InvalidConfigurationException e) {
-            // Thermostat home not set? Do something reasonable
+            logger.log(Level.WARNING,
+                    "THERMOSTAT_HOME not set and config file attempted to be " +
+                            "read from there! Returning false.");
             return result;
         }
         String token = clientProps.getProperty(MONGO_CONNECTION_USE_SSL_KEY);

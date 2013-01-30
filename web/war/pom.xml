@@ -59,7 +59,7 @@
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-server</artifactId>
+      <artifactId>thermostat-distribution</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -87,6 +87,32 @@
         <configuration>
           <skip>true</skip>
         </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.5</version>
+        <executions>
+          <execution>
+            <id>copy-logging-properties</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>src/main/webapp/WEB-INF/thermostat</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/../../../distribution/config</directory>
+                  <targetPath>etc</targetPath>
+                  <filtering>true</filtering>
+                  <includes>
+                    <include>ssl.properties</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
