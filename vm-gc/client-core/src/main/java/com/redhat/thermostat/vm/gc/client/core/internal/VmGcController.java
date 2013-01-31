@@ -59,14 +59,14 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.IntervalTimeData;
 import com.redhat.thermostat.storage.model.TimeStampedPojoComparator;
-import com.redhat.thermostat.storage.model.VmGcStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.gc.client.core.VmGcView;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 import com.redhat.thermostat.vm.gc.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 public class VmGcController implements InformationServiceController<VmRef> {
 

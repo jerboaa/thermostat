@@ -54,10 +54,10 @@ import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.SysConf;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
+import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuBackend extends Backend implements VmStatusListener {
 

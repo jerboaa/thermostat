@@ -53,7 +53,7 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
-import com.redhat.thermostat.storage.model.CpuStat;
+import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 
 public class HostCpuBackendTest {
     

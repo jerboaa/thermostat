@@ -60,10 +60,10 @@ import com.redhat.thermostat.host.memory.client.core.HostMemoryView;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.host.memory.client.core.internal.HostMemoryController;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.HostInfo;
-import com.redhat.thermostat.storage.model.MemoryStat;
 
 public class HostMemoryControllerTest {
 

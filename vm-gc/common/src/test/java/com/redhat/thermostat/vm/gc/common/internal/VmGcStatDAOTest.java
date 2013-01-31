@@ -58,8 +58,8 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.VmGcStat;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcStatDAOTest {
 

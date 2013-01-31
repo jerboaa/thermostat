@@ -34,10 +34,12 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.host.memory.common.model;
 
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 @Entity
 public class MemoryStat extends BasePojo implements TimeStampedPojo {

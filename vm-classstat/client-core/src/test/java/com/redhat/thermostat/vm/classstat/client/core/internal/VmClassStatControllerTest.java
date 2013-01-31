@@ -55,10 +55,10 @@ import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.VmClassStat;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
 public class VmClassStatControllerTest {
 

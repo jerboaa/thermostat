@@ -42,8 +42,8 @@ import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.VmMemoryStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 @Service
 public interface VmMemoryStatDAO {

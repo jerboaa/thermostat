@@ -44,7 +44,7 @@ import java.util.logging.Logger;
 import com.redhat.thermostat.common.NotImplementedException;
 import com.redhat.thermostat.common.Size;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.model.MemoryStat;
+import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 /**

@@ -56,10 +56,10 @@ import org.mockito.ArgumentCaptor;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HistogramLoader;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 public class HeapDumpReceiverTest {
 

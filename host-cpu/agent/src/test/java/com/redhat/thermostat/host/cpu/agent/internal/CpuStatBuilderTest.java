@@ -51,7 +51,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
-import com.redhat.thermostat.storage.model.CpuStat;
+import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.utils.ProcDataSource;
 
 public class CpuStatBuilderTest {

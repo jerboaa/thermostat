@@ -34,95 +34,49 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.model;
-
-import java.util.Objects;
+package com.redhat.thermostat.host.cpu.common.model;
 
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 @Entity
-public class HeapInfo extends BasePojo implements TimeStampedPojo {
+public class CpuStat extends BasePojo implements TimeStampedPojo {
 
-    private int vmId;
+    public static final double INVALID_LOAD = Double.MIN_VALUE;
+
     private long timeStamp;
+    private double[] perProcessorUsage;
 
-    private String heapId;
-    private String heapDumpId;
-    private String histogramId;
-
-    public HeapInfo() {
-        this(-1, -1);
+    public CpuStat() {
+        this(-1, null);
     }
 
-    public HeapInfo(int vmId, long timestamp) {
-        this.vmId = vmId;
+    public CpuStat(long timestamp, double[] perProcessorUsage) {
         this.timeStamp = timestamp;
+        this.perProcessorUsage = perProcessorUsage;
     }
 
     @Persist
-    public void setVmId(int vmId) {
-        this.vmId = vmId;
+    public double[] getPerProcessorUsage() {
+        return perProcessorUsage;
     }
 
     @Persist
-    public int getVmId() {
-        return vmId;
+    public void setPerProcessorUsage(double[] perProcessorUsage) {
+        this.perProcessorUsage = perProcessorUsage;
     }
 
     @Persist
+    @Override
     public long getTimeStamp() {
         return timeStamp;
     }
 
     @Persist
-    public void setTimeStamp(long timestamp) {
-        this.timeStamp = timestamp;
-    }
-
-    @Persist
-    public void setHeapId(String heapId) {
-        this.heapId = heapId;
-    }
-
-    @Persist
-    public String getHeapId() {
-        return heapId;
-    }
-
-    @Persist
-    public void setHeapDumpId(String heapDumpId) {
-        this.heapDumpId = heapDumpId;
-    }
-
-    @Persist
-    public String getHeapDumpId() {
-        return heapDumpId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (! (o instanceof HeapInfo)) {
-            return false;
-        }
-        HeapInfo other = (HeapInfo) o;
-        return vmId == other.vmId && Objects.equals(heapDumpId, other.heapDumpId)
-               && Objects.equals(histogramId, other.histogramId) && timeStamp == other.timeStamp;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(vmId, heapDumpId, histogramId, timeStamp);
-    }
-
-    @Persist
-    public String getHistogramId() {
-        return histogramId;
-    }
-
-    @Persist
-    public void setHistogramId(String histogramId) {
-        this.histogramId = histogramId;
+    public void setTimeStamp(long timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }
 

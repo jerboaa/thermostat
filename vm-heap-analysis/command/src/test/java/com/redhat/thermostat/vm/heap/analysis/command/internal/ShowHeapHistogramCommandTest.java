@@ -49,10 +49,10 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 

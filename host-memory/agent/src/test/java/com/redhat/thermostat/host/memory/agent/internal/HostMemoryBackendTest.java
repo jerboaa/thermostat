@@ -52,7 +52,7 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
-import com.redhat.thermostat.storage.model.MemoryStat;
+import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 
 public class HostMemoryBackendTest {
     

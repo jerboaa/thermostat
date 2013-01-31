@@ -41,9 +41,9 @@ import java.util.List;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.host.cpu.common.model.CpuStat;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.CpuStat;
 
 class CpuStatDAOImpl implements CpuStatDAO {
 

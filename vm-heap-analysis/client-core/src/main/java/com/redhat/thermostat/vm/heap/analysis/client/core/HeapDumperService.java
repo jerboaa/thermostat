@@ -38,8 +38,8 @@ package com.redhat.thermostat.vm.heap.analysis.client.core;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.VmRef;

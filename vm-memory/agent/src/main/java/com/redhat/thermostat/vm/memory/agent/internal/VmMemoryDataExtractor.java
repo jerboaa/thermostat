@@ -40,7 +40,7 @@ import sun.jvmstat.monitor.Monitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
 
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 /**
  * A helper class to provide type-safe access to commonly used jvmstat monitors

@@ -45,7 +45,7 @@ import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.model.HeapInfo;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 @Service
 public interface HeapDAO {

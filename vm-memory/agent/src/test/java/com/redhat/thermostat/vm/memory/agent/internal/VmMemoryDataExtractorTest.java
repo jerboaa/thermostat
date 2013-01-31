@@ -44,12 +44,12 @@ import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
-
 import sun.jvmstat.monitor.LongMonitor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.StringMonitor;
+
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 public class VmMemoryDataExtractorTest {
 

@@ -34,40 +34,76 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.vm.gc.common.model;
 
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 @Entity
-public class CpuStat extends BasePojo implements TimeStampedPojo {
-
-    public static final double INVALID_LOAD = Double.MIN_VALUE;
+public class VmGcStat extends BasePojo implements TimeStampedPojo {
 
     private long timeStamp;
-    private double[] perProcessorUsage;
+    private int vmId;
+    private String collectorName;
+    private long runCount;
+    private long wallTime;
 
-    public CpuStat() {
-        this(-1, null);
+    public VmGcStat() {
+        super();
     }
 
-    public CpuStat(long timestamp, double[] perProcessorUsage) {
+    public VmGcStat(int vmId, long timestamp, String collectorName, long runCount, long wallTime) {
         this.timeStamp = timestamp;
-        this.perProcessorUsage = perProcessorUsage;
+        this.vmId = vmId;
+        this.collectorName = collectorName;
+        this.runCount = runCount;
+        this.wallTime = wallTime;
     }
 
     @Persist
-    public double[] getPerProcessorUsage() {
-        return perProcessorUsage;
+    public int getVmId() {
+        return vmId;
     }
 
     @Persist
-    public void setPerProcessorUsage(double[] perProcessorUsage) {
-        this.perProcessorUsage = perProcessorUsage;
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
     }
 
     @Persist
+    public String getCollectorName() {
+        return collectorName;
+    }
+
+    @Persist
+    public void setCollectorName(String collectorName) {
+        this.collectorName = collectorName;
+    }
+
+    @Persist
+    public long getRunCount() {
+        return runCount;
+    }
+
+    @Persist
+    public void setRunCount(long runCount) {
+        this.runCount = runCount;
+    }
+
+    @Persist
+    public long getWallTime() {
+        return wallTime;
+    }
+
+    @Persist
+    public void setWallTime(long wallTime) {
+        this.wallTime = wallTime;
+    }
+
     @Override
+    @Persist
     public long getTimeStamp() {
         return timeStamp;
     }
@@ -76,5 +112,6 @@ public class CpuStat extends BasePojo implements TimeStampedPojo {
     public void setTimeStamp(long timeStamp) {
         this.timeStamp = timeStamp;
     }
+
 }
 

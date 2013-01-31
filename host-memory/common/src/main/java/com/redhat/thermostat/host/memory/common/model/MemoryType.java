@@ -34,82 +34,14 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.host.memory.common.model;
 
-import com.redhat.thermostat.storage.core.Entity;
-import com.redhat.thermostat.storage.core.Persist;
-
-@Entity
-public class VmGcStat extends BasePojo implements TimeStampedPojo {
-
-    private long timeStamp;
-    private int vmId;
-    private String collectorName;
-    private long runCount;
-    private long wallTime;
-
-    public VmGcStat() {
-        super();
-    }
-
-    public VmGcStat(int vmId, long timestamp, String collectorName, long runCount, long wallTime) {
-        this.timeStamp = timestamp;
-        this.vmId = vmId;
-        this.collectorName = collectorName;
-        this.runCount = runCount;
-        this.wallTime = wallTime;
-    }
-
-    @Persist
-    public int getVmId() {
-        return vmId;
-    }
-
-    @Persist
-    public void setVmId(int vmId) {
-        this.vmId = vmId;
-    }
-
-    @Persist
-    public String getCollectorName() {
-        return collectorName;
-    }
-
-    @Persist
-    public void setCollectorName(String collectorName) {
-        this.collectorName = collectorName;
-    }
-
-    @Persist
-    public long getRunCount() {
-        return runCount;
-    }
-
-    @Persist
-    public void setRunCount(long runCount) {
-        this.runCount = runCount;
-    }
-
-    @Persist
-    public long getWallTime() {
-        return wallTime;
-    }
-
-    @Persist
-    public void setWallTime(long wallTime) {
-        this.wallTime = wallTime;
-    }
-
-    @Override
-    @Persist
-    public long getTimeStamp() {
-        return timeStamp;
-    }
-
-    @Persist
-    public void setTimeStamp(long timeStamp) {
-        this.timeStamp = timeStamp;
-    }
-
+public enum MemoryType {
+    MEMORY_TOTAL,
+    MEMORY_FREE,
+    MEMORY_USED,
+    SWAP_TOTAL,
+    SWAP_FREE,
+    BUFFERS;
 }
 

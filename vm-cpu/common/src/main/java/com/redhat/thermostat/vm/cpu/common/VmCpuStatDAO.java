@@ -42,7 +42,7 @@ import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Key;
-import com.redhat.thermostat.storage.model.VmCpuStat;
+import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 @Service
 public interface VmCpuStatDAO {

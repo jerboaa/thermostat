@@ -39,9 +39,9 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class ObjectCommandHelper {

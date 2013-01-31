@@ -56,11 +56,11 @@ import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryView.GraphVisibilityChangeListener;
 import com.redhat.thermostat.host.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.host.memory.common.model.MemoryStat;
+import com.redhat.thermostat.host.memory.common.model.MemoryType;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
-import com.redhat.thermostat.storage.model.MemoryStat;
-import com.redhat.thermostat.storage.model.MemoryType;
 
 public class HostMemoryController implements InformationServiceController<HostRef> {
 

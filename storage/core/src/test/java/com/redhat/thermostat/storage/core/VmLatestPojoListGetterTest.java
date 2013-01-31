@@ -56,7 +56,7 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.VmClassStat;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
 public class VmLatestPojoListGetterTest {
     private static final String AGENT_ID = "agentid";
@@ -66,7 +66,7 @@ public class VmLatestPojoListGetterTest {
     private static final String CATEGORY_NAME = "vmcategory";
     // Make this one static so we don't get IllegalStateException from trying
     // to make category of same name while running tests in same classloader.
-    private static final Category<VmClassStat> cat =  new Category<>(CATEGORY_NAME, VmClassStat.class);
+    private static final Category<TestPojo> cat =  new Category<>(CATEGORY_NAME, TestPojo.class);
 
     private static long t1 = 1;
     private static long t2 = 5;
@@ -78,15 +78,24 @@ public class VmLatestPojoListGetterTest {
 
     private HostRef hostRef;
     private VmRef vmRef;
-    private VmClassStat result1, result2, result3;
+    private TestPojo result1, result2, result3;
 
     @Before
     public void setUp() {
         hostRef = new HostRef(AGENT_ID, HOSTNAME);
         vmRef = new VmRef(hostRef, VM_PID, MAIN_CLASS);
-        result1 = new VmClassStat(VM_PID, t1, lc1);
-        result2 = new VmClassStat(VM_PID, t2, lc2);
-        result3 = new VmClassStat(VM_PID, t3, lc3);
+        //result1 = new VmClassStat(VM_PID, t1, lc1);
+        //result2 = new VmClassStat(VM_PID, t2, lc2);
+        //result3 = new VmClassStat(VM_PID, t3, lc3);
+        result1 = mock(TestPojo.class);
+        when(result1.getTimeStamp()).thenReturn(t1);
+        when(result1.getData()).thenReturn(lc1);
+        result2 = mock(TestPojo.class);
+        when(result2.getTimeStamp()).thenReturn(t2);
+        when(result2.getData()).thenReturn(lc2);
+        result3 = mock(TestPojo.class);
+        when(result3.getTimeStamp()).thenReturn(t3);
+        when(result3.getData()).thenReturn(lc3);
     }
 
     @Test
@@ -95,7 +104,7 @@ public class VmLatestPojoListGetterTest {
         Query query = mock(Query.class);
         when(storage.createQuery(any(Category.class))).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat);
+        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
         query = getter.buildQuery(vmRef, 123l);
 
         assertNotNull(query);
@@ -114,7 +123,7 @@ public class VmLatestPojoListGetterTest {
         Query query = mock(Query.class);
         when(storage.createQuery(any(Category.class))).thenReturn(ignored).thenReturn(query);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat);
+        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
         getter.buildQuery(vmRef, Long.MIN_VALUE); // Ignore first return value.
         query = getter.buildQuery(vmRef, Long.MIN_VALUE);
 
@@ -130,7 +139,7 @@ public class VmLatestPojoListGetterTest {
     @Test
     public void testGetLatest() {
         @SuppressWarnings("unchecked")
-        Cursor<VmClassStat> cursor = mock(Cursor.class);
+        Cursor<TestPojo> cursor = mock(Cursor.class);
         when(cursor.hasNext()).thenReturn(true).thenReturn(true).thenReturn(false);
         when(cursor.next()).thenReturn(result1).thenReturn(result2).thenReturn(null);
 
@@ -139,9 +148,9 @@ public class VmLatestPojoListGetterTest {
         when(storage.createQuery(any(Category.class))).thenReturn(query);
         when(query.execute()).thenReturn(cursor);
 
-        VmLatestPojoListGetter<VmClassStat> getter = new VmLatestPojoListGetter<>(storage, cat);
+        VmLatestPojoListGetter<TestPojo> getter = new VmLatestPojoListGetter<>(storage, cat);
 
-        List<VmClassStat> stats = getter.getLatest(vmRef, t2);
+        List<TestPojo> stats = getter.getLatest(vmRef, t2);
 
         verify(storage).createQuery(cat);
         verify(query).where(Key.AGENT_ID, Criteria.EQUALS, AGENT_ID);
@@ -153,12 +162,18 @@ public class VmLatestPojoListGetterTest {
 
         assertNotNull(stats);
         assertEquals(2, stats.size());
-        VmClassStat stat1 = stats.get(0);
+        TestPojo stat1 = stats.get(0);
         assertEquals(t1, stat1.getTimeStamp());
-        assertEquals(lc1, stat1.getLoadedClasses());
-        VmClassStat stat2 = stats.get(1);
+        assertEquals(lc1, stat1.getData());
+        TestPojo stat2 = stats.get(1);
         assertEquals(t2, stat2.getTimeStamp());
-        assertEquals(lc2, stat2.getLoadedClasses());
+        assertEquals(lc2, stat2.getData());
+    }
+    
+    private static interface TestPojo extends TimeStampedPojo {
+        
+        long getData();
+        
     }
 
 }

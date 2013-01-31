@@ -62,15 +62,15 @@ import com.redhat.thermostat.gc.remote.common.command.GCCommand;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.storage.model.VmMemoryStat;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Generation;
-import com.redhat.thermostat.storage.model.VmMemoryStat.Space;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsView;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.client.core.Payload;
 import com.redhat.thermostat.vm.memory.client.core.StatsModel;
 import com.redhat.thermostat.vm.memory.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
+import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 
 public class MemoryStatsController implements InformationServiceController<VmRef> {
 

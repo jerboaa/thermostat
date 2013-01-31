@@ -49,8 +49,8 @@ import java.util.zip.GZIPInputStream;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.model.HeapInfo;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
+import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 /*

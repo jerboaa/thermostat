@@ -21,7 +21,8 @@
             <Bundle-SymbolicName>com.redhat.thermostat.vm.gc.common</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.vm.gc.common.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.vm.gc.common
+              com.redhat.thermostat.vm.gc.common,
+              com.redhat.thermostat.vm.gc.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.vm.gc.common.internal

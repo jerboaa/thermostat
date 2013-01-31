@@ -60,8 +60,8 @@ import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
+import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuBackendTest {
     

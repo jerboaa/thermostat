@@ -57,7 +57,8 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.heap.analysis.common</Bundle-SymbolicName>
             <Export-Package>
-               com.redhat.thermostat.vm.heap.analysis.common
+               com.redhat.thermostat.vm.heap.analysis.common,
+               com.redhat.thermostat.vm.heap.analysis.common.model
             </Export-Package>
             <Private-Package>
                com.redhat.thermostat.vm.heap.analysis.common.internal

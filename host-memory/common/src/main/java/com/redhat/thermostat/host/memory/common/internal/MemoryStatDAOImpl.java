@@ -41,9 +41,9 @@ import java.util.List;
 import com.redhat.thermostat.storage.core.HostLatestPojoListGetter;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.host.memory.common.model.MemoryStat;
 import com.redhat.thermostat.storage.core.Put;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.MemoryStat;
 
 public class MemoryStatDAOImpl implements MemoryStatDAO {
 

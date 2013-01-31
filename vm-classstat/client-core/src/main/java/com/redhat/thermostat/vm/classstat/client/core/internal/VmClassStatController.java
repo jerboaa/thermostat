@@ -52,11 +52,11 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
-import com.redhat.thermostat.storage.model.VmClassStat;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatView;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 import com.redhat.thermostat.vm.classstat.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
 public class VmClassStatController implements InformationServiceController<VmRef> {
 

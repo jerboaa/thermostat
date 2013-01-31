@@ -53,9 +53,9 @@ import sun.jvmstat.monitor.MonitoredVm;
 import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
 import sun.jvmstat.monitor.event.VmEvent;
 
-import com.redhat.thermostat.storage.model.VmClassStat;
 import com.redhat.thermostat.vm.classstat.agent.internal.VmClassStatVmListener;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
+import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
 public class VmClassStatVmListenerTest {
 

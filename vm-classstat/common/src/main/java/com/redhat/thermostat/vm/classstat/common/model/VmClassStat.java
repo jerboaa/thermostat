@@ -34,45 +34,59 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.storage.model;
+package com.redhat.thermostat.vm.classstat.common.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
+import com.redhat.thermostat.storage.model.TimeStampedPojo;
 
-import org.junit.Before;
-import org.junit.Test;
+@Entity
+public class VmClassStat extends BasePojo implements TimeStampedPojo {
 
-import com.redhat.thermostat.storage.model.HeapInfo;
+    private int vmId;
+    private long timestamp;
+    private long loadedClasses;
 
-public class HeapInfoTest {
-
-    private HeapInfo heapInfo;
-
-    @Before
-    public void setUp() {
-        heapInfo = new HeapInfo(321, 12345);
-        heapInfo.setAgentId("test-agent");
+    public VmClassStat() {
+        this(-1, -1, -1);
     }
 
-    @Test
-    public void testProperties() {
-        assertEquals("test-agent", heapInfo.getAgentId());
-        assertEquals(321, heapInfo.getVmId());
-        assertEquals(12345, heapInfo.getTimeStamp());
+    public VmClassStat(int vmId, long timestamp, long loadedClasses) {
+        this.vmId = vmId;
+        this.timestamp = timestamp;
+        this.loadedClasses = loadedClasses;
     }
 
-    @Test
-    public void testHeapDumpId() {
-        assertNull(heapInfo.getHeapDumpId());
-        heapInfo.setHeapDumpId("test");
-        assertEquals("test", heapInfo.getHeapDumpId());
+    @Persist
+    public int getVmId() {
+        return vmId;
     }
 
-    @Test
-    public void testHistogramId() {
-        assertNull(heapInfo.getHistogramId());
-        heapInfo.setHistogramId("test");
-        assertEquals("test", heapInfo.getHistogramId());
+    @Persist
+    public void setVmId(int vmId) {
+        this.vmId = vmId;
+    }
+
+    @Persist
+    @Override
+    public long getTimeStamp() {
+        return timestamp;
+    }
+
+    @Persist
+    public void setTimeStamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    @Persist
+    public long getLoadedClasses() {
+        return loadedClasses;
+    }
+
+    @Persist
+    public void setLoadedClasses(long loadedClasses) {
+        this.loadedClasses = loadedClasses;
     }
 }
 

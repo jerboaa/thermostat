@@ -21,7 +21,8 @@
             <Bundle-SymbolicName>com.redhat.thermostat.vm.cpu.common</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.vm.cpu.common.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.vm.cpu.common
+              com.redhat.thermostat.vm.cpu.common,
+              com.redhat.thermostat.vm.cpu.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.vm.cpu.common.internal

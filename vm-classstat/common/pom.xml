@@ -21,7 +21,8 @@
             <Bundle-SymbolicName>com.redhat.thermostat.vm.classstat.common</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.vm.classstat.common.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.vm.classstat.common
+              com.redhat.thermostat.vm.classstat.common,
+              com.redhat.thermostat.vm.classstat.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.vm.classstat.common.internal

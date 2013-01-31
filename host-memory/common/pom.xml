@@ -21,7 +21,8 @@
             <Bundle-SymbolicName>com.redhat.thermostat.host.memory.common</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.host.memory.common.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.host.memory.common
+              com.redhat.thermostat.host.memory.common,
+              com.redhat.thermostat.host.memory.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.host.memory.common.internal

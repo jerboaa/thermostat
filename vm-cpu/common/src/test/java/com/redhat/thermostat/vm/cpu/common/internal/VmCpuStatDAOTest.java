@@ -59,8 +59,8 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
+import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuStatDAOTest {
 

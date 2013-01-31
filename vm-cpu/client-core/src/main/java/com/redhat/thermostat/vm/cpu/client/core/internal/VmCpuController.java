@@ -52,11 +52,11 @@ import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.DiscreteTimeData;
-import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuView;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 import com.redhat.thermostat.vm.cpu.client.locale.LocaleResources;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
+import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuController implements InformationServiceController<VmRef> {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();

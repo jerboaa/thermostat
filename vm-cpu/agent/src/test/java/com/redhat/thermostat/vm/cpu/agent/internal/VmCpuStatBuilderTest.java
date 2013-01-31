@@ -47,11 +47,11 @@ import static org.mockito.Mockito.when;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.Clock;
-import com.redhat.thermostat.storage.model.VmCpuStat;
 import com.redhat.thermostat.test.Bug;
 import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfo;
 import com.redhat.thermostat.vm.cpu.agent.internal.ProcessStatusInfoBuilder;
 import com.redhat.thermostat.vm.cpu.agent.internal.VmCpuStatBuilder;
+import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
 public class VmCpuStatBuilderTest {
 

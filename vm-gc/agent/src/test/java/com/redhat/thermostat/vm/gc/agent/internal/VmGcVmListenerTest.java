@@ -51,8 +51,8 @@ import org.mockito.ArgumentCaptor;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredVm;
 
-import com.redhat.thermostat.storage.model.VmGcStat;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
 public class VmGcVmListenerTest {
     private static final String[] GC_NAMES = new String[] { "GC1", "GC2" };

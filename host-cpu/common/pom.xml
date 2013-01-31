@@ -21,7 +21,8 @@
             <Bundle-SymbolicName>com.redhat.thermostat.host.cpu.common</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.host.cpu.common.internal.Activator</Bundle-Activator>
             <Export-Package>
-              com.redhat.thermostat.host.cpu.common
+              com.redhat.thermostat.host.cpu.common,
+              com.redhat.thermostat.host.cpu.common.model
             </Export-Package>
             <Private-Package>
               com.redhat.thermostat.host.cpu.common.internal
