@@ -48,6 +48,7 @@ public class ClientPreferences {
     static final String PASSWORD = "password";
     static final String CONNECTION_URL = "connection-url";
     static final String SAVE_ENTITLEMENTS = "save-entitlements";
+    static final String DEFAULT_CONNECTION_URL = "mongodb://127.0.0.1:27518";
     
     private final Preferences prefs;
     
@@ -82,7 +83,7 @@ public class ClientPreferences {
     }
     
     public String getConnectionUrl() {
-        return prefs.get(CONNECTION_URL, "http://127.0.0.1:8082");
+        return prefs.get(CONNECTION_URL, DEFAULT_CONNECTION_URL);
     }
 
     public String getPassword() {

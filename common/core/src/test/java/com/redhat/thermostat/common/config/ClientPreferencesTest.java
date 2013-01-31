@@ -37,16 +37,14 @@
 package com.redhat.thermostat.common.config;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.times;
 
 import java.util.prefs.Preferences;
 
@@ -159,6 +157,17 @@ public class ClientPreferencesTest {
         
         clientPrefs.setSaveEntitlements(true);
         verify(prefs).putBoolean(eq(ClientPreferences.SAVE_ENTITLEMENTS), eq(true));
+    }
+    
+    @Test
+    public void testDefaultPreferencesIsMongodb() {
+        // Default preferences for GUI is mongodb:// since this is accomodates
+        // more use cases
+        Keyring keyring = mock(Keyring.class);
+        Preferences prefs = mock(Preferences.class);
+        when(prefs.get(eq("connection-url"), any(String.class))).thenReturn(ClientPreferences.DEFAULT_CONNECTION_URL);
+        ClientPreferences clientPrefs = new ClientPreferences(prefs, keyring);
+        assertEquals("mongodb://127.0.0.1:27518", clientPrefs.getConnectionUrl());
     }
 }
 
