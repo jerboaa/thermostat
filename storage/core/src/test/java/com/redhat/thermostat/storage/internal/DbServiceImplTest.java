@@ -50,14 +50,15 @@ import org.junit.Test;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.storage.core.Connection;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.DbService;
-import com.redhat.thermostat.storage.dao.DAOFactory;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
-public class DbServiceTest {
+public class DbServiceImplTest {
     
     private Connection connection;
-    private DAOFactory daoFactory;
+    private Storage storage;
     private DbService dbService;
     private StubBundleContext context;
     
@@ -66,10 +67,10 @@ public class DbServiceTest {
         context = new StubBundleContext();
         connection = mock(Connection.class);
 
-        daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getConnection()).thenReturn(connection);
+        storage = mock(Storage.class);
+        when(storage.getConnection()).thenReturn(connection);
 
-        dbService = new DbServiceImpl(context, daoFactory, "http://someUrl.ignored.com");
+        dbService = new DbServiceImpl(context, storage, "http://someUrl.ignored.com");
     }
     
     @After
@@ -83,7 +84,6 @@ public class DbServiceTest {
         dbService.connect();
 
         verify(connection).connect();
-        verify(daoFactory).registerDAOsAndStorageAsOSGiServices();
     }
     
     @Test
@@ -97,7 +97,19 @@ public class DbServiceTest {
         assertNotNull(dbServiceRef);
         // make sure we really get the same instance
         assertTrue(dbService.equals(context.getService(dbServiceRef)));
-        verify(daoFactory).registerDAOsAndStorageAsOSGiServices();
+    }
+    
+    @Test
+    public void testConnectRegistersStorage() {
+        dbService.connect();
+
+        verify(connection).connect();
+        @SuppressWarnings("rawtypes")
+        ServiceReference storageRef = context.getServiceReference(Storage.class);
+        // connect registers DbService
+        assertNotNull(storageRef);
+        // make sure we really get the same instance
+        assertTrue(storage.equals(context.getService(storageRef)));
     }
 
     @Test
@@ -107,21 +119,31 @@ public class DbServiceTest {
         
         dbService.disconnect();
 
-        verify(daoFactory).unregisterDAOsAndStorageAsOSGiServices();
         verify(connection).disconnect();
     }
 
     @Test
-    public void testDisconnectUnregistersService() {
+    public void testDisconnectUnregistersDbService() {
         dbService.connect();
         assertNotNull(context.getServiceReference(DbService.class));
         
         dbService.disconnect();
 
-        verify(daoFactory).unregisterDAOsAndStorageAsOSGiServices();
         verify(connection).disconnect();
         // disconnect unregisters DbService
         assertNull(context.getServiceReference(DbService.class));
+    }
+    
+    @Test
+    public void testDisconnectUnregistersStorage() {
+        dbService.connect();
+        assertNotNull(context.getServiceReference(Storage.class));
+        
+        dbService.disconnect();
+
+        verify(connection).disconnect();
+        // disconnect unregisters Storage
+        assertNull(context.getServiceReference(Storage.class));
     }
     
     @Test
@@ -130,6 +152,21 @@ public class DbServiceTest {
 
         dbService = new DbServiceImpl(context, null, connectionURL);
         assertEquals(connectionURL, dbService.getConnectionUrl());
+    }
+    
+    @Test
+    public void testAddListener() {
+        ConnectionListener listener = mock(ConnectionListener.class);
+        dbService.addConnectionListener(listener);
+        verify(connection).addListener(listener);
+    }
+    
+    @Test
+    public void testRemoveListener() {
+        // Remove called regardless of listener actually being added
+        ConnectionListener listener = mock(ConnectionListener.class);
+        dbService.removeConnectionListener(listener);
+        verify(connection).removeListener(listener);
     }
 }
 

@@ -38,6 +38,7 @@ package com.redhat.thermostat.storage.core;
 
 import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.ConnectionException;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 
 @Service
 public interface DbService {
@@ -64,5 +65,20 @@ public interface DbService {
      *             if not connected to storage.
      */
     String getConnectionUrl();
+    
+    /**
+     * Registers the supplied ConnectionListener to be notified
+     * when the status of the database connection changes.
+     * @param listener - the listener to be registered
+     */
+    void addConnectionListener(ConnectionListener listener);
+    
+    /**
+     * Unregisters the supplied ConnectionListener if it was
+     * previously registered via {@link #addConnectionListener(ConnectionListener)}.
+     * @param listener - the listener to be unregistered
+     */
+    void removeConnectionListener(ConnectionListener listener);
+    
 }
 

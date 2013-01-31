@@ -48,15 +48,19 @@ import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 public class Activator implements BundleActivator {
 
     private CommandRegistry reg;
+    private AgentApplication agentApplication;
 
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         reg = new CommandRegistryImpl(context);
-        reg.registerCommands(Arrays.asList(new ServiceCommand(), new StorageCommand(), new AgentApplication(context)));
+        agentApplication = new AgentApplication(context);
+        reg.registerCommands(Arrays.asList(new ServiceCommand(),
+                new StorageCommand(), agentApplication));
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        agentApplication.shutdown();
         reg.unregisterCommands();
     }
 }

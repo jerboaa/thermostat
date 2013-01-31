@@ -39,15 +39,13 @@ package com.redhat.thermostat.backend.system;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.DAOFactory;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class SystemBackendTest {
 
@@ -55,18 +53,13 @@ public class SystemBackendTest {
 
     @Before
     public void setUp() {
-        Storage s = mock(Storage.class);
         HostInfoDAO hDAO = mock(HostInfoDAO.class);
         NetworkInterfaceInfoDAO nDAO = mock(NetworkInterfaceInfoDAO.class);
-        DAOFactory df = mock(DAOFactory.class);
-        when(df.getStorage()).thenReturn(s);
-        when(df.getHostInfoDAO()).thenReturn(hDAO);
-        when(df.getNetworkInterfaceInfoDAO()).thenReturn(nDAO);
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
 
         VmStatusChangeNotifier notifier = mock(VmStatusChangeNotifier.class);
 
-        b = new SystemBackend(notifier);
-        b.setDAOFactory(df);
+        b = new SystemBackend(hDAO, nDAO, vmInfoDAO, notifier);
     }
 
     @Test

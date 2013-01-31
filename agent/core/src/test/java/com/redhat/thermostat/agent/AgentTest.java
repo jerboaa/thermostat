@@ -37,17 +37,16 @@
 package com.redhat.thermostat.agent;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.isA;
-import static org.mockito.Mockito.atLeast;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +57,6 @@ import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
@@ -66,7 +64,6 @@ import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.DAOFactory;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
 
@@ -77,8 +74,6 @@ public class AgentTest {
     private BackendRegistry backendRegistry;
     private Backend backend;
 
-    private DAOFactory daoFactory;
-    
     private Storage storage;
     private AgentInfoDAO agentInfoDao;
     private BackendInfoDAO backendInfoDao;
@@ -93,11 +88,6 @@ public class AgentTest {
         agentInfoDao = mock(AgentInfoDAO.class);
         backendInfoDao = mock(BackendInfoDAO.class);
         
-        daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getStorage()).thenReturn(storage);
-        when(daoFactory.getAgentInfoDAO()).thenReturn(agentInfoDao);
-        when(daoFactory.getBackendInfoDAO()).thenReturn(backendInfoDao);
-
         backend = mock(Backend.class);
         when(backend.getName()).thenReturn("testname");
         when(backend.getDescription()).thenReturn("testdesc");
@@ -112,11 +102,7 @@ public class AgentTest {
     @SuppressWarnings("unused")
     @Test
     public void testAgentInit() throws Exception {
-        Agent agent = new Agent(backendRegistry, config, daoFactory);
-
-        verify(daoFactory).getStorage();
-        verify(daoFactory).getAgentInfoDAO();
-        verify(daoFactory).getBackendInfoDAO();
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         
         verify(backendRegistry).addActionListener(any(ActionListener.class));
     }
@@ -125,7 +111,7 @@ public class AgentTest {
     public void testStartAgent() throws Exception {
         
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, daoFactory);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         
         agent.start();
 
@@ -142,7 +128,7 @@ public class AgentTest {
         ArgumentCaptor<ActionListener> backendListener = ArgumentCaptor.forClass(ActionListener.class);
 
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, daoFactory);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         verify(backendRegistry).addActionListener(backendListener.capture());
         
         agent.start();
@@ -163,7 +149,6 @@ public class AgentTest {
         
         listener.actionPerformed(actionEvent);
         
-        verify(backend).setDAOFactory(daoFactory);
         verify(backend).activate();
         
         assertTrue(agent.getBackendInfos().containsKey(backend));
@@ -188,7 +173,7 @@ public class AgentTest {
     @Test
     public void testStopAgentWithPurging() throws Exception {
                 
-        Agent agent = new Agent(backendRegistry, config, daoFactory);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         agent.start();
         
         // stop agent
@@ -208,7 +193,7 @@ public class AgentTest {
         when(config.getStartTime()).thenReturn(123L);
         when(config.purge()).thenReturn(false);
         
-        Agent agent = new Agent(backendRegistry, config, daoFactory);
+        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
         agent.start();
         
         // stop agent

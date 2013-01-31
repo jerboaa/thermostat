@@ -51,7 +51,7 @@ public class ActivatorTest {
     public void verifyActivatorRegistersCommands() throws Exception {
 
         StubBundleContext bundleContext = new StubBundleContext();
-
+        
         Activator activator = new Activator();
 
         activator.start(bundleContext);

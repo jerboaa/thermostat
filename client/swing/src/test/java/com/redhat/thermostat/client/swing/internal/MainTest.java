@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
@@ -58,30 +59,35 @@ import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.storage.dao.DAOFactory;
+import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class MainTest {
 
     private ExecutorService executorService;
-    private OSGIUtils serviceProvider;
 
     private MainWindowController mainWindowController;
     private UiFacadeFactory uiFactory;
 
-    private Connection connection;
     private ArgumentCaptor<ConnectionListener> connectionListenerCaptor;
 
-    private DAOFactory daoFactory;
+    private DbServiceFactory dbServiceFactory;
+    private DbService dbService;
 
     private TimerFactory timerFactory;
+    private StubBundleContext context;
+    private ApplicationService appService;
 
     @Before
     public void setUp() {
-        ApplicationService appService = mock(ApplicationService.class);
+        context = new StubBundleContext();
+        appService = mock(ApplicationService.class);
+        context.registerService(ApplicationService.class, appService, null);
 
         executorService = mock(ExecutorService.class);
         doAnswer(new Answer<Void>() {
@@ -95,20 +101,17 @@ public class MainTest {
 
         when(appService.getApplicationExecutor()).thenReturn(executorService);
 
-        serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getService(ApplicationService.class)).thenReturn(appService);
-
         mainWindowController = mock(MainWindowController.class);
 
         uiFactory = mock(UiFacadeFactory.class);
         when(uiFactory.getMainWindow()).thenReturn(mainWindowController);
 
-        connection = mock(Connection.class);
+        dbServiceFactory = mock(DbServiceFactory.class);
+        dbService = mock(DbService.class);
+        when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
+        
         connectionListenerCaptor = ArgumentCaptor.forClass(ConnectionListener.class);
-        doNothing().when(connection).addListener(connectionListenerCaptor.capture());
-
-        daoFactory = mock(DAOFactory.class);
-        when(daoFactory.getConnection()).thenReturn(connection);
+        doNothing().when(dbService).addConnectionListener(connectionListenerCaptor.capture());
 
         timerFactory = mock(TimerFactory.class);
         when(appService.getTimerFactory()).thenReturn(timerFactory);
@@ -129,7 +132,7 @@ public class MainTest {
 
     @Test
     public void verifyRunWaitsForShutdown() throws Exception {
-        Main main = new Main(serviceProvider, uiFactory, daoFactory);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
 
         main.run();
 
@@ -140,19 +143,23 @@ public class MainTest {
 
     @Test
     public void verifyConnectionIsMade() throws Exception {
-        Main main = new Main(serviceProvider, uiFactory, daoFactory);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
 
         main.run();
 
         handleAllEdtEvents();
 
-        verify(connection).connect();
+        verify(dbService).connect();
 
     }
 
     @Test
     public void verifySuccessfulConnectionTriggersMainWindowToBeShown() throws Exception {
-        Main main = new Main(serviceProvider, uiFactory, daoFactory);
+        HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
+        context.registerService(HostInfoDAO.class, hostInfoDAO, null);
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        context.registerService(VmInfoDAO.class, vmInfoDAO, null);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
 
         main.run();
 
@@ -166,28 +173,11 @@ public class MainTest {
         verify(mainWindowController).showMainMainWindow();
     }
 
-    @Test
-    public void verifySuccessfulConnectionRegistersDAOs() throws Exception {
-
-        Main main = new Main(serviceProvider, uiFactory, daoFactory);
-
-        main.run();
-
-        handleAllEdtEvents();
-
-        ConnectionListener connectionListener = connectionListenerCaptor.getValue();
-        connectionListener.changed(ConnectionStatus.CONNECTED);
-
-        handleAllEdtEvents();
-
-        verify(daoFactory).registerDAOsAndStorageAsOSGiServices();
-    }
-
     @Ignore("this prompts the user with some gui")
     @Test
     public void verifyFailedConnectionTriggersShutdown() throws Exception {
 
-        Main main = new Main(serviceProvider, uiFactory, daoFactory);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
 
         main.run();
 

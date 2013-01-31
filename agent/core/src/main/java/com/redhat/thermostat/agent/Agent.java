@@ -53,7 +53,6 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
-import com.redhat.thermostat.storage.dao.DAOFactory;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.BackendInformation;
 
@@ -68,8 +67,6 @@ public class Agent {
     private final BackendRegistry backendRegistry;
     private final AgentStartupConfiguration config;
 
-    private final DAOFactory daoFactory;
-    
     private AgentInformation agentInfo;
     
     private Map<Backend, BackendInformation> backendInfos;
@@ -94,7 +91,6 @@ public class Agent {
 
                     logger.info("Adding backend: " + backend);
                     
-                    backend.setDAOFactory(daoFactory);
                     backend.activate();
 
                     BackendInformation info = createBackendInformation(backend);
@@ -124,23 +120,24 @@ public class Agent {
         }
     };
     
-    public Agent(BackendRegistry backendRegistry, AgentStartupConfiguration config, DAOFactory daoFactory)
-    {
-        this(backendRegistry, UUID.randomUUID(), config, daoFactory);
+    public Agent(BackendRegistry backendRegistry,
+            AgentStartupConfiguration config, Storage storage,
+            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao) {
+        this(backendRegistry, UUID.randomUUID(), config, storage, agentInfoDao,
+                backendInfoDao);
     }
 
-    public Agent(BackendRegistry registry, UUID agentId, AgentStartupConfiguration config, DAOFactory daoFactory)
-    {
+    public Agent(BackendRegistry registry, UUID agentId,
+            AgentStartupConfiguration config, Storage storage,
+            AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao) {
         this.id = agentId;
         this.backendRegistry = registry;
         this.config = config;
-        this.storage = daoFactory.getStorage();
+        this.storage = storage;
         this.storage.setAgentId(agentId);
-        this.agentDao = daoFactory.getAgentInfoDAO();
-        this.backendDao = daoFactory.getBackendInfoDAO();
-        
-        this.daoFactory = daoFactory;
-        
+        this.agentDao = agentInfoDao;
+        this.backendDao = backendInfoDao;
+
         backendInfos = new ConcurrentHashMap<>();
         
         backendRegistry.addActionListener(backendRegistryListener);

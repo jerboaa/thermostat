@@ -37,10 +37,8 @@
 package com.redhat.thermostat.backend.system;
 
 import java.net.URISyntaxException;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -54,6 +52,7 @@ import com.redhat.thermostat.backend.BackendsProperties;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 
@@ -63,10 +62,6 @@ public class SystemBackend extends Backend {
 
     private HostInfoDAO hostInfos;
     private NetworkInterfaceInfoDAO networkInterfaces;
-
-    private final VmStatusChangeNotifier notifier;
-
-    private final Set<Integer> pidsToMonitor = new CopyOnWriteArraySet<>();
 
     private long procCheckInterval = 1000; // TODO make this configurable.
 
@@ -79,9 +74,10 @@ public class SystemBackend extends Backend {
     private final HostInfoBuilder hostInfoBuilder;
 
 
-    public SystemBackend(VmStatusChangeNotifier notifier) {
+    public SystemBackend(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier) {
         super(new BackendID("System Backend", SystemBackend.class.getName()));
-        this.notifier = notifier;
+        this.hostInfos = hostInfoDAO;
+        this.networkInterfaces = netInfoDAO;
 
         setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
         setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers basic information from the system");
@@ -89,22 +85,13 @@ public class SystemBackend extends Backend {
         
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
-    }
-
-    @Override
-    protected void setDAOFactoryAction() {
-        hostInfos = df.getHostInfoDAO();
-        networkInterfaces = df.getNetworkInterfaceInfoDAO();
-        hostListener = new JvmStatHostListener(df.getVmInfoDAO(), notifier);
+        hostListener = new JvmStatHostListener(vmInfoDAO, notifier);
     }
 
     @Override
     public synchronized boolean activate() {
         if (timer != null) {
             return true;
-        }
-        if (df == null) {
-            throw new IllegalStateException("Cannot activate backend without DAOFactory.");
         }
 
         if (!getObserveNewJvm()) {

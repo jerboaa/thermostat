@@ -36,12 +36,14 @@
 
 package com.redhat.thermostat.agent.cli.impl;
 
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
@@ -55,19 +57,21 @@ import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.LaunchException;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.storage.core.Connection;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.core.StorageProviderUtil;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.storage.dao.DAOFactory;
-import com.redhat.thermostat.storage.dao.DAOFactoryImpl;
+import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 
 @SuppressWarnings("restriction")
 public final class AgentApplication extends AbstractStateNotifyingCommand {
@@ -76,19 +80,23 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
 
     private final BundleContext bundleContext;
     private final ConfigurationCreator configurationCreator;
-    private final DAOFactoryCreator daoFactoryCreator;
 
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
+    private DbServiceFactory dbServiceFactory;
+    private ServiceTracker configServerTracker;
+    private MultipleServiceTracker daoTracker;
+
+    private CountDownLatch shutdownLatch;
 
     public AgentApplication(BundleContext bundleContext) {
-        this(bundleContext, new ConfigurationCreator(), new DAOFactoryCreator());
+        this(bundleContext, new ConfigurationCreator(), new DbServiceFactory());
     }
 
-    AgentApplication(BundleContext bundleContext, ConfigurationCreator configurationCreator, DAOFactoryCreator daoFactoryCreator) {
+    AgentApplication(BundleContext bundleContext, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
         this.bundleContext = bundleContext;
         this.configurationCreator = configurationCreator;
-        this.daoFactoryCreator = daoFactoryCreator;
+        this.dbServiceFactory = dbServiceFactory;
     }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
@@ -105,74 +113,59 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         }
         final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
-        final DAOFactory daoFactory = daoFactoryCreator.create(configuration);
-
-        Connection connection = daoFactory.getConnection();
-        ConnectionListener connectionListener = new ConnectionListener() {
+        final DbService dbService = dbServiceFactory.createDbService(
+                configuration.getUsername(), configuration.getPassword(),
+                configuration.getDBConnectionString());
+        
+        shutdownLatch = new CountDownLatch(1);
+        
+        configServerTracker = new ServiceTracker(bundleContext, ConfigurationServer.class.getName(), null) {
             @Override
-            public void changed(ConnectionStatus newStatus) {
-                switch (newStatus) {
-                case DISCONNECTED:
-                    logger.warning("Unexpected disconnect event.");
-                    break;
-                case CONNECTING:
-                    logger.fine("Connecting to storage.");
-                    break;
-                case CONNECTED:
-                    logger.fine("Connected to storage, registering storage as service");
-                    daoFactory.registerDAOsAndStorageAsOSGiServices();
-                    break;
-                case FAILED_TO_CONNECT:
-                    logger.warning("Could not connect to storage.");
-                    System.exit(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
-                default:
-                    logger.warning("Unfamiliar ConnectionStatus value");
+            public Object addingService(ServiceReference reference) {
+                final ConfigurationServer configServer = (ConfigurationServer) super.addingService(reference);
+                configServer.startListening(configuration.getConfigListenAddress());
+                
+                ConnectionListener connectionListener = new ConnectionListener() {
+                    @Override
+                    public void changed(ConnectionStatus newStatus) {
+                        switch (newStatus) {
+                        case DISCONNECTED:
+                            logger.warning("Unexpected disconnect event.");
+                            break;
+                        case CONNECTING:
+                            logger.fine("Connecting to storage.");
+                            break;
+                        case CONNECTED:
+                            logger.fine("Connected to storage");
+                            handleConnected(configServer, logger, shutdownLatch);
+                            break;
+                        case FAILED_TO_CONNECT:
+                            logger.warning("Could not connect to storage.");
+                            shutdown();
+                        default:
+                            logger.warning("Unfamiliar ConnectionStatus value");
+                        }
+                    }
+                };
+
+                dbService.addConnectionListener(connectionListener);
+                logger.fine("Connecting to storage...");
+                dbService.connect();
+                
+                return configServer;
+            }
+            
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                if (shutdownLatch.getCount() > 0) {
+                    // Lost config server while still running
+                    logger.warning("ConfigurationServer unexpectedly became unavailable");
                 }
+                super.removedService(reference, service);
             }
         };
-
-        connection.addListener(connectionListener);
-        connection.connect();
-        logger.fine("Connecting to storage...");
-
-        @SuppressWarnings("rawtypes")
-        ServiceReference configServiceRef = bundleContext.getServiceReference(ConfigurationServer.class.getName());
-        @SuppressWarnings("unchecked")
-        final ConfigurationServer configServer = (ConfigurationServer) bundleContext.getService(configServiceRef);
-        configServer.startListening(configuration.getConfigListenAddress());
+        configServerTracker.open();
         
-        BackendRegistry backendRegistry = null;
-        try {
-            backendRegistry = new BackendRegistry(bundleContext);
-            
-        } catch (Exception e) {
-            logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", e);
-            System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
-        }
-
-        final Agent agent = new Agent(backendRegistry, configuration, daoFactory);
-        try {
-            logger.fine("Starting agent.");
-            agent.start();
-            
-            bundleContext.registerService(BackendService.class, new BackendService(), null);
-            
-        } catch (LaunchException le) {
-            logger.log(Level.SEVERE,
-                    "Agent could not start, probably because a configured backend could not be activated.",
-                    le);
-            System.exit(Constants.EXIT_BACKEND_START_ERROR);
-        }
-        logger.fine("Agent started.");
-
-        ctx.getConsole().getOutput().println("Agent id: " + agent.getId());
-        ctx.getConsole().getOutput().println("agent started.");
-        logger.fine("Agent id: " + agent.getId());
-
-        final CountDownLatch shutdownLatch = new CountDownLatch(1);
-        SignalHandler handler = new CustomSignalHandler(agent, configServer, logger, shutdownLatch);
-        Signal.handle(new Signal("INT"), handler);
-        Signal.handle(new Signal("TERM"), handler);
         try {
             // Wait for either SIGINT or SIGTERM
             shutdownLatch.await();
@@ -201,6 +194,20 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         return NAME;
     }
     
+    public void shutdown() {
+        // Exit application
+        if (shutdownLatch != null) {
+            shutdownLatch.countDown();
+        }
+        
+        if (daoTracker != null) {
+            daoTracker.close();
+        }
+        if (configServerTracker != null) {
+            configServerTracker.close();
+        }
+    }
+    
     // Does not need a reference of the enclosing type so lets declare this class static
     private static class CustomSignalHandler implements SignalHandler {
 
@@ -209,7 +216,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         private Logger logger;
         private CountDownLatch shutdownLatch;
         
-        CustomSignalHandler(Agent agent, ConfigurationServer configServer, Logger logger, CountDownLatch latch) {
+        CustomSignalHandler(Agent agent, ConfigurationServer configServer,
+                Logger logger, CountDownLatch latch) {
             this.agent = agent;
             this.configServer = configServer;
             this.logger = logger;
@@ -232,23 +240,91 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         
     }
 
+    private Agent startAgent(final Logger logger, final Storage storage,
+            AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
+        BackendRegistry backendRegistry = null;
+        try {
+            backendRegistry = new BackendRegistry(bundleContext);
+            
+        } catch (Exception e) {
+            logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", e);
+            System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
+        }
+
+        final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO);
+        try {
+            logger.fine("Starting agent.");
+            agent.start();
+            
+            bundleContext.registerService(BackendService.class, new BackendService(), null);
+            
+        } catch (LaunchException le) {
+            logger.log(Level.SEVERE,
+                    "Agent could not start, probably because a configured backend could not be activated.",
+                    le);
+            System.exit(Constants.EXIT_BACKEND_START_ERROR);
+        }
+        logger.fine("Agent started.");
+
+        logger.info("Agent id: " + agent.getId());
+        logger.info("agent started.");
+        return agent;
+    }
+
+    private void handleConnected(final ConfigurationServer configServer,
+            final Logger logger, final CountDownLatch shutdownLatch) {
+        Class<?>[] deps = new Class<?>[] {
+                Storage.class,
+                AgentInfoDAO.class,
+                BackendInfoDAO.class
+        };
+        daoTracker = new MultipleServiceTracker(bundleContext, deps, new Action() {
+
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                Storage storage = (Storage) services.get(Storage.class.getName());
+                AgentInfoDAO agentInfoDAO = (AgentInfoDAO) services
+                        .get(AgentInfoDAO.class.getName());
+                BackendInfoDAO backendInfoDAO = (BackendInfoDAO) services
+                        .get(BackendInfoDAO.class.getName());
+
+                final Agent agent = startAgent(logger, storage,
+                        agentInfoDAO, backendInfoDAO);
+
+                SignalHandler handler = new CustomSignalHandler(agent,
+                        configServer, logger, shutdownLatch);
+                Signal.handle(new Signal("INT"), handler);
+                Signal.handle(new Signal("TERM"), handler);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                if (shutdownLatch.getCount() > 0) {
+                    // In the rare case we lose one of our deps, gracefully shutdown
+                    logger.severe("Storage unexpectedly became unavailable");
+                    shutdown();
+                }
+            }
+            
+        });
+        daoTracker.open();
+    }
+
     static class ConfigurationCreator {
         public AgentStartupConfiguration create() throws InvalidConfigurationException {
             return AgentConfigsUtils.createAgentConfigs();
         }
     }
 
-    static class DAOFactoryCreator {
-        public DAOFactory create(AgentStartupConfiguration config) {
-            StorageProvider connProv = StorageProviderUtil.getStorageProvider(config);
-            final DAOFactory daoFactory = new DAOFactoryImpl(connProv);
-            return daoFactory;
-        }
-    }
-
     @Override
     public boolean isAvailableInShell() {
-    	return false;
+        return false;
     }
+    
+    @Override
+    public boolean isStorageRequired() {
+        return false;
+    }
+    
 }
 

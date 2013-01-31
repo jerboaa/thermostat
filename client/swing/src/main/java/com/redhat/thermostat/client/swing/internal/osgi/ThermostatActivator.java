@@ -39,11 +39,10 @@ package com.redhat.thermostat.client.swing.internal.osgi;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
@@ -61,7 +60,10 @@ import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationVie
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -74,8 +76,8 @@ public class ThermostatActivator implements BundleActivator {
     private VMContextActionServiceTracker vmContextActionTracker;
 
     private CommandRegistry cmdReg;
+    private MultipleServiceTracker dependencyTracker;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
         
@@ -102,11 +104,18 @@ public class ThermostatActivator implements BundleActivator {
         ClientConfigViewProvider clientConfigViewProvider = new SwingClientConfigurationViewProvider();
         context.registerService(ClientConfigViewProvider.class, clientConfigViewProvider, null);
         
-        ServiceTracker tracker = new ServiceTracker(context, Keyring.class.getName(), null) {
+        Class<?>[] deps = new Class<?>[] {
+                Keyring.class,
+                ApplicationService.class
+        };
+        dependencyTracker = new MultipleServiceTracker(context, deps, new Action() {
+            
+            private Main main;
+
             @Override
-            public Object addingService(ServiceReference reference) {
-              
-                Keyring keyring = (Keyring) context.getService(reference);
+            public void dependenciesAvailable(Map<String, Object> services) {
+                Keyring keyring = (Keyring) services.get(Keyring.class.getName());
+                ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 
                 UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
 
@@ -120,15 +129,20 @@ public class ThermostatActivator implements BundleActivator {
                 vmContextActionTracker.open();
 
                 cmdReg = new CommandRegistryImpl(context);
-                Main main = new Main(keyring, uiFacadeFactory, new String[0]);
+                main = new Main(context, keyring, appSvc, uiFacadeFactory, new String[0]);
                 
                 GUIClientCommand cmd = new GUIClientCommand(main);
                 cmdReg.registerCommands(Arrays.asList(cmd));
-                
-                return super.addingService(reference);
             }
-        };
-        tracker.open();
+
+            @Override
+            public void dependenciesUnavailable() {
+                if (main != null) {
+                    main.shutdown();
+                }
+            }
+        });
+        dependencyTracker.open();
     }
 
     @Override
@@ -136,6 +150,7 @@ public class ThermostatActivator implements BundleActivator {
         infoServiceTracker.close();
         hostContextActionTracker.close();
         vmContextActionTracker.close();
+        dependencyTracker.close();
         cmdReg.unregisterCommands();
     }
 }

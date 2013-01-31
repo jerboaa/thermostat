@@ -42,7 +42,7 @@ import org.osgi.framework.BundleContext;
 import com.redhat.thermostat.common.ApplicationService;
 
 public class Activator implements BundleActivator {
-
+    
     @Override
     public void start(BundleContext context) throws Exception {
         ApplicationService service = new ApplicationServiceImpl();
@@ -51,7 +51,7 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        // Nothing to do here.
+        // Services unregistered automatically
     }
 }
 

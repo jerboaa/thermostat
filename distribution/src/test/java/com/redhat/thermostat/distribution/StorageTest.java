@@ -77,9 +77,12 @@ public class StorageTest extends IntegrationTest {
             }
         });
 
-        storage.expect("agent started");
-
-        killRecursively(process[0]);
+        try {
+            storage.expectErr("agent started");
+        }
+        finally {
+            killRecursively(process[0]);
+        }
     }
 
 }

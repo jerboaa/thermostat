@@ -193,5 +193,10 @@ public class UiFacadeFactoryImpl implements UiFacadeFactory {
         hostInformationServices.remove(hostInfoService);
     }
 
+    @Override
+    public boolean isShutdown() {
+        return shutdown.getCount() == 0;
+    }
+
 }
 

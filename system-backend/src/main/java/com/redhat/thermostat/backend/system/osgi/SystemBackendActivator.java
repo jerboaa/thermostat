@@ -36,57 +36,69 @@
 
 package com.redhat.thermostat.backend.system.osgi;
 
+import java.util.Map;
+
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
-import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
 import com.redhat.thermostat.backend.system.SystemBackend;
 import com.redhat.thermostat.backend.system.VmStatusChangeNotifier;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 @SuppressWarnings("rawtypes")
 public class SystemBackendActivator implements BundleActivator {
 
-    private ServiceTracker tracker;
+    private MultipleServiceTracker tracker;
     private SystemBackend backend;
-
+    private ServiceRegistration reg;
     private VmStatusChangeNotifier notifier;
     
-    @SuppressWarnings("unchecked")
     @Override
-    public void start(BundleContext context) throws Exception {
+    public void start(final BundleContext context) throws Exception {
         
         notifier = new VmStatusChangeNotifier(context);
         notifier.start();
-
-        backend = new SystemBackend(notifier);
         
-        tracker = new ServiceTracker(context, BackendService.class, null) {
+        Class<?>[] deps = new Class<?>[] {
+                BackendService.class,
+                HostInfoDAO.class,
+                NetworkInterfaceInfoDAO.class,
+                VmInfoDAO.class
+        };
+        tracker = new MultipleServiceTracker(context, deps, new Action() {
             @Override
-            public Object addingService(ServiceReference reference) {
-                context.registerService(Backend.class, backend, null);
-                return super.addingService(reference);
+            public void dependenciesAvailable(Map<String, Object> services) {
+                HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
+                NetworkInterfaceInfoDAO netInfoDAO = (NetworkInterfaceInfoDAO) services
+                        .get(NetworkInterfaceInfoDAO.class.getName());
+                VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                backend = new SystemBackend(hostInfoDAO, netInfoDAO, vmInfoDAO, notifier);
+                reg = context.registerService(Backend.class, backend, null);
             }
             
             @Override
-            public void removedService(ServiceReference reference, Object service) {
-                
+            public void dependenciesUnavailable() {
                 if (backend.isActive()) {
                     backend.deactivate();
                 }
-                context.ungetService(reference);
-                super.removedService(reference, service);
+                reg.unregister();
             }
-        };
-        
+            
+        });
+                
         tracker.open();
     }
     
     @Override
     public void stop(BundleContext context) throws Exception {
-        if (backend.isActive()) {
+        if (backend != null && backend.isActive()) {
             backend.deactivate();
         }
         tracker.close();

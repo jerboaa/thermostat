@@ -37,6 +37,7 @@
 package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.EventQueue;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -49,6 +50,8 @@ import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
 
+import org.osgi.framework.BundleContext;
+
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.internal.config.ConnectionConfiguration;
@@ -58,20 +61,18 @@ import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.storage.core.Connection.ConnectionType;
-import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.core.StorageProviderUtil;
-import com.redhat.thermostat.storage.dao.DAOFactory;
-import com.redhat.thermostat.storage.dao.DAOFactoryImpl;
+import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Main {
@@ -80,28 +81,41 @@ public class Main {
 
     private static final Logger logger = LoggingUtils.getLogger(Main.class);
 
-    private OSGIUtils serviceProvider;
+    private BundleContext context;
+    private ApplicationService appSvc;
     private UiFacadeFactory uiFacadeFactory;
-    private DAOFactory daoFactory;
+    private DbServiceFactory dbServiceFactory;
+    private DbService dbService;
+    private MultipleServiceTracker tracker;
     
-    public Main(Keyring keyring, UiFacadeFactory uiFacadeFactory, String[] args) {
+    public Main(BundleContext context, Keyring keyring,
+            ApplicationService appSvc, UiFacadeFactory uiFacadeFactory,
+            String[] args) {
         ClientPreferences prefs = new ClientPreferences(keyring);
-        StartupConfiguration config = new ConnectionConfiguration(prefs);
-        StorageProvider connProv = StorageProviderUtil.getStorageProvider(config);
+        ConnectionConfiguration config = new ConnectionConfiguration(prefs);
+        DbServiceFactory dbServiceFactory = new DbServiceFactory();
 
-        DAOFactory daoFactory = new DAOFactoryImpl(connProv);
-
-        init(OSGIUtils.getInstance(), uiFacadeFactory, daoFactory);
+        init(context, appSvc, uiFacadeFactory, dbServiceFactory,
+                config.getUsername(), config.getPassword(),
+                config.getDBConnectionString());
     }
 
-    Main(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory) {
-        init(serviceProvider, uiFacadeFactory, daoFactory);
+    Main(BundleContext context, ApplicationService appSvc,
+            UiFacadeFactory uiFacadeFactory, DbServiceFactory dbServiceFactory,
+            String username, String password, String connectionURL) {
+        init(context, appSvc, uiFacadeFactory, dbServiceFactory, username,
+                password, connectionURL);
     }
 
-    private void init(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, DAOFactory daoFactory) {
-        this.serviceProvider = serviceProvider;
+    private void init(BundleContext context, ApplicationService appSvc,
+            UiFacadeFactory uiFacadeFactory, DbServiceFactory dbServiceFactory,
+            String username, String password, String connectionURL) {
+        this.context = context;
+        this.appSvc = appSvc;
         this.uiFacadeFactory = uiFacadeFactory;
-        this.daoFactory = daoFactory;
+        this.dbServiceFactory = dbServiceFactory;
+        this.dbService = dbServiceFactory.createDbService(username, password,
+                connectionURL);
     }
 
     private void setLAF() {
@@ -172,8 +186,7 @@ public class Main {
     }
 
     private void showGui() {
-        ApplicationService appSrv = serviceProvider.getService(ApplicationService.class);
-        final ExecutorService service = appSrv.getApplicationExecutor();
+        final ExecutorService service = appSvc.getApplicationExecutor();
         service.execute(new ConnectorSetup(service));
     }
     
@@ -186,13 +199,10 @@ public class Main {
         
         @Override
         public void run() {
-            
-            Connection connection = daoFactory.getConnection();
-            connection.setType(ConnectionType.LOCAL);
-            ConnectionListener connectionListener = new ConnectionHandler(connection, service);
-            connection.addListener(connectionListener);
+            ConnectionListener connectionListener = new ConnectionHandler(service);
+            dbService.addConnectionListener(connectionListener);
             try {
-                connection.connect();
+                dbService.connect();
             } catch (Throwable t) {
                 logger.log(Level.WARNING, "connection attempt failed: ", t);
             }
@@ -200,26 +210,20 @@ public class Main {
     }
     
     private class Connector implements Runnable {
-        private Connection connection;
-        Connector(Connection connection) {
-            this.connection = connection;
-        }
         
         @Override
         public void run() {
             try {
-                connection.connect();
+                dbService.connect();
             } catch (Throwable t) {
                 logger.log(Level.WARNING, "connection attempt failed: ", t);
             }
         }
     }
     
-    private class ConnectionAttemp implements Runnable {
-        private Connection connection;
+    private class ConnectionAttempt implements Runnable {
         private ExecutorService service;
-        public ConnectionAttemp(Connection connection, ExecutorService service) {
-            this.connection = connection;
+        public ConnectionAttempt(ExecutorService service) {
             this.service = service;
         }
         
@@ -243,75 +247,92 @@ public class Main {
             case JOptionPane.CANCEL_OPTION:
             case JOptionPane.CLOSED_OPTION:
             case JOptionPane.NO_OPTION:
-                uiFacadeFactory
-                        .shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
+                shutdown();
                 break;
 
             case JOptionPane.YES_OPTION:
             default:
-                createPreferencesDialog(connection, service);
+                createPreferencesDialog(service);
                 break;
             }
         }
     }
     
-    private void connect(Connection connection, ExecutorService service) {
-        service.execute(new Connector(connection));
+    private void connect(ExecutorService service) {
+        service.execute(new Connector());
     }
     
     private class MainClientConfigReconnector implements ClientConfigReconnector {
-        private Connection connection;
         private ExecutorService service;
-        public MainClientConfigReconnector(Connection connection, ExecutorService service) {
-            this.connection = connection;
+        public MainClientConfigReconnector(ExecutorService service) {
             this.service = service;
         }
         
         @Override
         public void reconnect(ClientPreferences prefs) {
-            connection.setUrl(prefs.getConnectionUrl());
-            connect(connection, service);
+            // Recreate DbService with potentially modified parameters
+            dbService = dbServiceFactory.createDbService(prefs.getUserName(), prefs.getPassword(), prefs.getConnectionUrl());
+            dbService.addConnectionListener(new ConnectionHandler(service));
+            connect(service);
         }
 
         @Override
         public void abort() {
-            uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
+            shutdown();
         }
     }
     
-    private void createPreferencesDialog(final Connection connection, final ExecutorService service) {
+    private void createPreferencesDialog(final ExecutorService service) {
 
         ClientPreferences prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
         ClientConfigurationView configDialog = new ClientConfigurationSwing();
         ClientConfigurationController controller =
-                new ClientConfigurationController(prefs, configDialog, new MainClientConfigReconnector(connection, service));
+                new ClientConfigurationController(prefs, configDialog, new MainClientConfigReconnector(service));
         
         controller.showDialog();
     }
     
     private class ConnectionHandler implements ConnectionListener {
         private boolean retry;
-        private Connection connection;
         private ExecutorService service;
-        public ConnectionHandler(Connection connection, ExecutorService service) {
-            this.connection = connection;
+        public ConnectionHandler(ExecutorService service) {
             this.retry = true;
             this.service = service;
         }
         
         private void showConnectionAttemptWarning() {
-            SwingUtilities.invokeLater(new ConnectionAttemp(connection, service));
+            SwingUtilities.invokeLater(new ConnectionAttempt(service));
         }
         
         @Override
         public void changed(ConnectionStatus newStatus) {
             if (newStatus == ConnectionStatus.CONNECTED) {
-                // register the storage, so other services can request it
-                daoFactory.registerDAOsAndStorageAsOSGiServices();
-                uiFacadeFactory.setHostInfoDao(daoFactory.getHostInfoDAO());
-                uiFacadeFactory.setVmInfoDao(daoFactory.getVmInfoDAO());
+                Class<?>[] deps = new Class<?>[] {
+                        HostInfoDAO.class,
+                        VmInfoDAO.class
+                };
+                tracker = new MultipleServiceTracker(context, deps, new Action() {
+                    
+                    @Override
+                    public void dependenciesAvailable(Map<String, Object> services) {
+                        HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
+                        uiFacadeFactory.setHostInfoDao(hostInfoDAO);
+                        VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                        uiFacadeFactory.setVmInfoDao(vmInfoDAO);
+                        
+                        showMainWindow();
+                    }
 
-                showMainWindow();
+                    @Override
+                    public void dependenciesUnavailable() {
+                        if (!uiFacadeFactory.isShutdown()) {
+                            // In the rare case we lose one of our deps, gracefully shutdown
+                            logger.severe("Storage unexpectedly became unavailable");
+                            shutdown();
+                        }
+                    }
+                });
+                tracker.open();
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
                 if (retry) {
                     retry = false;
@@ -322,12 +343,19 @@ public class Main {
                             translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
                             translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
                             JOptionPane.ERROR_MESSAGE);
-                    uiFacadeFactory.shutdown(Constants.EXIT_UNABLE_TO_CONNECT_TO_DATABASE);
+                    shutdown();
                 }
             }
         }
     }
-
+    
+    public void shutdown() {
+        uiFacadeFactory.shutdown();
+        
+        if (tracker != null) {
+            tracker.close();
+        }
+    }
 
     private void showMainWindow() {
         SwingUtilities.invokeLater(new ShowMainWindow());

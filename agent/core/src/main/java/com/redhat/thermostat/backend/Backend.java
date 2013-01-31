@@ -57,7 +57,6 @@ import com.redhat.thermostat.storage.dao.DAOFactory;
 public abstract class Backend implements Ordered {
 
     private boolean initialConfigurationComplete = false;
-    protected DAOFactory df = null;
     private boolean observeNewJvm = attachToNewProcessByDefault();
 
     private Map<String,String> config = new HashMap<>();
@@ -88,15 +87,6 @@ public abstract class Backend implements Ordered {
             }
         }
         initialConfigurationComplete = true;
-    }
-
-    public final void setDAOFactory(DAOFactory df) {
-        this.df = df;
-        setDAOFactoryAction();
-    }
-
-    protected void setDAOFactoryAction() {
-        // Default implementation does nothing.
     }
 
     /**

@@ -38,43 +38,52 @@ package com.redhat.thermostat.storage.internal;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.core.StorageProvider;
-import com.redhat.thermostat.storage.core.StorageProviderUtil;
-import com.redhat.thermostat.storage.dao.DAOFactory;
-import com.redhat.thermostat.storage.dao.DAOFactoryImpl;
 
 public class DbServiceImpl implements DbService {
     
     @SuppressWarnings("rawtypes")
-    private ServiceRegistration registration;
+    private ServiceRegistration dbServiceReg;
+    @SuppressWarnings("rawtypes")
+    private ServiceRegistration storageReg;
     
-    private DAOFactory daoFactory;
+    private Storage storage;
     private BundleContext context;
     private String dbUrl;
     
     DbServiceImpl(String username, String password, String dbUrl) throws StorageException {
-        this(FrameworkUtil.getBundle(DbService.class).getBundleContext(), getDAOFactory(username, password, dbUrl), dbUrl);
+        BundleContext context = FrameworkUtil.getBundle(DbService.class).getBundleContext();
+        Storage storage = createStorage(context, username, password, dbUrl);
+        init(context, storage, dbUrl);
     }
 
     // for testing
-    DbServiceImpl(BundleContext context, DAOFactory daoFactory, String dbUrl) {
-        this.daoFactory = daoFactory;
+    DbServiceImpl(BundleContext context, Storage storage, String dbUrl) {
+        init(context, storage, dbUrl);
+    }
+    
+    private void init(BundleContext context, Storage storage, String dbUrl) {
+        this.storage = storage;
         this.context = context;
         this.dbUrl = dbUrl;
     }
 
     public void connect() throws ConnectionException {
         try {
-            daoFactory.getConnection().connect();
-            registration = context.registerService(DbService.class, this, null);
-            daoFactory.registerDAOsAndStorageAsOSGiServices();
+            storage.getConnection().connect();
+            dbServiceReg = context.registerService(DbService.class, this, null);
+            storageReg = context.registerService(Storage.class.getName(), storage, null);
         } catch (Exception cause) {
             throw new ConnectionException(cause);
         }
@@ -82,9 +91,9 @@ public class DbServiceImpl implements DbService {
     
     public void disconnect() throws ConnectionException {
         try {
-            daoFactory.unregisterDAOsAndStorageAsOSGiServices();
-            daoFactory.getConnection().disconnect();
-            registration.unregister();
+            storage.getConnection().disconnect();
+            storageReg.unregister();
+            dbServiceReg.unregister();
         } catch (Exception cause) {
             throw new ConnectionException(cause);
         }
@@ -108,15 +117,43 @@ public class DbServiceImpl implements DbService {
         return new DbServiceImpl(username, password, dbUrl);
     }
 
-    private static DAOFactory getDAOFactory(String username, String password, String dbUrl) throws StorageException {
+    private static Storage createStorage(BundleContext context, String username, String password, String dbUrl) throws StorageException {
         StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
-        StorageProvider prov = StorageProviderUtil.getStorageProvider(config);
+        StorageProvider prov = getStorageProvider(context, config);
         if (prov == null) {
             // no suitable provider found
             throw new StorageException("No storage found for URL " + dbUrl);
         }
-        return new DAOFactoryImpl(prov);
+        return prov.createStorage();
+    }
+    
+    private static StorageProvider getStorageProvider(BundleContext context, StartupConfiguration config) {
+        try {
+            ServiceReference[] refs = context.getServiceReferences(StorageProvider.class.getName(), null);
+            for (int i = 0; i < refs.length; i++) {
+                StorageProvider prov = (StorageProvider) context.getService(refs[i]);
+                prov.setConfig(config);
+                if (prov.canHandleProtocol()) {
+                    return prov;
+                }
+                else {
+                    context.ungetService(refs[i]);
+                }
+            }
+        } catch (InvalidSyntaxException e) {
+            throw new AssertionError("Bad filter used to get StorageProviders", e);
+        }
+        return null;
+    }
+
+    @Override
+    public void addConnectionListener(ConnectionListener listener) {
+        storage.getConnection().addListener(listener);
+    }
+
+    @Override
+    public void removeConnectionListener(ConnectionListener listener) {
+        storage.getConnection().removeListener(listener);
     }
     
 }
-
