@@ -56,6 +56,12 @@ public interface Storage {
 
     void registerCategory(Category<?> category);
 
+    /**
+     * Returns the Connection object that may be used to manage connections
+     * to this Storage. Subsequent calls to this method should return
+     * the same Connection.
+     * @return the Connection for this Storage
+     */
     Connection getConnection();
 
     Add createAdd(Category<?> category);

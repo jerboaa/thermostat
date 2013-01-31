@@ -329,6 +329,7 @@ public class WebStorage implements Storage, SecureStorage {
     private String username;
     private String password;
     private SecureRandom random;
+    private WebConnection conn;
 
     public WebStorage(StartupConfiguration config) throws StorageException {
         categoryIds = new HashMap<>();
@@ -338,6 +339,7 @@ public class WebStorage implements Storage, SecureStorage {
         DefaultHttpClient client = new DefaultHttpClient(connManager);
         httpClient = client;
         random = new SecureRandom();
+        conn = new WebConnection();
 
         // setup SSL if necessary
         if (config.getDBConnectionString().startsWith(HTTPS_PREFIX)) {
@@ -482,7 +484,7 @@ public class WebStorage implements Storage, SecureStorage {
 
     @Override
     public Connection getConnection() {
-        return new WebConnection();
+        return conn;
     }
 
     @Override
