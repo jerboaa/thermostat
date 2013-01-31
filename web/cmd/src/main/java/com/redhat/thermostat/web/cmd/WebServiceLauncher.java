@@ -54,8 +54,8 @@ import org.eclipse.jetty.util.security.Password;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
+import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.storage.mongodb.MongoStorageProvider;
-import com.redhat.thermostat.web.server.IpPortPair;
 import com.redhat.thermostat.web.server.WebStorageEndPoint;
 
 class WebServiceLauncher {
@@ -65,7 +65,7 @@ class WebServiceLauncher {
     private String storageUsername;
     private String storagePassword;
     // IP/Port pairs, keyed by IP
-    private List<IpPortPair> ipsPorts;
+    private List<HostPortPair> ipsPorts;
     
     WebServiceLauncher() {
         server = new Server();
@@ -80,10 +80,10 @@ class WebServiceLauncher {
         checkConfig();
         Connector[] connectors = new Connector[ipsPorts.size()];
         for (int i = 0; i < ipsPorts.size(); i++) {
-            IpPortPair pair = ipsPorts.get(i);
+            HostPortPair pair = ipsPorts.get(i);
             connectors[i] = new SelectChannelConnector();
             connectors[i].setPort(pair.getPort());
-            connectors[i].setHost(pair.getIp());
+            connectors[i].setHost(pair.getHost());
         }
         server.setConnectors( connectors );
 
@@ -153,7 +153,7 @@ class WebServiceLauncher {
         this.storagePassword = storagePassword;
     }
 
-    public void setIpAddresses(List<IpPortPair> ipsPorts) {
+    public void setIpAddresses(List<HostPortPair> ipsPorts) {
         this.ipsPorts = ipsPorts;
     }
 
@@ -167,7 +167,7 @@ class WebServiceLauncher {
         if (ipsPorts == null) {
             throw new InvalidConfigurationException("IP adresses to bind to must be set");
         }
-        for (IpPortPair pair: ipsPorts) {
+        for (HostPortPair pair: ipsPorts) {
             if (pair.getPort() <= 0) {
                 throw new InvalidConfigurationException("Invalid port number " + pair.getPort());
             }

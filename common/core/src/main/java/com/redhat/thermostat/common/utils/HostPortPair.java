@@ -34,19 +34,19 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.server;
+package com.redhat.thermostat.common.utils;
 
-public class IpPortPair {
-    private String ip;
+public class HostPortPair {
+    private String host;
     private int port;
     
-    public IpPortPair(String ip, int port) {
-        this.ip = ip;
+    public HostPortPair(String host, int port) {
+        this.host = host;
         this.port = port;
     }
 
-    public String getIp() {
-        return ip;
+    public String getHost() {
+        return host;
     }
 
     public int getPort() {

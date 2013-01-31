@@ -34,30 +34,43 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.server;
+package com.redhat.thermostat.common.utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Parses IP/Port pairs from a raw string of the form:
+ * Parses Host/Port pairs from a raw string.
  * 
+ * <pre>
  * IPv4:
  *      127.0.0.1:9999,127.0.0.2:8888
- *      
+ * </pre>
+ * 
  * or
  * 
+ * <pre>
  * IPv6:
  *      [1fff:0:a88:85a3::ac1f]:8001,[1fff:0:a88:85a3::ac2f]:8001
- *
+ * </pre>
+ * 
+ * or
+ * 
+ * <pre>
+ * DNS hostname:port pairs:
+ *      testhost.example.com:8970,host2.example.com:1234
+ * </pre>
+ * 
+ * Be sure to call <code>{@link #parse()}</code> before getting the list of
+ * host/port pairs via <code>{@link #getHostsPorts()}</code>.
  */
-public class IpPortsParser {
+public class HostPortsParser {
 
     private final String rawString;
-    private List<IpPortPair> ipPorts;
+    private List<HostPortPair> ipPorts;
     private final IllegalArgumentException formatException; 
     
-    public IpPortsParser(String parseString) {
+    public HostPortsParser(String parseString) {
         this.rawString = parseString;
         this.formatException = new IllegalArgumentException("Invalid format of IP/port argument " + rawString);
     }
@@ -80,7 +93,7 @@ public class IpPortsParser {
                 } catch (NumberFormatException e) {
                     throw formatException;
                 }
-                ipPorts.add(new IpPortPair(ipPort[0], port));
+                ipPorts.add(new HostPortPair(ipPort[0], port));
             } else {
                 // IPv6
                 if (idxRparen == -1) {
@@ -92,12 +105,12 @@ public class IpPortsParser {
                 } catch (NumberFormatException e) {
                     throw formatException;
                 }
-                ipPorts.add(new IpPortPair(ipPortPair.substring(idxLParen + 1, idxRparen), port));
+                ipPorts.add(new HostPortPair(ipPortPair.substring(idxLParen + 1, idxRparen), port));
             }
         }
     }
     
-    public List<IpPortPair> getIpsPorts() {
+    public List<HostPortPair> getHostsPorts() {
         if (ipPorts == null) {
             throw new IllegalStateException("Must call parse() before getting map!");
         }

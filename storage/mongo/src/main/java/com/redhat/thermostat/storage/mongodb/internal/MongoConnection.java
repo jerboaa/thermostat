@@ -38,11 +38,22 @@ package com.redhat.thermostat.storage.mongodb.internal;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.net.ssl.SSLContext;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
-import com.mongodb.MongoURI;
+import com.mongodb.MongoOptions;
+import com.mongodb.ServerAddress;
+import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SslInitException;
+import com.redhat.thermostat.common.utils.HostPortPair;
+import com.redhat.thermostat.common.utils.HostPortsParser;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection;
@@ -50,6 +61,7 @@ import com.redhat.thermostat.storage.core.ConnectionException;
 
 class MongoConnection extends Connection {
 
+    private static final Logger logger = LoggingUtils.getLogger(MongoConnection.class);
     static final String THERMOSTAT_DB_NAME = "thermostat";
 
     private Mongo m = null;
@@ -70,7 +82,7 @@ class MongoConnection extends Connection {
             connected = true;
 
         } catch (IOException | MongoException | IllegalArgumentException e) {
-            e.printStackTrace();
+            logger.log(Level.WARNING, "Failed to connect to storage", e);
             fireChanged(ConnectionStatus.FAILED_TO_CONNECT);
             throw new ConnectionException(e.getMessage(), e);
         }
@@ -107,18 +119,45 @@ class MongoConnection extends Connection {
     }
 
     private void createConnection() throws MongoException, UnknownHostException {
-        this.m = new Mongo(getMongoURI());
+        if (SSLKeystoreConfiguration.useSslForMongodb()) {
+            this.m = getSSLMongo();
+        } else {
+            this.m = new Mongo(getServerAddress());
+        }
         this.db = m.getDB(THERMOSTAT_DB_NAME);
     }
 
-    private MongoURI getMongoURI() {
+    Mongo getSSLMongo() throws UnknownHostException, MongoException {
+        MongoOptions opts = new MongoOptions();
+        SSLContext ctxt = null;
+        try {
+            ctxt = SSLContextFactory.getClientContext();
+        } catch (SslInitException e) {
+            logger.log(Level.WARNING, "Failed to get SSL context!", e);
+            throw new MongoException(e.getMessage(), e);
+        }
+        opts.socketFactory = ctxt.getSocketFactory();
+        return new Mongo(getServerAddress(), opts);
+    }
+
+    ServerAddress getServerAddress() throws UnknownHostException {
         String url = conf.getDBConnectionString();
-        MongoURI uri = new MongoURI(url);
-        return uri;
+        // Strip mongodb prefix: "mongodb://".length() == 10
+        String hostPort = url.substring(10);
+        HostPortsParser parser = new HostPortsParser(hostPort);
+        parser.parse();
+        HostPortPair ipPort = parser.getHostsPorts().get(0);
+        ServerAddress addr = new ServerAddress(ipPort.getHost(), ipPort.getPort());
+        return addr;
     }
 
     private void testConnection() {
         db.getCollection("agent-config").getCount();
+    }
+    
+    // Testing hook
+    Mongo getMongo() {
+        return this.m;
     }
 }
 

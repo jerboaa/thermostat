@@ -50,17 +50,17 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
-import com.redhat.thermostat.web.server.IpPortPair;
+import com.redhat.thermostat.common.utils.HostPortPair;
 
 public class WebServiceLauncherTest {
     
     private WebServiceLauncher launcher;
-    private List<IpPortPair> dummyIp;
+    private List<HostPortPair> dummyIp;
     
     @Before
     public void setUp() {
-        dummyIp = new ArrayList<IpPortPair>();
-        dummyIp.add(new IpPortPair("127.0.0.1", 8889));
+        dummyIp = new ArrayList<HostPortPair>();
+        dummyIp.add(new HostPortPair("127.0.0.1", 8889));
     }
     
     @After
@@ -89,8 +89,8 @@ public class WebServiceLauncherTest {
         int excptnsThrown = 0;
         int excptnsExpected = 2;
         launcher = new WebServiceLauncher();
-        List<IpPortPair> ips = new ArrayList<>();
-        ips.add(new IpPortPair("127.0.0.1", -10));
+        List<HostPortPair> ips = new ArrayList<>();
+        ips.add(new HostPortPair("127.0.0.1", -10));
         try {
             launcher.setIpAddresses(ips);
             launcher.start();
@@ -98,7 +98,7 @@ public class WebServiceLauncherTest {
             excptnsThrown++;
         }
         ips = new ArrayList<>();
-        ips.add(new IpPortPair("127.0.0.1", 0));
+        ips.add(new HostPortPair("127.0.0.1", 0));
         try {
             launcher.setIpAddresses(ips);
             launcher.start();

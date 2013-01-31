@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.web.server.internal;
+package com.redhat.thermostat.common.utils;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,40 +42,59 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.web.server.IpPortPair;
-import com.redhat.thermostat.web.server.IpPortsParser;
+import com.redhat.thermostat.common.utils.HostPortPair;
+import com.redhat.thermostat.common.utils.HostPortsParser;
 
-public class IpPortsParserTest {
+public class HostPortsParserTest {
 
     @Test
-    public void canParsIpV4Pair() throws IllegalArgumentException {
-        IpPortsParser parser = new IpPortsParser(
+    public void canParseIpV4Pair() throws IllegalArgumentException {
+        HostPortsParser parser = new HostPortsParser(
                 "127.0.0.1:8080,127.0.0.1:9999");
         parser.parse();
-        List<IpPortPair> ipPorts = parser.getIpsPorts();
+        List<HostPortPair> ipPorts = parser.getHostsPorts();
         assertEquals(2, ipPorts.size());
         assertEquals(8080, (long) ipPorts.get(0).getPort());
-        assertEquals("127.0.0.1", ipPorts.get(0).getIp());
+        assertEquals("127.0.0.1", ipPorts.get(0).getHost());
         assertEquals(9999, (long) ipPorts.get(1).getPort());
-        assertEquals("127.0.0.1", ipPorts.get(1).getIp());
+        assertEquals("127.0.0.1", ipPorts.get(1).getHost());
+    }
+    
+    @Test
+    public void canParseDnsHostsPortsPair() throws IllegalArgumentException {
+        HostPortsParser parser = new HostPortsParser(
+                "somehost.example.com:8080,host2.example.com:9999");
+        parser.parse();
+        List<HostPortPair> ipPorts = parser.getHostsPorts();
+        assertEquals(2, ipPorts.size());
+        assertEquals(8080, (long) ipPorts.get(0).getPort());
+        assertEquals("somehost.example.com", ipPorts.get(0).getHost());
+        assertEquals(9999, (long) ipPorts.get(1).getPort());
+        assertEquals("host2.example.com", ipPorts.get(1).getHost());
+        parser = new HostPortsParser(
+                "thermostat-storage.fluff.org:9999");
+        parser.parse();
+        HostPortPair pair = parser.getHostsPorts().get(0);
+        assertEquals("thermostat-storage.fluff.org", pair.getHost());
+        assertEquals(9999, pair.getPort());
     }
 
     @Test
     public void canParseIpv6Pair() {
-        IpPortsParser parser = new IpPortsParser(
+        HostPortsParser parser = new HostPortsParser(
                 "[1fff:0:a88:85a3::ac1f]:8001,[1fff:0:a88:85a3::ac2f]:8001");
         parser.parse();
-        List<IpPortPair> ipPorts = parser.getIpsPorts();
+        List<HostPortPair> ipPorts = parser.getHostsPorts();
         assertEquals(2, ipPorts.size());
         assertEquals(8001, (long) ipPorts.get(0).getPort());
-        assertEquals("1fff:0:a88:85a3::ac1f", ipPorts.get(0).getIp());
+        assertEquals("1fff:0:a88:85a3::ac1f", ipPorts.get(0).getHost());
         assertEquals(8001, (long) ipPorts.get(1).getPort());
-        assertEquals("1fff:0:a88:85a3::ac2f", ipPorts.get(1).getIp());
+        assertEquals("1fff:0:a88:85a3::ac2f", ipPorts.get(1).getHost());
     }
 
     @Test
     public void failsParsingInvalidString() {
-        IpPortsParser parser = new IpPortsParser(
+        HostPortsParser parser = new HostPortsParser(
                 "1fff:0:a88:85a3::ac1f]:8001,[1fff:0:a88:85a3::ac2f]:8001");
         int expectedExcptns = 3;
         int exptns = 0;
@@ -84,13 +103,13 @@ public class IpPortsParserTest {
         } catch (IllegalArgumentException e) {
             exptns++;
         }
-        parser = new IpPortsParser("blah,test");
+        parser = new HostPortsParser("blah,test");
         try {
             parser.parse();
         } catch (IllegalArgumentException e) {
             exptns++;
         }
-        parser = new IpPortsParser("127.0.0.1:80,127.0.0.2:bad");
+        parser = new HostPortsParser("127.0.0.1:80,127.0.0.2:bad");
         try {
             parser.parse();
         } catch (IllegalArgumentException e) {
@@ -101,8 +120,8 @@ public class IpPortsParserTest {
 
     @Test(expected = IllegalStateException.class)
     public void getMapWithNoParseThrowsException() {
-        IpPortsParser parser = new IpPortsParser("blah");
-        parser.getIpsPorts();
+        HostPortsParser parser = new HostPortsParser("blah");
+        parser.getHostsPorts();
     }
 }
 

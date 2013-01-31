@@ -67,13 +67,15 @@ public class SSLKeystoreConfigurationTest {
     }
     
     @Test
-    public void canGetSSLEnabledConfig() {
+    public void canGetSSLEnabledConfigs() {
         File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
         SSLKeystoreConfiguration.initClientProperties(clientProps);
         assertTrue(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
+        assertTrue(SSLKeystoreConfiguration.useSslForMongodb());
         clientProps = new File(this.getClass().getResource("/ssl.properties").getFile());
         SSLKeystoreConfiguration.initClientProperties(clientProps);
         assertFalse(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
+        assertFalse(SSLKeystoreConfiguration.useSslForMongodb());
     }
 }
 

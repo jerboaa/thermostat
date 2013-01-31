@@ -36,19 +36,30 @@
 
 package com.redhat.thermostat.storage.mongodb.internal;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -56,15 +67,23 @@ import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.Mongo;
 import com.mongodb.MongoException;
+import com.mongodb.MongoOptions;
 import com.mongodb.MongoURI;
+import com.mongodb.ServerAddress;
+import com.redhat.thermostat.common.ssl.SSLContextFactory;
+import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
-import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
-import com.redhat.thermostat.storage.mongodb.internal.MongoConnection;
+import com.redhat.thermostat.storage.core.ConnectionException;
 
-@PrepareForTest(MongoConnection.class)
 @RunWith(PowerMockRunner.class)
+// There is a bug (resolved as wontfix) in powermock which results in
+// java.lang.LinkageError if javax.management.* classes aren't ignored by
+// Powermock. More here: http://code.google.com/p/powermock/issues/detail?id=277
+// SSL tests need this and having that annotation on method level doesn't seem
+// to solve the issue.
+@PowerMockIgnore( {"javax.management.*"})
 public class MongoConnectionTest {
 
     private MongoConnection conn;
@@ -84,6 +103,7 @@ public class MongoConnectionTest {
         conn = null;
     }
 
+    @PrepareForTest({ MongoConnection.class })
     @Test
     public void testConnectSuccess() throws Exception {
         DBCollection collection = mock(DBCollection.class);
@@ -97,6 +117,7 @@ public class MongoConnectionTest {
         verify(listener).changed(ConnectionStatus.CONNECTED);
     }
 
+    @PrepareForTest({ MongoConnection.class })
     @Test
     public void testConnectIOException() throws Exception {
         PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new IOException());
@@ -110,9 +131,10 @@ public class MongoConnectionTest {
         assertTrue(exceptionThrown);
     }
 
+    @PrepareForTest({ MongoConnection.class })
     @Test
     public void testConnectMongoException() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenThrow(new MongoException("fluff"));
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(ServerAddress.class).withArguments(any(ServerAddress.class)).thenThrow(new MongoException("fluff"));
         boolean exceptionThrown = false;
         try {
             conn.connect();
@@ -122,6 +144,83 @@ public class MongoConnectionTest {
 
         verify(listener).changed(ConnectionStatus.FAILED_TO_CONNECT);
         assertTrue(exceptionThrown);
+    }
+    
+    @PrepareForTest({ MongoConnection.class, SSLKeystoreConfiguration.class,
+        SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
+    @Test
+    public void verifySSLSocketFactoryUsedIfSSLEnabled() throws Exception {
+        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
+        when(SSLKeystoreConfiguration.useSslForMongodb()).thenReturn(true);
+        
+        PowerMockito.mockStatic(SSLContextFactory.class);
+        // SSL classes need to be mocked with PowerMockito
+        SSLContext context = PowerMockito.mock(SSLContext.class);
+        when(SSLContextFactory.getClientContext()).thenReturn(context);
+        SSLSocketFactory factory = PowerMockito.mock(SSLSocketFactory.class);
+        when(context.getSocketFactory()).thenReturn(factory);
+        Mongo mockMongo = mock(Mongo.class);
+        ArgumentCaptor<MongoOptions> mongoOptCaptor = ArgumentCaptor.forClass(MongoOptions.class);
+        whenNew(Mongo.class).withParameterTypes(ServerAddress.class,
+                MongoOptions.class).withArguments(any(ServerAddress.class),
+                mongoOptCaptor.capture()).thenReturn(mockMongo);
+        DB mockDb = mock(DB.class);
+        when(mockMongo.getDB(eq(MongoConnection.THERMOSTAT_DB_NAME))).thenReturn(mockDb);
+        DBCollection mockCollection = mock(DBCollection.class);
+        when(mockDb.getCollection(any(String.class))).thenReturn(mockCollection);
+        conn.connect();
+        Mongo mongo = conn.getMongo();
+        assertEquals(mockMongo, mongo);
+        MongoOptions opts = mongoOptCaptor.getValue();
+        assertTrue(opts.socketFactory instanceof SSLSocketFactory);
+        assertEquals(factory, opts.socketFactory);
+    }
+    
+    @PrepareForTest({ SSLKeystoreConfiguration.class,
+        SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
+    @Test
+    public void verifyNoSSLSocketFactoryUsedIfSSLDisabled() throws Exception {
+        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
+        when(SSLKeystoreConfiguration.useSslForMongodb()).thenReturn(false);
+        
+        MongoConnection connection = mock(MongoConnection.class);
+        connection.connect();
+        verify(connection, Mockito.times(0)).getSSLMongo();
+    }
+    
+    @Test
+    public void canGetServerAddress() {
+        StartupConfiguration config = new StartupConfiguration() {
+            
+            @Override
+            public String getDBConnectionString() {
+                return "mongodb://127.0.1.1:23452";
+            }
+        };
+        MongoConnection connection = new MongoConnection(config);
+        ServerAddress addr = null;
+        try {
+            addr = connection.getServerAddress();
+        } catch (UnknownHostException e) {
+            fail("Should not have thrown exception!");
+        }
+        assertEquals(23452, addr.getPort());
+        assertEquals("127.0.1.1", addr.getHost());
+        
+        config = new StartupConfiguration() {
+            
+            @Override
+            public String getDBConnectionString() {
+                return "fluff://willnotwork.com:23452";
+            }
+        };
+        connection = new MongoConnection(config);
+        try {
+            connection.getServerAddress();
+            fail("should not have been able to parse address");
+        } catch (UnknownHostException e) {
+            // pass
+        }
     }
 }
 

@@ -50,6 +50,7 @@ public class SSLKeystoreConfiguration {
     private static final String KEYSTORE_FILE_KEY = "KEYSTORE_FILE";
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
     private static final String CMD_CHANNEL_SSL_KEY = "COMMAND_CHANNEL_USE_SSL";
+    private static final String MONGO_CONNECTION_USE_SSL_KEY = "MONGODB_CONNECTION_USE_SSL";
 
     /**
      * 
@@ -108,6 +109,27 @@ public class SSLKeystoreConfiguration {
             return result;
         }
         String token = clientProps.getProperty(CMD_CHANNEL_SSL_KEY);
+        if (token != null) {
+            result = Boolean.parseBoolean(token);
+        }
+        return result;
+    }
+    
+    /**
+     * 
+     * @return true if and only if SSL should be used for mongodb connections on
+     *         client side. I.e. if $THERMOSTAT_HOME/etc/ssl.properties exists
+     *         and proper config has been added. false otherwise.
+     */
+    public static boolean useSslForMongodb() {
+        boolean result = false;
+        try {
+            loadClientProperties();
+        } catch (InvalidConfigurationException e) {
+            // Thermostat home not set? Do something reasonable
+            return result;
+        }
+        String token = clientProps.getProperty(MONGO_CONNECTION_USE_SSL_KEY);
         if (token != null) {
             result = Boolean.parseBoolean(token);
         }

@@ -42,8 +42,8 @@ import java.util.List;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.AbstractCommand;
-import com.redhat.thermostat.web.server.IpPortPair;
-import com.redhat.thermostat.web.server.IpPortsParser;
+import com.redhat.thermostat.common.utils.HostPortPair;
+import com.redhat.thermostat.common.utils.HostPortsParser;
 
 public class WebServiceCommand extends AbstractCommand {
 
@@ -99,14 +99,14 @@ public class WebServiceCommand extends AbstractCommand {
     	return false;
     }
 
-    private List<IpPortPair> parseIPsPorts(String rawIpsPorts) throws CommandException {
-        IpPortsParser parser = new IpPortsParser(rawIpsPorts);
+    private List<HostPortPair> parseIPsPorts(String rawIpsPorts) throws CommandException {
+        HostPortsParser parser = new HostPortsParser(rawIpsPorts);
         try {
            parser.parse(); 
         } catch (IllegalArgumentException e) {
             throw new CommandException(e);
         }
-        return parser.getIpsPorts();
+        return parser.getHostsPorts();
     }
 
 }
