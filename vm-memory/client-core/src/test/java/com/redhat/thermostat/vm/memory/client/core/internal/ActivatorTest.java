@@ -49,7 +49,7 @@ import com.redhat.thermostat.gc.remote.common.GCRequest;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.vm.memory.client.core.MemoryStatsService;
+import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class ActivatorTest {
@@ -78,23 +78,25 @@ public class ActivatorTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         GCRequest gcRequest = mock(GCRequest.class);
         AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        MemoryStatsViewProvider viewProvider = mock(MemoryStatsViewProvider.class);
 
         context.registerService(VmInfoDAO.class, vmInfoDAO, null);
         context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
         context.registerService(ApplicationService.class, appSvc, null);
         context.registerService(GCRequest.class, gcRequest, null);
         context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
+        context.registerService(MemoryStatsViewProvider.class, viewProvider, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), MemoryStatsService.class));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), MemoryStatsServiceImpl.class));
 
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(5, context.getAllServices().size());
+        assertEquals(6, context.getAllServices().size());
     }
 
 }

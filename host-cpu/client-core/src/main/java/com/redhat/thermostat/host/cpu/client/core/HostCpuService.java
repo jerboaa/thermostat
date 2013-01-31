@@ -36,48 +36,11 @@
 
 package com.redhat.thermostat.host.cpu.client.core;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.host.cpu.client.core.internal.HostCpuController;
-import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-public class HostCpuService implements InformationService<HostRef> {
-    
-    private static final int ORDER = ORDER_CPU_GROUP;
-    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
+public interface HostCpuService extends InformationService<HostRef> {
 
-    private ApplicationService appSvc;
-    private HostInfoDAO hostInfoDAO;
-    private CpuStatDAO cpuStatDAO;
-    
-    public HostCpuService(ApplicationService appSvc, HostInfoDAO hostInfoDAO, CpuStatDAO cpuStatDAO) {
-        this.appSvc = appSvc;
-        this.hostInfoDAO = hostInfoDAO;
-        this.cpuStatDAO = cpuStatDAO;
-    }
-
-    @Override
-    public Filter<HostRef> getFilter() {
-        return FILTER;
-    }
-
-    @Override
-    public InformationServiceController<HostRef> getInformationServiceController(
-            HostRef ref) {
-        HostCpuViewProvider provider = OSGIUtils.getInstance().getService(HostCpuViewProvider.class);
-        return new HostCpuController(appSvc, hostInfoDAO, cpuStatDAO, ref, provider);
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
+    public static final String SERVICE_ID = "com.redhat.thermostat.host.cpu";
 
 }
-

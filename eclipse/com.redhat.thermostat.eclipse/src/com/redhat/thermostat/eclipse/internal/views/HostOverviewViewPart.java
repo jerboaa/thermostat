@@ -36,27 +36,32 @@
 
 package com.redhat.thermostat.eclipse.internal.views;
 
-import org.eclipse.swt.widgets.Composite;
+import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.client.core.views.ViewProvider;
+import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
-import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostOverviewViewPart extends HostRefViewPart {
+    
+    public HostOverviewViewPart() {
+        this(Activator.getDefault().getBundle().getBundleContext());
+    }
+    
+    public HostOverviewViewPart(BundleContext context) {
+        super(context);
+    }
 
     @Override
-    protected SWTComponent createControllerView(HostRef ref, Composite top) {
-        SWTHostOverviewViewProvider provider = (SWTHostOverviewViewProvider) OSGIUtils
-                .getInstance().getService(HostOverviewViewProvider.class);
-        provider.setParent(top);
+    protected Class<? extends ViewProvider> getViewProviderClass() {
+        return HostOverviewViewProvider.class;
+    }
 
-        HostOverviewService service = OSGIUtils.getInstance().getService(HostOverviewService.class);
-        InformationServiceController<HostRef> controller = service.getInformationServiceController(ref);
-        return (SWTComponent) controller.getView();
+    @Override
+    protected String getInformationServiceID() {
+        return HostOverviewService.SERVICE_ID;
     }
 
 }

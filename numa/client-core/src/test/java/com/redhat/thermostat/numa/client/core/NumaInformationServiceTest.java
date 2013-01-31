@@ -45,6 +45,7 @@ import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.numa.client.core.internal.NumaController;
+import com.redhat.thermostat.numa.client.core.internal.NumaInformationServiceImpl;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.storage.core.HostRef;
 
@@ -64,7 +65,7 @@ public class NumaInformationServiceTest {
         NumaView view = mock(NumaView.class);
         when(numaViewProvider.createView()).thenReturn(view);
 
-        NumaInformationService numaInfoService = new NumaInformationService(appSvc, numaDAO, numaViewProvider);
+        NumaInformationServiceImpl numaInfoService = new NumaInformationServiceImpl(appSvc, numaDAO, numaViewProvider);
 
         int order = numaInfoService.getOrderValue();
         assertEquals(Ordered.ORDER_MEMORY_GROUP, order);

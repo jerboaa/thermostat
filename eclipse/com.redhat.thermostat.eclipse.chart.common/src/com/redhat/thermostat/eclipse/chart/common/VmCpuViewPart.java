@@ -36,29 +36,31 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import org.eclipse.swt.widgets.Composite;
+import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class VmCpuViewPart extends VmRefViewPart {
 
+    public VmCpuViewPart() {
+        this(Activator.getDefault().getBundle().getBundleContext());
+    }
+    
+    public VmCpuViewPart(BundleContext context) {
+        super(context);
+    }
+
     @Override
-    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        SWTVmCpuViewProvider viewProvider = (SWTVmCpuViewProvider) OSGIUtils
-                .getInstance().getService(VmCpuViewProvider.class);
-        viewProvider.setParent(parent);
-        
-        VmCpuService service = OSGIUtils.getInstance().getService(VmCpuService.class);
-        InformationServiceController<VmRef> controller = service.getInformationServiceController(ref);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
+    protected Class<? extends ViewProvider> getViewProviderClass() {
+        return VmCpuViewProvider.class;
+    }
+
+    @Override
+    protected String getInformationServiceID() {
+        return VmCpuService.SERVICE_ID;
     }
 
 }
-

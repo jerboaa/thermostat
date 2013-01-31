@@ -46,7 +46,7 @@ import org.junit.Test;
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
 public class ActivatorTest {
@@ -72,20 +72,22 @@ public class ActivatorTest {
         StubBundleContext context = new StubBundleContext();
         ApplicationService appService = mock(ApplicationService.class);
         VmClassStatDAO daoService = mock(VmClassStatDAO.class);
+        VmClassStatViewProvider viewProvider = mock(VmClassStatViewProvider.class);
 
         context.registerService(ApplicationService.class, appService, null);
         context.registerService(VmClassStatDAO.class, daoService, null);
+        context.registerService(VmClassStatViewProvider.class, viewProvider, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), VmClassStatService.class));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), VmClassStatServiceImpl.class));
 
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(2, context.getAllServices().size());
+        assertEquals(3, context.getAllServices().size());
     }
 
 }

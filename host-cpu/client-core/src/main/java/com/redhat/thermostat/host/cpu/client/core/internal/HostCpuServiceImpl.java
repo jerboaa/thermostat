@@ -34,13 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.client.core;
+package com.redhat.thermostat.host.cpu.client.core.internal;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
+import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-public interface MemoryStatsService extends InformationService<VmRef> {
+public class HostCpuServiceImpl implements HostCpuService {
+    
+    private static final int ORDER = ORDER_CPU_GROUP;
+    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
-    public static final String SERVICE_ID = "com.redhat.thermostat.vm.memory";
+    private ApplicationService appSvc;
+    private HostInfoDAO hostInfoDAO;
+    private CpuStatDAO cpuStatDAO;
+    private HostCpuViewProvider viewProvider;
+    
+    public HostCpuServiceImpl(ApplicationService appSvc, HostInfoDAO hostInfoDAO,
+            CpuStatDAO cpuStatDAO, HostCpuViewProvider viewProvider) {
+        this.appSvc = appSvc;
+        this.hostInfoDAO = hostInfoDAO;
+        this.cpuStatDAO = cpuStatDAO;
+        this.viewProvider = viewProvider;
+    }
+
+    @Override
+    public Filter<HostRef> getFilter() {
+        return FILTER;
+    }
+
+    @Override
+    public InformationServiceController<HostRef> getInformationServiceController(
+            HostRef ref) {
+        return new HostCpuController(appSvc, hostInfoDAO, cpuStatDAO, ref, viewProvider);
+    }
+
+    @Override
+    public int getOrderValue() {
+        return ORDER;
+    }
 
 }
+

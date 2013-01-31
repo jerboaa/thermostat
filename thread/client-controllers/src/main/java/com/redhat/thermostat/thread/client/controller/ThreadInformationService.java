@@ -34,13 +34,13 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.client.core;
+package com.redhat.thermostat.thread.client.controller;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.storage.core.VmRef;
 
-public interface MemoryStatsService extends InformationService<VmRef> {
+public interface ThreadInformationService extends InformationService<VmRef> {
 
-    public static final String SERVICE_ID = "com.redhat.thermostat.vm.memory";
+    public static final String SERVICE_ID = "com.redhat.thermostat.vm.thread";
 
 }

@@ -45,7 +45,6 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.numa.client.core.NumaInformationService;
 import com.redhat.thermostat.numa.client.core.NumaViewProvider;
 import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -83,7 +82,7 @@ public class ActivatorTest {
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), NumaInformationService.class));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), NumaInformationServiceImpl.class));
 
         activator.stop(context);
 

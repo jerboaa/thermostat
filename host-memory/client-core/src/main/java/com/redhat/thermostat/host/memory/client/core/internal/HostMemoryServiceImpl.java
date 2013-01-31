@@ -34,55 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.chart.common;
+package com.redhat.thermostat.host.memory.client.core.internal;
 
-import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
-import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
+import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
+import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-public class Activator extends AbstractUIPlugin {
-
-    // The plug-in ID
-    public static final String PLUGIN_ID = "com.redhat.thermostat.eclipse.chart.common"; //$NON-NLS-1$
-
-    private static Activator plugin;
-  
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext
-     * )
-     */
-    public void start(BundleContext context) throws Exception {
-        super.start(context);
-        plugin = this;
-        
-        // Register our ViewProviders
-        context.registerService(HostCpuViewProvider.class, new SWTHostCpuViewProvider(), null);
-        context.registerService(HostMemoryViewProvider.class, new SWTHostMemoryViewProvider(), null);
-        context.registerService(VmCpuViewProvider.class, new SWTVmCpuViewProvider(), null);
-        context.registerService(VmGcViewProvider.class, new SWTVmGcViewProvider(), null);
-    }
-
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext
-     * )
-     */
-    public void stop(BundleContext context) throws Exception {
-        plugin = null;
-        super.stop(context);
-    }
+public class HostMemoryServiceImpl implements HostMemoryService {
     
-    public static Activator getDefault() {
-        return plugin;
+    private static final int ORDER = ORDER_MEMORY_GROUP;
+    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
+
+    private ApplicationService appSvc;
+    private HostInfoDAO hostInfoDAO;
+    private MemoryStatDAO memoryStatDAO;
+    private HostMemoryViewProvider viewProvider;
+    
+    public HostMemoryServiceImpl(ApplicationService appSvc,
+            HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO,
+            HostMemoryViewProvider viewProvider) {
+        this.appSvc = appSvc;
+        this.hostInfoDAO = hostInfoDAO;
+        this.memoryStatDAO = memoryStatDAO;
+        this.viewProvider = viewProvider;
+    }
+
+    @Override
+    public Filter<HostRef> getFilter() {
+        return FILTER;
+    }
+
+    @Override
+    public InformationServiceController<HostRef> getInformationServiceController(
+            HostRef ref) {
+        return new HostMemoryController(appSvc, hostInfoDAO, memoryStatDAO, ref, viewProvider);
+    }
+
+    @Override
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

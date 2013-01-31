@@ -34,46 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.controller.impl;
+package com.redhat.thermostat.vm.gc.client.core.internal;
 
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
-import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
-import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.vm.gc.client.core.VmGcService;
+import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
+import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
+import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
-public class ThreadInformationService implements InformationService<VmRef> {
+public class VmGcServiceImpl implements VmGcService {
+    
+    private static final int ORDER = ORDER_MEMORY_GROUP;
+    private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
-    private static final int ORDER = ORDER_THREAD_GROUP;
+    private ApplicationService appSvc;
+    private VmMemoryStatDAO vmMemoryStatDAO;
+    private VmGcStatDAO vmGcStatDAO;
+    private VmGcViewProvider viewProvider;
     
-    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
-    private ApplicationService service;
-    private VmInfoDAO vmInfoDao;
-    private ThreadCollectorFactory collectorFactory;
-    private ThreadViewProvider viewFactory;
-    
-    public ThreadInformationService(ApplicationService appService, VmInfoDAO vmInfoDao,
-                                    ThreadCollectorFactory collectorFactory,
-                                    ThreadViewProvider viewFactory)
-    {
-        this.service = appService;
-        this.vmInfoDao = vmInfoDao;
-        this.collectorFactory = collectorFactory;
-        this.viewFactory = viewFactory;
+    public VmGcServiceImpl(ApplicationService appSvc,
+            VmMemoryStatDAO vmMemoryStatDAO, VmGcStatDAO vmGcStatDAO,
+            VmGcViewProvider viewProvider) {
+        this.appSvc = appSvc;
+        this.vmMemoryStatDAO = vmMemoryStatDAO;
+        this.vmGcStatDAO = vmGcStatDAO;
+        this.viewProvider = viewProvider;
     }
-    
+
+    @Override
+    public InformationServiceController<VmRef> getInformationServiceController(
+            VmRef ref) {
+        return new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, ref, viewProvider);
+    }
+
     @Override
     public Filter<VmRef> getFilter() {
-        return filter;
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        return new ThreadInformationController(ref, service, vmInfoDao, collectorFactory, viewFactory);
+        return FILTER;
     }
 
     @Override

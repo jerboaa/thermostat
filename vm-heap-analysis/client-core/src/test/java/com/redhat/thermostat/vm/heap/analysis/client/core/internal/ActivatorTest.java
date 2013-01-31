@@ -47,7 +47,11 @@ import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
-import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
@@ -76,22 +80,34 @@ public class ActivatorTest {
         VmMemoryStatDAO vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         HeapDAO heapDAO = mock(HeapDAO.class);
         ApplicationService appSvc = mock(ApplicationService.class);
+        
+        HeapViewProvider viewProvider = mock(HeapViewProvider.class);
+        HeapDumpDetailsViewProvider detailsViewProvider = mock(HeapDumpDetailsViewProvider.class);
+        HeapHistogramViewProvider histogramViewProvider = mock(HeapHistogramViewProvider.class);
+        ObjectDetailsViewProvider objectDetailsViewProvider = mock(ObjectDetailsViewProvider.class);
+        ObjectRootsViewProvider objectRootsViewProvider = mock(ObjectRootsViewProvider.class);
 
         context.registerService(VmInfoDAO.class, vmInfoDao, null);
         context.registerService(VmMemoryStatDAO.class, vmMemoryStatDAO, null);
         context.registerService(HeapDAO.class, heapDAO, null);
         context.registerService(ApplicationService.class, appSvc, null);
+        
+        context.registerService(HeapViewProvider.class, viewProvider, null);
+        context.registerService(HeapDumpDetailsViewProvider.class, detailsViewProvider, null);
+        context.registerService(HeapHistogramViewProvider.class, histogramViewProvider, null);
+        context.registerService(ObjectDetailsViewProvider.class, objectDetailsViewProvider, null);
+        context.registerService(ObjectRootsViewProvider.class, objectRootsViewProvider, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), HeapDumperService.class));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), HeapDumperServiceImpl.class));
 
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(4, context.getAllServices().size());
+        assertEquals(9, context.getAllServices().size());
     }
 
 }

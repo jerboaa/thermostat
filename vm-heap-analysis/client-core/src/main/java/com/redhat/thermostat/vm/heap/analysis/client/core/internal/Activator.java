@@ -52,7 +52,12 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumpDetailsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.client.core.HeapDumperService;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapHistogramViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.HeapViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectDetailsViewProvider;
+import com.redhat.thermostat.vm.heap.analysis.client.core.ObjectRootsViewProvider;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
@@ -68,6 +73,11 @@ public class Activator implements BundleActivator {
             VmInfoDAO.class,
             VmMemoryStatDAO.class,
             HeapDAO.class,
+            HeapViewProvider.class,
+            HeapDumpDetailsViewProvider.class,
+            HeapHistogramViewProvider.class,
+            ObjectDetailsViewProvider.class,
+            ObjectRootsViewProvider.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -81,10 +91,28 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(vmMemoryStatDao);
                 HeapDAO heapDao = (HeapDAO) services.get(HeapDAO.class.getName());
                 Objects.requireNonNull(heapDao);
+                HeapViewProvider viewProvider = (HeapViewProvider) services.get(HeapViewProvider.class.getName());
+                Objects.requireNonNull(viewProvider);
+                HeapDumpDetailsViewProvider detailsViewProvider = (HeapDumpDetailsViewProvider) services
+                        .get(HeapDumpDetailsViewProvider.class.getName());
+                Objects.requireNonNull(detailsViewProvider);
+                HeapHistogramViewProvider histogramViewProvider = (HeapHistogramViewProvider) services
+                        .get(HeapHistogramViewProvider.class.getName());
+                Objects.requireNonNull(histogramViewProvider);
+                ObjectDetailsViewProvider objectDetailsViewProvider = (ObjectDetailsViewProvider) services
+                        .get(ObjectDetailsViewProvider.class.getName());
+                Objects.requireNonNull(objectDetailsViewProvider);
+                ObjectRootsViewProvider objectRootsViewProvider = (ObjectRootsViewProvider) services
+                        .get(ObjectRootsViewProvider.class.getName());
+                Objects.requireNonNull(objectRootsViewProvider);
 
-                HeapDumperService service = new HeapDumperService(appSvc, vmInfoDao, vmMemoryStatDao, heapDao);
+                HeapDumperService service = new HeapDumperServiceImpl(appSvc,
+                        vmInfoDao, vmMemoryStatDao, heapDao, viewProvider,
+                        detailsViewProvider, histogramViewProvider,
+                        objectDetailsViewProvider, objectRootsViewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, HeapDumperService.SERVICE_ID);
                 reg = context.registerService(InformationService.class.getName(), service , properties);
             }
 

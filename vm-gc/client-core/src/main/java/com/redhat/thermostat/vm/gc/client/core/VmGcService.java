@@ -36,48 +36,11 @@
 
 package com.redhat.thermostat.vm.gc.client.core;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.vm.gc.client.core.internal.VmGcController;
-import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
-import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
-public class VmGcService implements InformationService<VmRef> {
-    
-    private static final int ORDER = ORDER_MEMORY_GROUP;
-    private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
+public interface VmGcService extends InformationService<VmRef> {
 
-    private ApplicationService appSvc;
-    private VmMemoryStatDAO vmMemoryStatDAO;
-    private VmGcStatDAO vmGcStatDAO;
-    
-    public VmGcService(ApplicationService appSvc, VmMemoryStatDAO vmMemoryStatDAO, VmGcStatDAO vmGcStatDAO) {
-        this.appSvc = appSvc;
-        this.vmMemoryStatDAO = vmMemoryStatDAO;
-        this.vmGcStatDAO = vmGcStatDAO;
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(
-            VmRef ref) {
-        VmGcViewProvider provider = OSGIUtils.getInstance().getService(VmGcViewProvider.class);
-        return new VmGcController(appSvc, vmMemoryStatDAO, vmGcStatDAO, ref, provider);
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return FILTER;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
+    public static final String SERVICE_ID = "com.redhat.thermostat.vm.gc";
 
 }
-

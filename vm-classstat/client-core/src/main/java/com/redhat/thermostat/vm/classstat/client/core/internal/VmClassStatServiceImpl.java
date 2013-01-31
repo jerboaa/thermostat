@@ -34,13 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.client.core;
+package com.redhat.thermostat.vm.classstat.client.core.internal;
 
-import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
+import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public interface MemoryStatsService extends InformationService<VmRef> {
+public class VmClassStatServiceImpl implements VmClassStatService {
+    
+    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
+    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
 
-    public static final String SERVICE_ID = "com.redhat.thermostat.vm.memory";
+    private ApplicationService appSvc;
+    private VmClassStatDAO vmClassStatDao;
+    private VmClassStatViewProvider viewProvider;
 
+    public VmClassStatServiceImpl(ApplicationService appSvc,
+            VmClassStatDAO vmClassStatDao, VmClassStatViewProvider viewProvider) {
+        this.appSvc = appSvc;
+        this.vmClassStatDao = vmClassStatDao;
+        this.viewProvider = viewProvider;
+    }
+    
+    @Override
+    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
+        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
+    }
+
+    @Override
+    public Filter<VmRef> getFilter() {
+        return filter;
+    }
+
+    @Override
+    public int getOrderValue() {
+        return ORDER;
+    }
 }
+

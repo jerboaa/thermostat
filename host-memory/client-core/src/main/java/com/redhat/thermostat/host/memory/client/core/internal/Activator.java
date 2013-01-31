@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
+import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -65,7 +66,8 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
             HostInfoDAO.class,
             MemoryStatDAO.class,
-            ApplicationService.class
+            ApplicationService.class,
+            HostMemoryViewProvider.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -78,9 +80,13 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(memoryStatDAO);
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
-                HostMemoryService service = new HostMemoryService(appSvc, hostInfoDAO, memoryStatDAO);
+                HostMemoryViewProvider viewProvider = (HostMemoryViewProvider) services.get(HostMemoryViewProvider.class.getName());
+                Objects.requireNonNull(viewProvider);
+                
+                HostMemoryService service = new HostMemoryServiceImpl(appSvc, hostInfoDAO, memoryStatDAO, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, HostMemoryService.SERVICE_ID);
                 reg = context.registerService(InformationService.class.getName(), service, properties);
             }
 

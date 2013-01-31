@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.eclipse.test.views;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -46,12 +49,18 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartSite;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.junit.Before;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.client.core.InformationService;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.eclipse.SWTComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.internal.views.HostsVmsTreeViewPart;
@@ -64,27 +73,34 @@ public abstract class AbstractRefViewPartTest<T extends Ref> {
     protected RefViewPart<T> view;
     protected SWTComponent thermoView;
     protected HostsVmsTreeViewPart hostVMView;
+    protected BundleContext context;
+    protected InformationServiceController<T> controller;
     private ISelectionProvider provider;
-    protected OSGIUtils osgi;
 
     public AbstractRefViewPartTest() {
         super();
     }
 
+    @SuppressWarnings("unchecked")
     @Before
-    public void before() {
+    public void before() throws InvalidSyntaxException, PartInitException {
         parent = spy(new Shell(Display.getCurrent()));
         
-        view = spy(createViewPart());
+        context = mock(BundleContext.class);
+        view = spy(createViewPart(context));
         hostVMView = mock(HostsVmsTreeViewPart.class);
-        osgi = mock(OSGIUtils.class);
-        OSGIUtils.setInstance(osgi);
+        ServiceReference<InformationService<T>> ref = (ServiceReference<InformationService<T>>) mock(ServiceReference.class);
+        InformationService<T> infoService = (InformationService<T>) mock(InformationService.class);
+        controller = (InformationServiceController<T>) mock(InformationServiceController.class);
+        when(infoService.getInformationServiceController((T) any(Ref.class))).thenReturn(controller);
+        when(context.getService(ref)).thenReturn(infoService);
+        when(context.getServiceReferences((String) isNull(), anyString())).thenReturn(new ServiceReference<?>[] { ref });
     
         // Workbench mocks
         IWorkbenchWindow window = mock(IWorkbenchWindow.class);
         IWorkbenchPage page = mock(IWorkbenchPage.class);
         ISelectionService service = mock(ISelectionService.class);
-        IWorkbenchPartSite site = mock(IWorkbenchPartSite.class);
+        IViewSite site = mock(IViewSite.class);
         
         when(page.findView(ThermostatConstants.VIEW_ID_HOST_VM)).thenReturn(hostVMView);
         when(window.getSelectionService()).thenReturn(service);
@@ -93,8 +109,8 @@ public abstract class AbstractRefViewPartTest<T extends Ref> {
         when(site.getId()).thenReturn(getViewID());
         when(view.getSite()).thenReturn(site);
         
-        // Controller mock
-        mockController();
+        // ViewProvider mock
+        mockViewProvider();
         
         // Selection mocks
         IWorkbenchPartSite hostVMSite = mock(IWorkbenchPartSite.class);
@@ -103,11 +119,13 @@ public abstract class AbstractRefViewPartTest<T extends Ref> {
         when(hostVMSite.getId()).thenReturn(ThermostatConstants.VIEW_ID_HOST_VM);
         when(hostVMSite.getSelectionProvider()).thenReturn(provider);
         when(hostVMView.getSite()).thenReturn(hostVMSite);
+        
+        view.init(site);
     }
 
-    protected abstract void mockController();
+    protected abstract void mockViewProvider();
 
-    protected abstract RefViewPart<T> createViewPart();
+    protected abstract RefViewPart<T> createViewPart(BundleContext context);
     
     protected abstract String getViewID();
 

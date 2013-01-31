@@ -36,29 +36,31 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import org.eclipse.swt.widgets.Composite;
+import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 import com.redhat.thermostat.eclipse.views.VmRefViewPart;
-import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class VmGcViewPart extends VmRefViewPart {
 
+    public VmGcViewPart() {
+        this(Activator.getDefault().getBundle().getBundleContext());
+    }
+    
+    public VmGcViewPart(BundleContext context) {
+        super(context);
+    }
+    
     @Override
-    protected SWTComponent createControllerView(VmRef ref, Composite parent) {
-        SWTVmGcViewProvider viewProvider = (SWTVmGcViewProvider) OSGIUtils.getInstance().getService(
-                VmGcViewProvider.class);
-        viewProvider.setParent(parent);
-        
-        VmGcService service = OSGIUtils.getInstance().getService(VmGcService.class);
-        InformationServiceController<VmRef> controller = service.getInformationServiceController(ref);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
+    protected Class<? extends ViewProvider> getViewProviderClass() {
+        return VmGcViewProvider.class;
+    }
+
+    @Override
+    protected String getInformationServiceID() {
+        return VmGcService.SERVICE_ID;
     }
 
 }
-

@@ -36,45 +36,11 @@
 
 package com.redhat.thermostat.vm.cpu.client.core;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.vm.cpu.client.core.internal.VmCpuController;
-import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 
-public class VmCpuService implements InformationService<VmRef> {
-    
-    private static final int ORDER = ORDER_CPU_GROUP;
-    private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
+public interface VmCpuService extends InformationService<VmRef> {
 
-    private ApplicationService appSvc;
-    private VmCpuStatDAO vmCpuStatDAO;
-    
-    public VmCpuService(ApplicationService appSvc, VmCpuStatDAO vmCpuStatDAO) {
-        this.appSvc = appSvc;
-        this.vmCpuStatDAO = vmCpuStatDAO;
-    }
-
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(
-            VmRef ref) {
-        VmCpuViewProvider provider = OSGIUtils.getInstance().getService(VmCpuViewProvider.class);
-        return new VmCpuController(appSvc, vmCpuStatDAO, ref, provider);
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return FILTER;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
+    public static final String SERVICE_ID = "com.redhat.thermostat.vm.cpu";
 
 }
-

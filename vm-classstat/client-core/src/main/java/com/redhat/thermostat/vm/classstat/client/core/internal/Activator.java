@@ -52,6 +52,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
+import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
 public class Activator implements BundleActivator {
@@ -64,6 +65,7 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
             ApplicationService.class,
             VmClassStatDAO.class,
+            VmClassStatViewProvider.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -74,9 +76,13 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(dao);
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
-                VmClassStatService service = new VmClassStatService(appSvc, dao);
+                VmClassStatViewProvider viewProvider = (VmClassStatViewProvider) services.get(VmClassStatViewProvider.class.getName());
+                Objects.requireNonNull(viewProvider);
+                
+                VmClassStatService service = new VmClassStatServiceImpl(appSvc, dao, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, VmClassStatService.SERVICE_ID);
                 reg = context.registerService(InformationService.class.getName(), service, properties);
             }
 

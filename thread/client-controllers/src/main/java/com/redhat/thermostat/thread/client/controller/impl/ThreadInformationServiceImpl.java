@@ -34,31 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.views;
+package com.redhat.thermostat.thread.client.controller.impl;
 
-import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
+import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
 
-public abstract class VmRefViewPart extends RefViewPart<VmRef> {
-
-    public VmRefViewPart(BundleContext context) {
-        super(context);
+public class ThreadInformationServiceImpl implements ThreadInformationService {
+    
+    private static final int ORDER = ORDER_THREAD_GROUP;
+    
+    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
+    private ApplicationService service;
+    private VmInfoDAO vmInfoDao;
+    private ThreadCollectorFactory collectorFactory;
+    private ThreadViewProvider viewFactory;
+    
+    public ThreadInformationServiceImpl(ApplicationService appService, VmInfoDAO vmInfoDao,
+                                    ThreadCollectorFactory collectorFactory,
+                                    ThreadViewProvider viewFactory)
+    {
+        this.service = appService;
+        this.vmInfoDao = vmInfoDao;
+        this.collectorFactory = collectorFactory;
+        this.viewFactory = viewFactory;
+    }
+    
+    @Override
+    public Filter<VmRef> getFilter() {
+        return filter;
     }
 
     @Override
-    protected VmRef getRefFromSelection(Object selection) {
-        VmRef ref = null;
-        if (selection instanceof VmRef) {
-            ref = (VmRef) selection;
-        }
-        return ref;
+    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
+        return new ThreadInformationController(ref, service, vmInfoDao, collectorFactory, viewFactory);
     }
 
     @Override
-    protected String getNoSelectionMessage() {
-        return "No VM selected";
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

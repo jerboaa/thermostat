@@ -39,7 +39,6 @@ package com.redhat.thermostat.eclipse.chart.vmclassstat;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 /**
@@ -73,7 +72,7 @@ public class Activator extends AbstractUIPlugin {
         plugin = this;
 
         // Register view
-        OSGIUtils.getInstance().registerService(VmClassStatViewProvider.class,
+        context.registerService(VmClassStatViewProvider.class,
                 new SWTVmClassStatViewProvider(), null);
     }
 

@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.memory.client.core.internal;
 import java.util.Dictionary;
 import java.util.Hashtable;
 import java.util.Map;
+import java.util.Objects;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -54,6 +55,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.vm.memory.client.core.MemoryStatsService;
+import com.redhat.thermostat.vm.memory.client.core.MemoryStatsViewProvider;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
 public class Activator implements BundleActivator {
@@ -69,6 +71,7 @@ public class Activator implements BundleActivator {
             VmMemoryStatDAO.class,
             GCRequest.class,
             AgentInfoDAO.class,
+            MemoryStatsViewProvider.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -82,15 +85,23 @@ public class Activator implements BundleActivator {
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
                 VmInfoDAO vmInfoDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                Objects.requireNonNull(vmInfoDao);
                 VmMemoryStatDAO memoryStatDao = (VmMemoryStatDAO) services.get(VmMemoryStatDAO.class.getName());
+                Objects.requireNonNull(memoryStatDao);
                 AgentInfoDAO agentDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                Objects.requireNonNull(agentDAO);
                 GCRequest gcRequest = (GCRequest) services.get(GCRequest.class.getName());
+                Objects.requireNonNull(gcRequest);
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
+                MemoryStatsViewProvider viewProvider = (MemoryStatsViewProvider) services.get(MemoryStatsViewProvider.class.getName());
+                Objects.requireNonNull(viewProvider);
 
-                MemoryStatsService impl = new MemoryStatsService(appSvc, vmInfoDao, memoryStatDao, agentDAO, gcRequest);
+                MemoryStatsService impl = new MemoryStatsServiceImpl(appSvc, vmInfoDao, memoryStatDao, agentDAO, gcRequest, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
-                memoryStatRegistration = context.registerService(InformationService.class.getName(), impl , properties);
+                properties.put(InformationService.KEY_SERVICE_ID, MemoryStatsService.SERVICE_ID);
+                memoryStatRegistration = context.registerService(InformationService.class.getName(), impl, properties);
             }
         });
         tracker.open();

@@ -43,6 +43,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.LoggerFacility;
@@ -80,8 +81,8 @@ public class Activator extends AbstractUIPlugin {
         plugin = this;
 
         // Register ViewProvider
-        OSGIUtils.getInstance().registerService(HostOverviewViewProvider.class,
-                new SWTHostOverviewViewProvider());
+        context.registerService(HostOverviewViewProvider.class,
+                new SWTHostOverviewViewProvider(), null);
     }
 
     /*
@@ -92,14 +93,17 @@ public class Activator extends AbstractUIPlugin {
      * )
      */
     public void stop(BundleContext context) throws Exception {
-        DbService dbService = OSGIUtils.getInstance().getServiceAllowNull(
-                DbService.class);
-        if (dbService != null) {
-            try {
-                dbService.disconnect();
-            } catch (ConnectionException e) {
-                LoggerFacility.getInstance().log(IStatus.ERROR,
-                        "Error disconnecting from database", e);
+        ServiceReference<DbService> dbServiceRef = context.getServiceReference(DbService.class);
+        if (dbServiceRef != null) {
+            DbService dbService = context.getService(dbServiceRef);
+            if (dbService != null) {
+                try {
+                    dbService.disconnect();
+                    context.ungetService(dbServiceRef);
+                } catch (ConnectionException e) {
+                    LoggerFacility.getInstance().log(IStatus.ERROR,
+                            "Error disconnecting from database", e);
+                }
             }
         }
         plugin = null;

@@ -36,43 +36,11 @@
 
 package com.redhat.thermostat.vm.classstat.client.core;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.vm.classstat.client.core.internal.VmClassStatController;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public class VmClassStatService implements InformationService<VmRef> {
+public interface VmClassStatService extends InformationService<VmRef> {
 
-    private static final int ORDER = ORDER_MEMORY_GROUP + 20;
-    private Filter<VmRef> filter = new NameMatchingRefFilter<>();
+    public static final String SERVICE_ID = "com.redhat.thermostat.vm.classstat";
 
-    private ApplicationService appSvc;
-    private VmClassStatDAO vmClassStatDao;
-
-    public VmClassStatService(ApplicationService appSvc, VmClassStatDAO vmClassStatDao) {
-        this.appSvc = appSvc;
-        this.vmClassStatDao = vmClassStatDao;
-    }
-    
-    @Override
-    public InformationServiceController<VmRef> getInformationServiceController(VmRef ref) {
-        VmClassStatViewProvider viewProvider = OSGIUtils.getInstance().getService(VmClassStatViewProvider.class);
-        return new VmClassStatController(appSvc, vmClassStatDao, ref, viewProvider);
-    }
-
-    @Override
-    public Filter<VmRef> getFilter() {
-        return filter;
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
 }
-

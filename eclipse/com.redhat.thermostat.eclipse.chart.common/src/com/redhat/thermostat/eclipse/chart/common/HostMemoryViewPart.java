@@ -36,29 +36,31 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import org.eclipse.swt.widgets.Composite;
+import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
-import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostMemoryViewPart extends HostRefViewPart {
 
+    public HostMemoryViewPart() {
+        this(Activator.getDefault().getBundle().getBundleContext());
+    }
+    
+    public HostMemoryViewPart(BundleContext context) {
+        super(context);
+    }
+    
     @Override
-    protected SWTComponent createControllerView(HostRef ref, Composite parent) {
-        SWTHostMemoryViewProvider viewProvider = (SWTHostMemoryViewProvider) OSGIUtils
-                .getInstance().getService(HostMemoryViewProvider.class);
-        viewProvider.setParent(parent);
-        
-        HostMemoryService service = OSGIUtils.getInstance().getService(HostMemoryService.class);
-        InformationServiceController<HostRef> controller = service.getInformationServiceController(ref);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
+    protected Class<? extends ViewProvider> getViewProviderClass() {
+        return HostMemoryViewProvider.class;
+    }
+
+    @Override
+    protected String getInformationServiceID() {
+        return HostMemoryService.SERVICE_ID;
     }
 
 }
-

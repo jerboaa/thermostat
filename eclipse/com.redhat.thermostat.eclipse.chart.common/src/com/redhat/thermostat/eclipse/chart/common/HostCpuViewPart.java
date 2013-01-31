@@ -36,28 +36,31 @@
 
 package com.redhat.thermostat.eclipse.chart.common;
 
-import org.eclipse.swt.widgets.Composite;
+import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.eclipse.SWTComponent;
+import com.redhat.thermostat.client.core.views.ViewProvider;
 import com.redhat.thermostat.eclipse.views.HostRefViewPart;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
-import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostCpuViewPart extends HostRefViewPart {
+    
+    public HostCpuViewPart() {
+        this(Activator.getDefault().getBundle().getBundleContext());
+    }
+    
+    public HostCpuViewPart(BundleContext context) {
+        super(context);
+    }
 
     @Override
-    protected SWTComponent createControllerView(HostRef ref, Composite parent) {
-        SWTHostCpuViewProvider viewProvider = (SWTHostCpuViewProvider) OSGIUtils
-                .getInstance().getService(HostCpuViewProvider.class);
-        viewProvider.setParent(parent);
+    protected Class<? extends ViewProvider> getViewProviderClass() {
+        return HostCpuViewProvider.class;
+    }
 
-        HostCpuService service = OSGIUtils.getInstance().getService(HostCpuService.class);
-        InformationServiceController<HostRef> controller = service.getInformationServiceController(ref);
-        SWTComponent view = (SWTComponent) controller.getView();
-        return view;
+    @Override
+    protected String getInformationServiceID() {
+        return HostCpuService.SERVICE_ID;
     }
 
 }

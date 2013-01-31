@@ -47,22 +47,20 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
-import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuView;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmCpuViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmCpuViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.vm.cpu.client.core.VmCpuService;
 import com.redhat.thermostat.vm.cpu.client.core.VmCpuViewProvider;
 
 public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmCpuViewProvider viewProvider;
-    private InformationServiceController<VmRef> controller;
 
     @Test
     public void testSelectionHostRef() throws Exception {
@@ -109,22 +107,18 @@ public class VmCpuViewPartTest extends AbstractRefViewPartTest<VmRef> {
     }
 
     @Override
-    protected void mockController() {
-        VmCpuService service = mock(VmCpuService.class);
-        controller = mock(InformationServiceController.class);
-        thermoView = mock(SWTVmCpuView.class);
-        
-        when(osgi.getService(VmCpuService.class)).thenReturn(service);
-        when(service.getInformationServiceController(any(VmRef.class))).thenReturn(controller);
-        when(controller.getView()).thenReturn(thermoView);
-
+    protected void mockViewProvider() {
         viewProvider = mock(SWTVmCpuViewProvider.class);
-        when(osgi.getService(VmCpuViewProvider.class)).thenReturn(viewProvider);
+        @SuppressWarnings("unchecked")
+        ServiceReference<VmCpuViewProvider> ref = (ServiceReference<VmCpuViewProvider>) mock(ServiceReference.class);
+        when(context.getService(ref)).thenReturn(viewProvider);
+        when(context.getServiceReference(VmCpuViewProvider.class)).thenReturn(
+                ref);
     }
 
     @Override
-    protected RefViewPart<VmRef> createViewPart() {
-        return new VmCpuViewPart();
+    protected RefViewPart<VmRef> createViewPart(BundleContext context) {
+        return new VmCpuViewPart(context);
     }
 
     @Override

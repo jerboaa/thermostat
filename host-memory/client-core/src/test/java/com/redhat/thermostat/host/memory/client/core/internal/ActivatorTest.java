@@ -45,7 +45,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
+import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
@@ -74,21 +74,23 @@ public class ActivatorTest {
         HostInfoDAO hostInfoDAO = mock(HostInfoDAO.class);
         MemoryStatDAO memoryStatDAO = mock(MemoryStatDAO.class);
         ApplicationService appSvc = mock(ApplicationService.class);
+        HostMemoryViewProvider viewProvider = mock(HostMemoryViewProvider.class);
 
         context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         context.registerService(MemoryStatDAO.class, memoryStatDAO, null);
         context.registerService(ApplicationService.class, appSvc, null);
+        context.registerService(HostMemoryViewProvider.class, viewProvider, null);
 
         Activator activator = new Activator();
 
         activator.start(context);
 
-        assertTrue(context.isServiceRegistered(InformationService.class.getName(), HostMemoryService.class));
+        assertTrue(context.isServiceRegistered(InformationService.class.getName(), HostMemoryServiceImpl.class));
 
         activator.stop(context);
 
         assertEquals(0, context.getServiceListeners().size());
-        assertEquals(3, context.getAllServices().size());
+        assertEquals(4, context.getAllServices().size());
     }
 
 }

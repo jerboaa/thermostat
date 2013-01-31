@@ -45,22 +45,20 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.Activator;
-import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatView;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.SWTVmClassStatViewProvider;
 import com.redhat.thermostat.eclipse.chart.vmclassstat.VmClassStatViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.vm.classstat.client.core.VmClassStatService;
 import com.redhat.thermostat.vm.classstat.client.core.VmClassStatViewProvider;
 
 public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmClassStatViewProvider viewProvider;
-    private InformationServiceController<VmRef> controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -81,22 +79,18 @@ public class VmClassStatViewPartTest extends AbstractRefViewPartTest<VmRef> {
     }
 
     @Override
-    protected void mockController() {
-        VmClassStatService service = mock(VmClassStatService.class);
-        controller = mock(InformationServiceController.class);
-        thermoView = mock(SWTVmClassStatView.class);
-
-        when(osgi.getService(VmClassStatService.class)).thenReturn(service);
-        when(service.getInformationServiceController(any(VmRef.class))).thenReturn(controller);
-        when(controller.getView()).thenReturn(thermoView);
-        
+    protected void mockViewProvider() {
         viewProvider = mock(SWTVmClassStatViewProvider.class);
-        when(osgi.getService(VmClassStatViewProvider.class)).thenReturn(viewProvider);
+        @SuppressWarnings("unchecked")
+        ServiceReference<VmClassStatViewProvider> ref = (ServiceReference<VmClassStatViewProvider>) mock(ServiceReference.class);
+        when(context.getService(ref)).thenReturn(viewProvider);
+        when(context.getServiceReference(VmClassStatViewProvider.class)).thenReturn(
+                ref);
     }
 
     @Override
-    protected RefViewPart<VmRef> createViewPart() {
-        return new VmClassStatViewPart();
+    protected RefViewPart<VmRef> createViewPart(BundleContext context) {
+        return new VmClassStatViewPart(context);
     }
 
     @Override

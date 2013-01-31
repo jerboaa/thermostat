@@ -45,22 +45,19 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.chart.common.HostMemoryViewPart;
-import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryView;
 import com.redhat.thermostat.eclipse.chart.common.SWTHostMemoryViewProvider;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
-import com.redhat.thermostat.host.memory.client.core.HostMemoryService;
 import com.redhat.thermostat.host.memory.client.core.HostMemoryViewProvider;
 import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
     private SWTHostMemoryViewProvider viewProvider;
-    private InformationServiceController<HostRef> controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -80,23 +77,17 @@ public class HostMemoryViewPartTest extends AbstractRefViewPartTest<HostRef> {
     }
 
     @Override
-    protected void mockController() {
-        HostMemoryService service = mock(HostMemoryService.class);
-        controller = mock(InformationServiceController.class);
-        thermoView = mock(SWTHostMemoryView.class);
-
-        when(osgi.getService(HostMemoryService.class)).thenReturn(service);
-        when(service.getInformationServiceController(any(HostRef.class))).thenReturn(controller);
-        when(controller.getView()).thenReturn((UIComponent) thermoView);
-        
+    protected void mockViewProvider() {
         viewProvider = mock(SWTHostMemoryViewProvider.class);
-        when(osgi.getService(HostMemoryViewProvider.class)).thenReturn(
-                viewProvider);
+        @SuppressWarnings("unchecked")
+        ServiceReference<HostMemoryViewProvider> ref = (ServiceReference<HostMemoryViewProvider>) mock(ServiceReference.class);
+        when(context.getService(ref)).thenReturn(viewProvider);
+        when(context.getServiceReference(HostMemoryViewProvider.class)).thenReturn(ref);
     }
 
     @Override
-    protected RefViewPart<HostRef> createViewPart() {
-        return new HostMemoryViewPart();
+    protected RefViewPart<HostRef> createViewPart(BundleContext context) {
+        return new HostMemoryViewPart(context);
     }
 
     @Override

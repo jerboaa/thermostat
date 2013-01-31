@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
@@ -65,7 +66,8 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
             HostInfoDAO.class,
             NetworkInterfaceInfoDAO.class,
-            ApplicationService.class
+            ApplicationService.class,
+            HostOverviewViewProvider.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -79,9 +81,14 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(networkInfoDAO);
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
-                HostOverviewService service = new HostOverviewService(appSvc, hostInfoDAO, networkInfoDAO);
+                HostOverviewViewProvider viewProvider = (HostOverviewViewProvider) services
+                        .get(HostOverviewViewProvider.class.getName());
+                Objects.requireNonNull(viewProvider);
+                
+                HostOverviewService service = new HostOverviewServiceImpl(appSvc, hostInfoDAO, networkInfoDAO, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, HostOverviewService.SERVICE_ID);
                 reg = context.registerService(InformationService.class.getName(), service, properties);
             }
 

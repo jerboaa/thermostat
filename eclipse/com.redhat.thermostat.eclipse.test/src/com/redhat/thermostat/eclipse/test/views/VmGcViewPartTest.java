@@ -45,22 +45,20 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
-import com.redhat.thermostat.eclipse.chart.common.SWTVmGcView;
 import com.redhat.thermostat.eclipse.chart.common.SWTVmGcViewProvider;
 import com.redhat.thermostat.eclipse.chart.common.VmGcViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.vm.gc.client.core.VmGcService;
 import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 
 public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
 
     private SWTVmGcViewProvider viewProvider;
-    private InformationServiceController<VmRef> controller;
 
     @Test
     public void testSelectionAfter() throws Exception {
@@ -81,22 +79,18 @@ public class VmGcViewPartTest extends AbstractRefViewPartTest<VmRef> {
     }
 
     @Override
-    protected void mockController() {
-        VmGcService service = mock(VmGcService.class);
-        controller = mock(InformationServiceController.class);
-        thermoView = mock(SWTVmGcView.class);
-
-        when(osgi.getService(VmGcService.class)).thenReturn(service);
-        when(service.getInformationServiceController(any(VmRef.class))).thenReturn(controller);
-        when(controller.getView()).thenReturn(thermoView);
-
+    protected void mockViewProvider() {
         viewProvider = mock(SWTVmGcViewProvider.class);
-        when(osgi.getService(VmGcViewProvider.class)).thenReturn(viewProvider);
+        @SuppressWarnings("unchecked")
+        ServiceReference<VmGcViewProvider> ref = (ServiceReference<VmGcViewProvider>) mock(ServiceReference.class);
+        when(context.getService(ref)).thenReturn(viewProvider);
+        when(context.getServiceReference(VmGcViewProvider.class)).thenReturn(
+                ref);
     }
 
     @Override
-    protected RefViewPart<VmRef> createViewPart() {
-        return new VmGcViewPart();
+    protected RefViewPart<VmRef> createViewPart(BundleContext context) {
+        return new VmGcViewPart(context);
     }
 
     @Override

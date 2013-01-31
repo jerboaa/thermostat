@@ -54,7 +54,8 @@ import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.thread.client.common.ThreadViewProvider;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
-import com.redhat.thermostat.thread.client.controller.impl.ThreadInformationService;
+import com.redhat.thermostat.thread.client.controller.ThreadInformationService;
+import com.redhat.thermostat.thread.client.controller.impl.ThreadInformationServiceImpl;
 
 public class Activator implements BundleActivator {
 
@@ -80,9 +81,10 @@ public class Activator implements BundleActivator {
                 VmInfoDAO vmInfoDao = Objects.requireNonNull((VmInfoDAO) services.get(VmInfoDAO.class.getName()));
                 ThreadViewProvider viewFactory = (ThreadViewProvider) services.get(ThreadViewProvider.class.getName());
                 
-                InformationService<VmRef> vmInfoService = new ThreadInformationService(applicationService, vmInfoDao, collectorFactory, viewFactory);
+                ThreadInformationService vmInfoService = new ThreadInformationServiceImpl(applicationService, vmInfoDao, collectorFactory, viewFactory);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, ThreadInformationService.SERVICE_ID);
                 registration = context.registerService(InformationService.class.getName(), vmInfoService, properties);
             }
 

@@ -45,21 +45,18 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Composite;
 import org.junit.Test;
 import org.mockito.InOrder;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.views.UIComponent;
 import com.redhat.thermostat.eclipse.ThermostatConstants;
 import com.redhat.thermostat.eclipse.internal.views.HostOverviewViewPart;
 import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
-import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewView;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
-import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.HostRef;
 
 public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
 
-    private InformationServiceController<HostRef> controller;
     private SWTHostOverviewViewProvider viewProvider;
     
     @Test
@@ -80,23 +77,18 @@ public class HostOverviewViewPartTest extends AbstractRefViewPartTest<HostRef> {
     }
 
     @Override
-    protected void mockController() {
-        HostOverviewService service = mock(HostOverviewService.class);
-        controller = mock(InformationServiceController.class);
-        thermoView = mock(SWTHostOverviewView.class);
-
-        when(osgi.getService(HostOverviewService.class)).thenReturn(service);
-        when(service.getInformationServiceController(any(HostRef.class))).thenReturn(controller);
-        when(controller.getView()).thenReturn((UIComponent) thermoView);
-        
+    protected void mockViewProvider() {
         viewProvider = mock(SWTHostOverviewViewProvider.class);
-        when(osgi.getService(HostOverviewViewProvider.class)).thenReturn(
-                viewProvider);
+        @SuppressWarnings("unchecked")
+        ServiceReference<HostOverviewViewProvider> ref = (ServiceReference<HostOverviewViewProvider>) mock(ServiceReference.class);
+        when(context.getService(ref)).thenReturn(viewProvider);
+        when(context.getServiceReference(HostOverviewViewProvider.class)).thenReturn(
+                ref);
     }
 
     @Override
-    protected RefViewPart<HostRef> createViewPart() {
-        return new HostOverviewViewPart();
+    protected RefViewPart<HostRef> createViewPart(BundleContext context) {
+        return new HostOverviewViewPart(context);
     }
 
     @Override

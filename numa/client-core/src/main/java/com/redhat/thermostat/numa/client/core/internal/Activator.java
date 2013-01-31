@@ -78,9 +78,10 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(appSvc);
                 NumaViewProvider numaViewProvider = (NumaViewProvider) services.get(NumaViewProvider.class.getName());
                 Objects.requireNonNull(numaViewProvider);
-                NumaInformationService service = new NumaInformationService(appSvc, numaDAO, numaViewProvider);
+                NumaInformationServiceImpl service = new NumaInformationServiceImpl(appSvc, numaDAO, numaViewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, NumaInformationService.SERVICE_ID);
                 reg = context.registerService(InformationService.class.getName(), service, properties);
             }
 

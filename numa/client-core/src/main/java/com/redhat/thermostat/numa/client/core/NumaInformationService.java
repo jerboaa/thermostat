@@ -36,44 +36,11 @@
 
 package com.redhat.thermostat.numa.client.core;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.numa.client.core.internal.NumaController;
-import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.storage.core.HostRef;
 
-public class NumaInformationService implements InformationService<HostRef> {
+public interface NumaInformationService extends InformationService<HostRef> {
     
-    private static final int ORDER = ORDER_MEMORY_GROUP;
-    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
-
-    private ApplicationService appSvc;
-    private NumaDAO numaDAO;
-    private NumaViewProvider numaViewProvider;
-
-    public NumaInformationService(ApplicationService appSvc, NumaDAO numaDAO, NumaViewProvider numaViewProvider) {
-        this.appSvc = appSvc;
-        this.numaDAO = numaDAO;
-        this.numaViewProvider = numaViewProvider;
-    }
-
-    @Override
-    public Filter<HostRef> getFilter() {
-        return FILTER;
-    }
-
-    @Override
-    public InformationServiceController<HostRef> getInformationServiceController(HostRef ref) {
-        return new NumaController(appSvc, numaDAO, ref, numaViewProvider);
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
+    public static final String SERVICE_ID = "com.redhat.thermostat.host.numa";
 
 }
-

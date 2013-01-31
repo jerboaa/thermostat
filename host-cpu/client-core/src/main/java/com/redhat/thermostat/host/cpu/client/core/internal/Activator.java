@@ -51,6 +51,7 @@ import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.host.cpu.client.core.HostCpuService;
+import com.redhat.thermostat.host.cpu.client.core.HostCpuViewProvider;
 import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -65,7 +66,8 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
             HostInfoDAO.class,
             CpuStatDAO.class,
-            ApplicationService.class
+            ApplicationService.class,
+            HostCpuViewProvider.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -78,9 +80,13 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(cpuStatDAO);
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
-                HostCpuService service = new HostCpuService(appSvc, hostInfoDAO, cpuStatDAO);
+                HostCpuViewProvider viewProvider = (HostCpuViewProvider) services.get(HostCpuViewProvider.class.getName());
+                Objects.requireNonNull(viewProvider);
+                
+                HostCpuService service = new HostCpuServiceImpl(appSvc, hostInfoDAO, cpuStatDAO, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, HostRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, HostCpuService.SERVICE_ID);
                 reg = context.registerService(InformationService.class.getName(), service, properties);
             }
 

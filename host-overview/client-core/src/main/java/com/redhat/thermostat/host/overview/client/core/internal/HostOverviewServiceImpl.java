@@ -34,35 +34,51 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.eclipse.views;
+package com.redhat.thermostat.host.overview.client.core.internal;
 
-import org.osgi.framework.BundleContext;
-
-import com.redhat.thermostat.eclipse.internal.views.RefViewPart;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewService;
+import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 
-public abstract class HostRefViewPart extends RefViewPart<HostRef> {
+public class HostOverviewServiceImpl implements HostOverviewService {
+    
+    private static final int ORDER = ORDER_DEFAULT_GROUP;
+    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
-    public HostRefViewPart(BundleContext context) {
-        super(context);
+    private ApplicationService appSvc;
+    private HostInfoDAO hostInfoDAO;
+    private NetworkInterfaceInfoDAO networkInfoDAO;
+    private HostOverviewViewProvider viewProvider;
+    
+    public HostOverviewServiceImpl(ApplicationService appSvc,
+            HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO,
+            HostOverviewViewProvider viewProvider) {
+        this.appSvc = appSvc;
+        this.hostInfoDAO = hostInfoDAO;
+        this.networkInfoDAO = networkInfoDAO;
+        this.viewProvider = viewProvider;
     }
 
     @Override
-    protected HostRef getRefFromSelection(Object selection) {
-        HostRef ref = null;
-        if (selection instanceof HostRef) {
-            ref = (HostRef) selection;
-        }
-        else if (selection instanceof VmRef) {
-            ref = ((VmRef) selection).getAgent();
-        }
-        return ref;
+    public Filter<HostRef> getFilter() {
+        return FILTER;
     }
 
     @Override
-    protected String getNoSelectionMessage() {
-        return "No host selected";
+    public InformationServiceController<HostRef> getInformationServiceController(
+            HostRef ref) {
+        return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO, ref, viewProvider);
+    }
+
+    @Override
+    public int getOrderValue() {
+        return ORDER;
     }
 
 }

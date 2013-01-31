@@ -34,13 +34,46 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.memory.client.core;
+package com.redhat.thermostat.numa.client.core.internal;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.NameMatchingRefFilter;
+import com.redhat.thermostat.client.core.controllers.InformationServiceController;
+import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.numa.client.core.NumaInformationService;
+import com.redhat.thermostat.numa.client.core.NumaViewProvider;
+import com.redhat.thermostat.numa.common.NumaDAO;
+import com.redhat.thermostat.storage.core.HostRef;
 
-public interface MemoryStatsService extends InformationService<VmRef> {
+public class NumaInformationServiceImpl implements NumaInformationService {
+    
+    private static final int ORDER = ORDER_MEMORY_GROUP;
+    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
-    public static final String SERVICE_ID = "com.redhat.thermostat.vm.memory";
+    private ApplicationService appSvc;
+    private NumaDAO numaDAO;
+    private NumaViewProvider numaViewProvider;
+
+    public NumaInformationServiceImpl(ApplicationService appSvc, NumaDAO numaDAO, NumaViewProvider numaViewProvider) {
+        this.appSvc = appSvc;
+        this.numaDAO = numaDAO;
+        this.numaViewProvider = numaViewProvider;
+    }
+
+    @Override
+    public Filter<HostRef> getFilter() {
+        return FILTER;
+    }
+
+    @Override
+    public InformationServiceController<HostRef> getInformationServiceController(HostRef ref) {
+        return new NumaController(appSvc, numaDAO, ref, numaViewProvider);
+    }
+
+    @Override
+    public int getOrderValue() {
+        return ORDER;
+    }
 
 }
+

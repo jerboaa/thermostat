@@ -36,48 +36,11 @@
 
 package com.redhat.thermostat.host.overview.client.core;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.host.overview.client.core.internal.HostOverviewController;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 
-public class HostOverviewService implements InformationService<HostRef> {
-    
-    private static final int ORDER = ORDER_DEFAULT_GROUP;
-    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
+public interface HostOverviewService extends InformationService<HostRef> {
 
-    private ApplicationService appSvc;
-    private HostInfoDAO hostInfoDAO;
-    private NetworkInterfaceInfoDAO networkInfoDAO;
-    
-    public HostOverviewService(ApplicationService appSvc, HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO networkInfoDAO) {
-        this.appSvc = appSvc;
-        this.hostInfoDAO = hostInfoDAO;
-        this.networkInfoDAO = networkInfoDAO;
-    }
-
-    @Override
-    public Filter<HostRef> getFilter() {
-        return FILTER;
-    }
-
-    @Override
-    public InformationServiceController<HostRef> getInformationServiceController(
-            HostRef ref) {
-        HostOverviewViewProvider provider = OSGIUtils.getInstance().getService(HostOverviewViewProvider.class);
-        return new HostOverviewController(appSvc, hostInfoDAO, networkInfoDAO, ref, provider);
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
+    public static final String SERVICE_ID = "com.redhat.thermostat.host.overview";
 
 }
-

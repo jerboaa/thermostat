@@ -50,11 +50,19 @@ import com.redhat.thermostat.storage.core.Ref;
  * <p>
  * To provide an implementation of {@link InformationService}, register an
  * instance of this interface as an OSGi service with the property
- * {@link Constants#GENERIC_SERVICE_CLASSNAME} set to the name of the Class
- * that this {@link InformationService} provides information for.
+ * {@link Constants#GENERIC_SERVICE_CLASSNAME} set to the name of the Class that
+ * this {@link InformationService} provides information for, and the property
+ * {@link #KEY_SERVICE_ID} set to a unique identifier for your implementation.
  */
 @ExtensionPoint
 public interface InformationService<T extends Ref> extends Ordered {
+    
+    /**
+     * Property key to be used when registering this service with the OSGi framework.
+     * The value of the property with this key should be an identifier that a client
+     * may use to differentiate this implementation of InformationService from another.
+     */
+    public static final String KEY_SERVICE_ID = InformationService.class.getName() + ".serviceID";
     
     /**
      * Returns a {@link Filter} that is used to determine if this information

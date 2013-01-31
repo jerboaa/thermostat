@@ -437,6 +437,7 @@ public class WebStorage implements Storage, SecureStorage {
     public void registerCategory(Category<?> category) throws StorageException {
         NameValuePair nameParam = new BasicNameValuePair("name",
                 category.getName());
+        
         NameValuePair categoryParam = new BasicNameValuePair("category",
                 gson.toJson(category));
         List<NameValuePair> formparams = Arrays

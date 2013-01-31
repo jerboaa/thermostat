@@ -52,6 +52,7 @@ import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.vm.gc.client.core.VmGcService;
+import com.redhat.thermostat.vm.gc.client.core.VmGcViewProvider;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
@@ -65,7 +66,8 @@ public class Activator implements BundleActivator {
         Class<?>[] deps = new Class<?>[] {
             VmMemoryStatDAO.class,
             VmGcStatDAO.class,
-            ApplicationService.class
+            ApplicationService.class,
+            VmGcViewProvider.class
         };
 
         tracker = new MultipleServiceTracker(context, deps, new Action() {
@@ -78,9 +80,13 @@ public class Activator implements BundleActivator {
                 Objects.requireNonNull(vmGcStatDAO);
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 Objects.requireNonNull(appSvc);
-                VmGcService service = new VmGcService(appSvc, vmMemoryStatDAO, vmGcStatDAO);
+                VmGcViewProvider viewProvider = (VmGcViewProvider) services.get(VmGcViewProvider.class.getName());
+                Objects.requireNonNull(viewProvider);
+                
+                VmGcService service = new VmGcServiceImpl(appSvc, vmMemoryStatDAO, vmGcStatDAO, viewProvider);
                 Dictionary<String, String> properties = new Hashtable<>();
                 properties.put(Constants.GENERIC_SERVICE_CLASSNAME, VmRef.class.getName());
+                properties.put(InformationService.KEY_SERVICE_ID, VmGcService.SERVICE_ID);
                 reg = context.registerService(InformationService.class.getName(), service, properties);
             }
 

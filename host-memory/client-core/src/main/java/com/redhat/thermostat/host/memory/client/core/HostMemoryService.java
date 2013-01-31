@@ -36,48 +36,11 @@
 
 package com.redhat.thermostat.host.memory.client.core;
 
-import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.NameMatchingRefFilter;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.host.memory.client.core.internal.HostMemoryController;
-import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.storage.core.HostRef;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
 
-public class HostMemoryService implements InformationService<HostRef> {
-    
-    private static final int ORDER = ORDER_MEMORY_GROUP;
-    private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
+public interface HostMemoryService extends InformationService<HostRef> {
 
-    private ApplicationService appSvc;
-    private HostInfoDAO hostInfoDAO;
-    private MemoryStatDAO memoryStatDAO;
-    
-    public HostMemoryService(ApplicationService appSvc, HostInfoDAO hostInfoDAO, MemoryStatDAO memoryStatDAO) {
-        this.appSvc = appSvc;
-        this.hostInfoDAO = hostInfoDAO;
-        this.memoryStatDAO = memoryStatDAO;
-    }
-
-    @Override
-    public Filter<HostRef> getFilter() {
-        return FILTER;
-    }
-
-    @Override
-    public InformationServiceController<HostRef> getInformationServiceController(
-            HostRef ref) {
-        HostMemoryViewProvider provider = OSGIUtils.getInstance().getService(HostMemoryViewProvider.class);
-        return new HostMemoryController(appSvc, hostInfoDAO, memoryStatDAO, ref, provider);
-    }
-
-    @Override
-    public int getOrderValue() {
-        return ORDER;
-    }
+    public static final String SERVICE_ID = "com.redhat.thermostat.host.memory";
 
 }
-
