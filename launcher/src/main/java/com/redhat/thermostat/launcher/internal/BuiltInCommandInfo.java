@@ -39,6 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
@@ -109,7 +110,19 @@ public class BuiltInCommandInfo implements CommandInfo {
 
     private void learnOptions(String optionsValue, Properties props) {
         List<String> optionNames = Arrays.asList(optionsValue.split(","));
+
+        boolean addDbOptions = false;
+        boolean addLogOption = false;
+
         for (String optionString : optionNames) {
+            if (optionString.equals(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
+            	addDbOptions = true;
+            	continue;
+            }
+            if (optionString.equals(CommonOptions.OPTIONS_COMMON_LOG_OPTION)) {
+            	addLogOption = true;
+                continue;
+            }
             List<String> optionsList = Arrays.asList(optionString.trim().split("\\|"));
             if (optionsList.size() == 1) {
                 learnOption(optionsList.get(0).trim(), props);
@@ -117,23 +130,115 @@ public class BuiltInCommandInfo implements CommandInfo {
                 learnOptionGroup(optionsList, props);
             }
         }
+
+        if (addDbOptions) {
+            for (Option opt: CommonOptions.getDbOptions()) {
+                addOptionUsingOverriddenRequiredValue(opt);
+            }
+        }
+        if (addLogOption) {
+            Option opt = CommonOptions.getLogOption();
+            addOptionUsingOverriddenRequiredValue(opt);
+        }
+    }
+
+    /*
+     * For options that come from CommonOptions, there can be an override of
+     * the default value of boolean property <option>.required.  This is not
+     * to be confused with the value itself being required, which it is not.
+     */
+    private void addOptionUsingOverriddenRequiredValue(Option option) {
+        if (conflictExistsWithCommonOption(option)) {
+            throwConflictingOption(option);
+        }
+        Option overrider = options.getOption(option.getArgName());
+        if (overrider != null) {
+            option.setRequired(overrider.isRequired());
+        }
+        // This replaces the existing placeholder.
+        options.addOption(option);
+    }
+
+    // If a common option is being added, call this method to check if
+    // there is something conflicted that was defined in command.properties
+    private boolean conflictExistsWithCommonOption(Option toCheck) {
+        String optString = toCheck.getOpt();
+        String longOptString = toCheck.getLongOpt();
+        Option optionReturnedByShortOpt = options.getOption(optString);
+        Option optionReturnedByLongOpt = options.getOption(longOptString);
+        if (optionReturnedByShortOpt != null &&
+                optionReturnedByLongOpt != null &&
+                optionReturnedByShortOpt != optionReturnedByLongOpt) {
+            // Two different options?  Definitely conflict.
+            return true;
+        }
+        Option potentialConflict = optionReturnedByShortOpt;
+        if (potentialConflict == null) {
+            // We know from above there is no more than one distinct match.
+            potentialConflict = optionReturnedByLongOpt;
+        }
+        if (potentialConflict == null) {
+            // Still null? No match -> no conflict.
+            return false;
+        }
+        if (potentialConflict.getOpt() != null ||
+                potentialConflict.getDescription() != null) {
+            // Only name and required should be set (name becomes longopt if no longopt explicitly set)
+            return true;
+        }
+        return false;
+    }
+
+    private boolean optionConflictsWithOptions(Option option, Options options) {
+        for (Option o : (Collection<Option>) options.getOptions()) {
+            if (optionConflictsWithOption(option, o)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    private boolean optionConflictsWithGroup(Option option, OptionGroup group) {
+        for (Option o : (Collection<Option>) group.getOptions()) {
+            if(optionConflictsWithOption(o, option)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Compares the two to detect conflicts.  Not to be confused with conflictExistsWithCommonOption
+    private boolean optionConflictsWithOption(Option o1, Option o2) {
+    	String name = o1.getArgName();
+        String opt = o1.getOpt();
+        String longOpt = o1.getLongOpt();
+        if (name != null && name.equals(o2.getArgName())) {
+            return true;
+        }
+        if (opt != null && opt.equals(o2.getOpt())) {
+            return true;
+        }
+        if (longOpt != null && longOpt.equals(o2.getLongOpt())) {
+            return true;
+        }
+        return false;
+    }
+
+    private void throwConflictingOption(Option option) {
+        // Throwing this to catch issues during development.  Not intended as a
+        // robust solution to this happening in production.
+        throw new RuntimeException("The " + name +
+                " command contains a conflicting option: " +
+                option.getOpt());
     }
 
     private void learnOption(String name, Properties props) {
-        if (name.equals(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
-            addDbOptions();
-        } else if (name.equals(CommonOptions.OPTIONS_COMMON_LOG_OPTION)) {
-            options.addOption(CommonOptions.getLogOption());
-        } else {
-            Option option = optionFromProperties(name, props);
-            options.addOption(option);
+        Option option = optionFromProperties(name, props);
+        if (optionConflictsWithOptions(option, options)) {
+            throwConflictingOption(option);
         }
-    }
-
-    private void addDbOptions() {
-        for (Option opt: CommonOptions.getDbOptions()) {
-            options.addOption(opt);
-        }
+        options.addOption(option);
     }
 
     /* TODO currently this assumes that any set of mutually exclusive options will be
@@ -146,6 +251,10 @@ public class BuiltInCommandInfo implements CommandInfo {
         og.setRequired(true);
         for (String optionName : optionsList) {
             Option option = optionFromProperties(optionName.trim(), props);
+            if (optionConflictsWithGroup(option, og) |
+                    optionConflictsWithOptions(option, options)) {
+                throwConflictingOption(option);
+            }
             og.addOption(option);
         }
         options.addOptionGroup(og);
@@ -163,17 +272,6 @@ public class BuiltInCommandInfo implements CommandInfo {
         String argKey = name + PROP_OPTHASARG;
         String requiredKey = name + PROP_OPTREQUIRED;
         String descKey = name + PROP_OPTDESC;
-        
-        // required property of common options are allowed to be overridden by
-        // command.properties files
-        if (CommonOptions.ALL_COMMON_OPTIONS.contains(name) && options.hasOption(name)) {
-            if (props.containsKey(requiredKey)) {
-                Option optionToChange = options.getOption(name);
-                required = Boolean.parseBoolean((String) props.getProperty(requiredKey));
-                optionToChange.setRequired(required);
-                return optionToChange;
-            }
-        }
 
         if (props.containsKey(optKey)) {
             opt = (String) props.getProperty(optKey);
@@ -182,7 +280,8 @@ public class BuiltInCommandInfo implements CommandInfo {
             longOpt = (String) props.getProperty(longKey);
         }
         if (opt == null && longOpt == null) {
-            logger.severe("Neither short nor long version of option " + name + " was set.  Check properties file.");
+            logger.warning("Neither short nor long version of option " + name + " was set.  Assuming long option same as name.");
+            longOpt = name;
         }
         if (props.containsKey(argKey)) {
             hasArg = Boolean.parseBoolean((String) props.getProperty(argKey));

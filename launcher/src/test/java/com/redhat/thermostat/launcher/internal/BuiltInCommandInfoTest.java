@@ -219,7 +219,6 @@ public class BuiltInCommandInfoTest {
         Properties props = new Properties();
         String name = "name";
         props.put("options", "AUTO_DB_OPTIONS, dbUrl");
-        props.put("dbUrl.long", "ignored");
         props.put("dbUrl.required", "true");
         BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
 
@@ -262,5 +261,84 @@ public class BuiltInCommandInfoTest {
         assertTrue(members.contains(foo));
         assertTrue(members.contains(bar));
     }
-}
 
+    @Test(expected=RuntimeException.class)
+    public void verifyConflictingShortOptions() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "bar,baz");
+        props.put("bar.short", "b");
+        props.put("baz.short", "b");
+        @SuppressWarnings("unused")
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void verifyConflictingLongOptions() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "bar,baz");
+        props.put("bar.long", "ba");
+        props.put("baz.long", "ba");
+        @SuppressWarnings("unused")
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void verifyConflictingOptionsInGroup() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "bar|baz");
+        props.put("bar.short", "b");
+        props.put("baz.short", "b");
+        @SuppressWarnings("unused")
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void verifyGroupOptionConflictingWithNongroupOption() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "foo|bar,baz");
+        props.put("foo.short", "f");
+        props.put("bar.short", "b");
+        props.put("baz.short", "b");
+        @SuppressWarnings("unused")
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void verifyConflictsWithCommonShortOption() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
+        props.put("dbUrl.short", "x");
+        props.put("dbUrl.long", "dbUrl");
+        props.put("dbUrl.required", "true");
+        @SuppressWarnings("unused")
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void verifyConflictsWithCommonLongOption() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
+        props.put("dbUrl.short", "d");
+        props.put("dbUrl.long", "notDbUrl");
+        props.put("dbUrl.required", "true");
+        @SuppressWarnings("unused")
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+
+    @Test(expected=RuntimeException.class)
+    public void verifyDescriptionConflictsWithCommonOption() {
+        Properties props = new Properties();
+        String name = "name";
+        props.put("options", "AUTO_DB_OPTIONS, dbUrl");
+        props.put("dbUrl.description", "An attempt to cause confusion.");
+        props.put("dbUrl.required", "true");
+        @SuppressWarnings("unused")
+        BuiltInCommandInfo info = new BuiltInCommandInfo(name, props, tempLibs.toString());
+    }
+}
