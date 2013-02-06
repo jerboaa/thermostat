@@ -158,9 +158,7 @@ public class SSLKeystoreConfiguration {
     private static void loadClientProperties()
             throws InvalidConfigurationException {
         if (clientProps == null) {
-            File thermostatEtcDir = new File(new Configuration().getThermostatHome(),
-                    "etc");
-            File clientPropertiesFile = new File(thermostatEtcDir,
+            File clientPropertiesFile = new File(new Configuration().getConfigurationDir(),
                     "ssl.properties");
             initClientProperties(clientPropertiesFile);
         }

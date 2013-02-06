@@ -78,8 +78,12 @@ public class Configuration {
         return file;
     }
 
-    public String getLibRoot() {
+    public String getLibRoot() throws InvalidConfigurationException {
         return home + File.separator + "libs";
+    }
+
+    public String getConfigurationDir() throws InvalidConfigurationException {
+        return home + File.separator + "etc";
     }
 
     public File getStorageBaseDirectory() throws InvalidConfigurationException {

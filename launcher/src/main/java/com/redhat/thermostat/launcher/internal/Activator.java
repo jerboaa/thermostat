@@ -76,8 +76,7 @@ public class Activator implements BundleActivator {
             Keyring keyring = (Keyring)context.getService(reference);
             Configuration config = bundleService.getConfiguration();
 
-            String commandsDir = config.getThermostatHome() + File.separator + "etc" +
-                    File.separator + "commands";
+            String commandsDir = config.getConfigurationDir() + File.separator + "commands";
             CommandInfoSource builtInCommandSource =
                     new BuiltInCommandInfoSource(commandsDir, config.getLibRoot());
             CommandInfoSource pluginCommandSource = new PluginCommandInfoSource(

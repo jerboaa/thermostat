@@ -119,8 +119,8 @@ public final class LoggingUtils {
     }
 
     public static void loadGlobalLoggingConfig() throws InvalidConfigurationException {
-        File thermostatEtcDir = new File(new Configuration().getThermostatHome(), "etc");
-        File loggingPropertiesFile = new File(thermostatEtcDir, "logging.properties");
+        File thermostatConfigurationDir = new File(new Configuration().getConfigurationDir());
+        File loggingPropertiesFile = new File(thermostatConfigurationDir, "logging.properties");
         loadConfig(loggingPropertiesFile);
     }
     

@@ -69,14 +69,14 @@ public class FrameworkProvider {
     private static final String PROPS_FILE = "/com/redhat/thermostat/main/impl/bootstrapbundles.properties";
     private static final String BUNDLELIST = "bundles";
 
+    private Configuration configuration;
     private boolean printOSGiInfo;
-    private String thermostatHome;
     // The framework cache location; Must not be shared between apps!
     private Path osgiCacheStorage;
 
     public FrameworkProvider(Configuration config) {
+        this.configuration = config;
         printOSGiInfo = config.getPrintOSGiInfo();
-        this.thermostatHome = config.getThermostatHome();
     }
 
     // This is our ticket into OSGi land. Unfortunately, we to use a bit of reflection here.
@@ -95,8 +95,7 @@ public class FrameworkProvider {
     }
 
     private String getOSGiPublicPackages() throws FileNotFoundException, IOException {
-        File thermostatEtc = new File(thermostatHome, "etc");
-        File osgiBundleDefinitions = new File(thermostatEtc, "osgi-export.properties");
+        File osgiBundleDefinitions = new File(configuration.getConfigurationDir(), "osgi-export.properties");
 
         Properties bundles = new Properties();
         bundles.load(new FileInputStream(osgiBundleDefinitions));
@@ -162,7 +161,7 @@ public class FrameworkProvider {
     }
 
     private Framework makeFramework() throws FileNotFoundException, IOException {
-        File osgiCacheDir = new File(thermostatHome, "osgi-cache");
+        File osgiCacheDir = new File(configuration.getThermostatHome(), "osgi-cache");
 
         // Create temporary directory which will be used as cache for OSGi bundles. See
         // http://www.osgi.org/javadoc/r4v43/core/org/osgi/framework/Constants.html#FRAMEWORK_STORAGE
@@ -254,7 +253,7 @@ public class FrameworkProvider {
     }
 
     private String actualLocation(String resourceName) {
-        return "file:" + thermostatHome + "/libs/" + resourceName.trim();
+        return new File(configuration.getLibRoot(), resourceName).toURI().toString();
     }
 }
 
