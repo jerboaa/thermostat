@@ -44,7 +44,6 @@ import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.Storage;
-import com.redhat.thermostat.storage.dao.DAOFactory;
 
 /**
  * Represents a plugin that runs on the agent and performs monitoring of host
