@@ -143,14 +143,16 @@ public class AnnotationProcessorTest {
         processor.process(annotations, roundEnv);
 
         String actualFileContents = out.toString("UTF-8");
-        String expectedFileContents = "<?xml?>\n"
+        String expectedFileContents = "<?xml version=\"1.0\"?>\n"
         		+ AUTO_GENERATED_COMMENT + "\n"
-                + "  <service>\n"
-                + "    <name>" + CLASS_NAME + "</name>\n"
-                + "    <doc><![CDATA[\n"
+        		+ "  <plugin-docs>\n"
+                + "    <service>\n"
+                + "      <name>" + CLASS_NAME + "</name>\n"
+                + "      <doc>\n"
                 + JAVADOC + "\n"
-                + "]]></doc>\n"
-                + "  </service>\n"
+                + "      </doc>\n"
+                + "    </service>\n"
+                + "  </plugin-docs>\n"
                 + "";
 
         assertEquals(expectedFileContents, actualFileContents);
@@ -189,14 +191,16 @@ public class AnnotationProcessorTest {
         processor.process(annotations, roundEnv);
 
         String actualFileContents = out.toString("UTF-8");
-        String expectedFileContents = "<?xml?>\n"
+        String expectedFileContents = "<?xml version=\"1.0\"?>\n"
         		+ AUTO_GENERATED_COMMENT + "\n"
-                + "  <extension-point>\n"
-                + "    <name>" + CLASS_NAME + "</name>\n"
-                + "    <doc><![CDATA[\n"
+        		+ "  <plugin-docs>\n"
+                + "    <extension-point>\n"
+                + "      <name>" + CLASS_NAME + "</name>\n"
+                + "      <doc>\n"
                 + JAVADOC + "\n"
-                + "]]></doc>\n"
-                + "  </extension-point>\n"
+                + "      </doc>\n"
+                + "    </extension-point>\n"
+                + "  </plugin-docs>\n"
                 + "";
 
         assertEquals(expectedFileContents, actualFileContents);

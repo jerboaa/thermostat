@@ -76,12 +76,34 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <!-- dont try to run the annotation process on this module
-               it will pick up the service file and try to run the (not yet
-               compiled) annotation processor and fail mysteriously -->
-          <compilerArgument>-proc:none</compilerArgument>
-        </configuration>
+        <!-- compile in 2 steps -->
+        <executions>
+          <execution>
+            <!-- Step 1: only compile annotation processors and do not run any annotation processors -->
+            <id>default-compile</id>
+            <configuration>
+              <compilerArgument>-proc:none</compilerArgument>
+              <includes>
+                <include>**/internal/**</include>
+              </includes>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- Step 2: after compiling annotation processors, compile everything else using them -->
+            <id>compile-everything-else</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <configuration>
+              <compilerArguments>
+                <!-- only use the self annotation processor here instead of the PluginAnnotationProcessor
+                     only meta-docs for the annotations should be generated -->
+                <processor>com.redhat.thermostat.annotations.internal.SelfAnnotationProcessor</processor>
+              </compilerArguments>
+            </configuration>
+          </execution>
+        </executions>
       </plugin>
 
     </plugins>
