@@ -115,6 +115,17 @@ public class BuiltInCommandInfo implements CommandInfo {
         boolean addLogOption = false;
 
         for (String optionString : optionNames) {
+            /*
+             * The automatic options are not added until the end.  This ordering
+             * is part of a not-entirely-clear solution that accomplishes:
+             *  a) Preventing conflicts between options.
+             *  b) Still allowing the "required" property of these DB and LOG
+             *     options to be overridden.
+             *
+             * Change this order at your peril.
+             *
+             * See also http://icedtea.classpath.org/pipermail/thermostat/2013-February/005503.html
+             */ 
             if (optionString.equals(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
             	addDbOptions = true;
             	continue;
