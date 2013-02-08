@@ -39,6 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -224,9 +225,13 @@ public class BuiltInCommandInfoTest {
 
         Options options = info.getOptions();
         assertTrue(options.hasOption(CommonOptions.DB_URL_ARG));
-        Option dbUrlOption = options.getOption(CommonOptions.DB_URL_ARG);
-        assertTrue(dbUrlOption.isRequired());
-        assertEquals("dbUrl", dbUrlOption.getLongOpt());
+        assertTrue(options.hasOption("d"));
+        Option dbUrlOption1 = options.getOption(CommonOptions.DB_URL_ARG);
+        Option dbUrlOption2 = options.getOption("d");
+        assertSame(dbUrlOption1, dbUrlOption2);
+        assertTrue(dbUrlOption1.isRequired());
+        assertEquals("dbUrl", dbUrlOption1.getLongOpt());
+        assertEquals("d", dbUrlOption1.getOpt());
     }
     
     @Test

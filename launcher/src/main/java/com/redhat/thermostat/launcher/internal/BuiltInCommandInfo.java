@@ -109,166 +109,78 @@ public class BuiltInCommandInfo implements CommandInfo {
     }
 
     private void learnOptions(String optionsValue, Properties props) {
-        List<String> optionNames = Arrays.asList(optionsValue.split(","));
+        List<String> optionNamesWithWhitespace = Arrays.asList(optionsValue.split(","));
+        List<String> optionNames = new ArrayList<>();
+        for (String optionString : optionNamesWithWhitespace) {
+            optionNames.add(optionString.trim());
+        }
 
-        boolean addDbOptions = false;
-        boolean addLogOption = false;
+        /*
+         * These intermediate Options objects are created, so that we can do the necessary
+         * gymnastics to accomplish the following seemingly-contradictory goals:
+         * 
+         *  a) Preventing conflicts between options.
+         *  b) Still allowing the "required" property of these DB and LOG
+         *     options to be overridden.
+         *
+         * Change this code at your peril.
+         *
+         * Grep for "secret sauce" to find other relevant snippets in this class.
+         */
+        Options commonOptionsToAdd = new Options(); // For adding to this.options later, and checking for conflicts
+        Options propertiesOptions = new Options(); // For checking for conflicts only, will contain OptionGroup members
+        Options propertiesOptionsToAdd = new Options(); // For adding to this.options later, will not contain OptionGroup members
+
+        if (optionNames.contains(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
+            for (Option opt: CommonOptions.getDbOptions()) {
+                commonOptionsToAdd.addOption(opt);
+            }
+            while (optionNames.contains(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
+                optionNames.remove(CommonOptions.OPTIONS_COMMON_DB_OPTIONS);
+            }
+        }
+        if (optionNames.contains(CommonOptions.OPTIONS_COMMON_LOG_OPTION)) {
+            Option opt = CommonOptions.getLogOption();
+            commonOptionsToAdd.addOption(opt);
+            while (optionNames.contains(CommonOptions.OPTIONS_COMMON_LOG_OPTION)) {
+                optionNames.remove(CommonOptions.OPTIONS_COMMON_LOG_OPTION);
+            }
+        }
 
         for (String optionString : optionNames) {
-            /*
-             * The automatic options are not added until the end.  This ordering
-             * is part of a not-entirely-clear solution that accomplishes:
-             *  a) Preventing conflicts between options.
-             *  b) Still allowing the "required" property of these DB and LOG
-             *     options to be overridden.
-             *
-             * Change this order at your peril.
-             *
-             * See also http://icedtea.classpath.org/pipermail/thermostat/2013-February/005503.html
-             */ 
-            if (optionString.equals(CommonOptions.OPTIONS_COMMON_DB_OPTIONS)) {
-            	addDbOptions = true;
-            	continue;
-            }
-            if (optionString.equals(CommonOptions.OPTIONS_COMMON_LOG_OPTION)) {
-            	addLogOption = true;
-                continue;
-            }
-            List<String> optionsList = Arrays.asList(optionString.trim().split("\\|"));
+        	// A set of mutually exclusive options can be specified as strings separated by "|"
+            List<String> optionsList = Arrays.asList(optionString.split("\\|"));
             if (optionsList.size() == 1) {
-                learnOption(optionsList.get(0).trim(), props);
+            	// Not a group
+                Option option = optionFromProperties(optionsList.get(0).trim(), props);
+                if (optionConflicts(option, commonOptionsToAdd, propertiesOptions)) {
+                    throwConflictingOption(option);
+                }
+                propertiesOptions.addOption(option);
+                propertiesOptionsToAdd.addOption(option);
             } else {
-                learnOptionGroup(optionsList, props);
+            	// Is a group
+                OptionGroup og = createOptionGroup(optionsList, props, commonOptionsToAdd, propertiesOptions);
+                for (Option o : (Collection<Option>) og.getOptions()) {
+                    propertiesOptions.addOption(o);
+                }
+                options.addOptionGroup(og);
             }
         }
 
-        if (addDbOptions) {
-            for (Option opt: CommonOptions.getDbOptions()) {
-                addOptionUsingOverriddenRequiredValue(opt);
+        for (Option commonOpt : (Collection<Option>) commonOptionsToAdd.getOptions()) {
+            options.addOption(commonOpt);
+        }
+        for (Option potentialOpt : (Collection<Option>) propertiesOptionsToAdd.getOptions()) {
+            // Here is some of the secret sauce to allow overriding.
+            Option existingOpt = options.getOption(potentialOpt.getArgName());
+            if (existingOpt != null) {
+                existingOpt.setRequired(potentialOpt.isRequired());
+            } else {
+                // Not secret sauce, this is what we'd otherwise just do.
+                options.addOption(potentialOpt);
             }
         }
-        if (addLogOption) {
-            Option opt = CommonOptions.getLogOption();
-            addOptionUsingOverriddenRequiredValue(opt);
-        }
-    }
-
-    /*
-     * For options that come from CommonOptions, there can be an override of
-     * the default value of boolean property <option>.required.  This is not
-     * to be confused with the value itself being required, which it is not.
-     */
-    private void addOptionUsingOverriddenRequiredValue(Option option) {
-        if (conflictExistsWithCommonOption(option)) {
-            throwConflictingOption(option);
-        }
-        Option overrider = options.getOption(option.getArgName());
-        if (overrider != null) {
-            option.setRequired(overrider.isRequired());
-        }
-        // This replaces the existing placeholder.
-        options.addOption(option);
-    }
-
-    // If a common option is being added, call this method to check if
-    // there is something conflicted that was defined in command.properties
-    private boolean conflictExistsWithCommonOption(Option toCheck) {
-        String optString = toCheck.getOpt();
-        String longOptString = toCheck.getLongOpt();
-        Option optionReturnedByShortOpt = options.getOption(optString);
-        Option optionReturnedByLongOpt = options.getOption(longOptString);
-        if (optionReturnedByShortOpt != null &&
-                optionReturnedByLongOpt != null &&
-                optionReturnedByShortOpt != optionReturnedByLongOpt) {
-            // Two different options?  Definitely conflict.
-            return true;
-        }
-        Option potentialConflict = optionReturnedByShortOpt;
-        if (potentialConflict == null) {
-            // We know from above there is no more than one distinct match.
-            potentialConflict = optionReturnedByLongOpt;
-        }
-        if (potentialConflict == null) {
-            // Still null? No match -> no conflict.
-            return false;
-        }
-        if (potentialConflict.getOpt() != null ||
-                potentialConflict.getDescription() != null) {
-            // Only name and required should be set (name becomes longopt if no longopt explicitly set)
-            return true;
-        }
-        return false;
-    }
-
-    private boolean optionConflictsWithOptions(Option option, Options options) {
-        for (Option o : (Collection<Option>) options.getOptions()) {
-            if (optionConflictsWithOption(option, o)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-
-    private boolean optionConflictsWithGroup(Option option, OptionGroup group) {
-        for (Option o : (Collection<Option>) group.getOptions()) {
-            if(optionConflictsWithOption(o, option)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    // Compares the two to detect conflicts.  Not to be confused with conflictExistsWithCommonOption
-    private boolean optionConflictsWithOption(Option o1, Option o2) {
-    	String name = o1.getArgName();
-        String opt = o1.getOpt();
-        String longOpt = o1.getLongOpt();
-        if (name != null && name.equals(o2.getArgName())) {
-            return true;
-        }
-        if (opt != null && opt.equals(o2.getOpt())) {
-            return true;
-        }
-        if (longOpt != null && longOpt.equals(o2.getLongOpt())) {
-            return true;
-        }
-        return false;
-    }
-
-    private void throwConflictingOption(Option option) {
-        // Throwing this to catch issues during development.  Not intended as a
-        // robust solution to this happening in production.
-        throw new RuntimeException("The " + name +
-                " command contains a conflicting option: " +
-                option.getOpt());
-    }
-
-    private void learnOption(String name, Properties props) {
-        Option option = optionFromProperties(name, props);
-        if (optionConflictsWithOptions(option, options)) {
-            throwConflictingOption(option);
-        }
-        options.addOption(option);
-    }
-
-    /* TODO currently this assumes that any set of mutually exclusive options will be
-     * required.  Needs some sort of enhancement in properties file to allow them to
-     * be optional.  For the time being this is good enough, since in practice all such
-     * sets *are* required.
-     */
-    private void learnOptionGroup(List<String> optionsList, Properties props) {
-        OptionGroup og = new OptionGroup();
-        og.setRequired(true);
-        for (String optionName : optionsList) {
-            Option option = optionFromProperties(optionName.trim(), props);
-            if (optionConflictsWithGroup(option, og) |
-                    optionConflictsWithOptions(option, options)) {
-                throwConflictingOption(option);
-            }
-            og.addOption(option);
-        }
-        options.addOptionGroup(og);
     }
 
     private Option optionFromProperties(String name, Properties props) {
@@ -312,6 +224,96 @@ public class BuiltInCommandInfo implements CommandInfo {
         option.setArgName(name);
         option.setRequired(required);
         return option;
+    }
+
+    /* TODO currently this assumes that any set of mutually exclusive options will be
+     * required.  Needs some sort of enhancement in properties file to allow them to
+     * be optional.  For the time being this is good enough, since in practice all such
+     * sets *are* required.
+     * The members of an option group should be separated by a "|" character.
+     */
+    private OptionGroup createOptionGroup(List<String> optionsList, Properties props, Options commonOpts, Options propOpts) {
+        OptionGroup og = new OptionGroup();
+        og.setRequired(true);
+        for (String optionName : optionsList) {
+            Option option = optionFromProperties(optionName.trim(), props);
+            if (optionConflictsWithGroup(option, og) |
+                    optionConflicts(option, commonOpts, propOpts)) {
+                throwConflictingOption(option);
+            }
+            og.addOption(option);
+        }
+        return og;
+    }
+
+    private boolean optionConflicts(Option option, Options commonOpts, Options propOpts) {
+        if (optionConflictsWithOptions(option, propOpts) ||
+                optionConflictsWithCommonOptions(option, commonOpts)) {
+            return true;
+        }
+        return false;
+    }
+
+    // All conflicts detected.
+    private boolean optionConflictsWithOptions(Option option, Options options) {
+        for (Option o : (Collection<Option>) options.getOptions()) {
+            if (optionConflictsWithOption(option, o)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Conflicts not interpreted as override detected.
+    private boolean optionConflictsWithCommonOptions(Option option, Options options) {
+        for (Option o : (Collection<Option>) options.getOptions()) {
+            if (optionConflictsWithOption(option, o)) {
+                /* As a special case, if these things are not defined we do not consider
+                 * this to be a conflict.  This will instead be treated as an override,
+                 * specifically for the "required" property of the common option.
+                 * Grep for "secret sauce" to find other relevant snippets in this class.
+                 */
+                if (option.getOpt() != null || option.getDescription() != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // All conflicts detected.
+    private boolean optionConflictsWithGroup(Option option, OptionGroup group) {
+        for (Option o : (Collection<Option>) group.getOptions()) {
+            if(optionConflictsWithOption(o, option)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Compares the two to detect conflicts.  Not to be confused with conflictExistsWithCommonOption
+    private boolean optionConflictsWithOption(Option o1, Option o2) {
+        String name = o1.getArgName();
+        String opt = o1.getOpt();
+        String longOpt = o1.getLongOpt();
+        if (name != null && name.equals(o2.getArgName())) {
+            return true;
+        }
+        if (opt != null && opt.equals(o2.getOpt())) {
+            return true;
+        }
+        if (longOpt != null && longOpt.equals(o2.getLongOpt())) {
+            return true;
+        }
+        return false;
+    }
+
+    private void throwConflictingOption(Option option) {
+        // Throwing this to catch issues during development.  Not intended as a
+        // robust solution to this happening in production.
+        throw new RuntimeException("The " + name +
+                " command contains a conflicting option: " +
+                option.getArgName());
     }
 
     public String getName() {
