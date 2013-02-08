@@ -71,6 +71,7 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
+import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -114,8 +115,17 @@ public class Main {
         this.appSvc = appSvc;
         this.uiFacadeFactory = uiFacadeFactory;
         this.dbServiceFactory = dbServiceFactory;
-        this.dbService = dbServiceFactory.createDbService(username, password,
+        try {
+            // See IcedTea BZ#1294
+            // This may throw a StorageException if no suitable storage provider
+            // is registered. This most likely means a user has a wrong
+            // connection-url saved in her preferences. Continue, and catch
+            // this case in ConnectionSetup#run()
+            this.dbService = dbServiceFactory.createDbService(username, password,
                 connectionURL);
+        } catch (StorageException e) {
+            logger.log(Level.WARNING, "Error looking up storage provider", e);
+        }
     }
 
     private void setLAF() {
@@ -200,6 +210,12 @@ public class Main {
         @Override
         public void run() {
             ConnectionListener connectionListener = new ConnectionHandler(service);
+            // dbService may be null at this point (see constructor). Fire
+            // failed connection attempt immediately.
+            if (dbService == null) {
+                connectionListener.changed(ConnectionStatus.FAILED_TO_CONNECT);
+                return;
+            }
             dbService.addConnectionListener(connectionListener);
             try {
                 dbService.connect();
@@ -270,9 +286,19 @@ public class Main {
         
         @Override
         public void reconnect(ClientPreferences prefs) {
-            // Recreate DbService with potentially modified parameters
-            dbService = dbServiceFactory.createDbService(prefs.getUserName(), prefs.getPassword(), prefs.getConnectionUrl());
-            dbService.addConnectionListener(new ConnectionHandler(service));
+            ConnectionHandler connectionListener = new ConnectionHandler(service);
+            try {
+                // Recreate DbService with potentially modified parameters.
+                dbService = dbServiceFactory.createDbService(prefs.getUserName(), prefs.getPassword(), prefs.getConnectionUrl());
+            } catch (StorageException e) {
+                // Prevent Icedtea BZ#1294, where no matching StorageProvider
+                // could potentially be found for the given connection URL.
+                // Indicate connection failure immediately.
+                logger.log(Level.WARNING, "Error looking up storage provider", e);
+                connectionListener.changed(ConnectionStatus.FAILED_TO_CONNECT);
+                return;
+            }
+            dbService.addConnectionListener(connectionListener);
             connect(service);
         }
 
