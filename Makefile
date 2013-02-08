@@ -1,6 +1,6 @@
 MAVEN           ?= mvn
 SKIP_TESTS      ?= false
-REPO_LOC        ?= $(HOME)/.thermostat/.build/mvn_repository
+REPO_LOC        ?= $(HOME)/.thermostat/.build/mvn_repository/
 MAVEN_FLAGS     ?= 
 USE_VNC         ?= false
 VNC             ?= vncserver
@@ -61,12 +61,11 @@ eclipse: jfreechart-p2
 create-repo-dir:
 	mkdir -p $(REPO_LOC)
 
-# This is basically in bash speak:
-#
-# for i in $(find | grep thermostat); do rm -rf $i; done;
-# rm -rf .cache/tycho
 clean-repo:
-	done=$(shell bash -c 'cd $(REPO_LOC); for i in $$(find | grep thermostat); do rm -rf $$i; done; rm -rf .cache/tycho/; echo true' )
+	if [ -d $(REPO_LOC) ] ; then \
+	  find $(REPO_LOC) -name '*thermostat*' -print0 | xargs -0 rm -rf ; \
+	fi
+	rm -rf $(REPO_LOC).cache/tycho/
 
 echo-repo:
 	echo "Using private Maven repository: $(REPO_LOC)"
