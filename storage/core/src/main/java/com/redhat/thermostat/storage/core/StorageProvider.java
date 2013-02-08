@@ -38,13 +38,42 @@ package com.redhat.thermostat.storage.core;
 
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 
+/**
+ * Factory for creating a new {@link Storage} instance.
+ * 
+ */
 public interface StorageProvider {
 
+    /**
+     * Creates a new {@link Storage}.
+     * 
+     * @return The new instance.
+     */
     Storage createStorage();
-    
+
+    /**
+     * Sets the to-be-used configuration of this StorageProvider. Called prior
+     * {@link StorageProvider#canHandleProtocol()}.
+     * 
+     * @param config
+     */
     void setConfig(StartupConfiguration config);
-    
+
+    /**
+     * Method which determines if this StorageProvider can handle the given
+     * protocol as set via
+     * {@link StorageProvider#setConfig(StartupConfiguration)}.
+     * 
+     * <br/>
+     * <br/>
+     * <strong>Pre:</strong> Configuration has been set via
+     * {@link StorageProvider#setConfig(StartupConfiguration)}.
+     * 
+     * @return true if this StorageProvider can handle the protocol prefix of
+     *         the given StartupConfiguration. I.e.
+     *         {@link StorageProvider#createStorage()} can be safely called
+     *         given this config. false otherwise.
+     */
     boolean canHandleProtocol();
 
 }
-

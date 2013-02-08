@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -48,6 +49,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -110,6 +112,50 @@ public class DbServiceImplTest {
         assertNotNull(storageRef);
         // make sure we really get the same instance
         assertTrue(storage.equals(context.getService(storageRef)));
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testConnectEnforcesPreCond() {
+        ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
+        try {
+            dbService.connect();
+            fail("connect should check if db service is already registered");
+        } catch (IllegalStateException e) {
+            // pass
+            reg.unregister();
+        }
+        reg = context.registerService(Storage.class, storage, null);
+        try {
+            dbService.connect();
+            fail("connect should check if storage service is already registered");
+        } catch (IllegalStateException e) {
+            // pass
+            reg.unregister();
+        }
+    }
+    
+    @SuppressWarnings("rawtypes")
+    @Test
+    public void testDisConnectEnforcesPreCond() {
+        ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
+        try {
+            // Storage == null
+            dbService.disconnect();
+            fail("disconnect should check if storage service is already registered");
+        } catch (IllegalStateException e) {
+            // pass
+            reg.unregister();
+        }
+        reg = context.registerService(Storage.class, storage, null);
+        try {
+            // DbService == null
+            dbService.disconnect();
+            fail("disconnect should check if db service is already registered");
+        } catch (IllegalStateException e) {
+            // pass
+            reg.unregister();
+        }
     }
 
     @Test

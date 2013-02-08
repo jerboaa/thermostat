@@ -80,16 +80,21 @@ public class DbServiceImpl implements DbService {
     }
 
     public void connect() throws ConnectionException {
+        // Storage and DbService must not be registered
+        // as service
+        ensureConnectPreCondition();
         try {
-            storage.getConnection().connect();
+            this.storage.getConnection().connect();
             dbServiceReg = context.registerService(DbService.class, this, null);
-            storageReg = context.registerService(Storage.class.getName(), storage, null);
+            storageReg = context.registerService(Storage.class.getName(), this.storage, null);
         } catch (Exception cause) {
             throw new ConnectionException(cause);
         }
     }
     
     public void disconnect() throws ConnectionException {
+        // DbService and Storage must be registered as service at this point
+        ensureDisconnectPrecondition();
         try {
             storage.getConnection().disconnect();
             storageReg.unregister();
@@ -117,6 +122,32 @@ public class DbServiceImpl implements DbService {
         return new DbServiceImpl(username, password, dbUrl);
     }
 
+    @SuppressWarnings("rawtypes")
+    private void ensureDisconnectPrecondition() {
+        ServiceReference dbServiceReference = context
+                .getServiceReference(DbService.class);
+        ServiceReference storageReference = context
+                .getServiceReference(Storage.class);
+        if (dbServiceReference == null || storageReference == null) {
+            throw new IllegalStateException(
+                    "DbService or Storage not registered as service when "
+                            + "trying to disconnect");
+        }
+    }
+
+    @SuppressWarnings("rawtypes")
+    private void ensureConnectPreCondition() {
+        ServiceReference dbServiceReference = context
+                .getServiceReference(DbService.class);
+        ServiceReference storageReference = context
+                .getServiceReference(Storage.class);
+        if (dbServiceReference != null || storageReference != null) {
+            throw new IllegalStateException(
+                    "DbService or Storage already registered as service when "
+                            + "trying to connect");
+        }
+    }
+
     private static Storage createStorage(BundleContext context, String username, String password, String dbUrl) throws StorageException {
         StartupConfiguration config = new ConnectionConfiguration(dbUrl, username, password);
         StorageProvider prov = getStorageProvider(context, config);
@@ -127,6 +158,7 @@ public class DbServiceImpl implements DbService {
         return prov.createStorage();
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private static StorageProvider getStorageProvider(BundleContext context, StartupConfiguration config) {
         try {
             ServiceReference[] refs = context.getServiceReferences(StorageProvider.class.getName(), null);

@@ -40,11 +40,27 @@ import com.redhat.thermostat.annotations.Service;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 
+/**
+ * DbService provides API for handling database (i.e. {@link Storage})
+ * connections. Once {@link DbService#connect()} has been called, the current
+ * instance can be retrieved as service. This registered service instance could
+ * then be used to disconnect from storage.
+ * 
+ * @see {@link DbServiceFactory}
+ */
 @Service
 public interface DbService {
 
     /**
-     * Connects to the given database.
+     * Connects to {@link Storage} and registers {@link Storage} instance which
+     * was used for the connection as a service.
+     * 
+     * <br/>
+     * <br/>
+     * <strong>Pre:</strong> Neither DbService nor Storage are registered as
+     * services. <br/>
+     * <strong>Post:</strong> Both DbService and Storage are registered as
+     * services.
      * 
      * @throws ConnectionException
      *             If DB connection cannot be established.
@@ -52,7 +68,15 @@ public interface DbService {
     void connect() throws ConnectionException;
 
     /**
-     * Disconnects from the database.
+     * Disconnects from {@link Storage}.
+     * 
+     * <br/>
+     * <br/>
+     * <strong>Pre:</strong> Both DbService and Storage are registered as
+     * services.
+     * <br/>
+     * <strong>Post:</strong> Neither DbService nor Storage are registered as
+     * services.
      * 
      * @throws ConnectionException
      */
@@ -65,20 +89,23 @@ public interface DbService {
      *             if not connected to storage.
      */
     String getConnectionUrl();
-    
+
     /**
-     * Registers the supplied ConnectionListener to be notified
-     * when the status of the database connection changes.
-     * @param listener - the listener to be registered
+     * Registers the supplied ConnectionListener to be notified when the status
+     * of the database connection changes.
+     * 
+     * @param listener
+     *            - the listener to be registered
      */
     void addConnectionListener(ConnectionListener listener);
-    
+
     /**
-     * Unregisters the supplied ConnectionListener if it was
-     * previously registered via {@link #addConnectionListener(ConnectionListener)}.
-     * @param listener - the listener to be unregistered
+     * Unregisters the supplied ConnectionListener if it was previously
+     * registered via {@link #addConnectionListener(ConnectionListener)}.
+     * 
+     * @param listener
+     *            - the listener to be unregistered
      */
     void removeConnectionListener(ConnectionListener listener);
-    
-}
 
+}

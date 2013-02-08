@@ -44,9 +44,39 @@ import com.redhat.thermostat.storage.internal.DbServiceImpl;
  * classes are won't be.
  *
  */
+/**
+ * Factory for creating new {@link DbService} instances.
+ * 
+ * @see {@link DbService}, {@link StorageProvider}.
+ *
+ */
 public class DbServiceFactory {
 
-    public DbService createDbService(String username, String password, String dbUrl) {
+    /**
+     * Creates a <strong>new</strong> {@link DbService} instance which can be
+     * used to establish a connection with {@link Storage}. Note that the actual
+     * {@link StorageProvider} which will be used for the connection is looked
+     * up based on registered StorageProvider OSGi services and URLs they are
+     * able to handle. If a {@link DbService} instance is already registered as
+     * a service, users are encouraged to use that instance for disconnecting
+     * from storage.
+     * 
+     * @param username
+     *            The username to use for the connection to storage.
+     * @param password
+     *            The password to use for the connection to storage.
+     * @param dbUrl
+     *            The URL to the storage endpoint. For example
+     *            {@code mongodb://127.0.0.1:27518} or
+     *            {@code https://storage.example.com/storage}.
+     * @return A new {@link DbService} instance which can be used for
+     *         establishing new storage connections.
+     * @throws StorageException
+     *             If no matching {@link StorageProvider} could be found for the
+     *             given dbUrl.
+     */
+    public DbService createDbService(String username, String password,
+            String dbUrl) throws StorageException {
         return DbServiceImpl.create(username, password, dbUrl);
     }
 }
