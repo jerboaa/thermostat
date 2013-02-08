@@ -1,6 +1,6 @@
 MAVEN           ?= mvn
 SKIP_TESTS      ?= false
-REPO_LOC        ?= $(HOME)/.thermostat/.build/mvn_repository/
+REPO_LOC        ?= $(HOME)/.thermostat-build/mvn_repository/
 MAVEN_FLAGS     ?= 
 USE_VNC         ?= false
 VNC             ?= vncserver
