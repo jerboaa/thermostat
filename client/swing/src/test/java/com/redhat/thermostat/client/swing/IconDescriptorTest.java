@@ -51,7 +51,7 @@ public class IconDescriptorTest {
     public void test() throws IOException {
         ClassLoader classLoader = IconResource.class.getClassLoader();
         String resource = IconResource.JAVA_APPLICATION.getPath();
-        IconDescriptor descriptor = IconDescriptor.createFromClassloader(classLoader, resource);
+        IconDescriptor descriptor = IconDescriptor.loadIcon(classLoader, resource);
         ByteBuffer buffer = descriptor.getData();
         
         assertEquals(3512, buffer.capacity());

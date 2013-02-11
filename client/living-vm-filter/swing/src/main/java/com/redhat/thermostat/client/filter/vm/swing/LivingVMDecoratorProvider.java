@@ -46,6 +46,8 @@ import com.redhat.thermostat.client.ui.Decorator;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class LivingVMDecoratorProvider implements DecoratorProvider<VmRef> {
     
@@ -53,9 +55,10 @@ public class LivingVMDecoratorProvider implements DecoratorProvider<VmRef> {
         @Override
         public IconDescriptor getIconDescriptor() {
             try {
-                return IconDescriptor.createFromClassloader(IconResource.class.getClassLoader(), IconResource.JAVA_APPLICATION.getPath());
+                return IconDescriptor.loadIcon(IconResource.class.getClassLoader(), IconResource.JAVA_APPLICATION.getPath());
             } catch (IOException e) {
-                e.printStackTrace();
+                Logger.getLogger(LivingVMDecoratorProvider.class.getName()).log(Level.SEVERE, e.getMessage(), e);
+
                 return null;
             }
         }

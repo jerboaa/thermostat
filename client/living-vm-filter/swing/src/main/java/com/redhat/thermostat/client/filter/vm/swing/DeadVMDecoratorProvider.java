@@ -52,7 +52,7 @@ public class DeadVMDecoratorProvider implements DecoratorProvider<VmRef> {
         @Override
         public IconDescriptor getIconDescriptor() {
             try {
-                return IconDescriptor.createFromClassloader(getClass().getClassLoader(), "deadvm.png");
+                return IconDescriptor.loadIcon(getClass().getClassLoader(), "deadvm.png");
             } catch (IOException e) {
                 e.printStackTrace();
                 return null;
