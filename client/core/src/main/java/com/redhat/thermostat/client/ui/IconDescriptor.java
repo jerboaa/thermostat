@@ -95,35 +95,19 @@ public class IconDescriptor {
             return false;
         return true;
     }
-
-    /**
-     * Loads an icon by calling
-     * {@link #createFromClassloader(ClassLoader, String)} with the system
-     * {@link ClassLoader}.
-     * 
-     * <br /><br />
-     * 
-     * This method doesn't throw {@link IOException}, it returns {@code null}
-     * on failure and logs the error.
-     */
-    public static IconDescriptor loadIcon(String name) {
-        try {
-            return IconDescriptor.createFromClassloader(ClassLoader.getSystemClassLoader(), name);
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Can't load " + name, e);
-        }
-        return null;
-    }
     
-    public static IconDescriptor createFromClassloader(ClassLoader classloader,
-                                                       String resource) throws IOException
-    {
+    /**
+     * Loads an icon by calling from the given resource file and {@link ClassLoader}.
+     */
+    public static IconDescriptor loadIcon(ClassLoader classloader, String resource) throws IOException {
         InputStream stream = classloader.getResourceAsStream(resource);
-        if (stream == null) throw new IOException("no resource found");
-        
+        if (stream == null) {
+            throw new IOException("no resource found");
+        }
+
         byte[] bytes = new byte[stream.available()];
         stream.read(bytes, 0, bytes.length);
-        
+
         ByteBuffer data = ByteBuffer.wrap(bytes);
         return new IconDescriptor(data);
     }

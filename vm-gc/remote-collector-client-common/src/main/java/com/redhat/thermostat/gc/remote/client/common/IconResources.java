@@ -37,6 +37,9 @@
 package com.redhat.thermostat.gc.remote.client.common;
 
 import com.redhat.thermostat.client.ui.IconDescriptor;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class IconResources {
 
@@ -44,7 +47,12 @@ public class IconResources {
     
     public synchronized static IconDescriptor getGCIconSmall() {
         if (gcIconSmall == null) {
-            gcIconSmall = IconDescriptor.loadIcon("com/redhat/thermostat/gc/remote/client/common/gcSmall.png");
+            try {
+                gcIconSmall = IconDescriptor.loadIcon(IconResources.class.getClassLoader(), "com/redhat/thermostat/gc/remote/client/common/gcSmall.png");
+                
+            } catch (IOException ex) {
+                Logger.getLogger(IconResources.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+            }
         }
         return gcIconSmall;
     }
