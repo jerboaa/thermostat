@@ -12,6 +12,11 @@
       <param-value>com.redhat.thermostat.storage.mongodb.MongoStorageProvider</param-value>
     </init-param>
     <init-param>
+      <!-- Absolute path to THERMOSTAT_HOME -->
+      <param-name>THERMOSTAT_HOME</param-name>
+      <param-value>${project.build.directory}/../../../distribution/target/</param-value>
+    </init-param>
+    <init-param>
       <param-name>storage.endpoint</param-name>
       <param-value>mongodb://127.0.0.1:27518</param-value>
     </init-param>

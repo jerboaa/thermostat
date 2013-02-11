@@ -153,6 +153,10 @@ public class WebStorageEndpointTest {
     @Before
     public void setUp() throws Exception {
 
+        // Set thermostat home to something so we don't set
+        // it in WebStorageEndPoint.init()
+        System.setProperty("THERMOSTAT_HOME", "does not matter");
+        
         mockStorage = mock(Storage.class);
         StorageWrapper.setStorage(mockStorage);
 
