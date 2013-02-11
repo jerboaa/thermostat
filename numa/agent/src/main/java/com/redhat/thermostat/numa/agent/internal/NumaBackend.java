@@ -129,7 +129,7 @@ public class NumaBackend extends Backend {
 
     @Override
     public int getOrderValue() {
-        return ORDER_CPU_GROUP;
+        return ORDER_MEMORY_GROUP + 80;
     }
 
 }

@@ -83,6 +83,8 @@ public interface Ordered {
      * services. A service with a lower order value will
      * be processed before a service of a higher order value. This
      * ordering is used, for example, to sort views in a client's UI.
+     * Please take care to ensure the value returned by this
+     * implementation does not collide with other implementations.
      * 
      * The order value should be offset from one of the provided
      * constants in this class. Such as {@link #ORDER_DEFAULT_GROUP}.

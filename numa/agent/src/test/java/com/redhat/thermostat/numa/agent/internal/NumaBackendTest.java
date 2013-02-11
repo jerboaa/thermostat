@@ -46,7 +46,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -168,7 +167,7 @@ public class NumaBackendTest {
 
     @Test
     public void testOrderValue() {
-        assertEquals(Ordered.ORDER_CPU_GROUP, backend.getOrderValue());
+        assertEquals(Ordered.ORDER_MEMORY_GROUP + 80, backend.getOrderValue());
     }
 }
 

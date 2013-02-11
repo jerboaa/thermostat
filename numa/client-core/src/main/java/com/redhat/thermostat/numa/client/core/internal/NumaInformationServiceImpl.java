@@ -47,7 +47,7 @@ import com.redhat.thermostat.storage.core.HostRef;
 
 public class NumaInformationServiceImpl implements NumaInformationService {
     
-    private static final int ORDER = ORDER_MEMORY_GROUP;
+    private static final int ORDER = ORDER_MEMORY_GROUP + 80;
     private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
     private ApplicationService appSvc;

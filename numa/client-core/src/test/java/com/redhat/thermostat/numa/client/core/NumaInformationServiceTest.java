@@ -68,7 +68,7 @@ public class NumaInformationServiceTest {
         NumaInformationServiceImpl numaInfoService = new NumaInformationServiceImpl(appSvc, numaDAO, numaViewProvider);
 
         int order = numaInfoService.getOrderValue();
-        assertEquals(Ordered.ORDER_MEMORY_GROUP, order);
+        assertEquals(Ordered.ORDER_MEMORY_GROUP + 80, order);
         HostRef ref = mock(HostRef.class);
         assertTrue(numaInfoService.getInformationServiceController(ref) instanceof NumaController);
         assertNotNull(numaInfoService.getFilter());
