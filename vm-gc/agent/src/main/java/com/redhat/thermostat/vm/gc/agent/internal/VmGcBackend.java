@@ -36,84 +36,28 @@
 
 package com.redhat.thermostat.vm.gc.agent.internal;
 
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import sun.jvmstat.monitor.HostIdentifier;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredHost;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.VmIdentifier;
 import sun.jvmstat.monitor.event.VmListener;
 
-import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendID;
 import com.redhat.thermostat.backend.BackendsProperties;
-import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 
-public class VmGcBackend extends Backend implements VmStatusListener {
-
-    private static final Logger LOGGER = LoggingUtils.getLogger(VmGcBackend.class);
+public class VmGcBackend extends VmListenerBackend {
 
     private final VmGcStatDAO vmGcStats;
-    private final VmStatusListenerRegistrar registerer;
 
-    private final Map<Integer, Pair<MonitoredVm, ? extends VmListener>> pidToData = new HashMap<>();
-    private MonitoredHost host;
-    private boolean started;
-
-    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version, VmStatusListenerRegistrar registerer) {
-        super(new BackendID("VM GC Backend", VmGcBackend.class.getName()));
+    public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version, VmStatusListenerRegistrar registrar) {
+        super(new BackendID("VM GC Backend", VmGcBackend.class.getName()), registrar);
         this.vmGcStats = vmGcStatDAO;
-        this.registerer = registerer;
         
         setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
         setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers garbage collection statistics about a JVM");
         setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
-        
-        try {
-            HostIdentifier hostId = new HostIdentifier((String) null);
-            host = MonitoredHost.getMonitoredHost(hostId);
-        } catch (MonitorException me) {
-            LOGGER.log(Level.WARNING, "Problems with connecting jvmstat to local machine", me);
-        } catch (URISyntaxException use) {
-            LOGGER.log(Level.WARNING, "Failed to create host identifier", use);
-        }
-    }
-
-    // Methods from Backend
-
-    @Override
-    public boolean activate() {
-        if (!started && host != null) {
-            registerer.register(this);
-            started = true;
-        }
-        return started;
-    }
-
-    @Override
-    public boolean deactivate() {
-        if (started) {
-            registerer.unregister(this);
-            started = false;
-        }
-        return !started;
     }
     
-    @Override
-    public boolean isActive() {
-        return started;
-    }
-
     @Override
     public String getConfigurationValue(String key) {
         return null;
@@ -129,66 +73,9 @@ public class VmGcBackend extends Backend implements VmStatusListener {
         return ORDER_MEMORY_GROUP + 20;
     }
 
-    // Methods from VmStatusListener
-
     @Override
-    public void vmStatusChanged(Status newStatus, int pid) {
-        switch (newStatus) {
-        case VM_STARTED:
-            /* fall-through */
-        case VM_ACTIVE:
-            vmStarted(pid);
-            break;
-        case VM_STOPPED:
-            vmStopped(pid);
-            break;
-        }
-    }
-
-    private void vmStarted(int pid) {
-        if (attachToNewProcessByDefault()) {
-            try {
-                MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(new VmIdentifier(String.valueOf(pid))));
-                if (vm != null) {
-                    VmGcVmListener listener = new VmGcVmListener(vmGcStats, pid);
-                    vm.addVmListener(listener);
-                    pidToData.put(pid, new Pair<>(vm, listener));
-                    LOGGER.finer("Attached VmListener for VM: " + pid);
-                } else {
-                    LOGGER.warning("could not connect to vm " + pid);
-                }
-            } catch (MonitorException me) {
-                LOGGER.log(Level.WARNING, "could not connect to vm " + pid, me);
-            } catch (URISyntaxException e) {
-                throw new AssertionError("The URI for the monitored vm must be valid, but it is not.");
-            }
-        }
-    }
-
-    private void vmStopped(int pid) {
-        Pair<MonitoredVm, ? extends VmListener> data = pidToData.remove(pid);
-        // if there is no data, we must never have attached to it. Nothing to do.
-        if (data == null) {
-            return;
-        }
-
-        MonitoredVm vm = data.getFirst();
-        VmListener listener = data.getSecond();
-        try {
-            if (listener != null) {
-                vm.removeVmListener(listener);
-            }
-        } catch (MonitorException e) {
-            LOGGER.log(Level.WARNING, "can't remove vm listener", e);
-        }
-        vm.detach();
-    }
-
-    /*
-     * For testing purposes only.
-     */
-    void setHost(MonitoredHost host) {
-        this.host = host;
+    protected VmListener createVmListener(int pid) {
+        return new VmGcVmListener(vmGcStats, pid);
     }
 
 }

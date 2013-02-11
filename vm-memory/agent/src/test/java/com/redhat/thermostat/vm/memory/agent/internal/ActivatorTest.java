@@ -49,6 +49,7 @@ import org.osgi.framework.Version;
 
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
+import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
@@ -90,7 +91,7 @@ public class ActivatorTest {
         activator.start(context);
 
         assertTrue(context.isServiceRegistered(Backend.class.getName(), VmMemoryBackend.class));
-        VmMemoryBackend backend = activator.getBackend();
+        VmListenerBackend backend = activator.getBackend();
         assertNotNull(backend);
 
         // core thermostat activates the backend when the backend is detected

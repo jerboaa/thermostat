@@ -51,6 +51,8 @@ import com.redhat.thermostat.storage.core.Storage;
  * <p>
  * To register a new backend, register an instance of the class with the OSGi
  * service registry.
+ * 
+ * @see VmListenerBackend
  */
 @ExtensionPoint
 public abstract class Backend implements Ordered {

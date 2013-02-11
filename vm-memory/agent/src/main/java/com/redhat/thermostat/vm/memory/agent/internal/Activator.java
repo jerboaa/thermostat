@@ -45,6 +45,7 @@ import org.osgi.framework.ServiceRegistration;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.Backend;
 import com.redhat.thermostat.backend.BackendService;
+import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.Version;
@@ -53,7 +54,7 @@ import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 public class Activator implements BundleActivator {
     
     private MultipleServiceTracker tracker;
-    private VmMemoryBackend backend;
+    private VmListenerBackend backend;
     private ServiceRegistration reg;
     
     @Override
@@ -94,7 +95,7 @@ public class Activator implements BundleActivator {
     /*
      * For testing purposes only.
      */
-    VmMemoryBackend getBackend() {
+    VmListenerBackend getBackend() {
         return backend;
     }
 }
