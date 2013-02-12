@@ -51,7 +51,6 @@ import javax.swing.GroupLayout.Alignment;
 import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.LayoutStyle.ComponentPlacement;
@@ -73,7 +72,6 @@ public class AboutDialog extends JDialog {
 
     private static final Logger logger = LoggingUtils.getLogger(AboutDialog.class);
 
-    private String name;
     private String description;
     private String version;
     private Icon icon;
@@ -91,10 +89,8 @@ public class AboutDialog extends JDialog {
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         setResizable(false);
         
-        name = appInfo.getName();
         description = appInfo.getDescription();
         version = appInfo.getVersion().getVersionNumber();
-        icon = IconResource.QUESTION.getIcon();
         copyright = appInfo.getCopyright();
         license = appInfo.getLicenseSummary();
         website = appInfo.getWebsite();
@@ -107,6 +103,7 @@ public class AboutDialog extends JDialog {
         setBounds(100, 100, 450, 338);
         
         UIResources res = UIResources.getInstance();
+        icon = new com.redhat.thermostat.client.swing.components.Icon(res.getLogo());
         
         JPanel panel = new JPanel();
         panel.setBorder(new TitledBorder(""));
@@ -147,11 +144,7 @@ public class AboutDialog extends JDialog {
         JLabel versionLabel = new JLabel(version);
         versionLabel.setFont(res.footerFont());
         versionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        
-        JLabel nameLabel = new JLabel(name);
-        nameLabel.setFont(res.headerFont());
-        nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        
+                
         JLabel descriptionLabel = new JLabel(description);
         descriptionLabel.setHorizontalAlignment(SwingConstants.CENTER);
         descriptionLabel.setFont(res.standardFont());
@@ -183,7 +176,6 @@ public class AboutDialog extends JDialog {
                     .addContainerGap()
                     .addGroup(gl_panel.createParallelGroup(Alignment.LEADING)
                         .addComponent(iconLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
-                        .addComponent(nameLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
                         .addComponent(versionLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
                         .addComponent(descriptionLabel, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
                         .addComponent(copyrightLabel, Alignment.TRAILING, GroupLayout.DEFAULT_SIZE, 398, Short.MAX_VALUE)
@@ -198,8 +190,6 @@ public class AboutDialog extends JDialog {
                     .addContainerGap()
                     .addComponent(iconLabel)
                     .addGap(4)
-                    .addComponent(nameLabel, GroupLayout.DEFAULT_SIZE, 24, Short.MAX_VALUE)
-                    .addPreferredGap(ComponentPlacement.RELATED)
                     .addComponent(versionLabel, GroupLayout.DEFAULT_SIZE, 13, Short.MAX_VALUE)
                     .addPreferredGap(ComponentPlacement.UNRELATED)
                     .addComponent(descriptionLabel, GroupLayout.DEFAULT_SIZE, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)

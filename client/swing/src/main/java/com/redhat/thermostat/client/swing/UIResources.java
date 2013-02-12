@@ -36,8 +36,12 @@
 
 package com.redhat.thermostat.client.swing;
 
+import com.redhat.thermostat.client.ui.IconDescriptor;
 import java.awt.Color;
 import java.awt.Font;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.UIManager;
 import javax.swing.plaf.ColorUIResource;
@@ -55,6 +59,8 @@ public class UIResources {
     private static final ColorUIResource selectionColor;
     
     private static final Font standard;
+    
+    private static IconDescriptor logo = null;
     
     static {
         Color color = UIManager.getColor("Button.darkShadow");
@@ -75,6 +81,11 @@ public class UIResources {
             font = Font.decode(Font.DIALOG);
         }
         standard = font;
+        try {
+            logo = IconDescriptor.loadIcon(UIResources.class.getClassLoader(), "/icons/thermostat.png");
+        } catch (IOException ex) {
+            Logger.getLogger(UIResources.class.getName()).log(Level.SEVERE, ex.getMessage(), ex);
+        }
     }
     
     private static final Font header = standard.deriveFont(Font.BOLD);
@@ -114,6 +125,12 @@ public class UIResources {
     
     public Font standardFont() {
         return standard;
+    }
+    
+    // miscellaneous
+    
+    public IconDescriptor getLogo() {
+        return logo;
     }
 }
 
