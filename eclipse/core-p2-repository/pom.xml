@@ -5,11 +5,11 @@
   <parent>
     <artifactId>thermostat-eclipse-parent</artifactId>
     <groupId>com.redhat.thermostat.eclipse.parent</groupId>
-    <version>0.5.0-SNAPSHOT</version>
+    <version>0.6.0-SNAPSHOT</version>
   </parent>
   <groupId>com.redhat.thermostat.eclipse.parent</groupId>
   <artifactId>com.redhat.thermostat.eclipse.core-p2-repo</artifactId>
-  <version>0.5.0-SNAPSHOT</version>
+  <version>0.6.0-SNAPSHOT</version>
 
   <name>Thermostat Client p2 Repository</name>
 
@@ -17,7 +17,7 @@
     <dependency>
       <groupId>com.redhat.thermostat.eclipse.parent</groupId>
       <artifactId>com.redhat.thermostat.client.feature</artifactId>
-      <version>0.5.0-SNAPSHOT</version>
+      <version>0.6.0-SNAPSHOT</version>
       <type>eclipse-feature</type>
     </dependency>
   </dependencies>
