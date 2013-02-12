@@ -41,11 +41,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import com.redhat.thermostat.common.Ordered;
 import com.redhat.thermostat.storage.core.Entity;
 import com.redhat.thermostat.storage.core.Persist;
 
 @Entity
-public class BackendInformation extends BasePojo {
+public class BackendInformation extends BasePojo implements Ordered {
 
     private String name;
     private String description;
@@ -109,6 +110,7 @@ public class BackendInformation extends BasePojo {
         this.isActive = active;
     }
     
+    @Override
     @Persist
     public int getOrderValue() {
         return orderValue;

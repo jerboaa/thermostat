@@ -38,9 +38,9 @@ package com.redhat.thermostat.storage.internal.dao;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
+import com.redhat.thermostat.common.OrderedComparator;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
@@ -75,20 +75,7 @@ public class BackendInfoDAOImpl implements BackendInfoDAO {
         }
         
         // Sort before returning
-        Collections.sort(results, new Comparator<BackendInformation>() {
-
-            // TODO Use OrderedComparator when common-core
-            // doesn't depend on storage-core
-            @Override
-            public int compare(BackendInformation o1, BackendInformation o2) {
-                int result = o1.getOrderValue() - o2.getOrderValue();
-                // Break ties using class name
-                if (result == 0) {
-                    result = o1.getClass().getName().compareTo(o2.getClass().getName());
-                }
-                return result;
-            }
-        });
+        Collections.sort(results, new OrderedComparator<>());
         
         return results;
     }
