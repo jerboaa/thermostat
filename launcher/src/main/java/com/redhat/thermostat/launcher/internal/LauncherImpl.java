@@ -44,10 +44,8 @@ import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 
 import org.apache.commons.cli.Options;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.ActionListener;
@@ -68,7 +66,6 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
@@ -159,20 +156,21 @@ public class LauncherImpl implements Launcher {
 
     private void shutdown() throws InternalError {
         try {
-            ApplicationService appSvc = OSGIUtils.getInstance().getService(ApplicationService.class);
-            appSvc.getApplicationExecutor().shutdown();
-            appSvc.getTimerFactory().shutdown();
+            ServiceReference appServiceRef = context.getServiceReference(ApplicationService.class);
+            if (appServiceRef != null) {
+                ApplicationService appSvc = (ApplicationService) context.getService(appServiceRef);
+                appSvc.getApplicationExecutor().shutdown();
+                appSvc.getTimerFactory().shutdown();
+                appSvc = null;
+                context.ungetService(appServiceRef);
+            }
 
-            Bundle bundle = FrameworkUtil.getBundle(LauncherImpl.class);
-            if (bundle != null) {
-                BundleContext ctx = bundle.getBundleContext();
-                if (ctx != null) {
-                    ServiceReference storageRef = ctx.getServiceReference(Storage.class);
-                    if (storageRef != null) {
-                        Storage storage = (Storage) ctx.getService(storageRef);
-                        if (storage != null) {
-                            storage.shutdown();
-                        }
+            if (context != null) {
+                ServiceReference storageRef = context.getServiceReference(Storage.class);
+                if (storageRef != null) {
+                    Storage storage = (Storage) context.getService(storageRef);
+                    if (storage != null) {
+                        storage.shutdown();
                     }
                 }
             }

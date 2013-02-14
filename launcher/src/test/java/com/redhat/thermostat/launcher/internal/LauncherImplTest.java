@@ -105,7 +105,7 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({FrameworkUtil.class, HelpCommand.class, OSGIUtils.class})
+@PrepareForTest({FrameworkUtil.class, HelpCommand.class})
 public class LauncherImplTest {
     
     private static String defaultKeyringProvider;
@@ -256,10 +256,7 @@ public class LauncherImplTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when(appSvc.getTimerFactory()).thenReturn(timerFactory);
         when(appSvc.getApplicationExecutor()).thenReturn(exec);
-        OSGIUtils osgi = mock(OSGIUtils.class);
-        when(osgi.getService(ApplicationService.class)).thenReturn(appSvc);
-        PowerMockito.mockStatic(OSGIUtils.class);
-        when(OSGIUtils.getInstance()).thenReturn(osgi);
+        bundleContext.registerService(ApplicationService.class, appSvc, null);
 
         loggingInitializer = mock(LoggingInitializer.class);
         dbServiceFactory = mock(DbServiceFactory.class);
