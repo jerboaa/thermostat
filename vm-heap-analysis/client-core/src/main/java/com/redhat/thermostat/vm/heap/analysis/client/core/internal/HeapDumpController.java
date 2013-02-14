@@ -125,7 +125,7 @@ public class HeapDumpController implements InformationServiceController<VmRef> {
         this.heapDAO = heapDao;
         
         model = new OverviewChart(
-                    translator.localize(LocaleResources.HEAP_CHART_TITLE),
+                    null,
                     translator.localize(LocaleResources.HEAP_CHART_TIME_AXIS),
                     translator.localize(LocaleResources.HEAP_CHART_HEAP_AXIS),
                     translator.localize(LocaleResources.HEAP_CHART_CAPACITY),

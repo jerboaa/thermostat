@@ -300,7 +300,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     private JFreeChart createMemoryChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                translator.localize(LocaleResources.HOST_MEMORY_CHART_TITLE), // Title
+                null, // Title
                 translator.localize(LocaleResources.HOST_MEMORY_CHART_TIME_LABEL), // x-axis Label
                 translator.localize(LocaleResources.HOST_MEMORY_CHART_SIZE_LABEL, Size.Unit.MiB.name()), // y-axis Label
                 memoryCollection, // Dataset

@@ -275,7 +275,7 @@ public class NumaPanel extends NumaView implements SwingComponent {
 
     private JFreeChart createNumaChart() {
         JFreeChart chart = ChartFactory.createTimeSeriesChart(
-                translator.localize(LocaleResources.NUMA_CHART_TITLE), // Title
+                null, // Title
                 translator.localize(LocaleResources.NUMA_CHART_TIME_LABEL), // x-axis Label
                 translator.localize(LocaleResources.NUMA_CHART_NUM_HITS_LABEL), // y-axis Label
                 numaCollection, // Dataset

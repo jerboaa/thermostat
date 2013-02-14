@@ -40,7 +40,7 @@ import com.redhat.thermostat.common.locale.Translate;
 
 public enum LocaleResources {
     NUMA_TAB,
-    NUMA_NODE, NUMA_SECTION_OVERVIEW, NUMA_CHART_TITLE, NUMA_CHART_TIME_LABEL, NUMA_CHART_NUM_HITS_LABEL,
+    NUMA_NODE, NUMA_SECTION_OVERVIEW, NUMA_CHART_TIME_LABEL, NUMA_CHART_NUM_HITS_LABEL,
     ;
 
     static final String RESOURCE_BUNDLE =
