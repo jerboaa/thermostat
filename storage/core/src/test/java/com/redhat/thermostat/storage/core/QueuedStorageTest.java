@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -405,6 +406,14 @@ public class QueuedStorageTest {
 
         assertNull(executor.getTask());
         assertNull(fileExecutor.getTask());
+    }
+    
+    @Test
+    public void testShutdown() {
+        queuedStorage.shutdown();
+        verify(delegateStorage).shutdown();
+        assertTrue(executor.isShutdown());
+        assertTrue(fileExecutor.isShutdown());
     }
 }
 

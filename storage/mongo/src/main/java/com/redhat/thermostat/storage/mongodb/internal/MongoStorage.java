@@ -321,7 +321,15 @@ public class MongoStorage implements Storage {
 
     @Override
     public void shutdown() {
-        // Nothing to do here.
+        try {
+            // Clean up any pending connections. mongo-java-driver issue 130
+            // suggests that Mongo.close() helps with this ThreadLocal business
+            // tomcat warns about. See also:
+            // IcedTea BZ#1315 and https://jira.mongodb.org/browse/JAVA-130
+            db.getMongo().close();
+        } catch (Exception e) {
+            // ignored
+        }
     }
 
 }

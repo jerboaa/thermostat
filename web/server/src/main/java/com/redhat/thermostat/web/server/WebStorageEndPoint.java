@@ -69,6 +69,7 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AbstractQuery.Sort;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
@@ -134,6 +135,22 @@ public class WebStorageEndPoint extends HttpServlet {
             tokenManager.setTimeout(Integer.parseInt(timeoutParam));
         }
         getServletContext().setAttribute(TOKEN_MANAGER_KEY, tokenManager);
+    }
+    
+    @Override
+    public void destroy() {
+        logger.log(Level.INFO, "Going to shut down web service");
+        if (storage != null) {
+            // See IcedTea BZ#1315. Shut down storage in order
+            // to avoid further memory leaks.
+            Connection connection = storage.getConnection();
+            try {
+                connection.disconnect();
+            } finally {
+                storage.shutdown();
+            }
+        }
+        logger.log(Level.INFO, "Web service shut down finished");
     }
 
     @Override

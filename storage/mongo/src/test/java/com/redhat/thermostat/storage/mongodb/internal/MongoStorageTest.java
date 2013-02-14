@@ -52,6 +52,7 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.UUID;
 
 import org.junit.After;
@@ -60,6 +61,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
@@ -86,6 +88,12 @@ import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.storage.core.Update;
 import com.redhat.thermostat.storage.model.BasePojo;
 
+//There is a bug (resolved as wontfix) in powermock which results in
+//java.lang.LinkageError if javax.management.* classes aren't ignored by
+//Powermock. More here: http://code.google.com/p/powermock/issues/detail?id=277
+//SSL tests need this and having that annotation on method level doesn't seem
+//to solve the issue.
+@PowerMockIgnore( {"javax.management.*"})
 @RunWith(PowerMockRunner.class)
 @PrepareForTest({ DBCollection.class, DB.class, Mongo.class, MongoStorage.class, MongoConnection.class })
 public class MongoStorageTest {
@@ -205,7 +213,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyFindAllReturnsCursor() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
@@ -214,7 +221,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyFindAllCallsDBCollectionFind() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery(testCategory);
         query.where(key1, Criteria.EQUALS, "fluff");
@@ -224,7 +230,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyFindAllCallsDBCollectionFindWithCorrectQuery() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
 
         MongoQuery query = mock(MongoQuery.class);
@@ -240,7 +245,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyFindAllReturnsCorrectCursor() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing MongoCursor
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
@@ -252,7 +256,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyFindAllWithSortAndLimit() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         // TODO find a way to test this that isn't just testing MongoCursor
         // Because we mock the DBCollection, the contents of this query don't actually determine the result.
@@ -272,7 +275,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyFindAllFromCategoryCallsDBCollectionFindAll() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery(testCategory);
         query.execute();
@@ -281,7 +283,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyFindAllFromCategoryReturnsCorrectCursor() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         Query query = storage.createQuery(testCategory);
         Cursor<TestClass> cursor = query.execute();
@@ -291,7 +292,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyGetCount() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         long count = storage.getCount(testCategory);
         assertEquals(2, count);
@@ -299,7 +299,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyGetCountForEmptyCategory() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         long count = storage.getCount(emptyTestCategory);
         assertEquals(0, count);
@@ -307,9 +306,8 @@ public class MongoStorageTest {
 
     @Test
     public void verifyGetCountForNonexistentCategory() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
-        storage.getConnection().connect();
+        setDbFieldInStorage(storage);
         long count = storage.getCount(new Category("NonExistent", TestClass.class));
         assertEquals(0, count);
     }
@@ -346,7 +344,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyPutChunkUsesCorrectChunkAgent() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         TestClass pojo = new TestClass();
         pojo.setAgentId("123");
@@ -361,7 +358,6 @@ public class MongoStorageTest {
 
     @Test
     public void verifyPutChunkUsesCorrectGlobalAgent() throws Exception {
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
         storage.setAgentId(new UUID(1, 2));
         TestClass pojo = new TestClass();
@@ -382,7 +378,6 @@ public class MongoStorageTest {
         GridFS gridFS = mock(GridFS.class);
         when(gridFS.findOne("test")).thenReturn(file);
         PowerMockito.whenNew(GridFS.class).withArguments(any()).thenReturn(gridFS);
-        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
         MongoStorage storage = makeStorage();
 
         InputStream actual = storage.loadFile("test");
@@ -475,6 +470,23 @@ public class MongoStorageTest {
         assertEquals("test4", value.get("key4"));
         assertEquals("test5", value.get("key5"));
         assertEquals("123", value.get("agentId"));
+    }
+    
+    @Test
+    public void verifyMongoCloseOnShutdown() throws Exception {
+        Mongo mockMongo = mock(Mongo.class);
+        when(db.getMongo()).thenReturn(mockMongo);
+        MongoStorage storage = new MongoStorage(conf);
+        setDbFieldInStorage(storage);
+        storage.shutdown();
+        verify(mockMongo).close();
+    }
+
+    private void setDbFieldInStorage(MongoStorage storage) throws Exception {
+        // use a bit of reflection to set the db field
+        Field dbField = storage.getClass().getDeclaredField("db");
+        dbField.setAccessible(true);
+        dbField.set(storage, db);
     }
 }
 

@@ -274,6 +274,7 @@ public final class QueuedStorage implements Storage {
 
     @Override
     public void shutdown() {
+        delegate.shutdown();
         executor.shutdown();
         fileExecutor.shutdown();
     }
