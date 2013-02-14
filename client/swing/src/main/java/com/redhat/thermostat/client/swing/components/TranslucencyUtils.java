@@ -52,7 +52,7 @@ class TranslucencyUtils {
         if (translucent) {
             GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
             GraphicsDevice gd = ge.getDefaultScreenDevice();
-            translucent = gd.isWindowTranslucencySupported(WindowTranslucency.PERPIXEL_TRANSLUCENT);
+            translucent = gd.isWindowTranslucencySupported(WindowTranslucency.TRANSLUCENT);
         }
         
         float transparency = 0.90f;
