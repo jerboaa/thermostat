@@ -66,12 +66,12 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
     private JPanel visiblePanel;
     private JScrollPane scrollPane;
 
-    private final ValueField hostname = new ValueField("${hostname}");
-    private final ValueField cpuModel = new ValueField("${cpu-model}");
-    private final ValueField cpuCount = new ValueField("${cpu-count}");
-    private final ValueField totalMemory = new ValueField("${total-memory}");
-    private final ValueField osName = new ValueField("${os-name}");
-    private final ValueField osKernel = new ValueField("${os-kernel}");
+    private final ValueField hostname = new ValueField("");
+    private final ValueField cpuModel = new ValueField("");
+    private final ValueField cpuCount = new ValueField("");
+    private final ValueField totalMemory = new ValueField("");
+    private final ValueField osName = new ValueField("");
+    private final ValueField osKernel = new ValueField("");
 
     private final DefaultTableModel networkTableModel = new DefaultTableModel() {
         @Override

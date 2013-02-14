@@ -60,8 +60,8 @@ public class MemorySpacePanel extends JPanel {
 
         additionalDetailsIcon = new JLabel(IconResource.ARROW_RIGHT.getIcon());
 
-        lblUsed = new JLabel("${USED}");
-        lblAvailable = new JLabel("${AVAILABLE}");
+        lblUsed = new JLabel("");
+        lblAvailable = new JLabel("");
 
         GroupLayout groupLayout = new GroupLayout(this);
         groupLayout.setHorizontalGroup(

@@ -79,11 +79,11 @@ public class SummaryPanel extends SummaryView implements SwingComponent {
 
         JLabel lblTotalHosts = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_MACHINES));
 
-        totalMonitoredHosts = new ValueField("${TOTAL_MONITORED_HOSTS}");
+        totalMonitoredHosts = new ValueField("");
 
         JLabel lblTotal = new JLabel(translator.localize(LocaleResources.HOME_PANEL_TOTAL_JVMS));
 
-        totalMonitoredVms = new ValueField("${TOTAL_MONITORED_VMS}");
+        totalMonitoredVms = new ValueField("");
 
         JLabel lblIssues = new SectionHeader(translator.localize(LocaleResources.HOME_PANEL_SECTION_ISSUES));
 

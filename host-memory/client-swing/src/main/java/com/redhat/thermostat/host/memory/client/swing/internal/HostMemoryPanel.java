@@ -87,7 +87,7 @@ public class HostMemoryPanel extends HostMemoryView implements SwingComponent {
 
     private final MemoryCheckboxListener memoryCheckboxListener = new MemoryCheckboxListener();
 
-    private final JTextComponent totalMemory = new ValueField("${TOTAL_MEMORY}");
+    private final JTextComponent totalMemory = new ValueField("");
 
     private final JPanel memoryCheckBoxPanel = new JPanel(new WrapLayout(FlowLayout.LEADING));
     private final CopyOnWriteArrayList<GraphVisibilityChangeListener> listeners = new CopyOnWriteArrayList<>();

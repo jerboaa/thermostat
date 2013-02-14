@@ -82,8 +82,8 @@ public class HostCpuPanel extends HostCpuView implements SwingComponent {
 
     private JPanel visiblePanel;
 
-    private final JTextComponent cpuModel = new ValueField("${CPU_MODEL}");
-    private final JTextComponent cpuCount = new ValueField("${CPU_COUNT}");
+    private final JTextComponent cpuModel = new ValueField("");
+    private final JTextComponent cpuCount = new ValueField("");
 
     private final TimeSeriesCollection datasetCollection = new TimeSeriesCollection();
     private final Map<Integer, TimeSeries> datasets = new HashMap<>();
