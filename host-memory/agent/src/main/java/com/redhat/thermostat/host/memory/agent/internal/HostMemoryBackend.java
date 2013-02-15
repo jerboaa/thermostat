@@ -39,14 +39,12 @@ package com.redhat.thermostat.host.memory.agent.internal;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.host.memory.common.MemoryStatDAO;
 import com.redhat.thermostat.utils.ProcDataSource;
 
-public class HostMemoryBackend extends Backend {
+public class HostMemoryBackend extends BaseBackend {
 
     private static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
     
@@ -56,14 +54,13 @@ public class HostMemoryBackend extends Backend {
     private boolean started;
 
     public HostMemoryBackend(ScheduledExecutorService executor, MemoryStatDAO memoryStatDAO, Version version) {
-        super(new BackendID("Host Memory Backend", HostMemoryBackend.class.getName()));
+        super("Host Memory Backend",
+                "Gathers memory statistics about a host",
+                "Red Hat, Inc.",
+                version.getVersionNumber(), true);
         this.executor = executor;
         this.memoryStats = memoryStatDAO;
-        
-        setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers memory statistics about a host");
-        setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
-        
+
         ProcDataSource source = new ProcDataSource();
         memoryStatBuilder = new MemoryStatBuilder(source);
     }
@@ -92,16 +89,6 @@ public class HostMemoryBackend extends Backend {
     @Override
     public boolean isActive() {
         return started;
-    }
-
-    @Override
-    public String getConfigurationValue(String key) {
-        return null;
-    }
-
-    @Override
-    public boolean attachToNewProcessByDefault() {
-        return true;
     }
 
     @Override

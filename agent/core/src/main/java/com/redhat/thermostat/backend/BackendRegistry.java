@@ -36,22 +36,17 @@
  
 package com.redhat.thermostat.backend;
 
-import java.util.logging.Logger;
-
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
  * A registry for {@link Backend}s. {@link Backend}s are responsible to be
  * registered as OSGi services into the framework.
  */
 public class BackendRegistry extends ThermostatExtensionRegistry<Backend> {
-
-    private static final Logger logger = LoggingUtils.getLogger(BackendRegistry.class);
 
     private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + Backend.class.getName() + ")";
 

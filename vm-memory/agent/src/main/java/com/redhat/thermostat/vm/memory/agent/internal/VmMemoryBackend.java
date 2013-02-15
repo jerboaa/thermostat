@@ -37,8 +37,6 @@
 package com.redhat.thermostat.vm.memory.agent.internal;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
 import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
@@ -48,22 +46,10 @@ public class VmMemoryBackend extends VmListenerBackend {
     private VmMemoryStatDAO vmMemoryStats;
     
     public VmMemoryBackend(VmMemoryStatDAO vmMemoryStatDAO, Version version, VmStatusListenerRegistrar registrar) {
-        super(new BackendID("VM Memory Backend", VmMemoryBackend.class.getName()), registrar);
+        super("VM Memory Backend",
+                "Gathers memory statistics about a JVM",
+                "Red Hat, Inc.", version.getVersionNumber(), true, registrar);
         this.vmMemoryStats = vmMemoryStatDAO;
-        
-        setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers memory statistics about a JVM");
-        setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
-    }
-    
-    @Override
-    public String getConfigurationValue(String key) {
-        return null;
-    }
-
-    @Override
-    public boolean attachToNewProcessByDefault() {
-        return true;
     }
 
     @Override

@@ -39,8 +39,10 @@ package com.redhat.thermostat.backend;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -73,7 +75,6 @@ public class VmListenerBackendTest {
 
     @Before
     public void setup() throws URISyntaxException, MonitorException {
-        BackendID id = mock(BackendID.class);
         registrar = mock(VmStatusListenerRegistrar.class);
         listener = mock(VmListener.class);
         
@@ -89,7 +90,8 @@ public class VmListenerBackendTest {
         
         monitoredVm = mock(MonitoredVm.class);
         
-        backend = new TestBackend(id, registrar);
+        backend = new TestBackend("Test Backend", "Backend for test", "Test Co.",
+                "0.0.0", registrar);
         backend.setHost(host);
     }
     
@@ -140,8 +142,13 @@ public class VmListenerBackendTest {
         VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
         when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
 
+        // Should be no response if not observing new jvm.
+        backend.setObserveNewJvm(false);
         backend.vmStatusChanged(Status.VM_STARTED, 1);
+        verify(monitoredVm, times(0)).addVmListener(any(VmListener.class));
 
+        backend.setObserveNewJvm(true);
+        backend.vmStatusChanged(Status.VM_STARTED, 1);
         verify(monitoredVm).addVmListener(listener);
     }
 
@@ -151,6 +158,7 @@ public class VmListenerBackendTest {
         VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
         when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
 
+        backend.setObserveNewJvm(true);
         backend.vmStatusChanged(Status.VM_ACTIVE, 1);
 
         verify(monitoredVm).addVmListener(listener);
@@ -172,6 +180,7 @@ public class VmListenerBackendTest {
         VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
         when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
 
+        backend.setObserveNewJvm(true);
         backend.vmStatusChanged(Status.VM_STARTED, 1);
         backend.vmStatusChanged(Status.VM_STOPPED, 1);
 
@@ -197,6 +206,7 @@ public class VmListenerBackendTest {
         MonitorException monitorException = new MonitorException();
         doThrow(monitorException).when(monitoredVm).removeVmListener(listener);
 
+        backend.setObserveNewJvm(true);
         backend.vmStatusChanged(Status.VM_STARTED, 1);
         backend.vmStatusChanged(Status.VM_STOPPED, 1);
 
@@ -211,6 +221,7 @@ public class VmListenerBackendTest {
         VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
         when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
 
+        backend.setObserveNewJvm(true);
         backend.vmStatusChanged(Status.VM_STARTED, 1);
         backend.deactivate();
         verify(monitoredVm).removeVmListener(listener);
@@ -218,8 +229,9 @@ public class VmListenerBackendTest {
     
     private class TestBackend extends VmListenerBackend {
 
-        public TestBackend(BackendID id, VmStatusListenerRegistrar registrar) {
-            super(id, registrar);
+        public TestBackend(String name, String description, String vendor,
+                String version, VmStatusListenerRegistrar registrar) {
+            super(name, description, vendor, version, registrar);
         }
 
         @Override
@@ -230,11 +242,6 @@ public class VmListenerBackendTest {
         @Override
         protected VmListener createVmListener(int pid) {
             return listener;
-        }
-
-        @Override
-        public boolean attachToNewProcessByDefault() {
-            return true;
         }
         
     }

@@ -46,9 +46,7 @@ import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
-import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
@@ -56,7 +54,7 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.NetworkInterfaceInfo;
 import com.redhat.thermostat.utils.ProcDataSource;
 
-public class SystemBackend extends Backend {
+public class SystemBackend extends BaseBackend {
 
     private static final Logger logger = LoggingUtils.getLogger(SystemBackend.class);
 
@@ -75,14 +73,13 @@ public class SystemBackend extends Backend {
 
 
     public SystemBackend(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier) {
-        super(new BackendID("System Backend", SystemBackend.class.getName()));
+        super("System Backend",
+                "Gathers basic information from the system",
+                "Red Hat, Inc.",
+                "0.5.0", true);
         this.hostInfos = hostInfoDAO;
         this.networkInterfaces = netInfoDAO;
 
-        setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers basic information from the system");
-        setConfigurationValue(BackendsProperties.VERSION.name(), "0.5.0");
-        
         ProcDataSource source = new ProcDataSource();
         hostInfoBuilder = new HostInfoBuilder(source);
         hostListener = new JvmStatHostListener(vmInfoDAO, notifier);
@@ -145,16 +142,6 @@ public class SystemBackend extends Backend {
     @Override
     public synchronized boolean isActive() {
         return (timer != null);
-    }
-
-    @Override
-    public String getConfigurationValue(String key) {
-        return null;
-    }
-
-    @Override
-    public boolean attachToNewProcessByDefault() {
-        return true;
     }
 
     @Override

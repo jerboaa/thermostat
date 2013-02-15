@@ -36,63 +36,82 @@
 
 package com.redhat.thermostat.backend;
 
-/**
- * The unique identifier that identifies a backend.
- */
-public class BackendID {
+import java.util.Objects;
 
-    private final String simpleName;
-    private final String className;
+public abstract class BaseBackend implements Backend {
+
+    private boolean observeNewJvm;
     
-    public BackendID(String simpleName, String className) {
-        this.simpleName = simpleName;
-        this.className = className;
+    private String name, description, vendor, version;
+
+    public BaseBackend(String name, String description, String vendor, String version) {
+        this(name, description, vendor, version, false);
     }
-    
-    public String getSimpleName() {
-        return simpleName;
+
+    public BaseBackend(String name, String description, String vendor, String version, boolean observeNewJvm) {
+        this.name = Objects.requireNonNull(name);
+        this.description = Objects.requireNonNull(description);
+        this.vendor = Objects.requireNonNull(vendor);
+        this.version = Objects.requireNonNull(version);
+        this.observeNewJvm = observeNewJvm;
     }
-    
-    public String getClassName() {
-        return className;
-    }
-    
+
     @Override
-    public String toString() {
-        return simpleName + " = " + className;
+    public String getName() {
+        return name;
     }
 
+    @Override
+    public String getDescription() {
+        return description;
+    }
+
+    @Override
+    public String getVendor() {
+        return vendor;
+    }
+
+    @Override
+    public String getVersion() {
+        return version;
+    }
+
+    @Override
+    public boolean getObserveNewJvm() {
+        return observeNewJvm;
+    }
+
+    @Override
+    public void setObserveNewJvm(boolean newValue) {
+        observeNewJvm = newValue;
+    }
+    
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result
-                + ((className == null) ? 0 : className.hashCode());
-        result = prime * result
-                + ((simpleName == null) ? 0 : simpleName.hashCode());
-        return result;
+        return Objects.hash(name, vendor, version);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        BackendID other = (BackendID) obj;
-        if (className == null) {
-            if (other.className != null)
-                return false;
-        } else if (!className.equals(other.className))
-            return false;
-        if (simpleName == null) {
-            if (other.simpleName != null)
-                return false;
-        } else if (!simpleName.equals(other.simpleName))
-            return false;
-        return true;
+        }
+        BaseBackend other = (BaseBackend) obj;
+        return Objects.equals(name, other.name) &&
+                Objects.equals(version, other.version) &&
+                Objects.equals(vendor, other.vendor);
+    }
+
+    @Override
+    public String toString() {
+        return "Backend [name=" + getName() + ", version=" + getVersion() + ", vendor=" + getVendor()
+                + ", description=" + getDescription() + "]";
     }
 }
 

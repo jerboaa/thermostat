@@ -84,38 +84,40 @@ public class Agent {
             Backend backend = (Backend) actionEvent.getPayload();
             
             switch (actionEvent.getActionId()) {
-            case SERVICE_ADDED: {
-                // TODO: this backed has been already added, we should
-                // probably signal the user this
-                if (!backendInfos.containsKey(backend)) {
 
-                    logger.info("Adding backend: " + backend);
-                    
-                    backend.activate();
+                case SERVICE_ADDED: {
+                    if (!backendInfos.containsKey(backend)) {
 
-                    BackendInformation info = createBackendInformation(backend);
-                    backendDao.addBackendInformation(info);
-                    backendInfos.put(backend, info);                    
+                        logger.info("Adding backend: " + backend);
+
+                        backend.activate();
+
+                        BackendInformation info = createBackendInformation(backend);
+                        backendDao.addBackendInformation(info);
+                        backendInfos.put(backend, info);                    
+                    } else {
+                        logger.warning("Backend registered that agent already knows about:" + backend);
+                    }
+                    break;
                 }
-            }
-            break;
 
-            case SERVICE_REMOVED: {
-                BackendInformation info = backendInfos.get(backend);
-                if (info != null) {
-                    logger.info("removing backend: " + backend);
-                    
-                    backend.deactivate();
-                    
-                    backendDao.removeBackendInformation(info);
-                    backendInfos.remove(backend); 
+                case SERVICE_REMOVED: {
+                    BackendInformation info = backendInfos.get(backend);
+                    if (info != null) {
+                        logger.info("removing backend: " + backend);
+
+                        backend.deactivate();
+
+                        backendDao.removeBackendInformation(info);
+                        backendInfos.remove(backend); 
+                    }
+                    break;
                 }
-            }
-            break;
-                
-            default:
-                logger.log(Level.WARNING, "received unknown event from BackendRegistry: " + actionEvent.getActionId());
-                break;
+
+                default: {
+                    logger.log(Level.WARNING, "received unknown event from BackendRegistry: " + actionEvent.getActionId());
+                    break;
+                }
             }
         }
     };
