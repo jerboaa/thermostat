@@ -346,18 +346,14 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
+                backendsTableModel.setRowCount(0);
+
                 int i = 0;
                 for (Entry<String, String> entry : backendStatus.entrySet()) {
                     String backendName = entry.getKey();
                     String status = entry.getValue();
-                    int rowCount = backendsTableModel.getRowCount();
-                    if (i >= rowCount) {
-                        Object[] rowData = new String[] { backendName, status };
-                        backendsTableModel.insertRow(i, rowData);
-                    } else {
-                        backendsTableModel.setValueAt(backendName, i, 0);
-                        backendsTableModel.setValueAt(status, i, 1);
-                    }
+                    Object[] rowData = new String[] { backendName, status };
+                    backendsTableModel.insertRow(i, rowData);
                     i++;
                 }
 
@@ -454,11 +450,17 @@ public class AgentInformationDisplayFrame extends AgentInformationDisplayView {
 
             ListSelectionModel model = (ListSelectionModel) e.getSource();
             int rowIndex = model.getMinSelectionIndex();
+            if (rowIndex == -1) {
+                backendDescription.setText("");
+                return;
+            }
+
             String backendName = (String) backendsTableModel.getValueAt(rowIndex, 0);
             ActionEvent<ConfigurationAction> event = new ActionEvent<>(AgentInformationDisplayFrame.this,
                     ConfigurationAction.SHOW_BACKEND_DESCRIPTION);
             event.setPayload(backendName);
             fireAction(event);
+
         }
 
     }
