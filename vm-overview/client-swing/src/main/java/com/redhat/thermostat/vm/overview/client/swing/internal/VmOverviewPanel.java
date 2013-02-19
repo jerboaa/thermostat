@@ -37,40 +37,42 @@
 package com.redhat.thermostat.vm.overview.client.swing.internal;
 
 import java.awt.Component;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.BorderFactory;
+import javax.swing.GroupLayout;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingUtilities;
+import javax.swing.GroupLayout.Alignment;
+import javax.swing.LayoutStyle.ComponentPlacement;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.HeaderPanel;
+import com.redhat.thermostat.client.swing.components.LabelField;
+import com.redhat.thermostat.client.swing.components.SectionHeader;
+import com.redhat.thermostat.client.swing.components.ValueField;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.vm.overview.client.core.VmOverviewView;
 import com.redhat.thermostat.vm.overview.client.locale.LocaleResources;
-import com.redhat.thermostat.vm.overview.client.swing.internal.SimpleTable.Section;
-import com.redhat.thermostat.vm.overview.client.swing.internal.SimpleTable.TableEntry;
 
 public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
-    
+
     private HeaderPanel visiblePanel;
     private JScrollPane container;
 
-    private final ChangeableText pid = new ChangeableText("");
-    private final ChangeableText startTimeStamp = new ChangeableText("");
-    private final ChangeableText stopTimeStamp = new ChangeableText("");
-    private final ChangeableText mainClass = new ChangeableText("");
-    private final ChangeableText javaCommandLine = new ChangeableText("");
-    private final ChangeableText javaHome = new ChangeableText("");
-    private final ChangeableText javaVersion = new ChangeableText("");
-    private final ChangeableText vmNameAndVersion = new ChangeableText("");
-    private final ChangeableText vmArguments = new ChangeableText("");
-
+    private final ValueField pid = new ValueField("");
+    private final ValueField startTimeStamp = new ValueField("");
+    private final ValueField stopTimeStamp = new ValueField("");
+    private final ValueField mainClass = new ValueField("");
+    private final ValueField javaCommandLine = new ValueField("");
+    private final ValueField javaHome = new ValueField("");
+    private final ValueField javaVersion = new ValueField("");
+    private final ValueField vmNameAndVersion = new ValueField("");
+    private final ValueField vmArguments = new ValueField("");
 
     public VmOverviewPanel() {
         super();
@@ -99,49 +101,94 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
     }
 
     @Override
-    public void setVmPid(String pid) {
-        this.pid.setText(pid);
+    public void setVmPid(final String newPid) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                pid.setText(newPid);
+            }
+        });
     }
 
     @Override
-    public void setVmStartTimeStamp(String timeStamp) {
-        this.startTimeStamp.setText(timeStamp);
+    public void setVmStartTimeStamp(final String newTimeStamp) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                startTimeStamp.setText(newTimeStamp);
+            }
+        });
     }
 
     @Override
-    public void setVmStopTimeStamp(String timeStamp) {
-        this.stopTimeStamp.setText(timeStamp);
+    public void setVmStopTimeStamp(final String newTimeStamp) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                stopTimeStamp.setText(newTimeStamp);
+            }
+        });
     }
 
     @Override
-    public void setMainClass(String mainClass) {
-        this.mainClass.setText(mainClass);
+    public void setMainClass(final String newMainClass) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                mainClass.setText(newMainClass);
+            }
+        });
     }
 
     @Override
-    public void setJavaCommandLine(String javaCommandLine) {
-        this.javaCommandLine.setText(javaCommandLine);
+    public void setJavaCommandLine(final String newJavaCommandLine) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                javaCommandLine.setText(newJavaCommandLine);
+            }
+        });
     }
 
     @Override
-    public void setJavaHome(String javaHome) {
-        this.javaHome.setText(javaHome);
+    public void setJavaHome(final String newJavaHome) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                javaHome.setText(newJavaHome);
+            }
+        });
 
     }
 
     @Override
-    public void setJavaVersion(String javaVersion) {
-        this.javaVersion.setText(javaVersion);
+    public void setJavaVersion(final String newJavaVersion) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                javaVersion.setText(newJavaVersion);
+            }
+        });
     }
 
     @Override
-    public void setVmNameAndVersion(String vmNameAndVersion) {
-        this.vmNameAndVersion.setText(vmNameAndVersion);
+    public void setVmNameAndVersion(final String newVmNameAndVersion) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                vmNameAndVersion.setText(newVmNameAndVersion);
+            }
+        });
     }
 
     @Override
-    public void setVmArguments(String vmArguments) {
-        this.vmArguments.setText(vmArguments);
+    public void setVmArguments(final String newVmArguments) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                vmArguments.setText(newVmArguments);
+            }
+        });
     }
 
     @Override
@@ -154,40 +201,92 @@ public class VmOverviewPanel extends VmOverviewView implements SwingComponent {
 
         visiblePanel.setHeader(translator.localize(LocaleResources.VM_INFO_TITLE));
 
-        TableEntry entry;
-        List<Section> allSections = new ArrayList<Section>();
+        SectionHeader processSection = new SectionHeader(translator.localize(LocaleResources.VM_INFO_SECTION_PROCESS));
+        LabelField pidLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_PROCESS_ID));
+        LabelField startTimeLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_START_TIME));
+        LabelField stopTimeLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_STOP_TIME));
 
-        Section processSection = new Section(translator.localize(LocaleResources.VM_INFO_SECTION_PROCESS));
-        allSections.add(processSection);
+        SectionHeader javaSection = new SectionHeader(translator.localize(LocaleResources.VM_INFO_SECTION_JAVA));
 
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_PROCESS_ID), pid);
-        processSection.add(entry);
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_START_TIME), startTimeStamp);
-        processSection.add(entry);
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_STOP_TIME), stopTimeStamp);
-        processSection.add(entry);
+        LabelField mainClassLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_MAIN_CLASS));
+        LabelField javaCommandLineLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_COMMAND_LINE));
+        LabelField javaVersionLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_JAVA_VERSION));
+        LabelField vmNameAndVersionLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_VM));
+        LabelField vmArgumentsLabel = new LabelField(translator.localize(LocaleResources.VM_INFO_VM_ARGUMENTS));
 
-        Section javaSection = new Section(translator.localize(LocaleResources.VM_INFO_SECTION_JAVA));
-        allSections.add(javaSection);
+        JPanel table = new JPanel();
+        table.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 15));
+        GroupLayout gl = new GroupLayout(table);
+        table.setLayout(gl);
 
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_MAIN_CLASS), mainClass);
-        javaSection.add(entry);
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_COMMAND_LINE), javaCommandLine);
-        javaSection.add(entry);
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_JAVA_VERSION), javaVersion);
-        javaSection.add(entry);
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_VM), vmNameAndVersion);
-        javaSection.add(entry);
-        entry = new TableEntry(translator.localize(LocaleResources.VM_INFO_VM_ARGUMENTS), vmArguments);
-        javaSection.add(entry);
+        gl.setHorizontalGroup(gl.createParallelGroup()
+                .addComponent(processSection)
+                .addComponent(javaSection)
+                .addGroup(gl.createSequentialGroup()
+                        .addContainerGap()
+                        .addGroup(gl.createParallelGroup(Alignment.TRAILING)
+                                .addComponent(pidLabel)
+                                .addComponent(startTimeLabel)
+                                .addComponent(stopTimeLabel)
+                                .addComponent(mainClassLabel)
+                                .addComponent(javaCommandLineLabel)
+                                .addComponent(javaVersionLabel)
+                                .addComponent(vmNameAndVersionLabel)
+                                .addComponent(vmArgumentsLabel))
+                        .addPreferredGap(ComponentPlacement.RELATED)
+                        .addGroup(gl.createParallelGroup()
+                                .addComponent(pid)
+                                .addComponent(startTimeStamp)
+                                .addComponent(stopTimeStamp)
+                                .addComponent(mainClass)
+                                .addComponent(javaCommandLine)
+                                .addComponent(javaVersion)
+                                .addComponent(vmNameAndVersion)
+                                .addComponent(vmArguments))
+                        .addContainerGap()));
 
-        SimpleTable simpleTable = new SimpleTable();
-        JPanel table = simpleTable.createTable(allSections);
-        table.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        gl.setVerticalGroup(gl.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(processSection)
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(pidLabel)
+                        .addComponent(pid))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(startTimeLabel)
+                        .addComponent(startTimeStamp))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(stopTimeLabel)
+                        .addComponent(stopTimeStamp))
+                .addPreferredGap(ComponentPlacement.UNRELATED)
+                .addComponent(javaSection)
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(mainClassLabel)
+                        .addComponent(mainClass))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(javaCommandLineLabel)
+                        .addComponent(javaCommandLine))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(javaVersionLabel)
+                        .addComponent(javaVersion))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(vmNameAndVersionLabel)
+                        .addComponent(vmNameAndVersion))
+                .addPreferredGap(ComponentPlacement.RELATED)
+                .addGroup(gl.createParallelGroup(Alignment.LEADING, false)
+                        .addComponent(vmArgumentsLabel)
+                        .addComponent(vmArguments))
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addContainerGap());
 
         container = new JScrollPane(table, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 
         visiblePanel.setContent(container);
     }
 }
-
