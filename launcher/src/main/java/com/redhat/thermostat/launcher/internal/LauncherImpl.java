@@ -243,7 +243,14 @@ public class LauncherImpl implements Launcher {
             }
         }
         Options options = cmd.getOptions();
-        Arguments args = parseCommandArguments(cmdArgs, options);
+        Arguments args = null;
+        try {
+            args = parseCommandArguments(cmdArgs, options);
+        } catch (CommandLineArgumentParseException e) {
+            out.println(e.getMessage());
+            runHelpCommandFor(cmdName);
+            return;
+        }
         setupLogLevel(args);
         CommandContext ctx = setupCommandContext(cmd, args);
         cmd.run(ctx);
