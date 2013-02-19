@@ -77,6 +77,10 @@ public class ApplicationInfo {
         return new Version();
     }
 
+    public String getMavenVersion() {
+        return appInfo.getProperty("APP_VERSION");
+    }
+
     public String getDescription() {
         return t.localize(LocaleResources.APPLICATION_INFO_DESCRIPTION);
     }

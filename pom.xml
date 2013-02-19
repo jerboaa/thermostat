@@ -142,6 +142,7 @@
     <module>vm-heap-analysis</module>
     <module>numa</module>
     <!-- development related modules -->
+    <module>integration-tests</module>
     <module>dev</module>
   </modules>
 

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.distribution;
+package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertFalse;
 
@@ -60,11 +60,11 @@ public class IntegrationTest {
     public static final String SHELL_PROMPT = "Thermostat >";
 
     public static String getThermostatExecutable() {
-        return "target/bin/thermostat";
+        return "../distribution/target/bin/thermostat";
     }
 
     public static String getStorageDataDirectory() {
-        return "target/storage/db";
+        return "../distribution/target/storage/db";
     }
 
     public static Spawn spawnThermostat(String... args) throws IOException {

@@ -85,6 +85,7 @@ import com.google.gson.GsonBuilder;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
+import com.redhat.thermostat.storage.config.AuthenticationConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.AuthToken;
@@ -341,6 +342,11 @@ public class WebStorage implements Storage, SecureStorage {
         random = new SecureRandom();
         conn = new WebConnection();
 
+        setEndpoint(config.getDBConnectionString());
+        if (config instanceof AuthenticationConfiguration) {
+            AuthenticationConfiguration authConfig = (AuthenticationConfiguration) config;
+            setAuthConfig(authConfig.getUsername(), authConfig.getPassword());
+        }
         // setup SSL if necessary
         if (config.getDBConnectionString().startsWith(HTTPS_PREFIX)) {
             registerSSLScheme(connManager);

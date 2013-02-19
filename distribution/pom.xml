@@ -309,11 +309,6 @@
       <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>net.sourceforge.expectj</groupId>
-      <artifactId>expectj</artifactId>
-      <scope>test</scope>
-    </dependency>
 
     <!-- thermostat parts -->
     <dependency>

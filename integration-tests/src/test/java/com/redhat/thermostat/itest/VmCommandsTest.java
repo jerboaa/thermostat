@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.distribution;
+package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertEquals;
 
