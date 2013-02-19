@@ -41,6 +41,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -53,12 +54,16 @@ import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
+import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 
 public class PluginCommandInfoSource implements CommandInfoSource {
 
-    private Logger logger = LoggingUtils.getLogger(PluginCommandInfoSource.class);
+    private static final String PLUGIN_CONFIG_FILE = "plugin.xml";
 
-    private Map<String, List<String>> allInfo = new HashMap<>();
+    private static final Logger logger = LoggingUtils.getLogger(PluginCommandInfoSource.class);
+
+    private Map<String, BasicCommandInfo> allNewCommands = new HashMap<>();
+    private Map<String, List<String>> additionalBundlesForExistingCommands = new HashMap<>();
 
     public PluginCommandInfoSource(String internalJarRoot, String pluginRootDir) {
         this(new File(internalJarRoot), new File(pluginRootDir), new PluginConfigurationParser());
@@ -74,28 +79,28 @@ public class PluginCommandInfoSource implements CommandInfoSource {
 
         for (File pluginDir : pluginDirs) {
             try {
-                File configurationFile = new File(pluginDir, "plugin.conf");
+                File configurationFile = new File(pluginDir, PLUGIN_CONFIG_FILE);
                 PluginConfiguration pluginConfig = parser.parse(configurationFile);
                 loadNewAndExtendedCommands(internalJarRoot, pluginDir, pluginConfig);
             } catch (PluginConfigurationParseException | FileNotFoundException exception) {
                 logger.log(Level.WARNING, "unable to parse plugin configuration", exception);
             }
         }
+
+        combineCommands();
     }
 
     private void loadNewAndExtendedCommands(File coreJarRoot, File pluginDir,
             PluginConfiguration pluginConfig) {
 
-        List<CommandExtensions> allExtensions = pluginConfig.getExtendedCommands();
-
-        for (CommandExtensions extension : allExtensions) {
+        for (CommandExtensions extension : pluginConfig.getExtendedCommands()) {
             String commandName = extension.getCommandName();
-            List<String> pluginBundles = extension.getAdditionalBundles();
+            List<String> pluginBundles = extension.getPluginBundles();
             List<String> dependencyBundles = extension.getDepenedencyBundles();
             logger.config("plugin at " + pluginDir + " contributes " +
                     pluginBundles.size() + " bundles to comamnd '" + commandName + "'");
 
-            List<String> bundlePaths = allInfo.get(commandName);
+            List<String> bundlePaths = additionalBundlesForExistingCommands.get(commandName);
             if (bundlePaths == null) {
                 bundlePaths = new LinkedList<>();
             }
@@ -107,23 +112,73 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                 bundlePaths.add(new File(coreJarRoot, bundle).toURI().toString());
             }
 
-            allInfo.put(commandName, bundlePaths);
+            additionalBundlesForExistingCommands.put(commandName, bundlePaths);
+        }
+
+        for (NewCommand command : pluginConfig.getNewCommands()) {
+            String commandName = command.getCommandName();
+            logger.config("plugin at " + pluginDir + " contributes new command '" + commandName + "'");
+
+            if (allNewCommands.containsKey(commandName)) {
+                throw new IllegalStateException("multiple plugins are providing the command " + commandName);
+            }
+
+            List<String> bundlePaths = new LinkedList<>();
+
+            for (String bundle : command.getPluginBundles()) {
+                bundlePaths.add(new File(pluginDir, bundle).toURI().toString());
+            }
+            for (String bundle : command.getDepenedencyBundles()) {
+                bundlePaths.add(new File(coreJarRoot, bundle).toURI().toString());
+            }
+            BasicCommandInfo info = new BasicCommandInfo(commandName,
+                    command.getDescription(),
+                    command.getUsage(),
+                    command.getOptions(),
+                    bundlePaths);
+
+            allNewCommands.put(commandName, info);
+        }
+
+    }
+
+    private void combineCommands() {
+        Iterator<Entry<String, List<String>>> iter = additionalBundlesForExistingCommands.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<String, List<String>> entry = iter.next();
+            if (allNewCommands.containsKey(entry.getKey())) {
+                BasicCommandInfo old = allNewCommands.get(entry.getKey());
+                List<String> updatedResources = new ArrayList<>();
+                updatedResources.addAll(old.getDependencyResourceNames());
+                updatedResources.addAll(entry.getValue());
+                BasicCommandInfo updated = new BasicCommandInfo(old.getName(),
+                        old.getDescription(),
+                        old.getUsage(),
+                        old.getOptions(),
+                        updatedResources);
+                allNewCommands.put(entry.getKey(), updated);
+                iter.remove();
+            }
         }
     }
 
     @Override
     public CommandInfo getCommandInfo(String name) throws CommandInfoNotFoundException {
-        List<String> bundles = allInfo.get(name);
-        if (bundles == null) {
-            return null;
+        if (allNewCommands.containsKey(name)) {
+            return allNewCommands.get(name);
         }
-        return new BasicCommandInfo(name, null, null, null, bundles);
+        List<String> bundles = additionalBundlesForExistingCommands.get(name);
+        if (bundles != null) {
+            return new BasicCommandInfo(name, null, null, null, bundles);
+        }
+        throw new CommandInfoNotFoundException(name);
     }
 
     @Override
     public Collection<CommandInfo> getCommandInfos() {
         List<CommandInfo> result = new ArrayList<>();
-        for (Entry<String, List<String>> entry : allInfo.entrySet()) {
+        result.addAll(allNewCommands.values());
+        for (Entry<String, List<String>> entry : additionalBundlesForExistingCommands.entrySet()) {
             result.add(new BasicCommandInfo(entry.getKey(), null, null, null, entry.getValue()));
         }
         return result;

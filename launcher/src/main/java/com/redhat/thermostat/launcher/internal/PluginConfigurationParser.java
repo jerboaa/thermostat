@@ -42,8 +42,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -56,18 +58,27 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 
+/**
+ * Parses the configuration of a plugin as specified in an {@code File} or an
+ * {@code InputStream}.
+ * <p>
+ * This class is thread-safe
+ */
 public class PluginConfigurationParser {
 
-    // no state :)
+    private static final Logger logger = LoggingUtils.getLogger(PluginConfigurationParser.class);
+
+    // thread safe because there is no state :)
 
     public PluginConfiguration parse(File configurationFile) throws FileNotFoundException {
-        return parse(new FileInputStream(configurationFile));
+        return parse(configurationFile.getParentFile().getName(), new FileInputStream(configurationFile));
     }
 
-    public PluginConfiguration parse(InputStream configurationStream) {
+    public PluginConfiguration parse(String pluginName, InputStream configurationStream) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
@@ -76,13 +87,13 @@ public class PluginConfigurationParser {
             if (rootNode == null) {
                 throw new PluginConfigurationParseException("no configuration found");
             }
-            return parseRootElement(rootNode);
+            return parseRootElement(pluginName, rootNode);
         } catch (ParserConfigurationException | SAXException | IOException exception) {
             throw new PluginConfigurationParseException("failed to parse plugin configuration", exception);
         }
     }
 
-    private PluginConfiguration parseRootElement(Node root) {
+    private PluginConfiguration parseRootElement(String pluginName, Node root) {
         List<NewCommand> newCommands = Collections.emptyList();
         List<CommandExtensions> extensions = Collections.emptyList();
 
@@ -92,7 +103,7 @@ public class PluginConfigurationParser {
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
                 if (node.getNodeName().equals("commands")) {
-                    commands = parseCommands(node);
+                    commands = parseCommands(pluginName, node);
                 }
             }
         }
@@ -100,22 +111,31 @@ public class PluginConfigurationParser {
         return new PluginConfiguration(commands.getFirst(), commands.getSecond());
     }
 
-    private Pair<List<NewCommand>, List<CommandExtensions>> parseCommands(Node commandsNode) {
+    private Pair<List<NewCommand>, List<CommandExtensions>> parseCommands(String pluginName, Node commandsNode) {
         List<NewCommand> newCommands = new ArrayList<NewCommand>();
         List<CommandExtensions> extendedCommands = new ArrayList<CommandExtensions>();
         NodeList childNodes = commandsNode.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
-            if (node.getNodeName().equals("new")) {
-                newCommands.add(parseNewCommand(node));
-            } else if (node.getNodeName().equals("existing")) {
-                extendedCommands.add(parseAdditionsToExistingCommand(node));
+            if (node.getNodeName().equals("command")) {
+                String type = node.getAttributes().getNamedItem("type").getNodeValue();
+                if (type.equals("extends")) {
+                    CommandExtensions additions = parseAdditionsToExistingCommand(pluginName, node);
+                    if (additions != null) {
+                        extendedCommands.add(additions);
+                    }
+                } else if (type.equals("provides")) {
+                    NewCommand newCmd = parseNewCommand(pluginName, node);
+                    if (newCmd != null) {
+                        newCommands.add(newCmd);
+                    }
+                }
             }
         }
         return new Pair<>(newCommands, extendedCommands);
     }
 
-    private CommandExtensions parseAdditionsToExistingCommand(Node commandNode) {
+    private CommandExtensions parseAdditionsToExistingCommand(String pluginName, Node commandNode) {
         String name = null;
         List<String> bundles = new ArrayList<>();
         List<String> dependencies = new ArrayList<>();
@@ -126,31 +146,23 @@ public class PluginConfigurationParser {
             if (node.getNodeName().equals("name")) {
                 name = node.getTextContent();
             } else if (node.getNodeName().equals("bundles")) {
-                String[] bundleNames = node.getTextContent().split(",");
-                for (String bundleName : bundleNames) {
-                    if (bundleName.trim().length() == 0) {
-                        continue;
-                    }
-                    bundles.add(bundleName.trim());
-                }
+                bundles.addAll(parseBundles(node));
             } else if (node.getNodeName().equals("dependencies")) {
-                String[] dependencyNames = node.getTextContent().split(",");
-                for (String bundleName : dependencyNames) {
-                    if (bundleName.trim().length() == 0) {
-                        continue;
-                    }
-                    dependencies.add(bundleName);
-                }
+                dependencies.addAll(parseDependencies(node));
             }
+        }
+        if (name == null) {
+            logger.warning("plugin " + pluginName + " provides extensions without specifying the command");
+            return null;
         }
         return new CommandExtensions(name, bundles, dependencies);
     }
 
-    private NewCommand parseNewCommand(Node commandNode) {
+    private NewCommand parseNewCommand(String pluginName, Node commandNode) {
         String name = null;
         String usage = null;
         String description = null;
-        Options options = null;
+        Options options = new Options();
         List<String> bundles = new ArrayList<>();
         List<String> dependencies = new ArrayList<>();
 
@@ -166,29 +178,50 @@ public class PluginConfigurationParser {
             } else if (node.getNodeName().equals("arguments")) {
                 options = parseArguments(node);
             } else if (node.getNodeName().equals("bundles")) {
-                String[] bundleNames = node.getTextContent().split(",");
-                for (String bundleName : bundleNames) {
-                    if (bundleName.trim().length() == 0) {
-                        continue;
-                    }
-                    bundles.add(bundleName);
-                }
+                bundles.addAll(parseBundles(node));
             } else if (node.getNodeName().equals("dependencies")) {
-                String[] dependencyNames = node.getTextContent().split(",");
-                for (String bundleName : dependencyNames) {
-                    if (bundleName.trim().length() == 0) {
-                        continue;
-                    }
-                    dependencies.add(bundleName);
-                }
+                dependencies.addAll(parseDependencies(node));
             }
         }
-        return new NewCommand(name, usage, description, options, bundles, dependencies);
+
+        if (name == null || usage == null || description == null) {
+            logger.warning("plugin " + pluginName + " provides an incomplete new command: " +
+                    "name='" + name + "', usage='" + usage + "', description='" + description + "', options='" + options + "'");
+            return null;
+        } else {
+            return new NewCommand(name, usage, description, options, bundles, dependencies);
+        }
+    }
+
+    private Collection<String> parseBundles(Node bundlesNode) {
+        List<String> bundles = new ArrayList<>();
+        NodeList nodes = bundlesNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("bundle")) {
+                String bundleName = node.getTextContent();
+                bundles.add(bundleName);
+            }
+        }
+        return bundles;
+    }
+
+    private Collection<String> parseDependencies(Node dependenciesNode) {
+        List<String> dependencies = new ArrayList<>();
+        NodeList nodes = dependenciesNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("dependency")) {
+                String bundleName = node.getTextContent();
+                dependencies.add(bundleName);
+            }
+        }
+        return dependencies;
     }
 
     private Options parseArguments(Node argumentsNode) {
-        // need to identify a way to express arguments
-        return null;
+        // TODO need to identify a way to express arguments
+        return new Options();
     }
 
 }

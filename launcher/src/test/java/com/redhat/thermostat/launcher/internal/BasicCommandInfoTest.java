@@ -48,9 +48,9 @@ public class BasicCommandInfoTest {
 
     @Test
     public void testBasics() {
-        final String NAME = "name";
-        final String DESCRIPTION = "description";
-        final String USAGE = "usage";
+        final String NAME = "the_name";
+        final String DESCRIPTION = "some-description";
+        final String USAGE = "some-usage";
         final Options OPTIONS = new Options();
         final List<String> RESOURCES = Collections.emptyList();
 
@@ -62,5 +62,6 @@ public class BasicCommandInfoTest {
         assertEquals(OPTIONS, info.getOptions());
         assertEquals(RESOURCES, info.getDependencyResourceNames());
 
+        assertEquals(String.format("%s (description='%s', dependencies='%s')", NAME, DESCRIPTION, RESOURCES.toString()), info.toString());
     }
 }

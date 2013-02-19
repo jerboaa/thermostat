@@ -75,7 +75,7 @@ public class PluginConfiguration {
             return commandName;
         }
 
-        public List<String> getAdditionalBundles() {
+        public List<String> getPluginBundles() {
             return Collections.unmodifiableList(additionalResources);
         }
 
@@ -119,11 +119,11 @@ public class PluginConfiguration {
             return options;
         }
 
-        public List<String> getAdditionalBundles() {
+        public List<String> getPluginBundles() {
             return Collections.unmodifiableList(additionalResources);
         }
 
-        public List<String> getCoreDepenedencyBundles() {
+        public List<String> getDepenedencyBundles() {
             return Collections.unmodifiableList(coreDeps);
         }
     }

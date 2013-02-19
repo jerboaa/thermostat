@@ -37,6 +37,7 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
@@ -44,6 +45,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.cli.Options;
 import org.junit.Test;
 
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
@@ -55,7 +57,7 @@ public class PluginConfigurationParserTest {
     public void testEmptyConfigurationThrowsException() throws UnsupportedEncodingException {
         String config = "<?xml version=\"1.0\"?>\n";
         PluginConfigurationParser parser = new PluginConfigurationParser();
-        parser.parse(new ByteArrayInputStream(config.getBytes("UTF-8")));
+        parser.parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
         fail("should not reach here");
     }
 
@@ -66,7 +68,7 @@ public class PluginConfigurationParserTest {
                 "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
                 "</plugin>";
-        PluginConfiguration result = parser.parse(new ByteArrayInputStream(config.getBytes("UTF-8")));
+        PluginConfiguration result = parser.parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
 
         assertEquals(0, result.getExtendedCommands().size());
         assertEquals(0, result.getNewCommands().size());
@@ -77,16 +79,22 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
                 "  <commands>\n" +
-                "    <existing>\n" +
+                "    <command type='extends'>\n" +
                 "      <name>test</name>\n" +
-                "      <bundles>foo,bar,baz,</bundles>\n" +
-                "      <dependencies>thermostat-foo</dependencies>\n" +
-                "    </existing>\n" +
+                "      <bundles>\n" +
+                "        <bundle>foo</bundle>\n" +
+                "        <bundle>bar</bundle>\n" +
+                "        <bundle>baz</bundle>\n" +
+                "      </bundles>\n" +
+                "      <dependencies>\n" +
+                "        <dependency>thermostat-foo</dependency>\n" +
+                "      </dependencies>\n" +
+                "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
 
         PluginConfiguration result = new PluginConfigurationParser()
-                .parse(new ByteArrayInputStream(config.getBytes("UTF-8")));
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
 
         assertEquals(0, result.getNewCommands().size());
 
@@ -95,7 +103,7 @@ public class PluginConfigurationParserTest {
 
         CommandExtensions first = extensions.get(0);
         assertEquals("test", first.getCommandName());
-        assertEquals(Arrays.asList("foo", "bar", "baz"), first.getAdditionalBundles());
+        assertEquals(Arrays.asList("foo", "bar", "baz"), first.getPluginBundles());
         assertEquals(Arrays.asList("thermostat-foo"), first.getDepenedencyBundles());
     }
 
@@ -104,18 +112,24 @@ public class PluginConfigurationParserTest {
         String config = "<?xml version=\"1.0\"?>\n" +
                 "<plugin>\n" +
                 "  <commands>\n" +
-                "    <new>\n" +
+                "    <command type='provides'>\n" +
                 "      <name>test</name>\n" +
                 "      <usage>usage: test</usage>\n" +
                 "      <description>description</description>\n" +
-                "      <bundles>foo,bar,baz,</bundles>\n" +
-                "      <dependencies>thermostat-foo</dependencies>\n" +
-                "    </new>\n" +
+                "      <bundles>\n" +
+                "        <bundle>foo</bundle>\n" +
+                "        <bundle>bar</bundle>\n" +
+                "        <bundle>baz</bundle>\n" +
+                "      </bundles>\n" +
+                "      <dependencies>\n" +
+                "        <dependency>thermostat-foo</dependency>\n" +
+                "      </dependencies>\n" +
+                "    </command>\n" +
                 "  </commands>\n" +
                 "</plugin>";
 
         PluginConfiguration result = new PluginConfigurationParser()
-                .parse(new ByteArrayInputStream(config.getBytes("UTF-8")));
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
 
         List<CommandExtensions> extensions = result.getExtendedCommands();
         assertEquals(0, extensions.size());
@@ -127,9 +141,11 @@ public class PluginConfigurationParserTest {
         assertEquals("test", newCommand.getCommandName());
         assertEquals("usage: test", newCommand.getUsage());
         assertEquals("description", newCommand.getDescription());
-        assertEquals(null, newCommand.getOptions());
-        assertEquals(Arrays.asList("foo", "bar", "baz"), newCommand.getAdditionalBundles());
-        assertEquals(Arrays.asList("thermostat-foo"), newCommand.getCoreDepenedencyBundles());
+        Options opts = newCommand.getOptions();
+        assertTrue(opts.getOptions().isEmpty());
+        assertTrue(opts.getRequiredOptions().isEmpty());
+        assertEquals(Arrays.asList("foo", "bar", "baz"), newCommand.getPluginBundles());
+        assertEquals(Arrays.asList("thermostat-foo"), newCommand.getDepenedencyBundles());
     }
 
 }
