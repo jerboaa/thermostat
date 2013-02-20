@@ -152,8 +152,13 @@ public class CliTest extends IntegrationTest {
     @Test
     public void testShellUnrecognizedArgument() throws Exception {
         Spawn shell = spawnThermostat("shell", "--foo");
-        shell.expectErr("Unrecognized option: --foo");
         shell.expectClose();
+        String stdOut = shell.getCurrentStandardOutContents();
+        String expectedOut = "Unrecognized option: --foo\n"
+                           + "usage: thermostat shell\n"
+                           + "                  launches the Thermostat interactive shell\n"
+                           + "thermostat shell\n\n";
+        assertEquals(expectedOut, stdOut);
     }
 
     @Test
