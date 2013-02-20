@@ -57,6 +57,30 @@
 
   <build>
     <plugins>
+      <!-- jacoco:report insists to have a target/classes dir. since this
+           module only contains test classes it won't exist after a build.
+           Hence, create manually in order to unbreak the build. For some
+           reason skipping both, report AND prepare-agent goals for the
+           jacoco plugin does not work. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.6</version>
+        <executions>
+          <execution>
+            <id>make-target-classes-dir</id>
+            <phase>prepare-package</phase>
+            <configuration>
+              <target>
+                <mkdir dir="${project.build.directory}/classes" />
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <!-- skip unit test run, tests to be executed during integration-test -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -98,7 +122,7 @@
     </plugins>
     <pluginManagement>
     	<plugins>
-    		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
     		<plugin>
     			<groupId>org.eclipse.m2e</groupId>
     			<artifactId>lifecycle-mapping</artifactId>
