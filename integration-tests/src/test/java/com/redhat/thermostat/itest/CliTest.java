@@ -37,6 +37,7 @@
 package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -129,6 +130,30 @@ public class CliTest extends IntegrationTest {
 
         assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
 
+        shell.send("exit\n");
+
+        shell.expectClose();
+    }
+    
+    @Test
+    public void versionArgumentInShellIsNotAllowed() throws Exception {
+        Spawn shell = spawnThermostat("shell");
+
+        shell.expect(SHELL_PROMPT);
+        shell.send("--version\n");
+
+        shell.expect(SHELL_PROMPT);
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        String stdErr = shell.getCurrentStandardErrContents();
+
+        assertFalse(stdOut.matches("Thermostat version \\d+\\.\\d+\\.\\d+\n"));
+        assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
+        // use the Pattern.DOTALL flag (?s) so that line terminators match with
+        // ".*". stdOut contains the SHELL_PROMPT too.
+        assertTrue(stdOut.matches("(?s)^.*\nunknown command '--version'\n.*$"));
+        assertEquals(stdErr, "");
+        
         shell.send("exit\n");
 
         shell.expectClose();

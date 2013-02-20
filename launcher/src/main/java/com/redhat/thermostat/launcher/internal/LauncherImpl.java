@@ -119,7 +119,7 @@ public class LauncherImpl implements Launcher {
         try {
             if (hasNoArguments()) {
                 runHelpCommand();
-            } else if (isVersionQuery()) {
+            } else if (isVersionQuery(inShell)) {
                 // We want to print the version of core
                 // thermostat, so we use the no-arg constructor of Version
                 Version coreVersion = new Version();
@@ -336,8 +336,13 @@ public class LauncherImpl implements Launcher {
         return ctx;
     }
 
-    private boolean isVersionQuery() {
-        return args[0].equals(Version.VERSION_OPTION);
+    private boolean isVersionQuery(boolean inShell) {
+        // don't allow --version in the shell
+        if (inShell) {
+            return false;
+        } else {
+            return args[0].equals(Version.VERSION_OPTION);
+        }
     }
 
     static class LoggingInitializer {
