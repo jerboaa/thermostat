@@ -49,26 +49,22 @@ public class BaseBackendTest {
 
     @Test(expected = NullPointerException.class)
     public void testConstructorRejectsNullName() {
-        @SuppressWarnings("unused")
-        Backend backend = new TestBaseBackend(null, "", "", "");
+        new TestBaseBackend(null, "", "", "");
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorRejectsNullVendor() {
-        @SuppressWarnings("unused")
-        Backend backend = new TestBaseBackend("", "", null, "");
+        new TestBaseBackend("", "", null, "");
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorRejectsNullVersion() {
-        @SuppressWarnings("unused")
-        Backend backend = new TestBaseBackend("", "", "", null);
+        new TestBaseBackend("", "", "", null);
     }
 
     @Test(expected = NullPointerException.class)
     public void testConstructorRejectsNullDescription() {
-        @SuppressWarnings("unused")
-        Backend backend = new TestBaseBackend("", null, "", "");
+        new TestBaseBackend("", null, "", "");
     }
 
     @Test
