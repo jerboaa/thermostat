@@ -64,7 +64,38 @@ import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 
 /**
  * Parses the configuration of a plugin as specified in an {@code File} or an
- * {@code InputStream}.
+ * {@code InputStream}. This configuration describes which new commands this
+ * plugin provides as well as additional jars to load for existing commands.
+ * <p>
+ * A example configuration looks like the following:
+ *
+ * <pre>
+ * &lt;?xml version="1.0"?&gt;
+ * &lt;plugin&gt;
+ *   &lt;commands&gt;
+ *     &lt;command type="extends"&gt;
+ *       &lt;name&gt;gui&lt;/name&gt;
+ *       &lt;bundles&gt;
+ *         &lt;bundle&gt;hello-world-plugin-0.1-SNAPSHOT.jar&lt;/bundle&gt;
+ *       &lt;/bundles&gt;
+ *       &lt;dependencies&gt;
+ *         &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+ *       &lt;/dependencies&gt;
+ *     &lt;/command&gt;
+ *     &lt;command type="provides"&gt;
+ *       &lt;name&gt;hello&lt;/name&gt;
+ *       &lt;description&gt;print hello&lt;/description&gt;
+ *       &lt;usage&gt;hello&lt;/usage&gt;
+ *       &lt;bundles&gt;
+ *         &lt;bundle&gt;hello-world-plugin-0.1-SNAPSHOT.jar&lt;/bundle&gt;
+ *       &lt;/bundles&gt;
+ *       &lt;dependencies&gt;
+ *         &lt;dependency&gt;thermostat-client-core-0.6.0-SNAPSHOT.jar&lt;/dependency&gt;
+ *       &lt;/dependencies&gt;
+ *     &lt;/command&gt;
+ *   &lt;/commands&gt;
+ * &lt;/plugin&gt;
+ * </pre>
  * <p>
  * This class is thread-safe
  */

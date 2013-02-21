@@ -56,6 +56,16 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 
+/**
+ * Searches for plugins under <code>$THERMOSTAT_HOME/plugins/</code> and
+ * provides information about all commands specified by them.
+ * <p>
+ * Each plugin is located under
+ * <code>$THERMOSTAT_HOME/plugins/$PLUGIN_NAME/</code> and must have a
+ * <code>plugin.xml</code> file in the main plugin directory.
+ *
+ * @see PluginConfigurationParser how the plugin.xml file is parsed
+ */
 public class PluginCommandInfoSource implements CommandInfoSource {
 
     private static final String PLUGIN_CONFIG_FILE = "plugin.xml";
@@ -69,8 +79,7 @@ public class PluginCommandInfoSource implements CommandInfoSource {
         this(new File(internalJarRoot), new File(pluginRootDir), new PluginConfigurationParser());
     }
 
-    public PluginCommandInfoSource(File internalJarRoot, File pluginRootDir,
-            PluginConfigurationParser parser) {
+    PluginCommandInfoSource(File internalJarRoot, File pluginRootDir, PluginConfigurationParser parser) {
         File[] pluginDirs = pluginRootDir.listFiles();
         if (pluginDirs == null) {
             logger.log(Level.SEVERE, "plugin root dir " + pluginRootDir + " does not exist");
