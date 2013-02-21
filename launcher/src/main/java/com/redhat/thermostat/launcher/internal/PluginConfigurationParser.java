@@ -175,7 +175,7 @@ public class PluginConfigurationParser {
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
             if (node.getNodeName().equals("name")) {
-                name = node.getTextContent();
+                name = node.getTextContent().trim();
             } else if (node.getNodeName().equals("bundles")) {
                 bundles.addAll(parseBundles(node));
             } else if (node.getNodeName().equals("dependencies")) {
@@ -201,11 +201,11 @@ public class PluginConfigurationParser {
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
             if (node.getNodeName().equals("name")) {
-                name = node.getTextContent();
+                name = node.getTextContent().trim();
             } else if (node.getNodeName().equals("usage")) {
-                usage = node.getTextContent();
+                usage = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
-                description = node.getTextContent();
+                description = node.getTextContent().trim();
             } else if (node.getNodeName().equals("arguments")) {
                 options = parseArguments(node);
             } else if (node.getNodeName().equals("bundles")) {
@@ -230,7 +230,7 @@ public class PluginConfigurationParser {
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
             if (node.getNodeName().equals("bundle")) {
-                String bundleName = node.getTextContent();
+                String bundleName = node.getTextContent().trim();
                 bundles.add(bundleName);
             }
         }
@@ -243,7 +243,7 @@ public class PluginConfigurationParser {
         for (int i = 0; i < nodes.getLength(); i++) {
             Node node = nodes.item(i);
             if (node.getNodeName().equals("dependency")) {
-                String bundleName = node.getTextContent();
+                String bundleName = node.getTextContent().trim();
                 dependencies.add(bundleName);
             }
         }

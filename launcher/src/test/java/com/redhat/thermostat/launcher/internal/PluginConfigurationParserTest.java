@@ -148,4 +148,36 @@ public class PluginConfigurationParserTest {
         assertEquals(Arrays.asList("thermostat-foo"), newCommand.getDepenedencyBundles());
     }
 
+    @Test
+    public void testSpacesAtStartAndEndAreTrimmed() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='extends'>\n" +
+                "      <name>\ntest   \n</name>\n" +
+                "      <bundles>\n" +
+                "        <bundle>\n \t  \nfoo\t \n \n</bundle>\n" +
+                "        <bundle>\tbar  baz\n</bundle>\n" +
+                "        <bundle>buzz</bundle>\n" +
+                "      </bundles>\n" +
+                "      <dependencies>\n\t\n\t \t\t\n" +
+                "        <dependency>\t\t\t  thermostat-foo\n\t\t\n</dependency>\n" +
+                "      </dependencies>\n" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getNewCommands().size());
+
+        List<CommandExtensions> extensions = result.getExtendedCommands();
+        assertEquals(1, extensions.size());
+
+        CommandExtensions first = extensions.get(0);
+        assertEquals("test", first.getCommandName());
+        assertEquals(Arrays.asList("foo", "bar  baz", "buzz"), first.getPluginBundles());
+        assertEquals(Arrays.asList("thermostat-foo"), first.getDepenedencyBundles());
+    }
 }
