@@ -53,6 +53,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.Launcher;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -72,6 +73,7 @@ public class ShellCommand extends AbstractCommand {
     private static final String PROMPT = "Thermostat > ";
 
     private HistoryProvider historyProvider;
+    private Version version;
 
     private BundleContext bundleContext;
     
@@ -88,12 +90,13 @@ public class ShellCommand extends AbstractCommand {
     }
 
     public ShellCommand() {
-        this(FrameworkUtil.getBundle(ShellCommand.class).getBundleContext(), new HistoryProvider());
+        this(FrameworkUtil.getBundle(ShellCommand.class).getBundleContext(), new Version(), new HistoryProvider());
     }
 
-    ShellCommand(BundleContext context, HistoryProvider provider) {
+    ShellCommand(BundleContext context, Version version, HistoryProvider provider) {
         this.historyProvider = provider;
         this.bundleContext = context;
+        this.version = version;
     }
     
     @Override
@@ -102,6 +105,7 @@ public class ShellCommand extends AbstractCommand {
         PersistentHistory history = historyProvider.get();
 
         try {
+            ctx.getConsole().getOutput().println(version.getVersionInfo());
             shellMainLoop(ctx, history, term);
         } catch (IOException ex) {
             throw new CommandException(ex);

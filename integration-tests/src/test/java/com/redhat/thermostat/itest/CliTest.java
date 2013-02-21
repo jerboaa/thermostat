@@ -134,6 +134,16 @@ public class CliTest extends IntegrationTest {
 
         shell.expectClose();
     }
+
+    @Test
+    public void testShellPrintsVersionOnStartup() throws Exception {
+        Spawn shell = spawnThermostat("shell");
+
+        shell.expect(SHELL_PROMPT);
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        assertTrue(stdOut.contains("Thermostat version "));
+    }
     
     @Test
     public void versionArgumentInShellIsNotAllowed() throws Exception {
@@ -147,7 +157,6 @@ public class CliTest extends IntegrationTest {
         String stdOut = shell.getCurrentStandardOutContents();
         String stdErr = shell.getCurrentStandardErrContents();
 
-        assertFalse(stdOut.matches("Thermostat version \\d+\\.\\d+\\.\\d+\n"));
         assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
         // use the Pattern.DOTALL flag (?s) so that line terminators match with
         // ".*". stdOut contains the SHELL_PROMPT too.
