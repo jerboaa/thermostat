@@ -39,6 +39,12 @@ package com.redhat.thermostat.agent.cli.impl.db;
 import java.io.File;
 import java.io.IOException;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
@@ -54,8 +60,18 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
 
     private DBStartupConfiguration configuration;
     private DBOptionParser parser;
+    private BundleContext context;
     
     private MongoProcessRunner runner;
+    
+    public StorageCommand() {
+        this(FrameworkUtil.getBundle(StorageCommand.class).getBundleContext());
+    }
+    
+    // For testing
+    StorageCommand(BundleContext context) {
+        this.context = context;
+    }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
     
@@ -113,14 +129,29 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
     }
     
     private void startService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
-        runner.startService();
+        try {
+            runner.startService();
+        } catch (ApplicationException | InvalidConfigurationException | IOException e) {
+            // something went wrong set status appropriately. This makes sure
+            // that the JVM exits with this status.
+            setExitStatus(Constants.EXIT_ERROR);
+            // rethrow
+            throw e;
+        }
         getNotifier().fireAction(ApplicationState.START);
     }
     
     
     private void stopService() throws IOException, InterruptedException, InvalidConfigurationException, ApplicationException {
-        check();
-        runner.stopService();
+        try {
+            check();
+            runner.stopService();
+        } catch (ApplicationException | InvalidConfigurationException | InterruptedException | IOException e) {
+            // something went wrong set status appropriately. This makes sure
+            // that the JVM exits with this status.
+            setExitStatus(Constants.EXIT_ERROR);
+            throw e;
+        }
         getNotifier().fireAction(ApplicationState.STOP);
     }
     
@@ -135,6 +166,14 @@ public class StorageCommand extends AbstractStateNotifyingCommand {
         {
             throw new InvalidConfigurationException("database directories do not exist...");
         }
+    }
+    
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    private void setExitStatus(final int newStatus) {
+        ServiceReference exitStatusRef = context.getServiceReference(ExitStatus.class);
+        ExitStatus status = (ExitStatus) context.getService(exitStatusRef);
+        status.setExitStatus(newStatus);
+        context.ungetService(exitStatusRef);
     }
 
     public DBStartupConfiguration getConfiguration() {

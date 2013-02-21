@@ -37,7 +37,6 @@
 package com.redhat.thermostat.agent.cli.impl.db;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doThrow;
@@ -47,29 +46,29 @@ import static org.mockito.Mockito.when;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Collection;
 import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 
 import junit.framework.Assert;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionGroup;
-import org.apache.commons.cli.Options;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.agent.cli.impl.db.MongoProcessRunner;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class StorageCommandTest {
     
@@ -78,9 +77,11 @@ public class StorageCommandTest {
     private static final String DB = "storage/db";
 
     private String tmpDir;
+    private BundleContext context;
     
     @Before
     public void setup() {
+        context = mock(BundleContext.class);
         // need to create a dummy config file for the test
         try {
             Random random = new Random();
@@ -110,6 +111,11 @@ public class StorageCommandTest {
         }
     }
     
+    @After
+    public void tearDown() {
+        context = null;
+    }
+    
     @Test
     public void testConfig() throws CommandException {
         SimpleArguments args = new SimpleArguments();
@@ -119,7 +125,7 @@ public class StorageCommandTest {
         CommandContext ctx = mock(CommandContext.class);
         when(ctx.getArguments()).thenReturn(args);
 
-        StorageCommand service = new StorageCommand() {
+        StorageCommand service = new StorageCommand(context) {
             @Override
             MongoProcessRunner createRunner() {
                 throw new AssertionError("dry run should never create an actual runner");
@@ -146,7 +152,7 @@ public class StorageCommandTest {
         // TODO: stop not tested yet, but be sure it's not called from the code
         doThrow(new ApplicationException("mock exception")).when(runner).stopService();
         
-        StorageCommand service = new StorageCommand() {
+        StorageCommand service = new StorageCommand(context) {
             @Override
             MongoProcessRunner createRunner() {
                 return runner;
@@ -224,6 +230,104 @@ public class StorageCommandTest {
         
         Assert.assertTrue(result[0]);
     }
+    
+    @Test
+    public void exceptionSetsExitStatusOnFailure() throws Exception {
+        context = new StubBundleContext();
+        ExitStatus exitStatusImpl = new ExitStatus() {
+            
+            private int exitStatus = -1;
+            
+            @Override
+            public void setExitStatus(int newExitStatus) {
+                exitStatus = newExitStatus;
+            }
+            
+            @Override
+            public int getExitStatus() {
+                return exitStatus;
+            }
+        };
+        context.registerService(ExitStatus.class, exitStatusImpl, null);
+        assertEquals(-1, getExitStatusService(context).getExitStatus());
+        StorageCommand command = prepareService(false);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] result = new boolean[1];
+        command.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                case FAIL:
+                    result[0] = true;
+                    break;
+                    
+                case SUCCESS:
+                    result[0] = false;
+                    break;
+                }
+                latch.countDown();
+            }
+        });
+        command.run(prepareContext());
+        latch.await();
+        // should have failed
+        assertTrue(result[0]);
+        assertEquals(Constants.EXIT_ERROR, getExitStatusService(context).getExitStatus());
+    }
+    
+    @Test
+    public void exitStatusRemainsUntouchedOnSuccess() throws Exception {
+        context = new StubBundleContext();
+        ExitStatus exitStatusImpl = new ExitStatus() {
+            
+            private int exitStatus = -1;
+            
+            @Override
+            public void setExitStatus(int newExitStatus) {
+                exitStatus = newExitStatus;
+            }
+            
+            @Override
+            public int getExitStatus() {
+                return exitStatus;
+            }
+        };
+        context.registerService(ExitStatus.class, exitStatusImpl, null);
+        assertEquals(-1, getExitStatusService(context).getExitStatus());
+        StorageCommand command = prepareService(true);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final boolean[] result = new boolean[1];
+        command.getNotifier().addActionListener(new ActionListener<ApplicationState>() {
+            @SuppressWarnings("incomplete-switch")
+            @Override
+            public void actionPerformed(ActionEvent<ApplicationState> actionEvent) {
+                switch (actionEvent.getActionId()) {
+                case FAIL:
+                    result[0] = false;
+                    break;
+                    
+                case SUCCESS:
+                    result[0] = true;
+                    break;
+                }
+                latch.countDown();
+            }
+        });
+        command.run(prepareContext());
+        latch.await();
+        // should have worked
+        assertTrue(result[0]);
+        // this impl of ExitStatus has a default value of -1
+        assertEquals(-1, getExitStatusService(context).getExitStatus());
+    }
+    
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private ExitStatus getExitStatusService(BundleContext context) {
+        ServiceReference ref = context.getServiceReference(ExitStatus.class);
+        ExitStatus exitStatus = (ExitStatus)context.getService(ref);
+        return exitStatus;
+    }
 
     private CommandContext prepareContext() {
         SimpleArguments args = new SimpleArguments();
@@ -236,59 +340,16 @@ public class StorageCommandTest {
 
     @Test
     public void testName() {
-        StorageCommand dbService = new StorageCommand();
+        StorageCommand dbService = new StorageCommand(context);
         String name = dbService.getName();
         assertEquals("storage", name);
     }
 
     @Test
     public void testDescAndUsage() {
-        StorageCommand dbService = new StorageCommand();
+        StorageCommand dbService = new StorageCommand(context);
         assertNotNull(dbService.getDescription());
         assertNotNull(dbService.getUsage());
-    }
-
-    @Ignore
-    @Test
-    public void testOptions() {
-        StorageCommand dbService = new StorageCommand();
-        Options options = dbService.getOptions();
-        assertNotNull(options);
-        assertEquals(4, options.getOptions().size());
-
-        assertTrue(options.hasOption("dryRun"));
-        Option dry = options.getOption("dryRun");
-        assertEquals("d", dry.getOpt());
-        assertEquals("run the service in dry run mode", dry.getDescription());
-        assertFalse(dry.isRequired());
-        assertFalse(dry.hasArg());
-
-        assertTrue(options.hasOption("start"));
-        Option start = options.getOption("start");
-        assertEquals("start the database", start.getDescription());
-        assertFalse(start.isRequired());
-        assertFalse(start.hasArg());
-
-        assertTrue(options.hasOption("stop"));
-        Option stop = options.getOption("stop");
-        assertEquals("stop the database", stop.getDescription());
-        assertFalse(stop.isRequired());
-        assertFalse(stop.hasArg());
-
-        assertTrue(options.hasOption("quiet"));
-        Option quiet = options.getOption("quiet");
-        assertEquals("q", quiet.getOpt());
-        assertEquals("don't produce any output", quiet.getDescription());
-        assertFalse(quiet.isRequired());
-        assertFalse(quiet.hasArg());
-
-        OptionGroup startStop = options.getOptionGroup(start);
-        assertTrue(startStop.isRequired());
-        @SuppressWarnings("unchecked")
-        Collection<Option> groupOpts = startStop.getOptions();
-        assertEquals(2, groupOpts.size());
-        assertTrue(groupOpts.contains(start));
-        assertTrue(groupOpts.contains(stop));
     }
 }
 

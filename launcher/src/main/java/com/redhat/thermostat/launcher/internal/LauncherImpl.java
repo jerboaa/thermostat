@@ -51,6 +51,8 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
@@ -154,6 +156,7 @@ public class LauncherImpl implements Launcher {
         return usageCount == 0;
     }
 
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     private void shutdown() throws InternalError {
         try {
             ServiceReference appServiceRef = context.getServiceReference(ApplicationService.class);
@@ -165,6 +168,8 @@ public class LauncherImpl implements Launcher {
                 context.ungetService(appServiceRef);
             }
 
+            // default to success for exit status
+            int exitStatus = Constants.EXIT_SUCCESS;
             if (context != null) {
                 ServiceReference storageRef = context.getServiceReference(Storage.class);
                 if (storageRef != null) {
@@ -173,9 +178,14 @@ public class LauncherImpl implements Launcher {
                         storage.shutdown();
                     }
                 }
+                ServiceReference exitStatusRef = context.getServiceReference(ExitStatus.class);
+                if (exitStatusRef != null) {
+                    ExitStatus exitStatusService = (ExitStatus) context.getService(exitStatusRef);
+                    exitStatus = exitStatusService.getExitStatus();
+                }
             }
-
             context.getBundle(0).stop();
+            System.exit(exitStatus);
         } catch (BundleException e) {
             throw (InternalError) new InternalError().initCause(e);
         }

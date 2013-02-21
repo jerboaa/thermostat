@@ -245,7 +245,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", e);
-            System.exit(Constants.EXIT_BACKEND_LOAD_ERROR);
+            System.exit(Constants.EXIT_ERROR);
         }
 
         final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO);
@@ -259,7 +259,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             logger.log(Level.SEVERE,
                     "Agent could not start, probably because a configured backend could not be activated.",
                     le);
-            System.exit(Constants.EXIT_BACKEND_START_ERROR);
+            System.exit(Constants.EXIT_ERROR);
         }
         logger.fine("Agent started.");
 

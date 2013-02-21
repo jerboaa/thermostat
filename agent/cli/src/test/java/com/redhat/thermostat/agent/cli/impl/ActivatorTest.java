@@ -38,18 +38,32 @@ package com.redhat.thermostat.agent.cli.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest({FrameworkUtil.class})
 public class ActivatorTest {
 
     @Test
     public void verifyActivatorRegistersCommands() throws Exception {
 
+        PowerMockito.mockStatic(FrameworkUtil.class);
+        Bundle mockBundle = mock(Bundle.class);
+        when(FrameworkUtil.getBundle(StorageCommand.class)).thenReturn(mockBundle);
+        
         StubBundleContext bundleContext = new StubBundleContext();
         
         Activator activator = new Activator();

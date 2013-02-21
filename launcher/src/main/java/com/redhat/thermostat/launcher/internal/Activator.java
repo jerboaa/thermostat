@@ -45,6 +45,8 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
+import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
@@ -62,6 +64,7 @@ public class Activator implements BundleActivator {
         private ServiceRegistration launcherReg;
         private ServiceRegistration bundleManReg;
         private ServiceRegistration cmdInfoReg;
+        private ServiceRegistration exitStatusReg;
         private BundleContext context;
         private BundleManager bundleService;
 
@@ -91,6 +94,8 @@ public class Activator implements BundleActivator {
                     new CommandContextFactory(context), bundleService);
             launcherReg = context.registerService(Launcher.class.getName(), launcher, null);
             bundleManReg = context.registerService(BundleManager.class, bundleService, null);
+            ExitStatus exitStatus = new ExitStatusImpl(Constants.EXIT_SUCCESS);
+            exitStatusReg = context.registerService(ExitStatus.class, exitStatus, null);
             return keyring;
         }
 
@@ -105,6 +110,7 @@ public class Activator implements BundleActivator {
             launcherReg.unregister();
             bundleManReg.unregister();
             cmdInfoReg.unregister();
+            exitStatusReg.unregister();
         }
 
     }

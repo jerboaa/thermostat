@@ -38,6 +38,7 @@ package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -46,6 +47,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.security.Permission;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,6 +80,7 @@ import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -93,6 +96,7 @@ import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.TestCommand;
+import com.redhat.thermostat.launcher.internal.DisallowSystemExitSecurityManager.ExitException;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
 import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
@@ -113,10 +117,17 @@ public class LauncherImplTest {
     private static final String name1 = "test1";
     private static final String name2 = "test2";
     private static final String name3 = "test3";
+    private static SecurityManager secMan;
       
     @BeforeClass
     public static void beforeClassSetUp() {
         defaultKeyringProvider = System.getProperty(KeyringProvider.KEYRING_FACTORY_PROPERTY);
+        // Launcher calls System.exit(). This causes issues for unit testing.
+        // We work around this by installing a security manager which disallows
+        // System.exit() and throws an ExitException instead. This exception in
+        // turn is caught by the wrapped launcher call.
+        secMan = System.getSecurityManager();
+        System.setSecurityManager(new DisallowSystemExitSecurityManager());
     }
     
     @AfterClass
@@ -124,6 +135,7 @@ public class LauncherImplTest {
         if (defaultKeyringProvider != null) {
             System.setProperty(KeyringProvider.KEYRING_FACTORY_PROPERTY, defaultKeyringProvider);
         }
+        System.setSecurityManager(secMan);
     }
     
     private static class TestCmd1 implements TestCommand.Handle {
@@ -440,16 +452,28 @@ public class LauncherImplTest {
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
         launcher.setArgs(new String[] { "error" });
-        launcher.run(false);
+        wrappedRun(launcher, false);
         assertEquals("test error\n", ctxFactory.getError());
 
     }
 
     private void runAndVerifyCommand(String[] args, String expected, boolean inShell) {
         launcher.setArgs(args);
-        launcher.run(inShell);
+        wrappedRun(launcher, inShell);
         assertEquals(expected, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
+    }
+    
+    private void wrappedRun(LauncherImpl launcher, boolean inShell) {
+        wrappedRun(launcher, inShell, null);
+    }
+    
+    private void wrappedRun(LauncherImpl launcher, boolean inShell, Collection<ActionListener<ApplicationState>> listeners) {
+        try {
+            launcher.run(listeners, inShell);
+        } catch (ExitException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     @Test
@@ -463,7 +487,7 @@ public class LauncherImplTest {
         when(dbServiceFactory.createDbService(anyString(), anyString(), dbUrlCaptor.capture())).thenReturn(dbService);
         launcher.setPreferences(prefs);
         launcher.setArgs(new String[] { "test3" });
-        launcher.run(false);
+        wrappedRun(launcher, false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();
         assertEquals(dbUrl, dbUrlCaptor.getValue());
@@ -485,7 +509,7 @@ public class LauncherImplTest {
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
 
         launcher.setArgs(new String[] { "dummy" });
-        launcher.run(false);
+        wrappedRun(launcher, false);
         verify(dbService).connect();
     }
 
@@ -515,7 +539,7 @@ public class LauncherImplTest {
         PowerMockito.mockStatic(FrameworkUtil.class);
         when(FrameworkUtil.getBundle(Version.class)).thenReturn(sysBundle);
         launcher.setArgs(new String[] {Version.VERSION_OPTION});
-        launcher.run(false);
+        wrappedRun(launcher, false);
 
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
@@ -529,14 +553,14 @@ public class LauncherImplTest {
         String[] args = new String[] {"basic"};
 
         launcher.setArgs(args);
-        launcher.run(listeners, false);
+        wrappedRun(launcher, false, listeners);
         verify(notifier).addActionListener(listener);
     }
 
     @Test
     public void verifyLoggingIsInitialized() {
         launcher.setArgs(new String[] { "test1" });
-        launcher.run(false);
+        wrappedRun(launcher, false);
 
         verify(loggingInitializer).initialize();
     }
@@ -544,9 +568,22 @@ public class LauncherImplTest {
     @Test
     public void verifyShutdown() throws BundleException {
         launcher.setArgs(new String[] { "test1" });
-        launcher.run(false);
+        wrappedRun(launcher, false);
 
         verify(sysBundle).stop();
+    }
+    
+    @Test
+    public void verifySetExitStatus() {
+        launcher.setArgs(new String[] { "test1" });
+        try {
+            launcher.run(false);
+            fail("Should have called System.exit()");
+        } catch (ExitException e) {
+            // pass, by default launcher exits with an exit status
+            // of 0.
+            assertEquals(Constants.EXIT_SUCCESS, e.getExitStatus());
+        }
     }
 
     @Test
@@ -581,6 +618,6 @@ public class LauncherImplTest {
 
         ctxFactory.getCommandRegistry().registerCommand(mockCmd);
         runAndVerifyCommand(new String[] { cmdName }, expected, isInShell);
-    }
+    }   
 }
 

@@ -34,18 +34,52 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.common;
+package com.redhat.thermostat.launcher.internal;
 
-/**
- * A grab bag of constants. This could be cleaned up later, but lets throw
- * things here for now.
+import java.security.Permission;
+
+/*
+ * This is used in order to work around the problem of System.exit() being
+ * called in LauncherImpl.
+ * 
+ * This needs to be in its own file. Right now it's ownly used in
+ * LauncherImplTest. If you are getting StackOverflowErrors, make sure this
+ * SecurityManager impl isn't in the same class which is run with
+ * PowerMockRunner.
+ *
  */
-public class Constants {
+public class DisallowSystemExitSecurityManager extends SecurityManager {
 
-    public static final int EXIT_ERROR = 1;
-    public static final int EXIT_SUCCESS = 0;
+    @Override
+    public void checkPermission(Permission perm) {
+        // allow anything.
+    }
 
-    public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
+    @Override
+    public void checkPermission(Permission perm, Object context) {
+        // allow anything.
+    }
 
+    @Override
+    public void checkExit(int status) {
+        throw new ExitException(status);
+    }
+
+    @SuppressWarnings("serial")
+    public static class ExitException extends SecurityException {
+        private int exitStatus;
+
+        public ExitException(int exitStatus) {
+            this.exitStatus = exitStatus;
+        }
+
+        public int getExitStatus() {
+            return this.exitStatus;
+        }
+
+        @Override
+        public String getMessage() {
+            return "System.exit(" + this.exitStatus + ")";
+        }
+    }
 }
-

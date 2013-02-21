@@ -74,6 +74,7 @@ import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -199,6 +200,7 @@ public class ActivatorTest {
         assertTrue(context.isServiceRegistered(CommandInfoSource.class.getName(), mock(CompoundCommandInfoSource.class).getClass()));
         assertTrue(context.isServiceRegistered(BundleManager.class.getName(), BundleManagerImpl.class));
         assertTrue(context.isServiceRegistered(Launcher.class.getName(), LauncherImpl.class));
+        assertTrue(context.isServiceRegistered(ExitStatus.class.getName(), ExitStatusImpl.class));
 
         customizer.removedService(null, null);
         
