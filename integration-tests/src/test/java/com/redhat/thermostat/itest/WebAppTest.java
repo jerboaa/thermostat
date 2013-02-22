@@ -37,12 +37,16 @@
 package com.redhat.thermostat.itest;
 
 import static com.redhat.thermostat.itest.IntegrationTest.assertNoExceptions;
+import static com.redhat.thermostat.itest.IntegrationTest.deleteFilesUnder;
+import static com.redhat.thermostat.itest.IntegrationTest.getStorageDataDirectory;
 import static com.redhat.thermostat.itest.IntegrationTest.spawnThermostat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.UUID;
 
 import org.eclipse.jetty.security.DefaultUserIdentity;
@@ -77,6 +81,9 @@ public class WebAppTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
+        String staleDataDir = getStorageDataDirectory();
+        deleteFilesUnder(staleDataDir);
+
         Spawn storage = spawnThermostat("storage", "--start");
         storage.expect("pid:");
         storage.expectClose();
@@ -162,5 +169,23 @@ public class WebAppTest {
         assertEquals(987, foundPojo.getVmId());
         assertEquals(12345, foundPojo.getLoadedClasses());
         assertFalse(cursor.hasNext());
+    }
+
+    @Test
+    public void testLoadSave() throws IOException, InterruptedException {
+        byte[] data = "Hello World".getBytes();
+        webStorage.saveFile("test", new ByteArrayInputStream(data));
+        // Note: Apparently, saving the file takes a bit. Without this
+        // waiting, we sometimes get problems on loadFile. There seems
+        // to be no way to synchronize on the operation in Mongo.
+        Thread.sleep(300);
+        InputStream loadStream = webStorage.loadFile("test");
+        StringBuilder str = new StringBuilder();
+        int i = loadStream.read();
+        while (i != -1) {
+            str.append((char) i);
+            i = loadStream.read();
+        }
+        assertEquals("Hello World", str.toString());
     }
 }

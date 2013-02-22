@@ -338,6 +338,7 @@ public class WebStorage implements Storage, SecureStorage {
                 new ThermostatGSONConverter()).create();
         ClientConnectionManager connManager = new ThreadSafeClientConnManager();
         DefaultHttpClient client = new DefaultHttpClient(connManager);
+        client.getParams().setParameter("http.protocol.expect-continue", Boolean.TRUE);
         httpClient = client;
         random = new SecureRandom();
         conn = new WebConnection();
