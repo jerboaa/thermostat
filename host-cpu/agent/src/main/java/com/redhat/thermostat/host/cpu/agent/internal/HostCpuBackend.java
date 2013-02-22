@@ -39,9 +39,7 @@ package com.redhat.thermostat.host.cpu.agent.internal;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
@@ -49,7 +47,7 @@ import com.redhat.thermostat.host.cpu.common.CpuStatDAO;
 import com.redhat.thermostat.utils.ProcDataSource;
 import com.redhat.thermostat.utils.SysConf;
 
-public class HostCpuBackend extends Backend {
+public class HostCpuBackend extends BaseBackend {
 
     private static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
     
@@ -59,14 +57,12 @@ public class HostCpuBackend extends Backend {
     private boolean started;
 
     public HostCpuBackend(ScheduledExecutorService executor, CpuStatDAO cpuStatDAO, Version version) {
-        super(new BackendID("Host CPU Backend", HostCpuBackend.class.getName()));
+        super("Host CPU Backend",
+                "Gathers CPU statistics about a host",
+                "Red Hat, Inc.",
+                version.getVersionNumber(), true);
         this.executor = executor;
         this.cpuStats = cpuStatDAO;
-        
-        setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers CPU statistics about a host");
-        setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
-        
         Clock clock = new SystemClock();
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         ProcDataSource source = new ProcDataSource();
@@ -101,16 +97,6 @@ public class HostCpuBackend extends Backend {
     @Override
     public boolean isActive() {
         return started;
-    }
-
-    @Override
-    public String getConfigurationValue(String key) {
-        return null;
-    }
-
-    @Override
-    public boolean attachToNewProcessByDefault() {
-        return true;
     }
 
     @Override

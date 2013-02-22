@@ -83,4 +83,8 @@ public class BasicCommandInfo implements CommandInfo {
         return resources;
     }
 
+    @Override
+    public String toString() {
+        return String.format("%s (description='%s', dependencies='%s')", name, description, resources.toString());
+    }
 }

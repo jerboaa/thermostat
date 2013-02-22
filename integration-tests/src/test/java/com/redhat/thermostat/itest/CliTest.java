@@ -37,6 +37,7 @@
 package com.redhat.thermostat.itest;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -135,6 +136,39 @@ public class CliTest extends IntegrationTest {
     }
 
     @Test
+    public void testShellPrintsVersionOnStartup() throws Exception {
+        Spawn shell = spawnThermostat("shell");
+
+        shell.expect(SHELL_PROMPT);
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        assertTrue(stdOut.contains("Thermostat version "));
+    }
+    
+    @Test
+    public void versionArgumentInShellIsNotAllowed() throws Exception {
+        Spawn shell = spawnThermostat("shell");
+
+        shell.expect(SHELL_PROMPT);
+        shell.send("--version\n");
+
+        shell.expect(SHELL_PROMPT);
+
+        String stdOut = shell.getCurrentStandardOutContents();
+        String stdErr = shell.getCurrentStandardErrContents();
+
+        assertMatchesHelpCommandList(shell.getCurrentStandardOutContents());
+        // use the Pattern.DOTALL flag (?s) so that line terminators match with
+        // ".*". stdOut contains the SHELL_PROMPT too.
+        assertTrue(stdOut.matches("(?s)^.*\nunknown command '--version'\n.*$"));
+        assertEquals(stdErr, "");
+        
+        shell.send("exit\n");
+
+        shell.expectClose();
+    }
+
+    @Test
     public void testShellHelp() throws Exception {
         Spawn shell = spawnThermostat("help", "shell");
         shell.expectClose();
@@ -152,8 +186,13 @@ public class CliTest extends IntegrationTest {
     @Test
     public void testShellUnrecognizedArgument() throws Exception {
         Spawn shell = spawnThermostat("shell", "--foo");
-        shell.expectErr("Unrecognized option: --foo");
         shell.expectClose();
+        String stdOut = shell.getCurrentStandardOutContents();
+        String expectedOut = "Unrecognized option: --foo\n"
+                           + "usage: thermostat shell\n"
+                           + "                  launches the Thermostat interactive shell\n"
+                           + "thermostat shell\n\n";
+        assertEquals(expectedOut, stdOut);
     }
 
     @Test

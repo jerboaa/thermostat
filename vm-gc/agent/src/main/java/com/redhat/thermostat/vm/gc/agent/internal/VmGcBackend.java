@@ -39,8 +39,6 @@ package com.redhat.thermostat.vm.gc.agent.internal;
 import sun.jvmstat.monitor.event.VmListener;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
 import com.redhat.thermostat.backend.VmListenerBackend;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
@@ -50,22 +48,10 @@ public class VmGcBackend extends VmListenerBackend {
     private final VmGcStatDAO vmGcStats;
 
     public VmGcBackend(VmGcStatDAO vmGcStatDAO, Version version, VmStatusListenerRegistrar registrar) {
-        super(new BackendID("VM GC Backend", VmGcBackend.class.getName()), registrar);
+        super("VM GC Backend",
+                "Gathers garbage collection statistics about a JVM",
+                "Red Hat, Inc.", version.getVersionNumber(), true, registrar);
         this.vmGcStats = vmGcStatDAO;
-        
-        setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers garbage collection statistics about a JVM");
-        setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
-    }
-    
-    @Override
-    public String getConfigurationValue(String key) {
-        return null;
-    }
-
-    @Override
-    public boolean attachToNewProcessByDefault() {
-        return true;
     }
 
     @Override

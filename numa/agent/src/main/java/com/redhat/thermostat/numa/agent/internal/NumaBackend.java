@@ -41,9 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -53,7 +51,7 @@ import com.redhat.thermostat.numa.common.NumaDAO;
 import com.redhat.thermostat.numa.common.NumaNodeStat;
 import com.redhat.thermostat.numa.common.NumaStat;
 
-public class NumaBackend extends Backend {
+public class NumaBackend extends BaseBackend {
 
     private static final Logger log = Logger.getLogger(NumaBackend.class.getName());
 
@@ -66,15 +64,13 @@ public class NumaBackend extends Backend {
     private Timer timer;
 
     public NumaBackend(ApplicationService appService, NumaDAO numaDAO, NumaCollector numaCollector, Version version) {
-        super(new BackendID("NUMA Backend", NumaBackend.class.getName()));
+        super("NUMA Backend",
+                "Gathers NUMA statistics about a host",
+                "Red Hat, Inc.",
+                version.getVersionNumber());
         this.appService = appService;
         this.numaDAO = numaDAO;
         this.numaCollector = numaCollector;
-        
-        setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers NUMA statistics about a host");
-        setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
-        
     }
 
     @Override
@@ -120,11 +116,6 @@ public class NumaBackend extends Backend {
     @Override
     public boolean isActive() {
         return started;
-    }
-
-    @Override
-    public boolean attachToNewProcessByDefault() {
-        return false;
     }
 
     @Override

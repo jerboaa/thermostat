@@ -60,6 +60,7 @@ import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.cli.internal.ShellCommand.HistoryProvider;
 import com.redhat.thermostat.common.Launcher;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -68,13 +69,23 @@ import com.redhat.thermostat.test.TestCommandContextFactory;
 
 public class ShellCommandTest {
 
+    static private final String VERSION = "Thermostat some version";
+    static private final String VERSION_OUTPUT = VERSION + "\n";
+
     private ShellCommand cmd;
+
     private BundleContext bundleContext;
+    private HistoryProvider historyProvider;
+    private Version version;
 
     @Before
     public void setUp() {
         bundleContext = mock(BundleContext.class);
-        cmd = new ShellCommand(bundleContext, new HistoryProvider());
+        historyProvider = mock(HistoryProvider.class);
+        version = mock(Version.class);
+        when(version.getVersionInfo()).thenReturn(VERSION);
+
+        cmd = new ShellCommand(bundleContext, version, historyProvider);
     }
 
     @After
@@ -108,7 +119,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals("Thermostat > quit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + "Thermostat > quit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -119,7 +130,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals("Thermostat > q\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + "Thermostat > q\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -130,7 +141,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals("Thermostat > ", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + "Thermostat > ", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 
@@ -141,7 +152,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        assertEquals("Thermostat > \nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + "Thermostat > \nThermostat > exit\n", ctxFactory.getOutput());
     }
 
     @Test
@@ -150,8 +161,7 @@ public class ShellCommandTest {
         when(history.previous()).thenReturn(true);
         when(history.current()).thenReturn("old-history-value");
 
-        HistoryProvider provider = mock(HistoryProvider.class);
-        when(provider.get()).thenReturn(history);
+        when(historyProvider.get()).thenReturn(history);
 
         ServiceReference ref = mock(ServiceReference.class);
         
@@ -160,15 +170,13 @@ public class ShellCommandTest {
         when(bundleContext.getService(ref)).thenReturn(launcher);
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
 
-        cmd = new ShellCommand(bundleContext, provider);
-        
         // "\u001b[A" is the escape code for up-arrow. use xxd -p to generate
         ctxFactory.setInput("\u001b[A\nexit\n");
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        assertEquals("Thermostat > old-history-value\nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + "Thermostat > old-history-value\nThermostat > exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
 
         verify(launcher).setArgs(new String[] {"old-history-value"});
@@ -178,16 +186,13 @@ public class ShellCommandTest {
     @Test
     public void testHistoryIsUpdated() throws CommandException, IOException {
         PersistentHistory mockHistory = mock(PersistentHistory.class);
-        HistoryProvider provider = mock(HistoryProvider.class);
-        when(provider.get()).thenReturn(mockHistory);
+        when(historyProvider.get()).thenReturn(mockHistory);
 
         ServiceReference ref = mock(ServiceReference.class);
         when(bundleContext.getServiceReference(Launcher.class.getName())).thenReturn(ref);
         Launcher launcher = mock(Launcher.class);
         when(bundleContext.getService(ref)).thenReturn(launcher);
         TestCommandContextFactory ctxFactory = new TestCommandContextFactory(bundleContext);
-        
-        cmd = new ShellCommand(bundleContext, provider);
         
         ctxFactory.setInput("add-to-history\nexit\n");
         Arguments args = new SimpleArguments();
@@ -199,7 +204,7 @@ public class ShellCommandTest {
         verify(mockHistory).add("add-to-history");
         verify(mockHistory).flush();
 
-        assertEquals("Thermostat > add-to-history\nThermostat > exit\n", ctxFactory.getOutput());
+        assertEquals(VERSION_OUTPUT + "Thermostat > add-to-history\nThermostat > exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
     }
 

@@ -161,11 +161,6 @@ public class NumaBackendTest {
     }
 
     @Test
-    public void testAttachToNewProcessByDefault() {
-        assertFalse(backend.attachToNewProcessByDefault());
-    }
-
-    @Test
     public void testOrderValue() {
         assertEquals(Ordered.ORDER_MEMORY_GROUP + 80, backend.getOrderValue());
     }

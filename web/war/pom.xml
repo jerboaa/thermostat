@@ -88,28 +88,59 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+
+      <!--
+	   Package the web archive (WAR) as an exploded WAR *and WAR. Downstream
+           distributions can build and deploy the war via a maven build call similar to
+           the following (from the top level dir):
+           $ mvn -Dthermostat.web.deploy.dir=<path-to-tomcat>/webapps/thermostat clean package
+       -->
       <plugin>
-        <artifactId>maven-resources-plugin</artifactId>
-        <version>2.5</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-war-plugin</artifactId>
+        <version>2.3</version>
         <executions>
           <execution>
-            <id>copy-logging-properties</id>
-            <phase>prepare-package</phase>
+            <id>exploded-war</id>
+            <phase>package</phase>
             <goals>
-              <goal>copy-resources</goal>
+              <goal>exploded</goal>
             </goals>
             <configuration>
-              <outputDirectory>src/main/webapp/WEB-INF/thermostat</outputDirectory>
-              <resources>
+              <!-- web.xml contains properties, which we'd like to have interpolated -->
+              <webResources>
                 <resource>
-                  <directory>src/../../../distribution/config</directory>
-                  <targetPath>etc</targetPath>
                   <filtering>true</filtering>
+                  <directory>src/main/webapp</directory>
                   <includes>
-                    <include>ssl.properties</include>
+                    <include>**/web.xml</include>
                   </includes>
                 </resource>
-              </resources>
+              </webResources>
+              <warSourceDirectory>src/main/webapp</warSourceDirectory>
+              <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
+              <webappDirectory>${thermostat.web.deploy.dir}</webappDirectory>
+            </configuration>
+          </execution>
+          <execution>
+            <id>war</id>
+            <phase>package</phase>
+            <goals>
+              <goal>war</goal>
+            </goals>
+            <configuration>
+              <!-- web.xml contains properties, which we'd like to have interpolated -->
+              <webResources>
+                <resource>
+                  <filtering>true</filtering>
+                  <directory>src/main/webapp</directory>
+                  <includes>
+                    <include>**/web.xml</include>
+                  </includes>
+                </resource>
+              </webResources>
+              <warSourceDirectory>src/main/webapp</warSourceDirectory>
+              <webXml>src/main/webapp/WEB-INF/web.xml</webXml>
             </configuration>
           </execution>
         </executions>

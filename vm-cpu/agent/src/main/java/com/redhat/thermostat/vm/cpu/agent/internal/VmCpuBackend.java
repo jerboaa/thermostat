@@ -47,9 +47,7 @@ import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.backend.Backend;
-import com.redhat.thermostat.backend.BackendID;
-import com.redhat.thermostat.backend.BackendsProperties;
+import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.Version;
@@ -59,7 +57,7 @@ import com.redhat.thermostat.utils.SysConf;
 import com.redhat.thermostat.vm.cpu.common.VmCpuStatDAO;
 import com.redhat.thermostat.vm.cpu.common.model.VmCpuStat;
 
-public class VmCpuBackend extends Backend implements VmStatusListener {
+public class VmCpuBackend extends BaseBackend implements VmStatusListener {
 
     private static final Logger LOGGER = LoggingUtils.getLogger(VmCpuBackend.class);
     static final long PROC_CHECK_INTERVAL = 1000; // TODO make this configurable.
@@ -74,15 +72,14 @@ public class VmCpuBackend extends Backend implements VmStatusListener {
 
     public VmCpuBackend(ScheduledExecutorService executor, VmCpuStatDAO vmCpuStatDao, Version version,
             VmStatusListenerRegistrar registrar) {
-        super(new BackendID("VM CPU Backend", VmCpuBackend.class.getName()));
+        super("VM CPU Backend",
+                "Gathers CPU statistics about a JVM",
+                "Red Hat, Inc.",
+                version.getVersionNumber(), true);
         this.executor = executor;
         this.vmCpuStats = vmCpuStatDao;
         this.registrar = registrar;
-        
-        setConfigurationValue(BackendsProperties.VENDOR.name(), "Red Hat, Inc.");
-        setConfigurationValue(BackendsProperties.DESCRIPTION.name(), "Gathers CPU statistics about a JVM");
-        setConfigurationValue(BackendsProperties.VERSION.name(), version.getVersionNumber());
-        
+
         Clock clock = new SystemClock();
         long ticksPerSecond = SysConf.getClockTicksPerSecond();
         ProcDataSource source = new ProcDataSource();
@@ -131,16 +128,6 @@ public class VmCpuBackend extends Backend implements VmStatusListener {
     @Override
     public boolean isActive() {
         return started;
-    }
-
-    @Override
-    public String getConfigurationValue(String key) {
-        return null;
-    }
-
-    @Override
-    public boolean attachToNewProcessByDefault() {
-        return true;
     }
 
     @Override

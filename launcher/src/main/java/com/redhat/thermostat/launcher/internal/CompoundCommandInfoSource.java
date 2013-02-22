@@ -66,8 +66,24 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
 
     @Override
     public CommandInfo getCommandInfo(String name) throws CommandInfoNotFoundException {
-        CommandInfo info1 = source1.getCommandInfo(name);
-        CommandInfo info2 = source2.getCommandInfo(name);
+        CommandInfo info1;
+        CommandInfo info2;
+
+        try {
+            info1 = source1.getCommandInfo(name);
+        } catch (CommandInfoNotFoundException notFound) {
+            info1 = null;
+        }
+        try {
+            info2 = source2.getCommandInfo(name);
+        } catch (CommandInfoNotFoundException notFound) {
+            info2 = null;
+        }
+
+        if (info1 == null && info2 == null) {
+            throw new CommandInfoNotFoundException(name);
+        }
+
         if (info1 == null) {
             return info2;
         } if (info2 == null) {
@@ -91,10 +107,9 @@ public class CompoundCommandInfoSource implements CommandInfoSource {
             String cmdName = info.getName();
             if (!result.containsKey(cmdName)) {
                 result.put(cmdName, info);
-                continue;
+            } else {
+                result.put(cmdName, merge(result.get(cmdName), info));
             }
-
-            result.put(cmdName, merge(result.get(cmdName), info));
         }
 
         return result.values();

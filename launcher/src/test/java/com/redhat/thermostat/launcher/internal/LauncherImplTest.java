@@ -39,7 +39,6 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -89,7 +88,6 @@ import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.LocaleResources;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.TestCommand;
 import com.redhat.thermostat.launcher.internal.HelpCommand;
@@ -162,8 +160,10 @@ public class LauncherImplTest {
         TestCommand cmd1 = new TestCommand(name1, new TestCmd1());
         CommandInfo info1 = mock(CommandInfo.class);
         when(info1.getName()).thenReturn(name1);
+        when(info1.getUsage()).thenReturn(name1 + " <--arg1 <arg>> [--arg2 <arg>]");
         Options options1 = new Options();
         Option opt1 = new Option(null, "arg1", true, null);
+        opt1.setRequired(true);
         options1.addOption(opt1);
         Option opt2 = new Option(null, "arg2", true, null);
         options1.addOption(opt2);
@@ -362,6 +362,42 @@ public class LauncherImplTest {
             + " test2         description 2\n"
             + " test3         description 3\n";
         runAndVerifyCommand(new String[] {"foo",  "--bar", "baz"}, expected, false);
+    }
+
+    @Test
+    public void testBadOption() {
+        String expected = "Unrecognized option: --argNotAccepted\n"
+                + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
+                + "                  description 1\n"
+                + "thermostat test1\n"
+                + "     --arg1 <arg>\n"
+                + "     --arg2 <arg>\n"
+                + "  -l,--logLevel <arg>\n";
+        runAndVerifyCommand(new String[] {"test1", "--arg1", "arg1value", "--argNotAccepted"}, expected, false);
+    }
+
+    @Test
+    public void testMissingRequiredOption() {
+        String expected = "Missing required option: --arg1\n"
+                + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
+                + "                  description 1\n"
+                + "thermostat test1\n"
+                + "     --arg1 <arg>\n"
+                + "     --arg2 <arg>\n"
+                + "  -l,--logLevel <arg>\n";
+        runAndVerifyCommand(new String[] {"test1"}, expected, false);
+    }
+
+    @Test
+    public void testOptionMissingRequiredArgument() {
+        String expected = "Missing argument for option: arg1\n"
+                + "usage: thermostat test1 <--arg1 <arg>> [--arg2 <arg>]\n"
+                + "                  description 1\n"
+                + "thermostat test1\n"
+                + "     --arg1 <arg>\n"
+                + "     --arg2 <arg>\n"
+                + "  -l,--logLevel <arg>\n";
+        runAndVerifyCommand(new String[] {"test1", "--arg1"}, expected, false);
     }
 
     @Test

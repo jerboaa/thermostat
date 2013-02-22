@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.web.server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -113,15 +114,20 @@ public class WebStorageEndPoint extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
+        logger.log(Level.INFO, "Initializing web service");
         if (!isThermostatHomeSet()) {
             // This is the webapp and our entry point into thermostat's web
             // service. The launcher did not run and hence THERMOSTAT_HOME is
             // not set and we need to do this ourselves.
-            // In this case THERMOSTAT_HOME is in the WEB-INF/thermostat folder
-            // in order to make it inaccessible via HTTP. This is not a "real"
-            // THERMOSTAT_HOME. For now it only contains an ssl.properties file.
-            String thermostatHome = config.getServletContext().getRealPath(
-                    "/WEB-INF/thermostat");
+            String thermostatHome = config.getInitParameter("THERMOSTAT_HOME");
+            File thermostatHomeFile = new File(thermostatHome);
+            if (!thermostatHomeFile.canRead()) {
+                // This is bad news. If we can't at least read THERMOSTAT_HOME
+                // we are bound to fail in some weird ways at some later point.
+                throw new RuntimeException("THERMOSTAT_HOME = "
+                        + thermostatHome
+                        + " is not readable or does not exist!");
+            }
             logger.log(Level.INFO, "Setting THERMOSTAT_HOME for webapp to "
                     + thermostatHome);
             System.setProperty("THERMOSTAT_HOME", thermostatHome);

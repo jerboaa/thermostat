@@ -48,9 +48,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -93,8 +90,6 @@ public class AgentTest {
         when(backend.getDescription()).thenReturn("testdesc");
         when(backend.getObserveNewJvm()).thenReturn(true);
         when(backend.activate()).thenReturn(true); // TODO: activate() should not return anything and throw exception in error case.
-        Collection<Backend> backends = new ArrayList<Backend>();
-        backends.add(backend);
         
         backendRegistry = mock(BackendRegistry.class);
     }

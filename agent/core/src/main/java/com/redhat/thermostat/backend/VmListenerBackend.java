@@ -55,14 +55,15 @@ import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
- * This class is a convenient subclass of {@link Backend} for those that need to
- * attach {@link VmListener} in response to starting and stopping of JVMs on a
+ * This class is a convenient subclass of {@link Backend} (via {@link BaseBackend}) for those
+ * that need to attach {@link VmListener} in response to starting and stopping of JVMs on a
  * host.
  * 
  * @see VmStatusListener
  * @see Backend
+ * @see BaseBackend
  */
-public abstract class VmListenerBackend extends Backend implements VmStatusListener {
+public abstract class VmListenerBackend extends BaseBackend implements VmStatusListener {
     
     private static final Logger logger = LoggingUtils.getLogger(VmListenerBackend.class);
 
@@ -71,10 +72,15 @@ public abstract class VmListenerBackend extends Backend implements VmStatusListe
     private final VmStatusListenerRegistrar registrar;
     private boolean started;
 
-    public VmListenerBackend(BackendID id, VmStatusListenerRegistrar registrar) {
-        super(id);
+    public VmListenerBackend(String backendName, String description,
+            String vendor, String version, VmStatusListenerRegistrar registrar) {
+        this(backendName, description, vendor, version, false, registrar);
+    }
+    public VmListenerBackend(String backendName, String description,
+            String vendor, String version, boolean observeNewJvm, VmStatusListenerRegistrar registrar) {
+        super(backendName, description, vendor, version, observeNewJvm);
         this.registrar = registrar;
-        
+
         try {
             HostIdentifier hostId = new HostIdentifier((String) null);
             host = MonitoredHost.getMonitoredHost(hostId);
@@ -141,7 +147,7 @@ public abstract class VmListenerBackend extends Backend implements VmStatusListe
     }
 
     private void handleNewVm(int pid) {
-        if (attachToNewProcessByDefault()) {
+        if (getObserveNewJvm()) {
             try {
                 MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(new VmIdentifier(String.valueOf(pid))));
                 VmListener listener = createVmListener(pid);
