@@ -36,19 +36,23 @@
 
 package com.redhat.thermostat.backend.system;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import org.junit.Before;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 
 public class SystemBackendTest {
 
+    private static final String VERSION = "0.0.0";
     private SystemBackend b;
 
     @Before
@@ -57,9 +61,12 @@ public class SystemBackendTest {
         NetworkInterfaceInfoDAO nDAO = mock(NetworkInterfaceInfoDAO.class);
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
 
+        Version version = mock(Version.class);
+        when(version.getVersionNumber()).thenReturn(VERSION);
+        
         VmStatusChangeNotifier notifier = mock(VmStatusChangeNotifier.class);
 
-        b = new SystemBackend(hDAO, nDAO, vmInfoDAO, notifier);
+        b = new SystemBackend(hDAO, nDAO, vmInfoDAO, version, notifier);
     }
 
     @Test
@@ -83,6 +90,11 @@ public class SystemBackendTest {
         b.deactivate();
         b.deactivate();
         assertFalse(b.isActive());
+    }
+    
+    @Test
+    public void testVersion() {
+        assertEquals(VERSION, b.getVersion());
     }
 
 }
