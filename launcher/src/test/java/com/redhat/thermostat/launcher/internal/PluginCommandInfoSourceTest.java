@@ -46,10 +46,17 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.cli.Options;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -61,34 +68,56 @@ import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 
 public class PluginCommandInfoSourceTest {
 
-    // name paths so anything tying to use them/create them will blow up
-    private static final String PLUGIN_ROOT = "/fake/${PLUGIN_ROOT}";
-    private static final String JAR_ROOT = "/fake/${JAR_ROOT}";
-
-    private File jarRootDir;
-    private File pluginRootDir;
+    private Path testRoot;
+    private Path jarRootDir;
+    private Path pluginRootDir;
     private PluginConfigurationParser parser;
     private PluginConfiguration parserResult;
 
     @Before
-    public void setUp() throws FileNotFoundException {
+    public void setUp() throws IOException {
         parser = mock(PluginConfigurationParser.class);
         parserResult = mock(PluginConfiguration.class);
         when(parser.parse(isA(File.class))).thenReturn(parserResult);
-        pluginRootDir = mock(File.class);
-        jarRootDir = new File(JAR_ROOT);
+
+        testRoot = Files.createTempDirectory("thermostat");
+        pluginRootDir = testRoot.resolve("plugins");
+        Files.createDirectory(pluginRootDir);
+        jarRootDir = testRoot.resolve("libs");
+        Files.createDirectories(jarRootDir);
+    }
+
+    @After
+    public void tearDown() throws IOException {
+        Files.walkFileTree(testRoot, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+                if (exc == null) {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                } else {
+                    throw exc;
+                }
+            }
+        });
     }
 
     @Test
-    public void verifyParserIsInvokedOnAllConfigurationFiles() throws FileNotFoundException {
-        File[] pluginDirs = new File[] {
-                new File(PLUGIN_ROOT, "plugin1"),
-                new File(PLUGIN_ROOT, "plugin2"),
+    public void verifyParserIsInvokedOnAllConfigurationFiles() throws IOException {
+        Path[] pluginDirs = new Path[] {
+                pluginRootDir.resolve("plugin1"),
+                pluginRootDir.resolve("plugin2"),
         };
+        for (Path pluginDir : pluginDirs) {
+            Files.createDirectory(pluginDir);
+        }
 
-        when(pluginRootDir.listFiles()).thenReturn(pluginDirs);
-
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir, pluginRootDir, parser);
+        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
 
         ArgumentCaptor<File> configFilesCaptor = ArgumentCaptor.forClass(File.class);
         verify(parser, times(pluginDirs.length)).parse(configFilesCaptor.capture());
@@ -96,59 +125,72 @@ public class PluginCommandInfoSourceTest {
         List<File> configurationFiles = configFilesCaptor.getAllValues();
         assertEquals(pluginDirs.length, configurationFiles.size());
         for (int i = 0; i < pluginDirs.length; i++) {
-            assertEquals(new File(pluginDirs[i], "plugin.xml"), configurationFiles.get(i));
+            assertTrue(configurationFiles.contains(pluginDirs[i].resolve("plugin.xml").toFile()));
         }
     }
 
     @Test
     public void verifyMissingConfigurationFileIsHandledCorrectly() throws FileNotFoundException {
-        File[] pluginDirs = new File[] { new File(PLUGIN_ROOT, "plugin1") };
-
-        when(pluginRootDir.listFiles()).thenReturn(pluginDirs);
         when(parser.parse(isA(File.class))).thenThrow(new FileNotFoundException("test"));
 
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir, pluginRootDir, parser);
+        new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
     }
 
     @Test(expected = CommandInfoNotFoundException.class)
     public void verifyMissingCommandInfo() {
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir, pluginRootDir, parser);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
 
         source.getCommandInfo("TEST");
     }
 
     @Test
-    public void verifyCommandInfoObjectsToExtendExistingCommandsAreCreated() {
+    public void verifyCommandInfoObjectsToExtendExistingCommandsAreCreated() throws IOException {
+        final String DEPENDENCY_BUNDLE = "dependency-bundle";
+        final String PLUGIN_BUNDLE = "plugin-bundle";
+
+        Path pluginDir = pluginRootDir.resolve("plugin1");
+        Files.createDirectory(pluginDir);
+        Path pluginJar = pluginDir.resolve(PLUGIN_BUNDLE);
+        Files.createFile(pluginJar);
+
+        Path dependencyJar = jarRootDir.resolve(DEPENDENCY_BUNDLE);
+        Files.createFile(dependencyJar);
+
         CommandExtensions extensions = mock(CommandExtensions.class);
         when(extensions.getCommandName()).thenReturn("command-name");
-        when(extensions.getPluginBundles()).thenReturn(Arrays.asList("additional-bundle"));
-        when(extensions.getDepenedencyBundles()).thenReturn(Arrays.asList("dependency-bundle"));
+        when(extensions.getPluginBundles()).thenReturn(Arrays.asList(PLUGIN_BUNDLE));
+        when(extensions.getDepenedencyBundles()).thenReturn(Arrays.asList(DEPENDENCY_BUNDLE));
 
         when(parserResult.getExtendedCommands()).thenReturn(Arrays.asList(extensions));
 
-        File[] pluginDirs = new File[] { new File(PLUGIN_ROOT, "plugin1") };
-        when(pluginRootDir.listFiles()).thenReturn(pluginDirs);
-
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir, pluginRootDir, parser);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
 
         CommandInfo info = source.getCommandInfo("command-name");
         assertEquals("command-name", info.getName());
 
-        String expectedDep1Name = new File(PLUGIN_ROOT + "/plugin1/additional-bundle").toURI().toString();
-        String expectedDep2Name = new File(JAR_ROOT + "/dependency-bundle").toURI().toString();
+        String expectedDep1Name = pluginJar.toFile().toURI().toString();
+        String expectedDep2Name = dependencyJar.toFile().toURI().toString();
 
         assertTrue(info.getDependencyResourceNames().contains(expectedDep1Name));
         assertTrue(info.getDependencyResourceNames().contains(expectedDep2Name));
     }
 
     @Test
-    public void verifyCommandInfoObjectsForNewComamndsAreCreated() {
+    public void verifyCommandInfoObjectsForNewComamndsAreCreated() throws IOException {
         final String NAME = "command-name";
         final String DESCRIPTION = "description of the command";
         final String USAGE = "usage";
         final Options OPTIONS = new Options();
         final String PLUGIN_BUNDLE = "plugin-bundle.jar";
         final String DEPENDENCY_BUNDLE = "dependency-bundle.jar";
+
+        Path pluginDir = pluginRootDir.resolve("plugin1");
+        Files.createDirectory(pluginDir);
+        Path pluginJar = pluginDir.resolve(PLUGIN_BUNDLE);
+        Files.createFile(pluginJar);
+
+        Path dependencyJar = jarRootDir.resolve(DEPENDENCY_BUNDLE);
+        Files.createFile(dependencyJar);
 
         NewCommand cmd = mock(NewCommand.class);
         when(cmd.getCommandName()).thenReturn(NAME);
@@ -160,10 +202,7 @@ public class PluginCommandInfoSourceTest {
 
         when(parserResult.getNewCommands()).thenReturn(Arrays.asList(cmd));
 
-        File[] pluginDirs = new File[] { new File(PLUGIN_ROOT, "plugin1") };
-        when(pluginRootDir.listFiles()).thenReturn(pluginDirs);
-
-        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir, pluginRootDir, parser);
+        PluginCommandInfoSource source = new PluginCommandInfoSource(jarRootDir.toFile(), pluginRootDir.toFile(), parser);
 
         CommandInfo result = source.getCommandInfo(NAME);
 
@@ -172,8 +211,8 @@ public class PluginCommandInfoSourceTest {
         assertEquals(USAGE, result.getUsage());
         assertEquals(OPTIONS, result.getOptions());
 
-        String expectedDep1Name = new File(PLUGIN_ROOT + "/plugin1/" + PLUGIN_BUNDLE).toURI().toString();
-        String expectedDep2Name = new File(JAR_ROOT + "/" + DEPENDENCY_BUNDLE).toURI().toString();
+        String expectedDep1Name = pluginJar.toFile().toURI().toString();
+        String expectedDep2Name = dependencyJar.toFile().toURI().toString();
 
         List<String> deps = result.getDependencyResourceNames();
         assertEquals(2, deps.size());
