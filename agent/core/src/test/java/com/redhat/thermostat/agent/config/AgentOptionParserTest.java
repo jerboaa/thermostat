@@ -68,14 +68,12 @@ public class AgentOptionParserTest {
         
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", "testURL");
-        args.addArgument("debug", "--debug");
         
         AgentStartupConfiguration configs = AgentConfigsUtils.createAgentConfigs();
         AgentOptionParser parser = new AgentOptionParser(configs, args);
         parser.parse();
         
         Assert.assertEquals("testURL", configs.getDBConnectionString());
-        Assert.assertTrue(configs.isDebugConsole());
         Assert.assertFalse(configs.purge());
     }
     
@@ -91,7 +89,6 @@ public class AgentOptionParserTest {
         parser.parse();
         
         Assert.assertEquals("testURL2", configs.getDBConnectionString());
-        Assert.assertFalse(configs.isDebugConsole());
         Assert.assertFalse(configs.purge());
     }
 }

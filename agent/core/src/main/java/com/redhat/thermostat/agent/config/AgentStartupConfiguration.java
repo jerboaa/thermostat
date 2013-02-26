@@ -58,14 +58,6 @@ public class AgentStartupConfiguration implements StartupConfiguration, Authenti
     public String getDBConnectionString() {
         return url;
     }
-    
-    void setDebugConsole(boolean debugConsole) {
-        this.debugConsole = debugConsole;
-    }
-    
-    public boolean isDebugConsole() {
-        return debugConsole;
-    }
 
     public void setDatabaseURL(String url) {
         this.url = url;

@@ -108,9 +108,6 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
         
-        if (configuration.isDebugConsole()) {
-            LoggingUtils.enableConsoleLogging();
-        }
         final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 
         final DbService dbService = dbServiceFactory.createDbService(

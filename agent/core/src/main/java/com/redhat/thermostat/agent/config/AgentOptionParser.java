@@ -60,8 +60,6 @@ public class AgentOptionParser implements ThermostatOptionParser {
             configuration.setPurge(false);
         }
 
-        configuration.setDebugConsole(args.hasArgument("debug"));
-        
         if (args.hasArgument("dbUrl")) {
             String url = args.getArgument("dbUrl");
             configuration.setDatabaseURL(url);
