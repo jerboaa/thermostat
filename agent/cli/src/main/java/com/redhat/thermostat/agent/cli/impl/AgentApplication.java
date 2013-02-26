@@ -109,7 +109,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         configuration.setStartTime(startTime);
         
         if (configuration.isDebugConsole()) {
-            LoggingUtils.useDevelConsole();
+            LoggingUtils.enableConsoleLogging();
         }
         final Logger logger = LoggingUtils.getLogger(AgentApplication.class);
 

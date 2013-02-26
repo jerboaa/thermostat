@@ -71,7 +71,6 @@ public class LoggingUtilsTest {
     
     @After
     public void tearDown() {
-        LoggingUtils.root = null;
         mongodbLogger = null;
     }
     

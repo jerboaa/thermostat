@@ -59,31 +59,36 @@ import com.redhat.thermostat.common.config.InvalidConfigurationException;
 public final class LoggingUtils {
 
     // package private for testing
-    static Logger root = null;
-    // package private for testing
     static final String ROOTNAME = "com.redhat.thermostat";
+
+    private static final Logger root;
+
+    private static final ConsoleHandler handler;
+
     private static final String HANDLER_PROP = ROOTNAME + ".handlers";
     private static final String LOG_LEVEL_PROP = ROOTNAME + ".level";
     private static final String DEFAULT_LOG_HANDLER = "java.util.logging.ConsoleHandler";
     private static final Level DEFAULT_LOG_LEVEL = Level.INFO;
 
-    private LoggingUtils() {
-        /* should not be instantiated */
+    static {
+        root = Logger.getLogger(ROOTNAME);
+        root.setUseParentHandlers(false);
+        for (Handler handler : root.getHandlers()) {
+            handler.setFormatter(new LogFormatter());
+            // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
+            handler.setLevel(Level.ALL);
+        }
+
+        handler = new ConsoleHandler();
+        handler.setFormatter(new LogFormatter());
+        // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
+        handler.setLevel(Level.ALL);
+
+        enableConsoleLogging();
     }
 
-    /**
-     * Pretty much every one of the utility methods in this static class should call this method before doing anything else.
-     */
-    private static void ensureRootLogger() {
-        if (root == null) {
-            root = Logger.getLogger(ROOTNAME);
-            root.setUseParentHandlers(false);
-            for (Handler handler : root.getHandlers()) {
-                handler.setFormatter(new LogFormatter());
-                // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
-                handler.setLevel(Level.ALL);
-            }
-        }
+    private LoggingUtils() {
+        /* should not be instantiated */
     }
 
     /**
@@ -92,7 +97,6 @@ public final class LoggingUtils {
      * @param level the minimum level at which logging statements should appear in the logs
      */
     public static void setGlobalLogLevel(Level level) {
-        ensureRootLogger();
         root.setLevel(level);
     }
 
@@ -100,7 +104,6 @@ public final class LoggingUtils {
      * Returns an appropriate logger to be used by class klass.
      */
     public static Logger getLogger(Class<?> klass) {
-        ensureRootLogger();
         Logger logger = Logger.getLogger(klass.getPackage().getName());
         logger.setLevel(null); // Will inherit from root logger
         return logger;
@@ -109,13 +112,13 @@ public final class LoggingUtils {
     /**
      * Ensures log messages are written to the console as well
      */
-    public static void useDevelConsole() {
-        ensureRootLogger();
-        ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        // This is workaround for http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4462908
-        handler.setLevel(Level.ALL);
+    public static void enableConsoleLogging() {
+        root.removeHandler(handler);
         root.addHandler(handler);
+    }
+
+    public static void disableConsoleLogging() {
+        root.removeHandler(handler);
     }
 
     public static void loadGlobalLoggingConfig() throws InvalidConfigurationException {
@@ -140,8 +143,6 @@ public final class LoggingUtils {
 
     private static void readLoggingProperties(File loggingPropertiesFile)
             throws InvalidConfigurationException {
-        // Make sure root logger exists
-        ensureRootLogger();
         try (FileInputStream fis = new FileInputStream(loggingPropertiesFile)){
             // Set basic logger configs. Note that this does NOT add handlers.
             // It also resets() handlers. I.e. removes any existing handlers
