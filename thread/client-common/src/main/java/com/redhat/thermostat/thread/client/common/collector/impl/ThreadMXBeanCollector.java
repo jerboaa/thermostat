@@ -240,6 +240,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
         
             try {
                 latch.await();
+                // FIXME there is no guarantee that data is now present in storage
                 caps = threadDao.loadCapabilities(ref);
             } catch (InterruptedException ignore) {
                 caps = new VMThreadCapabilities();

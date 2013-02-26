@@ -38,9 +38,13 @@ package com.redhat.thermostat.common;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.isA;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
@@ -81,6 +85,28 @@ public class ActionNotifierTest {
         viewActionSupport.addActionListener(listener3);
 
         viewActionSupport.fireAction(TestId.TEST_ID1);
+
+        verify(listener1).actionPerformed(new ActionEvent<TestId>(source, TestId.TEST_ID1));
+        verify(listener2).actionPerformed(new ActionEvent<TestId>(source, TestId.TEST_ID1));
+        verify(listener3).actionPerformed(new ActionEvent<TestId>(source, TestId.TEST_ID1));
+    }
+
+    @Test
+    public void verifyListenersInvokedInPresenseOfExceptions() {
+        Object source = new Object();
+        ActionNotifier<TestId> notifier = new ActionNotifier<TestId>(source);
+        @SuppressWarnings("unchecked")
+        ActionListener<TestId> listener1 = mock(ActionListener.class);
+        @SuppressWarnings("unchecked")
+        ActionListener<TestId> listener2 = mock(ActionListener.class);
+        doThrow(new IllegalArgumentException("ignore")).when(listener2).actionPerformed(isA(ActionEvent.class));
+        @SuppressWarnings("unchecked")
+        ActionListener<TestId> listener3 = mock(ActionListener.class);
+        notifier.addActionListener(listener1);
+        notifier.addActionListener(listener2);
+        notifier.addActionListener(listener3);
+
+        notifier.fireAction(TestId.TEST_ID1);
 
         verify(listener1).actionPerformed(new ActionEvent<TestId>(source, TestId.TEST_ID1));
         verify(listener2).actionPerformed(new ActionEvent<TestId>(source, TestId.TEST_ID1));

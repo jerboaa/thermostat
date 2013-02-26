@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.thread.dao.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -43,6 +44,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+
+import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
@@ -107,6 +110,38 @@ public class ThreadDaoImplTest {
         assertTrue(caps.supportThreadAllocatedMemory());
     }
     
+    @Test
+    public void testLoadVMCapabilitiesWithoutAnyDataInStorage() {
+        Query query = mock(Query.class);
+        Storage storage = mock(Storage.class);
+        when(storage.createQuery(any(Category.class))).thenReturn(query);
+        VmRef ref = mock(VmRef.class);
+        when(ref.getId()).thenReturn(42);
+
+        HostRef agent = mock(HostRef.class);
+        when(agent.getAgentId()).thenReturn("0xcafe");
+
+        when(ref.getAgent()).thenReturn(agent);
+
+        VMThreadCapabilities expected = new VMThreadCapabilities();
+        expected.setSupportedFeaturesList(new String[] { ThreadDao.CPU_TIME, ThreadDao.THREAD_ALLOCATED_MEMORY });
+        Cursor cursor = mock(Cursor.class);
+        when(cursor.hasNext()).thenReturn(false);
+        when(cursor.next()).thenThrow(new NoSuchElementException());
+        when(query.execute()).thenReturn(cursor);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        VMThreadCapabilities caps = dao.loadCapabilities(ref);
+
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, 42);
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, "0xcafe");
+        verify(query).limit(1);
+        verify(query).execute();
+        verifyNoMoreInteractions(query);
+
+        assertEquals(null, caps);
+    }
+
     @Test
     public void testSaveVMCapabilities() {
         Storage storage = mock(Storage.class);

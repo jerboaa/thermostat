@@ -38,8 +38,14 @@ package com.redhat.thermostat.common;
 
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ActionNotifier<T extends Enum<?>> {
+
+    private static final Logger logger = LoggingUtils.getLogger(ActionNotifier.class);
 
     public ActionNotifier(Object source) {
         this.source = source;
@@ -59,17 +65,20 @@ public class ActionNotifier<T extends Enum<?>> {
     }
 
     public void fireAction(T actionId) {
-        ActionEvent<T> action = new ActionEvent<>(source, actionId);
-        for (ActionListener<T> listener : listeners) {
-            listener.actionPerformed(action);
-        }
+        fireAction(actionId, null);
     }
 
     public void fireAction(T actionId, Object payload) {
         ActionEvent<T> action = new ActionEvent<>(source, actionId);
         action.setPayload(payload);
         for (ActionListener<T> listener : listeners) {
-            listener.actionPerformed(action);
+            try {
+                listener.actionPerformed(action);
+            } catch (Exception e) {
+                // a listener throwing exception is BAD
+                // unfortunately, all we can do is make sure other listeners continue working
+                logger.log(Level.WARNING, "a listener threw an unexpected exception", e);
+            }
         }
     }
 }

@@ -69,7 +69,11 @@ public class ThreadDaoImpl implements ThreadDao {
         query.where(Key.VM_ID, Query.Criteria.EQUALS, vm.getId());
         query.where(Key.AGENT_ID, Query.Criteria.EQUALS, vm.getAgent().getAgentId());
         query.limit(1);
-        VMThreadCapabilities caps = query.execute().next();
+        Cursor<VMThreadCapabilities> cursor = query.execute();
+        if (!cursor.hasNext()) {
+            return null;
+        }
+        VMThreadCapabilities caps = cursor.next();
         return caps;
     }
     
