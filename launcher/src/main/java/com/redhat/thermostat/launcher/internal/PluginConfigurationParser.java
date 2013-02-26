@@ -142,6 +142,10 @@ public class PluginConfigurationParser {
             }
         }
 
+        if (commands.getFirst().isEmpty() && commands.getSecond().isEmpty()) {
+            logger.warning("plugin " + pluginName + " does not extend any command or provide any new commands");
+        }
+
         return new PluginConfiguration(commands.getFirst(), commands.getSecond());
     }
 
@@ -180,11 +184,16 @@ public class PluginConfigurationParser {
             if (node.getNodeName().equals("name")) {
                 name = node.getTextContent().trim();
             } else if (node.getNodeName().equals("bundles")) {
-                bundles.addAll(parseBundles(node));
+                bundles.addAll(parseBundles(pluginName, name, node));
             } else if (node.getNodeName().equals("dependencies")) {
-                dependencies.addAll(parseDependencies(node));
+                dependencies.addAll(parseDependencies(pluginName, name, node));
             }
         }
+
+        if (bundles.isEmpty()) {
+            logger.warning("plugin " + pluginName  + " extends the command " + name + " but supplies no bundles");
+        }
+
         if (name == null) {
             logger.warning("plugin " + pluginName + " provides extensions without specifying the command");
             return null;
@@ -212,10 +221,17 @@ public class PluginConfigurationParser {
             } else if (node.getNodeName().equals("arguments")) {
                 options = parseArguments(node);
             } else if (node.getNodeName().equals("bundles")) {
-                bundles.addAll(parseBundles(node));
+                bundles.addAll(parseBundles(pluginName, name, node));
             } else if (node.getNodeName().equals("dependencies")) {
-                dependencies.addAll(parseDependencies(node));
+                dependencies.addAll(parseDependencies(pluginName, name, node));
             }
+        }
+
+        if (bundles.isEmpty()) {
+            logger.warning("plugin " + pluginName  + " provides a new command " + name + " but supplies no bundles");
+        }
+        if (dependencies.isEmpty()) {
+            logger.warning("plugin " + pluginName  + " provides a new command " + name + " but lists no dependencies on thermostat");
         }
 
         if (name == null || usage == null || description == null) {
@@ -227,7 +243,7 @@ public class PluginConfigurationParser {
         }
     }
 
-    private Collection<String> parseBundles(Node bundlesNode) {
+    private Collection<String> parseBundles(String pluginName, String commandName, Node bundlesNode) {
         List<String> bundles = new ArrayList<>();
         NodeList nodes = bundlesNode.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -237,10 +253,15 @@ public class PluginConfigurationParser {
                 bundles.add(bundleName);
             }
         }
+
+        if (bundles.isEmpty()) {
+            logger.warning("plugin " + pluginName + " has an empty bundles element for command " + commandName);
+        }
+
         return bundles;
     }
 
-    private Collection<String> parseDependencies(Node dependenciesNode) {
+    private Collection<String> parseDependencies(String pluginName, String commandName, Node dependenciesNode) {
         List<String> dependencies = new ArrayList<>();
         NodeList nodes = dependenciesNode.getChildNodes();
         for (int i = 0; i < nodes.getLength(); i++) {
@@ -250,6 +271,11 @@ public class PluginConfigurationParser {
                 dependencies.add(bundleName);
             }
         }
+
+        if (dependencies.isEmpty()) {
+            logger.warning("plugin " + pluginName + " has an empty dependencies element for command " + commandName);
+        }
+
         return dependencies;
     }
 
