@@ -72,7 +72,7 @@ public interface Storage {
     /**
      * Drop all data related to the currently running agent.
      */
-    void purge();
+    void purge(String agentId);
 
     long getCount(Category<?> category);
 

@@ -41,10 +41,13 @@ import java.io.InputStream;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import com.redhat.thermostat.storage.model.Pojo;
 
 public final class QueuedStorage implements Storage {
+
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
 
     private class QueuedReplace extends BasePut implements Replace {
 
@@ -186,13 +189,13 @@ public final class QueuedStorage implements Storage {
     }
 
     @Override
-    public void purge() {
+    public void purge(final String agentId) {
 
         executor.execute(new Runnable() {
             
             @Override
             public void run() {
-                delegate.purge();
+                delegate.purge(agentId);
             }
 
         });
@@ -275,8 +278,18 @@ public final class QueuedStorage implements Storage {
     @Override
     public void shutdown() {
         delegate.shutdown();
-        executor.shutdown();
-        fileExecutor.shutdown();
+        try {
+            executor.shutdown();
+            executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            // Fall through. 
+        }
+        try {
+            fileExecutor.shutdown();
+            fileExecutor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            // Fall through. 
+        }
     }
 
 }

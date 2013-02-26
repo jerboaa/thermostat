@@ -39,14 +39,16 @@ package com.redhat.thermostat.agent;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import java.util.UUID;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -106,7 +108,8 @@ public class AgentTest {
     public void testStartAgent() throws Exception {
         
         // Start agent.
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+        UUID uuid = UUID.randomUUID();
+        Agent agent = new Agent(backendRegistry, uuid, config, storage, agentInfoDao, backendInfoDao);
         
         agent.start();
 
@@ -116,6 +119,7 @@ public class AgentTest {
 
         verify(agentInfoDao).addAgentInformation(argument.capture());
         assertEquals(123, argument.getValue().getStartTime());
+        assertEquals(uuid.toString(), argument.getValue().getAgentId());
     }
     
     @Test
@@ -168,7 +172,8 @@ public class AgentTest {
     @Test
     public void testStopAgentWithPurging() throws Exception {
                 
-        Agent agent = new Agent(backendRegistry, config, storage, agentInfoDao, backendInfoDao);
+        UUID uuid = UUID.randomUUID();
+        Agent agent = new Agent(backendRegistry, uuid, config, storage, agentInfoDao, backendInfoDao);
         agent.start();
         
         // stop agent
@@ -178,7 +183,7 @@ public class AgentTest {
 
         ArgumentCaptor<AgentInformation> argument = ArgumentCaptor.forClass(AgentInformation.class);        
         verify(agentInfoDao, never()).updateAgentInformation(argument.capture());
-        verify(storage, times(1)).purge();
+        verify(storage, times(1)).purge(uuid.toString());
     }
    
     @Test
@@ -197,7 +202,7 @@ public class AgentTest {
         verify(backendRegistry).stop();
 
         verify(agentInfoDao).updateAgentInformation(isA(AgentInformation.class));
-        verify(storage, times(0)).purge();
+        verify(storage, times(0)).purge(anyString());
     }
 }
 

@@ -77,6 +77,8 @@ public class QueuedStorageTest {
 
         private Runnable task;
         private boolean shutdown;
+        private long awaitTerminationTimeout;
+        private TimeUnit awaitTerminationTimeUnit;
 
         @Override
         public void execute(Runnable task) {
@@ -111,10 +113,18 @@ public class QueuedStorageTest {
         }
 
         @Override
-        public boolean awaitTermination(long timeout, TimeUnit unit)
-                throws InterruptedException {
-            // Not used.
+        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            awaitTerminationTimeout = timeout;
+            awaitTerminationTimeUnit = unit;
             return true;
+        }
+
+        long getAwaitTerminationTimeout() {
+            return awaitTerminationTimeout;
+        }
+
+        TimeUnit getAwaitTerminationTimeUnit() {
+            return awaitTerminationTimeUnit;
         }
 
         @Override
@@ -290,13 +300,13 @@ public class QueuedStorageTest {
     @Test
     public void testPurge() {
 
-        queuedStorage.purge();
+        queuedStorage.purge("fluff");
 
         Runnable r = executor.getTask();
         assertNotNull(r);
         verifyZeroInteractions(delegateStorage);
         r.run();
-        verify(delegateStorage, times(1)).purge();
+        verify(delegateStorage, times(1)).purge("fluff");
         verifyNoMoreInteractions(delegateStorage);
 
         assertNull(fileExecutor.getTask());
@@ -413,7 +423,11 @@ public class QueuedStorageTest {
         queuedStorage.shutdown();
         verify(delegateStorage).shutdown();
         assertTrue(executor.isShutdown());
+        assertEquals(3, executor.getAwaitTerminationTimeout());
+        assertEquals(TimeUnit.SECONDS, executor.getAwaitTerminationTimeUnit());
         assertTrue(fileExecutor.isShutdown());
+        assertEquals(3, fileExecutor.getAwaitTerminationTimeout());
+        assertEquals(TimeUnit.SECONDS, fileExecutor.getAwaitTerminationTimeUnit());
     }
 }
 

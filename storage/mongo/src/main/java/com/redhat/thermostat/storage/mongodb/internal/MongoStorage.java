@@ -216,8 +216,8 @@ public class MongoStorage implements Storage {
 
 
     @Override
-    public void purge() {
-        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), getAgentId());
+    public void purge(String agentId) {
+        BasicDBObject query = new BasicDBObject(Key.AGENT_ID.getName(), agentId);
         for (DBCollection coll : collectionCache.values()) {
             coll.remove(query);
         }

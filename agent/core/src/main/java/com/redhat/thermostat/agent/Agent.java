@@ -148,6 +148,7 @@ public class Agent {
     public synchronized void start() throws LaunchException {
         if (!started) {
             agentInfo = createAgentInformation();
+            agentInfo.setAgentId(id.toString());
             agentDao.addAgentInformation(agentInfo);
             
             backendRegistry.start();
@@ -203,7 +204,7 @@ public class Agent {
         System.out.println("purging database");
         logger.info("purging database");
         agentDao.removeAgentInformation(agentInfo);
-        storage.purge();
+        storage.purge(agentInfo.getAgentId());
     }
 
     private void updateAgentStatusToStopped() {

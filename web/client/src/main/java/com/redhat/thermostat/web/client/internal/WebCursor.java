@@ -37,6 +37,8 @@
 
 package com.redhat.thermostat.web.client.internal;
 
+import java.util.NoSuchElementException;
+
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.model.Pojo;
 
@@ -57,6 +59,9 @@ class WebCursor<T extends Pojo> implements Cursor<T> {
 
     @Override
     public T next() {
+        if (index >= data.length) {
+            throw new NoSuchElementException();
+        }
         T result = data[index];
         index++;
         return result;

@@ -459,9 +459,10 @@ public class WebStorageEndpointTest {
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setDoOutput(true);
         conn.setRequestMethod("POST");
+        conn.getOutputStream().write("agentId=fluff".getBytes());
         int status = conn.getResponseCode();
         assertEquals(200, status);
-        verify(mockStorage).purge();
+        verify(mockStorage).purge("fluff");
     }
 
     private void registerCategory() {

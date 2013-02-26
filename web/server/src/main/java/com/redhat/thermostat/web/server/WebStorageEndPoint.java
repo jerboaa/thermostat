@@ -214,7 +214,8 @@ public class WebStorageEndPoint extends HttpServlet {
     }
 
     private void purge(HttpServletRequest req, HttpServletResponse resp) {
-        storage.purge();
+        String agentId = req.getParameter("agentId");
+        storage.purge(agentId);
         resp.setStatus(HttpServletResponse.SC_OK);
     }
 

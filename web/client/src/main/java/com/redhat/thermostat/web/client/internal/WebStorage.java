@@ -515,8 +515,10 @@ public class WebStorage implements Storage, SecureStorage {
     }
 
     @Override
-    public void purge() throws StorageException {
-        post(endpoint + "/purge", (HttpEntity) null).close();
+    public void purge(String agentId) throws StorageException {
+        NameValuePair agentIdParam = new BasicNameValuePair("agentId", agentId);
+        List<NameValuePair> agentIdParams = Arrays.asList(agentIdParam);
+        post(endpoint + "/purge", agentIdParams).close();
     }
 
     @Override

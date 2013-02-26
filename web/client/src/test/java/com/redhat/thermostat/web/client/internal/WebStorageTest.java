@@ -57,6 +57,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import javax.servlet.ServletException;
@@ -255,6 +256,12 @@ public class WebStorageTest {
         assertTrue(results.hasNext());
         assertEquals("fluffor2", results.next().getProperty1());
         assertFalse(results.hasNext());
+        try {
+            results.next();
+            fail();
+        } catch (NoSuchElementException ex) {
+            // Pass.
+        }
     }
 
     @Test
@@ -461,10 +468,16 @@ public class WebStorageTest {
     }
 
     @Test
-    public void testPurge() {
-        storage.purge();
+    public void testPurge() throws UnsupportedEncodingException, IOException {
+        storage.purge("fluff");
         assertEquals("POST", method);
         assertTrue(requestURI.endsWith("/purge"));
+        StringReader reader = new StringReader(requestBody);
+        BufferedReader bufRead = new BufferedReader(reader);
+        String line = URLDecoder.decode(bufRead.readLine(), "UTF-8");
+        String[] parts = line.split("=");
+        assertEquals("agentId", parts[0]);
+        assertEquals("fluff", parts[1]);
     }
 
     @Test
