@@ -48,6 +48,8 @@ import javax.swing.LayoutStyle.ComponentPlacement;
 import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumnModel;
 
 import com.redhat.thermostat.client.swing.ComponentVisibleListener;
 import com.redhat.thermostat.client.swing.SwingComponent;
@@ -82,6 +84,8 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
 
     private Object[] networkTableColumns;
     private Object[][] networkTableData;
+
+    private JTable networkTable;
 
     public HostOverviewPanel() {
         super();
@@ -188,6 +192,25 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
             @Override
             public void run() {
                 networkTableModel.setDataVector(networkTableData, networkTableColumns);
+
+                /*
+                 * Compute and set initial (minimum) widths for the table. The
+                 * LayoutManager will give it extra space because the table is
+                 * narrower than what it has to be and that space is distributed
+                 * among all the columns as extra.
+                 */
+                TableColumnModel columnModel = networkTable.getColumnModel();
+                for (int col = 0; col < networkTable.getColumnCount(); col++) {
+                    int maxWidth = Integer.MIN_VALUE;
+
+                    for (int row = 0; row < networkTable.getRowCount(); row++) {
+                        TableCellRenderer renderer = networkTable.getCellRenderer(row, col);
+                        Component component = networkTable.prepareRenderer(renderer, row, col);
+                        maxWidth = Math.max(maxWidth, component.getPreferredSize().width);
+                    }
+
+                    columnModel.getColumn(col).setPreferredWidth(maxWidth);
+                }
             }
         });
     }
@@ -302,7 +325,7 @@ public class HostOverviewPanel extends HostOverviewView implements SwingComponen
 
         panel.setLayout(new BorderLayout(0, 0));
 
-        JTable networkTable = new JTable(networkTableModel);
+        networkTable = new JTable(networkTableModel);
         panel.add(networkTable);
         JTableHeader header = networkTable.getTableHeader();
         panel.add(header, BorderLayout.PAGE_START);
