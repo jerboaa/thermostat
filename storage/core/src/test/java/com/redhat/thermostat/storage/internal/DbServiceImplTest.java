@@ -45,7 +45,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.osgi.framework.ServiceReference;
@@ -55,13 +54,15 @@ import com.redhat.thermostat.storage.core.Connection;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.Storage;
+import com.redhat.thermostat.storage.core.StorageException;
+import com.redhat.thermostat.storage.core.StorageProvider;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class DbServiceImplTest {
     
     private Connection connection;
+    private StorageProvider storageProvider;
     private Storage storage;
-    private DbService dbService;
     private StubBundleContext context;
     
     @Before
@@ -72,17 +73,40 @@ public class DbServiceImplTest {
         storage = mock(Storage.class);
         when(storage.getConnection()).thenReturn(connection);
 
-        dbService = new DbServiceImpl(context, storage, "http://someUrl.ignored.com");
+        storageProvider = mock(StorageProvider.class);
+        when(storageProvider.canHandleProtocol()).thenReturn(true);
+        when(storageProvider.createStorage()).thenReturn(storage);
+        context.registerService(StorageProvider.class, storageProvider, null);
     }
-    
-    @After
-    public void teardown() {
-        dbService = null;
-        context = null;
+
+    @Test
+    public void testNoStorageProvider() {
+        context = new StubBundleContext();
+
+        try {
+            new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+            fail("exception expected");
+        } catch (StorageException se) {
+            assertEquals("No storage provider available", se.getMessage());
+        }
+    }
+
+    @Test
+    public void testNoStorageProviderCanHandleStorageUrl() {
+        when(storageProvider.canHandleProtocol()).thenReturn(false);
+
+        try {
+            new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+            fail("exception expected");
+        } catch (StorageException se) {
+            assertEquals("No storage found for URL http://ignored.example.com", se.getMessage());
+        }
     }
 
     @Test
     public void testConnect() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         dbService.connect();
 
         verify(connection).connect();
@@ -90,6 +114,8 @@ public class DbServiceImplTest {
     
     @Test
     public void testConnectRegistersDbService() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         dbService.connect();
 
         verify(connection).connect();
@@ -103,6 +129,8 @@ public class DbServiceImplTest {
     
     @Test
     public void testConnectRegistersStorage() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         dbService.connect();
 
         verify(connection).connect();
@@ -117,6 +145,8 @@ public class DbServiceImplTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testConnectEnforcesPreCond() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
         try {
             dbService.connect();
@@ -138,6 +168,8 @@ public class DbServiceImplTest {
     @SuppressWarnings("rawtypes")
     @Test
     public void testDisConnectEnforcesPreCond() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         ServiceRegistration reg = context.registerService(DbService.class, dbService, null);
         try {
             // Storage == null
@@ -160,6 +192,8 @@ public class DbServiceImplTest {
 
     @Test
     public void testDisconnect() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         dbService.connect();
         assertNotNull(context.getServiceReference(DbService.class));
         
@@ -170,6 +204,8 @@ public class DbServiceImplTest {
 
     @Test
     public void testDisconnectUnregistersDbService() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         dbService.connect();
         assertNotNull(context.getServiceReference(DbService.class));
         
@@ -182,6 +218,8 @@ public class DbServiceImplTest {
     
     @Test
     public void testDisconnectUnregistersStorage() {
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         dbService.connect();
         assertNotNull(context.getServiceReference(Storage.class));
         
@@ -196,13 +234,15 @@ public class DbServiceImplTest {
     public void canGetStorageUrl() {
         String connectionURL = "http://test.example.com:8082";
 
-        dbService = new DbServiceImpl(context, null, connectionURL);
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", connectionURL);
         assertEquals(connectionURL, dbService.getConnectionUrl());
     }
     
     @Test
     public void testAddListener() {
         ConnectionListener listener = mock(ConnectionListener.class);
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
+
         dbService.addConnectionListener(listener);
         verify(connection).addListener(listener);
     }
@@ -211,6 +251,7 @@ public class DbServiceImplTest {
     public void testRemoveListener() {
         // Remove called regardless of listener actually being added
         ConnectionListener listener = mock(ConnectionListener.class);
+        DbService dbService = new DbServiceImpl(context, "ignore", "ignore", "http://ignored.example.com");
         dbService.removeConnectionListener(listener);
         verify(connection).removeListener(listener);
     }

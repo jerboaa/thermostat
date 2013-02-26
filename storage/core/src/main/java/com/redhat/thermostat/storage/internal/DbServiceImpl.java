@@ -64,16 +64,17 @@ public class DbServiceImpl implements DbService {
     
     DbServiceImpl(String username, String password, String dbUrl) throws StorageException {
         BundleContext context = FrameworkUtil.getBundle(DbService.class).getBundleContext();
-        Storage storage = createStorage(context, username, password, dbUrl);
-        init(context, storage, dbUrl);
+        init(context, username, password, dbUrl);
     }
 
     // for testing
-    DbServiceImpl(BundleContext context, Storage storage, String dbUrl) {
-        init(context, storage, dbUrl);
+    DbServiceImpl(BundleContext context, String username, String password, String dbUrl) {
+        init(context, username, password, dbUrl);
     }
     
-    private void init(BundleContext context, Storage storage, String dbUrl) {
+    private void init(BundleContext context, String username, String password, String dbUrl) {
+        Storage storage = createStorage(context, username, password, dbUrl);
+
         this.storage = storage;
         this.context = context;
         this.dbUrl = dbUrl;
@@ -162,6 +163,9 @@ public class DbServiceImpl implements DbService {
     private static StorageProvider getStorageProvider(BundleContext context, StartupConfiguration config) {
         try {
             ServiceReference[] refs = context.getServiceReferences(StorageProvider.class.getName(), null);
+            if (refs == null) {
+                throw new StorageException("No storage provider available");
+            }
             for (int i = 0; i < refs.length; i++) {
                 StorageProvider prov = (StorageProvider) context.getService(refs[i]);
                 prov.setConfig(config);
