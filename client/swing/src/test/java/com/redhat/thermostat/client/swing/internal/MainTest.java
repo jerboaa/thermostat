@@ -66,6 +66,7 @@ import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class MainTest {
 
@@ -82,6 +83,7 @@ public class MainTest {
     private TimerFactory timerFactory;
     private StubBundleContext context;
     private ApplicationService appService;
+    private Keyring keyring;
 
     @Before
     public void setUp() {
@@ -115,6 +117,8 @@ public class MainTest {
 
         timerFactory = mock(TimerFactory.class);
         when(appService.getTimerFactory()).thenReturn(timerFactory);
+
+        keyring = mock(Keyring.class);
     }
 
     /**
@@ -132,7 +136,7 @@ public class MainTest {
 
     @Test
     public void verifyRunWaitsForShutdown() throws Exception {
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
 
         main.run();
 
@@ -143,7 +147,7 @@ public class MainTest {
 
     @Test
     public void verifyConnectionIsMade() throws Exception {
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
 
         main.run();
 
@@ -159,7 +163,7 @@ public class MainTest {
         context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         context.registerService(VmInfoDAO.class, vmInfoDAO, null);
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
 
         main.run();
 
@@ -177,7 +181,7 @@ public class MainTest {
     @Test
     public void verifyFailedConnectionTriggersShutdown() throws Exception {
 
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, null, null, null);
+        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
 
         main.run();
 

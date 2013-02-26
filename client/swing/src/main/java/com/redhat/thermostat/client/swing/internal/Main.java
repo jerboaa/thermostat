@@ -54,7 +54,6 @@ import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
 import com.redhat.thermostat.client.locale.LocaleResources;
-import com.redhat.thermostat.client.swing.internal.config.ConnectionConfiguration;
 import com.redhat.thermostat.client.swing.internal.views.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigReconnector;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
@@ -66,7 +65,6 @@ import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
@@ -86,46 +84,32 @@ public class Main {
     private ApplicationService appSvc;
     private UiFacadeFactory uiFacadeFactory;
     private DbServiceFactory dbServiceFactory;
-    private DbService dbService;
+    private Keyring keyring;
     private MultipleServiceTracker tracker;
     
     public Main(BundleContext context, Keyring keyring,
             ApplicationService appSvc, UiFacadeFactory uiFacadeFactory,
             String[] args) {
-        ClientPreferences prefs = new ClientPreferences(keyring);
-        ConnectionConfiguration config = new ConnectionConfiguration(prefs);
+
         DbServiceFactory dbServiceFactory = new DbServiceFactory();
 
-        init(context, appSvc, uiFacadeFactory, dbServiceFactory,
-                config.getUsername(), config.getPassword(),
-                config.getDBConnectionString());
+        init(context, appSvc, uiFacadeFactory, dbServiceFactory, keyring);
     }
 
     Main(BundleContext context, ApplicationService appSvc,
             UiFacadeFactory uiFacadeFactory, DbServiceFactory dbServiceFactory,
-            String username, String password, String connectionURL) {
-        init(context, appSvc, uiFacadeFactory, dbServiceFactory, username,
-                password, connectionURL);
+            Keyring keyring) {
+        init(context, appSvc, uiFacadeFactory, dbServiceFactory, keyring);
     }
 
     private void init(BundleContext context, ApplicationService appSvc,
             UiFacadeFactory uiFacadeFactory, DbServiceFactory dbServiceFactory,
-            String username, String password, String connectionURL) {
+            Keyring keyring) {
         this.context = context;
         this.appSvc = appSvc;
         this.uiFacadeFactory = uiFacadeFactory;
         this.dbServiceFactory = dbServiceFactory;
-        try {
-            // See IcedTea BZ#1294
-            // This may throw a StorageException if no suitable storage provider
-            // is registered. This most likely means a user has a wrong
-            // connection-url saved in her preferences. Continue, and catch
-            // this case in ConnectionSetup#run()
-            this.dbService = dbServiceFactory.createDbService(username, password,
-                connectionURL);
-        } catch (StorageException e) {
-            logger.log(Level.WARNING, "Error looking up storage provider", e);
-        }
+        this.keyring = keyring;
     }
 
     private void setLAF() {
@@ -183,10 +167,11 @@ public class Main {
                 UIManager.getDefaults().put("OptionPane.isYesLast", true);
                 UIManager.getDefaults().put("OptionPane.sameSizeButtons", true);
                 
-                showGui();
             }
 
         });
+
+        tryConnecting();
 
         try {
             uiFacadeFactory.awaitShutdown();
@@ -195,46 +180,10 @@ public class Main {
         }
     }
 
-    private void showGui() {
+    private void tryConnecting() {
         final ExecutorService service = appSvc.getApplicationExecutor();
-        service.execute(new ConnectorSetup(service));
-    }
-    
-    private class ConnectorSetup implements Runnable {
-        
-        private ExecutorService service;
-        public ConnectorSetup(ExecutorService service) {
-            this.service = service;
-        }
-        
-        @Override
-        public void run() {
-            ConnectionListener connectionListener = new ConnectionHandler(service);
-            // dbService may be null at this point (see constructor). Fire
-            // failed connection attempt immediately.
-            if (dbService == null) {
-                connectionListener.changed(ConnectionStatus.FAILED_TO_CONNECT);
-                return;
-            }
-            dbService.addConnectionListener(connectionListener);
-            try {
-                dbService.connect();
-            } catch (Throwable t) {
-                logger.log(Level.WARNING, "connection attempt failed: ", t);
-            }
-        }
-    }
-    
-    private class Connector implements Runnable {
-        
-        @Override
-        public void run() {
-            try {
-                dbService.connect();
-            } catch (Throwable t) {
-                logger.log(Level.WARNING, "connection attempt failed: ", t);
-            }
-        }
+        ClientPreferences prefs = new ClientPreferences(keyring);
+        connect(prefs, service);
     }
     
     private class ConnectionAttempt implements Runnable {
@@ -274,8 +223,31 @@ public class Main {
         }
     }
     
-    private void connect(ExecutorService service) {
-        service.execute(new Connector());
+    private void connect(ClientPreferences prefs, ExecutorService service) {
+        final ConnectionHandler reconnectionHandler = new ConnectionHandler(service);
+        try {
+            // create DbService with potentially modified parameters
+            final DbService dbService = dbServiceFactory.createDbService(prefs.getUserName(), prefs.getPassword(), prefs.getConnectionUrl());
+            dbService.addConnectionListener(reconnectionHandler);
+            service.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        dbService.connect();
+                    } catch (Throwable t) {
+                        logger.log(Level.WARNING, "connection attempt failed: ", t);
+                        // is this ever possible?
+                        reconnectionHandler.changed(ConnectionStatus.FAILED_TO_CONNECT);
+                    }
+                }
+            });
+        } catch (StorageException se) {
+            logger.log(Level.WARNING, "Unable to find appropriate storage provider", se);
+            // Prevent Icedtea BZ#1294, where no matching StorageProvider
+            // could potentially be found for the given connection URL.
+            // Indicate connection failure immediately.
+            reconnectionHandler.changed(ConnectionStatus.FAILED_TO_CONNECT);
+        }
     }
     
     private class MainClientConfigReconnector implements ClientConfigReconnector {
@@ -286,20 +258,7 @@ public class Main {
         
         @Override
         public void reconnect(ClientPreferences prefs) {
-            ConnectionHandler connectionListener = new ConnectionHandler(service);
-            try {
-                // Recreate DbService with potentially modified parameters.
-                dbService = dbServiceFactory.createDbService(prefs.getUserName(), prefs.getPassword(), prefs.getConnectionUrl());
-            } catch (StorageException e) {
-                // Prevent Icedtea BZ#1294, where no matching StorageProvider
-                // could potentially be found for the given connection URL.
-                // Indicate connection failure immediately.
-                logger.log(Level.WARNING, "Error looking up storage provider", e);
-                connectionListener.changed(ConnectionStatus.FAILED_TO_CONNECT);
-                return;
-            }
-            dbService.addConnectionListener(connectionListener);
-            connect(service);
+            connect(prefs, service);
         }
 
         @Override
@@ -309,8 +268,7 @@ public class Main {
     }
     
     private void createPreferencesDialog(final ExecutorService service) {
-
-        ClientPreferences prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
+        ClientPreferences prefs = new ClientPreferences(keyring);
         ClientConfigurationView configDialog = new ClientConfigurationSwing();
         ClientConfigurationController controller =
                 new ClientConfigurationController(prefs, configDialog, new MainClientConfigReconnector(service));
@@ -384,15 +342,14 @@ public class Main {
     }
 
     private void showMainWindow() {
-        SwingUtilities.invokeLater(new ShowMainWindow());
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                MainWindowController mainController = uiFacadeFactory.getMainWindow();
+                mainController.showMainMainWindow();
+            }
+        });
     }
-    
-    private class ShowMainWindow implements Runnable {
-        @Override
-        public void run() {
-            MainWindowController mainController = uiFacadeFactory.getMainWindow();
-            mainController.showMainMainWindow();                        
-        }
-    }
+
 }
 
