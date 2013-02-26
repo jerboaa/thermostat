@@ -70,9 +70,9 @@ public class BuiltInCommandInfo implements CommandInfo {
     private Options options;
     private List<String> dependencies;
 
-    BuiltInCommandInfo(String name, Properties properties, String libRoot) {
+    BuiltInCommandInfo(String commandName, Properties properties, String libRoot) {
         options = new Options();
-        this.name = name;
+        this.name = commandName;
         for (Entry<Object,Object> entry: properties.entrySet()) {
             String key = (String) entry.getKey();
             if (key.equals(PROPERTY_BUNDLES)) {
@@ -152,7 +152,9 @@ public class BuiltInCommandInfo implements CommandInfo {
             List<String> optionsList = Arrays.asList(optionString.split("\\|"));
             if (optionsList.size() == 1) {
             	// Not a group
-                Option option = optionFromProperties(optionsList.get(0).trim(), props);
+                String optionName = optionsList.get(0).trim();
+                boolean forOverridingRequired = CommonOptions.ALL_COMMON_OPTIONS.contains(optionName);
+                Option option = optionFromProperties(optionName, props, forOverridingRequired);
                 if (optionConflicts(option, commonOptionsToAdd, propertiesOptions)) {
                     throwConflictingOption(option);
                 }
@@ -183,7 +185,14 @@ public class BuiltInCommandInfo implements CommandInfo {
         }
     }
 
-    private Option optionFromProperties(String name, Properties props) {
+    /**
+     * @param name the name of the option
+     * @param props the properties object that contains more information about that option
+     * @param forOverridingRequiredOnly indicates that the option is for
+     * overriding the required property of a common option
+     * @return an Option object created by parsing the props
+     */
+    private Option optionFromProperties(String name, Properties props, boolean forOverridingRequiredOnly) {
         String opt = null;
         String longOpt = null;
         boolean hasArg = false;
@@ -203,18 +212,22 @@ public class BuiltInCommandInfo implements CommandInfo {
             longOpt = (String) props.getProperty(longKey);
         }
         if (opt == null && longOpt == null) {
-            logger.warning("Neither short nor long version of option " + name + " was set.  Assuming long option same as name.");
             longOpt = name;
+            if (!forOverridingRequiredOnly) {
+                logger.info("Command '" + this.name + "': Neither short nor long version of option " + name + " was set.  Assuming long option same as name.");
+            }
         }
         if (props.containsKey(argKey)) {
             hasArg = Boolean.parseBoolean((String) props.getProperty(argKey));
         } else {
-            logger.warning("The 'hasarg' property for " + name + " was not set.  Assuming FALSE");
+            if (!forOverridingRequiredOnly) {
+                logger.info("Command '" + this.name + "': The 'hasarg' property for " + name + " was not set.  Assuming FALSE");
+            }
         }
         if (props.containsKey(requiredKey)) {
             required = Boolean.parseBoolean((String) props.getProperty(requiredKey));
         } else {
-            logger.warning("The 'required' property for " + name + " was not set.  Assuming FALSE");
+            logger.info("Command '" + this.name + "': The 'required' property for " + name + " was not set.  Assuming FALSE");
         }
         if (props.containsKey(descKey)) {
             description = (String) props.getProperty(descKey);
@@ -236,7 +249,8 @@ public class BuiltInCommandInfo implements CommandInfo {
         OptionGroup og = new OptionGroup();
         og.setRequired(true);
         for (String optionName : optionsList) {
-            Option option = optionFromProperties(optionName.trim(), props);
+            boolean forOverridingRequired = CommonOptions.ALL_COMMON_OPTIONS.contains(optionName);
+            Option option = optionFromProperties(optionName.trim(), props, forOverridingRequired);
             if (optionConflictsWithGroup(option, og) |
                     optionConflicts(option, commonOpts, propOpts)) {
                 throwConflictingOption(option);
