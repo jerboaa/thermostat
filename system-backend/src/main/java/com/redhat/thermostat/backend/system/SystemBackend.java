@@ -47,6 +47,7 @@ import sun.jvmstat.monitor.MonitorException;
 import sun.jvmstat.monitor.MonitoredHost;
 
 import com.redhat.thermostat.backend.BaseBackend;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.NetworkInterfaceInfoDAO;
@@ -72,11 +73,12 @@ public class SystemBackend extends BaseBackend {
     private final HostInfoBuilder hostInfoBuilder;
 
 
-    public SystemBackend(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO, VmStatusChangeNotifier notifier) {
+    public SystemBackend(HostInfoDAO hostInfoDAO, NetworkInterfaceInfoDAO netInfoDAO, VmInfoDAO vmInfoDAO,
+            Version version, VmStatusChangeNotifier notifier) {
         super("System Backend",
                 "Gathers basic information from the system",
                 "Red Hat, Inc.",
-                "0.5.0", true);
+                version.getVersionNumber(), true);
         this.hostInfos = hostInfoDAO;
         this.networkInterfaces = netInfoDAO;
 

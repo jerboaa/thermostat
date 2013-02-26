@@ -55,7 +55,9 @@ import org.apache.commons.cli.Options;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.ErrorHandler;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import com.redhat.thermostat.common.Pair;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -113,6 +115,7 @@ public class PluginConfigurationParser {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
             DocumentBuilder builder = factory.newDocumentBuilder();
+            builder.setErrorHandler(new ConfigurationParserErrorHandler());
             Document xmlDoc = builder.parse(configurationStream);
             Node rootNode = xmlDoc.getFirstChild();
             if (rootNode == null) {
@@ -255,4 +258,21 @@ public class PluginConfigurationParser {
         return new Options();
     }
 
+    private static class ConfigurationParserErrorHandler implements ErrorHandler {
+
+        @Override
+        public void warning(SAXParseException exception) throws SAXException {
+            // no-op
+        }
+
+        @Override
+        public void fatalError(SAXParseException exception) throws SAXException {
+            throw exception;
+        }
+
+        @Override
+        public void error(SAXParseException exception) throws SAXException {
+            throw exception;
+        }
+    }
 }

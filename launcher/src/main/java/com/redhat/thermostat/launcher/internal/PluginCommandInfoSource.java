@@ -114,12 +114,9 @@ public class PluginCommandInfoSource implements CommandInfoSource {
                 bundlePaths = new LinkedList<>();
             }
 
-            for (String bundle : pluginBundles) {
-                bundlePaths.add(new File(pluginDir, bundle).toURI().toString());
-            }
-            for (String bundle : dependencyBundles) {
-                bundlePaths.add(new File(coreJarRoot, bundle).toURI().toString());
-            }
+            addIfValidPath(bundlePaths, pluginDir, pluginBundles);
+
+            addIfValidPath(bundlePaths, coreJarRoot, dependencyBundles);
 
             additionalBundlesForExistingCommands.put(commandName, bundlePaths);
         }
@@ -134,12 +131,10 @@ public class PluginCommandInfoSource implements CommandInfoSource {
 
             List<String> bundlePaths = new LinkedList<>();
 
-            for (String bundle : command.getPluginBundles()) {
-                bundlePaths.add(new File(pluginDir, bundle).toURI().toString());
-            }
-            for (String bundle : command.getDepenedencyBundles()) {
-                bundlePaths.add(new File(coreJarRoot, bundle).toURI().toString());
-            }
+            addIfValidPath(bundlePaths, pluginDir, command.getPluginBundles());
+
+            addIfValidPath(bundlePaths, coreJarRoot, command.getDepenedencyBundles());
+
             BasicCommandInfo info = new BasicCommandInfo(commandName,
                     command.getDescription(),
                     command.getUsage(),
@@ -149,6 +144,17 @@ public class PluginCommandInfoSource implements CommandInfoSource {
             allNewCommands.put(commandName, info);
         }
 
+    }
+
+    private void addIfValidPath(List<String> result, File parentDir, List<String> pathsRelativeToParent) {
+        for (String bundle : pathsRelativeToParent) {
+            File bundleFile = new File(parentDir, bundle);
+            if (bundleFile.isFile()) {
+                result.add(bundleFile.toURI().toString());
+            } else {
+                logger.warning("File " + bundleFile.toString() + " not found. Removing it from list of bundles to load.");
+            }
+        }
     }
 
     private void combineCommands() {
