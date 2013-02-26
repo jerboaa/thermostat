@@ -45,18 +45,20 @@
     <version>0.6.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-host-memory</artifactId>
-  <packaging>pom</packaging>
+  <artifactId>thermostat-assembly</artifactId>
 
-  <name>Thermostat Host Memory plugin</name>
+  <name>Thermostat Assemblies</name>
 
-  <modules>
-    <module>agent</module>
-    <module>client-core</module>
-    <module>client-swing</module>
-    <module>common</module>
-    <module>distribution</module>
-  </modules>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <skipTests>true</skipTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
 
 </project>
 

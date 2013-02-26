@@ -55,6 +55,7 @@
     <module>client-core</module>
     <module>client-swing</module>
     <module>common</module>
+    <module>distribution</module>
     <module>remote-collector-command</module>
     <module>remote-collector-client-common</module>
     <module>remote-collector-client-swing</module>

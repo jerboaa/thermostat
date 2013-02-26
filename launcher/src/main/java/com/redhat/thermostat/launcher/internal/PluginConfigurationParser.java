@@ -114,6 +114,7 @@ public class PluginConfigurationParser {
     public PluginConfiguration parse(String pluginName, InputStream configurationStream) {
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setIgnoringComments(true);
             DocumentBuilder builder = factory.newDocumentBuilder();
             builder.setErrorHandler(new ConfigurationParserErrorHandler());
             Document xmlDoc = builder.parse(configurationStream);

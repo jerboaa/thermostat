@@ -41,22 +41,73 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-numa</artifactId>
     <version>0.6.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-host-memory</artifactId>
+  <artifactId>thermostat-numa-distribution</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Host Memory plugin</name>
+  <name>Thermostat NUMA plugin distribution</name>
+  
+  <properties>
+    <thermostat.plugin>numa</thermostat.plugin>
+  </properties>
 
-  <modules>
-    <module>agent</module>
-    <module>client-core</module>
-    <module>client-swing</module>
-    <module>common</module>
-    <module>distribution</module>
-  </modules>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-assembly</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>plugin-assembly</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>assemble-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <!-- Explicitly list all plug-in artifacts, transitive dependencies
+       are not included in assembly. -->
+  <dependencies>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 
 </project>
 

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <!-- 
 
  Copyright 2012, 2013 Red Hat, Inc.
@@ -36,27 +36,37 @@
  to do so, delete this exception statement from your version.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-
-  <parent>
-    <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
-  </parent>
-
-  <artifactId>thermostat-host-memory</artifactId>
-  <packaging>pom</packaging>
-
-  <name>Thermostat Host Memory plugin</name>
-
-  <modules>
-    <module>agent</module>
-    <module>client-core</module>
-    <module>client-swing</module>
-    <module>common</module>
-    <module>distribution</module>
-  </modules>
-
-</project>
-
+<plugin>
+  <commands>
+    <command type="extends">
+      <name>gui</name>
+      <bundles>
+        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-memory-client-core-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-memory-client-swing-${project.version}.jar</bundle>
+      </bundles>
+    </command>
+    <command type="extends">
+      <name>agent</name>
+      <bundles>
+        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-memory-agent-${project.version}.jar</bundle>
+      </bundles>
+    </command>
+    <!-- Requires all storage entity classes to be loaded -->
+    <command type="extends">
+      <name>webservice</name>
+      <bundles>
+        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
+      </bundles>
+    </command>
+    <command type="extends">
+      <name>vm-stat</name>
+      <bundles>
+        <bundle>thermostat-vm-memory-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-memory-client-cli-${project.version}.jar</bundle>
+      </bundles>
+    </command>
+  </commands>
+  <!-- TODO: Express dependency on remote GC bundles -->
+</plugin>

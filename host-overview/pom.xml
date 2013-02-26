@@ -53,6 +53,7 @@
   <modules>
     <module>client-core</module>
     <module>client-swing</module>
+    <module>distribution</module>
   </modules>
 
 </project>

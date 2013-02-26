@@ -41,30 +41,78 @@
 
   <parent>
     <groupId>com.redhat.thermostat</groupId>
-    <artifactId>thermostat</artifactId>
+    <artifactId>thermostat-vm-cpu</artifactId>
     <version>0.6.0-SNAPSHOT</version>
   </parent>
 
-  <artifactId>thermostat-thread</artifactId>
+  <artifactId>thermostat-vm-cpu-distribution</artifactId>
   <packaging>pom</packaging>
 
-  <name>Thermostat Thread Analysis Plugins</name>
+  <name>Thermostat VM CPU plugin distribution</name>
+  
+  <properties>
+    <thermostat.plugin>vm-cpu</thermostat.plugin>
+  </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.thermostat</groupId>
+            <artifactId>thermostat-assembly</artifactId>
+            <version>${project.version}</version>
+          </dependency>
+        </dependencies>
+        <configuration>
+          <descriptorRefs>
+            <descriptorRef>plugin-assembly</descriptorRef>
+          </descriptorRefs>
+          <appendAssemblyId>false</appendAssemblyId>
+        </configuration>
+        <executions>
+          <execution>
+            <id>assemble-plugin</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  
+  <!-- Explicitly list all plug-in artifacts, transitive dependencies
+       are not included in assembly. -->
   <dependencies>
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-common</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-client-core</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-client-cli</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-client-swing</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-agent</artifactId>
+      <version>${project.version}</version>
     </dependency>
   </dependencies>
 
-  <modules>
-    <module>collector</module>
-    <module>harvester</module>
-    <module>client-common</module>
-    <module>client-swing</module>
-    <module>client-controllers</module>
-    <module>distribution</module>
-  </modules>
 </project>
 

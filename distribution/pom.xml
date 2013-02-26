@@ -54,7 +54,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <main.basedir>${project.basedir}/..</main.basedir>
   </properties>
-
+  
   <build>
     <plugins>
       <!-- skip unit test run, tests to be executed during integration-test -->
@@ -78,20 +78,38 @@
         </executions>
       </plugin>
       <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.4</version>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <appendAssemblyId>false</appendAssemblyId> 
+        </configuration>
         <executions>
           <execution>
-            <id>copy-deps</id>
+            <id>assemble-core</id>
+            <configuration>
+              <descriptors>
+                <descriptor>assembly/core-assembly.xml</descriptor>
+              </descriptors>
+              <finalName>libs</finalName>
+              <attach>false</attach>
+            </configuration>
             <phase>package</phase>
             <goals>
-              <goal>copy-dependencies</goal>
+              <goal>single</goal>
             </goals>
+          </execution>
+          <execution>
+            <id>assemble-all-plugins</id>
             <configuration>
-              <excludeTransitive>false</excludeTransitive>
-              <excludeGroupIds>org.osgi,junit,org.hamcrest</excludeGroupIds>
-              <outputDirectory>${project.build.directory}/libs</outputDirectory>
+              <descriptors>
+                <descriptor>assembly/all-plugin-assembly.xml</descriptor>
+              </descriptors>
+              <finalName>plugins</finalName>
+              <attach>false</attach>
             </configuration>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -342,121 +360,6 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-overview-client-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-overview-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-cpu-client-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-cpu-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-cpu-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-memory-client-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-memory-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-host-memory-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-overview-client-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-overview-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-cpu-client-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-cpu-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-cpu-client-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-cpu-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-gc-client-core</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-gc-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-gc-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-classstat-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-classstat-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-client-cli</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-memory-agent</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-heap-analysis-client-swing</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-osgi-living-vm-filter-swing</artifactId>
         <version>${project.version}</version>
@@ -474,11 +377,6 @@
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
       <artifactId>thermostat-agent-command</artifactId>
-      <version>${project.version}</version>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-vm-heap-analysis-agent</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -531,72 +429,82 @@
       <artifactId>jetty-webapp</artifactId>
       <version>8.1.5.v20120716</version>
     </dependency>
-
-    <!--  thread plugin -->
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-thread-client-common</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-thread-client-controllers</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-thread-client-swing</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-thread-collector</artifactId>
-        <version>${project.version}</version>
-    </dependency>      
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-thread-harvester</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-     
     <dependency>
         <groupId>com.redhat.thermostat</groupId>
         <artifactId>thermostat-system-backend</artifactId>
         <version>${project.version}</version>
     </dependency>
     
-    <!-- new GC plugin -->
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-gc-remote-collector-common</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-gc-remote-collector-client-common</artifactId>
-        <version>${project.version}</version>
-    </dependency>    
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-gc-remote-collector-client-swing</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-    <dependency>
-        <groupId>com.redhat.thermostat</groupId>
-        <artifactId>thermostat-gc-remote-collector-command</artifactId>
-        <version>${project.version}</version>
-    </dependency>
-         
+    <!-- Plugins -->
+    <!-- Be sure to add the distribution module of your plugin below
+         with type "zip", and also to assembly/all-plugin-assembly.xml -->
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-numa-agent</artifactId>
+      <artifactId>thermostat-host-cpu-distribution</artifactId>
       <version>${project.version}</version>
+      <type>zip</type>
     </dependency>
     <dependency>
       <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-numa-client-swing</artifactId>
+      <artifactId>thermostat-host-memory-distribution</artifactId>
       <version>${project.version}</version>
+      <type>zip</type>
     </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-host-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-numa-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-thread-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-classstat-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-cpu-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-gc-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-heap-analysis-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-memory-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    <dependency>
+      <groupId>com.redhat.thermostat</groupId>
+      <artifactId>thermostat-vm-overview-distribution</artifactId>
+      <version>${project.version}</version>
+      <type>zip</type>
+    </dependency>
+    
   </dependencies>
 </project>
 
