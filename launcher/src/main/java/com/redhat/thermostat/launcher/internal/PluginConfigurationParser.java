@@ -98,6 +98,10 @@ import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
  *           &lt;required&gt;true&lt;/required&gt;
  *           &lt;description&gt;some required and long option&lt;/description&gt;
  *         &lt;/option&gt;
+ *         &lt;options common="true"&gt;
+ *           &lt;long&gt;dbUrl&lt;/long&gt;
+ *           &lt;required&gt;true&lt;/required&gt;
+ *         &lt;/option&gt;
  *       &lt;/options&gt;
  *       &lt;bundles&gt;
  *         &lt;bundle&gt;hello-world-plugin-0.1-SNAPSHOT.jar&lt;/bundle&gt;
@@ -301,7 +305,9 @@ public class PluginConfigurationParser {
                 opts.addOptionGroup(group);
             } else if (node.getNodeName().equals("option")) {
                 Option option = parseOption(node);
-                opts.addOption(option);
+                if (option != null) {
+                    opts.addOption(option);
+                }
             }
         }
 
@@ -316,7 +322,9 @@ public class PluginConfigurationParser {
             Node node = nodes.item(i);
             if (node.getNodeName().equals("option")) {
                 Option option = parseOption(node);
-                group.addOption(option);
+                if (option != null) {
+                    group.addOption(option);
+                }
             } else if (node.getNodeName().equals("required")) {
                 group.setRequired(Boolean.valueOf(node.getTextContent().trim()));
             }
@@ -326,6 +334,54 @@ public class PluginConfigurationParser {
     }
 
     private Option parseOption(Node optionNode) {
+        Option option;
+        Node type = optionNode.getAttributes().getNamedItem("common");
+        if (type != null && Boolean.valueOf(type.getNodeValue())) {
+            option = parseCommonOption(optionNode);
+        } else {
+            option = parseNormalOption(optionNode);
+        }
+
+        return option;
+    }
+
+    private Option parseCommonOption(Node optionNode) {
+        String longName = null;
+        String shortName = null;
+        boolean required = false;
+        Option option = null;
+
+        NodeList nodes = optionNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("long")) {
+                longName = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("short")) {
+                shortName = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("required")) {
+                required = Boolean.valueOf(node.getTextContent().trim());
+            }
+        }
+
+        List<Option> allKnownOptions = new ArrayList<Option>();
+        allKnownOptions.addAll(CommonOptions.getDbOptions());
+        allKnownOptions.add(CommonOptions.getLogOption());
+
+        for (Option knownOption : allKnownOptions) {
+            if (knownOption.getOpt().equals(shortName) || knownOption.getLongOpt().equals(longName)) {
+                option = new Option(knownOption.getOpt(), knownOption.getLongOpt(), knownOption.hasArg(), knownOption.getDescription());
+                option.setRequired(required);
+                option.setArgName(knownOption.getArgName());
+                return option;
+            }
+        }
+
+        logger.warning("The option " + longName != null ? longName : shortName + " claims to be a common option but isnt");
+
+        return null;
+    }
+
+    private Option parseNormalOption(Node optionNode) {
         String longName = null;
         String shortName = null;
         String description = null;

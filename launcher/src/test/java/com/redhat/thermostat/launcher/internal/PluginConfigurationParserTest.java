@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -53,6 +54,7 @@ import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.CommandExtensions;
 import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
 
@@ -259,5 +261,85 @@ public class PluginConfigurationParserTest {
 
         OptionGroup group = opts.getOptionGroup(exclusiveOptionA);
         assertTrue(group.isRequired());
+    }
+
+    @Test
+    public void testCommonOptionParsing() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <description>just a test</description>\n" +
+                "      <usage>test [ -a | -b ] -l &lt;foo&gt;</usage>\n" +
+                "      <options>\n" +
+                "        <option common=\"true\">\n" +
+                "          <long>dbUrl</long>\n" +
+                "        </option>\n" +
+                "      </options>\n" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+
+        Options opts = command.getOptions();
+        assertTrue(opts.getRequiredOptions().isEmpty());
+
+        Option dbUrlOption = opts.getOption("d");
+        assertNotNull(dbUrlOption);
+
+        Option otherDbUrlOption = opts.getOption("dbUrl");
+        assertSame(dbUrlOption, otherDbUrlOption);
+
+        Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
+        assertEquals("dbUrl", dbUrlOption.getArgName());
+        assertEquals(1, dbUrlOption.getArgs());
+        assertEquals(t.localize(LocaleResources.OPTION_DB_URL_DESC), dbUrlOption.getDescription());
+        assertFalse(dbUrlOption.isRequired());
+    }
+
+    @Test
+    public void testFakeCommonOptionIsIgnored() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <description>just a test</description>\n" +
+                "      <usage>test [ -a | -b ] -l &lt;foo&gt;</usage>\n" +
+                "      <options>\n" +
+                "        <option common=\"true\">\n" +
+                "          <long>foobarbaz</long>\n" +
+                "        </option>\n" +
+                "      </options>\n" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+
+        Options opts = command.getOptions();
+        assertTrue(opts.getRequiredOptions().isEmpty());
+
+        Option dbUrlOption = opts.getOption("foobarbaz");
+        assertNull(dbUrlOption);
     }
 }
