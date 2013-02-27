@@ -219,7 +219,7 @@ public class LauncherImpl implements Launcher {
         } catch (BundleException | IOException e) {
             // If this happens we definitely need to do something about it, and the
             // trace will be immeasurably helpful in figuring out what is wrong.
-            out.println("Could not load necessary bundles for: " + cmdName);
+            out.println(t.localize(LocaleResources.COMMAND_COULD_NOT_LOAD_BUNDLES, cmdName));
             e.printStackTrace(out);
             return;
         } catch (CommandInfoNotFoundException commandNotFound) {
@@ -258,13 +258,13 @@ public class LauncherImpl implements Launcher {
     }
 
     private void outputBadShellContext(boolean inShell, PrintStream out, String cmd) {
-    	String inOrOut = null;
+    	String message = null;
     	if (inShell) {
-    		inOrOut = t.localize(LocaleResources.WITHIN);
+    		message = t.localize(LocaleResources.COMMAND_AVAILABLE_OUTSIDE_SHELL_ONLY, cmd);
     	} else {
-    		inOrOut = t.localize(LocaleResources.OUTSIDE);
+    		message = t.localize(LocaleResources.COMMAND_AVAILABLE_INSIDE_SHELL_ONLY, cmd);
     	}
-    	out.println(t.localize(LocaleResources.COMMAND_USED_IN_WRONG_CONTEXT, cmd, inOrOut));
+    	out.println(message);
     }
 
     private void setupLogLevel(Arguments args) {
