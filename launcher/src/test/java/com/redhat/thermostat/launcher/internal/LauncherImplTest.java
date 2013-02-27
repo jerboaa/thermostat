@@ -39,6 +39,7 @@ package com.redhat.thermostat.launcher.internal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -62,6 +63,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
@@ -154,7 +157,7 @@ public class LauncherImplTest {
     private Storage storage;
 
     @Before
-    public void setUp() {
+    public void setUp() throws CommandInfoNotFoundException, BundleException, IOException {
         setupCommandContextFactory();
 
         TestCommand cmd1 = new TestCommand(name1, new TestCmd1());
@@ -221,8 +224,6 @@ public class LauncherImplTest {
 
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(helpCommand, cmd1, cmd2, cmd3, basicCmd));
 
-        registry = mock(BundleManager.class);
-
         infos = mock(CommandInfoSource.class);
         when(infos.getCommandInfo(name1)).thenReturn(info1);
         when(infos.getCommandInfo(name2)).thenReturn(info2);
@@ -239,6 +240,17 @@ public class LauncherImplTest {
         when(infos.getCommandInfos()).thenReturn(infoList);
 
         helpCommand.setCommandInfoSource(infos);
+
+        registry = mock(BundleManager.class);
+        doAnswer(new Answer() {
+            @Override
+            public Void answer(InvocationOnMock invocation) throws Throwable {
+                // simulate the real BundleManager which tries to find a CommandInfo
+                // needed to propagate/handle exceptions properly
+                infos.getCommandInfo((String) invocation.getArguments()[0]);
+                return null;
+            }
+        }).when(registry).addBundlesFor(anyString());
 
         PowerMockito.mockStatic(FrameworkUtil.class);
 

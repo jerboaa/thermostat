@@ -76,6 +76,8 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class LauncherImpl implements Launcher {
 
+    private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
+
     private ClientPreferences prefs;
 
     private String[] args;
@@ -89,8 +91,6 @@ public class LauncherImpl implements Launcher {
     private BundleManager registry;
     private final DbServiceFactory dbServiceFactory;
 
-    private Translate<LocaleResources> t = LocaleResources.createLocalizer();
-    
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry) {
         this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory());
     }
@@ -213,6 +213,7 @@ public class LauncherImpl implements Launcher {
     		Collection<ActionListener<ApplicationState>> listeners, boolean inShell) throws CommandException {
 
         PrintStream out = cmdCtxFactory.getConsole().getOutput();
+        PrintStream err = cmdCtxFactory.getConsole().getError();
         try {
             registry.addBundlesFor(cmdName);
         } catch (BundleException | IOException e) {
@@ -228,7 +229,7 @@ public class LauncherImpl implements Launcher {
 
         Command cmd = getCommand(cmdName);
         if (cmd == null) {
-            runHelpCommandFor(cmdName);
+            err.println(t.localize(LocaleResources.COMMAND_DESCRIBED_BUT_NOT_AVAILALBE, cmdName));
             return;
         }
         if ((inShell && !cmd.isAvailableInShell()) || (!inShell && !cmd.isAvailableOutsideShell())) {
