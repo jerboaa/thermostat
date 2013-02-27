@@ -51,6 +51,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
@@ -88,6 +90,15 @@ import com.redhat.thermostat.launcher.internal.PluginConfiguration.NewCommand;
  *       &lt;name&gt;hello&lt;/name&gt;
  *       &lt;description&gt;print hello&lt;/description&gt;
  *       &lt;usage&gt;hello&lt;/usage&gt;
+ *       &lt;options&gt;
+ *         &lt;options&gt;
+ *           &lt;long&gt;long&lt;/long&gt;
+ *           &lt;short&gt;l&lt;/short&gt;
+ *           &lt;hasArg&gt;true&lt;/hasArg&gt;
+ *           &lt;required&gt;true&lt;/required&gt;
+ *           &lt;description&gt;some required and long option&lt;/description&gt;
+ *         &lt;/option&gt;
+ *       &lt;/options&gt;
  *       &lt;bundles&gt;
  *         &lt;bundle&gt;hello-world-plugin-0.1-SNAPSHOT.jar&lt;/bundle&gt;
  *       &lt;/bundles&gt;
@@ -219,8 +230,8 @@ public class PluginConfigurationParser {
                 usage = node.getTextContent().trim();
             } else if (node.getNodeName().equals("description")) {
                 description = node.getTextContent().trim();
-            } else if (node.getNodeName().equals("arguments")) {
-                options = parseArguments(node);
+            } else if (node.getNodeName().equals("options")) {
+                options = parseOptions(node);
             } else if (node.getNodeName().equals("bundles")) {
                 bundles.addAll(parseBundles(pluginName, name, node));
             } else if (node.getNodeName().equals("dependencies")) {
@@ -280,9 +291,67 @@ public class PluginConfigurationParser {
         return dependencies;
     }
 
-    private Options parseArguments(Node argumentsNode) {
-        // TODO need to identify a way to express arguments
-        return new Options();
+    private Options parseOptions(Node optionsNode) {
+        Options opts = new Options();
+        NodeList nodes = optionsNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("group")) {
+                OptionGroup group = parseOptionGroup(node);
+                opts.addOptionGroup(group);
+            } else if (node.getNodeName().equals("option")) {
+                Option option = parseOption(node);
+                opts.addOption(option);
+            }
+        }
+
+        return opts;
+    }
+
+    private OptionGroup parseOptionGroup(Node optionGroupNode) {
+        OptionGroup group = new OptionGroup();
+
+        NodeList nodes = optionGroupNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("option")) {
+                Option option = parseOption(node);
+                group.addOption(option);
+            } else if (node.getNodeName().equals("required")) {
+                group.setRequired(Boolean.valueOf(node.getTextContent().trim()));
+            }
+        }
+
+        return group;
+    }
+
+    private Option parseOption(Node optionNode) {
+        String longName = null;
+        String shortName = null;
+        String description = null;
+        boolean required = false;
+        boolean hasArg = false;
+
+        NodeList nodes = optionNode.getChildNodes();
+        for (int i = 0; i < nodes.getLength(); i++) {
+            Node node = nodes.item(i);
+            if (node.getNodeName().equals("long")) {
+                longName = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("short")) {
+                shortName = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("description")) {
+                description = node.getTextContent().trim();
+            } else if (node.getNodeName().equals("hasArg")) {
+                hasArg = Boolean.valueOf(node.getTextContent().trim());
+            } else if (node.getNodeName().equals("required")) {
+                required = Boolean.valueOf(node.getTextContent().trim());
+            }
+        }
+
+        Option opt = new Option(shortName, longName, hasArg, description);
+        opt.setArgName(longName != null? longName : shortName);
+        opt.setRequired(required);
+        return opt;
     }
 
     private static class ConfigurationParserErrorHandler implements ErrorHandler {

@@ -37,6 +37,9 @@
 package com.redhat.thermostat.launcher.internal;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -45,6 +48,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.junit.Test;
 
@@ -179,5 +184,80 @@ public class PluginConfigurationParserTest {
         assertEquals("test", first.getCommandName());
         assertEquals(Arrays.asList("foo", "bar  baz", "buzz"), first.getPluginBundles());
         assertEquals(Arrays.asList("thermostat-foo"), first.getDepenedencyBundles());
+    }
+
+    @Test
+    public void testOptionParsing() throws UnsupportedEncodingException {
+        String config = "<?xml version=\"1.0\"?>\n" +
+                "<plugin>\n" +
+                "  <commands>\n" +
+                "    <command type='provides'>\n" +
+                "      <name>test</name>\n" +
+                "      <description>just a test</description>\n" +
+                "      <usage>test [ -a | -b ] -l &lt;foo&gt;</usage>\n" +
+                "      <options>\n" +
+                "        <group>\n" +
+                "          <required>true</required>\n" +
+                "          <option>\n" +
+                "            <long>exclusive-a</long>\n" +
+                "            <short>a</short>\n" +
+                "            <hasArg>false</hasArg>\n" +
+                "            <required>false</required>\n" +
+                "            <description>exclusive option a</description>\n" +
+                "          </option>\n" +
+                "          <option>\n" +
+                "            <long>exclusive-b</long>\n" +
+                "            <short>b</short>\n" +
+                "            <hasArg>false</hasArg>\n" +
+                "            <required>false</required>\n" +
+                "            <description>exclusive option b</description>\n" +
+                "          </option>\n" +
+                "        </group>\n" +
+                "        <option>\n" +
+                "          <long>long</long>\n" +
+                "          <short>l</short>\n" +
+                "          <hasArg>true</hasArg>\n" +
+                "          <required>true</required>\n" +
+                "          <description>some required and long option</description>\n" +
+                "        </option>\n" +
+                "      </options>\n" +
+                "    </command>\n" +
+                "  </commands>\n" +
+                "</plugin>";
+
+        PluginConfiguration result = new PluginConfigurationParser()
+                .parse("test", new ByteArrayInputStream(config.getBytes("UTF-8")));
+
+        assertEquals(0, result.getExtendedCommands().size());
+
+        List<NewCommand> newCommands = result.getNewCommands();
+        assertEquals(1, newCommands.size());
+
+        NewCommand command = newCommands.get(0);
+        assertEquals("test", command.getCommandName());
+        assertEquals("just a test", command.getDescription());
+        assertEquals("test [ -a | -b ] -l <foo>", command.getUsage());
+        Options opts = command.getOptions();
+        assertNull(opts.getOption("foobarbaz"));
+
+        Option requiredOption = opts.getOption("l");
+        assertNotNull(requiredOption);
+
+        Option exclusiveOptionA = opts.getOption("a");
+        assertNotNull(exclusiveOptionA);
+        assertEquals("exclusive-a", exclusiveOptionA.getLongOpt());
+        assertFalse(exclusiveOptionA.hasArg());
+        assertFalse(exclusiveOptionA.isRequired());
+        assertEquals("exclusive option a", exclusiveOptionA.getDescription());
+
+        Option exclusiveOptionB = opts.getOption("b");
+        assertNotNull(exclusiveOptionB);
+        assertEquals("exclusive-b", exclusiveOptionB.getLongOpt());
+        assertFalse(exclusiveOptionB.hasArg());
+        assertFalse(exclusiveOptionB.isRequired());
+        assertEquals("exclusive option b", exclusiveOptionB.getDescription());
+
+        OptionGroup group = opts.getOptionGroup(exclusiveOptionA);
+        assertTrue(group.isRequired());
     }
 }
