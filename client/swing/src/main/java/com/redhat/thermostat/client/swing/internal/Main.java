@@ -235,9 +235,9 @@ public class Main {
                     try {
                         dbService.connect();
                     } catch (Throwable t) {
+                        // Note: DbService fires a ConnectionListener event when it
+                        // fails to connect. No need to notify our handler manually.
                         logger.log(Level.WARNING, "connection attempt failed: ", t);
-                        // is this ever possible?
-                        reconnectionHandler.changed(ConnectionStatus.FAILED_TO_CONNECT);
                     }
                 }
             });
