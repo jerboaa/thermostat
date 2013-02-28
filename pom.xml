@@ -59,6 +59,11 @@
     <thermostat.build.directory>target</thermostat.build.directory>
     <thermostat.java.version>1.7</thermostat.java.version>
     <thermostat.home>${project.build.directory}</thermostat.home>
+    <!-- used in systemd service files. Set this to the username thermostat should run
+         under when run via systemd. -->
+    <thermostat.system.user>thermostat</thermostat.system.user>
+    <thermostat.system.group>thermostat</thermostat.system.group>
+    <!-- directory into which the exploded web archive should be deployed to -->
     <thermostat.web.deploy.dir>${thermostat.build.directory}/${project.build.finalName}</thermostat.web.deploy.dir>
     <java.dir>/usr/share/java</java.dir>
 

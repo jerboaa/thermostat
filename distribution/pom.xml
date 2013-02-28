@@ -136,6 +136,12 @@
                   <targetPath>bin</targetPath>
                   <filtering>true</filtering>
                 </resource>
+                <!-- systemd service unit files -->
+                <resource>
+                  <directory>systemd</directory>
+                  <targetPath>systemd</targetPath>
+                  <filtering>true</filtering>
+                </resource>
                 <resource>
                   <directory>config</directory>
                   <targetPath>agent</targetPath>
