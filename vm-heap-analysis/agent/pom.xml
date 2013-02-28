@@ -114,9 +114,7 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-Activator>com.redhat.thermostat.vm.heap.analysis.agent.internal.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.heap.analysis.agent</Bundle-SymbolicName>
-            <Export-Package>
-              com.redhat.thermostat.vm.heap.analysis.agent
-            </Export-Package>
+            <Export-Package />
             <Private-Package>
               com.redhat.thermostat.vm.heap.analysis.agent.internal
             </Private-Package>

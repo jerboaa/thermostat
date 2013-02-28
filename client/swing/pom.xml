@@ -165,7 +165,6 @@
               com.redhat.thermostat.client.swing.internal,
               com.redhat.thermostat.client.swing.internal.components,
               com.redhat.thermostat.client.swing.internal.osgi,
-              com.redhat.thermostat.client.swing.internal.config,
               com.redhat.thermostat.client.swing.internal.views,
             </Private-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->

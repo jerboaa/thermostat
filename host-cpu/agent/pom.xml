@@ -20,9 +20,7 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.host.cpu.agent</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.host.cpu.agent.internal.Activator</Bundle-Activator>
-            <Export-Package>
-              com.redhat.thermostat.host.cpu.agent
-            </Export-Package>
+            <Export-Package />
             <Private-Package>
               com.redhat.thermostat.host.cpu.agent.internal
             </Private-Package>

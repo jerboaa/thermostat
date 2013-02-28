@@ -85,11 +85,8 @@
             <Bundle-SymbolicName>com.redhat.thermostat.common.command</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.common.command,
-              com.redhat.thermostat.common.command.cli
             </Export-Package>
-            <Private-Package>
-              com.redhat.thermostat.common.command.internal
-            </Private-Package>
+            <Private-Package />
             <!-- Do not autogenerate uses clauses in Manifests -->
             <_nouses>true</_nouses>
           </instructions>

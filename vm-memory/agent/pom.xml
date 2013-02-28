@@ -20,9 +20,7 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.vm.memory.agent</Bundle-SymbolicName>
             <Bundle-Activator>com.redhat.thermostat.vm.memory.agent.internal.Activator</Bundle-Activator>
-            <Export-Package>
-              com.redhat.thermostat.vm.memory.agent
-            </Export-Package>
+            <Export-Package />
             <Private-Package>
               com.redhat.thermostat.vm.memory.agent.internal
             </Private-Package>

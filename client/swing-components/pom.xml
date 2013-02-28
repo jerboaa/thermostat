@@ -54,8 +54,6 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.client.swing.components</Bundle-SymbolicName>
             <Export-Package>
-              com.redhat.thermostat.swing.components,
-              com.redhat.thermostat.swing.components.models,
               com.redhat.thermostat.swing.components.experimental
             </Export-Package>
             <!-- Do not autogenerate uses clauses in Manifests -->
