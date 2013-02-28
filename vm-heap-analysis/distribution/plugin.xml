@@ -61,6 +61,390 @@
         <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
       </bundles>
     </command>
-    <!-- TODO: Move and declare new commands here -->
+    <command type="provides">
+      <name>dump-heap</name>
+      <description>trigger a heap dump on the VM</description>
+      <usage>dump-heap --hostId &lt;host&gt; --vmId &lt;vm&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
+      <options>
+        <option>
+          <short>a</short>
+          <long>hostId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the host to monitor</description>
+        </option>
+        <option>
+          <short>v</short>
+          <long>vmId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the VM to monitor</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>username</long>
+        </option>
+        <option common="true">
+          <long>password</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+      </bundles>
+      <dependencies>
+        <dependency>thermostat-common-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-core-${project.version}.jar</dependency>
+        <dependency>thermostat-client-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
+        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
+        <dependency>thermostat-web-common-${project.version}.jar</dependency>
+        <dependency>thermostat-web-client-${project.version}.jar</dependency>
+        <dependency>mongo.jar</dependency>
+        <dependency>commons-beanutils.jar</dependency>
+        <dependency>commons-codec.jar</dependency>
+        <dependency>commons-collections.jar</dependency>
+        <dependency>commons-logging.jar</dependency>
+        <dependency>httpcomponents-core.jar</dependency>
+        <dependency>httpcomponents-client.jar</dependency>
+        <dependency>gson.jar</dependency>
+        <dependency>netty.jar</dependency>
+      </dependencies>
+    </command>
+    <command type="provides">
+      <name>find-objects</name>
+      <description>finds objects in a heapdump</description>
+      <usage>find-objects [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;] --heapId &lt;id&gt; --limit &lt;limit&gt; &lt;pattern&gt;</usage>
+      <options>
+        <option>
+          <short>h</short>
+          <long>heapId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the heapdump to analyze</description>
+        </option>
+        <option>
+          <short>L</short>
+          <long>limit</long>
+          <hasArg>true</hasArg>
+          <required>false</required>
+          <description>limit search to top N results, defaults to 10</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>username</long>
+        </option>
+        <option common="true">
+          <long>password</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+      </bundles>
+      <dependencies>
+        <dependency>thermostat-common-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-core-${project.version}.jar</dependency>
+        <dependency>thermostat-client-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
+        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
+        <dependency>thermostat-web-common-${project.version}.jar</dependency>
+        <dependency>thermostat-web-client-${project.version}.jar</dependency>
+        <dependency>mongo.jar</dependency>
+        <dependency>commons-beanutils.jar</dependency>
+        <dependency>commons-codec.jar</dependency>
+        <dependency>commons-collections.jar</dependency>
+        <dependency>commons-logging.jar</dependency>
+        <dependency>httpcomponents-core.jar</dependency>
+        <dependency>httpcomponents-client.jar</dependency>
+        <dependency>gson.jar</dependency>
+        <dependency>netty.jar</dependency>
+      </dependencies>
+    </command>
+    <command type="provides">
+      <name>find-root</name>
+      <description>finds the shortest path from an object to a GC root</description>
+      <usage>find-root --heapId &lt;heap&gt; --objectId &lt;object&gt; [-a] [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
+      <options>
+        <option>
+          <short>h</short>
+          <long>heapId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the heapdump to analyze</description>
+        </option>
+        <option>
+          <short>o</short>
+          <long>objectId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the object to query</description>
+        </option>
+        <option>
+          <short>a</short>
+          <long>all</long>
+          <hasArg>false</hasArg>
+          <required>false</required>
+          <description>finds all paths to GC roots</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>username</long>
+        </option>
+        <option common="true">
+          <long>password</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+      </bundles>
+      <dependencies>
+        <dependency>thermostat-common-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-core-${project.version}.jar</dependency>
+        <dependency>thermostat-client-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
+        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
+        <dependency>thermostat-web-common-${project.version}.jar</dependency>
+        <dependency>thermostat-web-client-${project.version}.jar</dependency>
+        <dependency>mongo.jar</dependency>
+        <dependency>commons-beanutils.jar</dependency>
+        <dependency>commons-codec.jar</dependency>
+        <dependency>commons-collections.jar</dependency>
+        <dependency>commons-logging.jar</dependency>
+        <dependency>httpcomponents-core.jar</dependency>
+        <dependency>httpcomponents-client.jar</dependency>
+        <dependency>gson.jar</dependency>
+        <dependency>netty.jar</dependency>
+      </dependencies>
+    </command>
+    <command type="provides">
+      <name>list-heap-dumps</name>
+      <description>list all heap dumps</description>
+      <usage>list-heap-dumps [--hostId &lt;host&gt;] [--vmId &lt;vm&gt;] [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
+      <options>
+        <option>
+          <short>a</short>
+          <long>hostId</long>
+          <hasArg>true</hasArg>
+          <required>false</required>
+          <description>the ID of the host to monitor</description>
+        </option>
+        <option>
+          <short>v</short>
+          <long>vmId</long>
+          <hasArg>true</hasArg>
+          <required>false</required>
+          <description>the ID of the VM to monitor</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>username</long>
+        </option>
+        <option common="true">
+          <long>password</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+      </bundles>
+      <dependencies>
+        <dependency>thermostat-common-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-core-${project.version}.jar</dependency>
+        <dependency>thermostat-client-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
+        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
+        <dependency>thermostat-web-common-${project.version}.jar</dependency>
+        <dependency>thermostat-web-client-${project.version}.jar</dependency>
+        <dependency>mongo.jar</dependency>
+        <dependency>commons-beanutils.jar</dependency>
+        <dependency>commons-codec.jar</dependency>
+        <dependency>commons-collections.jar</dependency>
+        <dependency>commons-logging.jar</dependency>
+        <dependency>httpcomponents-core.jar</dependency>
+        <dependency>httpcomponents-client.jar</dependency>
+        <dependency>gson.jar</dependency>
+        <dependency>netty.jar</dependency>
+      </dependencies>
+    </command>
+    <command type="provides">
+      <name>object-info</name>
+      <description>prints information about an object in a heap dump</description>
+      <usage>object-info --heapId &lt;heap&gt; --objectId &lt;object&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
+      <options>
+        <option>
+          <short>h</short>
+          <long>heapId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the heapdump to analyze</description>
+        </option>
+        <option>
+          <short>o</short>
+          <long>objectId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the object to query</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>username</long>
+        </option>
+        <option common="true">
+          <long>password</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+      </bundles>
+      <dependencies>
+        <dependency>thermostat-common-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-core-${project.version}.jar</dependency>
+        <dependency>thermostat-client-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
+        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
+        <dependency>thermostat-web-common-${project.version}.jar</dependency>
+        <dependency>thermostat-web-client-${project.version}.jar</dependency>
+        <dependency>mongo.jar</dependency>
+        <dependency>commons-beanutils.jar</dependency>
+        <dependency>commons-codec.jar</dependency>
+        <dependency>commons-collections.jar</dependency>
+        <dependency>commons-logging.jar</dependency>
+        <dependency>httpcomponents-core.jar</dependency>
+        <dependency>httpcomponents-client.jar</dependency>
+        <dependency>gson.jar</dependency>
+        <dependency>netty.jar</dependency>
+      </dependencies>
+    </command>
+    <command type="provides">
+      <name>save-heap-dump-to-file</name>
+      <description>saves a heap dump to a local file</description>
+      <usage>save-heap-dump-to-file --heapId &lt;heap&gt; --file &lt;filename&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
+      <options>
+        <option>
+          <short>h</short>
+          <long>heapId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the heapdump to analyze</description>
+        </option>
+        <option>
+          <short>f</short>
+          <long>file</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the file name to save to</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>username</long>
+        </option>
+        <option common="true">
+          <long>password</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+      </bundles>
+      <dependencies>
+        <dependency>thermostat-common-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-core-${project.version}.jar</dependency>
+        <dependency>thermostat-client-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
+        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
+        <dependency>thermostat-web-common-${project.version}.jar</dependency>
+        <dependency>thermostat-web-client-${project.version}.jar</dependency>
+        <dependency>mongo.jar</dependency>
+        <dependency>commons-beanutils.jar</dependency>
+        <dependency>commons-codec.jar</dependency>
+        <dependency>commons-collections.jar</dependency>
+        <dependency>commons-logging.jar</dependency>
+        <dependency>httpcomponents-core.jar</dependency>
+        <dependency>httpcomponents-client.jar</dependency>
+        <dependency>gson.jar</dependency>
+        <dependency>netty.jar</dependency>
+      </dependencies>
+    </command>
+    <command type="provides">
+      <name>show-heap-histogram</name>
+      <description>show the heap histogram</description>
+      <usage>show-heap-histogram --heapId &lt;heap&gt; [-d &lt;url&gt; [-u &lt;user&gt; -p &lt;password&gt;]] [-l &lt;level&gt;]</usage>
+      <options>
+        <option>
+          <short>h</short>
+          <long>heapId</long>
+          <hasArg>true</hasArg>
+          <required>true</required>
+          <description>the ID of the heapdump to analyze</description>
+        </option>
+        <option common="true">
+          <long>dbUrl</long>
+        </option>
+        <option common="true">
+          <long>username</long>
+        </option>
+        <option common="true">
+          <long>password</long>
+        </option>
+        <option common="true">
+          <long>logLevel</long>
+        </option>
+      </options>
+      <bundles>
+        <bundle>thermostat-vm-heap-analysis-common-${project.version}.jar</bundle>
+        <bundle>thermostat-vm-heap-analysis-command-${project.version}.jar</bundle>
+      </bundles>
+      <dependencies>
+        <dependency>thermostat-common-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-core-${project.version}.jar</dependency>
+        <dependency>thermostat-client-command-${project.version}.jar</dependency>
+        <dependency>thermostat-client-cli-${project.version}.jar</dependency>
+        <dependency>thermostat-storage-mongodb-${project.version}.jar</dependency>
+        <dependency>thermostat-web-common-${project.version}.jar</dependency>
+        <dependency>thermostat-web-client-${project.version}.jar</dependency>
+        <dependency>mongo.jar</dependency>
+        <dependency>commons-beanutils.jar</dependency>
+        <dependency>commons-codec.jar</dependency>
+        <dependency>commons-collections.jar</dependency>
+        <dependency>commons-logging.jar</dependency>
+        <dependency>httpcomponents-core.jar</dependency>
+        <dependency>httpcomponents-client.jar</dependency>
+        <dependency>gson.jar</dependency>
+        <dependency>netty.jar</dependency>
+      </dependencies>
+    </command>
   </commands>
 </plugin>
