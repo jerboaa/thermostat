@@ -45,21 +45,16 @@ import com.redhat.thermostat.client.core.views.BasicView;
 import com.redhat.thermostat.client.core.views.VmInformationView;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.common.OrderedComparator;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class VmInformationController {
 
     private final VmInformationView view;
 
-    public VmInformationController(UiFacadeFactory uiFacadeFactory, VmRef vmRef, VmInformationViewProvider provider) {
-        this(OSGIUtils.getInstance(), uiFacadeFactory, vmRef, provider);
-    }
-    
-    VmInformationController(OSGIUtils serviceProvider, UiFacadeFactory uiFacadeFactory, VmRef vmRef, VmInformationViewProvider provider) {
+    public VmInformationController(List<InformationService<VmRef>> vmInfoServices, 
+            VmRef vmRef, VmInformationViewProvider provider) {
         view = provider.createView();
 
-        List<InformationService<VmRef>> vmInfoServices = uiFacadeFactory.getVmInformationServices();
         Collections.sort(vmInfoServices, new OrderedComparator<InformationService<VmRef>>());
         for (InformationService<VmRef> vmInfoService : vmInfoServices) {
             if (vmInfoService.getFilter().matches(vmRef)) {

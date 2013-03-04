@@ -36,39 +36,44 @@
 
 package com.redhat.thermostat.client.swing.internal.osgi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.osgi.service.HostContextAction;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 
 @SuppressWarnings("rawtypes")
-class HostContextActionServiceTracker extends ServiceTracker {
-
-    private UiFacadeFactory uiFacadeFactory;
-
-    private BundleContext context;
+public class HostContextActionServiceTracker extends ServiceTracker {
+    
+    private List<HostContextAction> hostContextActions;
 
     @SuppressWarnings("unchecked")
-    HostContextActionServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+    public HostContextActionServiceTracker(BundleContext context) {
         super(context, HostContextAction.class.getName(), null);
-        this.context = context;
-        this.uiFacadeFactory = uiFacadeFactory;
+        this.hostContextActions = new ArrayList<>();
     }
 
     @Override
     public Object addingService(ServiceReference reference) {
         @SuppressWarnings("unchecked")
         HostContextAction service = (HostContextAction) super.addingService(reference);
-        uiFacadeFactory.addHostContextAction(service);
+        hostContextActions.add(service);
         return service;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void removedService(ServiceReference reference, Object service) {
-        uiFacadeFactory.removeHostContextAction((HostContextAction)service);
+        hostContextActions.remove((HostContextAction)service);
         super.removedService(reference, service);
     }
+    
+    public List<HostContextAction> getHostContextActions() {
+        return new ArrayList<>(hostContextActions);
+    }
+    
 }
 

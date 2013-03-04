@@ -36,33 +36,43 @@
 
 package com.redhat.thermostat.client.swing.internal.osgi;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 
 @SuppressWarnings("rawtypes")
-class VMContextActionServiceTracker extends ServiceTracker {
+public class VMContextActionServiceTracker extends ServiceTracker {
 
-    private UiFacadeFactory uiFacadeFactory;
-
-    private BundleContext context;
+    private List<VMContextAction> vmContextActions;
 
     @SuppressWarnings("unchecked")
-    VMContextActionServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+    public VMContextActionServiceTracker(BundleContext context) {
         super(context, VMContextAction.class.getName(), null);
-        this.context = context;
-        this.uiFacadeFactory = uiFacadeFactory;
+        this.vmContextActions = new ArrayList<>();
     }
 
     @Override
     public Object addingService(ServiceReference reference) {
         @SuppressWarnings("unchecked")
-        VMContextAction service = (VMContextAction) context.getService(reference);
-        uiFacadeFactory.addVMContextAction(service);
+        VMContextAction service = (VMContextAction) super.addingService(reference);
+        vmContextActions.add(service);
         return service;
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Override
+    public void removedService(ServiceReference reference, Object service) {
+        vmContextActions.remove((VMContextAction) service);
+        super.removedService(reference, service);
+    }
+    
+    public List<VMContextAction> getVmContextActions() {
+        return new ArrayList<>(vmContextActions);
     }
 }
 

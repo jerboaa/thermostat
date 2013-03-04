@@ -51,9 +51,9 @@ import static org.mockito.Mockito.when;
 import java.awt.event.MouseEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import org.fest.swing.edt.FailOnThreadViolationRepaintManager;
@@ -66,20 +66,25 @@ import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.HostInformationView;
+import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.SummaryView;
+import com.redhat.thermostat.client.core.views.SummaryViewProvider;
+import com.redhat.thermostat.client.core.views.VmInformationView;
+import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
-import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry.Action;
+import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -89,6 +94,7 @@ import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.Bug;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class MainWindowControllerImplTest {
 
@@ -96,8 +102,6 @@ public class MainWindowControllerImplTest {
 
     private MainWindowControllerImpl controller;
 
-    private UiFacadeFactory uiFacadeFactory;
-    
     private MainView view;
 
     private Timer mainWindowTimer;
@@ -121,6 +125,12 @@ public class MainWindowControllerImplTest {
     @SuppressWarnings("unused")
     private ActionListener<ThermostatExtensionRegistry.Action> vmFiltersListener;
     private ActionListener<ThermostatExtensionRegistry.Action> decoratorsListener;
+
+    private StubBundleContext context;
+    private CountDownLatch shutdown;
+
+    private VmInformationView vmInfoView;
+    private VmInformationViewProvider vmInfoViewProvider;
     
     @BeforeClass
     public static void setUpOnce() {
@@ -131,6 +141,8 @@ public class MainWindowControllerImplTest {
     @SuppressWarnings({ "unchecked", "rawtypes" }) // ActionListener fluff
     @Before
     public void setUp() throws Exception {
+        context = new StubBundleContext();
+        
         // Setup timers
         mainWindowTimer = mock(Timer.class);
         Timer otherTimer = mock(Timer.class); // FIXME needed for SummaryView; remove later
@@ -139,14 +151,25 @@ public class MainWindowControllerImplTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when (appSvc.getTimerFactory()).thenReturn(timerFactory);
 
-        SummaryController summaryController = mock(SummaryController.class);
-
-        uiFacadeFactory = mock(UiFacadeFactory.class);
-        
-        when(uiFacadeFactory.getSummary()).thenReturn(summaryController);
-
         mockHostsDAO = mock(HostInfoDAO.class);
+        context.registerService(HostInfoDAO.class, mockHostsDAO, null);
         mockVmsDAO = mock(VmInfoDAO.class);
+        context.registerService(VmInfoDAO.class, mockVmsDAO, null);
+        
+        SummaryViewProvider summaryViewProvider = mock(SummaryViewProvider.class);
+        context.registerService(SummaryViewProvider.class, summaryViewProvider, null);
+        SummaryView summaryView = mock(SummaryView.class);
+        when(summaryViewProvider.createView()).thenReturn(summaryView);
+        
+        HostInformationViewProvider hostInfoViewProvider = mock(HostInformationViewProvider.class);
+        context.registerService(HostInformationViewProvider.class, hostInfoViewProvider, null);
+        HostInformationView hostInfoView = mock(HostInformationView.class);
+        when(hostInfoViewProvider.createView()).thenReturn(hostInfoView);
+        
+        vmInfoViewProvider = mock(VmInformationViewProvider.class);
+        context.registerService(VmInformationViewProvider.class, vmInfoViewProvider, null);
+        vmInfoView = mock(VmInformationView.class);
+        when(vmInfoViewProvider.createView()).thenReturn(vmInfoView);
 
         // Setup View
         view = mock(MainView.class);
@@ -160,6 +183,7 @@ public class MainWindowControllerImplTest {
         vmDecoratorRegistry = mock(VMTreeDecoratorRegistry.class);
         vmInfoRegistry = mock(VMInformationRegistry.class);
         menus = mock(MenuRegistry.class);
+        shutdown = mock(CountDownLatch.class);
 
         when(registryFactory.createMenuRegistry()).thenReturn(menus);
         when(registryFactory.createHostTreeDecoratorRegistry()).thenReturn(hostDecoratorRegistry);
@@ -183,7 +207,7 @@ public class MainWindowControllerImplTest {
         setUpHostContextActions();
         setUpVMContextActions();
 
-        controller = new MainWindowControllerImpl(appSvc, uiFacadeFactory, view, registryFactory, mockHostsDAO, mockVmsDAO);
+        controller = new MainWindowControllerImpl(context, appSvc, view, registryFactory, shutdown);
         l = grabListener.getValue();
         
         hostFiltersListener = grabHostFiltersListener.getValue();
@@ -200,7 +224,7 @@ public class MainWindowControllerImplTest {
         when(hostContextAction1.getDescription()).thenReturn("action1desc");
         when(hostContextAction1.getFilter()).thenReturn(hostFilter1);
 
-        when(uiFacadeFactory.getHostContextActions()).thenReturn(Arrays.asList(hostContextAction1));
+        context.registerService(HostContextAction.class, hostContextAction1, null);
     }
 
     private void setUpVMContextActions() {
@@ -212,6 +236,8 @@ public class MainWindowControllerImplTest {
         when(vmContextAction1.getDescription()).thenReturn("action1desc");
         when(vmContextAction1.getFilter()).thenReturn(action1Filter);
         
+        context.registerService(VMContextAction.class, vmContextAction1, null);
+        
         vmContextAction2 = mock(VMContextAction.class);
         Filter action2Filter = mock(Filter.class);
         when(action2Filter.matches(isA(VmRef.class))).thenReturn(false);
@@ -220,11 +246,7 @@ public class MainWindowControllerImplTest {
         when(vmContextAction2.getDescription()).thenReturn("action2desc");
         when(vmContextAction2.getFilter()).thenReturn(action2Filter);
         
-        Collection<VMContextAction> actions = new ArrayList<>();
-        actions.add(vmContextAction1);
-        actions.add(vmContextAction2);
-        
-        when(uiFacadeFactory.getVMContextActions()).thenReturn(actions);
+        context.registerService(VMContextAction.class, vmContextAction2, null);
     }
 
     @After
@@ -411,17 +433,15 @@ public class MainWindowControllerImplTest {
         when(vmRef.getAgent()).thenReturn(ref);
         
         when(view.getSelectedHostOrVm()).thenReturn(vmRef);
-
-        VmInformationController vmInformationController = mock(VmInformationController.class);
-        when(vmInformationController.getSelectedChildID()).thenReturn(3);
-        when(uiFacadeFactory.getVmController(any(VmRef.class))).thenReturn(vmInformationController);
-        when(vmInformationController.selectChildID(anyInt())).thenReturn(true);
-
+        
+        when(vmInfoView.getSelectedChildID()).thenReturn(3);
+        when(vmInfoView.selectChildID(anyInt())).thenReturn(true);
+        
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
-
+        
         ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInformationController).selectChildID(arg.capture());
-        verify(vmInformationController, times(0)).getSelectedChildID();
+        verify(vmInfoView).selectChildID(arg.capture());
+        verify(vmInfoView, times(0)).getSelectedChildID();
 
         int id = arg.getValue();
 
@@ -430,8 +450,8 @@ public class MainWindowControllerImplTest {
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
 
         arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInformationController, times(1)).getSelectedChildID();
-        verify(vmInformationController, times(2)).selectChildID(arg.capture());
+        verify(vmInfoView, times(1)).getSelectedChildID();
+        verify(vmInfoView, times(2)).selectChildID(arg.capture());
         id = arg.getValue();
 
         assertEquals(3, id);
@@ -454,31 +474,28 @@ public class MainWindowControllerImplTest {
         when(vmRef2.getIdString()).thenReturn("testvmid");
         when(vmRef2.getAgent()).thenReturn(ref);
         
-        VmInformationController vmInformationController1 = mock(VmInformationController.class);
-        VmInformationController vmInformationController2 = mock(VmInformationController.class);
+        VmInformationView vmInfoView2 = mock(VmInformationView.class);
         
-        when(vmInformationController1.getSelectedChildID()).thenReturn(2).thenReturn(2);
-        when(vmInformationController2.getSelectedChildID()).thenReturn(3);
+        when(vmInfoView.getSelectedChildID()).thenReturn(2).thenReturn(2);
+        when(vmInfoView2.getSelectedChildID()).thenReturn(3);
         
-        when(vmInformationController1.selectChildID(0)).thenReturn(true);
-        when(vmInformationController1.selectChildID(2)).thenReturn(true);
-        when(vmInformationController1.selectChildID(3)).thenReturn(false);
+        when(vmInfoView.selectChildID(0)).thenReturn(true);
+        when(vmInfoView.selectChildID(2)).thenReturn(true);
+        when(vmInfoView.selectChildID(3)).thenReturn(false);
         
-        when(vmInformationController2.selectChildID(0)).thenReturn(true);
-        when(vmInformationController2.selectChildID(2)).thenReturn(true);
-        when(vmInformationController2.selectChildID(3)).thenReturn(true);
+        when(vmInfoView2.selectChildID(0)).thenReturn(true);
+        when(vmInfoView2.selectChildID(2)).thenReturn(true);
+        when(vmInfoView2.selectChildID(3)).thenReturn(true);
         
-        when(uiFacadeFactory.getVmController(any(VmRef.class))).
-                             thenReturn(vmInformationController1).
-                             thenReturn(vmInformationController2).
-                             thenReturn(vmInformationController2).
-                             thenReturn(vmInformationController1);
-
+        when(vmInfoViewProvider.createView()).thenReturn(vmInfoView)
+                .thenReturn(vmInfoView2).thenReturn(vmInfoView2)
+                .thenReturn(vmInfoView);
+        
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
 
         ArgumentCaptor<Integer> arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInformationController1).selectChildID(arg.capture());
-        verify(vmInformationController1, times(0)).getSelectedChildID();
+        verify(vmInfoView).selectChildID(arg.capture());
+        verify(vmInfoView, times(0)).getSelectedChildID();
 
         int id = arg.getValue();
 
@@ -487,8 +504,8 @@ public class MainWindowControllerImplTest {
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
 
         arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInformationController1).getSelectedChildID();
-        verify(vmInformationController2, times(1)).selectChildID(arg.capture());
+        verify(vmInfoView).getSelectedChildID();
+        verify(vmInfoView2, times(1)).selectChildID(arg.capture());
         id = arg.getValue();
 
         assertEquals(2, id);
@@ -496,8 +513,8 @@ public class MainWindowControllerImplTest {
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
 
         arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInformationController2, times(1)).getSelectedChildID();
-        verify(vmInformationController2, times(2)).selectChildID(arg.capture());
+        verify(vmInfoView2, times(1)).getSelectedChildID();
+        verify(vmInfoView2, times(2)).selectChildID(arg.capture());
         id = arg.getValue();
 
         assertEquals(3, id);
@@ -505,8 +522,8 @@ public class MainWindowControllerImplTest {
         l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.HOST_VM_SELECTION_CHANGED));
 
         arg = ArgumentCaptor.forClass(Integer.class);
-        verify(vmInformationController2, times(2)).getSelectedChildID();
-        verify(vmInformationController1, times(3)).selectChildID(arg.capture());
+        verify(vmInfoView2, times(2)).getSelectedChildID();
+        verify(vmInfoView, times(3)).selectChildID(arg.capture());
         id = arg.getValue();
 
         assertEquals(2, id);
@@ -600,7 +617,7 @@ public class MainWindowControllerImplTest {
 
        l.actionPerformed(new ActionEvent<MainView.Action>(view, MainView.Action.SHUTDOWN));
 
-       verify(uiFacadeFactory).shutdown();
+       verify(shutdown).countDown();
    }
 }
 

@@ -59,14 +59,12 @@ public class VmInformationControllerTest {
 
     private static final Filter<VmRef> FILTER = new NameMatchingRefFilter<>();
 
-    private UiFacadeFactory uiFacadeFactory;
     private VmRef ref;
     private VmInformationViewProvider provider;
     private VmInformationView view;
 
     @Before
     public void setup() {
-        uiFacadeFactory = mock(UiFacadeFactory.class);
         ref = mock(VmRef.class);
         provider = mock(VmInformationViewProvider.class);
         view = mock(VmInformationView.class);
@@ -80,7 +78,7 @@ public class VmInformationControllerTest {
         // Mock services
         List<InformationService<VmRef>> services = mockServices(orderValues);
 
-        new VmInformationController(uiFacadeFactory, ref, provider);
+        new VmInformationController(new ArrayList<>(services), ref, provider);
 
         InOrder order = inOrder(services.get(0), services.get(1),
                 services.get(2), services.get(3), services.get(4));
@@ -102,8 +100,6 @@ public class VmInformationControllerTest {
             when(service.getOrderValue()).thenReturn(order);
             services.add(service);
         }
-        // Return copy
-        when(uiFacadeFactory.getVmInformationServices()).thenReturn(new ArrayList<>(services));
         return services;
     }
 

@@ -36,6 +36,8 @@
 
 package com.redhat.thermostat.client.swing.internal.osgi;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import org.osgi.framework.BundleContext;
@@ -43,7 +45,6 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.HostRef;
@@ -52,13 +53,16 @@ import com.redhat.thermostat.storage.core.VmRef;
 @SuppressWarnings("rawtypes")
 public class InformationServiceTracker extends ServiceTracker {
 
-    private UiFacadeFactory uiFacadeFactory;
     private static final Logger logger = LoggingUtils.getLogger(InformationServiceTracker.class);
+    
+    private List<InformationService<HostRef>> hostInfoServices;
+    private List<InformationService<VmRef>> vmInfoServices;
 
     @SuppressWarnings("unchecked")
-    public InformationServiceTracker(BundleContext context, UiFacadeFactory uiFacadeFactory) {
+    public InformationServiceTracker(BundleContext context) {
         super(context, InformationService.class.getName(), null);
-        this.uiFacadeFactory = uiFacadeFactory;
+        this.hostInfoServices = new ArrayList<>();
+        this.vmInfoServices = new ArrayList<>();
     }
 
     @Override
@@ -66,9 +70,9 @@ public class InformationServiceTracker extends ServiceTracker {
         Object service = super.addingService(reference);
         String genericType = (String) reference.getProperty(Constants.GENERIC_SERVICE_CLASSNAME);
         if (genericType.equals(HostRef.class.getName())) {
-            uiFacadeFactory.addHostInformationService((InformationService<HostRef>) service);
+            hostInfoServices.add((InformationService<HostRef>) service);
         } else if (genericType.equals(VmRef.class.getName())) {
-            uiFacadeFactory.addVmInformationService((InformationService<VmRef>) service);
+            vmInfoServices.add((InformationService<VmRef>) service);
         } else {
             logUnknownGenericServiceType(genericType);
         }
@@ -79,13 +83,21 @@ public class InformationServiceTracker extends ServiceTracker {
     public void removedService(ServiceReference reference, Object service) {
         String genericType = (String) reference.getProperty(Constants.GENERIC_SERVICE_CLASSNAME);
         if (genericType.equals(HostRef.class.getName())) {
-            uiFacadeFactory.removeHostInformationService((InformationService<HostRef>) service);
+            hostInfoServices.remove((InformationService<HostRef>) service);
         } else if (genericType.equals(VmRef.class.getName())) {
-            uiFacadeFactory.removeVmInformationService((InformationService<VmRef>) service);
+            vmInfoServices.remove((InformationService<VmRef>) service);
         } else {
             logUnknownGenericServiceType(genericType);
         }
         super.removedService(reference, service);
+    }
+    
+    public List<InformationService<HostRef>> getHostInformationServices() {
+        return new ArrayList<>(hostInfoServices);
+    }
+    
+    public List<InformationService<VmRef>> getVmInformationServices() {
+        return new ArrayList<>(vmInfoServices);
     }
 
     private void logUnknownGenericServiceType(String genericType) {

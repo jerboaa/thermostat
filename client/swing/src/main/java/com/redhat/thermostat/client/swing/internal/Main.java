@@ -37,7 +37,8 @@
 package com.redhat.thermostat.client.swing.internal;
 
 import java.awt.EventQueue;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -57,11 +58,7 @@ import com.redhat.thermostat.client.locale.LocaleResources;
 import com.redhat.thermostat.client.swing.internal.views.ClientConfigurationSwing;
 import com.redhat.thermostat.client.ui.ClientConfigReconnector;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
-import com.redhat.thermostat.client.ui.MainWindowController;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.MultipleServiceTracker;
-import com.redhat.thermostat.common.MultipleServiceTracker.Action;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -70,8 +67,6 @@ import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.storage.core.StorageException;
-import com.redhat.thermostat.storage.dao.HostInfoDAO;
-import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class Main {
@@ -82,34 +77,39 @@ public class Main {
 
     private BundleContext context;
     private ApplicationService appSvc;
-    private UiFacadeFactory uiFacadeFactory;
     private DbServiceFactory dbServiceFactory;
     private Keyring keyring;
-    private MultipleServiceTracker tracker;
+    private CountDownLatch shutdown;
+    private MainWindowControllerImpl mainController;
+    private MainWindowRunnable mainWindowRunnable;
     
     public Main(BundleContext context, Keyring keyring,
-            ApplicationService appSvc, UiFacadeFactory uiFacadeFactory,
-            String[] args) {
+            ApplicationService appSvc, String[] args) {
 
         DbServiceFactory dbServiceFactory = new DbServiceFactory();
+        CountDownLatch shutdown = new CountDownLatch(1);
+        MainWindowRunnable mainWindowRunnable = new MainWindowRunnable();
 
-        init(context, appSvc, uiFacadeFactory, dbServiceFactory, keyring);
+        init(context, appSvc, dbServiceFactory, keyring, shutdown,
+                mainWindowRunnable);
     }
 
     Main(BundleContext context, ApplicationService appSvc,
-            UiFacadeFactory uiFacadeFactory, DbServiceFactory dbServiceFactory,
-            Keyring keyring) {
-        init(context, appSvc, uiFacadeFactory, dbServiceFactory, keyring);
+            DbServiceFactory dbServiceFactory, Keyring keyring,
+            CountDownLatch shutdown, MainWindowRunnable mainWindowRunnable) {
+        init(context, appSvc, dbServiceFactory, keyring, shutdown,
+                mainWindowRunnable);
     }
 
     private void init(BundleContext context, ApplicationService appSvc,
-            UiFacadeFactory uiFacadeFactory, DbServiceFactory dbServiceFactory,
-            Keyring keyring) {
+            DbServiceFactory dbServiceFactory, Keyring keyring,
+            CountDownLatch shutdown, MainWindowRunnable mainWindowRunnable) {
         this.context = context;
         this.appSvc = appSvc;
-        this.uiFacadeFactory = uiFacadeFactory;
         this.dbServiceFactory = dbServiceFactory;
         this.keyring = keyring;
+        this.shutdown = shutdown;
+        this.mainWindowRunnable = mainWindowRunnable;
     }
 
     private void setLAF() {
@@ -174,7 +174,21 @@ public class Main {
         tryConnecting();
 
         try {
-            uiFacadeFactory.awaitShutdown();
+            shutdown.await();
+            
+            // Shutdown MainController
+            if (mainController != null) {
+                try {
+                    SwingUtilities.invokeAndWait(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainController.shutdownApplication();
+                        }
+                    });
+                } catch (InvocationTargetException e) {
+                    logger.log(Level.WARNING, "Unable to shutdown MainWindowController", e);
+                }
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -212,7 +226,7 @@ public class Main {
             case JOptionPane.CANCEL_OPTION:
             case JOptionPane.CLOSED_OPTION:
             case JOptionPane.NO_OPTION:
-                shutdown();
+                shutdown.countDown();
                 break;
 
             case JOptionPane.YES_OPTION:
@@ -263,7 +277,7 @@ public class Main {
 
         @Override
         public void abort() {
-            shutdown();
+            shutdown.countDown();
         }
     }
     
@@ -291,32 +305,7 @@ public class Main {
         @Override
         public void changed(ConnectionStatus newStatus) {
             if (newStatus == ConnectionStatus.CONNECTED) {
-                Class<?>[] deps = new Class<?>[] {
-                        HostInfoDAO.class,
-                        VmInfoDAO.class
-                };
-                tracker = new MultipleServiceTracker(context, deps, new Action() {
-                    
-                    @Override
-                    public void dependenciesAvailable(Map<String, Object> services) {
-                        HostInfoDAO hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
-                        uiFacadeFactory.setHostInfoDao(hostInfoDAO);
-                        VmInfoDAO vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                        uiFacadeFactory.setVmInfoDao(vmInfoDAO);
-                        
-                        showMainWindow();
-                    }
-
-                    @Override
-                    public void dependenciesUnavailable() {
-                        if (!uiFacadeFactory.isShutdown()) {
-                            // In the rare case we lose one of our deps, gracefully shutdown
-                            logger.severe("Storage unexpectedly became unavailable");
-                            shutdown();
-                        }
-                    }
-                });
-                tracker.open();
+                SwingUtilities.invokeLater(mainWindowRunnable);
             } else if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
                 if (retry) {
                     retry = false;
@@ -327,29 +316,26 @@ public class Main {
                             translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_DESCRIPTION),
                             translator.localize(LocaleResources.CONNECTION_FAILED_TO_CONNECT_TITLE),
                             JOptionPane.ERROR_MESSAGE);
-                    shutdown();
+                    shutdown.countDown();
                 }
             }
         }
     }
     
     public void shutdown() {
-        uiFacadeFactory.shutdown();
-        
-        if (tracker != null) {
-            tracker.close();
+        shutdown.countDown();
+    }
+    
+    /*
+     * This Runnable is extracted to a class for testing purposes.
+     */
+    class MainWindowRunnable implements Runnable {
+
+        @Override
+        public void run() {
+            mainController = new MainWindowControllerImpl(context, appSvc, shutdown);
+            mainController.showMainMainWindow();
         }
     }
-
-    private void showMainWindow() {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                MainWindowController mainController = uiFacadeFactory.getMainWindow();
-                mainController.showMainMainWindow();
-            }
-        });
-    }
-
 }
 

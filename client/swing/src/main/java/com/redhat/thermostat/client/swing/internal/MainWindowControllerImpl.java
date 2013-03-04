@@ -40,38 +40,48 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.InformationService;
 import com.redhat.thermostat.client.core.NameMatchingRefFilter;
 import com.redhat.thermostat.client.core.views.AgentInformationDisplayView;
 import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.ClientConfigurationView;
+import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
+import com.redhat.thermostat.client.core.views.SummaryViewProvider;
+import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
 import com.redhat.thermostat.client.osgi.service.ContextAction;
 import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.swing.internal.MainView.Action;
+import com.redhat.thermostat.client.swing.internal.osgi.HostContextActionServiceTracker;
+import com.redhat.thermostat.client.swing.internal.osgi.InformationServiceTracker;
+import com.redhat.thermostat.client.swing.internal.osgi.VMContextActionServiceTracker;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayController;
 import com.redhat.thermostat.client.ui.AgentInformationDisplayModel;
 import com.redhat.thermostat.client.ui.ClientConfigurationController;
 import com.redhat.thermostat.client.ui.HostInformationController;
 import com.redhat.thermostat.client.ui.MainWindowController;
 import com.redhat.thermostat.client.ui.SummaryController;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.client.ui.VmInformationController;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
+import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
@@ -102,12 +112,21 @@ public class MainWindowControllerImpl implements MainWindowController {
 
     private MainView view;
 
-    private final HostInfoDAO hostsDAO;
-    private final VmInfoDAO vmsDAO;
+    private HostInfoDAO hostInfoDAO;
+    private VmInfoDAO vmInfoDAO;
 
+    private SummaryViewProvider summaryViewProvider;
+    private HostInformationViewProvider hostInfoViewProvider;
+    private VmInformationViewProvider vmInfoViewProvider;
+    
     private ApplicationInfo appInfo;
 
-    private UiFacadeFactory facadeFactory;
+    private InformationServiceTracker infoServiceTracker;
+    private HostContextActionServiceTracker hostContextActionTracker;
+    private VMContextActionServiceTracker vmContextActionTracker;
+    private MultipleServiceTracker depTracker;
+    
+    private CountDownLatch shutdown;
 
     private MenuRegistry menuRegistry;
     private ActionListener<ThermostatExtensionRegistry.Action> menuListener =
@@ -163,9 +182,16 @@ public class MainWindowControllerImpl implements MainWindowController {
     private boolean showHistory;
 
     private VmInformationControllerProvider vmInfoControllerProvider;
+    
+    public MainWindowControllerImpl(BundleContext context, ApplicationService appSvc,
+            CountDownLatch shutdown) {
+        this(context, appSvc, new MainWindow(), new RegistryFactory(context), shutdown);
+    }
 
-    public MainWindowControllerImpl(ApplicationService appSvc, UiFacadeFactory facadeFactory, MainView view, RegistryFactory registryFactory, HostInfoDAO hostsDao, VmInfoDAO vmsDAO)
-    {
+    MainWindowControllerImpl(BundleContext context, ApplicationService appSvc,
+            final MainView view,
+            RegistryFactory registryFactory,
+            final CountDownLatch shutdown) {
         this.appSvc = appSvc;
         try {
             vmFilterRegistry = registryFactory.createVmFilterRegistry();
@@ -185,22 +211,62 @@ public class MainWindowControllerImpl implements MainWindowController {
         hostFilters.add(hostFilter);
         vmFilters.add(vmFilter);
         
-        this.facadeFactory = facadeFactory;
+        this.infoServiceTracker = new InformationServiceTracker(context);
+        this.infoServiceTracker.open();
+        
+        this.hostContextActionTracker = new HostContextActionServiceTracker(context);
+        this.hostContextActionTracker.open();
 
-        this.hostsDAO = hostsDao;
-        this.vmsDAO = vmsDAO;
+        this.vmContextActionTracker = new VMContextActionServiceTracker(context);
+        this.vmContextActionTracker.open();
+        
+        this.shutdown = shutdown;
 
-        initView(view);
+        Class<?>[] deps = new Class<?>[] {
+                HostInfoDAO.class,
+                VmInfoDAO.class,
+                SummaryViewProvider.class,
+                HostInformationViewProvider.class,
+                VmInformationViewProvider.class
+        };
+        depTracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
+            
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
+                Objects.requireNonNull(hostInfoDAO);
+                vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                Objects.requireNonNull(vmInfoDAO);
+                summaryViewProvider = (SummaryViewProvider) services.get(SummaryViewProvider.class.getName());
+                Objects.requireNonNull(summaryViewProvider);
+                hostInfoViewProvider = (HostInformationViewProvider) services.get(HostInformationViewProvider.class.getName());
+                Objects.requireNonNull(hostInfoViewProvider);
+                vmInfoViewProvider = (VmInformationViewProvider) services.get(VmInformationViewProvider.class.getName());
+                Objects.requireNonNull(vmInfoViewProvider);
+                
+                initView(view);
 
-        vmInfoControllerProvider = new VmInformationControllerProvider();
+                vmInfoControllerProvider = new VmInformationControllerProvider();
 
-        appInfo = new ApplicationInfo();
-        view.setWindowTitle(appInfo.getName());
-        initializeTimer();
+                appInfo = new ApplicationInfo();
+                view.setWindowTitle(appInfo.getName());
+                initializeTimer();
 
-        updateView();
+                updateView();
 
-        installListenersAndStartRegistries();
+                installListenersAndStartRegistries();
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                if (shutdown.getCount() > 0) {
+                    // In the rare case we lose one of our deps, gracefully shutdown
+                    logger.severe("Dependency unexpectedly became unavailable");
+                    shutdown.countDown();
+                }
+            }
+        });
+        depTracker.open();
     }
 
     /*
@@ -260,7 +326,7 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     public void doUpdateTreeAsync() {
-        HostsVMsLoader loader = new DefaultHostsVMsLoader(hostsDAO, vmsDAO, !showHistory);
+        HostsVMsLoader loader = new DefaultHostsVMsLoader(hostInfoDAO, vmInfoDAO, !showHistory);
         view.updateTree(hostFilters, vmFilters, hostTreeDecorators, vmTreeDecorators, loader);
     }
 
@@ -304,7 +370,8 @@ public class MainWindowControllerImpl implements MainWindowController {
                     handleVMHooks(evt);
                     break;
                 case SHUTDOWN:
-                    shutdownApplication();
+                    // Main will call shutdownApplication
+                    shutdown.countDown();
                     break;
                 default:
                     throw new IllegalStateException("unhandled action");
@@ -314,12 +381,19 @@ public class MainWindowControllerImpl implements MainWindowController {
         });
     }
 
-    private void shutdownApplication() {
+    /*
+     * Called by Main to cleanup when shutting down
+     */
+    void shutdownApplication() {
         uninstallListenersAndStopRegistries();
 
         view.hideMainWindow();
         appSvc.getTimerFactory().shutdown();
-        shutdownOSGiFramework();
+        
+        depTracker.close();
+        infoServiceTracker.close();
+        hostContextActionTracker.close();
+        vmContextActionTracker.close();
     }
 
     private void installListenersAndStartRegistries() {
@@ -368,10 +442,6 @@ public class MainWindowControllerImpl implements MainWindowController {
         vmInfoRegistry.stop();
     }
 
-    private void shutdownOSGiFramework() {
-        facadeFactory.shutdown();
-    }
-
     private void showContextMenu(ActionEvent<Action> evt) {
         List<ContextAction> toShow = new ArrayList<>();
 
@@ -381,7 +451,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
             logger.log(Level.INFO, "registering applicable HostContextActions actions to show");
 
-            for (HostContextAction action : facadeFactory.getHostContextActions()) {
+            for (HostContextAction action : hostContextActionTracker.getHostContextActions()) {
                 if (action.getFilter().matches(vm)) {
                     toShow.add(action);
                 }
@@ -391,7 +461,7 @@ public class MainWindowControllerImpl implements MainWindowController {
 
             logger.log(Level.INFO, "registering applicable VMContextActions actions to show");
 
-            for (VMContextAction action : facadeFactory.getVMContextActions()) {
+            for (VMContextAction action : vmContextActionTracker.getVmContextActions()) {
                 if (action.getFilter().matches(vm)) {
                     toShow.add(action);
                 }
@@ -455,11 +525,11 @@ public class MainWindowControllerImpl implements MainWindowController {
         Ref ref = view.getSelectedHostOrVm();
 
         if (ref == null) {
-            SummaryController controller = facadeFactory.getSummary();
+            SummaryController controller = createSummaryController();
             view.setSubView(controller.getView());
         } else if (ref instanceof HostRef) {
             HostRef hostRef = (HostRef) ref;
-            HostInformationController hostController = facadeFactory.getHostController(hostRef);
+            HostInformationController hostController = createHostInformationController(hostRef);
             view.setSubView(hostController.getView());
             view.setStatusBarPrimaryStatus("host: " + hostRef.getHostName() + ", id: " + hostRef.getAgentId());
         } else if (ref instanceof VmRef) {
@@ -567,7 +637,7 @@ public class MainWindowControllerImpl implements MainWindowController {
                 id = lastSelectedVM.getSelectedChildID();
             }
             
-            lastSelectedVM = facadeFactory.getVmController(vmRef);
+            lastSelectedVM = createVmController(vmRef);
             if (!lastSelectedVM.selectChildID(id)) {
                 Integer _id = selectedForVM.get(vmRef);
                 id = _id != null? _id : 0;
@@ -578,6 +648,20 @@ public class MainWindowControllerImpl implements MainWindowController {
             
             return lastSelectedVM;
         }
+    }
+    
+    private SummaryController createSummaryController() {
+        return new SummaryController(appSvc, hostInfoDAO, vmInfoDAO, summaryViewProvider);
+    }
+
+    private HostInformationController createHostInformationController(HostRef ref) {
+        List<InformationService<HostRef>> hostInfoServices = infoServiceTracker.getHostInformationServices();
+        return new HostInformationController(hostInfoServices, ref, hostInfoViewProvider);
+    }
+
+    private VmInformationController createVmController(VmRef ref) {
+        List<InformationService<VmRef>> vmInfoServices = infoServiceTracker.getVmInformationServices();
+        return new VmInformationController(vmInfoServices, ref, vmInfoViewProvider);
     }
 
 }

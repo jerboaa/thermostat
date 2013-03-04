@@ -34,39 +34,37 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.ui;
+package com.redhat.thermostat.client.swing.internal.osgi;
 
-import java.util.Collections;
-import java.util.List;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
-import com.redhat.thermostat.client.core.InformationService;
-import com.redhat.thermostat.client.core.controllers.InformationServiceController;
-import com.redhat.thermostat.client.core.views.BasicView;
-import com.redhat.thermostat.client.core.views.HostInformationView;
-import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
-import com.redhat.thermostat.common.OrderedComparator;
-import com.redhat.thermostat.storage.core.HostRef;
+import org.junit.Test;
+import org.osgi.framework.ServiceRegistration;
 
-public class HostInformationController {
+import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
-    private final HostInformationView view;
+public class VMContextActionServiceTrackerTest {
 
-    public HostInformationController(List<InformationService<HostRef>> hostInfoServices,
-            HostRef ref, HostInformationViewProvider provider) {
-        view = provider.createView();
+    @Test
+    public void verifyHostActionIsAddedToAndRemovedFromUiModel() {
+        StubBundleContext bundleContext = new StubBundleContext();
 
-        Collections.sort(hostInfoServices, new OrderedComparator<InformationService<HostRef>>());
-        for (InformationService<HostRef> hostInfoService : hostInfoServices) {
-            if (hostInfoService.getFilter().matches(ref)) {
-                InformationServiceController<HostRef> ctrl = hostInfoService.getInformationServiceController(ref);
-                String name = ctrl.getLocalizedName();
-                view.addChildView(name, ctrl.getView());
-            }
-        }
-    }
+        VMContextAction vmAction = mock(VMContextAction.class);
+        ServiceRegistration registration = bundleContext.registerService(VMContextAction.class, vmAction, null);
 
-    public BasicView getView() {
-        return view;
+        VMContextActionServiceTracker tracker = new VMContextActionServiceTracker(bundleContext);
+        tracker.open();
+        
+        assertTrue(tracker.getVmContextActions().contains(vmAction));
+
+        registration.unregister();
+
+        tracker.close();
+
+        assertFalse(tracker.getVmContextActions().contains(vmAction));
     }
 
 }

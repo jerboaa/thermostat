@@ -44,6 +44,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 
 import javax.swing.SwingUtilities;
@@ -55,8 +56,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
-import com.redhat.thermostat.client.ui.MainWindowController;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
+import com.redhat.thermostat.client.swing.internal.Main.MainWindowRunnable;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
@@ -72,8 +72,7 @@ public class MainTest {
 
     private ExecutorService executorService;
 
-    private MainWindowController mainWindowController;
-    private UiFacadeFactory uiFactory;
+    private MainWindowRunnable mainWindowRunnable;
 
     private ArgumentCaptor<ConnectionListener> connectionListenerCaptor;
 
@@ -84,6 +83,7 @@ public class MainTest {
     private StubBundleContext context;
     private ApplicationService appService;
     private Keyring keyring;
+    private CountDownLatch shutdown;
 
     @Before
     public void setUp() {
@@ -102,12 +102,9 @@ public class MainTest {
         }).when(executorService).execute(isA(Runnable.class));
 
         when(appService.getApplicationExecutor()).thenReturn(executorService);
-
-        mainWindowController = mock(MainWindowController.class);
-
-        uiFactory = mock(UiFacadeFactory.class);
-        when(uiFactory.getMainWindow()).thenReturn(mainWindowController);
-
+        
+        mainWindowRunnable = mock(MainWindowRunnable.class);
+        
         dbServiceFactory = mock(DbServiceFactory.class);
         dbService = mock(DbService.class);
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
@@ -119,6 +116,7 @@ public class MainTest {
         when(appService.getTimerFactory()).thenReturn(timerFactory);
 
         keyring = mock(Keyring.class);
+        shutdown = mock(CountDownLatch.class);
     }
 
     /**
@@ -136,18 +134,18 @@ public class MainTest {
 
     @Test
     public void verifyRunWaitsForShutdown() throws Exception {
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
+        Main main = new Main(context, appService, dbServiceFactory, keyring, shutdown, mainWindowRunnable);
 
         main.run();
 
         handleAllEdtEvents();
 
-        verify(uiFactory).awaitShutdown();
+        verify(shutdown).await();
     }
 
     @Test
     public void verifyConnectionIsMade() throws Exception {
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
+        Main main = new Main(context, appService, dbServiceFactory, keyring, shutdown, mainWindowRunnable);
 
         main.run();
 
@@ -163,7 +161,7 @@ public class MainTest {
         context.registerService(HostInfoDAO.class, hostInfoDAO, null);
         VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
         context.registerService(VmInfoDAO.class, vmInfoDAO, null);
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
+        Main main = new Main(context, appService, dbServiceFactory, keyring, shutdown, mainWindowRunnable);
 
         main.run();
 
@@ -174,14 +172,14 @@ public class MainTest {
 
         handleAllEdtEvents();
 
-        verify(mainWindowController).showMainMainWindow();
+        verify(mainWindowRunnable).run();
     }
 
     @Ignore("this prompts the user with some gui")
     @Test
     public void verifyFailedConnectionTriggersShutdown() throws Exception {
 
-        Main main = new Main(context, appService, uiFactory, dbServiceFactory, keyring);
+        Main main = new Main(context, appService, dbServiceFactory, keyring, shutdown, mainWindowRunnable);
 
         main.run();
 
@@ -192,7 +190,7 @@ public class MainTest {
 
         handleAllEdtEvents();
 
-        verify(uiFactory).shutdown();
+        verify(shutdown).countDown();
     }
 }
 

@@ -59,14 +59,12 @@ public class HostInformationControllerTest {
 
     private static final Filter<HostRef> FILTER = new NameMatchingRefFilter<>();
 
-    private UiFacadeFactory uiFacadeFactory;
     private HostRef ref;
     private HostInformationViewProvider provider;
     private HostInformationView view;
 
     @Before
     public void setup() {
-        uiFacadeFactory = mock(UiFacadeFactory.class);
         ref = mock(HostRef.class);
         provider = mock(HostInformationViewProvider.class);
         view = mock(HostInformationView.class);
@@ -80,7 +78,7 @@ public class HostInformationControllerTest {
         // Mock services
         List<InformationService<HostRef>> services = mockServices(orderValues);
 
-        new HostInformationController(uiFacadeFactory, ref, provider);
+        new HostInformationController(new ArrayList<>(services), ref, provider);
 
         InOrder order = inOrder(services.get(0), services.get(1),
                 services.get(2), services.get(3), services.get(4));
@@ -102,8 +100,6 @@ public class HostInformationControllerTest {
             when(service.getOrderValue()).thenReturn(order);
             services.add(service);
         }
-        // Return copy
-        when(uiFacadeFactory.getHostInformationServices()).thenReturn(new ArrayList<>(services));
         return services;
     }
 

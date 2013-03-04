@@ -36,14 +36,14 @@
 
 package com.redhat.thermostat.client.swing.internal.osgi;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 
 import org.junit.Test;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.osgi.service.HostContextAction;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class HostContextActionServiceTrackerTest {
@@ -51,20 +51,20 @@ public class HostContextActionServiceTrackerTest {
     @Test
     public void verifyHostActionIsAddedToAndRemovedFromUiModel() {
         StubBundleContext bundleContext = new StubBundleContext();
-        UiFacadeFactory applicationModel = mock(UiFacadeFactory.class);
 
         HostContextAction hostAction = mock(HostContextAction.class);
         ServiceRegistration registration = bundleContext.registerService(HostContextAction.class, hostAction, null);
 
-        HostContextActionServiceTracker tracker = new HostContextActionServiceTracker(bundleContext, applicationModel);
+        HostContextActionServiceTracker tracker = new HostContextActionServiceTracker(bundleContext);
         tracker.open();
+        
+        assertTrue(tracker.getHostContextActions().contains(hostAction));
 
         registration.unregister();
 
         tracker.close();
 
-        verify(applicationModel).addHostContextAction(hostAction);
-        verify(applicationModel).removeHostContextAction(hostAction);
+        assertFalse(tracker.getHostContextActions().contains(hostAction));
     }
 
 }

@@ -53,13 +53,11 @@ import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.swing.internal.GUIClientCommand;
 import com.redhat.thermostat.client.swing.internal.HostIconDecoratorProvider;
 import com.redhat.thermostat.client.swing.internal.Main;
-import com.redhat.thermostat.client.swing.internal.UiFacadeFactoryImpl;
 import com.redhat.thermostat.client.swing.internal.views.SwingAgentInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingClientConfigurationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
-import com.redhat.thermostat.client.ui.UiFacadeFactory;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.MultipleServiceTracker;
@@ -70,10 +68,6 @@ import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class ThermostatActivator implements BundleActivator {
-
-    private InformationServiceTracker infoServiceTracker;
-    private HostContextActionServiceTracker hostContextActionTracker;
-    private VMContextActionServiceTracker vmContextActionTracker;
 
     private CommandRegistry cmdReg;
     private MultipleServiceTracker dependencyTracker;
@@ -117,19 +111,8 @@ public class ThermostatActivator implements BundleActivator {
                 Keyring keyring = (Keyring) services.get(Keyring.class.getName());
                 ApplicationService appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
                 
-                UiFacadeFactory uiFacadeFactory = new UiFacadeFactoryImpl(context);
-
-                infoServiceTracker = new InformationServiceTracker(context, uiFacadeFactory);
-                infoServiceTracker.open();
-
-                hostContextActionTracker = new HostContextActionServiceTracker(context, uiFacadeFactory);
-                hostContextActionTracker.open();
-
-                vmContextActionTracker = new VMContextActionServiceTracker(context, uiFacadeFactory);
-                vmContextActionTracker.open();
-
                 cmdReg = new CommandRegistryImpl(context);
-                main = new Main(context, keyring, appSvc, uiFacadeFactory, new String[0]);
+                main = new Main(context, keyring, appSvc, new String[0]);
                 
                 GUIClientCommand cmd = new GUIClientCommand(main);
                 cmdReg.registerCommands(Arrays.asList(cmd));
@@ -147,9 +130,6 @@ public class ThermostatActivator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
-        infoServiceTracker.close();
-        hostContextActionTracker.close();
-        vmContextActionTracker.close();
         dependencyTracker.close();
         cmdReg.unregisterCommands();
     }
