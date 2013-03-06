@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 # Copyright 2012, 2013 Red Hat, Inc.
 #
@@ -36,78 +35,21 @@
 #
 #####################################################################
 #
-# Some necessary variables.
-JAVA_DIR="@java.dir@"
-JAVA="@java.home@/bin/java"
+# Unit file in order to be able to start
+# thermostat agent via systemd.
+#
+[Unit]
+Description=Thermostat agent service
+After=syslog.target network.target
+Documentation=http://icedtea.classpath.org/wiki/Thermostat/Packaging/SystemdServices
 
-if [ x"$THERMOSTAT_HOME" = x ] ; then
-  THERMOSTAT_HOME="@thermostat.home@"
-fi
-export THERMOSTAT_HOME
-THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+[Service]
+Type=forking
+ExecStart=@thermostat.home@/bin/thermostat-agent-sysd start
+ExecStop=@thermostat.home@/bin/thermostat-agent-sysd stop
+PIDFile=@thermostat.home@/agent/run/thermostat-agent.pid
+User=@thermostat.system.user@
+Group=@thermostat.system.group@
 
-# need tools from the JVM
-TOOLS_JAR="@java.home@/../lib/tools.jar"
-
-# plus the main services we use and export
-SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
-SERVICE_NATIVE="${THERMOSTAT_LIBS}/native"
-
-SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
-THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
-
-function usage() {
-    echo "$0 [-J<java-opt>] [-Tbg PIDFILE] [THERMOSTAT_ARGS]" >&2
-    exit 1
-}
-
-# start parsing arguments, we intercept jvm arguments vs thermostat specific
-# arguments
-JAVA_ARGS=()
-ARGS=()
-
-RUN_IN_BG=0
-PID_FILE=""
-
-i=0
-j=0
-
-while [ "$#" -gt "0" ];
-do
-    case "$1" in
-    -J*)
-        JAVA_ARGS[$i]="${1##-J}"
-        i=$((i+1))
-        shift
-        ;;
-    -Tbg)
-        shift
-        RUN_IN_BG=1
-        PID_FILE="$1"
-        shift
-        ;;
-    *)
-        ARGS[$j]="$1"
-        j=$((j+1))
-        shift
-        ;;
-    esac
-done
-
-# Finally run thermostat (optionally in the background)
-if [ $RUN_IN_BG -eq 1 ]; then
-    # The thermostat-agent-sysd script uses this.
-    if [ x"$PID_FILE" = "x" ]; then
-        usage 
-    else
-        ${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}" &
-        retval=$?
-        echo $! > $PID_FILE
-        retval=$(( $retval + $? ))
-    fi
-else
-    ${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
-    retval=$?
-fi
-exit $retval
-
+[Install]
+WantedBy=multi-user.target

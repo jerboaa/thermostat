@@ -36,78 +36,54 @@
 #
 #####################################################################
 #
-# Some necessary variables.
-JAVA_DIR="@java.dir@"
-JAVA="@java.home@/bin/java"
+# for debugging
+#set -xv
+
+if [ $# -ne 1 ]; then
+    echo "usage: $0 {start|stop|restart}" >&2
+    exit 1
+fi
 
 if [ x"$THERMOSTAT_HOME" = x ] ; then
-  THERMOSTAT_HOME="@thermostat.home@"
+    THERMOSTAT_HOME="@thermostat.home@"
 fi
+
 export THERMOSTAT_HOME
-THERMOSTAT_LIBS="${THERMOSTAT_HOME}/libs"
+THERMOSTAT_BIN="$THERMOSTAT_HOME/bin/thermostat"
+AGENT_PID_FILE="$THERMOSTAT_HOME/agent/run/thermostat-agent.pid"
 
-# need tools from the JVM
-TOOLS_JAR="@java.home@/../lib/tools.jar"
-
-# plus the main services we use and export
-SERVICE_CLASSPATH="${THERMOSTAT_LIBS}/*"
-SERVICE_NATIVE="${THERMOSTAT_LIBS}/native"
-
-SERVICE_CLASSPATH="${TOOLS_JAR}:${SERVICE_CLASSPATH}"
-THERMOSTAT_MAIN="com.redhat.thermostat.main.Thermostat"
-
-function usage() {
-    echo "$0 [-J<java-opt>] [-Tbg PIDFILE] [THERMOSTAT_ARGS]" >&2
-    exit 1
+function start() {
+    if [ -e "$AGENT_PID_FILE" ]; then
+        echo "Agent already running. Use '$0 stop' to stop it." >&2
+        exit 1
+    fi
+    # This writes PID of java process to AGENT_PID_FILE
+    "$THERMOSTAT_BIN" -Tbg "$AGENT_PID_FILE" agent
+    exit $?
 }
 
-# start parsing arguments, we intercept jvm arguments vs thermostat specific
-# arguments
-JAVA_ARGS=()
-ARGS=()
-
-RUN_IN_BG=0
-PID_FILE=""
-
-i=0
-j=0
-
-while [ "$#" -gt "0" ];
-do
-    case "$1" in
-    -J*)
-        JAVA_ARGS[$i]="${1##-J}"
-        i=$((i+1))
-        shift
-        ;;
-    -Tbg)
-        shift
-        RUN_IN_BG=1
-        PID_FILE="$1"
-        shift
-        ;;
-    *)
-        ARGS[$j]="$1"
-        j=$((j+1))
-        shift
-        ;;
-    esac
-done
-
-# Finally run thermostat (optionally in the background)
-if [ $RUN_IN_BG -eq 1 ]; then
-    # The thermostat-agent-sysd script uses this.
-    if [ x"$PID_FILE" = "x" ]; then
-        usage 
-    else
-        ${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}" &
+function stop() {
+    if [ -e "$AGENT_PID_FILE" ]; then
+        pid=$(cat "$AGENT_PID_FILE")
+        kill $pid
         retval=$?
-        echo $! > $PID_FILE
-        retval=$(( $retval + $? ))
+        # cleanup pid
+        rm -rf "$AGENT_PID_FILE"
+        exit $retval
+    else
+        exit 1
     fi
-else
-    ${JAVA} "${JAVA_ARGS[@]}" -Djava.library.path=${SERVICE_NATIVE} -cp ${SERVICE_CLASSPATH} ${THERMOSTAT_MAIN} "${ARGS[@]}"
-    retval=$?
-fi
-exit $retval
+}
 
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+esac
