@@ -39,34 +39,17 @@ package com.redhat.thermostat.storage.core;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+/**
+ * 
+ * {@link Storage} delegates to this class for connecting to storage.
+ *
+ */
 public abstract class Connection {
 
-    public enum ConnectionType {
-        LOCAL(false),
-        REMOTE(true),
-        CLUSTER(true),
-        ;
-
-        boolean isDisplayable = false;
-        boolean needsUrl = false;
-
-        private ConnectionType(boolean needsUrl) {
-            this.needsUrl = needsUrl;
-        }
-
-        private ConnectionType(boolean isDisplayable, boolean needsUrl) {
-            this.isDisplayable = isDisplayable;
-        }
-
-        public boolean isDisplayable() {
-            return isDisplayable;
-        }
-
-        public boolean needsUrl() {
-            return needsUrl;
-        }
-    }
-
+    /**
+     * @see {@link ConnectionListener},
+     * 
+     */
     public enum ConnectionStatus {
         CONNECTED,
         CONNECTING,
@@ -75,56 +58,104 @@ public abstract class Connection {
     }
 
     public interface ConnectionListener {
+        /**
+         * Called by the connection reporting a status update.
+         * 
+         * @param newStatus The new status.
+         * 
+         * @see ConnectionStatus
+         */
         public void changed(ConnectionStatus newStatus);
     }
 
     protected boolean connected = false;
 
-    private ConnectionType type;
     private String url;
 
     private List<Connection.ConnectionListener> listeners = new CopyOnWriteArrayList<>();
 
-    public void setType(ConnectionType type) {
-        this.type = type;
-    }
-
-    public ConnectionType getType() {
-        return type;
-    }
-
+    /**
+     * Sets the connection URL to which to connect to.
+     * 
+     * @param url The connection URL.
+     */
     public void setUrl(String url) {
         this.url = url;
     }
 
+    /**
+     * 
+     * @return The connection URL.
+     */
     public String getUrl() {
         return url;
     }
 
     @Override
     public String toString() {
-        if (url == null) {
-            return type.toString();
-        }
-        return type.toString() + " to " + url;
+        return url;
     }
 
+    /**
+     * Connects to storage. Implementors are responsible to fire at least the
+     * following connection events:
+     * <ul>
+     * <li>{@link ConnectionStatus.CONNECTED}: Once the connection has been made
+     * successfully.</li>
+     * <li>{@link ConnectionStatus.FAILED_TO_CONNECT}: If the connection could
+     * not be established for some reason.</li>
+     * </ul>
+     */
     public abstract void connect();
 
+    /**
+     * Disconnects from storage. Implementors are responsible to fire at least
+     * the following connection events:
+     * <ul>
+     * <li>{@link ConnectionStatus.DISCONNECTED}: Once disconnect has finished.</li>
+     * </ul>
+     */
     public abstract void disconnect();
 
+    
+    /**
+     * May be used to determine the state of a connection if no connect or
+     * disconnect attempt is currently in progress.
+     * 
+     * @return Provided the connection is not in a transitive state (e.g.
+     *         ongoing connect/disconnect), true if storage is connected. False
+     *         otherwise.
+     */
     public boolean isConnected() {
         return connected;
     }
 
+    /**
+     * Adds a connection listener to this connection. This may be used for
+     * progress reporting.
+     * 
+     * @param listener
+     *            The listener which will be notified of connection events.
+     */
     public void addListener(ConnectionListener listener) {
         this.listeners.add(listener);
     }
 
+    /**
+     * Removes a formerly registered listener. No-op if the given listener
+     * is not currently registered.
+     * 
+     * @param listener The listener which should get removed.
+     */
     public void removeListener(ConnectionListener listener) {
         this.listeners.remove(listener);
     }
 
+    /**
+     * Notifies all registered listeners of this ConnectionStatus event.
+     * 
+     * @param status The status which is passed on to listeners.
+     */
     protected void fireChanged(ConnectionStatus status) {
         for (ConnectionListener listener: listeners) {
             listener.changed(status);
