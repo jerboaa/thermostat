@@ -43,6 +43,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Mockito.mock;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
@@ -59,6 +60,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -66,8 +68,10 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.client.HttpClient;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.conn.scheme.Scheme;
 import org.apache.http.conn.scheme.SchemeRegistry;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -76,6 +80,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -85,6 +90,8 @@ import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.Categories;
 import com.redhat.thermostat.storage.core.Category;
+import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
+import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Put;
@@ -561,6 +568,97 @@ public class WebStorageTest {
         ok = storage.verifyToken(authToken);
         assertFalse(ok);
         
+    }
+    
+    @Test
+    public void verifyConnectFiresEventOnConnectionFailure() {
+        DefaultHttpClient client = mock(DefaultHttpClient.class);
+        ClientConnectionManager connManager = mock(ClientConnectionManager.class);
+        // this should make connect fail
+        Mockito.doThrow(RuntimeException.class).when(client).getCredentialsProvider();
+        StartupConfiguration config = new StartupConfiguration() {
+            
+            @Override
+            public String getDBConnectionString() {
+                return "http://fluff.example.org";
+            }
+        };
+        storage = new WebStorage(config, client, connManager);
+        storage.setEndpoint("http://localhost:" + port + "/");
+        storage.setAgentId(new UUID(123, 456));
+        
+        CountDownLatch latch = new CountDownLatch(1);
+        MyListener listener = new MyListener(latch);
+        storage.getConnection().addListener(listener);
+        storage.getConnection().connect();
+        // wait for connection to fail
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertFalse(listener.connectEvent);
+        assertTrue(listener.failedToConnectEvent);
+    }
+    
+    @Test
+    public void verifyConnectFiresEventOnSuccessfulConnect() {
+        CountDownLatch latch = new CountDownLatch(1);
+        MyListener listener = new MyListener(latch);
+        storage.getConnection().addListener(listener);
+        storage.getConnection().connect();
+        // wait for connection to happen
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertTrue(listener.connectEvent);
+        assertFalse(listener.failedToConnectEvent);
+    }
+    
+    @Test
+    public void verifyDisconnectFiresDisconnectEvent() {
+        CountDownLatch latch = new CountDownLatch(1);
+        MyListener listener = new MyListener(latch);
+        storage.getConnection().addListener(listener);
+        storage.getConnection().disconnect();
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        assertFalse(listener.connectEvent);
+        assertFalse(listener.failedToConnectEvent);
+        assertTrue(listener.disconnectEvent);
+    }
+    
+    static class MyListener implements ConnectionListener {
+
+        private CountDownLatch latch;
+        boolean failedToConnectEvent = false;
+        boolean connectEvent = false;
+        boolean disconnectEvent = false;
+        
+        MyListener(CountDownLatch latch) {
+            this.latch = latch;
+        }
+        
+        @Override
+        public void changed(ConnectionStatus newStatus) {
+            if (newStatus == ConnectionStatus.CONNECTED) {
+                connectEvent = true;
+                latch.countDown();
+            }
+            if (newStatus == ConnectionStatus.FAILED_TO_CONNECT) {
+                failedToConnectEvent = true;
+                latch.countDown();
+            }
+            if (newStatus == ConnectionStatus.DISCONNECTED) {
+                disconnectEvent = true;
+                latch.countDown();
+            }
+        }
     }
 }
 

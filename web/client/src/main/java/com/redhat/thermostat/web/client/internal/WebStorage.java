@@ -331,18 +331,27 @@ public class WebStorage implements Storage, SecureStorage {
     private String password;
     private SecureRandom random;
     private WebConnection conn;
+    
+    // for testing
+    WebStorage(StartupConfiguration config, DefaultHttpClient client, ClientConnectionManager connManager) {
+        init(config, client, connManager);
+    }
 
     public WebStorage(StartupConfiguration config) throws StorageException {
-        categoryIds = new HashMap<>();
-        gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
-                new ThermostatGSONConverter()).create();
         ClientConnectionManager connManager = new ThreadSafeClientConnManager();
         DefaultHttpClient client = new DefaultHttpClient(connManager);
         client.getParams().setParameter("http.protocol.expect-continue", Boolean.TRUE);
+        init(config, client, connManager);
+    }
+    
+    private void init(StartupConfiguration config, DefaultHttpClient client, ClientConnectionManager connManager) {
+        categoryIds = new HashMap<>();
+        gson = new GsonBuilder().registerTypeHierarchyAdapter(Pojo.class,
+                new ThermostatGSONConverter()).create();
         httpClient = client;
         random = new SecureRandom();
         conn = new WebConnection();
-
+        
         setEndpoint(config.getDBConnectionString());
         if (config instanceof AuthenticationConfiguration) {
             AuthenticationConfiguration authConfig = (AuthenticationConfiguration) config;

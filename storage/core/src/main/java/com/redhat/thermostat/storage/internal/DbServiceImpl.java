@@ -36,15 +36,21 @@
 
 package com.redhat.thermostat.storage.internal;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.config.ConnectionConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
+import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.Storage;
@@ -53,6 +59,7 @@ import com.redhat.thermostat.storage.core.StorageProvider;
 
 public class DbServiceImpl implements DbService {
     
+    private static Logger logger = LoggingUtils.getLogger(DbServiceImpl.class);
     @SuppressWarnings("rawtypes")
     private ServiceRegistration dbServiceReg;
     @SuppressWarnings("rawtypes")
@@ -72,6 +79,12 @@ public class DbServiceImpl implements DbService {
         init(context, username, password, dbUrl);
     }
     
+    // For testing. Injects custom storage.
+    DbServiceImpl(BundleContext context, Storage storage) {
+        this.context = context;
+        this.storage = storage;
+    }
+    
     private void init(BundleContext context, String username, String password, String dbUrl) {
         Storage storage = createStorage(context, username, password, dbUrl);
 
@@ -85,26 +98,71 @@ public class DbServiceImpl implements DbService {
         // as service
         ensureConnectPreCondition();
         try {
-            this.storage.getConnection().connect();
-            dbServiceReg = context.registerService(DbService.class, this, null);
-            storageReg = context.registerService(Storage.class.getName(), this.storage, null);
+            // connection needs to be synchronous, otherwise there is no
+            // way to guarantee the postcondition if there's a delayed exception
+            // during connection handling.
+            doSynchronousConnect();
         } catch (Exception cause) {
             throw new ConnectionException(cause);
         }
+        // Connection didn't throw an exception. Now it is safe to register
+        // services.
+        dbServiceReg = context.registerService(DbService.class, this, null);
+        storageReg = context.registerService(Storage.class.getName(), this.storage, null);
     }
     
+    private void doSynchronousConnect() throws ConnectionException {
+        CountDownLatch latch = new CountDownLatch(1);
+        SynchronousConnectionListener listener = new SynchronousConnectionListener(
+                latch, ConnectionStatus.CONNECTED);
+        // Install listener in order to ensure connection is synchronous.
+        addConnectionListener(listener);
+        this.storage.getConnection().connect();
+        try {
+            // Wait for connection to finish.
+            // The synchronous connection listener gets removed once connection
+            // has finished.
+            latch.await();
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, e.getMessage(), e);
+        }
+        if (!listener.successful) {
+            throw new ConnectionException();
+        }
+    }
+
     public void disconnect() throws ConnectionException {
         // DbService and Storage must be registered as service at this point
         ensureDisconnectPrecondition();
         try {
-            storage.getConnection().disconnect();
-            storageReg.unregister();
-            dbServiceReg.unregister();
+            doSyncronousDisconnect();
         } catch (Exception cause) {
             throw new ConnectionException(cause);
         }
+        storageReg.unregister();
+        dbServiceReg.unregister();
     }
     
+    private void doSyncronousDisconnect() {
+        CountDownLatch latch = new CountDownLatch(1);
+        SynchronousConnectionListener listener = new SynchronousConnectionListener(
+                latch, ConnectionStatus.DISCONNECTED);
+        // Install listener in order to ensure connection is synchronous.
+        addConnectionListener(listener);
+        this.storage.getConnection().disconnect();
+        try {
+            // Wait for disconnect to finish.
+            // The synchronous connection listener gets removed once connection
+            // has finished.
+            latch.await();
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, e.getMessage(), e);
+        }
+        if (!listener.successful) {
+            throw new ConnectionException();
+        }
+    }
+
     @Override
     public String getConnectionUrl() {
         return dbUrl;
@@ -192,4 +250,41 @@ public class DbServiceImpl implements DbService {
         storage.getConnection().removeListener(listener);
     }
     
+    class SynchronousConnectionListener implements ConnectionListener {
+
+        CountDownLatch latch;
+        boolean successful = false;
+        ConnectionStatus expectedType;
+        
+        public SynchronousConnectionListener(CountDownLatch latch, ConnectionStatus expectedType) {
+            this.latch = latch;
+            this.expectedType = expectedType;
+        }
+        
+        @Override
+        public void changed(ConnectionStatus newStatus) {
+            switch (newStatus) {
+            case CONNECTED: {
+                successful = (expectedType == ConnectionStatus.CONNECTED);
+                latch.countDown();
+                removeConnectionListener(this);
+                break;
+            }
+            case FAILED_TO_CONNECT: {
+                latch.countDown();
+                removeConnectionListener(this);
+                break;
+            }
+            case DISCONNECTED: {
+                successful = (expectedType == ConnectionStatus.DISCONNECTED);
+                latch.countDown();
+                removeConnectionListener(this);
+            }
+            default: {
+                // nothing
+            }
+            }
+        }
+        
+    }
 }

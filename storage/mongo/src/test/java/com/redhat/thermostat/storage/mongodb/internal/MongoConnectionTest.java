@@ -116,6 +116,24 @@ public class MongoConnectionTest {
 
         verify(listener).changed(ConnectionStatus.CONNECTED);
     }
+    
+    @PrepareForTest({ MongoConnection.class })
+    @Test
+    public void testDisconnect() throws Exception {
+        DBCollection collection = mock(DBCollection.class);
+        DB db = mock(DB.class);
+        when(db.getCollection("agent-config")).thenReturn(collection);
+        Mongo m = mock(Mongo.class);
+        when(m.getDB(MongoConnection.THERMOSTAT_DB_NAME)).thenReturn(db);
+        PowerMockito.whenNew(Mongo.class).withParameterTypes(MongoURI.class).withArguments(any(MongoURI.class)).thenReturn(m);
+        conn.connect();
+
+        verify(listener).changed(ConnectionStatus.CONNECTED);
+        
+        conn.disconnect();
+        verify(m).close();
+        verify(listener).changed(ConnectionStatus.DISCONNECTED);
+    }
 
     @PrepareForTest({ MongoConnection.class })
     @Test
@@ -222,5 +240,6 @@ public class MongoConnectionTest {
             // pass
         }
     }
+    
 }
 

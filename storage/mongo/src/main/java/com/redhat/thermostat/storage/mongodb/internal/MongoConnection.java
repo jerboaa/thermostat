@@ -112,6 +112,7 @@ class MongoConnection extends Connection {
         if (m != null) {
             m.close();
         }
+        fireChanged(ConnectionStatus.DISCONNECTED);
     }
 
     public DB getDB() {
