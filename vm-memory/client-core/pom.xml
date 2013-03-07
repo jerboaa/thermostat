@@ -4,7 +4,7 @@
   <parent>
     <artifactId>thermostat-vm-memory</artifactId>
     <groupId>com.redhat.thermostat</groupId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.6.999-SNAPSHOT</version>
   </parent>
   <artifactId>thermostat-vm-memory-client-core</artifactId>
   <packaging>bundle</packaging>
