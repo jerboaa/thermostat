@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.storage.core;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -105,6 +106,17 @@ public class ConnectionTest {
         connection.fireChanged(status);
         verify(listener1).changed(status);
         verify(listener2).changed(status);
+    }
+    
+    @Test
+    public void verifyToString() {
+        // URL == null should return empty string
+        String actual = connection.toString();
+        assertEquals("", actual);
+        String newUrl = "mongodb://someurl";
+        connection.setUrl(newUrl);
+        actual = connection.toString();
+        assertEquals(newUrl, actual);
     }
 
 }

@@ -93,7 +93,7 @@ public abstract class Connection {
 
     @Override
     public String toString() {
-        return url;
+        return url == null ? "" : url;
     }
 
     /**
@@ -105,6 +105,9 @@ public abstract class Connection {
      * <li>{@link ConnectionStatus.FAILED_TO_CONNECT}: If the connection could
      * not be established for some reason.</li>
      * </ul>
+     * 
+     * These events are mutually exclusive. One of the two needs to be fired in
+     * any case.
      */
     public abstract void connect();
 
