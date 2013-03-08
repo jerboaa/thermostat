@@ -39,26 +39,39 @@ package com.redhat.thermostat.agent.cli.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.InvalidSyntaxException;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
-import com.redhat.thermostat.agent.cli.impl.AgentApplication;
+import com.redhat.thermostat.agent.Agent;
 import com.redhat.thermostat.agent.cli.impl.AgentApplication.ConfigurationCreator;
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
+import com.redhat.thermostat.backend.BackendRegistry;
+import com.redhat.thermostat.common.ExitStatus;
+import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -72,15 +85,19 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
+@PrepareForTest({ AgentApplication.class })
+@RunWith(PowerMockRunner.class)
 public class AgentApplicationTest {
 
     // TODO: Test i18nized versions when they come.
 
     private StubBundleContext context;
 
-    private AgentApplication agent;
     private ConfigurationServer configServer;
     private DbService dbService;
+    private ConfigurationCreator configCreator;
+    private ExitStatus exitStatus;
+    private DbServiceFactory dbServiceFactory;
     
     @Before
     public void setUp() throws InvalidConfigurationException {
@@ -90,7 +107,7 @@ public class AgentApplicationTest {
         AgentStartupConfiguration config = mock(AgentStartupConfiguration.class);
         when(config.getDBConnectionString()).thenReturn("test string; please ignore");
 
-        ConfigurationCreator configCreator = mock(ConfigurationCreator.class);
+        configCreator = mock(ConfigurationCreator.class);
         when(configCreator.create()).thenReturn(config);
 
         Storage storage = mock(Storage.class);
@@ -101,33 +118,96 @@ public class AgentApplicationTest {
         context.registerService(BackendInfoDAO.class.getName(), backendInfoDAO, null);
         configServer = mock(ConfigurationServer.class);
         context.registerService(ConfigurationServer.class.getName(), configServer, null);
-        DbServiceFactory dbServiceFactory = mock(DbServiceFactory.class);
+        dbServiceFactory = mock(DbServiceFactory.class);
         dbService = mock(DbService.class);
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
 
-        agent = new AgentApplication(context, configCreator, dbServiceFactory);
+        exitStatus = mock(ExitStatus.class);
     }
 
     @After
     public void tearDown() {
-        agent = null;
+        context = null;
+        configServer = null;
+        dbService = null;
+        configCreator = null;
+        dbServiceFactory = null;
+        exitStatus = null;
     }
 
     @Test
     public void testName() {
+        AgentApplication agent = new AgentApplication(context, exitStatus, configCreator, dbServiceFactory);
         String name = agent.getName();
         assertEquals("agent", name);
     }
 
     @Test
     public void testDescAndUsage() {
+        AgentApplication agent = new AgentApplication(context, exitStatus, configCreator, dbServiceFactory);
         assertNotNull(agent.getDescription());
         assertNotNull(agent.getUsage());
     }
 
     @Test
     public void testAgentStartup() throws CommandException, InterruptedException {
+        final AgentApplication agent = new AgentApplication(context, exitStatus, configCreator, dbServiceFactory);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final CommandException[] ce = new CommandException[1];
         final long timeoutMillis = 5000L;
+        
+        startAgentRunThread(timeoutMillis, agent, ce, latch);
+        
+        boolean ret = latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
+        if (ce[0] != null) {
+            throw ce[0];
+        }
+        if (!ret) {
+            fail("Timeout expired!");
+        }
+        
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void verifyBackendRegistryProblemsSetsExitStatus() throws Exception {
+        whenNew(BackendRegistry.class).withParameterTypes(BundleContext.class)
+                .withArguments(any(BundleContext.class))
+                .thenThrow(InvalidSyntaxException.class);
+        final AgentApplication agent = new AgentApplication(context,
+                exitStatus, configCreator, dbServiceFactory);
+        try {
+            agent.startAgent(mock(Logger.class), null, null, null);
+        } catch (RuntimeException e) {
+            assertEquals(InvalidSyntaxException.class, e.getCause().getClass());
+        }
+        verify(exitStatus).setExitStatus(ExitStatus.EXIT_ERROR);
+    }
+    
+    @Test
+    public void verifyAgentLaunchExceptionSetsExitStatus() throws Exception {
+        whenNew(BackendRegistry.class).withParameterTypes(BundleContext.class)
+                .withArguments(any(BundleContext.class))
+                .thenReturn(mock(BackendRegistry.class));
+        Agent mockAgent = mock(Agent.class);
+        whenNew(Agent.class).withParameterTypes(BackendRegistry.class,
+                AgentStartupConfiguration.class, Storage.class,
+                AgentInfoDAO.class, BackendInfoDAO.class).withArguments(
+                any(BackendRegistry.class),
+                any(AgentStartupConfiguration.class), any(Storage.class),
+                any(AgentInfoDAO.class), any(BackendInfoDAO.class)).thenReturn(mockAgent);
+        doThrow(LaunchException.class).when(mockAgent).start();
+        final AgentApplication agent = new AgentApplication(context,
+                exitStatus, configCreator, dbServiceFactory);
+        try {
+            agent.startAgent(mock(Logger.class), null, null, null);
+        } catch (RuntimeException e) {
+            fail("Should not have thrown RuntimeException");
+        }
+        verify(exitStatus).setExitStatus(ExitStatus.EXIT_ERROR);
+    }
+
+    private void startAgentRunThread(final long timoutMillis, final AgentApplication agent, final CommandException[] ce, final CountDownLatch latch) {
         Arguments args = mock(Arguments.class);
         final CommandContext commandContext = mock(CommandContext.class);
         when(commandContext.getArguments()).thenReturn(args);
@@ -147,9 +227,6 @@ public class AgentApplicationTest {
             
         }).when(dbService).connect();
 
-        final CountDownLatch latch = new CountDownLatch(1);
-        
-        final CommandException[] ce = new CommandException[1];
         // Run agent in a new thread so we can timeout on failure
         Thread t = new Thread(new Runnable() {
             
@@ -174,14 +251,6 @@ public class AgentApplicationTest {
         });
         
         t.start();
-        boolean ret = latch.await(timeoutMillis, TimeUnit.MILLISECONDS);
-        if (ce[0] != null) {
-            throw ce[0];
-        }
-        if (!ret) {
-            fail("Timeout expired!");
-        }
-        
     }
 
 }

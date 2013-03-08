@@ -70,7 +70,7 @@ import org.osgi.framework.BundleException;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.common.cli.AbstractStateNotifyingCommand;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -533,7 +533,7 @@ public class LauncherImplTest {
         } catch (ExitException e) {
             // pass, by default launcher exits with an exit status
             // of 0.
-            assertEquals(Constants.EXIT_SUCCESS, e.getExitStatus());
+            assertEquals(ExitStatus.EXIT_SUCCESS, e.getExitStatus());
         }
     }
 

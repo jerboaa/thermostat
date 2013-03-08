@@ -40,8 +40,11 @@ import java.util.Arrays;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.common.cli.CommandRegistryImpl;
 
@@ -49,19 +52,33 @@ public class Activator implements BundleActivator {
 
     private CommandRegistry reg;
     private AgentApplication agentApplication;
+    @SuppressWarnings("rawtypes")
+    private ServiceTracker exitStatusTracker;
 
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     public void start(final BundleContext context) throws Exception {
-        reg = new CommandRegistryImpl(context);
-        agentApplication = new AgentApplication(context);
-        reg.registerCommands(Arrays.asList(new ServiceCommand(),
-                new StorageCommand(), agentApplication));
+        exitStatusTracker = new ServiceTracker(context, ExitStatus.class, null) {
+            
+            @Override
+            public Object addingService(ServiceReference reference) {
+                ExitStatus exitStatus = (ExitStatus)context.getService(reference);
+                reg = new CommandRegistryImpl(context);
+                agentApplication = new AgentApplication(context, exitStatus);
+                reg.registerCommands(Arrays.asList(new ServiceCommand(context),
+                        new StorageCommand(exitStatus), agentApplication));
+                return exitStatus;
+            }
+            
+        };
+        exitStatusTracker.open();
     }
 
     @Override
     public void stop(BundleContext context) throws Exception {
         agentApplication.shutdown();
         reg.unregisterCommands();
+        exitStatusTracker.close();
     }
 }
 

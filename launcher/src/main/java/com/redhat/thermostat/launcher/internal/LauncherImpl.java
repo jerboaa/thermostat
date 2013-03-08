@@ -51,7 +51,6 @@ import org.osgi.framework.ServiceReference;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
 import com.redhat.thermostat.common.ApplicationService;
-import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.Version;
@@ -169,7 +168,7 @@ public class LauncherImpl implements Launcher {
             }
 
             // default to success for exit status
-            int exitStatus = Constants.EXIT_SUCCESS;
+            int exitStatus = ExitStatus.EXIT_SUCCESS;
             if (context != null) {
                 ServiceReference storageRef = context.getServiceReference(Storage.class);
                 if (storageRef != null) {

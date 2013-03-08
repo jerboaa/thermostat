@@ -55,7 +55,7 @@ import com.redhat.thermostat.agent.config.AgentOptionParser;
 import com.redhat.thermostat.agent.config.AgentStartupConfiguration;
 import com.redhat.thermostat.backend.BackendRegistry;
 import com.redhat.thermostat.backend.BackendService;
-import com.redhat.thermostat.common.Constants;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.LaunchException;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -84,19 +84,22 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
     private AgentStartupConfiguration configuration;
     private AgentOptionParser parser;
     private DbServiceFactory dbServiceFactory;
+    @SuppressWarnings("rawtypes")
     private ServiceTracker configServerTracker;
     private MultipleServiceTracker daoTracker;
+    private final ExitStatus exitStatus;
 
     private CountDownLatch shutdownLatch;
 
-    public AgentApplication(BundleContext bundleContext) {
-        this(bundleContext, new ConfigurationCreator(), new DbServiceFactory());
+    public AgentApplication(BundleContext bundleContext, ExitStatus exitStatus) {
+        this(bundleContext, exitStatus, new ConfigurationCreator(), new DbServiceFactory());
     }
 
-    AgentApplication(BundleContext bundleContext, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
+    AgentApplication(BundleContext bundleContext, ExitStatus exitStatus, ConfigurationCreator configurationCreator, DbServiceFactory dbServiceFactory) {
         this.bundleContext = bundleContext;
         this.configurationCreator = configurationCreator;
         this.dbServiceFactory = dbServiceFactory;
+        this.exitStatus = exitStatus;
     }
     
     private void parseArguments(Arguments args) throws InvalidConfigurationException {
@@ -104,6 +107,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         parser.parse();
     }
     
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private void runAgent(CommandContext ctx) {
         long startTime = System.currentTimeMillis();
         configuration.setStartTime(startTime);
@@ -237,7 +241,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         
     }
 
-    private Agent startAgent(final Logger logger, final Storage storage,
+    Agent startAgent(final Logger logger, final Storage storage,
             AgentInfoDAO agentInfoDAO, BackendInfoDAO backendInfoDAO) {
         BackendRegistry backendRegistry = null;
         try {
@@ -245,7 +249,11 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Could not get BackendRegistry instance.", e);
-            System.exit(Constants.EXIT_ERROR);
+            exitStatus.setExitStatus(ExitStatus.EXIT_ERROR);
+            shutdown();
+            // Since this would throw NPE's down the line if we continue in this
+            // method, let's fail right and early :)
+            throw new RuntimeException(e);
         }
 
         final Agent agent = new Agent(backendRegistry, configuration, storage, agentInfoDAO, backendInfoDAO);
@@ -259,7 +267,8 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
             logger.log(Level.SEVERE,
                     "Agent could not start, probably because a configured backend could not be activated.",
                     le);
-            System.exit(Constants.EXIT_ERROR);
+            exitStatus.setExitStatus(ExitStatus.EXIT_ERROR);
+            shutdown();
         }
         logger.fine("Agent started.");
 
@@ -267,7 +276,7 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
         logger.info("agent started.");
         return agent;
     }
-
+    
     private void handleConnected(final ConfigurationServer configServer,
             final Logger logger, final CountDownLatch shutdownLatch) {
         Class<?>[] deps = new Class<?>[] {

@@ -71,10 +71,6 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     private BundleContext context;
     private Launcher launcher;
 
-    public ServiceCommand() {
-        this(FrameworkUtil.getBundle(ServiceCommand.class).getBundleContext());
-    }
-
     public ServiceCommand(BundleContext context) {
         this.context = context;
         listeners = new ArrayList<>();

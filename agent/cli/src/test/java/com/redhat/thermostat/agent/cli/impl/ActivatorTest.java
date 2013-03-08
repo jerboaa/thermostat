@@ -43,29 +43,19 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
+import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({FrameworkUtil.class})
 public class ActivatorTest {
 
     @Test
-    public void verifyActivatorRegistersCommands() throws Exception {
-
-        PowerMockito.mockStatic(FrameworkUtil.class);
-        Bundle mockBundle = mock(Bundle.class);
-        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(mockBundle);
-        
+    public void verifyActivatorRegistersCommands() throws Exception {        
         StubBundleContext bundleContext = new StubBundleContext();
+        ExitStatus exitStatus = mock(ExitStatus.class);
+        bundleContext.registerService(ExitStatus.class, exitStatus, null);
         
         Activator activator = new Activator();
 
@@ -77,7 +67,7 @@ public class ActivatorTest {
 
         activator.stop(bundleContext);
 
-        assertEquals(0, bundleContext.getAllServices().size());
+        assertEquals(1, bundleContext.getAllServices().size());
     }
 }
 

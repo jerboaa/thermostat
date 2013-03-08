@@ -14,7 +14,12 @@ public class ExitStatusImpl implements ExitStatus {
         this.exitStatus = initialExitStatus;
     }
     
-    public synchronized void setExitStatus(int newExitStatus) {
+    public synchronized void setExitStatus(int newExitStatus)
+            throws IllegalArgumentException {
+        if (newExitStatus < 0 || newExitStatus > 255) {
+            throw new IllegalArgumentException(
+                    "Status (" + newExitStatus + ") out ouf range. 0 <= status <= 255.");
+        }
         this.exitStatus = newExitStatus;
     }
     

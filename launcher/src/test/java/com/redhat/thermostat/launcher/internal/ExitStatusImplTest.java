@@ -33,43 +33,46 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.common;
 
-import com.redhat.thermostat.annotations.Service;
+package com.redhat.thermostat.launcher.internal;
 
-/**
- * Service which can be used for certain commands to set the exit status on
- * JVM termination. If the status is set multiple times, the last thread which
- * calls {@link #setExitStatus(int)} wins.
- * 
- */
-@Service
-public interface ExitStatus {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-    /**
-     * JVM exit status indicating successful termination.
-     */
-    public static final int EXIT_SUCCESS = 0;
+import org.junit.Test;
+
+import com.redhat.thermostat.common.ExitStatus;
+
+public class ExitStatusImplTest {
+
+    @Test
+    public void initialValue() {
+        ExitStatus status = new ExitStatusImpl(0);
+        assertEquals(0, status.getExitStatus());
+    }
     
-    /**
-     * JVM exit status indicating a generic error.
-     */
-    public static final int EXIT_ERROR = 1;
-
-    /**
-     * Sets the exit status, which will be used as status when the JVM
-     * terminates.
-     * 
-     * @param newExitStatus
-     * @throws IllegalArgumentException
-     *             If newExitStatus < 0 or newExitStatus > 255
-     */
-    void setExitStatus(int newExitStatus) throws IllegalArgumentException;
-    
-    /**
-     * Get the currently set exit status.
-     * 
-     * @return The exit status which should be used on JVM shutdown.
-     */
-    int getExitStatus();
+    @Test
+    public void valueOutOfRange() {
+        ExitStatus status = new ExitStatusImpl(0);
+        try {
+            status.setExitStatus(-1);
+            fail("should have thrown IllegalArgumentExcpt");
+        } catch (IllegalArgumentException e) {
+            // pass
+            assertEquals(0, status.getExitStatus());
+        }
+        try {
+            status.setExitStatus(256);
+            fail("should have thrown exptn");
+        } catch (IllegalArgumentException e) {
+            // pass
+            assertEquals(0, status.getExitStatus());
+        }
+        try {
+            status.setExitStatus(150);
+            assertEquals(150, status.getExitStatus());
+        } catch (IllegalArgumentException e) {
+            fail();
+        }
+    }
 }

@@ -55,12 +55,9 @@ import junit.framework.Assert;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
-import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.ExitStatus;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
@@ -68,7 +65,6 @@ import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.tools.ApplicationException;
 import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class StorageCommandTest {
     
@@ -77,11 +73,11 @@ public class StorageCommandTest {
     private static final String DB = "storage/db";
 
     private String tmpDir;
-    private BundleContext context;
+    private ExitStatus exitStatus;
     
     @Before
     public void setup() {
-        context = mock(BundleContext.class);
+        exitStatus = mock(ExitStatus.class);
         // need to create a dummy config file for the test
         try {
             Random random = new Random();
@@ -113,7 +109,7 @@ public class StorageCommandTest {
     
     @After
     public void tearDown() {
-        context = null;
+        exitStatus = null;
     }
     
     @Test
@@ -125,7 +121,7 @@ public class StorageCommandTest {
         CommandContext ctx = mock(CommandContext.class);
         when(ctx.getArguments()).thenReturn(args);
 
-        StorageCommand service = new StorageCommand(context) {
+        StorageCommand service = new StorageCommand(exitStatus) {
             @Override
             MongoProcessRunner createRunner() {
                 throw new AssertionError("dry run should never create an actual runner");
@@ -152,7 +148,7 @@ public class StorageCommandTest {
         // TODO: stop not tested yet, but be sure it's not called from the code
         doThrow(new ApplicationException("mock exception")).when(runner).stopService();
         
-        StorageCommand service = new StorageCommand(context) {
+        StorageCommand service = new StorageCommand(exitStatus) {
             @Override
             MongoProcessRunner createRunner() {
                 return runner;
@@ -233,8 +229,7 @@ public class StorageCommandTest {
     
     @Test
     public void exceptionSetsExitStatusOnFailure() throws Exception {
-        context = new StubBundleContext();
-        ExitStatus exitStatusImpl = new ExitStatus() {
+        this.exitStatus = new ExitStatus() {
             
             private int exitStatus = -1;
             
@@ -248,8 +243,7 @@ public class StorageCommandTest {
                 return exitStatus;
             }
         };
-        context.registerService(ExitStatus.class, exitStatusImpl, null);
-        assertEquals(-1, getExitStatusService(context).getExitStatus());
+        assertEquals(-1, this.exitStatus.getExitStatus());
         StorageCommand command = prepareService(false);
         final CountDownLatch latch = new CountDownLatch(1);
         final boolean[] result = new boolean[1];
@@ -273,13 +267,12 @@ public class StorageCommandTest {
         latch.await();
         // should have failed
         assertTrue(result[0]);
-        assertEquals(Constants.EXIT_ERROR, getExitStatusService(context).getExitStatus());
+        assertEquals(ExitStatus.EXIT_ERROR, this.exitStatus.getExitStatus());
     }
     
     @Test
     public void exitStatusRemainsUntouchedOnSuccess() throws Exception {
-        context = new StubBundleContext();
-        ExitStatus exitStatusImpl = new ExitStatus() {
+        this.exitStatus = new ExitStatus() {
             
             private int exitStatus = -1;
             
@@ -293,8 +286,6 @@ public class StorageCommandTest {
                 return exitStatus;
             }
         };
-        context.registerService(ExitStatus.class, exitStatusImpl, null);
-        assertEquals(-1, getExitStatusService(context).getExitStatus());
         StorageCommand command = prepareService(true);
         final CountDownLatch latch = new CountDownLatch(1);
         final boolean[] result = new boolean[1];
@@ -319,14 +310,7 @@ public class StorageCommandTest {
         // should have worked
         assertTrue(result[0]);
         // this impl of ExitStatus has a default value of -1
-        assertEquals(-1, getExitStatusService(context).getExitStatus());
-    }
-    
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private ExitStatus getExitStatusService(BundleContext context) {
-        ServiceReference ref = context.getServiceReference(ExitStatus.class);
-        ExitStatus exitStatus = (ExitStatus)context.getService(ref);
-        return exitStatus;
+        assertEquals(-1, this.exitStatus.getExitStatus());
     }
 
     private CommandContext prepareContext() {
@@ -340,14 +324,14 @@ public class StorageCommandTest {
 
     @Test
     public void testName() {
-        StorageCommand dbService = new StorageCommand(context);
+        StorageCommand dbService = new StorageCommand(exitStatus);
         String name = dbService.getName();
         assertEquals("storage", name);
     }
 
     @Test
     public void testDescAndUsage() {
-        StorageCommand dbService = new StorageCommand(context);
+        StorageCommand dbService = new StorageCommand(exitStatus);
         assertNotNull(dbService.getDescription());
         assertNotNull(dbService.getUsage());
     }

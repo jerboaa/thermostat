@@ -42,9 +42,6 @@ package com.redhat.thermostat.common;
  */
 public class Constants {
 
-    public static final int EXIT_ERROR = 1;
-    public static final int EXIT_SUCCESS = 0;
-
     public static final String GENERIC_SERVICE_CLASSNAME = "GenericClassName";
 
 }
