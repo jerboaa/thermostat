@@ -14,3 +14,5 @@ bin/*
 nbactions*.xml
 nb-configuration.xml
 *.versionsBackup
+*.iml
+.idea/*
