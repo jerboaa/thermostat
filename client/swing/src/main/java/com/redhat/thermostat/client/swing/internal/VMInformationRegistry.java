@@ -48,7 +48,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 class VMInformationRegistry extends ThermostatExtensionRegistry<InformationService> {
 
     private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
-            InformationService.class.getName() + ")&(" +
+            InformationService.class.getName() + ")(" +
             com.redhat.thermostat.common.Constants.GENERIC_SERVICE_CLASSNAME + "=" +
             VmRef.class.getName() + "))";
     

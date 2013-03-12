@@ -47,7 +47,7 @@ import com.redhat.thermostat.storage.core.HostRef;
 class HostFilterRegistry extends ThermostatExtensionRegistry<Filter> {
 
     private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
-            Filter.class.getName() + ")&(" +
+            Filter.class.getName() + ")(" +
             com.redhat.thermostat.common.Constants.GENERIC_SERVICE_CLASSNAME + "=" +
             HostRef.class.getName() + "))";
 

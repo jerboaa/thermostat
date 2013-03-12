@@ -48,7 +48,7 @@ import com.redhat.thermostat.storage.core.VmRef;
 class VMTreeDecoratorRegistry extends ThermostatExtensionRegistry<DecoratorProvider> {
 
     private static final String FILTER = "(&(" + Constants.OBJECTCLASS + "=" +
-            DecoratorProvider.class.getName() + ")&(" +
+            DecoratorProvider.class.getName() + ")(" +
             com.redhat.thermostat.common.Constants.GENERIC_SERVICE_CLASSNAME + "=" +
             VmRef.class.getName() + "))";
 
