@@ -33,13 +33,12 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.client.swing.internal;
+package com.redhat.thermostat.client.osgi.service;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 
-import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.common.ThermostatExtensionRegistry;
 
 public class MenuRegistry extends ThermostatExtensionRegistry<MenuAction> {
