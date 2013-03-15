@@ -89,21 +89,22 @@ public class LauncherImpl implements Launcher {
     private int usageCount = 0;
     private final Semaphore argsBarrier = new Semaphore(0);
 
-    private BundleContext context;
-    private BundleManager registry;
+    private final BundleContext context;
+    private final BundleManager registry;
     private final DbServiceFactory dbServiceFactory;
+    private final Version coreVersion;
 
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry) {
-        this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory());
+        this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory(), new Version());
     }
 
     LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry,
-            LoggingInitializer loggingInitializer, DbServiceFactory dbServiceFactory) {
+            LoggingInitializer loggingInitializer, DbServiceFactory dbServiceFactory, Version version) {
         this.context = context;
         this.cmdCtxFactory = cmdCtxFactory;
         this.registry = registry;
         this.dbServiceFactory = dbServiceFactory;
-
+        this.coreVersion = version;
         loggingInitializer.initialize();
     }
 
@@ -124,7 +125,6 @@ public class LauncherImpl implements Launcher {
             } else if (isVersionQuery(inShell)) {
                 // We want to print the version of core
                 // thermostat, so we use the no-arg constructor of Version
-                Version coreVersion = new Version();
                 cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
             } else {
                 runCommandFromArguments(listeners, inShell);

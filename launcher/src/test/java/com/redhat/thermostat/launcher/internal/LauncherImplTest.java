@@ -48,7 +48,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.security.Permission;
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -58,27 +57,18 @@ import java.util.logging.Logger;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.osgi.framework.BundleException;
-import org.osgi.framework.FrameworkUtil;
-import org.osgi.framework.ServiceReference;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.ActionNotifier;
-import com.redhat.thermostat.common.ApplicationInfo;
 import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.common.Version;
@@ -91,8 +81,6 @@ import com.redhat.thermostat.common.cli.CommandInfo;
 import com.redhat.thermostat.common.cli.CommandInfoNotFoundException;
 import com.redhat.thermostat.common.cli.CommandInfoSource;
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.locale.LocaleResources;
-import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.launcher.TestCommand;
@@ -102,15 +90,12 @@ import com.redhat.thermostat.launcher.internal.LauncherImpl;
 import com.redhat.thermostat.launcher.internal.LauncherImpl.LoggingInitializer;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
-import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.test.TestCommandContextFactory;
 import com.redhat.thermostat.test.TestTimerFactory;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.utils.keyring.Keyring;
 import com.redhat.thermostat.utils.keyring.KeyringProvider;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({FrameworkUtil.class, HelpCommand.class})
 public class LauncherImplTest {
     
     private static String defaultKeyringProvider;
@@ -160,13 +145,13 @@ public class LauncherImplTest {
     private Bundle sysBundle;
     private TestTimerFactory timerFactory;
     private BundleManager registry;
+    private Version version;
     private LoggingInitializer loggingInitializer;
     private DbServiceFactory dbServiceFactory;
     private CommandInfoSource infos;
     private ActionNotifier<ApplicationState> notifier;
 
     private LauncherImpl launcher;
-    private Storage storage;
 
     @Before
     public void setUp() throws CommandInfoNotFoundException, BundleException, IOException {
@@ -254,7 +239,7 @@ public class LauncherImplTest {
         helpCommand.setCommandInfoSource(infos);
 
         registry = mock(BundleManager.class);
-        doAnswer(new Answer() {
+        doAnswer(new Answer<Void>() {
             @Override
             public Void answer(InvocationOnMock invocation) throws Throwable {
                 // simulate the real BundleManager which tries to find a CommandInfo
@@ -263,17 +248,6 @@ public class LauncherImplTest {
                 return null;
             }
         }).when(registry).addBundlesFor(anyString());
-
-        PowerMockito.mockStatic(FrameworkUtil.class);
-
-        storage = mock(Storage.class);
-        ServiceReference storageRef = mock(ServiceReference.class);
-        Bundle launcherBundle = mock(Bundle.class);
-        BundleContext launcherBundleCtx = mock(BundleContext.class);
-        when(launcherBundleCtx.getServiceReference(Storage.class)).thenReturn(storageRef);
-        when(launcherBundleCtx.getService(storageRef)).thenReturn(storage);
-        when(launcherBundle.getBundleContext()).thenReturn(launcherBundleCtx);
-        when(FrameworkUtil.getBundle(LauncherImpl.class)).thenReturn(launcherBundle);
 
         timerFactory = new TestTimerFactory();
         ExecutorService exec = mock(ExecutorService.class);
@@ -284,8 +258,9 @@ public class LauncherImplTest {
 
         loggingInitializer = mock(LoggingInitializer.class);
         dbServiceFactory = mock(DbServiceFactory.class);
+        version = mock(Version.class);
 
-        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, loggingInitializer, dbServiceFactory);
+        launcher = new LauncherImpl(bundleContext, ctxFactory, registry, loggingInitializer, dbServiceFactory, version);
 
         Keyring keyring = mock(Keyring.class);
         launcher.setPreferences(new ClientPreferences(keyring));
@@ -296,13 +271,6 @@ public class LauncherImplTest {
         bundleContext = new StubBundleContext();
         bundleContext.setBundle(0, sysBundle);
         ctxFactory = new TestCommandContextFactory(bundleContext);
-    }
-
-
-    @After
-    public void tearDown() {
-        ctxFactory = null;
-        bundleContext = null;
     }
 
     @Test
@@ -515,29 +483,12 @@ public class LauncherImplTest {
 
     @Test
     public void verifyVersionInfoQuery() {
-        int major = 0;
-        int minor = 3;
-        int micro = 0;
-        
-        ApplicationInfo appInfo = new ApplicationInfo();
-        Translate<LocaleResources> t = LocaleResources.createLocalizer();
-        String format = MessageFormat.format(
-                t.localize(LocaleResources.APPLICATION_VERSION_INFO),
-                appInfo.getName())
-                + " " + Version.VERSION_NUMBER_FORMAT;
-        
-        String expectedVersionInfo = String.format(format,
-                major, minor, micro) + "\n";
-        
-        String qualifier = "201207241700";
+        String versionString = "foo bar baz";
 
-        org.osgi.framework.Version ver = org.osgi.framework.Version
-                .parseVersion(String.format(Version.VERSION_NUMBER_FORMAT,
-                        major, minor, micro) + "." + qualifier);
-        when(sysBundle.getVersion()).thenReturn(ver);
-        
-        PowerMockito.mockStatic(FrameworkUtil.class);
-        when(FrameworkUtil.getBundle(Version.class)).thenReturn(sysBundle);
+        String expectedVersionInfo = versionString + "\n";
+
+        when(version.getVersionInfo()).thenReturn(versionString);
+
         launcher.setArgs(new String[] {Version.VERSION_OPTION});
         wrappedRun(launcher, false);
 
