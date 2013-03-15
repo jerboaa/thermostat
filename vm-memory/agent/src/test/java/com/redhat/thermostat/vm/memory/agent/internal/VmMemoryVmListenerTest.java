@@ -37,7 +37,6 @@
 package com.redhat.thermostat.vm.memory.agent.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -48,11 +47,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import sun.jvmstat.monitor.Monitor;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.event.VmEvent;
-
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
@@ -84,14 +80,12 @@ public class VmMemoryVmListenerTest {
     private VmMemoryVmListener vmListener;
     private VmMemoryDataExtractor extractor;
     private VmMemoryStatDAO vmMemoryStatDAO;
-    private MonitoredVm monitoredVm;
     
     @Before
-    public void setup() throws MonitorException {
+    public void setup() throws VmUpdateException {
         final int numGens = 2;
         vmMemoryStatDAO = mock(VmMemoryStatDAO.class);
         vmListener = new VmMemoryVmListener(vmMemoryStatDAO, 0);
-        monitoredVm = mock(MonitoredVm.class);
         extractor = mock(VmMemoryDataExtractor.class);
 
         mockTotalGenerations(numGens);
@@ -112,69 +106,50 @@ public class VmMemoryVmListenerTest {
         }
     }
 
-    private void mockTotalGenerations(long gens) throws MonitorException {
+    private void mockTotalGenerations(long gens) throws VmUpdateException {
         when(extractor.getTotalGcGenerations()).thenReturn(gens);
     }
 
-    private void mockGenerationName(int gen) throws MonitorException {
+    private void mockGenerationName(int gen) throws VmUpdateException {
         when(extractor.getGenerationName(gen)).thenReturn(GEN_NAMES[gen]);
     }
     
-    private void mockGenerationCapacity(int gen) throws MonitorException {
+    private void mockGenerationCapacity(int gen) throws VmUpdateException {
         when(extractor.getGenerationCapacity(gen)).thenReturn(GEN_CAPS[gen]);
     }
 
-    private void mockGenerationMaxCapacity(int gen) throws MonitorException {
+    private void mockGenerationMaxCapacity(int gen) throws VmUpdateException {
         when(extractor.getGenerationMaxCapacity(gen)).thenReturn(GEN_MAX_CAPS[gen]);
     }
     
-    private void mockGenerationGC(int gen) throws MonitorException {
+    private void mockGenerationGC(int gen) throws VmUpdateException {
         when(extractor.getGenerationCollector(gen)).thenReturn(GEN_GCS[gen]);
     }
     
-    private void mockTotalSpaces(int gen) throws MonitorException {
+    private void mockTotalSpaces(int gen) throws VmUpdateException {
         when(extractor.getTotalSpaces(gen)).thenReturn(GEN_SPACES[gen]);
     }
     
-    private void mockSpaceName(int gen, int space) throws MonitorException {
+    private void mockSpaceName(int gen, int space) throws VmUpdateException {
         when(extractor.getSpaceName(gen, space)).thenReturn(SPACE_NAME[gen][space]);
     }
     
-    private void mockSpaceCapacity(int gen, int space) throws MonitorException {
+    private void mockSpaceCapacity(int gen, int space) throws VmUpdateException {
         when(extractor.getSpaceCapacity(gen, space)).thenReturn(SPACE_CAPS[gen][space]);
     }
     
-    private void mockSpaceMaxCapacity(int gen, int space) throws MonitorException {
+    private void mockSpaceMaxCapacity(int gen, int space) throws VmUpdateException {
         when(extractor.getSpaceMaxCapacity(gen, space)).thenReturn(SPACE_MAX_CAPS[gen][space]);
     }
     
-    private void mockSpaceUsed(int gen, int space) throws MonitorException {
+    private void mockSpaceUsed(int gen, int space) throws VmUpdateException {
         when(extractor.getSpaceUsed(gen, space)).thenReturn(SPACE_USED[gen][space]);
     }
 
     @Test
-    public void testDisconnectedIsNoOp() {
-        vmListener.disconnected(null);
-
-        verifyNoMoreInteractions(vmMemoryStatDAO, extractor);
-    }
-
-    @Test
-    public void testMonitorStatusChangeIsNoOp() {
-        vmListener.monitorStatusChanged(null);
-
-        verifyNoMoreInteractions(vmMemoryStatDAO, extractor);
-    }
-
-    @Test
-    public void testMonitorsUpdated() throws MonitorException {
-        Monitor monitor = mock(Monitor.class);
-        when(monitor.getValue()).thenReturn(Long.valueOf(0));
-        when(monitoredVm.findByName(anyString())).thenReturn(monitor);
-        VmEvent monitorUpdateEvent = mock(VmEvent.class);
-        when(monitorUpdateEvent.getMonitoredVm()).thenReturn(monitoredVm);
-
-        vmListener.monitorsUpdated(monitorUpdateEvent);
+    public void testMonitorsUpdated() throws VmUpdateException {
+        VmUpdate update = mock(VmUpdate.class);
+        vmListener.countersUpdated(update);
 
         verify(vmMemoryStatDAO).putVmMemoryStat(isA(VmMemoryStat.class));
     }
@@ -207,8 +182,8 @@ public class VmMemoryVmListenerTest {
     }
 
     @Test
-    public void testRecordingMemoryInPresenseOfExtrationErrors() throws MonitorException {
-        when(extractor.getTotalGcGenerations()).thenThrow(new MonitorException());
+    public void testRecordingMemoryInPresenseOfExtrationErrors() throws VmUpdateException {
+        when(extractor.getTotalGcGenerations()).thenThrow(new VmUpdateException());
         vmListener.recordMemoryStat(extractor);
 
         verifyNoMoreInteractions(vmMemoryStatDAO);

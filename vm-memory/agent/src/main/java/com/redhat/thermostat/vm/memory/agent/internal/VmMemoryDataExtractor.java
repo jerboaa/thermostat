@@ -36,10 +36,8 @@
 
 package com.redhat.thermostat.vm.memory.agent.internal;
 
-import sun.jvmstat.monitor.Monitor;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 /**
@@ -62,56 +60,56 @@ public class VmMemoryDataExtractor {
      * http://docs.oracle.com/javase/6/docs/api/java/lang/String.html#intern()
      */
 
-    private final MonitoredVm vm;
+    private final VmUpdate update;
 
-    public VmMemoryDataExtractor(MonitoredVm vm) {
-        this.vm = vm;
+    public VmMemoryDataExtractor(VmUpdate update) {
+        this.update = update;
     }
     
-    public long getTotalGcGenerations() throws MonitorException {
-        return (Long) vm.findByName("sun.gc.policy.generations").getValue();
+    public long getTotalGcGenerations() throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.policy.generations");
     }
 
-    public String getGenerationName(long generation) throws MonitorException {
-        return (String) vm.findByName("sun.gc.generation." + generation + ".name").getValue();
+    public String getGenerationName(long generation) throws VmUpdateException {
+        return update.getPerformanceCounterString("sun.gc.generation." + generation + ".name");
     }
 
-    public long getGenerationCapacity(long generation) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".capacity").getValue();
+    public long getGenerationCapacity(long generation) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".capacity");
     }
 
-    public long getGenerationMaxCapacity(long generation) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".maxCapacity").getValue();
+    public long getGenerationMaxCapacity(long generation) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".maxCapacity");
     }
 
-    public String getGenerationCollector(long generation) throws MonitorException {
+    public String getGenerationCollector(long generation) throws VmUpdateException {
         // this is just re-implementing getCollectorName()
         // TODO check generation number and collector number are always associated
-        Monitor m = vm.findByName("sun.gc.collector." + generation + ".name");
-        if (m == null) {
-            return Generation.COLLECTOR_NONE;
+        String collector = update.getPerformanceCounterString("sun.gc.collector." + generation + ".name");
+        if (collector == null) {
+            collector = Generation.COLLECTOR_NONE;
         }
-        return (String) m.getValue();
+        return collector;
     }
 
-    public long getTotalSpaces(long generation) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".spaces").getValue();
+    public long getTotalSpaces(long generation) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".spaces");
     }
 
-    public String getSpaceName(long generation, long space) throws MonitorException {
-        return (String) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".name").getValue();
+    public String getSpaceName(long generation, long space) throws VmUpdateException {
+        return update.getPerformanceCounterString("sun.gc.generation." + generation + ".space." + space + ".name");
     }
 
-    public long getSpaceCapacity(long generation, long space) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".capacity").getValue();
+    public long getSpaceCapacity(long generation, long space) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".space." + space + ".capacity");
     }
 
-    public long getSpaceMaxCapacity(long generation, long space) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".maxCapacity").getValue();
+    public long getSpaceMaxCapacity(long generation, long space) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".space." + space + ".maxCapacity");
     }
 
-    public long getSpaceUsed(long generation, long space) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.generation." + generation + ".space." + space + ".used").getValue();
+    public long getSpaceUsed(long generation, long space) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.generation." + generation + ".space." + space + ".used");
     }
 
 }

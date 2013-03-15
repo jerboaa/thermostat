@@ -40,12 +40,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.net.URISyntaxException;
-
 import org.junit.Before;
 import org.junit.Test;
-
-import sun.jvmstat.monitor.MonitorException;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.common.Ordered;
@@ -57,7 +53,7 @@ public class VmGcBackendTest {
     private VmGcBackend backend;
 
     @Before
-    public void setup() throws MonitorException, URISyntaxException {
+    public void setup() {
         VmGcStatDAO vmGcStatDao = mock(VmGcStatDAO.class);
 
         Version version = mock(Version.class);

@@ -34,41 +34,42 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.agent.internal;
+package com.redhat.thermostat.backend;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+/**
+ * Exception class indicating that a problem occurred accessing
+ * a monitored JVM's performance counters.
+ */
+public class VmUpdateException extends Exception {
 
-import org.junit.Before;
-import org.junit.Test;
+    private static final long serialVersionUID = 7644805109896007513L;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
-
-public class VmClassStatBackendTest {
+    /**
+     * Constructs a VmUpdateException with no message.
+     */
+    public VmUpdateException() {
+        super();
+    }
     
-    private VmClassStatBackend backend;
-
-    @Before
-    public void setup() {
-        VmClassStatDAO vmClassStatDao = mock(VmClassStatDAO.class);
-        
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
-        
-        VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-
-        backend = new VmClassStatBackend(vmClassStatDao, version, registrar);
+    /**
+     * Constructs a VmUpdateException with an error message.
+     */
+    public VmUpdateException(String msg) {
+        super(msg);
+    }
+    
+    /**
+     * Constructs a VmUpdateException with a cause.
+     */
+    public VmUpdateException(Throwable cause) {
+        super(cause);
+    }
+    
+    /**
+     * Constructs a VmUpdateException with an error message and cause.
+     */
+    public VmUpdateException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
-    }
 }
-

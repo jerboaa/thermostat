@@ -36,27 +36,18 @@
 
 package com.redhat.thermostat.backend;
 
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import sun.jvmstat.monitor.HostIdentifier;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredHost;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.VmIdentifier;
-import sun.jvmstat.monitor.event.VmListener;
-
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Pair;
+import com.redhat.thermostat.backend.internal.BackendException;
+import com.redhat.thermostat.backend.internal.VmMonitor;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
  * This class is a convenient subclass of {@link Backend} (via {@link BaseBackend}) for those
- * that need to attach {@link VmListener} in response to starting and stopping of JVMs on a
+ * that need to attach {@link VmUpdateListener} in response to starting and stopping of JVMs on a
  * host.
  * 
  * @see VmStatusListener
@@ -66,10 +57,9 @@ import com.redhat.thermostat.common.utils.LoggingUtils;
 public abstract class VmListenerBackend extends BaseBackend implements VmStatusListener {
     
     private static final Logger logger = LoggingUtils.getLogger(VmListenerBackend.class);
-
-    private MonitoredHost host;
-    private Map<Integer, Pair<MonitoredVm, ? extends VmListener>> pidToData = new HashMap<>();
+    
     private final VmStatusListenerRegistrar registrar;
+    private VmMonitor monitor;
     private boolean started;
 
     public VmListenerBackend(String backendName, String description,
@@ -80,14 +70,10 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
             String vendor, String version, boolean observeNewJvm, VmStatusListenerRegistrar registrar) {
         super(backendName, description, vendor, version, observeNewJvm);
         this.registrar = registrar;
-
         try {
-            HostIdentifier hostId = new HostIdentifier((String) null);
-            host = MonitoredHost.getMonitoredHost(hostId);
-        } catch (MonitorException me) {
-            logger.log(Level.WARNING, "Problems with connecting jvmstat to local machine", me);
-        } catch (URISyntaxException use) {
-            logger.log(Level.WARNING, "Failed to create host identifier", use);
+            this.monitor = new VmMonitor();
+        } catch (BackendException e) {
+            logger.log(Level.SEVERE, "Unable to create backend", e);
         }
     }
     
@@ -95,13 +81,13 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      * {@inheritDoc}
      * 
      * <p>
-     * Registers a VmListener to begin receiving VM lifecycle events.
+     * Registers a VmUpdateListener to begin receiving VM lifecycle events.
      * Subclasses should call <code>super.activate()</code> when overriding this method.
      * </p>
      */
     @Override
     public boolean activate() {
-        if (!started && host != null) {
+        if (!started && monitor != null) {
             registrar.register(this);
             started = true;
         }
@@ -112,15 +98,15 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
      * {@inheritDoc}
      * 
      * <p>
-     * Unregisters the VmListener to stop receiving VM lifecycle events.
+     * Unregisters the VmUpdateListener to stop receiving VM lifecycle events.
      * Subclasses should call <code>super.deactivate()</code> when overriding this method.
      * </p>
      */
     @Override
     public boolean deactivate() {
-        if (started) {
+        if (started && monitor != null) {
             registrar.unregister(this);
-            removeVmListeners();
+            monitor.removeVmListeners();
             started = false;
         }
         return !started;
@@ -136,84 +122,35 @@ public abstract class VmListenerBackend extends BaseBackend implements VmStatusL
         case VM_STARTED:
             /* fall-through */
         case VM_ACTIVE:
-            handleNewVm(pid);
+            if (getObserveNewJvm()) {
+                VmUpdateListener listener = createVmListener(pid);
+                monitor.handleNewVm(listener, pid);
+            } else {
+                logger.log(Level.FINE, "skipping new vm " + pid);
+            }
             break;
         case VM_STOPPED:
-            handleStoppedVm(pid);
+            monitor.handleStoppedVm(pid);
             break;
         default:
             break;
         }
     }
 
-    private void handleNewVm(int pid) {
-        if (getObserveNewJvm()) {
-            try {
-                MonitoredVm vm = host.getMonitoredVm(host.getHostIdentifier().resolve(new VmIdentifier(String.valueOf(pid))));
-                VmListener listener = createVmListener(pid);
-                vm.addVmListener(listener);
-    
-                pidToData.put(pid, new Pair<>(vm, listener));
-                logger.finer("Attached VmListener for VM: " + pid);
-            } catch (MonitorException | URISyntaxException e) {
-                logger.log(Level.WARNING, "unable to attach to vm " + pid, e);
-            }
-        } else {
-            logger.log(Level.FINE, "skipping new vm " + pid);
-        }
-    }
-
-    private void handleStoppedVm(int pid) {
-        Pair<MonitoredVm, ? extends VmListener> data = pidToData.remove(pid);
-        // we were not monitoring pid at all, so nothing to do
-        if (data == null) {
-            return;
-        }
-    
-        MonitoredVm vm = data.getFirst();
-        VmListener listener = data.getSecond();
-        try {
-            vm.removeVmListener(listener);
-        } catch (MonitorException e) {
-            logger.log(Level.WARNING, "can't remove vm listener", e);
-        }
-        vm.detach();
-    }
-
-    private void removeVmListeners() {
-        for (Pair<MonitoredVm, ? extends VmListener> data : pidToData.values()) {
-            MonitoredVm vm = data.getFirst();
-            VmListener listener = data.getSecond();
-            try {
-                vm.removeVmListener(listener);
-            } catch (MonitorException e) {
-                logger.log(Level.WARNING, "can't remove vm listener", e);
-            }
-        }
-    }
-    
     /**
-     * Creates a new {@link VmListener} for the virtual machine
+     * Creates a new {@link VmUpdateListener} for the virtual machine
      * specified by the pid. This method is called when a new
      * JVM is started or for JVMs already active when this Backend
      * was activated.
      * @param pid the process ID of the JVM
-     * @return a new VmListener for the VM specified by pid
+     * @return a new listener for the VM specified by pid
      */
-    protected abstract VmListener createVmListener(int pid);
+    protected abstract VmUpdateListener createVmListener(int pid);
     
     /*
      * For testing purposes only.
      */
-    void setHost(MonitoredHost host) {
-        this.host = host;
+    void setMonitor(VmMonitor monitor) {
+        this.monitor = monitor;
     }
-    
-    /*
-     * For testing purposes only.
-     */
-    Map<Integer, Pair<MonitoredVm, ? extends VmListener>> getPidToDataMap() {
-        return pidToData;
-    }
-
 }

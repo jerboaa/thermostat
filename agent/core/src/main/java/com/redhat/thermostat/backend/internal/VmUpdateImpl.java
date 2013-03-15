@@ -34,41 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.agent.internal;
+package com.redhat.thermostat.backend.internal;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import sun.jvmstat.monitor.Monitor;
 
-import org.junit.Before;
-import org.junit.Test;
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 
-public class VmClassStatBackendTest {
+public class VmUpdateImpl implements VmUpdate {
     
-    private VmClassStatBackend backend;
+    private VmListenerWrapper wrapper;
 
-    @Before
-    public void setup() {
-        VmClassStatDAO vmClassStatDao = mock(VmClassStatDAO.class);
-        
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
-        
-        VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-
-        backend = new VmClassStatBackend(vmClassStatDao, version, registrar);
+    VmUpdateImpl(VmListenerWrapper wrapper) {
+        this.wrapper = wrapper;
+    }
+    
+    @Override
+    public Long getPerformanceCounterLong(String name) throws VmUpdateException {
+        return (Long) getPerformanceCounter(name);
     }
 
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
+    @Override
+    public String getPerformanceCounterString(String name)
+            throws VmUpdateException {
+        return (String) getPerformanceCounter(name);
     }
+    
+    private Object getPerformanceCounter(String name) throws VmUpdateException {
+        Object result = null;
+        Monitor monitor = wrapper.getMonitor(name);
+        if (monitor != null) {
+            result = monitor.getValue();
+        }
+        return result;
+    }
+
+    /*
+     * For testing purposes only.
+     */
+    VmListenerWrapper getWrapper() {
+        return wrapper;
+    }
+
 }
-

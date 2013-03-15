@@ -38,61 +38,37 @@ package com.redhat.thermostat.backend;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.isA;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import java.net.URISyntaxException;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 
-import sun.jvmstat.monitor.HostIdentifier;
 import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredHost;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.VmIdentifier;
-import sun.jvmstat.monitor.event.VmListener;
 
 import com.redhat.thermostat.agent.VmStatusListener.Status;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
+import com.redhat.thermostat.backend.internal.VmMonitor;
 
 public class VmListenerBackendTest {
     
     private VmListenerBackend backend;
-    private HostIdentifier hostIdentifier;
-    private MonitoredHost host;
-    private MonitoredVm monitoredVm;
-    private VmListener listener;
     private VmStatusListenerRegistrar registrar;
+    private VmMonitor monitor;
+    private VmUpdateListener listener;
 
     @Before
-    public void setup() throws URISyntaxException, MonitorException {
+    public void setup() {
         registrar = mock(VmStatusListenerRegistrar.class);
-        listener = mock(VmListener.class);
-        
-        hostIdentifier = mock(HostIdentifier.class);
-        when(hostIdentifier.resolve(isA(VmIdentifier.class))).then(new Answer<VmIdentifier>() {
-            @Override
-            public VmIdentifier answer(InvocationOnMock invocation) throws Throwable {
-                return (VmIdentifier) invocation.getArguments()[0];
-            }
-        });
-        host = mock(MonitoredHost.class);
-        when(host.getHostIdentifier()).thenReturn(hostIdentifier);
-        
-        monitoredVm = mock(MonitoredVm.class);
-        
         backend = new TestBackend("Test Backend", "Backend for test", "Test Co.",
                 "0.0.0", registrar);
-        backend.setHost(host);
+        monitor = mock(VmMonitor.class);
+        listener = mock(VmUpdateListener.class);
+        backend.setMonitor(monitor);
     }
     
     @Test
@@ -112,8 +88,8 @@ public class VmListenerBackendTest {
     }
 
     @Test
-    public void testCanNotActivateWithoutMonitoredHost() {
-        backend.setHost(null);
+    public void testCanNotActivateWithoutMonitor() {
+        backend.setMonitor(null);
 
         assertFalse(backend.activate());
         assertFalse(backend.isActive());
@@ -137,94 +113,49 @@ public class VmListenerBackendTest {
     }
     
     @Test
-    public void testNewVM() throws MonitorException, URISyntaxException {
+    public void testNewVM() {
         final int VM_PID = 1;
-        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
-        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
 
         // Should be no response if not observing new jvm.
         backend.setObserveNewJvm(false);
-        backend.vmStatusChanged(Status.VM_STARTED, 1);
-        verify(monitoredVm, times(0)).addVmListener(any(VmListener.class));
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+        verify(monitor, times(0)).handleNewVm(same(listener), same(VM_PID));
 
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_STARTED, 1);
-        verify(monitoredVm).addVmListener(listener);
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+        verify(monitor).handleNewVm(listener, VM_PID);
     }
 
     @Test
-    public void testAlreadyRunningVM() throws MonitorException, URISyntaxException {
+    public void testAlreadyRunningVM() {
         final int VM_PID = 1;
-        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
-        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
 
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_ACTIVE, 1);
+        backend.vmStatusChanged(Status.VM_ACTIVE, VM_PID);
 
-        verify(monitoredVm).addVmListener(listener);
-    }
-
-    @Test
-    public void testStatVMGetMonitoredVmFails() throws MonitorException {
-        MonitorException monitorException = new MonitorException();
-        when(host.getMonitoredVm(isA(VmIdentifier.class))).thenThrow(monitorException);
-
-        backend.vmStatusChanged(Status.VM_STARTED, 1);
-
-        assertFalse(backend.getPidToDataMap().containsKey(1));
+        verify(monitor).handleNewVm(listener, VM_PID);
     }
 
     @Test
     public void testStoppedVM() throws MonitorException, URISyntaxException {
         final int VM_PID = 1;
-        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
-        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
 
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_STARTED, 1);
-        backend.vmStatusChanged(Status.VM_STOPPED, 1);
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
+        backend.vmStatusChanged(Status.VM_STOPPED, VM_PID);
 
-        verify(monitoredVm).removeVmListener(listener);
+        verify(monitor).handleStoppedVm(VM_PID);
     }
 
-    @Test
-    public void testUnknownVMStopped() throws URISyntaxException, MonitorException {
-        final int VM_PID = 1;
-        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
-        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
-
-        backend.vmStatusChanged(Status.VM_STOPPED, 1);
-
-        verifyNoMoreInteractions(monitoredVm);
-    }
-
-    @Test
-    public void testErrorRemovingVmListener() throws URISyntaxException, MonitorException {
-        final int VM_PID = 1;
-        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
-        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
-        MonitorException monitorException = new MonitorException();
-        doThrow(monitorException).when(monitoredVm).removeVmListener(listener);
-
-        backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_STARTED, 1);
-        backend.vmStatusChanged(Status.VM_STOPPED, 1);
-
-        verify(monitoredVm).detach();
-    }
-    
     @Test
     public void testDeactivateUnregistersListener() throws URISyntaxException, MonitorException {
         final int VM_PID = 1;
         backend.activate();
         
-        VmIdentifier VM_ID = new VmIdentifier(String.valueOf(VM_PID));
-        when(host.getMonitoredVm(VM_ID)).thenReturn(monitoredVm);
-
         backend.setObserveNewJvm(true);
-        backend.vmStatusChanged(Status.VM_STARTED, 1);
+        backend.vmStatusChanged(Status.VM_STARTED, VM_PID);
         backend.deactivate();
-        verify(monitoredVm).removeVmListener(listener);
+        verify(monitor).removeVmListeners();
     }
     
     private class TestBackend extends VmListenerBackend {
@@ -240,7 +171,7 @@ public class VmListenerBackendTest {
         }
 
         @Override
-        protected VmListener createVmListener(int pid) {
+        protected VmUpdateListener createVmListener(int pid) {
             return listener;
         }
         

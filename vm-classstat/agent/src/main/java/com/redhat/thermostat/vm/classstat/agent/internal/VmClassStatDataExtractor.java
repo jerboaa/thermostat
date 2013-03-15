@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.vm.classstat.agent.internal;
 
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 
 /**
  * A helper class to provide type-safe access to commonly used jvmstat monitors
@@ -59,14 +59,14 @@ public class VmClassStatDataExtractor {
      * http://docs.oracle.com/javase/6/docs/api/java/lang/String.html#intern()
      */
 
-    private final MonitoredVm vm;
+    private final VmUpdate update;
 
-    public VmClassStatDataExtractor(MonitoredVm vm) {
-        this.vm = vm;
+    public VmClassStatDataExtractor(VmUpdate update) {
+        this.update = update;
     }
 
-    public long getLoadedClasses() throws MonitorException {
-        return (Long) vm.findByName("java.cls.loadedClasses").getValue();
+    public long getLoadedClasses() throws VmUpdateException {
+        return update.getPerformanceCounterLong("java.cls.loadedClasses");
     }
 
 }

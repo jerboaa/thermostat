@@ -39,18 +39,15 @@ package com.redhat.thermostat.vm.gc.agent.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
-import sun.jvmstat.monitor.event.VmEvent;
-import sun.jvmstat.monitor.event.VmListener;
-
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
+import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
-public class VmGcVmListener implements VmListener {
-
+public class VmGcVmListener implements VmUpdateListener {
+    
     private static final Logger logger = LoggingUtils.getLogger(VmGcVmListener.class);
 
     private final int vmId;
@@ -62,27 +59,12 @@ public class VmGcVmListener implements VmListener {
     }
 
     @Override
-    public void disconnected(VmEvent event) {
-        /* nothing to do here */
+    public void countersUpdated(VmUpdate update) {
+        VmGcDataExtractor extractor = new VmGcDataExtractor(update);
+        recordGcStat(extractor);
     }
 
-    @Override
-    public void monitorStatusChanged(MonitorStatusChangeEvent event) {
-        /* nothing to do here */
-    }
-
-    @Override
-    public void monitorsUpdated(VmEvent event) {
-        MonitoredVm vm = event.getMonitoredVm();
-        if (vm == null) {
-            throw new NullPointerException();
-        }
-        
-        VmGcDataExtractor extractor = new VmGcDataExtractor(vm);
-        recordGcStat(vm, extractor);
-    }
-
-    void recordGcStat(MonitoredVm vm, VmGcDataExtractor extractor) {
+    void recordGcStat(VmGcDataExtractor extractor) {
         try {
             long collectors = extractor.getTotalCollectors();
             for (int i = 0; i < collectors; i++) {
@@ -93,10 +75,9 @@ public class VmGcVmListener implements VmListener {
                         extractor.getCollectorTime(i));
                 gcDAO.putVmGcStat(stat);
             }
-        } catch (MonitorException e) {
+        } catch (VmUpdateException e) {
             logger.log(Level.WARNING, "error gathering gc info for vm " + vmId, e);
         }
-
     }
 
 }

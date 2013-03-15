@@ -39,36 +39,26 @@ package com.redhat.thermostat.vm.classstat.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
 
-import sun.jvmstat.monitor.LongMonitor;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 
 public class VmClassStatDataExtractorTest {
 
-    private MonitoredVm buildLongMonitoredVm(String monitorName, Long monitorReturn) throws MonitorException {
-        final LongMonitor monitor = mock(LongMonitor.class);
-        when(monitor.longValue()).thenReturn(monitorReturn);
-        when(monitor.getValue()).thenReturn(monitorReturn);
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName(monitorName)).thenReturn(monitor);
-        return vm;
-    }
-
     @Test
-    public void testLoadedClasses() throws MonitorException {
+    public void testLoadedClasses() throws VmUpdateException {
         final String MONITOR_NAME = "java.cls.loadedClasses";
         final Long LOADED_CLASSES = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, LOADED_CLASSES);
+        
+        VmUpdate update = mock(VmUpdate.class);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(LOADED_CLASSES);
 
-        VmClassStatDataExtractor extractor = new VmClassStatDataExtractor(vm);
+        VmClassStatDataExtractor extractor = new VmClassStatDataExtractor(update);
         Long returned = extractor.getLoadedClasses();
-
-        verify(vm).findByName(eq(MONITOR_NAME));
+        
         assertEquals(LOADED_CLASSES, returned);
     }
 

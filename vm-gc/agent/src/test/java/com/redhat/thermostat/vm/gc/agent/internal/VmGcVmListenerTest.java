@@ -48,9 +48,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-
+import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.gc.common.VmGcStatDAO;
 import com.redhat.thermostat.vm.gc.common.model.VmGcStat;
 
@@ -60,17 +58,15 @@ public class VmGcVmListenerTest {
     private static final Long[] GC_TIMES = new Long[] { 5000L, 10000L };
     
     private VmGcVmListener vmListener;
-    private MonitoredVm monitoredVm;
     private VmGcDataExtractor extractor;
     private VmGcStatDAO vmGcStatDAO;
     
     @Before
-    public void setup() throws MonitorException {
+    public void setup() throws VmUpdateException {
         final int numGCs = 2;
         vmGcStatDAO = mock(VmGcStatDAO.class);
         vmListener = new VmGcVmListener(vmGcStatDAO, 0);
         
-        monitoredVm = mock(MonitoredVm.class);
         extractor = mock(VmGcDataExtractor.class);
         
         for (int i = 0; i < numGCs; i++) {
@@ -82,22 +78,22 @@ public class VmGcVmListenerTest {
         when(extractor.getTotalCollectors()).thenReturn((long) GC_NAMES.length);
     }
 
-    private void mockCollectorName(int gc) throws MonitorException {
+    private void mockCollectorName(int gc) throws VmUpdateException {
         when(extractor.getCollectorName(gc)).thenReturn(GC_NAMES[gc]);
     }
     
-    private void mockCollectorInvocations(int gc) throws MonitorException {
+    private void mockCollectorInvocations(int gc) throws VmUpdateException {
         when(extractor.getCollectorInvocations(gc)).thenReturn(GC_INVOCS[gc]);
     }
 
-    private void mockCollectorTime(int gc) throws MonitorException {
+    private void mockCollectorTime(int gc) throws VmUpdateException {
         when(extractor.getCollectorTime(gc)).thenReturn(GC_TIMES[gc]);
     }
     
     @Test
     public void testRecordMemoryStat() {
         final int numCollectors = GC_NAMES.length;
-        vmListener.recordGcStat(monitoredVm, extractor);
+        vmListener.recordGcStat(extractor);
         ArgumentCaptor<VmGcStat> captor = ArgumentCaptor.forClass(VmGcStat.class);
         verify(vmGcStatDAO, times(numCollectors)).putVmGcStat(captor.capture());
         List<VmGcStat> gcStats = captor.getAllValues();

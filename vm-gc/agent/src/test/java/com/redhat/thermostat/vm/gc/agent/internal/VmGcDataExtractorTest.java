@@ -39,85 +39,66 @@ package com.redhat.thermostat.vm.gc.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import sun.jvmstat.monitor.LongMonitor;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.StringMonitor;
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 
 public class VmGcDataExtractorTest {
 
-    private MonitoredVm buildStringMonitoredVm(String monitorName, String monitorReturn) throws MonitorException {
-        final StringMonitor monitor = mock(StringMonitor.class);
-        when(monitor.stringValue()).thenReturn(monitorReturn);
-        when(monitor.getValue()).thenReturn(monitorReturn);
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName(monitorName)).thenReturn(monitor);
-        return vm;
-    }
+    private VmGcDataExtractor extractor;
+    private VmUpdate update;
 
-    private MonitoredVm buildLongMonitoredVm(String monitorName, Long monitorReturn) throws MonitorException {
-        final LongMonitor monitor = mock(LongMonitor.class);
-        when(monitor.longValue()).thenReturn(monitorReturn);
-        when(monitor.getValue()).thenReturn(monitorReturn);
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName(monitorName)).thenReturn(monitor);
-        return vm;
+    @Before
+    public void setup() {
+        update = mock(VmUpdate.class);
+        extractor = new VmGcDataExtractor(update);
     }
-
+    
     @Test
-    public void testTotalCollectors() throws MonitorException {
+    public void testTotalCollectors() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.policy.collectors";
         final Long MONITOR_VALUE = 9l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, MONITOR_VALUE);
 
-        VmGcDataExtractor extractor = new VmGcDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(MONITOR_VALUE);
+        
         Long returned = extractor.getTotalCollectors();
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(MONITOR_VALUE, returned);
     }
 
     @Test
-    public void testCollectorName() throws MonitorException {
+    public void testCollectorName() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.collector.0.name";
         final String COLLECTOR_NAME = "SomeMemoryCollector";
-        MonitoredVm vm = buildStringMonitoredVm(MONITOR_NAME, COLLECTOR_NAME);
 
-        VmGcDataExtractor extractor = new VmGcDataExtractor(vm);
+        when(update.getPerformanceCounterString(eq(MONITOR_NAME))).thenReturn(COLLECTOR_NAME);
+
         String returned = extractor.getCollectorName(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(COLLECTOR_NAME, returned);
     }
 
     @Test
-    public void testCollectorTime() throws MonitorException {
+    public void testCollectorTime() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.collector.0.time";
         final Long COLLECTOR_TIME = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, COLLECTOR_TIME);
 
-        VmGcDataExtractor extractor = new VmGcDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(COLLECTOR_TIME);
+
         Long returned = extractor.getCollectorTime(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(COLLECTOR_TIME, returned);
     }
 
     @Test
-    public void testCollectorInvocations() throws MonitorException {
+    public void testCollectorInvocations() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.collector.0.invocations";
         final Long COLLECTOR_INVOCATIONS = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, COLLECTOR_INVOCATIONS);
 
-        VmGcDataExtractor extractor = new VmGcDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(COLLECTOR_INVOCATIONS);
+
         Long returned = extractor.getCollectorInvocations(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(COLLECTOR_INVOCATIONS, returned);
     }
 

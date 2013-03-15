@@ -34,41 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.agent.internal;
+package com.redhat.thermostat.backend;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+/**
+ * This interface can be used to query the performance counters
+ * of a monitored JVM when they are updated.
+ * @see VmUpdateListener#countersUpdated(VmUpdate)
+ */
+public interface VmUpdate {
 
-import org.junit.Before;
-import org.junit.Test;
-
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
-
-public class VmClassStatBackendTest {
+    /**
+     * Queries the specified JVM performance counter with a Long data type.
+     * @param name - The name of the performance counter
+     * @return The current value of the requested counter, or null if no
+     * such counter exists
+     * @throws VmUpdateException if there is a problem communicating with
+     * the JVM
+     * @throws ClassCastException if the value of the counter is not a Long
+     */
+    Long getPerformanceCounterLong(String name) throws VmUpdateException;
     
-    private VmClassStatBackend backend;
-
-    @Before
-    public void setup() {
-        VmClassStatDAO vmClassStatDao = mock(VmClassStatDAO.class);
-        
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
-        
-        VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-
-        backend = new VmClassStatBackend(vmClassStatDao, version, registrar);
-    }
-
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
-    }
+    /**
+     * Queries the specified JVM performance counter with a String data type.
+     * @param name - The name of the performance counter
+     * @return The current value of the requested counter, or null if no
+     * such counter exists
+     * @throws VmUpdateException if there is a problem communicating with
+     * the JVM
+     * @throws ClassCastException if the value of the counter is not a String
+     */
+    String getPerformanceCounterString(String name) throws VmUpdateException;
+    
 }
-

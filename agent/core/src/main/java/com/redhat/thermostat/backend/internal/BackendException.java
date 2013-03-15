@@ -34,41 +34,26 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.agent.internal;
+package com.redhat.thermostat.backend.internal;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+public class BackendException extends Exception {
 
-import org.junit.Before;
-import org.junit.Test;
+    private static final long serialVersionUID = 5575912008800705065L;
 
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
-
-public class VmClassStatBackendTest {
+    public BackendException() {
+        super();
+    }
     
-    private VmClassStatBackend backend;
-
-    @Before
-    public void setup() {
-        VmClassStatDAO vmClassStatDao = mock(VmClassStatDAO.class);
-        
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
-        
-        VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-
-        backend = new VmClassStatBackend(vmClassStatDao, version, registrar);
+    public BackendException(String msg) {
+        super(msg);
+    }
+    
+    public BackendException(Throwable cause) {
+        super(cause);
+    }
+    
+    public BackendException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
-    }
 }
-

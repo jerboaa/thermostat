@@ -39,181 +39,144 @@ package com.redhat.thermostat.vm.memory.agent.internal;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Test;
 
-import sun.jvmstat.monitor.LongMonitor;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.StringMonitor;
-
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 
 public class VmMemoryDataExtractorTest {
 
-    private MonitoredVm buildStringMonitoredVm(String monitorName, String monitorReturn) throws MonitorException {
-        final StringMonitor monitor = mock(StringMonitor.class);
-        when(monitor.stringValue()).thenReturn(monitorReturn);
-        when(monitor.getValue()).thenReturn(monitorReturn);
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName(monitorName)).thenReturn(monitor);
-        return vm;
-    }
+    private VmUpdate update;
+    private VmMemoryDataExtractor extractor;
 
-    private MonitoredVm buildLongMonitoredVm(String monitorName, Long monitorReturn) throws MonitorException {
-        final LongMonitor monitor = mock(LongMonitor.class);
-        when(monitor.longValue()).thenReturn(monitorReturn);
-        when(monitor.getValue()).thenReturn(monitorReturn);
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName(monitorName)).thenReturn(monitor);
-        return vm;
+    @Before
+    public void setup() {
+        update = mock(VmUpdate.class);
+        extractor = new VmMemoryDataExtractor(update);
     }
-
+    
     @Test
-    public void testTotalGcGenerations() throws MonitorException {
+    public void testTotalGcGenerations() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.policy.generations";
         final Long GC_GENERATIONS = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, GC_GENERATIONS);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(GC_GENERATIONS);
+        
         Long returned = extractor.getTotalGcGenerations();
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(GC_GENERATIONS, returned);
     }
 
     @Test
-    public void testGenerationName() throws MonitorException {
+    public void testGenerationName() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.generation.0.name";
         final String GENERATION_NAME = "Youth";
-        MonitoredVm vm = buildStringMonitoredVm(MONITOR_NAME, GENERATION_NAME);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterString(eq(MONITOR_NAME))).thenReturn(GENERATION_NAME);
+
         String returned = extractor.getGenerationName(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(GENERATION_NAME, returned);
     }
 
     @Test
-    public void testGenerationCapacity() throws MonitorException {
+    public void testGenerationCapacity() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.generation.0.capacity";
         final Long GENERATION_CAPACITY = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, GENERATION_CAPACITY);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(GENERATION_CAPACITY);
+
         Long returned = extractor.getGenerationCapacity(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(GENERATION_CAPACITY, returned);
     }
 
     @Test
-    public void testGenerationMaxCapacity() throws MonitorException {
+    public void testGenerationMaxCapacity() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.generation.0.maxCapacity";
         final Long GENERATION_MAX_CAPACITY = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, GENERATION_MAX_CAPACITY);
 
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(GENERATION_MAX_CAPACITY);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
         Long returned = extractor.getGenerationMaxCapacity(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(GENERATION_MAX_CAPACITY, returned);
     }
 
     @Test
-    public void testGenerationCollector() throws MonitorException {
+    public void testGenerationCollector() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.collector.0.name";
         final String GENERATION_COLLECTOR = "generation collector";
-        MonitoredVm vm = buildStringMonitoredVm(MONITOR_NAME, GENERATION_COLLECTOR);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterString(eq(MONITOR_NAME))).thenReturn(GENERATION_COLLECTOR);
+
         String returned = extractor.getGenerationCollector(0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(GENERATION_COLLECTOR, returned);
     }
 
     @Test
-    public void testGenerationCollectorNone() throws MonitorException {
+    public void testGenerationCollectorNone() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.collector.0.name";
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName(MONITOR_NAME)).thenReturn(null);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterString(eq(MONITOR_NAME))).thenReturn(null);
+
         String returned = extractor.getGenerationCollector(0);
-
         assertEquals(Generation.COLLECTOR_NONE, returned);
     }
 
     @Test
-    public void testTotalSpaces() throws MonitorException {
+    public void testTotalSpaces() throws VmUpdateException {
+        final String MONITOR_NAME = "sun.gc.generation.0.spaces";
         final Long TOTAL_SPACES = 99l;
-        final LongMonitor monitor = mock(LongMonitor.class);
-        when(monitor.getValue()).thenReturn(TOTAL_SPACES);
-        MonitoredVm vm = mock(MonitoredVm.class);
-        when(vm.findByName("sun.gc.generation.0.spaces")).thenReturn(monitor);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(TOTAL_SPACES);
+
         Long returned = extractor.getTotalSpaces(0);
-
-        verify(vm).findByName(eq("sun.gc.generation.0.spaces"));
         assertEquals(TOTAL_SPACES, returned);
     }
 
 
     @Test
-    public void testSpaceName() throws MonitorException {
+    public void testSpaceName() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.generation.0.space.0.name";
         final String SPACE_NAME = "Hilbert";
-        MonitoredVm vm = buildStringMonitoredVm(MONITOR_NAME, SPACE_NAME);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterString(eq(MONITOR_NAME))).thenReturn(SPACE_NAME);
+
         String returned = extractor.getSpaceName(0,0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(SPACE_NAME, returned);
     }
 
     @Test
-    public void testSpaceCapacity() throws MonitorException {
+    public void testSpaceCapacity() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.generation.0.space.0.capacity";
         final Long SPACE_CAPACITY = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, SPACE_CAPACITY);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(SPACE_CAPACITY);
+
         Long returned = extractor.getSpaceCapacity(0,0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(SPACE_CAPACITY, returned);
     }
 
     @Test
-    public void testSpaceMaxCapacity() throws MonitorException {
+    public void testSpaceMaxCapacity() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.generation.0.space.0.maxCapacity";
         final Long SPACE_MAX_CAPACITY = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, SPACE_MAX_CAPACITY);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(SPACE_MAX_CAPACITY);
+
         Long returned = extractor.getSpaceMaxCapacity(0,0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(SPACE_MAX_CAPACITY, returned);
     }
 
     @Test
-    public void testSpaceUsed() throws MonitorException {
+    public void testSpaceUsed() throws VmUpdateException {
         final String MONITOR_NAME = "sun.gc.generation.0.space.0.used";
         final Long SPACE_USED = 99l;
-        MonitoredVm vm = buildLongMonitoredVm(MONITOR_NAME, SPACE_USED);
 
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+        when(update.getPerformanceCounterLong(eq(MONITOR_NAME))).thenReturn(SPACE_USED);
+
         Long returned = extractor.getSpaceUsed(0,0);
-
-        verify(vm).findByName(eq(MONITOR_NAME));
         assertEquals(SPACE_USED, returned);
     }
 

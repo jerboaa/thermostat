@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.classstat.agent.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -47,13 +48,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import sun.jvmstat.monitor.Monitor;
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
-import sun.jvmstat.monitor.event.VmEvent;
-
-import com.redhat.thermostat.vm.classstat.agent.internal.VmClassStatVmListener;
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
 import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
@@ -72,33 +68,11 @@ public class VmClassStatVmListenerTest {
     }
 
     @Test
-    public void testDisconnected() {
-        VmEvent vmEvent = mock(VmEvent.class);
-
-        listener.disconnected(vmEvent);
-
-        verifyNoMoreInteractions(vmEvent, dao);
-    }
-
-    @Test
-    public void testMonitorStatusChanged() {
-        MonitorStatusChangeEvent statusChangeEvent = mock(MonitorStatusChangeEvent.class);
-
-        listener.monitorStatusChanged(statusChangeEvent);
-
-        verifyNoMoreInteractions(statusChangeEvent, dao);
-    }
-
-    @Test
     public void testMonitorUpdatedClassStat() throws Exception {
-        VmEvent vmEvent = mock(VmEvent.class);
-        MonitoredVm monitoredVm = mock(MonitoredVm.class);
-        Monitor m = mock(Monitor.class);
-        when(m.getValue()).thenReturn(LOADED_CLASSES);
-        when(monitoredVm.findByName("java.cls.loadedClasses")).thenReturn(m);
-        when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
+        VmUpdate update = mock(VmUpdate.class);
+        when(update.getPerformanceCounterLong(eq("java.cls.loadedClasses"))).thenReturn(LOADED_CLASSES);
 
-        listener.monitorsUpdated(vmEvent);
+        listener.countersUpdated(update);
 
         ArgumentCaptor<VmClassStat> arg = ArgumentCaptor.forClass(VmClassStat.class);
         verify(dao).putVmClassStat(arg.capture());
@@ -109,30 +83,21 @@ public class VmClassStatVmListenerTest {
 
     @Test
     public void testMonitorUpdatedClassStatTwice() throws Exception {
-        VmEvent vmEvent = mock(VmEvent.class);
-        MonitoredVm monitoredVm = mock(MonitoredVm.class);
-        Monitor m = mock(Monitor.class);
-        when(m.getValue()).thenReturn(LOADED_CLASSES);
-        when(monitoredVm.findByName("java.cls.loadedClasses")).thenReturn(m);
-        when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
+        VmUpdate update = mock(VmUpdate.class);
+        when(update.getPerformanceCounterLong(eq("java.cls.loadedClasses"))).thenReturn(LOADED_CLASSES);
 
-        listener.monitorsUpdated(vmEvent);
-        listener.monitorsUpdated(vmEvent);
+        listener.countersUpdated(update);
+        listener.countersUpdated(update);
 
         // This checks a bug where the Category threw an IllegalStateException because the DAO
         // created a new one on each call, thus violating the unique guarantee of Category.
     }
 
     @Test
-    public void testMonitorUpdateFails() throws MonitorException {
-        VmEvent vmEvent = mock(VmEvent.class);
-        MonitoredVm monitoredVm = mock(MonitoredVm.class);
-        MonitorException monitorException = new MonitorException();
-
-        when(monitoredVm.findByName(anyString())).thenThrow(monitorException);
-        when(vmEvent.getMonitoredVm()).thenReturn(monitoredVm);
-
-        listener.monitorsUpdated(vmEvent);
+    public void testMonitorUpdateFails() throws VmUpdateException {
+        VmUpdate update = mock(VmUpdate.class);
+        when(update.getPerformanceCounterLong(anyString())).thenThrow(new VmUpdateException());
+        listener.countersUpdated(update);
 
         verifyNoMoreInteractions(dao);
     }

@@ -39,20 +39,17 @@ package com.redhat.thermostat.vm.memory.agent.internal;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
-import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
-import sun.jvmstat.monitor.event.VmEvent;
-import sun.jvmstat.monitor.event.VmListener;
-
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
+import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Generation;
 import com.redhat.thermostat.vm.memory.common.model.VmMemoryStat.Space;
 
-public class VmMemoryVmListener implements VmListener {
-
+public class VmMemoryVmListener implements VmUpdateListener {
+    
     private static final Logger logger = LoggingUtils.getLogger(VmMemoryVmListener.class);
 
     private final int vmId;
@@ -64,20 +61,8 @@ public class VmMemoryVmListener implements VmListener {
     }
 
     @Override
-    public void disconnected(VmEvent event) {
-        /* nothing to do here */
-    }
-
-    @Override
-    public void monitorStatusChanged(MonitorStatusChangeEvent event) {
-        /* nothing to do here */
-    }
-
-    @Override
-    public void monitorsUpdated(VmEvent event) {
-        MonitoredVm vm = event.getMonitoredVm();
-
-        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(vm);
+    public void countersUpdated(VmUpdate update) {
+        VmMemoryDataExtractor extractor = new VmMemoryDataExtractor(update);
         recordMemoryStat(extractor);
     }
 
@@ -108,7 +93,7 @@ public class VmMemoryVmListener implements VmListener {
             }
             VmMemoryStat stat = new VmMemoryStat(timestamp, vmId, generations);
             memDAO.putVmMemoryStat(stat);
-        } catch (MonitorException e) {
+        } catch (VmUpdateException e) {
             logger.log(Level.WARNING, "error gathering memory info for vm " + vmId, e);
         }
     }

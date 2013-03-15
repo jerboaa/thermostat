@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.memory.agent.internal;
 
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.backend.VmListenerBackend;
+import com.redhat.thermostat.backend.VmUpdateListener;
 import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.vm.memory.common.VmMemoryStatDAO;
 
@@ -58,7 +59,7 @@ public class VmMemoryBackend extends VmListenerBackend {
     }
 
     @Override
-    protected VmMemoryVmListener createVmListener(int pid) {
+    protected VmUpdateListener createVmListener(int pid) {
         return new VmMemoryVmListener(vmMemoryStats, pid);
     }
     

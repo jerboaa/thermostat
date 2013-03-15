@@ -34,41 +34,20 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.agent.internal;
+package com.redhat.thermostat.backend;
 
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import org.junit.Before;
-import org.junit.Test;
-
-import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
-import com.redhat.thermostat.common.Ordered;
-import com.redhat.thermostat.common.Version;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
-
-public class VmClassStatBackendTest {
+/**
+ * A listener that can be registered to receive updates for a
+ * JVM's performance counters.
+ * @see VmListenerBackend#createVmListener(int)
+ */
+public interface VmUpdateListener {
     
-    private VmClassStatBackend backend;
+    /**
+     * This method is called when the performance counters
+     * are updated for the JVM this listener is attached to.
+     * @param update - object to query performance counter values
+     */
+    public void countersUpdated(VmUpdate update);
 
-    @Before
-    public void setup() {
-        VmClassStatDAO vmClassStatDao = mock(VmClassStatDAO.class);
-        
-        Version version = mock(Version.class);
-        when(version.getVersionNumber()).thenReturn("0.0.0");
-        
-        VmStatusListenerRegistrar registrar = mock(VmStatusListenerRegistrar.class);
-
-        backend = new VmClassStatBackend(vmClassStatDao, version, registrar);
-    }
-
-    @Test
-    public void testOrderValue() {
-        int orderValue = backend.getOrderValue();
-        assertTrue(orderValue >= Ordered.ORDER_MEMORY_GROUP);
-        assertTrue(orderValue < Ordered.ORDER_NETWORK_GROUP);
-    }
 }
-

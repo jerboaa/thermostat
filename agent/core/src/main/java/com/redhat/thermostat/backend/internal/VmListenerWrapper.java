@@ -34,42 +34,64 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.vm.classstat.agent.internal;
+package com.redhat.thermostat.backend.internal;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import sun.jvmstat.monitor.Monitor;
+import sun.jvmstat.monitor.MonitorException;
+import sun.jvmstat.monitor.MonitoredVm;
+import sun.jvmstat.monitor.event.MonitorStatusChangeEvent;
+import sun.jvmstat.monitor.event.VmEvent;
+import sun.jvmstat.monitor.event.VmListener;
 
 import com.redhat.thermostat.backend.VmUpdate;
 import com.redhat.thermostat.backend.VmUpdateException;
 import com.redhat.thermostat.backend.VmUpdateListener;
-import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.vm.classstat.common.VmClassStatDAO;
-import com.redhat.thermostat.vm.classstat.common.model.VmClassStat;
 
-class VmClassStatVmListener implements VmUpdateListener {
+public class VmListenerWrapper implements VmListener {
     
-    private static final Logger logger = LoggingUtils.getLogger(VmClassStatVmListener.class);
+    private VmUpdateListener listener;
+    private MonitoredVm vm;
+    private VmUpdate update;
 
-    private VmClassStatDAO dao;
-    private int vmId;
-
-    VmClassStatVmListener(VmClassStatDAO dao, int vmId) {
-        this.dao = dao;
-        this.vmId = vmId;
+    public VmListenerWrapper(VmUpdateListener listener, MonitoredVm vm) {
+        this.listener = listener;
+        this.vm = vm;
+        this.update = new VmUpdateImpl(this);
     }
 
     @Override
-    public void countersUpdated(VmUpdate update) {
-        VmClassStatDataExtractor extractor = new VmClassStatDataExtractor(update);
-        try {
-            long loadedClasses = extractor.getLoadedClasses();
-            long timestamp = System.currentTimeMillis();
-            VmClassStat stat = new VmClassStat(vmId, timestamp, loadedClasses);
-            dao.putVmClassStat(stat);
-        } catch (VmUpdateException e) {
-            logger.log(Level.WARNING, "error gathering class info for vm " + vmId, e);
+    public void monitorsUpdated(VmEvent event) {
+        if (!vm.equals(event.getMonitoredVm())) {
+            throw new AssertionError("Received change event for wrong VM");
         }
+        listener.countersUpdated(update);
     }
 
-}
+    @Override
+    public void monitorStatusChanged(MonitorStatusChangeEvent event) {
+        // Nothing to do here
+    }
 
+    @Override
+    public void disconnected(VmEvent event) {
+        // Nothing to do here
+    }
+    
+    public Monitor getMonitor(String name) throws VmUpdateException {
+        Monitor result;
+        try {
+            result = vm.findByName(name);
+        } catch (MonitorException e) {
+            throw new VmUpdateException("Error communicating with monitored VM", e);
+        }
+        return result;
+    }
+    
+    /*
+     * For testing purposes only.
+     */
+    VmUpdateListener getVmUpdateListener() {
+        return listener;
+    }
+    
+}

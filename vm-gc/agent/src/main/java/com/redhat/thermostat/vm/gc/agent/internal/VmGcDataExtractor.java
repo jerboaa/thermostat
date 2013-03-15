@@ -36,8 +36,8 @@
 
 package com.redhat.thermostat.vm.gc.agent.internal;
 
-import sun.jvmstat.monitor.MonitorException;
-import sun.jvmstat.monitor.MonitoredVm;
+import com.redhat.thermostat.backend.VmUpdate;
+import com.redhat.thermostat.backend.VmUpdateException;
 
 /**
  * A helper class to provide type-safe access to commonly used jvmstat monitors
@@ -59,26 +59,26 @@ public class VmGcDataExtractor {
      * http://docs.oracle.com/javase/6/docs/api/java/lang/String.html#intern()
      */
 
-    private final MonitoredVm vm;
+    private final VmUpdate update;
 
-    public VmGcDataExtractor(MonitoredVm vm) {
-        this.vm = vm;
+    public VmGcDataExtractor(VmUpdate update) {
+        this.update = update;
     }
 
-    public long getTotalCollectors() throws MonitorException {
-        return (Long) vm.findByName("sun.gc.policy.collectors").getValue();
+    public long getTotalCollectors() throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.policy.collectors");
     }
 
-    public String getCollectorName(long collector) throws MonitorException {
-        return (String) vm.findByName("sun.gc.collector." + collector + ".name").getValue();
+    public String getCollectorName(long collector) throws VmUpdateException {
+        return update.getPerformanceCounterString("sun.gc.collector." + collector + ".name");
     }
 
-    public long getCollectorTime(long collector) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.collector." + collector + ".time").getValue();
+    public long getCollectorTime(long collector) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.collector." + collector + ".time");
     }
 
-    public long getCollectorInvocations(long collector) throws MonitorException {
-        return (Long) vm.findByName("sun.gc.collector." + collector + ".invocations").getValue();
+    public long getCollectorInvocations(long collector) throws VmUpdateException {
+        return update.getPerformanceCounterLong("sun.gc.collector." + collector + ".invocations");
     }
 
 }
