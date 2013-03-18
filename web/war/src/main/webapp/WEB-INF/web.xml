@@ -20,6 +20,26 @@
       <param-name>storage.endpoint</param-name>
       <param-value>mongodb://127.0.0.1:27518</param-value>
     </init-param>
+    <!-- Credentials to use for connecting to the backing storage
+         (currently mongodb). Uncomment the following two blocks in
+         order to use this username/password for the connection. -->
+
+    <!-- Username to use for connecting to the backing storage
+         implementation. -->
+    <!--
+    <init-param>
+      <param-name>storage.username</param-name>
+      <param-value>thermostat-webservice</param-value>
+    </init-param>
+    -->
+    <!-- Password to use for connecting to the backing storage
+         implementation -->
+    <!--
+    <init-param>
+      <param-name>storage.password</param-name>
+      <param-value>supersecrit</param-value>
+    </init-param>
+    -->
     <!-- The timeout of the token manager in ms -->
     <init-param>
       <param-name>token-manager-timeout</param-name>
