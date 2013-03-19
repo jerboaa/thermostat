@@ -8,7 +8,8 @@ Bundle-Vendor: Red Hat Inc.
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.ui
+ org.eclipse.ui,
+ org.eclipse.ui.workbench
 Import-Package: com.redhat.thermostat.client.core,
  com.redhat.thermostat.client.core.controllers,
  com.redhat.thermostat.client.core.views,
@@ -22,7 +23,10 @@ Import-Package: com.redhat.thermostat.client.core,
  com.redhat.thermostat.storage.config,
  com.redhat.thermostat.storage.core,
  com.redhat.thermostat.storage.model,
- com.redhat.thermostat.storage.dao
+ com.redhat.thermostat.storage.dao,
+ com.redhat.thermostat.utils.keyring,
+ com.redhat.thermostat.common.config,
+ org.eclipse.equinox.security.storage
 Export-Package: com.redhat.thermostat.eclipse,
  com.redhat.thermostat.eclipse.internal;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",
  com.redhat.thermostat.eclipse.internal.controllers;x-friends:="com.redhat.thermostat.eclipse.test,com.redhat.thermostat.eclipse.test.ui",

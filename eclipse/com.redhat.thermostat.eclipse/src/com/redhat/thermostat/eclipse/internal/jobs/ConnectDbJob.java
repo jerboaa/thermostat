@@ -41,7 +41,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
@@ -81,8 +80,6 @@ public class ConnectDbJob extends Job {
         DbService dbService = dbServiceFactory.createDbService(configuration.getUsername(),
                 configuration.getPassword(), configuration.getDBConnectionString());
         dbService.connect();
-        // register service in order to indicate that we are connected
-        OSGIUtils.getInstance().registerService(DbService.class, dbService);
     }
 
 }

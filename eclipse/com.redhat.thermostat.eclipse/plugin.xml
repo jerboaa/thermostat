@@ -67,5 +67,12 @@
             name="Thermostat">
       </perspective>
    </extension>
+   <extension
+         point="org.eclipse.ui.preferencePages">
+         <page
+            class="com.redhat.thermostat.eclipse.internal.preferences.MainPreferencePage"
+            id="com.redhat.thermostat.eclipse.preferences"
+            name="Thermostat Client"/>
+   </extension>
 </plugin>
 

@@ -44,6 +44,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.LoggerFacility;
@@ -51,6 +52,7 @@ import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -62,6 +64,10 @@ public class Activator extends AbstractUIPlugin {
 
     // The shared instance
     private static Activator plugin;
+    
+    private Keyring keyring;
+    @SuppressWarnings({ "rawtypes" })
+    private ServiceTracker keyringTracker;
 
     /**
      * The constructor
@@ -76,6 +82,7 @@ public class Activator extends AbstractUIPlugin {
      * org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext
      * )
      */
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     public void start(BundleContext context) throws Exception {
         super.start(context);
         plugin = this;
@@ -83,6 +90,24 @@ public class Activator extends AbstractUIPlugin {
         // Register ViewProvider
         context.registerService(HostOverviewViewProvider.class,
                 new SWTHostOverviewViewProvider(), null);
+        
+        keyringTracker = new ServiceTracker(context, Keyring.class, null) {
+            @Override
+            public Object addingService(ServiceReference reference) {
+                Keyring keyring = (Keyring) context.getService(reference);
+                Activator.this.keyring = keyring;
+                return keyring;
+            }
+
+            @Override
+            public void removedService(ServiceReference reference, Object service) {
+                Activator.this.keyring = null;
+                context.ungetService(reference);
+            }
+            
+        };
+        // Track for Keyring service.
+        keyringTracker.open();
     }
 
     /*
@@ -107,6 +132,7 @@ public class Activator extends AbstractUIPlugin {
             }
         }
         plugin = null;
+        keyringTracker.close();
         super.stop(context);
     }
 
@@ -163,6 +189,10 @@ public class Activator extends AbstractUIPlugin {
         DbService dbService = OSGIUtils.getInstance().getServiceAllowNull(
                 DbService.class);
         return dbService != null;
+    }
+    
+    public Keyring getKeyring() {
+        return keyring;
     }
 
 }

@@ -48,6 +48,10 @@ public interface ThermostatConstants {
     public static final String VIEW_ID_VM_GC = "com.redhat.thermostat.eclipse.chart.vmGcView";
     
     public static final String TEST_TAG = "com.redhat.thermostat.eclipse.test.swtTag";
-
+    
+    public static final String CONNECTION_URL_PREF_NAME = "com.redhat.thermostat.eclipse.prefs.connectionURL";
+    public static final String USERNAME_PREF_NAME = "com.redhat.thermostat.eclipse.prefs.username";
+    public static final String PASSWORD_PREF_NAME = "com.redhat.thermostat.eclipse.prefs.password";
+    public static final String SAVE_ENTITLEMENTS_PREF_NAME = "com.redhat.thermostat.eclipse.prefs.saveEntitlements";
 }
 

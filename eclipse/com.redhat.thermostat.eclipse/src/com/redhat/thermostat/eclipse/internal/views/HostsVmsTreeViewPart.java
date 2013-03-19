@@ -51,6 +51,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.ViewPart;
 
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
@@ -81,10 +82,10 @@ public class HostsVmsTreeViewPart extends ViewPart {
     private PageBook pageBook;
 
     public HostsVmsTreeViewPart() {
-        // FIXME: Get these values from preferences
-        // This circumvents webservice (uses mongo directly). If you want to use webstorage use something like:
-        // ConnectionConfiguration configuration = new ConnectionConfiguration("", "", "http://127.0.0.1:8082");
-        ConnectionConfiguration configuration = new ConnectionConfiguration("", "", "mongodb://127.0.0.1:27518");
+        ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring());
+        ConnectionConfiguration configuration = new ConnectionConfiguration(
+                clientPrefs.getUserName(), clientPrefs.getPassword(),
+                clientPrefs.getConnectionUrl());
         Job connectJob = new ConnectDbJob(
                 "Connecting to Thermostat storage...", configuration);
         connectJob.setSystem(true);

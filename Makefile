@@ -13,6 +13,7 @@ VNC_FLAGS       ?= -SecurityTypes None
 REPO_FLAG       = -Dmaven.repo.local=$(REPO_LOC)
 GOAL            = package
 POM             = pom.xml
+ARCH            = $(shell uname -m)
 
 ifeq ($(SKIP_TESTS),true)
 	MAVEN_SKIP_TEST = -Dmaven.test.skip=true
@@ -33,6 +34,13 @@ core:
 core-install: create-repo-dir
 	$(MAVEN) -f $(POM) $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
 
+copy-core-natives: core-install
+	if [ "_$(ARCH)" = "_x86_64" ]; then \
+        	cp keyring/target/libGnomeKeyringWrapper.so eclipse/com.redhat.thermostat.client.feature/linux_x86-64; \
+	else \
+		cp keyring/target/libGnomeKeyringWrapper.so eclipse/com.redhat.thermostat.client.feature/linux_x86; \
+	fi
+
 eclipse-test: eclipse eclipse-test-p2
 ifeq ($(USE_VNC),true)
 	$(VNC) $(VNC_DISPLAY) $(VNC_FLAGS)
@@ -43,13 +51,13 @@ ifeq ($(USE_VNC),true)
 	$(VNC) -kill $(VNC_DISPLAY)
 endif
 
-eclipse-test-deps: core-install
+eclipse-test-deps: copy-core-natives
 	$(MAVEN) -f eclipse/test-deps-bundle-wrapping/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
 
 eclipse-test-p2: eclipse-test-deps
 	$(MAVEN) -f eclipse/test-deps-p2-repository/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean $(GOAL)
 
-jfreechart-deps: core-install
+jfreechart-deps: copy-core-natives
 	$(MAVEN) -f eclipse/jfreechart-bundle-wrapping/pom.xml $(MAVEN_FLAGS) $(REPO_FLAG) $(MAVEN_SKIP_TEST) clean install
 
 jfreechart-p2: jfreechart-deps
@@ -71,4 +79,4 @@ echo-repo:
 	echo "Using private Maven repository: $(REPO_LOC)"
 
 # We only have phony targets
-.PHONY:	all core core-install eclipse-test eclipse-test-p2 eclipse-test-deps jfreechart-deps jfreechart-p2 eclipse create-repo-dir clean-repo echo-repo
+.PHONY:	all core core-install copy-core-natives eclipse-test eclipse-test-p2 eclipse-test-deps jfreechart-deps jfreechart-p2 eclipse create-repo-dir clean-repo echo-repo
