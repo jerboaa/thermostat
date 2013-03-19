@@ -60,7 +60,15 @@ public class MergePluginDocs {
     private static final String DOCS_FILE_NAME = CORE + ".xml";
     private static final String DOCS_ELEMENT = CORE;
 
+    private static final List<Path> corePaths = new LinkedList<>();
+
     public static void main(String[] args) throws IOException, XMLStreamException {
+        corePaths.add(Paths.get("agent").toAbsolutePath().normalize());
+        corePaths.add(Paths.get("launcher").toAbsolutePath().normalize());
+        corePaths.add(Paths.get("client").toAbsolutePath().normalize());
+        corePaths.add(Paths.get("common").toAbsolutePath().normalize());
+        corePaths.add(Paths.get("storage", "core").toAbsolutePath().normalize());
+
         String startPath = ".";
         if (args.length > 0) {
             startPath = args[0];
@@ -76,11 +84,15 @@ public class MergePluginDocs {
 
         Files.walkFileTree(Paths.get(startPath), new SimpleFileVisitor<Path>() {
             @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-                if (!Files.isRegularFile(file)) {
-                    throw new AssertionError("lrn2code, nub!");
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                if (!shouldEnter(dir)) {
+                    return FileVisitResult.SKIP_SUBTREE;
                 }
+                return FileVisitResult.CONTINUE;
+            }
 
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
                 if (file.getFileName().toString().equals(DOCS_FILE_NAME)) {
                     paths.add(file);
                 }
@@ -89,6 +101,17 @@ public class MergePluginDocs {
             }
         });
         return paths;
+    }
+
+    /** Only enter a directory if it is (or could lead to) a directory we want to check */
+    private static boolean shouldEnter(Path toCheck) {
+        toCheck = toCheck.toAbsolutePath().normalize();
+        for (Path path : corePaths) {
+            if (toCheck.startsWith(path) || path.startsWith(toCheck)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static String mergePluginDocs(List<Path> paths) throws IOException, XMLStreamException {
