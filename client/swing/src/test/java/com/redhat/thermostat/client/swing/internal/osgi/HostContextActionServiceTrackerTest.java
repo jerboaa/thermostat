@@ -43,7 +43,7 @@ import static org.mockito.Mockito.mock;
 import org.junit.Test;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.osgi.service.HostContextAction;
+import com.redhat.thermostat.client.ui.HostContextAction;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class HostContextActionServiceTrackerTest {

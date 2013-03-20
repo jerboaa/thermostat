@@ -36,7 +36,8 @@
 
 package com.redhat.thermostat.client.swing.internal;
 
-import com.redhat.thermostat.client.osgi.service.MenuRegistry;
+import com.redhat.thermostat.client.ui.MenuRegistry;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 

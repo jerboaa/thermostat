@@ -33,36 +33,52 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
+package com.redhat.thermostat.client.ui;
 
-package com.redhat.thermostat.client.osgi.service;
+import com.redhat.thermostat.annotations.ExtensionPoint;
 
 /**
- * Parent interface for all context-sensitive actions.
+ * {@code MenuAction}s are used to create top-level menu items in the main
+ * window.
  * <p>
- * {@code ContextAction}s are executed once the user selects the appropriate UI
- * elements in the view and triggers the registered action.
- * <p>
- * The name of the action (as returned by {@link #getName()}) is likely to be
- * user-visible and should be localized.
+ * Plugins can register menu items by creating classes that implement this
+ * interface and registering them as OSGi services. To register a menu item for
+ * for the menu "File" in thermostat client window, register a service that
+ * returns <code> {"File", getName()}</code> from {@link #getPath()}.
  *
  * <h2>Implementation Notes</h2>
  * <p>
  * The following information is specific to the current release and may change
  * in a future release.
  * <p>
- * The swing client uses {@code ContextAction}s to mostly implement menus. Some
- * of these menus are shown when a user right-clicks on a widget, but some are
- * associated with a window.
- * 
- * @see MenuAction
- * @see VMContextAction
+ * The swing client uses {@code MenuActions}s to implement top-level menus in
+ * the main window only.
  */
-public interface ContextAction {
-    
-    /** A user-visible name for this action */
-    String getName();
+@ExtensionPoint
+public interface MenuAction extends ContextAction {
 
-    /** A user-visible description for this action */
-    String getDescription();
+    public static enum Type {
+        CHECK,
+        RADIO,
+        STANDARD
+    }
+
+    /** The user-visible text displayed as the menu item. */
+    @Override
+    public String getName();
+
+    /** A user-visible description of what this {@code MenuAction} does. */
+    @Override
+    public String getDescription();
+
+    /** Invoked when the user selects this menu item */
+    void execute();
+
+    /** The type of the menu (radio, check, standard) */
+    Type getType();
+
+    /** The path to the menu action. The last element must equal getName() */
+    String[] getPath();
+
 }
 

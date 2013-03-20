@@ -76,12 +76,12 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.osgi.service.ContextAction;
-import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
-import com.redhat.thermostat.client.osgi.service.HostContextAction;
-import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.swing.components.SearchField;
+import com.redhat.thermostat.client.ui.ContextAction;
 import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.DecoratorProvider;
+import com.redhat.thermostat.client.ui.HostContextAction;
+import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.storage.core.HostRef;

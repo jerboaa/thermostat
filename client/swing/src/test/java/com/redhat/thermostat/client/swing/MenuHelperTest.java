@@ -63,7 +63,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
 
-import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.ui.MenuAction;
 
 @RunWith(CacioFESTRunner.class)
 public class MenuHelperTest {

@@ -34,62 +34,63 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
+package com.redhat.thermostat.client.ui;
 
 import com.redhat.thermostat.annotations.ExtensionPoint;
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.core.VmRef;
 
 /**
- * {@code HostContextAction}s provide actions that are associated with hosts and
- * can be invoked by users. The exact position and appearance of these
- * {@code HostContextAction}s varies based on the implementation.
+ * {@code VMContextAction}s provide actions that are associated with Java
+ * Virtual Machines and can be invoked by users. The exact position and
+ * appearance of these {@code VMContextAction}s varies based on the client
+ * implementation.
  * <p>
- * Plugins can register implementations of this interface as OSGi services to
- * provide additional {@code HostContextAction}s.
+ * Plugins can register implementation of this interface as OSGi services to
+ * provide additional {@code VMContextAction}s.
  * <p>
  * <h2>Implementation Note</h2>
  * <p>
  * The following information is specific to the current release and may change
  * in a future release.
  * <p>
- * The swing client uses instances of this interface to provide menu items for
- * the Host/VM tree. The menu is shown when a user right clicks a host in the
- * Host/VM tree. A menu item for every {@code HostContextAction} is added, if
- * the {@link Filter} matches, to this menu. Selecting a menu item invokes the
- * appropriate {@code HostContextAction}.
+ * The swing client uses instances of this class to provide menu items in the
+ * Host/VM tree. The menu is shown when a user right-clicks a VM in the Host/VM
+ * tree. A menu item for every {@link VMContextAction} is added, if the
+ * {@code Filter} matches, to this menu. Selecting a menu item invokes the
+ * corresponding {@code VMContextAction}.
  *
- * @see VMContextAction
+ * @see HostContextAction
  */
 @ExtensionPoint
-public interface HostContextAction extends ContextAction {
+public interface VMContextAction extends ContextAction {
 
     /**
-     * A user-visible name for this {@code HostContextAction}. This should be
+     * A user-visible name for this {@code VMContextAction}. Should be
      * localized.
      */
     @Override
-    String getName();
+    public String getName();
 
     /**
-     * A user-visible description for this {@code HostContextAction}. This
-     * should be localized.
+     * A user-visible description for {@code VMContextAction}. Should be
+     * localized.
      */
     @Override
-    String getDescription();
+    public String getDescription();
 
     /**
-     * Invoked when the user selects this {@code HostContextAction}.
+     * Invoked when the user selects this {@code VMContextAction}.
      *
-     * @param reference the host on which this {@code HostContextAction} was
+     * @param reference specifies the vm that this {@code VMContextAction} was
      * invoked on.
      */
-    void execute(HostRef reference);
+    void execute(VmRef reference);
 
     /**
      * The {@link Filter} returned by this method is used to select what VMs
-     * this {@code HostContextAction} is applicable to.
+     * this {@code VMContextAction} is applicable to.
      */
-    Filter<HostRef> getFilter();
+    Filter<VmRef> getFilter();
 }
 

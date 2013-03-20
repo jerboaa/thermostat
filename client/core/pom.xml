@@ -119,7 +119,6 @@
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
             <Bundle-SymbolicName>com.redhat.thermostat.client.core</Bundle-SymbolicName>
             <Export-Package>
-              com.redhat.thermostat.client.osgi.service,
               com.redhat.thermostat.client.ui,
               com.redhat.thermostat.client.locale,
               <!-- Interfaces for views, controllers, etc. -->

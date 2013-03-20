@@ -50,7 +50,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;

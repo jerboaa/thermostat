@@ -40,9 +40,9 @@ import java.io.IOException;
 
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
-import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.swing.IconResource;
 import com.redhat.thermostat.client.ui.Decorator;
+import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.client.ui.IconDescriptor;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;

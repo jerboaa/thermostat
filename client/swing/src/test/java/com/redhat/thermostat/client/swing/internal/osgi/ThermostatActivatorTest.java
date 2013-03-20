@@ -46,13 +46,13 @@ import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryViewProvider;
 import com.redhat.thermostat.client.core.views.VmInformationViewProvider;
-import com.redhat.thermostat.client.osgi.service.DecoratorProvider;
 import com.redhat.thermostat.client.swing.internal.HostIconDecoratorProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingAgentInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingClientConfigurationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingHostInformationViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingSummaryViewProvider;
 import com.redhat.thermostat.client.swing.internal.views.SwingVmInformationViewProvider;
+import com.redhat.thermostat.client.ui.DecoratorProvider;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ThermostatActivatorTest {

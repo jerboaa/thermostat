@@ -49,7 +49,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.MenuElement;
 
-import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.common.utils.StringUtils;
 

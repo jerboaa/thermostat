@@ -41,7 +41,7 @@ import java.util.Objects;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.ui.VMContextAction;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;

@@ -36,7 +36,7 @@
 
 package com.redhat.thermostat.client.filter.vm.core;
 
-import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.ui.MenuAction;
 
 class LivingVMFilterMenuAction implements MenuAction {
 

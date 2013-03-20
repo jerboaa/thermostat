@@ -44,7 +44,7 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.client.osgi.service.MenuAction;
+import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.testutils.StubServiceReference;

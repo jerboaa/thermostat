@@ -43,7 +43,7 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.client.osgi.service.HostContextAction;
+import com.redhat.thermostat.client.ui.HostContextAction;
 
 @SuppressWarnings("rawtypes")
 public class HostContextActionServiceTracker extends ServiceTracker {

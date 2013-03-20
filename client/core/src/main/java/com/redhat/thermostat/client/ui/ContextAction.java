@@ -34,63 +34,35 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.osgi.service;
-
-import com.redhat.thermostat.annotations.ExtensionPoint;
-import com.redhat.thermostat.client.core.Filter;
-import com.redhat.thermostat.storage.core.VmRef;
+package com.redhat.thermostat.client.ui;
 
 /**
- * {@code VMContextAction}s provide actions that are associated with Java
- * Virtual Machines and can be invoked by users. The exact position and
- * appearance of these {@code VMContextAction}s varies based on the client
- * implementation.
+ * Parent interface for all context-sensitive actions.
  * <p>
- * Plugins can register implementation of this interface as OSGi services to
- * provide additional {@code VMContextAction}s.
+ * {@code ContextAction}s are executed once the user selects the appropriate UI
+ * elements in the view and triggers the registered action.
  * <p>
- * <h2>Implementation Note</h2>
+ * The name of the action (as returned by {@link #getName()}) is likely to be
+ * user-visible and should be localized.
+ *
+ * <h2>Implementation Notes</h2>
  * <p>
  * The following information is specific to the current release and may change
  * in a future release.
  * <p>
- * The swing client uses instances of this class to provide menu items in the
- * Host/VM tree. The menu is shown when a user right-clicks a VM in the Host/VM
- * tree. A menu item for every {@link VMContextAction} is added, if the
- * {@code Filter} matches, to this menu. Selecting a menu item invokes the
- * corresponding {@code VMContextAction}.
- *
- * @see HostContextAction
+ * The swing client uses {@code ContextAction}s to mostly implement menus. Some
+ * of these menus are shown when a user right-clicks on a widget, but some are
+ * associated with a window.
+ * 
+ * @see MenuAction
+ * @see VMContextAction
  */
-@ExtensionPoint
-public interface VMContextAction extends ContextAction {
+public interface ContextAction {
+    
+    /** A user-visible name for this action */
+    String getName();
 
-    /**
-     * A user-visible name for this {@code VMContextAction}. Should be
-     * localized.
-     */
-    @Override
-    public String getName();
-
-    /**
-     * A user-visible description for {@code VMContextAction}. Should be
-     * localized.
-     */
-    @Override
-    public String getDescription();
-
-    /**
-     * Invoked when the user selects this {@code VMContextAction}.
-     *
-     * @param reference specifies the vm that this {@code VMContextAction} was
-     * invoked on.
-     */
-    void execute(VmRef reference);
-
-    /**
-     * The {@link Filter} returned by this method is used to select what VMs
-     * this {@code VMContextAction} is applicable to.
-     */
-    Filter<VmRef> getFilter();
+    /** A user-visible description for this action */
+    String getDescription();
 }
 

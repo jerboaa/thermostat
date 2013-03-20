@@ -51,7 +51,7 @@ import org.junit.Test;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
-import com.redhat.thermostat.client.osgi.service.VMContextAction;
+import com.redhat.thermostat.client.ui.VMContextAction;
 import com.redhat.thermostat.killvm.client.internal.Activator;
 import com.redhat.thermostat.killvm.client.internal.KillVMAction;
 

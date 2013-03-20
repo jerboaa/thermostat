@@ -33,21 +33,25 @@
  * library, but you are not obligated to do so.  If you do not wish
  * to do so, delete this exception statement from your version.
  */
-package com.redhat.thermostat.client.osgi.service;
 
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
-import org.osgi.framework.InvalidSyntaxException;
+package com.redhat.thermostat.client.ui;
 
-import com.redhat.thermostat.common.ThermostatExtensionRegistry;
+import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.storage.core.Ref;
 
-public class MenuRegistry extends ThermostatExtensionRegistry<MenuAction> {
+/**
+ * This interface allows plugins to install a custom {@link Decorator} into
+ * the Reference List view.
+ * 
+ * <br /><br />
+ * 
+ * Active {@link Decorator}s are first queried against their filters
+ * and then installed into the view if the filter passes. 
+ */
+public interface DecoratorProvider<T extends Ref> {
 
-    private static final String FILTER = "(" + Constants.OBJECTCLASS + "=" + MenuAction.class.getName() + ")";
-
-    public MenuRegistry(BundleContext context) throws InvalidSyntaxException {
-    	super(context, FILTER, MenuAction.class);
-    }
+    Decorator getDecorator();
+    Filter<T> getFilter();
 
 }
 
