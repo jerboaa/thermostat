@@ -36,38 +36,56 @@
 
 package com.redhat.thermostat.killvm.client.internal;
 
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
-import static org.mockito.Matchers.isA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
-import java.util.Dictionary;
-
-import org.junit.Ignore;
 import org.junit.Test;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.ui.VMContextAction;
-import com.redhat.thermostat.killvm.client.internal.Activator;
-import com.redhat.thermostat.killvm.client.internal.KillVMAction;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ActivatorTest {
-
-    @Ignore(value="testing activator is slightly more complex")
+    
     @Test
-    public void startRegistersKillVMAction() throws Exception {
-        BundleContext ctx = mock(BundleContext.class);
-        ServiceRegistration serviceReg = mock(ServiceRegistration.class);
-        when(ctx.registerService(anyString(), any(), any(Dictionary.class)))
-                .thenReturn(serviceReg);
+    public void verifyActivatorDoesNotRegisterServiceOnMissingDeps() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+
         Activator activator = new Activator();
-        activator.start(ctx);
-        verify(ctx).registerService(eq(VMContextAction.class.getName()),
-                isA(KillVMAction.class), any(Dictionary.class));
+
+        activator.start(context);
+
+        assertEquals(0, context.getAllServices().size());
+        assertNotSame(1, context.getServiceListeners().size());
+
+        activator.stop(context);
+    }
+
+    @Test
+    public void verifyActivatorRegistersServices() throws Exception {
+        StubBundleContext context = new StubBundleContext();
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        VmInfoDAO vmInfoDAO = mock(VmInfoDAO.class);
+        RequestQueue queue = mock(RequestQueue.class);
+
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
+        context.registerService(VmInfoDAO.class, vmInfoDAO, null);
+        context.registerService(RequestQueue.class, queue, null);
+
+        Activator activator = new Activator();
+
+        activator.start(context);
+
+        assertTrue(context.isServiceRegistered(VMContextAction.class.getName(), KillVMAction.class));
+
+        activator.stop(context);
+
+        assertEquals(0, context.getServiceListeners().size());
+        assertEquals(3, context.getAllServices().size());
     }
 
 }
