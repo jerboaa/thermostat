@@ -99,7 +99,6 @@ import com.redhat.thermostat.client.osgi.service.HostContextAction;
 import com.redhat.thermostat.client.osgi.service.MenuAction;
 import com.redhat.thermostat.client.osgi.service.VMContextAction;
 import com.redhat.thermostat.client.swing.EdtHelper;
-import com.redhat.thermostat.client.swing.HtmlTextBuilder;
 import com.redhat.thermostat.client.swing.MenuHelper;
 import com.redhat.thermostat.client.swing.SwingComponent;
 import com.redhat.thermostat.client.swing.components.SearchField;
@@ -658,22 +657,14 @@ public class MainWindow extends JFrame implements MainView {
         private String createToolTipText(Object value) {
             if (value instanceof HostRef) {
                 HostRef hostRef = (HostRef) value;
-                String hostNameHtml = new HtmlTextBuilder().bold(hostRef.getHostName()).toPartialHtml();
-                String agentIdHtml = new HtmlTextBuilder().bold(hostRef.getAgentId()).toPartialHtml();
-                HtmlTextBuilder builder = new HtmlTextBuilder()
-                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_HOST_NAME, hostNameHtml))
-                    .newLine()
-                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_AGENT_ID, agentIdHtml));
-                return builder.toHtml();
+                String hostName = hostRef.getHostName();
+                String agentId = hostRef.getAgentId();
+                return translator.localize(LocaleResources.HOST_TOOLTIP, hostName, agentId);
             } else if (value instanceof VmRef) {
                 VmRef vmRef = (VmRef) value;
-                String vmNameHtml= new HtmlTextBuilder().bold(vmRef.getName()).toPartialHtml();
-                String vmIdHtml = new HtmlTextBuilder().bold(vmRef.getIdString()).toPartialHtml();
-                HtmlTextBuilder builder = new HtmlTextBuilder()
-                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_VM_NAME, vmNameHtml))
-                    .newLine()
-                    .appendRaw(translator.localize(LocaleResources.TREE_HOST_TOOLTIP_VM_ID, vmIdHtml));
-                return builder.toHtml();
+                String vmName = vmRef.getName();
+                String vmId = vmRef.getIdString();
+                return translator.localize(LocaleResources.VM_TOOLTIP, vmName, vmId);
             } else {
                 return null;
             }
