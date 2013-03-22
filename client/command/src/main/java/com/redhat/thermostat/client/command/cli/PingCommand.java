@@ -41,6 +41,10 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.command.internal.LocaleResources;
 import com.redhat.thermostat.common.cli.Arguments;
@@ -52,7 +56,6 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -95,14 +98,14 @@ public class PingCommand extends AbstractCommand {
         
     }
 
-    private OSGIUtils serviceProvider;
+    private final BundleContext context;
 
     public PingCommand() {
-        this(OSGIUtils.getInstance());
+        this(FrameworkUtil.getBundle(PingCommand.class).getBundleContext());
     }
 
-    public PingCommand(OSGIUtils serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    public PingCommand(BundleContext context) {
+        this.context = context;
     }
 
     @Override
@@ -114,23 +117,25 @@ public class PingCommand extends AbstractCommand {
             return;
         }
 
-        HostInfoDAO hostInfoDao = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
-        if (hostInfoDao == null) {
+        ServiceReference hostInfoDaoRef = context.getServiceReference(HostInfoDAO.class.getName());
+        if (hostInfoDaoRef == null) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_HOST_INFO_DAO));
         }
+        HostInfoDAO hostInfoDao = (HostInfoDAO) context.getService(hostInfoDaoRef);
         HostRef targetHostRef = getHostRef(hostInfoDao, agentId);
-        serviceProvider.ungetService(HostInfoDAO.class, hostInfoDao);
+        context.ungetService(hostInfoDaoRef);
 
         if (targetHostRef == null) {
             printCustomMessageWithUsage(out, translator.localize(LocaleResources.COMMAND_PING_INVALID_HOST_ID));
             return;
         }
-        AgentInfoDAO agentInfoDao = serviceProvider.getService(AgentInfoDAO.class);
-        if (agentInfoDao == null) {
+        ServiceReference agentInfoDaoRef = context.getServiceReference(AgentInfoDAO.class.getName());
+        if (agentInfoDaoRef == null) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_AGENT_INFO_DAO));
         }
+        AgentInfoDAO agentInfoDao = (AgentInfoDAO) context.getService(agentInfoDaoRef);
         String address = agentInfoDao.getAgentInformation(targetHostRef).getConfigListenAddress();
-        serviceProvider.ungetService(AgentInfoDAO.class, agentInfoDao);
+        context.ungetService(agentInfoDaoRef);
         
         String [] host = address.split(":");
         InetSocketAddress target = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
@@ -139,9 +144,14 @@ public class PingCommand extends AbstractCommand {
         final Semaphore responseBarrier = new Semaphore(0);
         ping.addListener(new PongListener(out, responseBarrier));
 
-        RequestQueue queue = OSGIUtils.getInstance().getService(RequestQueue.class);
+        ServiceReference queueRef = context.getServiceReference(RequestQueue.class.getName());
+        if (queueRef == null) {
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_PING_NO_REQUEST_QUEUE));
+        }
+        RequestQueue queue = (RequestQueue) context.getService(queueRef);
         out.println(translator.localize(LocaleResources.COMMAND_PING_QUEUING_REQUEST, target.toString()));
         queue.putRequest(ping);
+        context.ungetService(queueRef);
         try {
             responseBarrier.acquire();
         } catch (InterruptedException e) {

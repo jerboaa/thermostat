@@ -40,18 +40,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.agent.cli.impl.db.StorageAlreadyRunningException;
 import com.redhat.thermostat.agent.cli.impl.db.StorageCommand;
 import com.redhat.thermostat.agent.cli.impl.locale.LocaleResources;
 import com.redhat.thermostat.common.ActionEvent;
 import com.redhat.thermostat.common.ActionListener;
 import com.redhat.thermostat.common.Launcher;
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 
 /**
  * Simple service that allows starting Agent and DB Backend
@@ -64,24 +67,37 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     private static final String NAME = "service";
 
     private List<ActionListener<ApplicationState>> listeners;
-
     private Semaphore agentBarrier = new Semaphore(0);
+    private BundleContext context;
+    private Launcher launcher;
 
     public ServiceCommand() {
+        this(FrameworkUtil.getBundle(ServiceCommand.class).getBundleContext());
+    }
+
+    public ServiceCommand(BundleContext context) {
+        this.context = context;
         listeners = new ArrayList<>();
         listeners.add(this);
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        Launcher launcher = getLauncher();
+        ServiceReference launcherRef = context.getServiceReference(Launcher.class);
+        if (launcherRef == null) {
+            throw new CommandException(translator.localize(LocaleResources.LAUNCHER_UNAVAILABLE));
+        }
+        launcher = (Launcher) context.getService(launcherRef);
         String[] storageStartArgs = new String[] { "storage", "--start" };
         launcher.setArgs(storageStartArgs);
         launcher.run(listeners, false);
         agentBarrier.acquireUninterruptibly();
+        
         String[] storageStopArgs = new String[] { "storage", "--stop" };
         launcher.setArgs(storageStopArgs);
         launcher.run(false);
+        
+        context.ungetService(launcherRef);
     }
 
     @Override
@@ -95,7 +111,6 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
             switch (actionEvent.getActionId()) {
             case START:
                 String dbUrl = storage.getConfiguration().getDBConnectionString();
-                Launcher launcher = getLauncher();
                 String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
                 System.err.println(translator.localize(LocaleResources.STARTING_AGENT));
                 launcher.setArgs(agentArgs);
@@ -126,11 +141,6 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
     @Override
     public boolean isStorageRequired() {
         return false;
-    }
-
-    private Launcher getLauncher() {
-        OSGIUtils osgi = OSGIUtils.getInstance();
-        return osgi.getService(Launcher.class);
     }
 
 }

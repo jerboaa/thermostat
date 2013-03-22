@@ -59,8 +59,10 @@ import org.mockito.stubbing.Answer;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
@@ -71,6 +73,7 @@ import com.sun.tools.hat.internal.model.Snapshot;
 
 public class ObjectInfoCommandTest {
 
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String HEAP_ID = "TEST_HEAP_ID";
 
     private ObjectInfoCommand cmd;
@@ -82,11 +85,6 @@ public class ObjectInfoCommandTest {
     public void setUp() {
         setupHeapDump();
         setupDAO();
-
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(dao);
-
-        cmd = new ObjectInfoCommand(serviceProvider);
     }
 
     @After
@@ -150,11 +148,15 @@ public class ObjectInfoCommandTest {
 
     @Test
     public void testName() {
+        StubBundleContext context = new StubBundleContext();
+        cmd = new ObjectInfoCommand(context);
         assertEquals("object-info", cmd.getName());
     }
 
     @Test
     public void testDescAndUsage() {
+        StubBundleContext context = new StubBundleContext();
+        cmd = new ObjectInfoCommand(context);
         assertNotNull(cmd.getDescription());
         assertNotNull(cmd.getUsage());
     }
@@ -162,6 +164,8 @@ public class ObjectInfoCommandTest {
     @Ignore
     @Test
     public void testOptions() {
+        StubBundleContext context = new StubBundleContext();
+        cmd = new ObjectInfoCommand(context);
         Options options = cmd.getOptions();
         assertEquals(2, options.getOptions().size());
 
@@ -180,11 +184,17 @@ public class ObjectInfoCommandTest {
 
     @Test
     public void testStorageRequired() {
+        StubBundleContext context = new StubBundleContext();
+        cmd = new ObjectInfoCommand(context);
         assertTrue(cmd.isStorageRequired());
     }
 
     @Test
     public void testSimpleObject() throws CommandException {
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HeapDAO.class, dao, null);
+        cmd = new ObjectInfoCommand(context);
+        
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", HEAP_ID);
@@ -208,6 +218,10 @@ public class ObjectInfoCommandTest {
     }
 
     public void testHeapNotFound() throws CommandException {
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HeapDAO.class, dao, null);
+        cmd = new ObjectInfoCommand(context);
+        
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", "fluff");
@@ -222,6 +236,10 @@ public class ObjectInfoCommandTest {
     }
 
     public void testObjectNotFound() throws CommandException {
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HeapDAO.class, dao, null);
+        cmd = new ObjectInfoCommand(context);
+        
         TestCommandContextFactory factory = new TestCommandContextFactory();
         SimpleArguments args = new SimpleArguments();
         args.addArgument("heapId", HEAP_ID);
@@ -232,6 +250,24 @@ public class ObjectInfoCommandTest {
             fail();
         } catch (ObjectNotFoundException ex) {
             assertEquals("Object not found: fluff", ex.getMessage());
+        }
+    }
+    
+    @Test
+    public void testNoHeapDAO() throws CommandException {
+        StubBundleContext context = new StubBundleContext();
+        cmd = new ObjectInfoCommand(context);
+        
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", HEAP_ID);
+        args.addArgument("objectId", "foo");
+
+        try {
+            cmd.run(factory.createContext(args));
+            fail();
+        } catch (CommandException e) {
+            assertEquals(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE), e.getMessage());
         }
     }
 }

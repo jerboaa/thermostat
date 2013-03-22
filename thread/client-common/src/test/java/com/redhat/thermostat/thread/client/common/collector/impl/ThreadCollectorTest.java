@@ -36,16 +36,18 @@
 
 package com.redhat.thermostat.thread.client.common.collector.impl;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
-
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.times;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.invocation.InvocationOnMock;
@@ -56,34 +58,45 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
-import com.redhat.thermostat.thread.client.common.collector.impl.ThreadMXBeanCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadCollectorTest {
+    
+    private StubBundleContext context;
+    private ThreadDao threadDao;
+    private VmRef reference;
+    private Request request;
+    private AgentInfoDAO agentDao;
+
+    @Before
+    public void setup() {
+        context = new StubBundleContext();
+        request = mock(Request.class);
+        agentDao = mock(AgentInfoDAO.class);
+        threadDao = mock(ThreadDao.class);
+        reference = mock(VmRef.class);
+        when(reference.getIdString()).thenReturn("00101010");
+        
+        final Response response = mock(Response.class);
+        when(response.getType()).thenReturn(ResponseType.OK);
+        
+        final ArgumentCaptor<RequestResponseListener> captor = ArgumentCaptor.forClass(RequestResponseListener.class);
+        doNothing().when(request).addListener(captor.capture());
+    }
 
     @Test
     public void testVMCapabilitiesNotInDAO() throws Exception {
-        
-        HostRef agent = mock(HostRef.class);
-        when(agent.getAgentId()).thenReturn("42");
-        
-        VmRef reference = mock(VmRef.class);
-        when(reference.getIdString()).thenReturn("00101010");
-        when(reference.getAgent()).thenReturn(agent);
-        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
-        ThreadDao threadDao = mock(ThreadDao.class);
-        
         VMThreadCapabilities resCaps = mock(VMThreadCapabilities.class);
         when(threadDao.loadCapabilities(reference)).thenReturn(null).thenReturn(resCaps);
         
-        final Request request = mock(Request.class);
         final RequestQueue requestQueue = mock(RequestQueue.class);
+        context.registerService(RequestQueue.class, requestQueue, null);
         
         final ArgumentCaptor<RequestResponseListener> captor = ArgumentCaptor.forClass(RequestResponseListener.class);
         doNothing().when(request).addListener(captor.capture());
@@ -101,22 +114,16 @@ public class ThreadCollectorTest {
             }
 
         }).when(requestQueue).putRequest(request);
-                
-        /* ************* */
         
-        ThreadCollector collector = new ThreadMXBeanCollector(reference) {
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
             @Override
             Request createRequest() {
                 return request;
             }
-            @Override
-            RequestQueue getRequestQueue() {
-                return requestQueue;
-            }
         };
         collector.setAgentInfoDao(agentDao);
         collector.setThreadDao(threadDao);
-        
+                
         VMThreadCapabilities caps = collector.getVMThreadCapabilities();
 
         verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
@@ -129,23 +136,38 @@ public class ThreadCollectorTest {
     }
     
     @Test
-    public void testVMCapabilitiesInDAO() throws Exception {
+    public void testVMCapabilitiesNoRequestQueue() throws Exception {
+        VMThreadCapabilities resCaps = mock(VMThreadCapabilities.class);
+        when(threadDao.loadCapabilities(reference)).thenReturn(null).thenReturn(resCaps);
         
-        VmRef reference = mock(VmRef.class);
-        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
-        ThreadDao threadDao = mock(ThreadDao.class);
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
+            @Override
+            Request createRequest() {
+                return request;
+            }
+        };
+        collector.setAgentInfoDao(agentDao);
+        collector.setThreadDao(threadDao);
+        
+        VMThreadCapabilities caps = collector.getVMThreadCapabilities();
+
+        verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
+        verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
+        
+        verify(threadDao, times(1)).loadCapabilities(reference);
+        assertNull(caps);
+    }
+    
+    @Test
+    public void testVMCapabilitiesInDAO() throws Exception {
+        StubBundleContext context = new StubBundleContext();
         
         VMThreadCapabilities resCaps = mock(VMThreadCapabilities.class);
         when(threadDao.loadCapabilities(reference)).thenReturn(resCaps);
         
-        ThreadCollector collector = new ThreadMXBeanCollector(reference) {
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
             @Override
             Request createRequest() {
-                fail();
-                return null;
-            }
-            @Override
-            RequestQueue getRequestQueue() {
                 fail();
                 return null;
             }
@@ -162,17 +184,8 @@ public class ThreadCollectorTest {
     
     @Test
     public void testStart() {
-        
-        HostRef agent = mock(HostRef.class);
-        when(agent.getAgentId()).thenReturn("42");
-        
-        final Request request = mock(Request.class);
         final RequestQueue requestQueue = mock(RequestQueue.class);
-        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
-        ThreadDao threadDao = mock(ThreadDao.class);
-        VmRef reference = mock(VmRef.class);
-        when(reference.getIdString()).thenReturn("00101010");
-        when(reference.getAgent()).thenReturn(agent);
+        context.registerService(RequestQueue.class, requestQueue, null);
         
         final Response response = mock(Response.class);
         when(response.getType()).thenReturn(ResponseType.OK);
@@ -194,14 +207,10 @@ public class ThreadCollectorTest {
 
         }).when(requestQueue).putRequest(request);
         
-        ThreadCollector collector = new ThreadMXBeanCollector(reference) {
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
             @Override
             Request createRequest() {
                 return request;
-            }
-            @Override
-            RequestQueue getRequestQueue() {
-                return requestQueue;
             }
         };
         collector.setAgentInfoDao(agentDao);
@@ -215,16 +224,29 @@ public class ThreadCollectorTest {
         verify(requestQueue).putRequest(request);
     }
     
-    
+    @Test
+    public void testStartNoRequestQueue() {
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
+            @Override
+            Request createRequest() {
+                return request;
+            }
+        };
+        collector.setAgentInfoDao(agentDao);
+        collector.setThreadDao(threadDao);
+        
+        boolean result = collector.startHarvester();
+        
+        verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.START.name());
+        verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
+        
+        assertFalse(result);
+    }
+
     @Test
     public void testStop() {
-
-        final Request request = mock(Request.class);
         final RequestQueue requestQueue = mock(RequestQueue.class);
-        AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
-        ThreadDao threadDao = mock(ThreadDao.class);
-        VmRef reference = mock(VmRef.class);
-        when(reference.getIdString()).thenReturn("00101010");
+        context.registerService(RequestQueue.class, requestQueue, null);
         
         final Response response = mock(Response.class);
         when(response.getType()).thenReturn(ResponseType.OK);
@@ -246,14 +268,10 @@ public class ThreadCollectorTest {
 
         }).when(requestQueue).putRequest(request);
         
-        ThreadCollector collector = new ThreadMXBeanCollector(reference) {
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
             @Override
             Request createRequest() {
                 return request;
-            }
-            @Override
-            RequestQueue getRequestQueue() {
-                return requestQueue;
             }
         };
         collector.setAgentInfoDao(agentDao);
@@ -264,6 +282,25 @@ public class ThreadCollectorTest {
         verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
         
         verify(requestQueue).putRequest(request);
-    }    
+    }
+    
+    @Test
+    public void testStopNoRequestQueue() {
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
+            @Override
+            Request createRequest() {
+                return request;
+            }
+        };
+        collector.setAgentInfoDao(agentDao);
+        collector.setThreadDao(threadDao);
+        
+        boolean result = collector.stopHarvester();
+        
+        verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.STOP.name());
+        verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
+        
+        assertFalse(result);
+    }
 }
 

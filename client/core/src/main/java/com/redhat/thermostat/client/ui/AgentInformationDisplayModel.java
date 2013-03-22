@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
@@ -60,12 +59,6 @@ public class AgentInformationDisplayModel {
 
     private final List<AgentInformation> agents;
     private final Map<String, List<BackendInformation>> backends;
-
-    public AgentInformationDisplayModel() {
-        this(
-                OSGIUtils.getInstance().getService(AgentInfoDAO.class),
-                OSGIUtils.getInstance().getService(BackendInfoDAO.class));
-    }
 
     public AgentInformationDisplayModel(AgentInfoDAO agentInfoDao, BackendInfoDAO backendInfoDao) {
         this.agentInfoDao = agentInfoDao;

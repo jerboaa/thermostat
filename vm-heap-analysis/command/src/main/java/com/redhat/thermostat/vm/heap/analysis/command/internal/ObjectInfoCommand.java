@@ -39,12 +39,15 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 import java.io.PrintStream;
 import java.util.Enumeration;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
@@ -60,28 +63,29 @@ public class ObjectInfoCommand extends AbstractCommand {
 
     private static final String NAME = "object-info";
 
-    private OSGIUtils serviceProvider;
+    private final BundleContext context;
     private Snapshot snapshot;
 
     public ObjectInfoCommand() {
-        this(OSGIUtils.getInstance());
+        this(FrameworkUtil.getBundle(ObjectInfoCommand.class).getBundleContext());
     }
 
-    ObjectInfoCommand(OSGIUtils serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    ObjectInfoCommand(BundleContext context) {
+        this.context = context;
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        HeapDAO heapDao = serviceProvider.getServiceAllowNull(HeapDAO.class);
-        if (heapDao == null) {
+        ServiceReference heapDaoRef = context.getServiceReference(HeapDAO.class.getName());
+        if (heapDaoRef == null) {
             throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
+        HeapDAO heapDao = (HeapDAO) context.getService(heapDaoRef);
 
         try {
             run(ctx, heapDao);
         } finally {
-            serviceProvider.ungetService(HeapDAO.class, heapDao);
+            context.ungetService(heapDaoRef);
         }
     }
 

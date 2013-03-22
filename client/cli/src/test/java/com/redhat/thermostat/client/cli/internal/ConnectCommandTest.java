@@ -40,36 +40,34 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ OSGIUtils.class, DbServiceFactory.class })
 public class ConnectCommandTest {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
+    private StubBundleContext context;
     private ConnectCommand cmd;
     private TestCommandContextFactory cmdCtxFactory;
     private BundleContext bundleContext;
@@ -79,8 +77,9 @@ public class ConnectCommandTest {
     public void setUp() {
         setupCommandContextFactory();
 
+        context = new StubBundleContext();
         dbServiceFactory = mock(DbServiceFactory.class);
-        cmd = new ConnectCommand(dbServiceFactory);
+        cmd = new ConnectCommand(context, dbServiceFactory);
     }
 
     private void setupCommandContextFactory() {
@@ -99,13 +98,12 @@ public class ConnectCommandTest {
 
     @Test
     public void verifyConnectedThrowsExceptionWithDiagnosticMessage() {
+        Keyring keyring = mock(Keyring.class);
+        context.registerService(Keyring.class, keyring, null);
         String dbUrl = "fluff";
         DbService dbService = mock(DbService.class);
-        OSGIUtils utils = mock(OSGIUtils.class);
-        PowerMockito.mockStatic(OSGIUtils.class);
-        when(OSGIUtils.getInstance()).thenReturn(utils);
-        when(utils.getServiceAllowNull(DbService.class)).thenReturn(dbService);
         when(dbService.getConnectionUrl()).thenReturn(dbUrl);
+        context.registerService(DbService.class, dbService, null);
 
         SimpleArguments args = new SimpleArguments();
         args.addArgument("--dbUrl", dbUrl);
@@ -118,11 +116,8 @@ public class ConnectCommandTest {
     
     @Test
     public void verifyNotConnectedConnects() throws CommandException {
-        OSGIUtils utils = mock(OSGIUtils.class);
-        PowerMockito.mockStatic(OSGIUtils.class);
-        when(OSGIUtils.getInstance()).thenReturn(utils);
-        when(utils.getServiceAllowNull(DbService.class)).thenReturn(null);
-
+        Keyring keyring = mock(Keyring.class);
+        context.registerService(Keyring.class, keyring, null);
         DbService dbService = mock(DbService.class);
 
         String username = "testuser";
@@ -136,6 +131,29 @@ public class ConnectCommandTest {
         CommandContext ctx = cmdCtxFactory.createContext(args);
         cmd.run(ctx);
         verify(dbService).connect();
+    }
+    
+    @Test
+    public void verifyNoKeyring() throws CommandException {
+        DbService dbService = mock(DbService.class);
+
+        String username = "testuser";
+        String password = "testpassword";
+        String dbUrl = "mongodb://10.23.122.1:12578";
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("dbUrl", dbUrl);
+        args.addArgument("username", username);
+        args.addArgument("password", password);
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+        
+        try {
+            cmd.run(ctx);
+            fail();
+        } catch (CommandException e) {
+            assertEquals(translator.localize(LocaleResources.COMMAND_CONNECT_NO_KEYRING), e.getMessage());
+        }
+        
+        verify(dbService, never()).connect();
     }
     
     @Test

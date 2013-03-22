@@ -37,12 +37,14 @@
 package com.redhat.thermostat.client.cli.internal;
 
 import org.apache.commons.cli.Options;
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 
@@ -52,17 +54,31 @@ public class DisconnectCommand extends AbstractCommand {
 
     private static final String NAME = "disconnect";
 
+    private BundleContext context;
+    
+    public DisconnectCommand() {
+        this(FrameworkUtil.getBundle(DisconnectCommand.class).getBundleContext());
+    }
+    
+    DisconnectCommand(BundleContext context) {
+        this.context = context;
+    }
+
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
-        if (service == null) {
+        ServiceReference ref = context.getServiceReference(DbService.class.getName());
+        if (ref == null) {
             // not connected
             throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_NOT_CONNECTED));
         }
+        
         try {
+            DbService service = (DbService) context.getService(ref);
             service.disconnect();
         } catch (ConnectionException e) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_DISCONNECT_ERROR));
+        } finally {
+            context.ungetService(ref);
         }
     }
 

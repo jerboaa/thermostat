@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.command.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,10 +48,12 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
+import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class PingCommandTest {
 
@@ -58,16 +61,17 @@ public class PingCommandTest {
 
     @Test
     public void testCommandName() {
-        PingCommand command = new PingCommand();
+        StubBundleContext context = new StubBundleContext();
+        PingCommand command = new PingCommand(context);
 
         assertEquals("ping", command.getName());
     }
 
     @Test
     public void testCommandNeedsAgentId() throws CommandException {
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        StubBundleContext context = new StubBundleContext();
 
-        PingCommand command = new PingCommand(serviceProvider);
+        PingCommand command = new PingCommand(context);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -81,9 +85,9 @@ public class PingCommandTest {
 
     @Test
     public void testCommandWithoutHostDao() throws CommandException {
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
+        StubBundleContext context = new StubBundleContext();
 
-        PingCommand command = new PingCommand(serviceProvider);
+        PingCommand command = new PingCommand(context);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -106,10 +110,10 @@ public class PingCommandTest {
         HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
         when(hostInfoDao.getAliveHosts()).thenReturn(Arrays.asList(host1));
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfoDao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HostInfoDAO.class, hostInfoDao, null);
 
-        PingCommand command = new PingCommand(serviceProvider);
+        PingCommand command = new PingCommand(context);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -121,6 +125,38 @@ public class PingCommandTest {
             fail("did not throw expected exception");
         } catch (CommandException agentDaoServiceMissing) {
             assertEquals("Unable to access agent information: service not available", agentDaoServiceMissing.getMessage());
+        }
+    }
+    
+    @Test
+    public void testCommandWithoutRequestQueue() throws CommandException {
+        HostRef host1 = mock(HostRef.class);
+        when(host1.getAgentId()).thenReturn(KNOWN_AGENT_ID);
+
+        HostInfoDAO hostInfoDao = mock(HostInfoDAO.class);
+        when(hostInfoDao.getAliveHosts()).thenReturn(Arrays.asList(host1));
+        
+        AgentInfoDAO agentInfoDao = mock(AgentInfoDAO.class);
+        AgentInformation info = mock(AgentInformation.class);
+        when(info.getConfigListenAddress()).thenReturn("myHost:9001");
+        when(agentInfoDao.getAgentInformation(any(HostRef.class))).thenReturn(info);
+
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HostInfoDAO.class, hostInfoDao, null);
+        context.registerService(AgentInfoDAO.class, agentInfoDao, null);
+
+        PingCommand command = new PingCommand(context);
+
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addNonOptionArgument(KNOWN_AGENT_ID);
+
+        try {
+            command.run(factory.createContext(args));
+            fail("did not throw expected exception");
+        } catch (CommandException e) {
+            assertEquals("Unable to access command request queue: service not available", e.getMessage());
         }
     }
 

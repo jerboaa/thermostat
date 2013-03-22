@@ -127,7 +127,7 @@ public class ThreadInformationController implements InformationServiceController
                 break;
                 
             default:
-                logger.log(Level.WARNING, "unkown action: " + actionEvent.getActionId());
+                logger.log(Level.WARNING, "unknown action: " + actionEvent.getActionId());
                 break;
             }
         }

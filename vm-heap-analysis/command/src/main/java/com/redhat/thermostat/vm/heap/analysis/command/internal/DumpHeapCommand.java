@@ -38,12 +38,16 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import java.util.concurrent.Semaphore;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.client.cli.HostVMArguments;
+import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 
@@ -53,15 +57,15 @@ public class DumpHeapCommand extends AbstractCommand {
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static final String NAME = "dump-heap";
 
-    private final OSGIUtils serviceProvider;
+    private BundleContext context;
     private final DumpHeapHelper implementation;
 
     public DumpHeapCommand() {
-        this(OSGIUtils.getInstance(), new DumpHeapHelper());
+        this(FrameworkUtil.getBundle(DumpHeapCommand.class).getBundleContext(), new DumpHeapHelper());
     }
 
-    DumpHeapCommand(OSGIUtils serviceProvider, DumpHeapHelper impl) {
-        this.serviceProvider = serviceProvider;
+    DumpHeapCommand(BundleContext context, DumpHeapHelper impl) {
+        this.context = context;
         this.implementation = impl;
     }
 
@@ -92,13 +96,23 @@ public class DumpHeapCommand extends AbstractCommand {
             }
         };
 
-        AgentInfoDAO service = serviceProvider.getService(AgentInfoDAO.class);
-        if (service == null) {
-            throw new CommandException("Unable to access agent information");
+        ServiceReference agentInfoRef = context.getServiceReference(AgentInfoDAO.class.getName());
+        if (agentInfoRef == null) {
+            throw new CommandException(translator.localize(LocaleResources.AGENT_SERVICE_UNAVAILABLE));
         }
-        implementation.execute(service, args.getVM(), successHandler, errorHandler);
-        serviceProvider.ungetService(AgentInfoDAO.class, service);
-
+        AgentInfoDAO agentInfoDAO = (AgentInfoDAO) context.getService(agentInfoRef);
+        
+        ServiceReference requestQueueRef = context.getServiceReference(RequestQueue.class.getName());
+        if (requestQueueRef == null) {
+            throw new CommandException(translator.localize(LocaleResources.REQUEST_QUEUE_UNAVAILABLE));
+        }
+        RequestQueue queue = (RequestQueue) context.getService(requestQueueRef);
+        
+        implementation.execute(agentInfoDAO, args.getVM(), queue, successHandler, errorHandler);
+        
+        context.ungetService(agentInfoRef);
+        context.ungetService(requestQueueRef);
+        
         try {
             s.acquire();
         } catch (InterruptedException e) {

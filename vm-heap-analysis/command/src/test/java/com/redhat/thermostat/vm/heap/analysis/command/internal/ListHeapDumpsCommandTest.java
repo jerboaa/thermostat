@@ -38,6 +38,7 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -55,13 +56,12 @@ import org.junit.Test;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.test.TestCommandContextFactory;
-import com.redhat.thermostat.vm.heap.analysis.command.internal.ListHeapDumpsCommand;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
@@ -82,7 +82,8 @@ public class ListHeapDumpsCommandTest {
 
     @Test
     public void verifyBasics() {
-        Command command = new ListHeapDumpsCommand();
+        StubBundleContext context = new StubBundleContext();
+        Command command = new ListHeapDumpsCommand(context);
         assertEquals("list-heap-dumps", command.getName());
         assertNotNull(command.getDescription());
         assertNotNull(command.getUsage());
@@ -91,7 +92,8 @@ public class ListHeapDumpsCommandTest {
     @Ignore
     @Test
     public void verifyOptions() {
-        Command command = new ListHeapDumpsCommand();
+        StubBundleContext context = new StubBundleContext();
+        Command command = new ListHeapDumpsCommand(context);
         Options options = command.getOptions();
         assertNotNull(options);
         assertEquals(2, options.getOptions().size());
@@ -99,12 +101,13 @@ public class ListHeapDumpsCommandTest {
 
     @Test
     public void verifyFailsWithoutHostDao() throws Exception {
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-
-        Command command = new ListHeapDumpsCommand(serviceProvider);
+        StubBundleContext context = new StubBundleContext();
+        Command command = new ListHeapDumpsCommand(context);
+        
         TestCommandContextFactory factory = new TestCommandContextFactory();
         try {
             command.run(factory.createContext(new SimpleArguments()));
+            fail();
         } catch (CommandException hostDaoNotAvailableException) {
             assertEquals("Unable to access host information (HostInfoDAO unavailable)",
                     hostDaoNotAvailableException.getMessage());
@@ -117,12 +120,12 @@ public class ListHeapDumpsCommandTest {
         VmInfoDAO vmInfo = mock(VmInfoDAO.class);
         HeapDAO heapDao = mock(HeapDAO.class);
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
-        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(VmInfoDAO.class, vmInfo, null);
+        context.registerService(HeapDAO.class, heapDao, null);
 
-        Command command = new ListHeapDumpsCommand(serviceProvider);
+        Command command = new ListHeapDumpsCommand(context);
         TestCommandContextFactory factory = new TestCommandContextFactory();
         command.run(factory.createContext(new SimpleArguments()));
         assertEquals("HOST ID VM ID HEAP ID TIMESTAMP\n", factory.getOutput());
@@ -151,12 +154,12 @@ public class ListHeapDumpsCommandTest {
 
         when(heapDao.getAllHeapInfo(vmRef)).thenReturn(Arrays.asList(heapInfo));
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
-        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(VmInfoDAO.class, vmInfo, null);
+        context.registerService(HeapDAO.class, heapDao, null);
 
-        Command command = new ListHeapDumpsCommand(serviceProvider);
+        Command command = new ListHeapDumpsCommand(context);
         TestCommandContextFactory factory = new TestCommandContextFactory();
         command.run(factory.createContext(new SimpleArguments()));
 
@@ -195,12 +198,12 @@ public class ListHeapDumpsCommandTest {
         when(heapDao.getAllHeapInfo(vmRef1)).thenReturn(Arrays.asList(heapInfo));
         when(heapDao.getAllHeapInfo(vmRef2)).thenReturn(Arrays.asList(heapInfo));
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
-        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(VmInfoDAO.class, vmInfo, null);
+        context.registerService(HeapDAO.class, heapDao, null);
 
-        Command command = new ListHeapDumpsCommand(serviceProvider);
+        Command command = new ListHeapDumpsCommand(context);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
@@ -244,12 +247,12 @@ public class ListHeapDumpsCommandTest {
         when(heapDao.getAllHeapInfo(vmRef1)).thenReturn(Arrays.asList(heapInfo));
         when(heapDao.getAllHeapInfo(vmRef2)).thenReturn(Arrays.asList(heapInfo));
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostInfo);
-        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmInfo);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HostInfoDAO.class, hostInfo, null);
+        context.registerService(VmInfoDAO.class, vmInfo, null);
+        context.registerService(HeapDAO.class, heapDao, null);
 
-        Command command = new ListHeapDumpsCommand(serviceProvider);
+        Command command = new ListHeapDumpsCommand(context);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();

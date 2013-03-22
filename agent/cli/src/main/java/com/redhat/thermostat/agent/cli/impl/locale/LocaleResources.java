@@ -56,7 +56,8 @@ public enum LocaleResources {
     STARTING_STORAGE_SERVER,
     CANNOT_EXECUTE_PROCESS,
     SERVER_LISTENING_ON,
-    PID_IS;
+    PID_IS,
+    LAUNCHER_UNAVAILABLE;
 
     static final String RESOURCE_BUNDLE = "com.redhat.thermostat.agent.cli.impl.strings";
 

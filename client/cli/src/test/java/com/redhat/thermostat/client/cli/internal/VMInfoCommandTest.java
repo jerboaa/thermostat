@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -58,7 +59,7 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
@@ -66,9 +67,11 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.Bug;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class VMInfoCommandTest {
-
+    
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
     private static TimeZone defaultTimezone;
 
     @BeforeClass
@@ -86,18 +89,14 @@ public class VMInfoCommandTest {
     private VmInfoDAO vmsDAO;
     private TestCommandContextFactory cmdCtxFactory;
     private VmRef vm;
+    private StubBundleContext context;
 
     @Before
     public void setUp() {
+        context = new StubBundleContext();
         setupCommandContextFactory();
 
         vmsDAO = mock(VmInfoDAO.class);
-
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmsDAO);
-
-        cmd = new VMInfoCommand(serviceProvider);
-
         setupDAOs();
     }
 
@@ -121,6 +120,8 @@ public class VMInfoCommandTest {
 
     @Test
     public void testVmInfo() throws CommandException {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", "234");
         args.addArgument("hostId", "123");
@@ -135,9 +136,26 @@ public class VMInfoCommandTest {
                           "VM arguments:    vmArguments\n";
         assertEquals(expected, cmdCtxFactory.getOutput());
     }
+    
+    @Test
+    public void testNoVmInfoDAO() throws CommandException {
+        cmd = new VMInfoCommand(context);
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("vmId", "234");
+        args.addArgument("hostId", "123");
+        
+        try {
+            cmd.run(cmdCtxFactory.createContext(args));
+            fail();
+        } catch (CommandException e) {
+            assertEquals(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE), e.getMessage());
+        }
+    }
 
     @Test
     public void testAllVmInfoForHost() throws CommandException {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("hostId", "123");
         cmd.run(cmdCtxFactory.createContext(args));
@@ -154,6 +172,8 @@ public class VMInfoCommandTest {
 
     @Test
     public void testVmInfoUnknownVM() throws CommandException {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", "9876");
         args.addArgument("hostId", "123");
@@ -165,6 +185,8 @@ public class VMInfoCommandTest {
 
     @Test
     public void testVmInfoNonNumericalVMID() throws CommandException {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("vmId", "fluff");
         args.addArgument("hostId", "123");
@@ -178,6 +200,8 @@ public class VMInfoCommandTest {
 
     @Test
     public void testName() {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         assertEquals("vm-info", cmd.getName());
     }
 
@@ -186,6 +210,8 @@ public class VMInfoCommandTest {
             url="http://icedtea.classpath.org/bugzilla/show_bug.cgi?id=1046")
     @Test
     public void testStopTime() throws CommandException {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         Calendar start = Calendar.getInstance();
         start.set(2012, 5, 7, 15, 32, 0);
         VmInfo vmInfo = new VmInfo(234, start.getTimeInMillis(), Long.MIN_VALUE, "vmVersion", "javaHome", "mainClass", "commandLine", "vmName", "vmInfo", "vmVersion", "vmArguments", new HashMap<String,String>(), new HashMap<String,String>(), new String[0]);
@@ -208,6 +234,8 @@ public class VMInfoCommandTest {
 
     @Test
     public void testDescAndUsage() {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         assertNotNull(cmd.getDescription());
         assertNotNull(cmd.getUsage());
     }
@@ -215,6 +243,8 @@ public class VMInfoCommandTest {
     @Ignore
     @Test
     public void testOptions() {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         Options options = cmd.getOptions();
         assertNotNull(options);
         assertEquals(2, options.getOptions().size());
@@ -234,6 +264,8 @@ public class VMInfoCommandTest {
 
     @Test
     public void testStorageRequired() {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+        cmd = new VMInfoCommand(context);
         assertTrue(cmd.isStorageRequired());
     }
 }

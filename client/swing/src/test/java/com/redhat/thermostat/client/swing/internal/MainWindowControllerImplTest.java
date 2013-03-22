@@ -65,7 +65,9 @@ import org.mockito.ArgumentCaptor;
 import org.osgi.framework.BundleException;
 
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.core.views.AgentInformationViewProvider;
 import com.redhat.thermostat.client.core.views.BasicView;
+import com.redhat.thermostat.client.core.views.ClientConfigViewProvider;
 import com.redhat.thermostat.client.core.views.HostInformationView;
 import com.redhat.thermostat.client.core.views.HostInformationViewProvider;
 import com.redhat.thermostat.client.core.views.SummaryView;
@@ -91,11 +93,14 @@ import com.redhat.thermostat.common.TimerFactory;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.Bug;
 import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.utils.keyring.Keyring;
 
 public class MainWindowControllerImplTest {
 
@@ -152,10 +157,18 @@ public class MainWindowControllerImplTest {
         ApplicationService appSvc = mock(ApplicationService.class);
         when (appSvc.getTimerFactory()).thenReturn(timerFactory);
 
+        Keyring keyring = mock(Keyring.class);
+        context.registerService(Keyring.class, keyring, null);
+        
         mockHostsDAO = mock(HostInfoDAO.class);
         context.registerService(HostInfoDAO.class, mockHostsDAO, null);
         mockVmsDAO = mock(VmInfoDAO.class);
         context.registerService(VmInfoDAO.class, mockVmsDAO, null);
+        
+        AgentInfoDAO agentInfoDAO = mock(AgentInfoDAO.class);
+        context.registerService(AgentInfoDAO.class, agentInfoDAO, null);
+        BackendInfoDAO backendInfoDAO = mock(BackendInfoDAO.class);
+        context.registerService(BackendInfoDAO.class, backendInfoDAO, null);
         
         SummaryViewProvider summaryViewProvider = mock(SummaryViewProvider.class);
         context.registerService(SummaryViewProvider.class, summaryViewProvider, null);
@@ -171,6 +184,11 @@ public class MainWindowControllerImplTest {
         context.registerService(VmInformationViewProvider.class, vmInfoViewProvider, null);
         vmInfoView = mock(VmInformationView.class);
         when(vmInfoViewProvider.createView()).thenReturn(vmInfoView);
+        
+        AgentInformationViewProvider agentInfoViewProvider = mock(AgentInformationViewProvider.class);
+        context.registerService(AgentInformationViewProvider.class, agentInfoViewProvider, null);
+        ClientConfigViewProvider clientConfigViewProvider = mock(ClientConfigViewProvider.class);
+        context.registerService(ClientConfigViewProvider.class, clientConfigViewProvider, null);
 
         // Setup View
         view = mock(MainView.class);

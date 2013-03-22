@@ -39,6 +39,7 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -47,23 +48,34 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.nio.charset.Charset;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.test.TestCommandContextFactory;
-import com.redhat.thermostat.vm.heap.analysis.command.internal.SaveHeapDumpToFileCommand;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.command.internal.SaveHeapDumpToFileCommand.FileStreamCreator;
+import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
 
 public class SaveHeapDumpToFileCommandTest {
+    
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
+    
+    private StubBundleContext context;
+
+    @Before
+    public void setup() {
+        context = new StubBundleContext();
+    }
 
     @Test
     public void verifyBasicInformation() {
-        Command command = new SaveHeapDumpToFileCommand();
+        Command command = new SaveHeapDumpToFileCommand(context, mock(FileStreamCreator.class));
         assertEquals("save-heap-dump-to-file", command.getName());
         assertNotNull(command.getDescription());
         assertNotNull(command.getUsage());
@@ -78,10 +90,10 @@ public class SaveHeapDumpToFileCommandTest {
         args.addArgument("vmId", "1");
         args.addArgument("file", "heap-id-1");
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(mock(HeapDAO.class));
-
-        Command command = new SaveHeapDumpToFileCommand(serviceProvider, mock(FileStreamCreator.class));
+        HeapDAO heapDAO = mock(HeapDAO.class);
+        context.registerService(HeapDAO.class, heapDAO, null);
+        
+        Command command = new SaveHeapDumpToFileCommand(context, mock(FileStreamCreator.class));
         command.run(factory.createContext(args));
     }
 
@@ -94,10 +106,10 @@ public class SaveHeapDumpToFileCommandTest {
         args.addArgument("vmId", "1");
         args.addArgument("heapId", "heap-id-1");
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(mock(HeapDAO.class));
+        HeapDAO heapDAO = mock(HeapDAO.class);
+        context.registerService(HeapDAO.class, heapDAO, null);
 
-        Command command = new SaveHeapDumpToFileCommand(serviceProvider, mock(FileStreamCreator.class));
+        Command command = new SaveHeapDumpToFileCommand(context, mock(FileStreamCreator.class));
         command.run(factory.createContext(args));
     }
 
@@ -111,13 +123,10 @@ public class SaveHeapDumpToFileCommandTest {
         ByteArrayOutputStream heapDumpStream = new ByteArrayOutputStream();
 
         HeapDAO heapDao = mock(HeapDAO.class);
-
         HeapInfo info = mock(HeapInfo.class);
         when(heapDao.getHeapInfo(HEAP_ID)).thenReturn(info);
         when(heapDao.getHeapDumpData(info)).thenReturn(new ByteArrayInputStream(HEAP_CONTENT_BYTES));
-
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
+        context.registerService(HeapDAO.class, heapDao, null);
 
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
@@ -128,10 +137,30 @@ public class SaveHeapDumpToFileCommandTest {
         FileStreamCreator creator = mock(FileStreamCreator.class);
         when(creator.createOutputStream(FILE_NAME)).thenReturn(heapDumpStream);
 
-        Command command = new SaveHeapDumpToFileCommand(serviceProvider, creator);
+        Command command = new SaveHeapDumpToFileCommand(context, creator);
         command.run(factory.createContext(args));
 
         assertArrayEquals(HEAP_CONTENT_BYTES, heapDumpStream.toByteArray());
+    }
+    
+    @Test
+    public void testNoHeapDAO() throws CommandException {
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("hostId", "host-id");
+        args.addArgument("vmId", "1");
+        args.addArgument("heapId", "heap-id-1");
+        args.addArgument("file", "heap-id-1");
+
+        Command command = new SaveHeapDumpToFileCommand(context, mock(FileStreamCreator.class));
+        
+        try {
+            command.run(factory.createContext(args));
+            fail();
+        } catch (CommandException e) {
+            assertEquals(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE), e.getMessage());
+        }
     }
 
 }

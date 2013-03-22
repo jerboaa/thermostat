@@ -38,6 +38,7 @@ package com.redhat.thermostat.agent.cli.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
 
@@ -62,7 +63,7 @@ public class ActivatorTest {
 
         PowerMockito.mockStatic(FrameworkUtil.class);
         Bundle mockBundle = mock(Bundle.class);
-        when(FrameworkUtil.getBundle(StorageCommand.class)).thenReturn(mockBundle);
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(mockBundle);
         
         StubBundleContext bundleContext = new StubBundleContext();
         

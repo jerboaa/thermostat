@@ -54,8 +54,8 @@ import org.junit.Test;
 
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDump;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
@@ -78,10 +78,10 @@ public class FindObjectsCommandTest {
 
         setupDAO();
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(dao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HeapDAO.class, dao, null);
 
-        cmd = new FindObjectsCommand(serviceProvider);
+        cmd = new FindObjectsCommand(context);
 
     }
 

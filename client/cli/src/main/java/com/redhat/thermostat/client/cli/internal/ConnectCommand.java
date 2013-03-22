@@ -36,12 +36,15 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
@@ -67,25 +70,36 @@ public class ConnectCommand extends AbstractCommand {
     private static final String NAME = "connect";
     
     private ClientPreferences prefs;
+    private BundleContext context;
     private DbServiceFactory dbServiceFactory;
 
     public ConnectCommand() {
-        this(new DbServiceFactory());
+        this(FrameworkUtil.getBundle(ConnectCommand.class).getBundleContext(), new DbServiceFactory());
     }
-
-    ConnectCommand(DbServiceFactory dbServiceFactory) {
+    
+    ConnectCommand(BundleContext context, DbServiceFactory dbServiceFactory) {
+        this.context = context;
         this.dbServiceFactory = dbServiceFactory;
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        DbService service = OSGIUtils.getInstance().getServiceAllowNull(DbService.class);
-        if (service != null) {
+        ServiceReference dbServiceRef = context.getServiceReference(DbService.class);
+        if (dbServiceRef != null) {
+            DbService service = (DbService) context.getService(dbServiceRef);
+            String connectionUrl = service.getConnectionUrl();
+            context.ungetService(dbServiceRef);
             // Already connected, bail out
-            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED, service.getConnectionUrl()));
+            throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_ALREADY_CONNECTED, connectionUrl));
         }
         if (prefs == null) {
-            prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
+            ServiceReference keyringRef = context.getServiceReference(Keyring.class);
+            if (keyringRef == null) {
+                throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_NO_KEYRING));
+            }
+            Keyring keyring = (Keyring) context.getService(keyringRef);
+            prefs = new ClientPreferences(keyring);
+            context.ungetService(keyringRef);
         }
         String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
         if (dbUrl == null) {
@@ -95,7 +109,7 @@ public class ConnectCommand extends AbstractCommand {
         String password = ctx.getArguments().getArgument(PASSWORD_ARG);
         try {
             // may throw StorageException if storage url is not supported
-            service = dbServiceFactory.createDbService(username, password, dbUrl);
+            DbService service = dbServiceFactory.createDbService(username, password, dbUrl);
             service.connect();
         } catch (StorageException ex) {
             throw new CommandException(translator.localize(LocaleResources.COMMAND_CONNECT_INVALID_STORAGE, dbUrl));

@@ -83,7 +83,7 @@ public class ActivatorTest {
     }
 
     private void makeServiceLoaderHappy(StubBundleContext ctx) {
-        // ShellCommands no-arg constructor uses FrameworkUtil to get
+        // Commands' no-arg constructors use FrameworkUtil to get
         // the bundle context. This results in NPEs when ServiceLoader
         // attempts to load Command classes. Note that client-cli is
         // a dep of this bundle and hence ServiceLoader wants to instantiate

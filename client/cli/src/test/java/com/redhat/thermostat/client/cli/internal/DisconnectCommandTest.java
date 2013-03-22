@@ -43,51 +43,34 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 import org.apache.commons.cli.Options;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.FrameworkUtil;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({ OSGIUtils.class, FrameworkUtil.class })
 public class DisconnectCommandTest {
 
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
+    private StubBundleContext context;
     private DisconnectCommand cmd;
     private TestCommandContextFactory cmdCtxFactory;
-    private BundleContext bundleContext;
 
     @Before
     public void setUp() {
-        setupCommandContextFactory();
+        context = new StubBundleContext();
+        cmdCtxFactory = new TestCommandContextFactory(context);
 
-        cmd = new DisconnectCommand();
-
-    }
-
-    private void setupCommandContextFactory() {
-        Bundle sysBundle = mock(Bundle.class);
-        bundleContext = mock(BundleContext.class);
-        when(bundleContext.getBundle(0)).thenReturn(sysBundle);
-        cmdCtxFactory = new TestCommandContextFactory(bundleContext);
+        cmd = new DisconnectCommand(context);
     }
 
     @After
@@ -98,11 +81,6 @@ public class DisconnectCommandTest {
 
     @Test
     public void verifyNotConnectedThrowsException() {
-        OSGIUtils utils = mock(OSGIUtils.class);
-        PowerMockito.mockStatic(OSGIUtils.class);
-        when(OSGIUtils.getInstance()).thenReturn(utils);
-        when(utils.getServiceAllowNull(DbService.class)).thenReturn(null);
-
         try {
             cmd.run(cmdCtxFactory.createContext(new SimpleArguments()));
             fail("cmd.run() should have thrown exception.");
@@ -114,10 +92,7 @@ public class DisconnectCommandTest {
     @Test
     public void verifyConnectedDisconnects() throws CommandException {
         DbService dbService = mock(DbService.class);
-        OSGIUtils utils = mock(OSGIUtils.class);
-        PowerMockito.mockStatic(OSGIUtils.class);
-        when(OSGIUtils.getInstance()).thenReturn(utils);
-        when(utils.getServiceAllowNull(DbService.class)).thenReturn(dbService);
+        context.registerService(DbService.class, dbService, null);
         
         CommandContext ctx = cmdCtxFactory.createContext(new SimpleArguments());
         cmd.run(ctx);

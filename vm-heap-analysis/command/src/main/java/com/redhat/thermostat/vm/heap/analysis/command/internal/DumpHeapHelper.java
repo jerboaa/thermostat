@@ -44,7 +44,6 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -79,8 +78,9 @@ public class DumpHeapHelper {
 
     }
 
-    public void execute(AgentInfoDAO agentInfoDAO, VmRef reference, Runnable heapDumpSuccessAction, Runnable heapDumpFailureAction) {
-
+    public void execute(AgentInfoDAO agentInfoDAO, VmRef reference,
+            RequestQueue queue, Runnable heapDumpSuccessAction,
+            Runnable heapDumpFailureAction) {
         HostRef targetHostRef = reference.getAgent();
         String address = agentInfoDAO.getAgentInformation(targetHostRef).getConfigListenAddress();
         
@@ -91,7 +91,6 @@ public class DumpHeapHelper {
         req.setParameter(VM_ID_PARAM, reference.getIdString());
         req.addListener(new HeapDumpListener(heapDumpSuccessAction, heapDumpFailureAction));
 
-        RequestQueue queue = OSGIUtils.getInstance().getService(RequestQueue.class);
         queue.putRequest(req);
 
     }

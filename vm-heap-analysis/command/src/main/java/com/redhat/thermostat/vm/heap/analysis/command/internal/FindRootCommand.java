@@ -40,11 +40,14 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.vm.heap.analysis.command.FindRoot;
 import com.redhat.thermostat.vm.heap.analysis.command.HeapPath;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
@@ -61,27 +64,28 @@ public class FindRootCommand extends AbstractCommand {
     private static final String ALL_ARG = "all";
     private static final String NAME = "find-root";
 
-    private OSGIUtils serviceProvider;
+    private BundleContext context;
 
     public FindRootCommand() {
-        this(OSGIUtils.getInstance());
+        this(FrameworkUtil.getBundle(FindRootCommand.class).getBundleContext());
     }
 
-    FindRootCommand(OSGIUtils serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    FindRootCommand(BundleContext context) {
+        this.context = context;
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        HeapDAO heapDao = serviceProvider.getServiceAllowNull(HeapDAO.class);
-        if (heapDao == null) {
+        ServiceReference heapDaoRef = context.getServiceReference(HeapDAO.class.getName());
+        if (heapDaoRef == null) {
             throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
+        HeapDAO heapDao = (HeapDAO) context.getService(heapDaoRef);
 
         try {
             run(ctx, heapDao);
         } finally {
-            serviceProvider.ungetService(HeapDAO.class, heapDao);
+            context.ungetService(heapDaoRef);
         }
     }
 

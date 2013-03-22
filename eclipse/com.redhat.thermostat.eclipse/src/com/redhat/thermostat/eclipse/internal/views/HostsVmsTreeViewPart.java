@@ -36,9 +36,13 @@
 
 package com.redhat.thermostat.eclipse.internal.views;
 
+import java.util.Map;
+import java.util.Objects;
+
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.RowLayout;
@@ -47,12 +51,15 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
+import org.eclipse.ui.IViewSite;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.ViewPart;
+import org.osgi.framework.BundleContext;
 
 import com.redhat.thermostat.common.config.ClientPreferences;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
 import com.redhat.thermostat.eclipse.internal.controllers.ConnectDBAction;
@@ -80,6 +87,10 @@ public class HostsVmsTreeViewPart extends ViewPart {
     private Composite connectPage;
     // Container for tree and connect
     private PageBook pageBook;
+    private MultipleServiceTracker tracker;
+    private HostInfoDAO hostInfoDAO;
+    private VmInfoDAO vmInfoDAO;
+    private boolean closing;
 
     public HostsVmsTreeViewPart() {
         ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring());
@@ -95,6 +106,51 @@ public class HostsVmsTreeViewPart extends ViewPart {
         connectJob.addJobChangeListener(new ConnectionJobListener(connectAction, this));
     }
     
+    @Override
+    public void init(IViewSite site) throws PartInitException {
+        super.init(site);
+        
+        BundleContext context = Activator.getDefault().getBundle().getBundleContext();
+        Class<?>[] deps = new Class<?>[] {
+            HostInfoDAO.class,
+            VmInfoDAO.class
+        };
+        tracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
+            
+            @Override
+            public void dependenciesAvailable(Map<String, Object> services) {
+                hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
+                Objects.requireNonNull(hostInfoDAO);
+                vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
+                Objects.requireNonNull(vmInfoDAO);
+            }
+
+            @Override
+            public void dependenciesUnavailable() {
+                if (!closing) {
+                    // Show the user an error
+                    PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable() {
+
+                        @Override
+                        public void run() {
+                            MessageDialog.openError(null, "Connection Error", "Unable to connect to storage");
+                        }
+                    });
+                    // Switch to the connection page
+                    showConnectionPage();
+                }
+            }
+        });
+        tracker.open();
+    }
+    
+    @Override
+    public void dispose() {
+        closing = true;
+        tracker.close();
+        super.dispose();
+    }
+    
     public void showConnectionPage() {
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
@@ -105,12 +161,8 @@ public class HostsVmsTreeViewPart extends ViewPart {
     }
 
     public void showHostVmsPage() {
-        HostInfoDAO hostDAO = OSGIUtils.getInstance().getService(
-                HostInfoDAO.class);
-        VmInfoDAO vmsDAO = OSGIUtils.getInstance().getService(
-                VmInfoDAO.class);
-        final HostsVMsLoader loader = new DefaultHostsVMsLoader(hostDAO,
-                vmsDAO, false);
+        final HostsVMsLoader loader = new DefaultHostsVMsLoader(hostInfoDAO,
+                vmInfoDAO, false);
 
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 

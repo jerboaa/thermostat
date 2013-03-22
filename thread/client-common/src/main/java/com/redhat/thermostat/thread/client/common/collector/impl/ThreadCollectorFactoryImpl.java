@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.thread.client.common.collector.impl;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
@@ -44,8 +47,17 @@ import com.redhat.thermostat.thread.dao.ThreadDao;
 
 public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
 
+    private BundleContext context;
     private AgentInfoDAO agentDao;
     private ThreadDao threadDao;
+    
+    public ThreadCollectorFactoryImpl() {
+        this(FrameworkUtil.getBundle(ThreadCollectorFactoryImpl.class).getBundleContext());
+    }
+    
+    ThreadCollectorFactoryImpl(BundleContext context) {
+        this.context = context;
+    }
     
     public void setAgentDao(AgentInfoDAO agentDao) {
         this.agentDao = agentDao;
@@ -58,7 +70,7 @@ public class ThreadCollectorFactoryImpl implements ThreadCollectorFactory {
     @Override
     public synchronized ThreadCollector getCollector(VmRef reference) {
         // TODO set the values when the agent/thread dao changes
-        ThreadMXBeanCollector result = new ThreadMXBeanCollector(reference);
+        ThreadMXBeanCollector result = new ThreadMXBeanCollector(context, reference);
         result.setAgentInfoDao(agentDao);
         result.setThreadDao(threadDao);
         return result;

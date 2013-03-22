@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -59,12 +60,10 @@ public class ActivatorTest {
 
     @Test
     public void testCommandsRegistered() throws Exception {
-        // Need to mock FrameworkUtil to avoid NPE in ShellCommand and
-        // VMStatCommand's no-arg constructors
+        // Need to mock FrameworkUtil to avoid NPE in commands' no-arg constructors
         PowerMockito.mockStatic(FrameworkUtil.class);
         Bundle mockBundle = mock(Bundle.class);
-        when(FrameworkUtil.getBundle(ShellCommand.class)).thenReturn(mockBundle);
-        when(FrameworkUtil.getBundle(VMStatCommand.class)).thenReturn(mockBundle);
+        when(FrameworkUtil.getBundle(any(Class.class))).thenReturn(mockBundle);
         // When we call createFilter, we need a real return value
         when(FrameworkUtil.createFilter(anyString())).thenCallRealMethod();
 

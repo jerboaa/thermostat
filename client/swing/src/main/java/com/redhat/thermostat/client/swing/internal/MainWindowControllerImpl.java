@@ -88,12 +88,13 @@ import com.redhat.thermostat.common.Timer;
 import com.redhat.thermostat.common.Timer.SchedulingType;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.utils.LoggingUtils;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.DefaultHostsVMsLoader;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.HostsVMsLoader;
 import com.redhat.thermostat.storage.core.Ref;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.utils.keyring.Keyring;
@@ -112,13 +113,18 @@ public class MainWindowControllerImpl implements MainWindowController {
     private Timer backgroundUpdater;
 
     private MainView view;
+    private Keyring keyring;
 
     private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
+    private AgentInfoDAO agentInfoDAO;
+    private BackendInfoDAO backendInfoDAO;
 
     private SummaryViewProvider summaryViewProvider;
     private HostInformationViewProvider hostInfoViewProvider;
     private VmInformationViewProvider vmInfoViewProvider;
+    private AgentInformationViewProvider agentInfoViewProvider;
+    private ClientConfigViewProvider clientConfigViewProvider;
     
     private ApplicationInfo appInfo;
 
@@ -224,26 +230,41 @@ public class MainWindowControllerImpl implements MainWindowController {
         this.shutdown = shutdown;
 
         Class<?>[] deps = new Class<?>[] {
+                Keyring.class,
                 HostInfoDAO.class,
                 VmInfoDAO.class,
+                AgentInfoDAO.class,
+                BackendInfoDAO.class,
                 SummaryViewProvider.class,
                 HostInformationViewProvider.class,
-                VmInformationViewProvider.class
+                VmInformationViewProvider.class,
+                AgentInformationViewProvider.class,
+                ClientConfigViewProvider.class,
         };
         depTracker = new MultipleServiceTracker(context, deps, new MultipleServiceTracker.Action() {
             
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
+                keyring = (Keyring) services.get(Keyring.class.getName());
+                Objects.requireNonNull(keyring);
                 hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
                 Objects.requireNonNull(hostInfoDAO);
                 vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 Objects.requireNonNull(vmInfoDAO);
+                agentInfoDAO = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
+                Objects.requireNonNull(agentInfoDAO);
+                backendInfoDAO = (BackendInfoDAO) services.get(BackendInfoDAO.class.getName());
+                Objects.requireNonNull(backendInfoDAO);
                 summaryViewProvider = (SummaryViewProvider) services.get(SummaryViewProvider.class.getName());
                 Objects.requireNonNull(summaryViewProvider);
                 hostInfoViewProvider = (HostInformationViewProvider) services.get(HostInformationViewProvider.class.getName());
                 Objects.requireNonNull(hostInfoViewProvider);
                 vmInfoViewProvider = (VmInformationViewProvider) services.get(VmInformationViewProvider.class.getName());
                 Objects.requireNonNull(vmInfoViewProvider);
+                agentInfoViewProvider = (AgentInformationViewProvider) services.get(AgentInformationViewProvider.class.getName());
+                Objects.requireNonNull(agentInfoViewProvider);
+                clientConfigViewProvider = (ClientConfigViewProvider) services.get(ClientConfigViewProvider.class.getName());
+                Objects.requireNonNull(clientConfigViewProvider);
                 
                 initView(view);
 
@@ -501,17 +522,15 @@ public class MainWindowControllerImpl implements MainWindowController {
     }
 
     private void showAgentConfiguration() {
-        AgentInformationDisplayModel model = new AgentInformationDisplayModel();
-        AgentInformationViewProvider viewProvider = OSGIUtils.getInstance().getService(AgentInformationViewProvider.class);
-        AgentInformationDisplayView view = viewProvider.createView();
+        AgentInformationDisplayModel model = new AgentInformationDisplayModel(agentInfoDAO, backendInfoDAO);
+        AgentInformationDisplayView view = agentInfoViewProvider.createView();
         AgentInformationDisplayController controller = new AgentInformationDisplayController(model, view);
         controller.showView();
     }
 
     private void showConfigureClientPreferences() {
-        ClientPreferences prefs = new ClientPreferences(OSGIUtils.getInstance().getService(Keyring.class));
-        ClientConfigViewProvider viewProvider = OSGIUtils.getInstance().getService(ClientConfigViewProvider.class);
-        ClientConfigurationView view = viewProvider.createView();
+        ClientPreferences prefs = new ClientPreferences(keyring);
+        ClientConfigurationView view = clientConfigViewProvider.createView();
         ClientConfigurationController controller = new ClientConfigurationController(prefs, view);
         controller.showDialog();
     }

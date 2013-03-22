@@ -38,9 +38,9 @@ package com.redhat.thermostat.vm.heap.analysis.command.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.Test;
@@ -48,8 +48,10 @@ import org.junit.Test;
 import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
 import com.redhat.thermostat.vm.heap.analysis.common.ObjectHistogram;
 import com.redhat.thermostat.vm.heap.analysis.common.model.HeapInfo;
@@ -57,10 +59,13 @@ import com.sun.tools.hat.internal.model.JavaClass;
 import com.sun.tools.hat.internal.model.JavaHeapObject;
 
 public class ShowHeapHistogramCommandTest {
+    
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     @Test
     public void verifyBasics() {
-        Command command = new ShowHeapHistogramCommand();
+        StubBundleContext context = new StubBundleContext();
+        Command command = new ShowHeapHistogramCommand(context);
 
         assertEquals("show-heap-histogram", command.getName());
         assertNotNull(command.getDescription());
@@ -97,10 +102,10 @@ public class ShowHeapHistogramCommandTest {
         when(heapDao.getHeapInfo(HEAP_ID)).thenReturn(heapInfo);
         when(heapDao.getHistogram(heapInfo)).thenReturn(histo);
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HeapDAO.class, heapDao, null);
 
-        Command command = new ShowHeapHistogramCommand(serviceProvider);
+        Command command = new ShowHeapHistogramCommand(context);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
@@ -110,7 +115,6 @@ public class ShowHeapHistogramCommandTest {
 
         assertEquals("class1                  2 8\n" +
                      "verylongclassnameclass2 1 10\n", factory.getOutput());
-        verify(serviceProvider).ungetService(HeapDAO.class, heapDao);
     }
 
     @Test
@@ -122,10 +126,10 @@ public class ShowHeapHistogramCommandTest {
         when(heapDao.getHeapInfo(BAD_HEAP_ID)).thenReturn(null);
         when(heapDao.getHistogram(any(HeapInfo.class))).thenReturn(null);
 
-        OSGIUtils serviceProvider = mock(OSGIUtils.class);
-        when(serviceProvider.getServiceAllowNull(HeapDAO.class)).thenReturn(heapDao);
+        StubBundleContext context = new StubBundleContext();
+        context.registerService(HeapDAO.class, heapDao, null);
 
-        Command command = new ShowHeapHistogramCommand(serviceProvider);
+        Command command = new ShowHeapHistogramCommand(context);
         TestCommandContextFactory factory = new TestCommandContextFactory();
 
         SimpleArguments args = new SimpleArguments();
@@ -134,7 +138,25 @@ public class ShowHeapHistogramCommandTest {
         command.run(factory.createContext(args));
 
         assertEquals("Heap ID not found: " + BAD_HEAP_ID + "\n", factory.getOutput());
-        verify(serviceProvider).ungetService(HeapDAO.class, heapDao);
+    }
+    
+    @Test
+    public void testNoHeapDAO() throws CommandException {
+        final String HEAP_ID = "heap-id-1";
+        StubBundleContext context = new StubBundleContext();
+
+        Command command = new ShowHeapHistogramCommand(context);
+        TestCommandContextFactory factory = new TestCommandContextFactory();
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("heapId", HEAP_ID);
+
+        try {
+            command.run(factory.createContext(args));
+            fail();
+        } catch (CommandException e) {
+            assertEquals(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE), e.getMessage());
+        }
     }
 }
 

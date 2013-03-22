@@ -42,6 +42,7 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 
+import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.ui.VMContextAction;
 import com.redhat.thermostat.common.MultipleServiceTracker;
 import com.redhat.thermostat.common.MultipleServiceTracker.Action;
@@ -58,6 +59,7 @@ public class Activator implements BundleActivator {
         Class<?>[] serviceDeps = new Class<?>[] {
             AgentInfoDAO.class,
             VmInfoDAO.class,
+            RequestQueue.class,
         };
 
         killVmActionTracker = new MultipleServiceTracker(context, serviceDeps, new Action() {
@@ -65,7 +67,8 @@ public class Activator implements BundleActivator {
             public void dependenciesAvailable(Map<String, Object> services) {
                 AgentInfoDAO agentDao = (AgentInfoDAO) services.get(AgentInfoDAO.class.getName());
                 VmInfoDAO vmDao = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
-                KillVMAction service = new KillVMAction(agentDao, vmDao, new SwingVMKilledListener());
+                RequestQueue queue = (RequestQueue) services.get(RequestQueue.class.getName());
+                KillVMAction service = new KillVMAction(agentDao, vmDao, queue, new SwingVMKilledListener());
                 killActionRegistration = context.registerService(VMContextAction.class.getName(), service, null);
             }
 

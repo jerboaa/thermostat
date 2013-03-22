@@ -44,12 +44,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
+import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.Arguments;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.common.utils.StreamUtils;
 import com.redhat.thermostat.vm.heap.analysis.command.locale.LocaleResources;
 import com.redhat.thermostat.vm.heap.analysis.common.HeapDAO;
@@ -65,14 +68,14 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
     private static final String FILE_NAME_ARGUMENT = "file";
 
     private final FileStreamCreator creator;
-    private final OSGIUtils serviceProvider;
+    private final BundleContext context;
 
     public SaveHeapDumpToFileCommand() {
-        this(OSGIUtils.getInstance(), new FileStreamCreator());
+        this(FrameworkUtil.getBundle(SaveHeapDumpToFileCommand.class).getBundleContext(), new FileStreamCreator());
     }
 
-    SaveHeapDumpToFileCommand(OSGIUtils serviceProvider, FileStreamCreator creator) {
-        this.serviceProvider = serviceProvider;
+    SaveHeapDumpToFileCommand(BundleContext context, FileStreamCreator creator) {
+        this.context = context;
         this.creator = creator;
     }
 
@@ -84,11 +87,15 @@ public class SaveHeapDumpToFileCommand extends AbstractCommand {
     @Override
 
     public void run(CommandContext ctx) throws CommandException {
-        HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
+        ServiceReference ref = context.getServiceReference(HeapDAO.class.getName());
+        if (ref == null) {
+            throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
+        }
+        HeapDAO heapDAO = (HeapDAO) context.getService(ref);
         try {
             run(ctx, heapDAO);
         } finally {
-            serviceProvider.ungetService(HeapDAO.class, heapDAO);
+            context.ungetService(ref);
             heapDAO = null;
         }
     }

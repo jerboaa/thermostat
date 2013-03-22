@@ -39,13 +39,19 @@ package com.redhat.thermostat.thread.client.common.collector.impl;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 import com.redhat.thermostat.client.command.RequestQueue;
+import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.command.Request;
+import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
-import com.redhat.thermostat.common.command.Request.RequestType;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -57,12 +63,16 @@ import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadMXBeanCollector implements ThreadCollector {
+    
+    private static final Logger logger = LoggingUtils.getLogger(ThreadMXBeanCollector.class);
 
     private AgentInfoDAO agentDao;
     private ThreadDao threadDao;
+    private BundleContext context;
     private VmRef ref;
 
-    public ThreadMXBeanCollector(VmRef ref) {
+    public ThreadMXBeanCollector(BundleContext context, VmRef ref) {
+        this.context = context;
         this.ref = ref;
     }
 
@@ -112,11 +122,11 @@ public class ThreadMXBeanCollector implements ThreadCollector {
             }
         });
         
-        RequestQueue queue = getRequestQueue();        
-        queue.putRequest(harvester);
-
         try {
+            enqueueRequest(harvester);
             latch.await();
+        } catch (CommandException e) {
+            logger.log(Level.WARNING, "Failed to enqueue request", e);
         } catch (InterruptedException ignore) {}
         
         return result[0];
@@ -146,11 +156,11 @@ public class ThreadMXBeanCollector implements ThreadCollector {
             }
         });
         
-        RequestQueue queue = getRequestQueue();
-        queue.putRequest(harvester);
-
         try {
+            enqueueRequest(harvester);
             latch.await();
+        } catch (CommandException e) {
+            logger.log(Level.WARNING, "Failed to enqueue request", e);
         } catch (InterruptedException ignore) {}
         return result[0];
     }
@@ -178,11 +188,11 @@ public class ThreadMXBeanCollector implements ThreadCollector {
             }
         });
         
-        RequestQueue queue = getRequestQueue();
-        queue.putRequest(harvester);
-
         try {
+            enqueueRequest(harvester);
             latch.await();
+        } catch (CommandException e) {
+            logger.log(Level.WARNING, "Failed to enqueue request", e);
         } catch (InterruptedException ignore) {}
         return result[0];
     }
@@ -235,22 +245,30 @@ public class ThreadMXBeanCollector implements ThreadCollector {
                 }
             });
 
-            RequestQueue queue = getRequestQueue();
-            queue.putRequest(harvester);
         
             try {
+                enqueueRequest(harvester);
                 latch.await();
                 // FIXME there is no guarantee that data is now present in storage
                 caps = threadDao.loadCapabilities(ref);
             } catch (InterruptedException ignore) {
                 caps = new VMThreadCapabilities();
+            } catch (CommandException e) {
+                logger.log(Level.WARNING, "Failed to enqueue request", e);
             }
         }
         return caps;
     }
     
-    RequestQueue getRequestQueue() {
-        return OSGIUtils.getInstance().getService(RequestQueue.class); 
+    private void enqueueRequest(Request req) throws CommandException {
+        ServiceReference ref = context.getServiceReference(RequestQueue.class.getName());
+        if (ref == null) {
+            throw new CommandException("Cannot access command channel");
+        }
+        RequestQueue queue = (RequestQueue) context.getService(ref);
+        queue.putRequest(req);
+        context.ungetService(ref);
     }
+    
 }
 

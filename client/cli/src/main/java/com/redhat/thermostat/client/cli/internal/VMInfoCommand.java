@@ -40,13 +40,16 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Date;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.DAOException;
@@ -60,23 +63,24 @@ public class VMInfoCommand extends AbstractCommand {
     private static final String NAME = "vm-info";
     private static final String STILL_ALIVE = translator.localize(LocaleResources.VM_STOP_TIME_RUNNING);
 
-    private OSGIUtils serviceProvider;
+    private final BundleContext context;
 
     public VMInfoCommand() {
-        this(OSGIUtils.getInstance());
+        this(FrameworkUtil.getBundle(VMInfoCommand.class).getBundleContext());
     }
 
     /** For tests only */
-    VMInfoCommand(OSGIUtils serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    VMInfoCommand(BundleContext context) {
+        this.context = context;
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
-        VmInfoDAO vmsDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
-        if (vmsDAO == null) {
+        ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
+        if (vmsDAORef == null) {
             throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         }
+        VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
 
         HostVMArguments hostVMArgs = new HostVMArguments(ctx.getArguments(), true, false);
         HostRef host = hostVMArgs.getHost();
@@ -91,7 +95,7 @@ public class VMInfoCommand extends AbstractCommand {
         } catch (DAOException ex) {
             ctx.getConsole().getError().println(ex.getMessage());
         } finally {
-            serviceProvider.ungetService(VmInfoDAO.class, vmsDAO);
+            context.ungetService(vmsDAORef);
         }
     }
 

@@ -38,11 +38,14 @@ package com.redhat.thermostat.client.cli.internal;
 
 import java.util.Collection;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -55,30 +58,32 @@ public class ListVMsCommand extends AbstractCommand {
 
     private static final String NAME = "list-vms";
 
-    private final OSGIUtils serviceProvider;
+    private final BundleContext context;
 
     public ListVMsCommand() {
-        this(OSGIUtils.getInstance());
+        this(FrameworkUtil.getBundle(ListVMsCommand.class).getBundleContext());
     }
 
-    ListVMsCommand(OSGIUtils serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    ListVMsCommand(BundleContext context) {
+        this.context = context;
     }
 
     @Override
     public void run(CommandContext ctx) throws CommandException {
 
-        HostInfoDAO hostsDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
-        if (hostsDAO == null) {
+        ServiceReference hostsDAORef = context.getServiceReference(HostInfoDAO.class.getName());
+        if (hostsDAORef == null) {
             throw new CommandException(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         }
+        HostInfoDAO hostsDAO = (HostInfoDAO) context.getService(hostsDAORef);
         Collection<HostRef> hosts = hostsDAO.getHosts();
-        serviceProvider.ungetService(HostInfoDAO.class, hostsDAO);
+        context.ungetService(hostsDAORef);
 
-        VmInfoDAO vmsDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
-        if (vmsDAO == null) {
+        ServiceReference vmsDAORef = context.getServiceReference(VmInfoDAO.class.getName());
+        if (vmsDAORef == null) {
             throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         }
+        VmInfoDAO vmsDAO = (VmInfoDAO) context.getService(vmsDAORef);
         VMListFormatter formatter = new VMListFormatter();
         for (HostRef host : hosts) {
             Collection<VmRef> vms = vmsDAO.getVMs(host);
@@ -88,8 +93,7 @@ public class ListVMsCommand extends AbstractCommand {
             }
         }
         formatter.format(ctx.getConsole().getOutput());
-
-        serviceProvider.ungetService(VmInfoDAO.class, vmsDAO);
+        context.ungetService(vmsDAORef);
     }
 
     @Override

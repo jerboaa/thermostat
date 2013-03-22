@@ -46,7 +46,6 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
 import org.osgi.util.tracker.ServiceTracker;
 
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.eclipse.LoggerFacility;
 import com.redhat.thermostat.eclipse.internal.views.SWTHostOverviewViewProvider;
 import com.redhat.thermostat.host.overview.client.core.HostOverviewViewProvider;
@@ -186,9 +185,12 @@ public class Activator extends AbstractUIPlugin {
     }
 
     public boolean isDbConnected() {
-        DbService dbService = OSGIUtils.getInstance().getServiceAllowNull(
-                DbService.class);
-        return dbService != null;
+        boolean result = false;
+        BundleContext context = getBundle().getBundleContext();
+        if (context.getServiceReference(DbService.class) != null) {
+            result = true;
+        }
+        return result;
     }
     
     public Keyring getKeyring() {

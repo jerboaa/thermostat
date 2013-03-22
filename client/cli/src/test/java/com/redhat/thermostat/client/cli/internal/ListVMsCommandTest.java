@@ -38,6 +38,7 @@ package com.redhat.thermostat.client.cli.internal;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.mock;
@@ -53,34 +54,34 @@ import org.junit.Test;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.SimpleArguments;
-import com.redhat.thermostat.common.utils.OSGIUtils;
+import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.VmInfo;
 import com.redhat.thermostat.test.TestCommandContextFactory;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ListVMsCommandTest {
+    
+    private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
     private ListVMsCommand cmd;
     private TestCommandContextFactory cmdCtxFactory;
     private HostInfoDAO hostsDAO;
     private VmInfoDAO vmsDAO;
-    private OSGIUtils serviceProvider;
+    private StubBundleContext context;
 
     @Before
     public void setUp() {
         setupCommandContextFactory();
-        serviceProvider = mock(OSGIUtils.class);
+        context = new StubBundleContext();
 
-        cmd = new ListVMsCommand(serviceProvider);
+        cmd = new ListVMsCommand(context);
 
         hostsDAO = mock(HostInfoDAO.class);
         vmsDAO = mock(VmInfoDAO.class);
-
-        when(serviceProvider.getServiceAllowNull(HostInfoDAO.class)).thenReturn(hostsDAO);
-        when(serviceProvider.getServiceAllowNull(VmInfoDAO.class)).thenReturn(vmsDAO);
     }
 
     private void setupCommandContextFactory() {
@@ -97,6 +98,8 @@ public class ListVMsCommandTest {
 
     @Test
     public void verifyOutputFormatOneLine() throws CommandException {
+        context.registerService(HostInfoDAO.class, hostsDAO, null);
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
 
         HostRef host1 = new HostRef("123", "h1");
         VmRef vm1 = new VmRef(host1, 1, "n");
@@ -118,6 +121,8 @@ public class ListVMsCommandTest {
 
     @Test
     public void verifyOutputFormatMultiLines() throws CommandException {
+        context.registerService(HostInfoDAO.class, hostsDAO, null);
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
 
         HostRef host1 = new HostRef("123", "h1");
         HostRef host2 = new HostRef("456", "longhostname");
@@ -145,6 +150,38 @@ public class ListVMsCommandTest {
                      "123     h1           1      EXITED n\n" +
                      "123     h1           2      EXITED n1\n" +
                      "456     longhostname 123456 EXITED longvmname\n", output);
+    }
+    
+    @Test
+    public void testNeedHostInfoDAO() throws CommandException {
+        context.registerService(VmInfoDAO.class, vmsDAO, null);
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("--dbUrl", "fluff");
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+
+        try {
+            cmd.run(ctx);
+            fail();
+        } catch (CommandException e) {
+            assertEquals(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE), e.getMessage());
+        }
+    }
+    
+    @Test
+    public void testNeedVmInfoDAO() throws CommandException {
+        context.registerService(HostInfoDAO.class, hostsDAO, null);
+
+        SimpleArguments args = new SimpleArguments();
+        args.addArgument("--dbUrl", "fluff");
+        CommandContext ctx = cmdCtxFactory.createContext(args);
+
+        try {
+            cmd.run(ctx);
+            fail();
+        } catch (CommandException e) {
+            assertEquals(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE), e.getMessage());
+        }
     }
 
     @Test

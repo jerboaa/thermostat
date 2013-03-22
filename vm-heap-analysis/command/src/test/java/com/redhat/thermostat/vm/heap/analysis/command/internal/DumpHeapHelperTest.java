@@ -58,12 +58,10 @@ import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
-import com.redhat.thermostat.vm.heap.analysis.command.internal.DumpHeapHelper;
 
 public class DumpHeapHelperTest {
 
@@ -77,9 +75,6 @@ public class DumpHeapHelperTest {
     @Before
     public void setUp() {
         reqQueue = mock(RequestQueue.class);
-        OSGIUtils osgiUtils = mock(OSGIUtils.class);
-        when(osgiUtils.getService(RequestQueue.class)).thenReturn(reqQueue);
-        OSGIUtils.setInstance(osgiUtils);
 
         HostRef host = mock(HostRef.class);
 
@@ -108,7 +103,7 @@ public class DumpHeapHelperTest {
     @Test
     public void testExecute() {
 
-        cmd.execute(agentInfoDao, vmRef, heapDumpCompleteAction, heapDumpFailedAction);
+        cmd.execute(agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
 
         ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
         verify(reqQueue).putRequest(reqArg.capture());
@@ -130,7 +125,7 @@ public class DumpHeapHelperTest {
     @Test
     public void testExecuteFailure() {
 
-        cmd.execute(agentInfoDao, vmRef, heapDumpCompleteAction, heapDumpFailedAction);
+        cmd.execute(agentInfoDao, vmRef, reqQueue, heapDumpCompleteAction, heapDumpFailedAction);
 
         ArgumentCaptor<Request> reqArg = ArgumentCaptor.forClass(Request.class);
         verify(reqQueue).putRequest(reqArg.capture());

@@ -40,13 +40,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 
+import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
+
 import com.redhat.thermostat.client.cli.HostVMArguments;
 import com.redhat.thermostat.common.cli.AbstractCommand;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.cli.TableRenderer;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.HostInfoDAO;
@@ -68,15 +71,15 @@ public class ListHeapDumpsCommand extends AbstractCommand {
         translator.localize(LocaleResources.HEADER_TIMESTAMP),
     };
 
-    private final OSGIUtils serviceProvider;
+    private final BundleContext context;
 
     public ListHeapDumpsCommand() {
-        this(OSGIUtils.getInstance());
+        this(FrameworkUtil.getBundle(ListHeapDumpsCommand.class).getBundleContext());
     }
 
     /** For tests only */
-    ListHeapDumpsCommand(OSGIUtils serviceProvider) {
-        this.serviceProvider = serviceProvider;
+    ListHeapDumpsCommand(BundleContext context) {
+        this.context = context;
     }
 
     @Override
@@ -92,20 +95,23 @@ public class ListHeapDumpsCommand extends AbstractCommand {
 
         renderer.printLine(COLUMN_NAMES);
 
-        HostInfoDAO hostDAO = serviceProvider.getServiceAllowNull(HostInfoDAO.class);
-        if (hostDAO == null) {
+        ServiceReference hostDAORef = context.getServiceReference(HostInfoDAO.class.getName());
+        if (hostDAORef == null) {
             throw new CommandException(translator.localize(LocaleResources.HOST_SERVICE_UNAVAILABLE));
         }
+        HostInfoDAO hostDAO = (HostInfoDAO) context.getService(hostDAORef);
 
-        VmInfoDAO vmDAO = serviceProvider.getServiceAllowNull(VmInfoDAO.class);
-        if (vmDAO == null) {
+        ServiceReference vmDAORef = context.getServiceReference(VmInfoDAO.class.getName());
+        if (vmDAORef == null) {
             throw new CommandException(translator.localize(LocaleResources.VM_SERVICE_UNAVAILABLE));
         }
+        VmInfoDAO vmDAO = (VmInfoDAO) context.getService(vmDAORef);
 
-        HeapDAO heapDAO = serviceProvider.getServiceAllowNull(HeapDAO.class);
-        if (heapDAO == null) {
+        ServiceReference heapDAORef = context.getServiceReference(HeapDAO.class.getName());
+        if (heapDAORef == null) {
             throw new CommandException(translator.localize(LocaleResources.HEAP_SERVICE_UNAVAILABLE));
         }
+        HeapDAO heapDAO = (HeapDAO) context.getService(heapDAORef);
 
         Collection<HostRef> hosts = args.getHost() != null ? Arrays.asList(args.getHost()) : hostDAO.getHosts();
         for (HostRef hostRef : hosts) {
@@ -115,9 +121,9 @@ public class ListHeapDumpsCommand extends AbstractCommand {
             }
         }
 
-        serviceProvider.ungetService(HeapDAO.class, heapDAO);
-        serviceProvider.ungetService(VmInfoDAO.class, vmDAO);
-        serviceProvider.ungetService(HostInfoDAO.class, hostDAO);
+        context.ungetService(heapDAORef);
+        context.ungetService(vmDAORef);
+        context.ungetService(hostDAORef);
 
         renderer.render(ctx.getConsole().getOutput());
     }

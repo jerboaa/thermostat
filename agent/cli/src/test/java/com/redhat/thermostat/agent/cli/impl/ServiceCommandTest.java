@@ -44,7 +44,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.cli.impl.ServiceCommand;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class ServiceCommandTest {
 
@@ -52,7 +52,8 @@ public class ServiceCommandTest {
 
     @Before
     public void setUp() {
-        thermostatService = new ServiceCommand();
+        StubBundleContext context = new StubBundleContext();
+        thermostatService = new ServiceCommand(context);
     }
 
     @After

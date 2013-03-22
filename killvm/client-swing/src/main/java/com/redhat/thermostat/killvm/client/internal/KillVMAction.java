@@ -46,7 +46,6 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.locale.Translate;
-import com.redhat.thermostat.common.utils.OSGIUtils;
 import com.redhat.thermostat.killvm.client.locale.LocaleResources;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -63,13 +62,15 @@ public class KillVMAction implements VMContextAction {
     private final AgentInfoDAO agentDao;
     private final VmInfoDAO vmDao;
     private final Translate<LocaleResources> t;
+    private final RequestQueue queue;
     private final RequestResponseListener listener;
 
-    public KillVMAction(AgentInfoDAO agentDao, VmInfoDAO vmDao, RequestResponseListener listener) {
+    public KillVMAction(AgentInfoDAO agentDao, VmInfoDAO vmDao, RequestQueue queue, RequestResponseListener listener) {
         Objects.requireNonNull(listener, "Listener can't be null");
         this.agentDao = agentDao;
         this.vmDao = vmDao;
         this.t = LocaleResources.createLocalizer();
+        this.queue = queue;
         this.listener = listener;
     }
 
@@ -94,7 +95,6 @@ public class KillVMAction implements VMContextAction {
         murderer.setReceiver(RECEIVER);
         murderer.addListener(listener);
 
-        RequestQueue queue = OSGIUtils.getInstance().getService(RequestQueue.class);
         queue.putRequest(murderer);
     }
 

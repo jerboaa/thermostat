@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.client.common.collector;
+package com.redhat.thermostat.thread.client.common.collector.impl;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
@@ -43,27 +43,32 @@ import org.junit.Test;
 
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
+import com.redhat.thermostat.testutils.StubBundleContext;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
+import com.redhat.thermostat.thread.client.common.collector.ThreadCollectorFactory;
 import com.redhat.thermostat.thread.client.common.collector.impl.ThreadCollectorFactoryImpl;
 import com.redhat.thermostat.thread.dao.ThreadDao;
 
-public class ThreadCollectorFactoryTest {
+public class ThreadCollectorFactoryImplTest {
 
     @Test
     public void testThreadCollectorFactory() {
+        StubBundleContext context = new StubBundleContext();
         VmRef reference = mock(VmRef.class);
 
-        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl();
+        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl(context);
         ThreadCollector collector = factory.getCollector(reference);
         assertNotNull(collector);
     }
 
     @Test
     public void testThreadCollectorFactoryWithAgentAndThreadDaos() {
+        StubBundleContext context = new StubBundleContext();
         AgentInfoDAO agentDao = mock(AgentInfoDAO.class);
         ThreadDao threadDao = mock(ThreadDao.class);
         VmRef reference = mock(VmRef.class);
 
-        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl();
+        ThreadCollectorFactory factory = new ThreadCollectorFactoryImpl(context);
         factory.setAgentDao(agentDao);
         factory.setThreadDao(threadDao);
         ThreadCollector collector = factory.getCollector(reference);

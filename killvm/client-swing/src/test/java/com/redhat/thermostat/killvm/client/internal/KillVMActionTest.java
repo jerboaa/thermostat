@@ -47,18 +47,12 @@ import static org.mockito.Mockito.when;
 import java.net.InetSocketAddress;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.powermock.api.mockito.PowerMockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.client.command.RequestQueue;
 import com.redhat.thermostat.client.core.Filter;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.utils.OSGIUtils;
-import com.redhat.thermostat.killvm.client.internal.KillVMAction;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.dao.AgentInfoDAO;
@@ -66,8 +60,6 @@ import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.storage.model.AgentInformation;
 import com.redhat.thermostat.storage.model.VmInfo;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest(OSGIUtils.class)
 public class KillVMActionTest {
 
     @Test
@@ -80,9 +72,10 @@ public class KillVMActionTest {
         VmInfo vmInfo = mock(VmInfo.class);
         when(vmInfoDao.getVmInfo(matching)).thenReturn(vmInfo);
 
+        RequestQueue queue = mock(RequestQueue.class);
         RequestResponseListener listener = mock(RequestResponseListener.class);
 
-        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, listener);
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, listener);
 
         Filter<VmRef> filter = action.getFilter();
 
@@ -109,18 +102,14 @@ public class KillVMActionTest {
 
         RequestResponseListener agentResponseListener = mock(RequestResponseListener.class);
 
+        RequestQueue queue = mock(RequestQueue.class);
         final Request req = mock(Request.class);
-        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, agentResponseListener) {
+        KillVMAction action = new KillVMAction(agentDao, vmInfoDao, queue, agentResponseListener) {
             @Override
             Request getKillRequest(InetSocketAddress target) {
                 return req;
             }
         };
-        OSGIUtils utils = mock(OSGIUtils.class);
-        PowerMockito.mockStatic(OSGIUtils.class);
-        when(OSGIUtils.getInstance()).thenReturn(utils);
-        RequestQueue queue = mock(RequestQueue.class);
-        when(utils.getService(RequestQueue.class)).thenReturn(queue);
         action.execute(ref);
         ArgumentCaptor<String> vmIdParamCaptor = ArgumentCaptor
                 .forClass(String.class);
