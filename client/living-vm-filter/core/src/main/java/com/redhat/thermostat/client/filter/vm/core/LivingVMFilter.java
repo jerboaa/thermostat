@@ -59,5 +59,13 @@ public class LivingVMFilter implements Filter<VmRef> {
         VmInfo vmInfo = dao.getVmInfo(ref);
         return vmInfo.isAlive();
     }
+
+    public void setActive(boolean active) {
+        this.filterActive = active;
+    }
+
+    public boolean isActive() {
+        return filterActive;
+    }
 }
 

@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core;
+package com.redhat.thermostat.client.filter.vm.core.internal;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -44,6 +44,8 @@ import org.osgi.framework.ServiceReference;
 import org.osgi.framework.ServiceRegistration;
 
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
+import com.redhat.thermostat.client.filter.vm.core.internal.VMFilterActivator;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.storage.dao.VmInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;

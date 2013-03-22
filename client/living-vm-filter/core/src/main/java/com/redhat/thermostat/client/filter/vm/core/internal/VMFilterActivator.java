@@ -34,7 +34,7 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core;
+package com.redhat.thermostat.client.filter.vm.core.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,6 +50,7 @@ import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
 import com.redhat.thermostat.client.core.Filter;
+import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
 import com.redhat.thermostat.client.ui.MenuAction;
 import com.redhat.thermostat.common.Constants;
 import com.redhat.thermostat.storage.core.VmRef;

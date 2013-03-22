@@ -34,41 +34,61 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.client.filter.vm.core;
+package com.redhat.thermostat.client.filter.vm.core.internal;
 
-import com.redhat.thermostat.client.ui.MenuAction;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
-class LivingVMFilterMenuAction implements MenuAction {
+import org.junit.Before;
+import org.junit.Test;
 
-    private LivingVMFilter filter;
+import com.redhat.thermostat.client.filter.vm.core.LivingVMFilter;
+import com.redhat.thermostat.client.filter.vm.core.internal.LivingVMFilterMenuAction;
+import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.storage.dao.VmInfoDAO;
+import com.redhat.thermostat.storage.model.VmInfo;
+
+public class LivingVMFilterTest {
+
+    private VmInfoDAO dao;
+    private VmRef vmRef1;
+    private VmRef vmRef2;
     
-    public LivingVMFilterMenuAction(LivingVMFilter filter) {
-        this.filter = filter;
+    private VmInfo vmInfo1;
+    private VmInfo vmInfo2;
+    
+    @Before
+    public void setUp() {
+        dao = mock(VmInfoDAO.class);
+        
+        vmRef1 = mock(VmRef.class);
+        vmRef2 = mock(VmRef.class);
+        
+        vmInfo1 = mock(VmInfo.class);
+        vmInfo2 = mock(VmInfo.class);
+        
+        when(dao.getVmInfo(vmRef1)).thenReturn(vmInfo1);
+        when(dao.getVmInfo(vmRef2)).thenReturn(vmInfo2);
+        
+        when(vmInfo1.isAlive()).thenReturn(true);
+        when(vmInfo2.isAlive()).thenReturn(false);
     }
     
-    @Override
-    public String getName() {
-        return "Show Non Living VM";
+    @Test
+    public void testFilter() {
+        LivingVMFilter filter = new LivingVMFilter(dao);
+        LivingVMFilterMenuAction action = new LivingVMFilterMenuAction(filter);
+        
+        assertTrue(filter.matches(vmRef1));
+        assertFalse(filter.matches(vmRef2));
+        
+        action.execute();
+        
+        assertTrue(filter.matches(vmRef1));
+        assertTrue(filter.matches(vmRef2));
     }
 
-    @Override
-    public String getDescription() {
-        return "Shows non living VM in the vm list";
-    }
-
-    @Override
-    public void execute() {
-        filter.filterActive = !filter.filterActive;
-    }
-
-    @Override
-    public Type getType() {
-        return Type.CHECK;
-    }
-
-    @Override
-    public String[] getPath() {
-        return new String[] { "Edit", getName() };
-    }
 }
 
