@@ -60,10 +60,12 @@ import com.redhat.thermostat.common.cli.Command;
 import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandContextFactory;
 import com.redhat.thermostat.common.cli.CommandException;
+import com.redhat.thermostat.common.cli.Console;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.locale.Translate;
 import com.redhat.thermostat.common.tools.ApplicationState;
+import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.launcher.BundleManager;
 import com.redhat.thermostat.storage.core.ConnectionException;
@@ -313,8 +315,18 @@ public class LauncherImpl implements Launcher {
                 if (dbUrl == null) {
                     dbUrl = prefs.getConnectionUrl();
                 }
-                String username = ctx.getArguments().getArgument(CommonOptions.USERNAME_ARG);
-                String password = ctx.getArguments().getArgument(CommonOptions.PASSWORD_ARG);
+                String username = prefs.getUserName();
+                String password = prefs.getPassword();
+                if (username == null || password == null) {
+                    Console console = ctx.getConsole();
+                    try {
+                        StorageAuthInfoGetter getUserPass = new StorageAuthInfoGetter(console);
+                        username = getUserPass.getUserName(dbUrl);
+                        password = new String(getUserPass.getPassword(dbUrl));
+                    } catch (IOException ex) {
+                        throw new CommandException("Could not get username or password from user.", ex);
+                    }
+                }
                 try {
                     // this may throw storage exception
                     DbService service = dbServiceFactory.createDbService(username, password, dbUrl);

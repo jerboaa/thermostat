@@ -125,9 +125,8 @@ public class ConnectCommandTest {
         when(dbServiceFactory.createDbService(eq(username), eq(password), eq(dbUrl))).thenReturn(dbService);
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", dbUrl);
-        args.addArgument("username", username);
-        args.addArgument("password", password);
         CommandContext ctx = cmdCtxFactory.createContext(args);
+        cmdCtxFactory.setInput(username + '\r' + password + '\r');
         cmd.run(ctx);
         verify(dbService).connect();
     }
@@ -136,13 +135,9 @@ public class ConnectCommandTest {
     public void verifyNoKeyring() throws CommandException {
         DbService dbService = mock(DbService.class);
 
-        String username = "testuser";
-        String password = "testpassword";
         String dbUrl = "mongodb://10.23.122.1:12578";
         SimpleArguments args = new SimpleArguments();
         args.addArgument("dbUrl", dbUrl);
-        args.addArgument("username", username);
-        args.addArgument("password", password);
         CommandContext ctx = cmdCtxFactory.createContext(args);
         
         try {

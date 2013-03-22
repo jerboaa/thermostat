@@ -115,9 +115,13 @@ public class Configuration {
     }
 
     public File getAgentConfigurationFile() throws InvalidConfigurationException {
-
         File agent = new File(getThermostatHome(), "agent");
         return new File(agent, "agent.properties");
+    }
+
+    public File getAgentAuthConfigFile() throws InvalidConfigurationException {
+        File agent = new File(getThermostatHome(), "agent");
+        return new File(agent, "agent.auth");
     }
 
     public File getClientConfigurationDirectory() throws InvalidConfigurationException {

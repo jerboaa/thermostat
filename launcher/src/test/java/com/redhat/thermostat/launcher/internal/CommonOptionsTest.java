@@ -68,17 +68,10 @@ public class CommonOptionsTest {
             options.addOption(opt);
         }
         assertTrue(options.hasOption("dbUrl"));
-        assertTrue(options.hasOption("username"));
-        assertTrue(options.hasOption("password"));
         assertFalse(options.getOption("dbUrl").isRequired());
-        assertFalse(options.getOption("username").isRequired());
-        assertFalse(options.getOption("password").isRequired());
         assertTrue(options.getOption("dbUrl").hasArg());
-        assertTrue(options.getOption("username").hasArg());
-        assertTrue(options.getOption("password").hasArg());
         Option dbUrlOption = options.getOption("dbUrl");
         assertEquals(CommonOptions.DB_URL_ARG, dbUrlOption.getArgName());
-        assertEquals(CommonOptions.USERNAME_ARG, options.getOption(CommonOptions.USERNAME_ARG).getArgName());
     }
 }
 

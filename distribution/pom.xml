@@ -148,6 +148,7 @@
                   <filtering>true</filtering>
                   <includes>
                     <include>agent.properties</include>
+                    <include>agent.auth</include>
                   </includes>
                 </resource>
                 <resource>

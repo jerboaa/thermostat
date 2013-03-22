@@ -71,8 +71,6 @@ public class AgentOptionParser implements ThermostatOptionParser {
                 isHelp = true;
             }
         }
-        configuration.setUsername(args.getArgument("username"));
-        configuration.setPassword(args.getArgument("password"));
     }
     
     public boolean isHelp() {

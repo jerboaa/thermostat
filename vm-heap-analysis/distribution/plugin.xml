@@ -62,12 +62,6 @@
           <long>dbUrl</long>
         </option>
         <option common="true">
-          <long>username</long>
-        </option>
-        <option common="true">
-          <long>password</long>
-        </option>
-        <option common="true">
           <long>logLevel</long>
         </option>
       </options>
@@ -107,19 +101,13 @@
         </option>
         <option>
           <long>limit</long>
-          <short>L</short>          
+          <short>L</short>
           <argument>true</argument>
           <required>false</required>
           <description>limit search to top N results, defaults to 10</description>
         </option>
         <option common="true">
           <long>dbUrl</long>
-        </option>
-        <option common="true">
-          <long>username</long>
-        </option>
-        <option common="true">
-          <long>password</long>
         </option>
         <option common="true">
           <long>logLevel</long>
@@ -154,33 +142,27 @@
       <options>
         <option>
           <long>heapId</long>
-          <short>h</short>          
+          <short>h</short>
           <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
           <long>objectId</long>
-          <short>o</short>          
+          <short>o</short>
           <argument>true</argument>
           <required>true</required>
           <description>the ID of the object to query</description>
         </option>
         <option>
           <long>all</long>
-          <short>a</short>          
+          <short>a</short>
           <argument>false</argument>
           <required>false</required>
           <description>finds all paths to GC roots</description>
         </option>
         <option common="true">
           <long>dbUrl</long>
-        </option>
-        <option common="true">
-          <long>username</long>
-        </option>
-        <option common="true">
-          <long>password</long>
         </option>
         <option common="true">
           <long>logLevel</long>
@@ -215,26 +197,20 @@
       <options>
         <option>
           <long>hostId</long>
-          <short>a</short>          
+          <short>a</short>
           <argument>true</argument>
           <required>false</required>
           <description>the ID of the host to monitor</description>
         </option>
         <option>
           <long>vmId</long>
-          <short>v</short>          
+          <short>v</short>
           <argument>true</argument>
           <required>false</required>
           <description>the ID of the VM to monitor</description>
         </option>
         <option common="true">
           <long>dbUrl</long>
-        </option>
-        <option common="true">
-          <long>username</long>
-        </option>
-        <option common="true">
-          <long>password</long>
         </option>
         <option common="true">
           <long>logLevel</long>
@@ -269,26 +245,20 @@
       <options>
         <option>
           <long>heapId</long>
-          <short>h</short>         
+          <short>h</short>
           <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
           <long>objectId</long>
-          <short>o</short>          
+          <short>o</short>
           <argument>true</argument>
           <required>true</required>
           <description>the ID of the object to query</description>
         </option>
         <option common="true">
           <long>dbUrl</long>
-        </option>
-        <option common="true">
-          <long>username</long>
-        </option>
-        <option common="true">
-          <long>password</long>
         </option>
         <option common="true">
           <long>logLevel</long>
@@ -323,26 +293,20 @@
       <options>
         <option>
           <long>heapId</long>
-          <short>h</short>          
+          <short>h</short>
           <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option>
           <long>file</long>
-          <short>f</short>          
+          <short>f</short>
           <argument>true</argument>
           <required>true</required>
           <description>the file name to save to</description>
         </option>
         <option common="true">
           <long>dbUrl</long>
-        </option>
-        <option common="true">
-          <long>username</long>
-        </option>
-        <option common="true">
-          <long>password</long>
         </option>
         <option common="true">
           <long>logLevel</long>
@@ -377,19 +341,13 @@
       <options>
         <option>
           <long>heapId</long>
-          <short>h</short>          
+          <short>h</short>
           <argument>true</argument>
           <required>true</required>
           <description>the ID of the heapdump to analyze</description>
         </option>
         <option common="true">
           <long>dbUrl</long>
-        </option>
-        <option common="true">
-          <long>username</long>
-        </option>
-        <option common="true">
-          <long>password</long>
         </option>
         <option common="true">
           <long>logLevel</long>

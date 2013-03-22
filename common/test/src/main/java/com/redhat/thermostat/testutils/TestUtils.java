@@ -38,6 +38,7 @@ package com.redhat.thermostat.testutils;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.management.ManagementFactory;
@@ -99,6 +100,11 @@ public class TestUtils {
             props.store(propsOutputStream, "thermostat agent test properties");
         }
 
+        File tmpAuth = new File(agent, "agent.auth");
+        FileWriter authWriter = new FileWriter(tmpAuth);
+        authWriter.append("username=user\npassword=pass\n");
+        authWriter.flush();
+        authWriter.close();
         return tmpDir;
     }
 }

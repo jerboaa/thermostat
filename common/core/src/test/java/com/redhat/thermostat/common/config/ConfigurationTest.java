@@ -75,6 +75,8 @@ public class ConfigurationTest {
 
         Assert.assertEquals(thermostatHome + "agent" + s + "agent.properties",
                             config.getAgentConfigurationFile().getCanonicalPath());
+        Assert.assertEquals(thermostatHome + "agent" + s + "agent.auth",
+                                    config.getAgentAuthConfigFile().getCanonicalPath());
         Assert.assertEquals(thermostatHome + "storage", config.getStorageBaseDirectory().getCanonicalPath());
         Assert.assertEquals(thermostatHome + "storage" + s + "db.properties",
                             config.getStorageConfigurationFile().getCanonicalPath());

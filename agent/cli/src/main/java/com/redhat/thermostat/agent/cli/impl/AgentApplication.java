@@ -141,8 +141,9 @@ public final class AgentApplication extends AbstractStateNotifyingCommand {
                         case FAILED_TO_CONNECT:
                             logger.warning("Could not connect to storage.");
                             shutdown();
+                            break;
                         default:
-                            logger.warning("Unfamiliar ConnectionStatus value");
+                            logger.warning("Unfamiliar ConnectionStatus value: " + newStatus.toString());
                         }
                     }
                 };

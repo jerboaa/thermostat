@@ -60,6 +60,7 @@ public class ClientPreferences {
         this(Preferences.userRoot().node("thermostat"), keyring);
     }
 
+    // Testing hook with injectable j.u.p.Preferences
     ClientPreferences(Preferences prefs, Keyring keyring) {
         this.prefs = prefs;
         this.keyring = keyring;

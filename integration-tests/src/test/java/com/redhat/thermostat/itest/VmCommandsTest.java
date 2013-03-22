@@ -72,14 +72,16 @@ public class VmCommandsTest extends IntegrationTest {
     @Test
     public void testListVms() throws Exception {
         Spawn vmList = commandAgainstMongo("list-vms");
+        handleAuthPrompt(vmList, "mongodb://127.0.0.1:27518", "", "");
         vmList.expectClose();
-
-        assertEquals("HOST_ID HOST VM_ID STATUS VM_NAME\n", vmList.getCurrentStandardOutContents());
+        assertOutputEndsWith(vmList.getCurrentStandardOutContents(), "HOST_ID HOST VM_ID STATUS VM_NAME\n\n");
     }
 
     @Test
     public void testVmStat() throws Exception {
         Spawn vmStat = commandAgainstMongo("vm-stat");
+        // TODO include required options to test meaningfully
+        //handleAuthPrompt(vmStat, "mongodb://127.0.0.1:27518", "", "");
         vmStat.expectClose();
 
         System.out.println(vmStat.getCurrentStandardOutContents());
@@ -90,6 +92,8 @@ public class VmCommandsTest extends IntegrationTest {
     @Test
     public void testVmInfo() throws Exception {
         Spawn vmInfo = commandAgainstMongo("vm-info");
+        // TODO include required options to test meaningfully
+        // handleAuthPrompt(vmInfo, "mongodb://127.0.0.1:27518", "", "");
         vmInfo.expectClose();
 
         assertNoExceptions(vmInfo.getCurrentStandardOutContents(), vmInfo.getCurrentStandardErrContents());
@@ -109,6 +113,11 @@ public class VmCommandsTest extends IntegrationTest {
 
         for (String command : commands) {
             Spawn heapCommand = commandAgainstMongo(command);
+            // TODO include required options to test each command meaningfully
+            if (command.equals("list-heap-dumps")) {
+                // No missing options, times out waiting for user/pass input without the following:
+                handleAuthPrompt(heapCommand, "mongodb://127.0.0.1:27518", "", "");
+            }
             heapCommand.expectClose();
 
             assertCommandIsFound(
@@ -128,7 +137,7 @@ public class VmCommandsTest extends IntegrationTest {
         completeArgs.addAll(Arrays.asList(args));
         completeArgs.add("-d");
         completeArgs.add("mongodb://127.0.0.1:27518");
-        return spawnThermostat(completeArgs.toArray(new String[0]));
+        return spawnThermostat(true, completeArgs.toArray(new String[0]));
     }
 
 }

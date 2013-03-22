@@ -40,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -432,11 +433,30 @@ public class LauncherImplTest {
         ClientPreferences prefs = mock(ClientPreferences.class);
         String dbUrl = "mongo://fluff:12345";
         when(prefs.getConnectionUrl()).thenReturn(dbUrl);
+        when(prefs.getUserName()).thenReturn("user");
+        when(prefs.getPassword()).thenReturn("password");
 
         DbService dbService = mock(DbService.class);
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
-        when(dbServiceFactory.createDbService(anyString(), anyString(), dbUrlCaptor.capture())).thenReturn(dbService);
+        when(dbServiceFactory.createDbService(eq("user"), eq("password"), dbUrlCaptor.capture())).thenReturn(dbService);
         launcher.setPreferences(prefs);
+        wrappedRun(launcher, new String[] { "test3" }, false);
+        verify(dbService).connect();
+        verify(prefs).getConnectionUrl();
+        assertEquals(dbUrl, dbUrlCaptor.getValue());
+    }
+
+    @Test
+    public void verifyUserInputUsedIfNoSavedAuthInfo() {
+        ClientPreferences prefs = mock(ClientPreferences.class);
+        String dbUrl = "mongo://fluff:12345";
+        when(prefs.getConnectionUrl()).thenReturn(dbUrl);
+
+        DbService dbService = mock(DbService.class);
+        ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
+        when(dbServiceFactory.createDbService(eq("user"), eq("pass"), dbUrlCaptor.capture())).thenReturn(dbService);
+        launcher.setPreferences(prefs);
+        ctxFactory.setInput("user\rpass\r");
         wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();

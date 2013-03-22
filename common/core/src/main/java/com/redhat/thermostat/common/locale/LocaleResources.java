@@ -45,6 +45,9 @@ public enum LocaleResources {
     APPLICATION_INFO_LICENSE,
     APPLICATION_INFO_DESCRIPTION,
     APPLICATION_VERSION_INFO,
+
+    USERNAME_PROMPT,
+    PASSWORD_PROMPT,
     ;
 
     public static final String RESOURCE_BUNDLE =

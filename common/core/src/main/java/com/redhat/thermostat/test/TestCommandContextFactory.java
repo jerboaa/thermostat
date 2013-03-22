@@ -118,6 +118,11 @@ public class TestCommandContextFactory extends CommandContextFactory {
         return new String(out.toByteArray());
     }
 
+    /**
+     * For simulating user input in tests that require user interaction.
+     * 
+     * @param input the user's input, including any CR characters
+     */
     public void setInput(String input) {
         try {
             inOut.write(input.getBytes());

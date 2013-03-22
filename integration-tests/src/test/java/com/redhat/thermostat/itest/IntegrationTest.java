@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.itest;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
 import java.io.File;
@@ -49,6 +50,7 @@ import com.redhat.thermostat.common.utils.StreamUtils;
 import expectj.Executor;
 import expectj.ExpectJ;
 import expectj.Spawn;
+import expectj.TimeoutException;
 
 /**
  * Helper methods to support writing an integration test.
@@ -68,6 +70,10 @@ public class IntegrationTest {
     }
 
     public static Spawn spawnThermostat(String... args) throws IOException {
+        return spawnThermostat(false, args);
+    }
+
+    public static Spawn spawnThermostat(boolean localeDependent, String... args) throws IOException {
         ExpectJ expect = new ExpectJ(TIMEOUT_IN_SECONDS);
         StringBuilder result = new StringBuilder(getThermostatExecutable());
         if (args != null) {
@@ -77,7 +83,12 @@ public class IntegrationTest {
         }
         String toExecute = result.toString();
         //System.out.println("executing: '" + toExecute + "'");
-        return expect.spawn(toExecute);
+        if (localeDependent) {
+            Executor exec = new LocaleExecutor(toExecute);
+            return expect.spawn(exec);
+        } else {
+            return expect.spawn(toExecute);
+        }
     }
 
     public static Spawn spawn(List<String> args) throws IOException {
@@ -146,8 +157,9 @@ public class IntegrationTest {
     public static void deleteFilesUnder(String path) throws IOException {
         String[] filesToDelete = new File(path).list();
         for (String toDelete : filesToDelete) {
-            if (!new File(path, toDelete).delete()) {
-                throw new IOException("cant delete: '" + new File(path, toDelete).toString() + "'.");
+            File theFile = new File(path, toDelete);
+            if (!theFile.delete()) {
+                throw new IOException("cant delete: '" + theFile.toString() + "'.");
             }
         }
     }
@@ -162,5 +174,36 @@ public class IntegrationTest {
         assertFalse(stdErrContents.contains("Exception"));
     }
 
+    public static void assertOutputEndsWith(String stdOutContents, String expectedOutput) {
+        String endOfOut = stdOutContents.substring(stdOutContents.length() - expectedOutput.length());
+        assertEquals(expectedOutput, endOfOut);
+    }
+
+    public static void handleAuthPrompt(Spawn spawn, String url, String user, String password) throws IOException, TimeoutException {
+        spawn.expect("Please enter username for storage at " + url + ":");
+        spawn.send(user + "\r");
+        spawn.expect("Please enter password for storage at " + url + ":");
+        spawn.send(password + "\r");
+    }
+
+    private static class LocaleExecutor implements Executor {
+
+        public static final String[] LANG_C = { "LANG=C " };
+        private String process;
+
+        public LocaleExecutor(String process) {
+            this.process = process;
+        }
+
+        @Override
+        public Process execute() throws IOException {
+            return Runtime.getRuntime().exec(process, LANG_C);
+        }
+
+        @Override
+        public String toString() {
+            return process;
+        }
+    }
 }
 

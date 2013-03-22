@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.client.cli.internal;
 
+import java.io.IOException;
+import java.util.Objects;
+
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.ServiceReference;
@@ -45,6 +48,7 @@ import com.redhat.thermostat.common.cli.CommandContext;
 import com.redhat.thermostat.common.cli.CommandException;
 import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.common.locale.Translate;
+import com.redhat.thermostat.common.tools.StorageAuthInfoGetter;
 import com.redhat.thermostat.storage.core.ConnectionException;
 import com.redhat.thermostat.storage.core.DbService;
 import com.redhat.thermostat.storage.core.DbServiceFactory;
@@ -62,8 +66,6 @@ import com.redhat.thermostat.utils.keyring.Keyring;
 public class ConnectCommand extends AbstractCommand {
 
     private static final String DB_URL_ARG = "dbUrl";
-    private static final String USERNAME_ARG = "username";
-    private static final String PASSWORD_ARG = "password";
     
     private static final Translate<LocaleResources> translator = LocaleResources.createLocalizer();
 
@@ -100,11 +102,25 @@ public class ConnectCommand extends AbstractCommand {
             context.ungetService(keyringRef);
         }
         String dbUrl = ctx.getArguments().getArgument(DB_URL_ARG);
-        if (dbUrl == null) {
-            dbUrl = prefs.getConnectionUrl();
+        // This argument is considered "required" so option parsing should mean this is impossible.
+        Objects.requireNonNull(dbUrl);
+        String username = null;
+        String password = null;
+        if (prefs.getConnectionUrl().equals(dbUrl)) {
+            // Have we previously saved connection parameters for this Url?
+            username = prefs.getUserName();
+            password = prefs.getPassword();
         }
-        String username = ctx.getArguments().getArgument(USERNAME_ARG);
-        String password = ctx.getArguments().getArgument(PASSWORD_ARG);
+        if (username == null || password == null) {
+            com.redhat.thermostat.common.cli.Console console = ctx.getConsole();
+            try {
+                StorageAuthInfoGetter getUserPass = new StorageAuthInfoGetter(console);
+                username = getUserPass.getUserName(dbUrl);
+                password = new String(getUserPass.getPassword(dbUrl));
+            } catch (IOException e) {
+                throw new CommandException("Could not get username or password from user.", e);
+            }
+        }
         try {
             // may throw StorageException if storage url is not supported
             DbService service = dbServiceFactory.createDbService(username, password, dbUrl);

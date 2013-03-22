@@ -251,7 +251,7 @@ public class Main {
                     } catch (Throwable t) {
                         // Note: DbService fires a ConnectionListener event when it
                         // fails to connect. No need to notify our handler manually.
-                        logger.log(Level.WARNING, "connection attempt failed: ", t);
+                        logger.log(Level.FINE, "connection attempt failed: ", t);
                     }
                 }
             });

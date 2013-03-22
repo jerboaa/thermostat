@@ -36,28 +36,103 @@
 
 package com.redhat.thermostat.agent.config;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Random;
 
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.testutils.TestUtils;
 
 public class AgentConfigsUtilsTest {
-    
-    @Before
-    public void setUp() throws IOException, InvalidConfigurationException {
-        TestUtils.setupAgentConfigs();
+
+    private static Random random;
+
+    @BeforeClass
+    public static void setUpRandom() {
+        random = new Random();
     }
     
     @Test
-    public void test() throws InvalidConfigurationException {
+    public void testCreateAgentConfigs() throws InvalidConfigurationException, IOException {
+        TestUtils.setupAgentConfigs();
         AgentStartupConfiguration config = AgentConfigsUtils.createAgentConfigs();        
 
         Assert.assertFalse(config.purge());
         Assert.assertEquals("42.42.42.42:42", config.getConfigListenAddress());
+        Assert.assertEquals("user", config.getUsername());
+        Assert.assertEquals("pass", config.getPassword());
+    }
+
+    @Test
+    public void testAuthConfigFromFile() throws IOException {
+        File tmpAuth = createTempAuthFile("username=user\npassword=pass\n");
+        AgentStartupConfiguration config = new AgentStartupConfiguration();
+        AgentConfigsUtils.setAuthConfigFromFile(tmpAuth, config);
+        Assert.assertEquals("user", config.getUsername());
+        Assert.assertEquals("pass", config.getPassword());
+    }
+
+    @Test
+    public void testAuthConfigFromEmptyFile() throws IOException {
+        File tmpAuth = createTempAuthFile("");
+        AgentStartupConfiguration config = new AgentStartupConfiguration();
+        AgentConfigsUtils.setAuthConfigFromFile(tmpAuth, config);
+        Assert.assertEquals("", config.getUsername());
+        Assert.assertEquals("", config.getPassword());
+    }
+
+    @Test
+    public void testAuthConfigWithConfigCommentedOut() throws IOException {
+        File tmpAuth = createTempAuthFile("#username=user\n#password=pass\n");
+        AgentStartupConfiguration config = new AgentStartupConfiguration();
+        AgentConfigsUtils.setAuthConfigFromFile(tmpAuth, config);
+        Assert.assertEquals("", config.getUsername());
+        Assert.assertEquals("", config.getPassword());
+    }
+
+    private File createTempAuthFile(String contents) throws IOException {
+        String tmpAuthLoc = System.getProperty("java.io.tmpdir") + File.separatorChar +
+                Math.abs(random.nextInt());
+        File tmpAuth = new File(tmpAuthLoc);
+        tmpAuth.deleteOnExit();
+        tmpAuth.createNewFile();
+        FileWriter authWriter = new FileWriter(tmpAuth);
+        authWriter.append(contents);
+        authWriter.flush();
+        authWriter.close();
+        return tmpAuth;
+    }
+
+    @Test
+    public void testParseAuthConfigData() {
+        char[] authData = "username=user\npassword=pass\n".toCharArray();
+        AgentStartupConfiguration config = new AgentStartupConfiguration();
+        AgentConfigsUtils.parseAuthConfigFromData(authData, authData.length, config);
+        Assert.assertEquals("user", config.getUsername());
+        Assert.assertEquals("pass", config.getPassword());
+    }
+
+    @Test
+    public void testParseAuthDataIgnoresComments() {
+        char[] authData = "#username=user\n#password=pass\n".toCharArray();
+        AgentStartupConfiguration config = new AgentStartupConfiguration();
+        AgentConfigsUtils.parseAuthConfigFromData(authData, authData.length, config);
+        Assert.assertNull(config.getUsername());
+        Assert.assertNull(config.getPassword());
+    }
+
+    @Test
+    public void testParseAuthDataIgnoresDataAfterLength() {
+        char[] authData = "#username=user\n#password=pass\nusername=user\npassword=pass\n".toCharArray();
+        AgentStartupConfiguration config = new AgentStartupConfiguration();
+        AgentConfigsUtils.parseAuthConfigFromData(authData, 30, config);
+        Assert.assertNull(config.getUsername());
+        Assert.assertNull(config.getPassword());
     }
 }
 

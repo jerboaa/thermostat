@@ -1,0 +1,9 @@
+# This file is intended to be read by a hand-rolled reader/parser, to avoid
+# passwords needing to be represented as String objects at runtime.  It must
+# be saved with Unix line end characters, and encoded as ascii.
+# Uncomment the following lines and replace with your storage authentication
+# parameters as needed.
+#
+#username=thermostat
+#password=thermostat
+

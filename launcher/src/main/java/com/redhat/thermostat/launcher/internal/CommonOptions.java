@@ -60,15 +60,11 @@ final class CommonOptions {
     
     static final String LOG_LEVEL_ARG = "logLevel";
     static final String DB_URL_ARG = "dbUrl";
-    static final String USERNAME_ARG = "username";
-    static final String PASSWORD_ARG = "password";
     static final Set<String> ALL_COMMON_OPTIONS = new HashSet<>(4);
     
     static {
         ALL_COMMON_OPTIONS.add(LOG_LEVEL_ARG);
         ALL_COMMON_OPTIONS.add(DB_URL_ARG);
-        ALL_COMMON_OPTIONS.add(USERNAME_ARG);
-        ALL_COMMON_OPTIONS.add(PASSWORD_ARG);
     }
     
     static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
@@ -78,18 +74,8 @@ final class CommonOptions {
         Option dbUrlOption = new Option("d", DB_URL_ARG, true, dbUrlDesc);
         dbUrlOption.setRequired(false);
         dbUrlOption.setArgName(DB_URL_ARG);
-        String usernameDesc = t.localize(LocaleResources.OPTION_USERNAME_DESC);
-        Option usernameOption = new Option("u", USERNAME_ARG, true, usernameDesc);
-        usernameOption.setRequired(false);
-        usernameOption.setArgName(USERNAME_ARG);
-        String passwordDesc = t.localize(LocaleResources.OPTION_PASSWORD_DESC);
-        Option passwordOption = new Option("p", PASSWORD_ARG, true, passwordDesc);
-        passwordOption.setRequired(false);
-        passwordOption.setArgName(PASSWORD_ARG);
-        List<Option> options = new ArrayList<>(3);
+        List<Option> options = new ArrayList<>(1);
         options.add(dbUrlOption);
-        options.add(usernameOption);
-        options.add(passwordOption);
         return options;
     }
     
