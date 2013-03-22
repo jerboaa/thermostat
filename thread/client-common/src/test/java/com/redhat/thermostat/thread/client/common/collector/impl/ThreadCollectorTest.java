@@ -36,14 +36,12 @@
 
 package com.redhat.thermostat.thread.client.common.collector.impl;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -92,93 +90,31 @@ public class ThreadCollectorTest {
 
     @Test
     public void testVMCapabilitiesNotInDAO() throws Exception {
-        VMThreadCapabilities resCaps = mock(VMThreadCapabilities.class);
-        when(threadDao.loadCapabilities(reference)).thenReturn(null).thenReturn(resCaps);
+        when(threadDao.loadCapabilities(reference)).thenReturn(null);
         
-        final RequestQueue requestQueue = mock(RequestQueue.class);
-        context.registerService(RequestQueue.class, requestQueue, null);
-        
-        final ArgumentCaptor<RequestResponseListener> captor = ArgumentCaptor.forClass(RequestResponseListener.class);
-        doNothing().when(request).addListener(captor.capture());
-        
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) throws Throwable {
-                Request req = (Request) invocation.getArguments()[0];
-                assertSame(request, req);
-                
-                RequestResponseListener listener = captor.getValue();
-                listener.fireComplete(null, null);
-                
-                return null;
-            }
-
-        }).when(requestQueue).putRequest(request);
-        
-        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
-            @Override
-            Request createRequest() {
-                return request;
-            }
-        };
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference);
         collector.setAgentInfoDao(agentDao);
         collector.setThreadDao(threadDao);
                 
         VMThreadCapabilities caps = collector.getVMThreadCapabilities();
-
-        verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
-        verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
         
-        verify(requestQueue).putRequest(request);
-        
-        verify(threadDao, times(2)).loadCapabilities(reference);
-        assertSame(resCaps, caps);
-    }
-    
-    @Test
-    public void testVMCapabilitiesNoRequestQueue() throws Exception {
-        VMThreadCapabilities resCaps = mock(VMThreadCapabilities.class);
-        when(threadDao.loadCapabilities(reference)).thenReturn(null).thenReturn(resCaps);
-        
-        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
-            @Override
-            Request createRequest() {
-                return request;
-            }
-        };
-        collector.setAgentInfoDao(agentDao);
-        collector.setThreadDao(threadDao);
-        
-        VMThreadCapabilities caps = collector.getVMThreadCapabilities();
-
-        verify(request).setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
-        verify(request).setParameter(HarvesterCommand.VM_ID.name(), "00101010");
-        
-        verify(threadDao, times(1)).loadCapabilities(reference);
-        assertNull(caps);
+        verify(threadDao).loadCapabilities(reference);
+        assertEquals(null, caps);
     }
     
     @Test
     public void testVMCapabilitiesInDAO() throws Exception {
-        StubBundleContext context = new StubBundleContext();
-        
         VMThreadCapabilities resCaps = mock(VMThreadCapabilities.class);
         when(threadDao.loadCapabilities(reference)).thenReturn(resCaps);
         
-        ThreadCollector collector = new ThreadMXBeanCollector(context, reference) {
-            @Override
-            Request createRequest() {
-                fail();
-                return null;
-            }
-        };
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference);
         
         collector.setAgentInfoDao(agentDao);
         collector.setThreadDao(threadDao);
 
         VMThreadCapabilities caps = collector.getVMThreadCapabilities();
  
-        verify(threadDao, times(1)).loadCapabilities(reference);
+        verify(threadDao).loadCapabilities(reference);
         assertSame(resCaps, caps);
     }
     

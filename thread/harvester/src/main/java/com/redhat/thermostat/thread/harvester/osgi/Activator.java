@@ -42,10 +42,15 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.util.tracker.ServiceTracker;
 
+import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
+import com.redhat.thermostat.backend.Backend;
+import com.redhat.thermostat.common.Version;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.harvester.ThreadBackend;
 import com.redhat.thermostat.thread.harvester.ThreadHarvester;
 
 public class Activator implements BundleActivator {
@@ -53,17 +58,26 @@ public class Activator implements BundleActivator {
     private ScheduledExecutorService executor = Executors.newScheduledThreadPool(24);
 
     private ServiceTracker threadDaoTracker;
+    private ServiceRegistration backendRegistration;
 
     private ReceiverRegistry registry;
     private ThreadHarvester harvester;
+    private ThreadBackend backend;
     
     @Override
     public void start(final BundleContext context) throws Exception {
 
         harvester = new ThreadHarvester(executor);
-
         registry = new ReceiverRegistry(context);
-        registry.registerReceiver(harvester);
+        VmStatusListenerRegistrar vmListener = new VmStatusListenerRegistrar(context);
+
+        /*
+         * dont register anything just yet, let the backend handle the
+         * registration, deregistration it when it's activated or deactivated
+         */
+
+        backend = new ThreadBackend(new Version(context.getBundle()), vmListener, registry, harvester);
+        backendRegistration = context.registerService(Backend.class, backend, null);
 
         threadDaoTracker = new ServiceTracker(context, ThreadDao.class.getName(), null) {
             @Override
@@ -85,6 +99,12 @@ public class Activator implements BundleActivator {
 
     @Override
     public void stop(BundleContext context) throws Exception {
+        if (backend.isActive()) {
+            backend.deactivate();
+        }
+
+        backendRegistration.unregister();
+
         threadDaoTracker.close();
 
         if (executor != null) {

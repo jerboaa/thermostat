@@ -89,12 +89,6 @@ public class ThreadHarvester implements RequestReceiver {
             result = stopHarvester(vmId);
             break;
         }
-        case VM_CAPS: {
-            // this is blocking
-            String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
-            result = saveVmCaps(vmId);
-            break;
-        }
         case IS_COLLECTING: {
             // this is blocking too
             String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
@@ -126,7 +120,7 @@ public class ThreadHarvester implements RequestReceiver {
         return harvester.start();
     }
     
-    private boolean saveVmCaps(String vmId) {
+    boolean saveVmCaps(String vmId) {
         Harvester harvester = getHarvester(vmId);
         return harvester.saveVmCaps();
     }

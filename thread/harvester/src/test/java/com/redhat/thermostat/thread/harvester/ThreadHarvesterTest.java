@@ -129,17 +129,9 @@ public class ThreadHarvesterTest {
     public void testSaveVmCaps() {
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         ThreadDao dao = mock(ThreadDao.class);
-        Request request = mock(Request.class);
         
         final boolean[] getHarvesterCalled = new boolean[1];
         final Harvester harverster = mock(Harvester.class);
-        
-        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-        
-        when(request.getParameter(captor.capture())).
-            thenReturn(HarvesterCommand.VM_CAPS.name()).
-            thenReturn("42").
-            thenReturn("0xcafe");
         
         ThreadHarvester threadHarvester = new ThreadHarvester(executor) {
             @Override
@@ -152,13 +144,7 @@ public class ThreadHarvesterTest {
             }
         };
         threadHarvester.setThreadDao(dao);
-        threadHarvester.receive(request);
-        
-        List<String> values = captor.getAllValues();
-        assertEquals(2, values.size());
-        
-        assertEquals(HarvesterCommand.class.getName(), values.get(0));
-        assertEquals(HarvesterCommand.VM_ID.name(), values.get(1));
+        threadHarvester.saveVmCaps("42");
         
         assertTrue(getHarvesterCalled[0]);
         

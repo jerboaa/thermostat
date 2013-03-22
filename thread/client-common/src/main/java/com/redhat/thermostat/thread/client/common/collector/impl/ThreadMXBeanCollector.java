@@ -230,33 +230,7 @@ public class ThreadMXBeanCollector implements ThreadCollector {
 
     @Override
     public VMThreadCapabilities getVMThreadCapabilities() {
-        
         VMThreadCapabilities caps = threadDao.loadCapabilities(ref);
-        if (caps == null) {
-            Request harvester = createRequest();
-            harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.VM_CAPS.name());
-            harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
-            
-            final CountDownLatch latch = new CountDownLatch(1);
-            harvester.addListener(new RequestResponseListener() {
-                @Override
-                public void fireComplete(Request request, Response response) {
-                    latch.countDown();
-                }
-            });
-
-        
-            try {
-                enqueueRequest(harvester);
-                latch.await();
-                // FIXME there is no guarantee that data is now present in storage
-                caps = threadDao.loadCapabilities(ref);
-            } catch (InterruptedException ignore) {
-                caps = new VMThreadCapabilities();
-            } catch (CommandException e) {
-                logger.log(Level.WARNING, "Failed to enqueue request", e);
-            }
-        }
         return caps;
     }
     
