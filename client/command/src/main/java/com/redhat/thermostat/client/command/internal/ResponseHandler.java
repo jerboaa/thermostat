@@ -76,6 +76,8 @@ public class ResponseHandler extends SimpleChannelUpstreamHandler {
         logger.log(Level.WARNING, "exception caught: ", e.getCause());
         Response response = new Response(ResponseType.ERROR);
         notifyListeners(response);
+        // Close broken channel. This is important, please keep!
+        e.getChannel().close();
     }
 
     private void notifyListeners(Response response) {

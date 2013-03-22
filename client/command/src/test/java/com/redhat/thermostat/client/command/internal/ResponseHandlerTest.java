@@ -39,6 +39,7 @@ package com.redhat.thermostat.client.command.internal;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,15 +81,19 @@ public class ResponseHandlerTest {
     }
     
     @Test
-    public void exceptionCaughtCallsFireComplete() throws Exception {
+    public void exceptionCaughtCallsFireCompleteAndClosesChannel() throws Exception {
         Request req = mock(Request.class);
         List<RequestResponseListener> listeners = new ArrayList<>();
         ResponseListenerFixture fixture = new ResponseListenerFixture();
         listeners.add(fixture);
         when(req.getListeners()).thenReturn(listeners);
         ResponseHandler handler = new ResponseHandler(req);
-        handler.exceptionCaught(mock(ChannelHandlerContext.class), mock(ExceptionEvent.class));
+        ExceptionEvent e = mock(ExceptionEvent.class);
+        Channel chan = mock(Channel.class);
+        when(e.getChannel()).thenReturn(chan);
+        handler.exceptionCaught(mock(ChannelHandlerContext.class), e);
         assertTrue(fixture.isCalled());
+        verify(chan).close();
     }
     
     private class ResponseListenerFixture implements RequestResponseListener {

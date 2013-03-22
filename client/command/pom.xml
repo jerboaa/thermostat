@@ -107,6 +107,13 @@
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
+    <!-- Needed for Browser compatible hostname verification after SSL handshake
+         of cmd-channel -->
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient-osgi</artifactId>
+      <version>${httpcomponents.version}</version>
+    </dependency>
     
   </dependencies>
 

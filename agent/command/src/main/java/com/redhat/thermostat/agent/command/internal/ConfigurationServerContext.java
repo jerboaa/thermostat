@@ -40,6 +40,7 @@ import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import org.jboss.netty.bootstrap.Bootstrap;
@@ -110,14 +111,15 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
             if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
                 SSLEngine engine = null;
                 try {
-                    engine = SSLContextFactory.getServerContext()
-                            .createSSLEngine();
+                    SSLContext ctxt = SSLContextFactory.getServerContext();
+                    engine = ctxt.createSSLEngine();
                     engine.setUseClientMode(false);
                 } catch (SslInitException | InvalidConfigurationException e) {
                     logger.log(Level.SEVERE,
                             "Failed to initiate command channel endpoint", e);
                 }
                 pipeline.addLast("ssl", new SslHandler(engine));
+                logger.log(Level.FINE, "Added SSL handler for command channel endpoint");
             }
             pipeline.addLast("decoder", new RequestDecoder());
             pipeline.addLast("encoder", new ResponseEncoder());

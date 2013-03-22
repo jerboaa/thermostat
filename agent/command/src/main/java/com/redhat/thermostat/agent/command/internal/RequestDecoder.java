@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import java.net.InetSocketAddress;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -68,7 +69,9 @@ class RequestDecoder extends MessageDecoder {
             buffer.resetReaderIndex();
             throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));
         }
-        Request request = new Request(RequestType.valueOf(typeAsString), channel.getRemoteAddress());
+        // Netty javadoc tells us it's safe to downcast to more concrete type.
+        InetSocketAddress addr = (InetSocketAddress)channel.getRemoteAddress();
+        Request request = new Request(RequestType.valueOf(typeAsString), addr);
         if (!DecodingHelper.decodeParameters(buffer, request)) {
             buffer.resetReaderIndex();
             throw new InvalidMessageException("Could not decode message: " + ChannelBuffers.hexDump(buffer));

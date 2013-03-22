@@ -64,7 +64,7 @@ class RequestEncoder extends MessageEncoder {
         // registered MessageEncoder is the one for Requests a cast
         // to Request should be safe.
         Request request = (Request) msg;
-        logger.log(Level.FINEST, "encoding Request object");
+        logger.log(Level.FINEST, "encoding Request object " + request.toString());
 
         // Request Type
         String requestType = EncodingHelper.trimType(request.getType()

@@ -50,6 +50,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 import javax.net.ssl.SSLSocketFactory;
 
 import org.junit.After;
@@ -176,7 +177,9 @@ public class MongoConnectionTest {
         SSLContext context = PowerMockito.mock(SSLContext.class);
         when(SSLContextFactory.getClientContext()).thenReturn(context);
         SSLSocketFactory factory = PowerMockito.mock(SSLSocketFactory.class);
-        when(context.getSocketFactory()).thenReturn(factory);
+        when(SSLContextFactory.wrapSSLFactory(any(SSLSocketFactory.class), any(SSLParameters.class))).thenReturn(factory);
+        SSLParameters params = mock(SSLParameters.class);
+        when(SSLContextFactory.getSSLParameters(context)).thenReturn(params);
         Mongo mockMongo = mock(Mongo.class);
         ArgumentCaptor<MongoOptions> mongoOptCaptor = ArgumentCaptor.forClass(MongoOptions.class);
         whenNew(Mongo.class).withParameterTypes(ServerAddress.class,
@@ -187,6 +190,7 @@ public class MongoConnectionTest {
         DBCollection mockCollection = mock(DBCollection.class);
         when(mockDb.getCollection(any(String.class))).thenReturn(mockCollection);
         conn.connect();
+        verify(params).setEndpointIdentificationAlgorithm("HTTPS");
         Mongo mongo = conn.getMongo();
         assertEquals(mockMongo, mongo);
         MongoOptions opts = mongoOptCaptor.getValue();

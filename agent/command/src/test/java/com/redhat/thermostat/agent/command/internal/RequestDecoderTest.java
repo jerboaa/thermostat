@@ -36,7 +36,11 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
-import java.net.SocketAddress;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+
+import java.net.InetSocketAddress;
 import java.util.Collection;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -45,16 +49,11 @@ import org.jboss.netty.channel.Channel;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.redhat.thermostat.agent.command.internal.RequestDecoder;
 import com.redhat.thermostat.common.command.InvalidMessageException;
 import com.redhat.thermostat.common.command.Message;
 import com.redhat.thermostat.common.command.Messages;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Request.RequestType;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
 
 public class RequestDecoderTest {
     
@@ -149,7 +148,7 @@ public class RequestDecoderTest {
         Message actual = new RequestDecoder().decode(channel, buffer);
         assertTrue(actual instanceof Request);
         assertTrue(Messages.equal(expected, (Request)actual));
-        SocketAddress addr = mock(SocketAddress.class);
+        InetSocketAddress addr = new InetSocketAddress(1234);
         buffer = ChannelBuffers.copiedBuffer(ENCODED_REQUEST_WITH_NO_PARAMS);
         expected = new Request(RequestType.RESPONSE_EXPECTED, addr);
         actual = new RequestDecoder().decode(channel, buffer);

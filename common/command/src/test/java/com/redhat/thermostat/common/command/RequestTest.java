@@ -45,9 +45,6 @@ import java.util.Collection;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.command.Request;
-import com.redhat.thermostat.common.command.RequestResponseListener;
-import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Request.RequestType;
 
 public class RequestTest {
@@ -102,6 +99,23 @@ public class RequestTest {
         assertEquals(1, listeners.size());
         assertTrue(listeners.contains(listener2));
         assertFalse(listeners.contains(listener1));
+    }
+    
+    @Test
+    public void canGetHostname() {
+        // unresolved hostname
+        InetSocketAddress addr = new InetSocketAddress(HOST, PORT);
+        assertTrue(addr.isUnresolved());
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, addr);
+        assertEquals(HOST, request.getTarget().getHostString());
+        
+    }
+    
+    @Test
+    public void testToString() {
+        InetSocketAddress addr = new InetSocketAddress(1234);
+        Request request = new Request(RequestType.RESPONSE_EXPECTED, addr);
+        assertEquals("{ Request: {target = "+ addr.toString() + "}, {type = RESPONSE_EXPECTED} }", request.toString());
     }
 }
 

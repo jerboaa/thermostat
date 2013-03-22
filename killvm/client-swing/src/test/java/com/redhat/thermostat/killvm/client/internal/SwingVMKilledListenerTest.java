@@ -41,14 +41,13 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 
 import org.junit.Test;
 
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.killvm.client.internal.SwingVMKilledListener;
 
 public class SwingVMKilledListenerTest {
     
@@ -65,7 +64,7 @@ public class SwingVMKilledListenerTest {
     public void okShowsNoMessage() {
         ResponseActionListener listener = new ResponseActionListener();
         Request request = mock(Request.class);
-        SocketAddress addr = mock(SocketAddress.class);
+        InetSocketAddress addr = new InetSocketAddress(1234);
         when(request.getTarget()).thenReturn(addr);
         Response resp = new Response(ResponseType.OK);
         listener.fireComplete(request, resp);

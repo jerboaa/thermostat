@@ -36,6 +36,7 @@
 
 package com.redhat.thermostat.common.command;
 
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.Collections;
@@ -83,6 +84,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * 
  */
 public class Request implements Message {
+    
+    public static final String UNKNOWN_HOSTNAME = "";
 
     public enum RequestType implements MessageType {
         NO_RESPONSE_EXPECTED,
@@ -92,7 +95,7 @@ public class Request implements Message {
 
     private final RequestType type;
     private final Map<String, String> parameters;
-    private final SocketAddress target;
+    private final InetSocketAddress target;
     private final Collection<RequestResponseListener> listeners;
 
     private static final String RECEIVER = "receiver";
@@ -100,7 +103,7 @@ public class Request implements Message {
     public static final String CLIENT_TOKEN = "client-token";
     public static final String AUTH_TOKEN = "auth-token";
 
-    public Request(RequestType type, SocketAddress target) {
+    public Request(RequestType type, InetSocketAddress target) {
         this.type = type;
         parameters = new TreeMap<>();
         this.target = target;
@@ -132,7 +135,7 @@ public class Request implements Message {
         return getParameter(RECEIVER);
     }
 
-    public SocketAddress getTarget() {
+    public InetSocketAddress getTarget() {
         return target;
     }
 
@@ -146,6 +149,11 @@ public class Request implements Message {
 
     public Collection<RequestResponseListener> getListeners() {
         return Collections.unmodifiableCollection(listeners);
+    }
+    
+    @Override
+    public String toString() {
+        return "{ Request: {target = " + target.toString() + "}, {type = " + type.name() + "} }";
     }
 }
 

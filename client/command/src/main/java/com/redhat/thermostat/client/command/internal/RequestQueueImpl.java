@@ -41,11 +41,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 import org.apache.commons.codec.binary.Base64;
 import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.osgi.framework.BundleContext;
@@ -159,7 +159,7 @@ class RequestQueueImpl implements RequestQueue {
 
     }
     
-    private void fireComplete(Request request, Response response) {
+    void fireComplete(Request request, Response response) {
         // TODO add more information once Response supports parameters.
         for (RequestResponseListener listener : request.getListeners()) {
             listener.fireComplete(request, response);
@@ -176,27 +176,9 @@ class RequestQueueImpl implements RequestQueue {
         ChannelFuture future = sslHandler.handshake();
         
         // Register a future listener, since it gives us a way to
-        // report an error on client side.
-        future.addListener(new SSLErrorReporter(request));
-    }
-
-    private class SSLErrorReporter implements ChannelFutureListener {
-        
-        private final Request request;
-        
-        private SSLErrorReporter(Request request) {
-            this.request = request;
-        }
-        
-        @Override
-        public void operationComplete(ChannelFuture future) throws Exception {
-            if (!future.isSuccess()) {
-                logger.log(Level.WARNING,
-                        "SSL handshake failed check agent logs for details!",
-                        future.getCause());
-                fireComplete(request, new Response(ResponseType.ERROR));
-            }
-        }
+        // report an error on client side and to perform (optional) host name verification.
+        // FIXME: make hostname verification configurable
+        future.addListener(new SSLHandshakeFinishedListener(request, true, sslHandler, this));
     }
 }
 

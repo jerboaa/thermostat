@@ -37,7 +37,10 @@
 package com.redhat.thermostat.client.command.internal;
 
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
 import org.jboss.netty.bootstrap.Bootstrap;
@@ -51,8 +54,11 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
 import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ConfigurationRequestContext implements ConfigurationCommandContext {
+    
+    private static final Logger logger = LoggingUtils.getLogger(ConfigurationRequestContext.class);
 
     private final ClientBootstrap bootstrap;
 
@@ -90,10 +96,15 @@ public class ConfigurationRequestContext implements ConfigurationCommandContext 
         public ChannelPipeline getPipeline() throws Exception {
             ChannelPipeline pipeline = Channels.pipeline();
             if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
-                SSLEngine engine = SSLContextFactory.getClientContext()
-                        .createSSLEngine();
+                SSLContext ctxt = SSLContextFactory.getClientContext();
+                SSLEngine engine = ctxt.createSSLEngine();
                 engine.setUseClientMode(true);
+                // intentionally don't set the endpoint identification algo,
+                // since this doesn't seem to work for SSLEngine and nio.
+                // we do this manually once the hanshake finishes.
+                engine.setSSLParameters(SSLContextFactory.getSSLParameters(ctxt));
                 pipeline.addLast("ssl", new SslHandler(engine));
+                logger.log(Level.FINE, "Added ssl handler for command channel client");
             }
             pipeline.addLast("decoder", new ResponseDecoder());
             pipeline.addLast("encoder", new RequestEncoder());

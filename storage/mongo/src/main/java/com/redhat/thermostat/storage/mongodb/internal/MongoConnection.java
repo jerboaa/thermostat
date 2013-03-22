@@ -42,6 +42,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
+import javax.net.ssl.SSLSocketFactory;
 
 import com.mongodb.DB;
 import com.mongodb.Mongo;
@@ -139,7 +141,14 @@ class MongoConnection extends Connection {
             logger.log(Level.WARNING, "Failed to get SSL context!", e);
             throw new MongoException(e.getMessage(), e);
         }
-        opts.socketFactory = ctxt.getSocketFactory();
+        SSLParameters params = SSLContextFactory.getSSLParameters(ctxt);
+        // Perform HTTPS compatible host name checking.
+        // FIXME: make hostname verification configurable
+        params.setEndpointIdentificationAlgorithm("HTTPS");
+        SSLSocketFactory factory = SSLContextFactory.wrapSSLFactory(
+                ctxt.getSocketFactory(), params);
+        logger.log(Level.FINE, "factory is: " + factory.getClass().getName());
+        opts.socketFactory = factory;
         return new Mongo(getServerAddress(), opts);
     }
 

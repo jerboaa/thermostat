@@ -37,9 +37,8 @@
 package com.redhat.thermostat.client.command.internal;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
 
-import java.net.SocketAddress;
+import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 
 import org.jboss.netty.buffer.ChannelBuffer;
@@ -64,7 +63,7 @@ public class RequestEncoderTest {
         buf = ChannelBuffers.buffer(4);
         buf.writeInt(0);
         ChannelBuffer expected = ChannelBuffers.wrappedBuffer(buf2, buf);
-        SocketAddress addr = mock(SocketAddress.class);
+        InetSocketAddress addr = new InetSocketAddress("testhost", 12);
         Request item = new Request(RequestType.RESPONSE_EXPECTED, addr);
         ChannelBuffer actual = encoder.encode(item);
         if (DEBUG) {
@@ -75,7 +74,7 @@ public class RequestEncoderTest {
     
     @Test
     public void canEncodeRequestWithParams() throws Exception {
-        SocketAddress addr = mock(SocketAddress.class);
+        InetSocketAddress addr = new InetSocketAddress(1234);
 
         // Prepare request we'd like to encode
         Request item = new Request(RequestType.RESPONSE_EXPECTED, addr);
