@@ -43,12 +43,15 @@ import java.util.Map.Entry;
 import java.util.concurrent.ScheduledExecutorService;
 
 import com.redhat.thermostat.agent.command.RequestReceiver;
+import com.redhat.thermostat.common.Clock;
+import com.redhat.thermostat.common.SystemClock;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 
 public class ThreadHarvester implements RequestReceiver {
 
@@ -56,10 +59,16 @@ public class ThreadHarvester implements RequestReceiver {
     Map<String, Harvester> connectors;
 
     private ThreadDao dao;
-    
+    private Clock clock;
+
     public ThreadHarvester(ScheduledExecutorService executor) {
+        this(executor, new SystemClock());
+    }
+    
+    public ThreadHarvester(ScheduledExecutorService executor, Clock clock) {
         this.executor = executor;
-        connectors = new HashMap<>();
+        this.connectors = new HashMap<>();
+        this.clock = clock;
     }
 
     public void setThreadDao(ThreadDao dao) {
@@ -89,12 +98,6 @@ public class ThreadHarvester implements RequestReceiver {
             result = stopHarvester(vmId);
             break;
         }
-        case IS_COLLECTING: {
-            // this is blocking too
-            String vmId = request.getParameter(HarvesterCommand.VM_ID.name());
-            // FIXME: this need to be replaced when we support response parameters
-            return isCollecting(vmId) ? new Response(ResponseType.OK) : new Response(ResponseType.NOK);
-        }        
         default:
             result = false;
             break;
@@ -107,17 +110,13 @@ public class ThreadHarvester implements RequestReceiver {
         }
     }
     
-    private boolean isCollecting(String vmId) {
-        Harvester harvester = connectors.get(vmId);
-        if (harvester == null) {
-            return false;
-        }
-        return harvester.isConnected();
-    }
-    
-    private boolean startHarvester(String vmId) {
+    public boolean startHarvester(String vmId) {
         Harvester harvester = getHarvester(vmId);
-        return harvester.start();
+        boolean result = harvester.start();
+        if (result) {
+            updateHarvestingStatus(Integer.valueOf(vmId), result);
+        }
+        return result;
     }
     
     boolean saveVmCaps(String vmId) {
@@ -125,14 +124,26 @@ public class ThreadHarvester implements RequestReceiver {
         return harvester.saveVmCaps();
     }
     
-    private boolean stopHarvester(String vmId) {
+    public boolean stopHarvester(String vmId) {
         Harvester harvester = connectors.get(vmId);
         if (harvester != null) {
             return harvester.stop();
         }
+        updateHarvestingStatus(Integer.valueOf(vmId), false);
         return true;
     }
-    
+
+    public void addThreadHarvestingStatus(String pid) {
+        updateHarvestingStatus(Integer.valueOf(pid), connectors.containsKey(pid));
+    }
+
+    private void updateHarvestingStatus(int vmId, boolean harvesting) {
+        ThreadHarvestingStatus status = new ThreadHarvestingStatus();
+        status.setTimeStamp(clock.getRealTimeMillis());
+        status.setVmId(vmId);
+        status.setHarvesting(harvesting);
+        dao.saveHarvestingStatus(status);
+    }
     Harvester getHarvester(String vmId) {
         Harvester harvester = connectors.get(vmId);
         if (harvester == null) {

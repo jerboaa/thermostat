@@ -58,6 +58,7 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -167,34 +168,11 @@ public class ThreadMXBeanCollector implements ThreadCollector {
     
     @Override
     public boolean isHarvesterCollecting() {
-        Request harvester = createRequest();
-        harvester.setParameter(HarvesterCommand.class.getName(), HarvesterCommand.IS_COLLECTING.name());
-        harvester.setParameter(HarvesterCommand.VM_ID.name(), ref.getIdString());
-
-        final CountDownLatch latch = new CountDownLatch(1);        
-        final boolean[] result = new boolean[1];
-
-        harvester.addListener(new RequestResponseListener() {
-            @Override
-            public void fireComplete(Request request, Response response) {
-                switch (response.getType()) {
-                case OK:
-                    result[0] = true;
-                    break;
-                default:
-                    break;
-                }
-                latch.countDown();
-            }
-        });
-        
-        try {
-            enqueueRequest(harvester);
-            latch.await();
-        } catch (CommandException e) {
-            logger.log(Level.WARNING, "Failed to enqueue request", e);
-        } catch (InterruptedException ignore) {}
-        return result[0];
+        ThreadHarvestingStatus status = threadDao.getLatestHarvestingStatus(ref);
+        if (status == null) {
+            return false;
+        }
+        return status.isHarvesting();
     }
     
     @Override

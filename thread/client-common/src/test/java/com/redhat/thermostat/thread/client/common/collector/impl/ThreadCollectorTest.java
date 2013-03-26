@@ -39,6 +39,7 @@ package com.redhat.thermostat.thread.client.common.collector.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -62,6 +63,7 @@ import com.redhat.thermostat.testutils.StubBundleContext;
 import com.redhat.thermostat.thread.client.common.collector.ThreadCollector;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadCollectorTest {
@@ -116,6 +118,18 @@ public class ThreadCollectorTest {
  
         verify(threadDao).loadCapabilities(reference);
         assertSame(resCaps, caps);
+    }
+
+    @Test
+    public void testHarvesterCollecting() {
+        ThreadHarvestingStatus status = mock(ThreadHarvestingStatus.class);
+        when(status.isHarvesting()).thenReturn(true);
+        ThreadCollector collector = new ThreadMXBeanCollector(context, reference);
+        when(threadDao.getLatestHarvestingStatus(reference)).thenReturn(status);
+
+        collector.setThreadDao(threadDao);
+
+        assertTrue(collector.isHarvesterCollecting());
     }
     
     @Test

@@ -48,11 +48,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.redhat.thermostat.common.Clock;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
 import com.redhat.thermostat.thread.collector.HarvesterCommand;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 
 public class ThreadHarvesterTest {
 
@@ -159,6 +161,27 @@ public class ThreadHarvesterTest {
         Response response = harvester.receive(mock(Request.class));
 
         assertEquals(ResponseType.ERROR, response.getType());
+    }
+
+    @Test
+    public void testHarvestingStatus() {
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+        Clock clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(1l);
+        ThreadDao dao = mock(ThreadDao.class);
+
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock);
+        harvester.setThreadDao(dao);
+
+        harvester.addThreadHarvestingStatus("10");
+
+        ArgumentCaptor<ThreadHarvestingStatus> statusCaptor = ArgumentCaptor.forClass(ThreadHarvestingStatus.class);
+        verify(dao).saveHarvestingStatus(statusCaptor.capture());
+
+        ThreadHarvestingStatus status = statusCaptor.getValue();
+        assertEquals(10, status.getVmId());
+        assertEquals(false, status.isHarvesting());
+        assertEquals(1, status.getTimeStamp());
     }
 }
 

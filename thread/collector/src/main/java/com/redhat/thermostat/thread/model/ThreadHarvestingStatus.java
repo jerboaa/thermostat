@@ -34,16 +34,47 @@
  * to do so, delete this exception statement from your version.
  */
 
-package com.redhat.thermostat.thread.collector;
+package com.redhat.thermostat.thread.model;
 
-public enum HarvesterCommand {
+import com.redhat.thermostat.storage.core.Entity;
+import com.redhat.thermostat.storage.core.Persist;
+import com.redhat.thermostat.storage.model.BasePojo;
 
-    START,
-    STOP,
-    
-    VM_ID;
+@Entity
+public class ThreadHarvestingStatus extends BasePojo {
 
-    public static final String RECEIVER = "com.redhat.thermostat.thread.harvester.ThreadHarvester";
+    private int vmId;
+    private long timeStamp;
+    private boolean collecting;
+
+    @Persist
+    public int getVmId() {
+        return vmId;
+    }
+
+    @Persist
+    public void setVmId(int newVmId) {
+        this.vmId = newVmId;
+    }
+
+    @Persist
+    public long getTimeStamp() {
+        return timeStamp;
+    }
+
+    @Persist
+    public void setTimeStamp(long newTimeStamp) {
+        this.timeStamp = newTimeStamp;
+    }
+
+    @Persist
+    public boolean isHarvesting() {
+        return collecting;
+    }
+
+    @Persist
+    public void setHarvesting(boolean collecting) {
+        this.collecting = collecting;
+    }
 
 }
-

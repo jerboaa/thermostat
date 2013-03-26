@@ -43,6 +43,7 @@ import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
@@ -79,6 +80,18 @@ public interface ThreadDao {
     void saveSummary(ThreadSummary summary);
     ThreadSummary loadLastestSummary(VmRef ref);
     List<ThreadSummary> loadSummary(VmRef ref, long since);
+
+    static final String HARVESTING_DATA = "harvesting";
+    static final Key<String> HARVESTING_STATUS_KEY = new Key<String> (HARVESTING_DATA, false);
+    static final Category<ThreadHarvestingStatus> THREAD_HARVESTING_STATUS =
+            new Category<>("vm-thread-harvesting", ThreadHarvestingStatus.class,
+                    Key.AGENT_ID,
+                    Key.VM_ID,
+                    Key.TIMESTAMP,
+                    HARVESTING_STATUS_KEY);
+
+    ThreadHarvestingStatus getLatestHarvestingStatus(VmRef vm);
+    void saveHarvestingStatus(ThreadHarvestingStatus status);
 
     static final String THREAD_STATE = "threadState";
     static final Key<String> THREAD_STATE_KEY = new Key<String>(THREAD_STATE, false);

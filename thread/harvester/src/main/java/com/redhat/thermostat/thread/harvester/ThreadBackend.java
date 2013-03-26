@@ -36,13 +36,18 @@
 
 package com.redhat.thermostat.thread.harvester;
 
+import java.util.logging.Logger;
+
 import com.redhat.thermostat.agent.VmStatusListener;
 import com.redhat.thermostat.agent.VmStatusListenerRegistrar;
 import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.backend.BaseBackend;
 import com.redhat.thermostat.common.Version;
+import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ThreadBackend extends BaseBackend implements VmStatusListener {
+
+    private static final Logger logger = LoggingUtils.getLogger(ThreadBackend.class);
 
     private final ReceiverRegistry registry;
     private final ThreadHarvester harvester;
@@ -70,6 +75,7 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
         }
         vmListener.register(this);
         registry.registerReceiver(harvester);
+        // FIXME enable harvester
         active = true;
         return true;
     }
@@ -81,6 +87,7 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
         }
         vmListener.unregister(this);
         registry.unregisterReceivers();
+        // FIXME disable harvester
         active = false;
         return true;
     }
@@ -92,15 +99,19 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
 
     @Override
     public void vmStatusChanged(Status newStatus, int pid) {
+        String vmId = String.valueOf(pid);
         switch (newStatus) {
         case VM_STARTED: case VM_ACTIVE:
             /* this is blocking */
-            harvester.saveVmCaps(String.valueOf(pid));
+            harvester.saveVmCaps(vmId);
+            harvester.addThreadHarvestingStatus(vmId);
             break;
         case VM_STOPPED:
-        default:
-            /* nothing to do */
+            harvester.stopHarvester(vmId);
+            harvester.addThreadHarvestingStatus(vmId);
             break;
+        default:
+            logger.warning("Unexpected VM state: " + newStatus);
         }
     }
 

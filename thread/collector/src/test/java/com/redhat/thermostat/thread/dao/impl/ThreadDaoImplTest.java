@@ -38,6 +38,7 @@ package com.redhat.thermostat.thread.dao.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
@@ -49,17 +50,19 @@ import java.util.NoSuchElementException;
 
 import org.junit.Test;
 
+import com.redhat.thermostat.storage.core.Add;
 import com.redhat.thermostat.storage.core.Category;
 import com.redhat.thermostat.storage.core.Cursor;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.Key;
 import com.redhat.thermostat.storage.core.Query;
 import com.redhat.thermostat.storage.core.Query.Criteria;
+import com.redhat.thermostat.storage.core.Query.SortDirection;
 import com.redhat.thermostat.storage.core.Replace;
 import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
-import com.redhat.thermostat.storage.core.Query.Criteria;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
 
 public class ThreadDaoImplTest {
@@ -72,6 +75,7 @@ public class ThreadDaoImplTest {
         ThreadDaoImpl dao = new ThreadDaoImpl(storage);
         
         verify(storage).registerCategory(ThreadDao.THREAD_CAPABILITIES);
+        verify(storage).registerCategory(ThreadDao.THREAD_HARVESTING_STATUS);
         verify(storage).registerCategory(ThreadDao.THREAD_INFO);
         verify(storage).registerCategory(ThreadDao.THREAD_SUMMARY);
     }
@@ -159,7 +163,55 @@ public class ThreadDaoImplTest {
         verify(storage).createReplace(ThreadDao.THREAD_CAPABILITIES);
         verify(replace).setPojo(caps);
         verify(replace).apply();
+    }
 
+    @Test
+    public void testGetLatestHarvestingStatus() {
+        VmRef vm = mock(VmRef.class);
+        when(vm.getId()).thenReturn(42);
+        when(vm.getIdString()).thenReturn("42");
+
+        HostRef agent = mock(HostRef.class);
+        when(agent.getAgentId()).thenReturn("0xcafe");
+        when(vm.getAgent()).thenReturn(agent);
+
+        Storage storage = mock(Storage.class);
+        Query<ThreadHarvestingStatus> query = mock(Query.class);
+        Cursor<ThreadHarvestingStatus> cursor = mock(Cursor.class);
+        ThreadHarvestingStatus status = mock(ThreadHarvestingStatus.class);
+
+        when(cursor.hasNext()).thenReturn(true);
+        when(cursor.next()).thenReturn(status);
+        when(query.execute()).thenReturn(cursor);
+
+        when(storage.createQuery(ThreadDaoImpl.THREAD_HARVESTING_STATUS)).thenReturn(query);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        ThreadHarvestingStatus result = dao.getLatestHarvestingStatus(vm);
+
+        verify(query).where(Key.AGENT_ID, Criteria.EQUALS, agent.getAgentId());
+        verify(query).where(Key.VM_ID, Criteria.EQUALS, vm.getId());
+        verify(query).sort(Key.TIMESTAMP, SortDirection.DESCENDING);
+        verify(query).execute();
+        verify(query).limit(1);
+        verifyNoMoreInteractions(query);
+
+        assertSame(status, result);
+    }
+
+    @Test
+    public void testSetHarvestingStatus() {
+        Storage storage = mock(Storage.class);
+        Add add = mock(Add.class);
+        when(storage.createAdd(ThreadDaoImpl.THREAD_HARVESTING_STATUS)).thenReturn(add);
+
+        ThreadHarvestingStatus status = mock(ThreadHarvestingStatus.class);
+
+        ThreadDaoImpl dao = new ThreadDaoImpl(storage);
+        dao.saveHarvestingStatus(status);
+
+        verify(add).setPojo(status);
+        verify(add).apply();
     }
 }
 

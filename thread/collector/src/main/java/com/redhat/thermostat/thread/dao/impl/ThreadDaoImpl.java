@@ -49,6 +49,7 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.VmRef;
 import com.redhat.thermostat.storage.model.Pojo;
 import com.redhat.thermostat.thread.dao.ThreadDao;
+import com.redhat.thermostat.thread.model.ThreadHarvestingStatus;
 import com.redhat.thermostat.thread.model.ThreadInfoData;
 import com.redhat.thermostat.thread.model.ThreadSummary;
 import com.redhat.thermostat.thread.model.VMThreadCapabilities;
@@ -60,6 +61,7 @@ public class ThreadDaoImpl implements ThreadDao {
         this.storage = storage;
         storage.registerCategory(THREAD_CAPABILITIES);
         storage.registerCategory(THREAD_SUMMARY);
+        storage.registerCategory(THREAD_HARVESTING_STATUS);
         storage.registerCategory(THREAD_INFO);
     }
 
@@ -123,7 +125,27 @@ public class ThreadDaoImpl implements ThreadDao {
         
         return result;
     }
-    
+
+    @Override
+    public void saveHarvestingStatus(ThreadHarvestingStatus status) {
+        Put add = storage.createAdd(THREAD_HARVESTING_STATUS);
+        add.setPojo(status);
+        add.apply();
+    }
+
+    @Override
+    public ThreadHarvestingStatus getLatestHarvestingStatus(VmRef vm) {
+        Query<ThreadHarvestingStatus> query = prepareQuery(THREAD_HARVESTING_STATUS, vm);
+        query.sort(Key.TIMESTAMP, Query.SortDirection.DESCENDING);
+        query.limit(1);
+
+        Cursor<ThreadHarvestingStatus> cursor = query.execute();
+        if (cursor.hasNext()) {
+            return cursor.next();
+        }
+        return null;
+    }
+
     @Override
     public void saveThreadInfo(ThreadInfoData info) {
         Put add = storage.createAdd(THREAD_INFO);
