@@ -43,6 +43,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Arrays;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -88,6 +90,19 @@ public class ThreadBackendTest {
 
         verify(vmListenerRegistrar).unregister(backend);
         verify(receiverRegistry).unregisterReceivers();
+        verify(threadHarvester).stopAndRemoveAllHarvesters();
+    }
+
+    @Test
+    public void testActivateAfterDeactivate() {
+        when(threadHarvester.stopAndRemoveAllHarvesters()).thenReturn(Arrays.asList(1));
+
+        assertTrue(backend.activate());
+        assertTrue(backend.deactivate());
+        assertTrue(backend.activate());
+        assertTrue(backend.isActive());
+
+        verify(threadHarvester).startHarvester("1");
     }
 
     @Test
@@ -103,6 +118,5 @@ public class ThreadBackendTest {
         backend.vmStatusChanged(Status.VM_STOPPED, 10);
 
         verify(threadHarvester).stopHarvester("10");
-        verify(threadHarvester).addThreadHarvestingStatus("10");
     }
 }

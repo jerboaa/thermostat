@@ -36,8 +36,10 @@
 
 package com.redhat.thermostat.thread.harvester;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ScheduledExecutorService;
@@ -71,11 +73,22 @@ public class ThreadHarvester implements RequestReceiver {
         this.clock = clock;
     }
 
+    /**
+     * Set the new implementation of thread DAO to be used as stroage
+     * @param dao
+     */
     public void setThreadDao(ThreadDao dao) {
-        // a new ThreadDao has appeared, stop everything using the old implementation
-        removeAllHarvesters();
+        // stop everything using the old implementation
+        List<Integer> saved = new ArrayList<>();
+        if (this.dao != null) {
+            saved.addAll(stopAndRemoveAllHarvesters());
+        }
+
         this.dao = dao;
-        // TODO maybe bring back the old stuff using the new ThreadDao?
+        // re-enable all existing harvesters
+        for (Integer pid : saved) {
+            startHarvester(String.valueOf(pid));
+        }
     }
     
     @Override
@@ -109,7 +122,12 @@ public class ThreadHarvester implements RequestReceiver {
             return new Response(ResponseType.ERROR);
         }
     }
-    
+
+    /**
+     * Attaches and starts a harvester to the given PID.
+     * <p>
+     * Saves current harvesting status to storage.
+     */
     public boolean startHarvester(String vmId) {
         Harvester harvester = getHarvester(vmId);
         boolean result = harvester.start();
@@ -123,16 +141,23 @@ public class ThreadHarvester implements RequestReceiver {
         Harvester harvester = getHarvester(vmId);
         return harvester.saveVmCaps();
     }
-    
+
+    /**
+     * Stops and detaches a harvester from the given PID.
+     * <p>
+     * Saves current harvesting status to storage.
+     */
     public boolean stopHarvester(String vmId) {
         Harvester harvester = connectors.get(vmId);
+        boolean result = true;
         if (harvester != null) {
-            return harvester.stop();
+            result = harvester.stop();
         }
         updateHarvestingStatus(Integer.valueOf(vmId), false);
         return true;
     }
 
+    /** Save current status to storage */
     public void addThreadHarvestingStatus(String pid) {
         updateHarvestingStatus(Integer.valueOf(pid), connectors.containsKey(pid));
     }
@@ -144,23 +169,36 @@ public class ThreadHarvester implements RequestReceiver {
         status.setHarvesting(harvesting);
         dao.saveHarvestingStatus(status);
     }
-    Harvester getHarvester(String vmId) {
+
+    private Harvester getHarvester(String vmId) {
         Harvester harvester = connectors.get(vmId);
         if (harvester == null) {
-            harvester = new Harvester(dao, executor, vmId);
+            harvester = createHarvester(vmId);
             connectors.put(vmId, harvester);
         }
         
         return harvester;
     }
 
-    private void removeAllHarvesters() {
+    Harvester createHarvester(String vmId) {
+        return new Harvester(dao, executor, vmId);
+    }
+
+    /**
+     * Returns a list of PIDs which the harvester stopped harvesting
+     */
+    public List<Integer> stopAndRemoveAllHarvesters() {
+        List<Integer> result = new ArrayList<>();
         Iterator<Entry<String, Harvester>> iter = connectors.entrySet().iterator();
         while (iter.hasNext()) {
             Entry<String, Harvester> entry = iter.next();
+            int pid = Integer.valueOf(entry.getKey());
             entry.getValue().stop();
+            updateHarvestingStatus(pid, false);
             iter.remove();
+            result.add(pid);
         }
+        return result;
     }
 
     private boolean allRequirementsAvailable() {

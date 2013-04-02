@@ -36,6 +36,9 @@
 
 package com.redhat.thermostat.thread.harvester;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import com.redhat.thermostat.agent.VmStatusListener;
@@ -54,6 +57,7 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
 
     private boolean active = false;
     private VmStatusListenerRegistrar vmListener;
+    private final List<Integer> pidsToHarvestOnEnable = new ArrayList<>();
 
     public ThreadBackend(Version version, VmStatusListenerRegistrar registrar, ReceiverRegistry registry, ThreadHarvester harvester) {
         super("VM Thread Backend", "Gathers thread information about a JVM", "Red Hat, Inc", version.getVersionNumber());
@@ -73,9 +77,17 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
         if (active) {
             return true;
         }
+
+        // bring back all harvesters that were active
+        Iterator<Integer> iter = pidsToHarvestOnEnable.iterator();
+        while (iter.hasNext()) {
+            harvester.startHarvester(String.valueOf(iter.next()));
+            iter.remove();
+        }
+
         vmListener.register(this);
         registry.registerReceiver(harvester);
-        // FIXME enable harvester
+
         active = true;
         return true;
     }
@@ -87,7 +99,10 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
         }
         vmListener.unregister(this);
         registry.unregisterReceivers();
-        // FIXME disable harvester
+
+        // stop all currently active harvesters
+        pidsToHarvestOnEnable.addAll(harvester.stopAndRemoveAllHarvesters());
+
         active = false;
         return true;
     }
@@ -108,7 +123,6 @@ public class ThreadBackend extends BaseBackend implements VmStatusListener {
             break;
         case VM_STOPPED:
             harvester.stopHarvester(vmId);
-            harvester.addThreadHarvestingStatus(vmId);
             break;
         default:
             logger.warning("Unexpected VM state: " + newStatus);
