@@ -277,7 +277,11 @@ public final class QueuedStorage implements Storage {
 
     @Override
     public void shutdown() {
-        delegate.shutdown();
+        /*
+         * First shut down executors. This may trigger some pushes to the
+         * storage implementation (a.k.a. delegate). Hence, this should get
+         * shut down last as this closes the connection etc.
+         */
         try {
             executor.shutdown();
             executor.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS);
@@ -290,6 +294,7 @@ public final class QueuedStorage implements Storage {
         } catch (InterruptedException ex) {
             // Fall through. 
         }
+        delegate.shutdown();
     }
 
 }

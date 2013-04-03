@@ -177,6 +177,22 @@ public class QueuedStorageTest {
         }
 
     }
+    
+    private static class TestShutdownExecutor extends TestExecutor {
+        long executorShutDownTime = -1;
+        
+        @Override
+        public void shutdown() {
+            super.shutdown();
+            executorShutDownTime = System.currentTimeMillis();
+            // delay shutdown just a little
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
 
     private static class TestPojo implements Pojo {
         
@@ -428,6 +444,125 @@ public class QueuedStorageTest {
         assertTrue(fileExecutor.isShutdown());
         assertEquals(3, fileExecutor.getAwaitTerminationTimeout());
         assertEquals(TimeUnit.SECONDS, fileExecutor.getAwaitTerminationTimeUnit());
+    }
+    
+    @Test
+    public void executorsShutdownBeforeDelegate() {
+        StubStorage delegate = new StubStorage();
+        TestShutdownExecutor executor = new TestShutdownExecutor();
+        TestShutdownExecutor fileExecutor = new TestShutdownExecutor();
+        queuedStorage = new QueuedStorage(delegate, executor, fileExecutor);
+        queuedStorage.shutdown();
+        
+        // all shutdown methods should have been called
+        assertTrue(-1 != delegate.shutDownTime);
+        assertTrue(-1 != executor.executorShutDownTime);
+        assertTrue(-1 != fileExecutor.executorShutDownTime);
+        // delegate should have shut down last
+        assertTrue(delegate.shutDownTime > executor.executorShutDownTime);
+        assertTrue(delegate.shutDownTime > fileExecutor.executorShutDownTime);
+    }
+    
+    private static class StubStorage implements Storage {
+
+        long shutDownTime = -1;
+
+        @Override
+        public void setAgentId(UUID id) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public String getAgentId() {
+            // not implementes
+            throw new AssertionError();
+        }
+
+        @Override
+        public void registerCategory(Category<?> category) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public Connection getConnection() {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public Add createAdd(Category<?> category) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public Replace createReplace(Category<?> category) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public void removePojo(Remove remove) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public void purge(String agentId) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public long getCount(Category<?> category) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public void saveFile(String filename, InputStream data) {
+            // not implemented
+            throw new AssertionError();
+
+        }
+
+        @Override
+        public InputStream loadFile(String filename) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public <T extends Pojo> Query<T> createQuery(Category<T> category) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public Update createUpdate(Category<?> category) {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public Remove createRemove() {
+            // not implemented
+            throw new AssertionError();
+        }
+
+        @Override
+        public void shutdown() {
+            shutDownTime = System.currentTimeMillis();
+            // delay shutdown just a little
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        
     }
 }
 
