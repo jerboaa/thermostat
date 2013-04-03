@@ -72,10 +72,12 @@ public class SSLKeystoreConfigurationTest {
         SSLKeystoreConfiguration.initClientProperties(clientProps);
         assertTrue(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
         assertTrue(SSLKeystoreConfiguration.useSslForMongodb());
+        assertTrue(SSLKeystoreConfiguration.disableHostnameVerification());
         clientProps = new File(this.getClass().getResource("/ssl.properties").getFile());
         SSLKeystoreConfiguration.initClientProperties(clientProps);
         assertFalse(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
         assertFalse(SSLKeystoreConfiguration.useSslForMongodb());
+        assertFalse(SSLKeystoreConfiguration.disableHostnameVerification());
     }
 }
 

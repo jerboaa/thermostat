@@ -54,6 +54,7 @@ public class SSLKeystoreConfiguration {
     private static final String KEYSTORE_FILE_PWD_KEY = "KEYSTORE_PASSWORD";
     private static final String CMD_CHANNEL_SSL_KEY = "COMMAND_CHANNEL_USE_SSL";
     private static final String MONGO_CONNECTION_USE_SSL_KEY = "MONGODB_CONNECTION_USE_SSL";
+    private static final String DISABLE_HOSTNAME_VERIFICATION = "DISABLE_HOSTNAME_VERIFICATION";
     private static final Logger logger = LoggingUtils.getLogger(SSLKeystoreConfiguration.class);
 
     /**
@@ -105,22 +106,9 @@ public class SSLKeystoreConfiguration {
      *         been added. false otherwise.
      */
     public static boolean shouldSSLEnableCmdChannel() {
-        boolean result = false;
-        try {
-            loadClientProperties();
-        } catch (InvalidConfigurationException e) {
-            logger.log(Level.WARNING,
-                    "THERMOSTAT_HOME not set and config file attempted to be " +
-                    		"read from there! Returning false.");
-            return result;
-        }
-        String token = clientProps.getProperty(CMD_CHANNEL_SSL_KEY);
-        if (token != null) {
-            result = Boolean.parseBoolean(token);
-        }
-        return result;
+        return readBooleanProperty(CMD_CHANNEL_SSL_KEY);
     }
-    
+
     /**
      * 
      * @return true if and only if SSL should be used for mongodb connections on
@@ -128,20 +116,18 @@ public class SSLKeystoreConfiguration {
      *         and proper config has been added. false otherwise.
      */
     public static boolean useSslForMongodb() {
-        boolean result = false;
-        try {
-            loadClientProperties();
-        } catch (InvalidConfigurationException e) {
-            logger.log(Level.WARNING,
-                    "THERMOSTAT_HOME not set and config file attempted to be " +
-                            "read from there! Returning false.");
-            return result;
-        }
-        String token = clientProps.getProperty(MONGO_CONNECTION_USE_SSL_KEY);
-        if (token != null) {
-            result = Boolean.parseBoolean(token);
-        }
-        return result;
+        return readBooleanProperty(MONGO_CONNECTION_USE_SSL_KEY);
+    }
+    
+    /**
+     * 
+     * @return true if and only if host name verification should not be
+     *         performed during SSL handshake. In other words if
+     *         $THERMOSTAT_HOME/etc/ssl.properties exists and proper config has
+     *         been added. false otherwise.
+     */
+    public static boolean disableHostnameVerification() {
+        return readBooleanProperty(DISABLE_HOSTNAME_VERIFICATION);
     }
 
     // testing hook
@@ -153,6 +139,23 @@ public class SSLKeystoreConfiguration {
             // Could not load ssl properties file. This is fine as it's
             // an optional config.
         }
+    }
+
+    private static boolean readBooleanProperty(final String property) {
+        boolean result = false;
+        try {
+            loadClientProperties();
+        } catch (InvalidConfigurationException e) {
+            logger.log(Level.WARNING,
+                    "THERMOSTAT_HOME not set and config file attempted to be " +
+                    		"read from there! Returning false.");
+            return result;
+        }
+        String token = clientProps.getProperty(property);
+        if (token != null) {
+            result = Boolean.parseBoolean(token);
+        }
+        return result;
     }
 
     private static void loadClientProperties()

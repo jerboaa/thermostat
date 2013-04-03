@@ -143,8 +143,9 @@ class MongoConnection extends Connection {
         }
         SSLParameters params = SSLContextFactory.getSSLParameters(ctxt);
         // Perform HTTPS compatible host name checking.
-        // FIXME: make hostname verification configurable
-        params.setEndpointIdentificationAlgorithm("HTTPS");
+        if (!SSLKeystoreConfiguration.disableHostnameVerification()) {
+            params.setEndpointIdentificationAlgorithm("HTTPS");
+        }
         SSLSocketFactory factory = SSLContextFactory.wrapSSLFactory(
                 ctxt.getSocketFactory(), params);
         logger.log(Level.FINE, "factory is: " + factory.getClass().getName());

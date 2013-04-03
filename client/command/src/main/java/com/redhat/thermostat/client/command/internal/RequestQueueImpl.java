@@ -177,8 +177,8 @@ class RequestQueueImpl implements RequestQueue {
         
         // Register a future listener, since it gives us a way to
         // report an error on client side and to perform (optional) host name verification.
-        // FIXME: make hostname verification configurable
-        future.addListener(new SSLHandshakeFinishedListener(request, true, sslHandler, this));
+        boolean performHostnameCheck = !SSLKeystoreConfiguration.disableHostnameVerification();
+        future.addListener(new SSLHandshakeFinishedListener(request, performHostnameCheck, sslHandler, this));
     }
 }
 
