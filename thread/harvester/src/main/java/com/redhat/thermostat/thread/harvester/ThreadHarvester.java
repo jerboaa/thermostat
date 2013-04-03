@@ -159,7 +159,12 @@ public class ThreadHarvester implements RequestReceiver {
 
     /** Save current status to storage */
     public void addThreadHarvestingStatus(String pid) {
-        updateHarvestingStatus(Integer.valueOf(pid), connectors.containsKey(pid));
+        boolean harvesting = false;
+        Harvester harvester = connectors.get(pid);
+        if (harvester != null) {
+            harvesting = harvester.isConnected();
+        }
+        updateHarvestingStatus(Integer.valueOf(pid), harvesting);
     }
 
     private void updateHarvestingStatus(int vmId, boolean harvesting) {

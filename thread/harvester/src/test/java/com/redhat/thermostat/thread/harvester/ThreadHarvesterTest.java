@@ -186,6 +186,28 @@ public class ThreadHarvesterTest {
     }
 
     @Test
+    public void testHarvestingStatusAfterSavingVmCaps() {
+        ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
+        Clock clock = mock(Clock.class);
+        when(clock.getRealTimeMillis()).thenReturn(1l);
+        ThreadDao dao = mock(ThreadDao.class);
+
+        ThreadHarvester harvester = new ThreadHarvester(executor, clock);
+        harvester.setThreadDao(dao);
+
+        harvester.saveVmCaps("10");
+        harvester.addThreadHarvestingStatus("10");
+
+        ArgumentCaptor<ThreadHarvestingStatus> statusCaptor = ArgumentCaptor.forClass(ThreadHarvestingStatus.class);
+        verify(dao).saveHarvestingStatus(statusCaptor.capture());
+
+        ThreadHarvestingStatus status = statusCaptor.getValue();
+        assertEquals(10, status.getVmId());
+        assertEquals(false, status.isHarvesting());
+        assertEquals(1, status.getTimeStamp());
+    }
+
+    @Test
     public void testStopAndRemoveAll() {
         ScheduledExecutorService executor = mock(ScheduledExecutorService.class);
         Clock clock = mock(Clock.class);
