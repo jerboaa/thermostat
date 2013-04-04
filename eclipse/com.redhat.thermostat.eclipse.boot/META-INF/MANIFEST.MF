@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Thermostat Eclipse client boot exports
 Bundle-SymbolicName: com.redhat.thermostat.eclipse.boot
-Bundle-Version: 0.6.999.qualifier
+Bundle-Version: 0.8.0.qualifier
 Bundle-Vendor: Redhat Inc.
 Fragment-Host: system.bundle
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7

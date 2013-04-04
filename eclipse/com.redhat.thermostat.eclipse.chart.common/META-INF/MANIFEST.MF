@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Thermostat Eclipse Charting
 Bundle-SymbolicName: com.redhat.thermostat.eclipse.chart.common;singleton:=true
-Bundle-Version: 0.6.999.qualifier
+Bundle-Version: 0.8.0.qualifier
 Bundle-Activator: com.redhat.thermostat.eclipse.chart.common.Activator
 Bundle-Vendor: Red Hat Inc.
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
