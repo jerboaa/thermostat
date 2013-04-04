@@ -44,40 +44,40 @@ import java.io.File;
 
 import org.junit.Test;
 
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 
-public class SSLKeystoreConfigurationTest {
+public class SSLConfigurationTest {
 
     @Test
     public void canGetKeystoreFileFromProps() throws Exception {
         File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
-        SSLKeystoreConfiguration.initClientProperties(clientProps);
+        SSLConfiguration.initClientProperties(clientProps);
         String keystorePath = "/path/to/thermostat.keystore";
         String keystorePwd = "some password";
-        assertEquals(keystorePath, SSLKeystoreConfiguration.getKeystoreFile().getAbsolutePath());
-        assertEquals(keystorePwd, SSLKeystoreConfiguration.getKeyStorePassword());
+        assertEquals(keystorePath, SSLConfiguration.getKeystoreFile().getAbsolutePath());
+        assertEquals(keystorePwd, SSLConfiguration.getKeyStorePassword());
     }
     
     @Test
     public void notExistingPropertiesFileReturnsNull() throws Exception {
         File clientProps = new File("i/am/not/there/file.txt");
-        SSLKeystoreConfiguration.initClientProperties(clientProps);
-        assertTrue(SSLKeystoreConfiguration.getKeystoreFile() == null);
-        assertEquals("", SSLKeystoreConfiguration.getKeyStorePassword());
+        SSLConfiguration.initClientProperties(clientProps);
+        assertTrue(SSLConfiguration.getKeystoreFile() == null);
+        assertEquals("", SSLConfiguration.getKeyStorePassword());
     }
     
     @Test
     public void canGetSSLEnabledConfigs() {
         File clientProps = new File(this.getClass().getResource("/client.properties").getFile());
-        SSLKeystoreConfiguration.initClientProperties(clientProps);
-        assertTrue(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
-        assertTrue(SSLKeystoreConfiguration.useSslForMongodb());
-        assertTrue(SSLKeystoreConfiguration.disableHostnameVerification());
+        SSLConfiguration.initClientProperties(clientProps);
+        assertTrue(SSLConfiguration.enableForCmdChannel());
+        assertTrue(SSLConfiguration.enableForBackingStorage());
+        assertTrue(SSLConfiguration.disableHostnameVerification());
         clientProps = new File(this.getClass().getResource("/ssl.properties").getFile());
-        SSLKeystoreConfiguration.initClientProperties(clientProps);
-        assertFalse(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel());
-        assertFalse(SSLKeystoreConfiguration.useSslForMongodb());
-        assertFalse(SSLKeystoreConfiguration.disableHostnameVerification());
+        SSLConfiguration.initClientProperties(clientProps);
+        assertFalse(SSLConfiguration.enableForCmdChannel());
+        assertFalse(SSLConfiguration.enableForBackingStorage());
+        assertFalse(SSLConfiguration.disableHostnameVerification());
     }
 }
 

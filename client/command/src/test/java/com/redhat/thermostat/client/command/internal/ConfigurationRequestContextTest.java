@@ -59,10 +59,10 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SSLKeystoreConfiguration.class, SSLContextFactory.class,
+@PrepareForTest({ SSLConfiguration.class, SSLContextFactory.class,
         SSLContext.class, SSLEngine.class })
 public class ConfigurationRequestContextTest {
 
@@ -80,8 +80,8 @@ public class ConfigurationRequestContextTest {
 
     @Test
     public void testSSLHandlersAdded() throws Exception {
-        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
-        when(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()).thenReturn(
+        PowerMockito.mockStatic(SSLConfiguration.class);
+        when(SSLConfiguration.enableForCmdChannel()).thenReturn(
                 true);
         PowerMockito.mockStatic(SSLContextFactory.class);
         // SSL classes need to be mocked with PowerMockito

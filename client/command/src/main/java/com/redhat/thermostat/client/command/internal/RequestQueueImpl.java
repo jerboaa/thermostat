@@ -57,7 +57,7 @@ import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.RequestResponseListener;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
@@ -145,7 +145,7 @@ class RequestQueueImpl implements RequestQueue {
                 if (f.isSuccess()) {
                 	Channel c = f.getChannel();
                 	ChannelPipeline pipeline = c.getPipeline();
-                	if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+                	if (SSLConfiguration.enableForCmdChannel()) {
                 	    doSSLHandShake(pipeline, request);
                 	}
                 	pipeline.addLast("responseHandler", new ResponseHandler(request));
@@ -177,7 +177,7 @@ class RequestQueueImpl implements RequestQueue {
         
         // Register a future listener, since it gives us a way to
         // report an error on client side and to perform (optional) host name verification.
-        boolean performHostnameCheck = !SSLKeystoreConfiguration.disableHostnameVerification();
+        boolean performHostnameCheck = !SSLConfiguration.disableHostnameVerification();
         future.addListener(new SSLHandshakeFinishedListener(request, performHostnameCheck, sslHandler, this));
     }
 }

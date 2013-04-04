@@ -51,7 +51,7 @@ import com.mongodb.MongoException;
 import com.mongodb.MongoOptions;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.HostPortPair;
 import com.redhat.thermostat.common.utils.HostPortsParser;
@@ -122,7 +122,7 @@ class MongoConnection extends Connection {
     }
 
     private void createConnection() throws MongoException, UnknownHostException {
-        if (SSLKeystoreConfiguration.useSslForMongodb()) {
+        if (SSLConfiguration.enableForBackingStorage()) {
             logger.log(Level.FINE, "Using SSL socket for mongodb:// protocol");
             this.m = getSSLMongo();
         } else {
@@ -143,7 +143,7 @@ class MongoConnection extends Connection {
         }
         SSLParameters params = SSLContextFactory.getSSLParameters(ctxt);
         // Perform HTTPS compatible host name checking.
-        if (!SSLKeystoreConfiguration.disableHostnameVerification()) {
+        if (!SSLConfiguration.disableHostnameVerification()) {
             params.setEndpointIdentificationAlgorithm("HTTPS");
         }
         SSLSocketFactory factory = SSLContextFactory.wrapSSLFactory(

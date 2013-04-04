@@ -65,7 +65,7 @@ import com.redhat.thermostat.common.internal.TrustManagerFactory;
 
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SSLKeystoreConfiguration.class, SSLContext.class, KeyManagerFactory.class })
+@PrepareForTest({ SSLConfiguration.class, SSLContext.class, KeyManagerFactory.class })
 public class SSLContextFactoryTest {
 
     /*
@@ -84,10 +84,10 @@ public class SSLContextFactoryTest {
         File keystoreFile = new File(this.getClass()
                 .getResource("/cmdChanServer.keystore").getFile());
 
-        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
-        when(SSLKeystoreConfiguration.getKeystoreFile()).thenReturn(
+        PowerMockito.mockStatic(SSLConfiguration.class);
+        when(SSLConfiguration.getKeystoreFile()).thenReturn(
                 keystoreFile);
-        when(SSLKeystoreConfiguration.getKeyStorePassword()).thenReturn(
+        when(SSLConfiguration.getKeyStorePassword()).thenReturn(
                 "testpassword");
 
         PowerMockito.mockStatic(SSLContext.class);
@@ -124,10 +124,10 @@ public class SSLContextFactoryTest {
         File keystoreFile = new File(this.getClass()
                 .getResource("/cmdChanServer.keystore").getFile());
 
-        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
-        when(SSLKeystoreConfiguration.getKeystoreFile()).thenReturn(
+        PowerMockito.mockStatic(SSLConfiguration.class);
+        when(SSLConfiguration.getKeystoreFile()).thenReturn(
                 keystoreFile);
-        when(SSLKeystoreConfiguration.getKeyStorePassword()).thenReturn(
+        when(SSLConfiguration.getKeyStorePassword()).thenReturn(
                 "testpassword");
 
         PowerMockito.mockStatic(SSLContext.class);

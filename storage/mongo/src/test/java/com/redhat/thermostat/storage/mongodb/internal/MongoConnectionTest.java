@@ -72,7 +72,7 @@ import com.mongodb.MongoOptions;
 import com.mongodb.MongoURI;
 import com.mongodb.ServerAddress;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.storage.config.StartupConfiguration;
 import com.redhat.thermostat.storage.core.Connection.ConnectionListener;
 import com.redhat.thermostat.storage.core.Connection.ConnectionStatus;
@@ -165,12 +165,12 @@ public class MongoConnectionTest {
         assertTrue(exceptionThrown);
     }
     
-    @PrepareForTest({ MongoConnection.class, SSLKeystoreConfiguration.class,
+    @PrepareForTest({ MongoConnection.class, SSLConfiguration.class,
         SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
     @Test
     public void verifySSLSocketFactoryUsedIfSSLEnabled() throws Exception {
-        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
-        when(SSLKeystoreConfiguration.useSslForMongodb()).thenReturn(true);
+        PowerMockito.mockStatic(SSLConfiguration.class);
+        when(SSLConfiguration.enableForBackingStorage()).thenReturn(true);
         
         PowerMockito.mockStatic(SSLContextFactory.class);
         // SSL classes need to be mocked with PowerMockito
@@ -198,12 +198,12 @@ public class MongoConnectionTest {
         assertEquals(factory, opts.socketFactory);
     }
     
-    @PrepareForTest({ SSLKeystoreConfiguration.class,
+    @PrepareForTest({ SSLConfiguration.class,
         SSLContextFactory.class, SSLContext.class, SSLSocketFactory.class })
     @Test
     public void verifyNoSSLSocketFactoryUsedIfSSLDisabled() throws Exception {
-        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
-        when(SSLKeystoreConfiguration.useSslForMongodb()).thenReturn(false);
+        PowerMockito.mockStatic(SSLConfiguration.class);
+        when(SSLConfiguration.enableForBackingStorage()).thenReturn(false);
         
         MongoConnection connection = mock(MongoConnection.class);
         connection.connect();

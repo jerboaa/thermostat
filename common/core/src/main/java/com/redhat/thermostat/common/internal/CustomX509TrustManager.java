@@ -53,7 +53,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 /**
@@ -99,7 +99,7 @@ class CustomX509TrustManager implements X509TrustManager {
      * Main constructor, which uses ssl.properties as config if present.
      */
     CustomX509TrustManager() {
-        this(SSLKeystoreConfiguration.getKeystoreFile(), SSLKeystoreConfiguration.getKeyStorePassword());
+        this(SSLConfiguration.getKeystoreFile(), SSLConfiguration.getKeyStorePassword());
     }
  
     private X509TrustManager getDefaultTrustManager() {

@@ -59,7 +59,7 @@ import com.redhat.thermostat.agent.command.RequestReceiver;
 import com.redhat.thermostat.common.command.Request;
 import com.redhat.thermostat.common.command.Response;
 import com.redhat.thermostat.common.command.Response.ResponseType;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 import com.redhat.thermostat.storage.core.AuthToken;
 import com.redhat.thermostat.storage.core.SecureStorage;
@@ -86,7 +86,7 @@ class ServerHandler extends SimpleChannelUpstreamHandler {
     @Override
     public void channelConnected(
             ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
-        if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+        if (SSLConfiguration.enableForCmdChannel()) {
             // Get the SslHandler in the current pipeline.
             // We added it in ConfigurationServerContext$ServerPipelineFactory.
             final SslHandler sslHandler = ctx.getPipeline().get(

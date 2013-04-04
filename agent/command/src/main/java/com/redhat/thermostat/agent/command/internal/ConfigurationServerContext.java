@@ -58,7 +58,7 @@ import com.redhat.thermostat.agent.command.ReceiverRegistry;
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 import com.redhat.thermostat.common.config.InvalidConfigurationException;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.ssl.SslInitException;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
@@ -108,7 +108,7 @@ class ConfigurationServerContext implements ConfigurationCommandContext {
         @Override
         public ChannelPipeline getPipeline() throws Exception {
             ChannelPipeline pipeline = Channels.pipeline();
-            if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+            if (SSLConfiguration.enableForCmdChannel()) {
                 SSLEngine engine = null;
                 try {
                     SSLContext ctxt = SSLContextFactory.getServerContext();

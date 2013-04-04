@@ -146,8 +146,8 @@ public class SSLContextFactory {
     private static void initServerContext() throws SslInitException,
             InvalidConfigurationException {
         SSLContext serverCtxt = null;
-        File trustStoreFile = SSLKeystoreConfiguration.getKeystoreFile();
-        String keyStorePassword = SSLKeystoreConfiguration
+        File trustStoreFile = SSLConfiguration.getKeystoreFile();
+        String keyStorePassword = SSLConfiguration
                 .getKeyStorePassword();
         KeyStore ks = KeyStoreProvider.getKeyStore(trustStoreFile,
                 keyStorePassword);

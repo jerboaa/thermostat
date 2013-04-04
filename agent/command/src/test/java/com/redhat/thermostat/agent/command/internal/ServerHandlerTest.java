@@ -52,10 +52,10 @@ import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import com.redhat.thermostat.agent.command.internal.ServerHandler.SSLHandshakeDoneListener;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest({ SSLKeystoreConfiguration.class})
+@PrepareForTest({ SSLConfiguration.class})
 public class ServerHandlerTest {
 
     @Test
@@ -63,8 +63,8 @@ public class ServerHandlerTest {
         ServerHandler handler = new ServerHandler(null);
         
         // enable ssl
-        PowerMockito.mockStatic(SSLKeystoreConfiguration.class);
-        when(SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()).thenReturn(true);
+        PowerMockito.mockStatic(SSLConfiguration.class);
+        when(SSLConfiguration.enableForCmdChannel()).thenReturn(true);
         
         ChannelHandlerContext ctx = mock(ChannelHandlerContext.class);
         ChannelPipeline pipeline = mock(ChannelPipeline.class);

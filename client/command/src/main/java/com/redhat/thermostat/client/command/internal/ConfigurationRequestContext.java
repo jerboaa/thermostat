@@ -53,7 +53,7 @@ import org.jboss.netty.handler.ssl.SslHandler;
 
 import com.redhat.thermostat.common.command.ConfigurationCommandContext;
 import com.redhat.thermostat.common.ssl.SSLContextFactory;
-import com.redhat.thermostat.common.ssl.SSLKeystoreConfiguration;
+import com.redhat.thermostat.common.ssl.SSLConfiguration;
 import com.redhat.thermostat.common.utils.LoggingUtils;
 
 public class ConfigurationRequestContext implements ConfigurationCommandContext {
@@ -95,7 +95,7 @@ public class ConfigurationRequestContext implements ConfigurationCommandContext 
         @Override
         public ChannelPipeline getPipeline() throws Exception {
             ChannelPipeline pipeline = Channels.pipeline();
-            if (SSLKeystoreConfiguration.shouldSSLEnableCmdChannel()) {
+            if (SSLConfiguration.enableForCmdChannel()) {
                 SSLContext ctxt = SSLContextFactory.getClientContext();
                 SSLEngine engine = ctxt.createSSLEngine();
                 engine.setUseClientMode(true);
