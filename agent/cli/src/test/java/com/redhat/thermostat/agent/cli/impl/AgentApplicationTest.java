@@ -85,7 +85,6 @@ import com.redhat.thermostat.storage.dao.AgentInfoDAO;
 import com.redhat.thermostat.storage.dao.BackendInfoDAO;
 import com.redhat.thermostat.testutils.StubBundleContext;
 
-@PrepareForTest({ AgentApplication.class })
 @RunWith(PowerMockRunner.class)
 public class AgentApplicationTest {
 
@@ -168,6 +167,19 @@ public class AgentApplicationTest {
         
     }
     
+    /*
+     * Having the PrepareForTest annotation on method level does not seem to
+     * deadlock the test, which seems to be more or less reliably reproducible
+     * if this annotation is at class level instead. Steps to reproduce the
+     * deadlock is:
+     * 1. Attach the PrepareForTest annotation to the class (over the test
+     *    method)
+     * 2. Run the test multiple times. 5-20 times seemed sufficient for me to
+     *    make the deadlock show up. This deadlock does not seem to happen
+     *    otherwise (can run up to 30 times head-to-head without deadlock).
+     *    
+     */
+    @PrepareForTest({ AgentApplication.class })
     @SuppressWarnings("unchecked")
     @Test
     public void verifyBackendRegistryProblemsSetsExitStatus() throws Exception {
@@ -184,6 +196,7 @@ public class AgentApplicationTest {
         verify(exitStatus).setExitStatus(ExitStatus.EXIT_ERROR);
     }
     
+    @PrepareForTest({ AgentApplication.class })
     @Test
     public void verifyAgentLaunchExceptionSetsExitStatus() throws Exception {
         whenNew(BackendRegistry.class).withParameterTypes(BundleContext.class)
