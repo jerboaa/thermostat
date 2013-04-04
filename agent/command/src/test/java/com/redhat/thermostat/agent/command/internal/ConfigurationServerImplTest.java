@@ -36,22 +36,22 @@
 
 package com.redhat.thermostat.agent.command.internal;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import java.net.InetSocketAddress;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.ChannelException;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.channel.group.ChannelGroupFuture;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-
-import com.redhat.thermostat.agent.command.internal.ConfigurationServerImpl;
-import com.redhat.thermostat.agent.command.internal.ConfigurationServerContext;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 public class ConfigurationServerImplTest {
 
@@ -80,6 +80,21 @@ public class ConfigurationServerImplTest {
         
         InetSocketAddress addr = new InetSocketAddress("127.0.0.1", 123);
         assertEquals(addr, argument.getValue());
+    }
+    
+    @SuppressWarnings("unchecked")
+    @Test
+    public void startListeningFailureThrowsException() {
+        ConfigurationServerImpl server = new ConfigurationServerImpl(ctx);
+
+        when(bootstrap.bind(any(InetSocketAddress.class))).thenThrow(ChannelException.class);
+        
+        try {
+            server.startListening("does-not-resolve.example.com:123");
+            fail("Should have thrown exception");
+        } catch (ChannelException e) {
+            // pass
+        }
     }
 
     @Test

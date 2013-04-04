@@ -41,6 +41,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jboss.netty.bootstrap.ServerBootstrap;
+import org.jboss.netty.channel.ChannelException;
 
 import com.redhat.thermostat.agent.command.ConfigurationServer;
 import com.redhat.thermostat.common.utils.LoggingUtils;
@@ -62,8 +63,15 @@ class ConfigurationServerImpl implements ConfigurationServer {
         InetSocketAddress addr = new InetSocketAddress(host[0], Integer.parseInt(host[1]));
         
         logger.log(Level.FINE, "Starting command channel server on " + addr.toString());
-        // Bind and start to accept incoming connections.
-        bootstrap.bind(addr);
+        try {
+            // Bind and start to accept incoming connections.
+            bootstrap.bind(addr);
+        } catch (ChannelException e) {
+            logger.log(Level.SEVERE, "Failed to bind command channel server!", e);
+            // rethrow, in order to stop agent from continuing
+            throw e;
+        }
+        logger.log(Level.FINEST, "Bound command channel server to " + addr.toString());
     }
 
     @Override
