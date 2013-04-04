@@ -96,6 +96,11 @@ public class WebStorageEndPoint extends HttpServlet {
     private static final String ROLE_THERMOSTAT_AGENT = "thermostat-agent";
     private static final String ROLE_THERMOSTAT_CLIENT = "thermostat-client";
     private static final String ROLE_CMD_CHANNEL = "thermostat-cmd-channel";
+
+    // our strings can contain non-ASCII characters. Use UTF-8
+    // see also PR 1344
+    private static final String RESPONSE_JSON_CONTENT_TYPE = "application/json; charset=UTF-8";
+
     private static final Logger logger = LoggingUtils.getLogger(WebStorageEndPoint.class);
 
     private Storage storage;
@@ -265,7 +270,7 @@ public class WebStorageEndPoint extends HttpServlet {
             Category<?> category = getCategoryFromId(categoryId);
             long result = storage.getCount(category);
             resp.setStatus(HttpServletResponse.SC_OK);
-            resp.setContentType("application/json");
+            resp.setContentType(RESPONSE_JSON_CONTENT_TYPE);
             gson.toJson(result, resp.getWriter());
             resp.flushBuffer();
         } catch (IOException ex) {
@@ -291,7 +296,7 @@ public class WebStorageEndPoint extends HttpServlet {
             currentCategoryId++;
         }
         resp.setStatus(HttpServletResponse.SC_OK);
-        resp.setContentType("application/json");
+        resp.setContentType(RESPONSE_JSON_CONTENT_TYPE);
         Writer writer = resp.getWriter();
         gson.toJson(id, writer);
         writer.flush();
@@ -403,7 +408,7 @@ public class WebStorageEndPoint extends HttpServlet {
 
     private void writeResponse(HttpServletResponse resp, Object result) throws IOException {
         resp.setStatus(HttpServletResponse.SC_OK);
-        resp.setContentType("application/json");
+        resp.setContentType(RESPONSE_JSON_CONTENT_TYPE);
         gson.toJson(result, resp.getWriter());
         resp.flushBuffer();
     }

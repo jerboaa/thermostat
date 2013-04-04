@@ -245,6 +245,8 @@ public class WebStorageEndpointTest {
         assertEquals("fluff2", results[1].getKey1());
         assertEquals(43, results[1].getKey2());
 
+        assertEquals("application/json; charset=UTF-8", conn.getContentType());
+
         verify(mockQuery).where(key1, Criteria.EQUALS, "fluff");
         verify(mockQuery).sort(key1, SortDirection.DESCENDING);
         verify(mockQuery).limit(42);
