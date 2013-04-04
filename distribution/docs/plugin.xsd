@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://icedtea.classpath.org/thermostat/plugins/v1.0"
+           elementFormDefault="qualified">
+
+
+<!-- definition of simple elements -->
+<xs:element name="name" type="xs:string"/>
+<xs:element name="bundle" type="xs:string"/>
+<xs:element name="dependency" type="xs:string"/>
+<xs:element name="description" type="xs:string"/>
+<xs:element name="short" type="xs:string"/>
+<xs:element name="long" type="xs:string"/>
+<xs:element name="argument" type="xs:string"/>
+<xs:element name="required" type="xs:boolean"/>
+
+
+<!-- definition of complex elements -->
+<xs:element name="plugin">
+  <xs:complexType>
+    <xs:choice>
+      <xs:sequence>
+        <xs:element ref="commands"/>
+        <xs:element ref="extensions" minOccurs="0" maxOccurs="1"/>
+      </xs:sequence>
+      <xs:element ref="extensions"/>
+    </xs:choice>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="commands">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="command" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+<xs:element name="extensions">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="extension" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="extension">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element ref="bundles"/>
+      <xs:element ref="dependencies" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="command">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="name"/>
+      <xs:element ref="description"/>
+      <xs:element ref="options"/>
+      <xs:element ref="bundles"/>
+      <xs:element ref="dependencies"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element> 
+
+
+<xs:element name="options">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="group" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="option" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="group">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="required" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="option" minOccurs="2" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="option">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:choice>
+        <xs:sequence>
+          <xs:element ref="long"/>
+          <xs:element ref="short" minOccurs="0" maxOccurs="1"/>
+        </xs:sequence>
+        <xs:element ref="short"/>
+      </xs:choice>
+      <xs:element ref="argument" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="required" minOccurs="0" maxOccurs="1"/>
+      <xs:element ref="description" minOccurs="0" maxOccurs="1"/>
+    </xs:sequence>
+    <xs:attribute name="common" type="xs:boolean" use="optional"/>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="bundles">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="bundle" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+<xs:element name="dependencies">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element ref="dependency" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:element>
+
+
+</xs:schema>
