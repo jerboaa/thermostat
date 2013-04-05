@@ -42,15 +42,12 @@ import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.action.Action;
 
 import com.redhat.thermostat.eclipse.internal.Activator;
-import com.redhat.thermostat.eclipse.internal.views.HostsVmsTreeViewPart;
 
 public class ConnectionJobListener extends JobChangeAdapter {
 
-    private HostsVmsTreeViewPart view;
     private Action connectAction;
     
-    public ConnectionJobListener(Action connectAction, HostsVmsTreeViewPart view) {
-        this.view = view;
+    public ConnectionJobListener(Action connectAction) {
         this.connectAction = connectAction;
     }
     
@@ -62,7 +59,6 @@ public class ConnectionJobListener extends JobChangeAdapter {
                     .getImageDescriptor("icons/online.png"));
             connectAction.setEnabled(!Activator.getDefault().isDbConnected());
             connectAction.setToolTipText("Online");
-            view.showHostVmsPage();
         }
     }
 }

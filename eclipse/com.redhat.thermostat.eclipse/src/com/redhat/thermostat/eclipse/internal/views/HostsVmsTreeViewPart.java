@@ -38,6 +38,7 @@ package com.redhat.thermostat.eclipse.internal.views;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
@@ -51,15 +52,16 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.ui.IViewSite;
-import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.PageBook;
 import org.eclipse.ui.part.ViewPart;
 import org.osgi.framework.BundleContext;
 
-import com.redhat.thermostat.common.config.ClientPreferences;
+import com.redhat.thermostat.common.ApplicationService;
 import com.redhat.thermostat.common.MultipleServiceTracker;
+import com.redhat.thermostat.common.Timer;
+import com.redhat.thermostat.common.Timer.SchedulingType;
+import com.redhat.thermostat.common.config.ClientPreferences;
 import com.redhat.thermostat.eclipse.internal.Activator;
 import com.redhat.thermostat.eclipse.internal.ConnectionConfiguration;
 import com.redhat.thermostat.eclipse.internal.controllers.ConnectDBAction;
@@ -88,9 +90,11 @@ public class HostsVmsTreeViewPart extends ViewPart {
     // Container for tree and connect
     private PageBook pageBook;
     private MultipleServiceTracker tracker;
+    private ApplicationService appSvc;
     private HostInfoDAO hostInfoDAO;
     private VmInfoDAO vmInfoDAO;
     private boolean closing;
+    private Timer timer;
 
     public HostsVmsTreeViewPart() {
         ClientPreferences clientPrefs = new ClientPreferences(Activator.getDefault().getKeyring());
@@ -103,15 +107,11 @@ public class HostsVmsTreeViewPart extends ViewPart {
         connectAction = new ConnectDBAction(connectJob);
         connectAction.setImageDescriptor(Activator
                 .getImageDescriptor("icons/offline.png"));
-        connectJob.addJobChangeListener(new ConnectionJobListener(connectAction, this));
-    }
-    
-    @Override
-    public void init(IViewSite site) throws PartInitException {
-        super.init(site);
+        connectJob.addJobChangeListener(new ConnectionJobListener(connectAction));
         
         BundleContext context = Activator.getDefault().getBundle().getBundleContext();
         Class<?>[] deps = new Class<?>[] {
+            ApplicationService.class,
             HostInfoDAO.class,
             VmInfoDAO.class
         };
@@ -119,10 +119,15 @@ public class HostsVmsTreeViewPart extends ViewPart {
             
             @Override
             public void dependenciesAvailable(Map<String, Object> services) {
+                appSvc = (ApplicationService) services.get(ApplicationService.class.getName());
+                Objects.requireNonNull(appSvc);
                 hostInfoDAO = (HostInfoDAO) services.get(HostInfoDAO.class.getName());
                 Objects.requireNonNull(hostInfoDAO);
                 vmInfoDAO = (VmInfoDAO) services.get(VmInfoDAO.class.getName());
                 Objects.requireNonNull(vmInfoDAO);
+                
+                // Switch to Hosts/VMs page
+                showHostVmsPage();
             }
 
             @Override
@@ -141,7 +146,6 @@ public class HostsVmsTreeViewPart extends ViewPart {
                 }
             }
         });
-        tracker.open();
     }
     
     @Override
@@ -155,24 +159,34 @@ public class HostsVmsTreeViewPart extends ViewPart {
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
             @Override
             public void run() {
+                // Stop background updates
+                if (timer != null) {
+                    timer.stop();
+                }
                 pageBook.showPage(connectPage);
             }
         });
     }
 
-    public void showHostVmsPage() {
+    private void showHostVmsPage() {
         final HostsVMsLoader loader = new DefaultHostsVMsLoader(hostInfoDAO,
-                vmInfoDAO, false);
+                vmInfoDAO, true /* TODO Make configurable */);
+        final HostsVmsTreeRoot root = new HostsVmsTreeRoot();
 
         PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
 
             @Override
             public void run() {
-                treeViewer.setContentProvider(new HostsVmsTreeContentProvider(
-                        loader));
+                initializeTimer(root);
+
+                treeViewer.setContentProvider(new HostsVmsTreeContentProvider(loader));
                 treeViewer.setLabelProvider(new HostsVmsLabelProvider());
                 treeViewer.setUseHashlookup(true);
-                treeViewer.setInput(new HostsVmsTreeRoot());
+                treeViewer.setInput(root);
+
+                // Start background updates
+                timer.start();
+
                 pageBook.showPage(treeViewer.getControl());
             }
 
@@ -207,17 +221,49 @@ public class HostsVmsTreeViewPart extends ViewPart {
                 connectAction.run();
             }
         });
-        // Show appropriate page
-        if (Activator.getDefault().isDbConnected()) {
-            showHostVmsPage();
-        } else {
-            showConnectionPage();
-        }
+        
+        showConnectionPage();
+        tracker.open();
     }
 
     @Override
     public void setFocus() {
         pageBook.setFocus();
+    }
+
+    private void initializeTimer(final HostsVmsTreeRoot root) {
+        timer = appSvc.getTimerFactory().createTimer();
+        timer.setAction(new Runnable() {
+            
+            @Override
+            public void run() {
+                PlatformUI.getWorkbench().getDisplay().asyncExec(new Runnable() {
+                    
+                    @Override
+                    public void run() {
+                        if (!treeViewer.getTree().isDisposed()) {
+                            // Turn off redrawing while we update to prevent flickering
+                            treeViewer.getTree().setRedraw(false);
+                            
+                            // Preserve expanded elements
+                            Object[] expandedElements = treeViewer.getExpandedElements();
+                            
+                            // Force update to tree
+                            treeViewer.setInput(root);
+                            
+                            // Restore expanded elements
+                            treeViewer.setExpandedElements(expandedElements);
+                            
+                            treeViewer.getTree().setRedraw(true);
+                        }
+                    }
+                });
+            }
+        });
+        timer.setInitialDelay(0);
+        timer.setDelay(3);
+        timer.setTimeUnit(TimeUnit.SECONDS);
+        timer.setSchedulingType(SchedulingType.FIXED_RATE);
     }
 
 }
