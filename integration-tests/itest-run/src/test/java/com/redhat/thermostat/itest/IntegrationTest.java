@@ -63,6 +63,9 @@ import expectj.TimeoutException;
  * used.
  */
 public class IntegrationTest {
+    
+    public static final String ITEST_USER_HOME_PROP = "com.redhat.thermostat.itest.thermostatUserHome";
+    public static final String ITEST_THERMOSTAT_HOME_PROP = "com.redhat.thermostat.itest.thermostatHome";
 
     public static class SpawnResult {
         final Process process;
@@ -90,7 +93,12 @@ public class IntegrationTest {
     }
     
     public static String getThermostatHome() {
-        return "../distribution/target/image";
+        String propHome = System.getProperty(ITEST_THERMOSTAT_HOME_PROP);
+        if (propHome == null) {
+            return "../../distribution/target/image";
+        } else {
+            return propHome;
+        }
     }
 
     public static String getSystemPluginHome() {
@@ -102,7 +110,12 @@ public class IntegrationTest {
     }
 
     public static String getUserThermostatHome() {
-        return "../distribution/target/user-home";
+        String userHomeProp = System.getProperty(ITEST_USER_HOME_PROP);
+        if (userHomeProp == null) {
+            return "../../distribution/target/user-home";
+        } else {
+            return userHomeProp;
+        }
     }
 
     public static String getStorageDataDirectory() {

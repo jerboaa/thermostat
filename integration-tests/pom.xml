@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- 
 
- Copyright 2013 Red Hat, Inc.
+ Copyright 2012, 2013 Red Hat, Inc.
 
  This file is part of Thermostat.
 
@@ -46,163 +46,14 @@
   </parent>
 
   <artifactId>thermostat-integration-tests</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
 
-  <name>Thermostat Integration Tests</name>
+  <name>Thermostat Integration Tests (parent)</name>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-  </properties>
+  <modules>
+    <module>itest-run</module>
+    <module>standalone</module>
+  </modules>
 
-  <build>
-    <plugins>
-      <!-- jacoco:report insists to have a target/classes dir. since this
-           module only contains test classes it won't exist after a build.
-           Hence, create manually in order to unbreak the build. For some
-           reason skipping both, report AND prepare-agent goals for the
-           jacoco plugin does not work. -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.6</version>
-        <executions>
-          <execution>
-            <id>make-target-classes-dir</id>
-            <phase>prepare-package</phase>
-            <configuration>
-              <target>
-                <mkdir dir="${project.build.directory}/classes" />
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- skip unit test run, tests to be executed during integration-test -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-plugin</artifactId>
-        <configuration>
-          <argLine>-Djava.security.auth.login.config=${thermostat.home}/etc/thermostat_jaas.conf ${coverageAgent}</argLine>
-          <skip>true</skip>
-        </configuration>
-        <executions>
-          <execution>
-            <id>run-integration-tests</id>
-            <phase>integration-test</phase>
-            <goals>
-              <goal>test</goal>
-            </goals>
-            <configuration>
-              <skip>false</skip>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.4</version>
-        <executions>
-          <execution>
-            <id>copy-deps</id>
-            <phase>package</phase>
-            <goals>
-              <goal>copy-dependencies</goal>
-            </goals>
-            <configuration>
-              <excludeTransitive>true</excludeTransitive>
-              <excludeGroupIds>org.osgi,junit,org.hamcrest</excludeGroupIds>
-              <outputDirectory>${project.build.directory}/libs</outputDirectory>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
-    </plugins>
-    <pluginManagement>
-    	<plugins>
-		<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
-    		<plugin>
-    			<groupId>org.eclipse.m2e</groupId>
-    			<artifactId>lifecycle-mapping</artifactId>
-    			<version>1.0.0</version>
-    			<configuration>
-    				<lifecycleMappingMetadata>
-    					<pluginExecutions>
-    						<pluginExecution>
-    							<pluginExecutionFilter>
-    								<groupId>
-    									org.apache.maven.plugins
-    								</groupId>
-    								<artifactId>
-    									maven-dependency-plugin
-    								</artifactId>
-    								<versionRange>[2.4,)</versionRange>
-    								<goals>
-    									<goal>copy-dependencies</goal>
-    								</goals>
-    							</pluginExecutionFilter>
-    							<action>
-    								<ignore></ignore>
-    							</action>
-    						</pluginExecution>
-    					</pluginExecutions>
-    				</lifecycleMappingMetadata>
-    			</configuration>
-    		</plugin>
-    	</plugins>
-    </pluginManagement>
-  </build>
-  <dependencies>
-
-    <!-- integration tests -->
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>net.sourceforge.expectj</groupId>
-      <artifactId>expectj</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <!-- thermostat parts -->
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-distribution</artifactId>
-      <version>${project.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.redhat.thermostat</groupId>
-      <artifactId>thermostat-web-war</artifactId>
-      <version>${project.version}</version>
-      <type>war</type>
-      <scope>test</scope>
-    </dependency>
-
-    <!--  Embedded jetty for testing the WAR (no peace from here on..). -->
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-server</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-plus</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.jetty</groupId>
-      <artifactId>jetty-webapp</artifactId>
-      <version>${jetty.version}</version>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
 </project>
 
