@@ -419,26 +419,24 @@ public class LauncherImplTest {
         });
         ctxFactory.getCommandRegistry().registerCommands(Arrays.asList(errorCmd));
 
-        launcher.setArgs(new String[] { "error" });
-        wrappedRun(launcher, false);
+        wrappedRun(launcher, new String[] { "error" }, false);
         assertEquals("test error\n", ctxFactory.getError());
 
     }
 
     private void runAndVerifyCommand(String[] args, String expected, boolean inShell) {
-        launcher.setArgs(args);
-        wrappedRun(launcher, inShell);
+        wrappedRun(launcher, args, inShell);
         assertEquals(expected, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
     }
     
-    private void wrappedRun(LauncherImpl launcher, boolean inShell) {
-        wrappedRun(launcher, inShell, null);
+    private void wrappedRun(LauncherImpl launcher, String[] args, boolean inShell) {
+        wrappedRun(launcher, args, inShell, null);
     }
     
-    private void wrappedRun(LauncherImpl launcher, boolean inShell, Collection<ActionListener<ApplicationState>> listeners) {
+    private void wrappedRun(LauncherImpl launcher, String[] args, boolean inShell, Collection<ActionListener<ApplicationState>> listeners) {
         try {
-            launcher.run(listeners, inShell);
+            launcher.run(args, listeners, inShell);
         } catch (ExitException e) {
             System.out.println(e.getMessage());
         }
@@ -454,8 +452,7 @@ public class LauncherImplTest {
         ArgumentCaptor<String> dbUrlCaptor = ArgumentCaptor.forClass(String.class);
         when(dbServiceFactory.createDbService(anyString(), anyString(), dbUrlCaptor.capture())).thenReturn(dbService);
         launcher.setPreferences(prefs);
-        launcher.setArgs(new String[] { "test3" });
-        wrappedRun(launcher, false);
+        wrappedRun(launcher, new String[] { "test3" }, false);
         verify(dbService).connect();
         verify(prefs).getConnectionUrl();
         assertEquals(dbUrl, dbUrlCaptor.getValue());
@@ -476,8 +473,7 @@ public class LauncherImplTest {
         DbService dbService = mock(DbService.class);
         when(dbServiceFactory.createDbService(anyString(), anyString(), anyString())).thenReturn(dbService);
 
-        launcher.setArgs(new String[] { "dummy" });
-        wrappedRun(launcher, false);
+        wrappedRun(launcher, new String[] { "dummy" }, false);
         verify(dbService).connect();
     }
 
@@ -489,8 +485,7 @@ public class LauncherImplTest {
 
         when(version.getVersionInfo()).thenReturn(versionString);
 
-        launcher.setArgs(new String[] {Version.VERSION_OPTION});
-        wrappedRun(launcher, false);
+        wrappedRun(launcher, new String[] {Version.VERSION_OPTION}, false);
 
         assertEquals(expectedVersionInfo, ctxFactory.getOutput());
         assertTrue(timerFactory.isShutdown());
@@ -503,32 +498,28 @@ public class LauncherImplTest {
         listeners.add(listener);
         String[] args = new String[] {"basic"};
 
-        launcher.setArgs(args);
-        wrappedRun(launcher, false, listeners);
+        wrappedRun(launcher, args, false, listeners);
         verify(notifier).addActionListener(listener);
     }
 
     @Test
     public void verifyLoggingIsInitialized() {
-        launcher.setArgs(new String[] { "test1" });
-        wrappedRun(launcher, false);
+        wrappedRun(launcher, new String[] { "test1" }, false);
 
         verify(loggingInitializer).initialize();
     }
 
     @Test
     public void verifyShutdown() throws BundleException {
-        launcher.setArgs(new String[] { "test1" });
-        wrappedRun(launcher, false);
+        wrappedRun(launcher, new String[] { "test1" }, false);
 
         verify(sysBundle).stop();
     }
     
     @Test
     public void verifySetExitStatus() {
-        launcher.setArgs(new String[] { "test1" });
         try {
-            launcher.run(false);
+            launcher.run(new String[] { "test1" }, false);
             fail("Should have called System.exit()");
         } catch (ExitException e) {
             // pass, by default launcher exits with an exit status

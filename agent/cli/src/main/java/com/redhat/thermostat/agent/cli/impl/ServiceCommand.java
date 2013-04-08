@@ -85,13 +85,11 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
         }
         launcher = (Launcher) context.getService(launcherRef);
         String[] storageStartArgs = new String[] { "storage", "--start" };
-        launcher.setArgs(storageStartArgs);
-        launcher.run(listeners, false);
+        launcher.run(storageStartArgs, listeners, false);
         agentBarrier.acquireUninterruptibly();
         
         String[] storageStopArgs = new String[] { "storage", "--stop" };
-        launcher.setArgs(storageStopArgs);
-        launcher.run(false);
+        launcher.run(storageStopArgs, false);
         
         context.ungetService(launcherRef);
     }
@@ -109,8 +107,7 @@ public class ServiceCommand extends AbstractCommand implements ActionListener<Ap
                 String dbUrl = storage.getConfiguration().getDBConnectionString();
                 String[] agentArgs =  new String[] {"agent", "-d", dbUrl};
                 System.err.println(translator.localize(LocaleResources.STARTING_AGENT));
-                launcher.setArgs(agentArgs);
-                launcher.run(false);
+                launcher.run(agentArgs, false);
                 agentBarrier.release();
                 break;
             case FAIL:

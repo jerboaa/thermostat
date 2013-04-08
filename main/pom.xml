@@ -106,7 +106,6 @@
         <configuration>
           <instructions>
             <Bundle-Vendor>Red Hat, Inc.</Bundle-Vendor>
-            <Bundle-Activator>com.redhat.thermostat.main.impl.Activator</Bundle-Activator>
             <Bundle-SymbolicName>com.redhat.thermostat.main</Bundle-SymbolicName>
             <Export-Package>
               com.redhat.thermostat.main,

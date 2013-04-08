@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 import org.apache.commons.cli.Options;
@@ -75,23 +75,22 @@ import com.redhat.thermostat.storage.core.Storage;
 import com.redhat.thermostat.storage.core.StorageException;
 import com.redhat.thermostat.utils.keyring.Keyring;
 
+/**
+ * This class is thread-safe.
+ */
 public class LauncherImpl implements Launcher {
 
     private static final Translate<LocaleResources> t = LocaleResources.createLocalizer();
 
-    private ClientPreferences prefs;
-
-    private String[] args;
-
-    private CommandContextFactory cmdCtxFactory;
-
-    private int usageCount = 0;
-    private final Semaphore argsBarrier = new Semaphore(0);
-
+    private final AtomicInteger usageCount = new AtomicInteger(0);
     private final BundleContext context;
     private final BundleManager registry;
+    private final CommandContextFactory cmdCtxFactory;
     private final DbServiceFactory dbServiceFactory;
     private final Version coreVersion;
+
+    /** MUST be mutated in a 'synchronized (this)' block */
+    private ClientPreferences prefs;
 
     public LauncherImpl(BundleContext context, CommandContextFactory cmdCtxFactory, BundleManager registry) {
         this(context, cmdCtxFactory, registry, new LoggingInitializer(), new DbServiceFactory(), new Version());
@@ -108,51 +107,30 @@ public class LauncherImpl implements Launcher {
     }
 
     @Override
-    public synchronized void run(boolean inShell) {
-        run(null, inShell);
+    public void run(String[] args, boolean inShell) {
+        run(args, null, inShell);
     }
 
     @Override
-    public synchronized void run(Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
-
-        usageCount++;
-        waitForArgs();
-
+    public void run(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+        usageCount.incrementAndGet();
         try {
-            if (hasNoArguments()) {
+            if (hasNoArguments(args)) {
                 runHelpCommand();
-            } else if (isVersionQuery(inShell)) {
+            } else if (isVersionQuery(args, inShell)) {
                 // We want to print the version of core
                 // thermostat, so we use the no-arg constructor of Version
                 cmdCtxFactory.getConsole().getOutput().println(coreVersion.getVersionInfo());
             } else {
-                runCommandFromArguments(listeners, inShell);
+                runCommandFromArguments(args, listeners, inShell);
             }
         } finally {
             args = null;
-            usageCount--;
-            if (isLastLaunch()) {
+            boolean isLastLaunch = (usageCount.decrementAndGet() == 0);
+            if (isLastLaunch) {
                 shutdown();
             }
         }
-    }
-
-    @Override
-    public void setArgs(String[] args) {
-        this.args = args;
-        argsBarrier.release();
-    }
-
-    private void waitForArgs() {
-        try {
-            argsBarrier.acquire();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private boolean isLastLaunch() {
-        return usageCount == 0;
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -190,12 +168,12 @@ public class LauncherImpl implements Launcher {
         }
     }
 
-    public void setPreferences(ClientPreferences prefs) {
+    synchronized void setPreferences(ClientPreferences prefs) {
         this.prefs = prefs;
     }
 
-    private boolean hasNoArguments() {
-        return args.length == 0;
+    private boolean hasNoArguments(String[] args) {
+        return args == null || args.length == 0;
     }
 
     private void runHelpCommand() {
@@ -206,7 +184,7 @@ public class LauncherImpl implements Launcher {
         runCommand("help", new String[] { "--", cmdName }, null, false);
     }
 
-    private void runCommandFromArguments(Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
+    private void runCommandFromArguments(String[] args, Collection<ActionListener<ApplicationState>> listeners, boolean inShell) {
         runCommand(args[0], Arrays.copyOfRange(args, 1, args.length), listeners, inShell);
     }
 
@@ -313,11 +291,13 @@ public class LauncherImpl implements Launcher {
 
         CommandContext ctx = cmdCtxFactory.createContext(args);
         
-        if (prefs == null) {
-            ServiceReference keyringReference = context.getServiceReference(Keyring.class);
-            @SuppressWarnings("unchecked")
-            Keyring keyring = (Keyring) context.getService(keyringReference);
-            prefs = new ClientPreferences(keyring);
+        synchronized (this) {
+            if (prefs == null) {
+                ServiceReference keyringReference = context.getServiceReference(Keyring.class);
+                @SuppressWarnings("unchecked")
+                Keyring keyring = (Keyring) context.getService(keyringReference);
+                prefs = new ClientPreferences(keyring);
+            }
         }
         
         if (cmd.isStorageRequired()) {
@@ -346,7 +326,7 @@ public class LauncherImpl implements Launcher {
         return ctx;
     }
 
-    private boolean isVersionQuery(boolean inShell) {
+    private boolean isVersionQuery(String[] args, boolean inShell) {
         // don't allow --version in the shell
         if (inShell) {
             return false;

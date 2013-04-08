@@ -82,13 +82,13 @@ public class FrameworkProvider {
     // This is our ticket into OSGi land. Unfortunately, we to use a bit of reflection here.
     // The launcher and bundleloader are instantiated from within their bundles, ie loaded
     // by the bundle classloader.
-    public void startFramework(String[] args) {
+    public void start(String[] args) {
         try {
             Framework framework = makeFramework();
             prepareFramework(framework);
             loadBootstrapBundles(framework);
             setLoaderVerbosity(framework);
-            setLaunchArgs(framework, args);
+            runLauncher(framework, args);
         } catch (InterruptedException | BundleException | IOException e) {
             throw new RuntimeException("Could not start framework.", e);
         }
@@ -220,12 +220,12 @@ public class FrameworkProvider {
 
     private void setLoaderVerbosity(Framework framework) throws InterruptedException {
         Object loader = getService(framework, BundleManager.class.getName());
-        callVoidReflectedMethod(loader, "setPrintOSGiInfo", printOSGiInfo, Boolean.TYPE);
+        callVoidReflectedMethod(loader, "setPrintOSGiInfo", printOSGiInfo);
     }
 
-    private void setLaunchArgs(Framework framework, String[] args) throws InterruptedException {
+    private void runLauncher(Framework framework, String[] args) throws InterruptedException {
         Object launcher = getService(framework, Launcher.class.getName());
-        callVoidReflectedMethod(launcher, "setArgs", args, String[].class);
+        callVoidReflectedMethod(launcher, "run", args, false);
     }
 
     private Object getService(Framework framework, String name) throws InterruptedException {
@@ -238,17 +238,45 @@ public class FrameworkProvider {
         return service;
     }
 
-    private void callVoidReflectedMethod(Object object, String name, Object arguments, Class<?> argsClass) {
+    /**
+     * Call {@code object}.{@code name} with {@code args} as the arguments. The
+     * return value is ignored. The types of the method arguments must exactly
+     * match the types of the supplied arguments, but primitives are used unboxed.
+     */
+    private void callVoidReflectedMethod(Object object, String name, Object... args) {
         Class<?> clazz = object.getClass();
+        Class<?>[] classes = new Class<?>[args.length];
+        for (int i = 0; i < args.length; i++) {
+            classes[i] = preferPrimitiveClass(args[i].getClass());
+        }
+
         try {
-            Method m = clazz.getMethod(name, argsClass);
-            m.invoke(object, arguments);
+            Method m = clazz.getMethod(name, classes);
+            m.invoke(object, args);
         } catch (IllegalAccessException | NoSuchMethodException |
                 IllegalArgumentException | InvocationTargetException e) {
             // It's pretty evil to just swallow these exceptions.  But, these can only
             // really come up in Really Bad Code Errors, which testing will catch early.
             // Right?  Right.  Of course it will.
             e.printStackTrace();
+        }
+    }
+
+    private static <T> Class<T> preferPrimitiveClass(Class<T> boxedPrimitive) {
+        HashMap<Class<?>, Class<?>> map = new HashMap<>();
+        map.put(Byte.class, byte.class);
+        map.put(Short.class, short.class);
+        map.put(Integer.class, int.class);
+        map.put(Long.class, long.class);
+        map.put(Float.class, float.class);
+        map.put(Double.class, double.class);
+        map.put(Boolean.class, boolean.class);
+        map.put(Character.class, char.class);
+
+        if (map.containsKey(boxedPrimitive)) {
+            return (Class<T>) map.get(boxedPrimitive);
+        } else  {
+            return boxedPrimitive;
         }
     }
 

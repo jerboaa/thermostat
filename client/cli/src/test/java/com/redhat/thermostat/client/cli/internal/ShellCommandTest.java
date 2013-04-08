@@ -108,8 +108,7 @@ public class ShellCommandTest {
         Arguments args = new SimpleArguments();
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
-        verify(launcher).setArgs(new String[]{"help"});
-        verify(launcher).run(true);
+        verify(launcher).run(new String[]{"help"}, true);
     }
 
     @Test
@@ -179,8 +178,7 @@ public class ShellCommandTest {
         assertEquals(VERSION_OUTPUT + "Thermostat > old-history-value\nThermostat > exit\n", ctxFactory.getOutput());
         assertEquals("", ctxFactory.getError());
 
-        verify(launcher).setArgs(new String[] {"old-history-value"});
-        verify(launcher).run(true);
+        verify(launcher).run(new String[] {"old-history-value"}, true);
     }
 
     @Test
@@ -199,8 +197,7 @@ public class ShellCommandTest {
         CommandContext ctx = ctxFactory.createContext(args);
         cmd.run(ctx);
 
-        verify(launcher).setArgs(new String[] {"add-to-history"});
-        verify(launcher).run(true);
+        verify(launcher).run(new String[] {"add-to-history"}, true);
         verify(mockHistory).add("add-to-history");
         verify(mockHistory).flush();
 

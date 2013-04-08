@@ -52,37 +52,9 @@ import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.config.Configuration;
 import com.redhat.thermostat.main.impl.FrameworkProvider;
 
-public class Thermostat implements Runnable {
+public class Thermostat {
 
     private static Configuration config;
-
-    private BundleContext context;
-
-    public Thermostat(BundleContext context) {
-        this.context = context;
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void launch()
-            throws NoSuchMethodException, IllegalAccessException, InvocationTargetException,
-            FileNotFoundException, IOException, BundleException, InterruptedException {
-        Launcher launcher = null;
-        ServiceTracker tracker = new ServiceTracker(context, Launcher.class.getName(), null);
-        tracker.open();
-        launcher = (Launcher) tracker.waitForService(0);
-        launcher.run(false);
-        tracker.close();
-    }
-
-    @Override
-    public void run() {
-        try {
-            launch();
-        } catch (IOException | NoSuchMethodException | InterruptedException |
-                IllegalAccessException | InvocationTargetException | BundleException e) {
-            e.printStackTrace();
-        }
-    }
 
     /**
      * @param args
@@ -103,7 +75,7 @@ public class Thermostat implements Runnable {
         }
 
         FrameworkProvider frameworkProvider = new FrameworkProvider(config);
-        frameworkProvider.startFramework(toProcess.toArray(new String[0]));
+        frameworkProvider.start(toProcess.toArray(new String[0]));
 
     }
 

@@ -170,8 +170,7 @@ public class ShellCommand extends AbstractCommand {
         ServiceReference launcherRef = bundleContext.getServiceReference(Launcher.class.getName());
         if (launcherRef != null) {
             Launcher launcher = (Launcher) bundleContext.getService(launcherRef);
-            launcher.setArgs(parsed);
-            launcher.run(true);
+            launcher.run(parsed, true);
         } else {
             throw new CommandException("Severe: Could not locate launcher");
         }
