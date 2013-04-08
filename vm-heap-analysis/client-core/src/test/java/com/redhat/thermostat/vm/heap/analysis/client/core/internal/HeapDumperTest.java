@@ -36,66 +36,53 @@
 
 package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
+import static org.junit.Assert.assertArrayEquals;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.redhat.thermostat.common.cli.Arguments;
-import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandContextFactory;
+import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.CommandRegistry;
 import com.redhat.thermostat.storage.core.HostRef;
 import com.redhat.thermostat.storage.core.VmRef;
+import com.redhat.thermostat.testutils.StubBundleContext;
 
 public class HeapDumperTest {
     private static final String TEST_HOST_ID = "1111111";
     private static final int TEST_VM_ID = 2222222;
 
-    private Command command;
     private HeapDumper dumper;
-    private CommandContextFactory ctxFactory;
-    private CommandRegistry reg;
+
+    private StubBundleContext bundleContext;
+    private Launcher launcher;
     
     @Before
     public void setUp() throws Exception {
-        command = mock(Command.class);
-        ctxFactory = mock(CommandContextFactory.class);
-        reg = mock(CommandRegistry.class);
-        CommandContext ctx = mock(CommandContext.class);
+        bundleContext = new StubBundleContext();
         
-        when(reg.getCommand(any(String.class))).thenReturn(command);
-        when(ctxFactory.getCommandRegistry()).thenReturn(reg);
-        when(ctxFactory.createContext(any(Arguments.class))).thenReturn(ctx);
+        launcher = mock(Launcher.class);
+        bundleContext.registerService(Launcher.class, launcher, null);
         
         HostRef hostRef = new HostRef(TEST_HOST_ID, "myHost");
         VmRef ref = new VmRef(hostRef, TEST_VM_ID, "myVM");
-        dumper = new HeapDumper(ref, ctxFactory);
+        dumper = new HeapDumper(ref, bundleContext);
     }
 
     @Test
-    public void testCommand() {
-        verify(reg).getCommand(eq("dump-heap"));
-    }
-    
-    @Test
     public void testDump() throws CommandException {
         dumper.dump();
-        
-        ArgumentCaptor<Arguments> captor = ArgumentCaptor.forClass(Arguments.class);
-        verify(ctxFactory).createContext(captor.capture());
-        Arguments args = captor.getValue();
-        
-        assertEquals(TEST_HOST_ID, args.getArgument("hostId"));
-        assertEquals(String.valueOf(TEST_VM_ID), args.getArgument("vmId"));
+
+        ArgumentCaptor<String[]> captor = ArgumentCaptor.forClass(String[].class);
+        verify(launcher).run(captor.capture(), eq(true));
+        verifyNoMoreInteractions(launcher);
+
+        String[] args = captor.getValue();
+        assertArrayEquals(new String[] { "dump-heap", "--hostId", TEST_HOST_ID, "--vmId", String.valueOf(TEST_VM_ID) }, args);
     }
 
 }

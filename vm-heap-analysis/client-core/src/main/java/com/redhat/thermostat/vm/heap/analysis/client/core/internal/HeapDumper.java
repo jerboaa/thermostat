@@ -38,47 +38,30 @@ package com.redhat.thermostat.vm.heap.analysis.client.core.internal;
 
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.FrameworkUtil;
+import org.osgi.framework.ServiceReference;
 
-import com.redhat.thermostat.common.cli.Command;
-import com.redhat.thermostat.common.cli.CommandContext;
-import com.redhat.thermostat.common.cli.CommandContextFactory;
+import com.redhat.thermostat.common.Launcher;
 import com.redhat.thermostat.common.cli.CommandException;
-import com.redhat.thermostat.common.cli.SimpleArguments;
 import com.redhat.thermostat.storage.core.VmRef;
 
 public class HeapDumper {
-    
-    private static final String HEAP_DUMP_COMMAND = "dump-heap";
-    private static final String HOST_ID_ARGUMENT = "hostId";
-    private static final String VM_ID_ARGUMENT = "vmId";
-    
-    private Command heapDumpCommand;
-    private CommandContext commandCtx;
-    private VmRef ref;
+
+    private final VmRef ref;
+    private final BundleContext context;
     
     public HeapDumper(VmRef ref) {
-        this.ref = ref;
-        BundleContext context = FrameworkUtil.getBundle(getClass()).getBundleContext();
-        CommandContextFactory ctxFactory = new CommandContextFactory(context);
-        init(ctxFactory);
+        this(ref, FrameworkUtil.getBundle(HeapDumper.class).getBundleContext());
     }
     
-    HeapDumper(VmRef ref, CommandContextFactory ctxFactory) {
+    HeapDumper(VmRef ref, BundleContext context) {
         this.ref = ref;
-        init(ctxFactory);
-    }
-    
-    private void init(CommandContextFactory ctxFactory) {
-        // Setup heap dump command
-        heapDumpCommand = ctxFactory.getCommandRegistry().getCommand(HEAP_DUMP_COMMAND);
-        SimpleArguments args = new SimpleArguments();
-        args.addArgument(HOST_ID_ARGUMENT, ref.getAgent().getStringID());
-        args.addArgument(VM_ID_ARGUMENT, ref.getStringID());
-        commandCtx = ctxFactory.createContext(args);
+        this.context = context;
     }
     
     public void dump() throws CommandException {
-        heapDumpCommand.run(commandCtx);
+        ServiceReference launcherRef = context.getServiceReference(Launcher.class.getName());
+        Launcher launcher = (Launcher) context.getService(launcherRef);
+        launcher.run(new String[] { "dump-heap", "--hostId", ref.getAgent().getStringID(), "--vmId", ref.getStringID()}, true);
     }
 
 }
